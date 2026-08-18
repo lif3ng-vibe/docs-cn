@@ -1,9 +1,9 @@
 ---
-title: Affected Tests in CI
-description: Run only the tests a change actually touches.
+title: CI 中的受影响测试
+description: 只运行一次变更真正触及的测试。
 ---
 
-`codegraph affected` traces import dependencies transitively to find which test files are affected by a set of changed source files — so CI can run only the relevant tests.
+`codegraph affected` 会沿导入依赖传递追踪，找出一组已变更的源文件会波及哪些测试文件——CI 因此可以只运行相关的测试。
 
 ```bash
 codegraph affected src/utils.ts src/api.ts          # pass files as arguments
@@ -11,17 +11,17 @@ git diff --name-only | codegraph affected --stdin    # pipe from git diff
 codegraph affected src/auth.ts --filter "e2e/*"      # custom test-file pattern
 ```
 
-## Options
+## 选项
 
-| Option | Description | Default |
+| 选项 | 描述 | 默认值 |
 |---|---|---|
-| `--stdin` | Read the file list from stdin | `false` |
-| `-d, --depth <n>` | Max dependency traversal depth | `5` |
-| `-f, --filter <glob>` | Custom glob to identify test files | auto-detect |
-| `-j, --json` | Output as JSON | `false` |
-| `-q, --quiet` | Output file paths only | `false` |
+| `--stdin` | 从 stdin 读取文件列表 | `false` |
+| `-d, --depth <n>` | 依赖遍历的最大深度 | `5` |
+| `-f, --filter <glob>` | 用于识别测试文件的自定义 glob | auto-detect |
+| `-j, --json` | 以 JSON 格式输出 | `false` |
+| `-q, --quiet` | 只输出文件路径 | `false` |
 
-## CI / hook example
+## CI / 钩子示例
 
 ```bash
 #!/usr/bin/env bash

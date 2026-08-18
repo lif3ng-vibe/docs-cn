@@ -1,18 +1,18 @@
 ---
-title: Indexing a Project
-description: Full index, incremental sync, and the file watcher.
+title: 索引一个项目
+description: 全量索引、增量同步与文件监听器。
 ---
 
-## Initialize and index
+## 初始化并建立索引
 
 ```bash
 cd your-project
 codegraph init      # creates .codegraph/ and builds the full graph — one step
 ```
 
-`codegraph init` creates the local `.codegraph/` directory and builds the full graph in the same step — one command, done. There's no separate index step to run afterward, and from here the graph [stays fresh automatically](#stay-fresh-automatically).
+`codegraph init` 会创建本地 `.codegraph/` 目录，并在同一步完成全量图谱的构建——一条命令，就此搞定。之后没有单独的索引步骤要跑，图谱从这里起[始终保持最新](#始终保持最新)。
 
-## Full vs. incremental
+## 全量与增量
 
 ```bash
 codegraph index           # full index of the whole project
@@ -20,15 +20,15 @@ codegraph index --force   # re-index from scratch
 codegraph sync            # incremental — only changed files
 ```
 
-`sync` is fast because it only reparses what changed — it's what the file watcher runs for you on every edit (see [Stay fresh automatically](#stay-fresh-automatically)). You rarely need to run it by hand.
+`sync` 之所以快，是因为它只重新解析有变更的内容——文件监听器在每次编辑后替你运行的就是它（见[始终保持最新](#始终保持最新)）。你几乎不需要手动运行它。
 
-## Stay fresh automatically
+## 始终保持最新
 
-**You don't need to run `codegraph sync` by hand during an agent session.** When your agent (Claude Code, Cursor, Codex, opencode, Hermes, Gemini, Antigravity, Kiro) launches `codegraph serve --mcp`, three layers cooperate to keep the index in step with your code — and to never give the agent a quiet wrong answer in the small window between an edit and the next sync.
+**在智能体会话期间，你不需要手动运行 `codegraph sync`。** 当你的智能体（Claude Code、Cursor、Codex、opencode、Hermes、Gemini、Antigravity、Kiro）启动 `codegraph serve --mcp` 时，有三层机制协同工作，让索引始终跟得上代码——并保证在从编辑到下一次同步之间的短暂窗口内，智能体绝不会拿到无声的错误答案。
 
-### 1. File watcher with debounced auto-sync (always on)
+### 1. 带防抖自动同步的文件监听器（始终开启）
 
-`serve --mcp` spins up a native file watcher (FSEvents on macOS, inotify on Linux, ReadDirectoryChangesW on Windows) over the project root. Every source-file create / modify / delete is captured. A debounce timer collapses bursts of edits into a single sync.
+`serve --mcp` 会在项目根目录上启动一个原生文件监听器（macOS 上是 FSEvents，Linux 上是 inotify，Windows 上是 ReadDirectoryChangesW）。源文件的每一次创建 / 修改 / 删除都会被捕获。防抖计时器把成串的编辑合并为一次同步。
 
 ```
 agent writes src/Widget.ts
@@ -38,11 +38,11 @@ agent writes src/Widget.ts
   → next agent query sees it
 ```
 
-**Tunable**: `CODEGRAPH_WATCH_DEBOUNCE_MS` overrides the default 2000ms, clamped to `[100ms, 60s]`. Useful when a build step or formatter writes many files in a tight burst — bump it to `5000` or `10000` so the watcher coalesces them into one sync.
+**可调**：`CODEGRAPH_WATCH_DEBOUNCE_MS` 可覆盖默认的 2000ms，取值被钳制在 `[100ms, 60s]`。当构建步骤或格式化工具在短时间内密集写入大量文件时很有用——把它调到 `5000` 或 `10000`，监听器就会把这些写入合并为一次同步。
 
-### 2. Per-file staleness banner — covers the debounce window
+### 2. 按文件的过期提示横幅——覆盖防抖窗口
 
-The watcher debounce introduces a small window (typically 2s) where a freshly-edited file is on disk but not yet in the index. CodeGraph closes that window with a per-file staleness banner: if any MCP tool response would reference a file that's currently pending re-index, the response prepends a `⚠️` banner naming the stale file:
+监听器的防抖带来一个短暂窗口（通常 2 秒）：刚编辑过的文件已写入磁盘，却还未进入索引。CodeGraph 用按文件的过期提示横幅封住这个窗口：只要某个 MCP 工具响应会引用一个正处于待重新索引状态的文件，该响应就会在开头附加一条 `⚠️` 横幅，点名这个过期文件：
 
 ```
 ⚠️ Some files referenced below were edited since the last index sync —
@@ -55,17 +55,17 @@ The rest of this response is fresh.
 …
 ```
 
-Agents read this and follow up with a direct `Read` on the named file — validated end-to-end with Claude Code, where the agent literally says "Reading the file directly for the live content" before opening it. So even during the 2-second debounce window, the agent never gets a silent wrong answer.
+智能体读到横幅后，会直接 `Read` 被点名的文件作为后续动作——这一点已在 Claude Code 上端到端验证过：智能体在打开文件之前，会明确表示要先直接读取该文件以获取实时内容。因此即便处在 2 秒的防抖窗口内，智能体也绝不会得到无声的错误答案。
 
-Pending files **not** referenced by the response surface as a small footer instead (`(Note: N file(s) elsewhere in this project are pending index sync but were not referenced above: …)`). Either way, the signal is explicit.
+响应中**未**引用的待处理文件则以一个小脚注呈现（`(Note: N file(s) elsewhere in this project are pending index sync but were not referenced above: …)`）。无论哪种方式，信号都是明确的。
 
-### 3. Connect-time catch-up — covers gaps when the MCP server wasn't running
+### 3. 连接时补齐——覆盖 MCP 服务器未运行期间的空档
 
-When your editor / agent (re)connects to the MCP server, codegraph runs a fast filesystem-based reconciliation (a `(size, mtime)` stat pre-filter, then a content hash on the rest) before answering the first query. So files changed while no MCP server was running — a `git pull` from the terminal, an edit from another editor, an agent that finished and exited — are caught up automatically on the next session's first tool call.
+当你的编辑器 / 智能体（重）连接到 MCP 服务器时，codegraph 会在回答第一个查询之前先做一次快速的、基于文件系统的对账（先用 `(size, mtime)` stat 预筛，再对剩余文件计算内容哈希）。这样，在 MCP 服务器未运行期间发生变更的文件——终端里执行的一次 `git pull`、另一个编辑器里做的修改、一个跑完就退出的智能体——都会在下一次会话的第一次工具调用时自动补齐。
 
-### Verify what the watcher sees
+### 核验监听器看到了什么
 
-`codegraph_status` exposes the pending set first-class — useful for an agent asking "is the index caught up?" in one call:
+`codegraph_status` 把待处理集合作为一等信息公开——智能体想一次调用就问清"索引追上了吗"时正好用得上：
 
 ```
 codegraph_status →
@@ -75,27 +75,27 @@ codegraph_status →
   - src/Widget.ts (edited 1200ms ago)
 ```
 
-If `### Pending sync:` isn't in the response, nothing is in flight.
+如果响应中没有 `### Pending sync:`，就说明没有任何文件在等待同步。
 
-### When manual `codegraph sync` makes sense
+### 何时需要手动 `codegraph sync`
 
-Almost never. The edge cases:
+几乎从来不需要。只有这些边缘情况：
 
-- **The watcher is disabled.** Sandboxes that block local fs watchers, or you've set `CODEGRAPH_NO_DAEMON=1` to opt out of the shared daemon. In those cases `codegraph sync` is the manual fallback.
-- **Pre-flight before a CI run.** If you're scripting against the index outside an agent session, a single `codegraph sync` at the start of the script guarantees the index reflects the current working tree.
+- **监听器被禁用。** 沙箱阻止了本地文件监听，或者你设置了 `CODEGRAPH_NO_DAEMON=1` 以退出共享守护进程。这些情况下，`codegraph sync` 就是手动兜底。
+- **CI 运行前预检。** 如果你在智能体会话之外针对索引写脚本，在脚本开头跑一次 `codegraph sync`，即可保证索引反映当前工作树。
 
-Otherwise: just use it. The watcher + banner + connect-sync covers the AI-assisted workflow end-to-end. If you're seeing files genuinely missed after the debounce window has passed, that's a bug — please file an issue with a reproduction.
+其余情况：放心用就好。监听器 + 横幅 + 连接时同步已经端到端覆盖 AI 辅助工作流。如果防抖窗口过后仍发现有文件确实被漏掉，那是一个 bug——请附上可复现步骤提交 issue。
 
-> See the v0.9.5 release notes for the [staleness banner (#403)](https://github.com/colbymchenry/codegraph/releases/tag/v0.9.5) and the connect-time catch-up (#414); both shipped together.
+> v0.9.5 发布说明中详细记录了[过期提示横幅（#403）](https://github.com/colbymchenry/codegraph/releases/tag/v0.9.5)与连接时补齐（#414）；两者一同发布。
 
-## Check status
+## 查看状态
 
 ```bash
 codegraph status
 ```
 
-Reports node/edge/file counts, the active SQLite backend, and the journal mode. In an agent session, the MCP-side `codegraph_status` additionally surfaces the `### Pending sync:` block described above.
+它会报告节点/边/文件数量、当前生效的 SQLite 后端以及 journal 模式。在智能体会话中，MCP 侧的 `codegraph_status` 还会额外展示上文描述的 `### Pending sync:` 区块。
 
-## What gets indexed
+## 哪些内容会被索引
 
-Every file whose extension maps to a [supported language](/reference/languages/), minus dependency/build directories excluded by default (`node_modules`, `vendor`, `dist`, …), anything your `.gitignore` excludes, and files over 1 MB. See [Configuration](/getting-started/configuration/).
+所有扩展名对应[受支持语言](/reference/languages/)的文件，减去默认排除的依赖/构建目录（`node_modules`、`vendor`、`dist` 等）、`.gitignore` 排除的一切内容，以及超过 1 MB 的文件。参见[配置](/getting-started/configuration/)。

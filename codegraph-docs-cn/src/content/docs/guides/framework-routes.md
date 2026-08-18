@@ -1,11 +1,11 @@
 ---
-title: Framework Routes
-description: CodeGraph links URL patterns to the handlers that serve them.
+title: 框架路由
+description: CodeGraph 把 URL 模式链接到服务它们的处理器。
 ---
 
-CodeGraph detects web-framework routing files and emits `route` nodes linked by `references` edges to their handler classes or functions. Querying the callers of a view or controller then surfaces the URL pattern that binds it.
+CodeGraph 能识别 Web 框架的路由文件，生成 `route` 节点，并用 `references` 边把它们链接到对应的处理器类或函数——因此查询某个视图或控制器的调用方时，绑定它的 URL 模式会直接浮现。
 
-| Framework | Shapes recognized |
+| 框架 | 识别的形态 |
 |---|---|
 | **Django** | `path()`, `re_path()`, `url()`, `include()` in `urls.py` (CBV `.as_view()`, dotted paths) |
 | **Flask** | `@app.route('/path', methods=[...])`, blueprint routes |
@@ -25,4 +25,4 @@ CodeGraph detects web-framework routing files and emits `route` nodes linked by 
 | **Vue Router** / **Nuxt** | `pages/` file-based routes, `server/api/` endpoints, route middleware |
 | **Astro** | `src/pages/` file-based routes (`.astro` pages + `.ts` endpoints, `[param]`/`[...rest]` syntax) |
 
-Route resolution is automatic — there's nothing to configure. If a framework file is recognized, its routes appear in the graph after the next index or sync.
+路由解析完全自动——没有任何需要配置的东西。只要某个框架文件被识别，它的路由就会在下一次索引或同步之后出现在图谱中。
