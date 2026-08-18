@@ -1,31 +1,31 @@
 ---
-title: Troubleshooting
-description: Fixes for the most common CodeGraph issues.
+title: 故障排查
+description: 最常见 CodeGraph 问题的修复方法。
 ---
 
-## "CodeGraph not initialized"
+## "CodeGraph not initialized"（CodeGraph 未初始化）
 
-Run `codegraph init` in your project directory first.
+请先在项目目录中运行 `codegraph init`。
 
-## Indexing is slow
+## 索引很慢
 
-Check that `node_modules` and other large directories are excluded (they are, if gitignored). Use `--quiet` to reduce output overhead.
+检查 `node_modules` 等大型目录是否已被排除（凡被 gitignore 的目录都会被排除）。用 `--quiet` 减少输出开销。
 
-## MCP hits `database is locked`
+## MCP 遇到 `database is locked`
 
-Current builds shouldn't: CodeGraph bundles its own Node runtime and uses Node's built-in `node:sqlite` in WAL mode, where concurrent reads never block on a writer. If you still see it:
+当前版本不应再出现此问题：CodeGraph 自带 Node 运行时，并使用 Node 内置的 `node:sqlite` 以 WAL 模式运行，并发读取永远不会被写入方阻塞。如果你仍然遇到：
 
-- **You're on an old (pre-0.9) install.** Reinstall to get the bundled runtime — `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh` (macOS/Linux), `irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex` (Windows), or `npm i -g @colbymchenry/codegraph@latest`.
-- **`codegraph status` shows `Journal:` other than `wal`** — WAL couldn't be enabled on this filesystem (common on network shares and WSL2 `/mnt`), so reads can block on writes. Move the project (with its `.codegraph/` folder) onto a local disk.
+- **你的安装版本太旧（0.9 之前）。** 请重新安装以获得自带运行时——`curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`（macOS/Linux）、`irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex`（Windows），或 `npm i -g @colbymchenry/codegraph@latest`。
+- **`codegraph status` 显示的 `Journal:` 不是 `wal`** —— 该文件系统无法启用 WAL（网络共享与 WSL2 的 `/mnt` 下很常见），读取就可能被写入阻塞。请把项目（连同 `.codegraph/` 目录）移到本地磁盘。
 
-## MCP server not connecting
+## MCP 服务器连不上
 
-Your agent starts the server itself, so you don't launch it by hand. Make sure the project is initialized and indexed (`codegraph status`) and that the path in your MCP config is correct. If it still won't connect, re-run `codegraph install` to rewrite the config.
+服务器由你的智能体自行启动，因此无需手动运行。确认项目已初始化并建立索引（`codegraph status`），且 MCP 配置中的路径正确无误。如果仍然连不上，重新运行 `codegraph install` 重写配置。
 
-## Missing symbols
+## 符号缺失
 
-The MCP server auto-syncs on save (wait a couple of seconds). Run `codegraph sync` manually if needed. Check that the file's language is [supported](/reference/languages/) and isn't inside a `.gitignore`d or default-excluded directory (e.g. `node_modules`, `dist`).
+MCP 服务器会在保存时自动同步（稍等几秒）。必要时可手动运行 `codegraph sync`。检查该文件的语言是否属于[受支持的语言](/reference/languages/)，并且不在被 `.gitignore` 或默认排除的目录里（如 `node_modules`、`dist`）。
 
-## Sharing one checkout between Windows and WSL
+## 在 Windows 与 WSL 之间共享同一份检出
 
-Don't point both at the same `.codegraph/`: the background-server lock and the SQLite index are tied to the OS that wrote them, and SQLite locking across the WSL2/Windows filesystem boundary is unreliable. Give each side its own index in the same tree by setting `CODEGRAPH_DIR` to a distinct name on one of them — e.g. `CODEGRAPH_DIR=.codegraph-win` on Windows, leaving WSL on the default `.codegraph`. CodeGraph skips any sibling `.codegraph-*` directory when indexing and watching, so the two never trip over each other.
+不要让两边指向同一个 `.codegraph/`：后台服务器的锁和 SQLite 索引都与写入它们的操作系统绑定，而 SQLite 锁在跨越 WSL2/Windows 文件系统边界时并不可靠。在同一棵目录树里给两边各配一份索引：在其中一侧把 `CODEGRAPH_DIR` 设为一个不同的名字——例如在 Windows 侧设 `CODEGRAPH_DIR=.codegraph-win`，让 WSL 继续使用默认的 `.codegraph`。CodeGraph 在索引和监听时会跳过所有同级的 `.codegraph-*` 目录，两边因此互不干扰。

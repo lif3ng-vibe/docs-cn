@@ -23,7 +23,7 @@ codegraph serve --mcp
 
 | 工具 | 用途 |
 |---|---|
-| `codegraph_node` | 某个符号的源码及其调用方/被调用项链路，或带行号读取整个文件（与 Read 对齐）。对有歧义的名称，返回每一个重载的本体。 |
+| `codegraph_node` | 某个符号的源码及其调用方/被调用项链路，或带行号读取整个文件（与 `Read` 等价）。对有歧义的名称，返回每一个重载的本体。 |
 | `codegraph_search` | 在整个代码库中按名称查找符号（仅返回位置） |
 | `codegraph_callers` | 查找谁调用了某个函数 |
 | `codegraph_callees` | 查找某个函数调用了什么 |
@@ -41,6 +41,6 @@ CODEGRAPH_MCP_TOOLS=explore,node,search,callers
 
 ## 智能体应当如何使用
 
-CodeGraph 本身*就是*现成的搜索索引。无论是「X 是怎么工作的？」这类问题、架构、某个流程（「X 如何到达 Y」），还是「X 在哪里」——包括编辑代码的时候——智能体都应该用 `codegraph_explore` 得出答案后就此打住，通常**零次文件读取**，而不是用 `grep` + `Read` 重新推导一遍。直接用 CodeGraph 回答只需一到数次调用；grep/读取式的探索则要几十次。
+CodeGraph 本身*就是*现成的搜索索引。无论是“X 是怎么工作的？”这类问题、架构、某个流程（“X 如何到达 Y”），还是“X 在哪里”——包括编辑代码的时候——智能体都应该用 `codegraph_explore` 得出答案后就此打住，通常**零次文件读取**，而不是用 `grep` + `Read` 重新推导一遍。直接用 CodeGraph 回答只需一到数次调用；grep/读取式的探索则要几十次。
 
 MCP 服务器会在 MCP `initialize` 响应中自动把这份指引下发给主智能体。由于子智能体和不通过 MCP 接入的智能体外壳永远看不到该响应，安装器还会在每个智能体的指令文件里写入一小段由标记围起来的区块，指向对应的 CLI 命令 `codegraph explore`。

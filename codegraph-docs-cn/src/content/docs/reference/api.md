@@ -3,7 +3,7 @@ title: API
 description: 将 CodeGraph 作为 TypeScript 库使用。
 ---
 
-CodeGraph 提供了一套 TypeScript API。公开的接口面就是 `CodeGraph` 类。
+CodeGraph 提供了一套 TypeScript API。公开接口就是 `CodeGraph` 类。
 
 ```typescript
 import CodeGraph from '@colbymchenry/codegraph';

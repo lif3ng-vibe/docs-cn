@@ -8,7 +8,7 @@ CodeGraph 已装好，图谱已建成。接下来可以去这些地方。
 ## 理解模型
 
 - [工作原理](/core-concepts/how-it-works/)——提取 → 存储 → 引用解析 → 同步的完整流水线。
-- [知识图谱](/core-concepts/knowledge-graph/)——构成图谱的节点种类与边种类。
+- [知识图谱](/core-concepts/knowledge-graph/)——构成图谱的节点类型与边类型。
 - [解析与框架](/core-concepts/resolution/)——引用与框架路由是如何被连接起来的。
 
 ## 投入使用

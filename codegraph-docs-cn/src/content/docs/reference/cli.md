@@ -5,7 +5,7 @@ description: CodeGraph 的每一条命令及其支持的标志。
 
 ```bash
 codegraph                         # 运行交互式安装器
-codegraph install                 # 运行安装器（显式形式）
+codegraph install                 # 运行安装器（显式调用）
 codegraph uninstall               # 从你的智能体中移除 CodeGraph（install 的逆操作）
 codegraph init [path]             # 初始化项目并构建其图谱（一步完成）
 codegraph uninit [path]           # 从项目中移除 CodeGraph（--force 可跳过确认）

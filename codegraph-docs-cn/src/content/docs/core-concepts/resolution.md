@@ -7,7 +7,7 @@ description: CodeGraph 如何连接引用，以及如何把路由链接到处理
 
 ## 引用解析
 
-解析完成后，CodeGraph 会落实以下引用：
+解析完成后，CodeGraph 会对以下引用进行解析：
 
 - **导入** → 它们指向的源文件（包括 tsconfig 路径别名和 cargo workspace 成员）。
 - **调用** → 凭借导入解析与名称匹配，找到各自的定义。
@@ -15,7 +15,7 @@ description: CodeGraph 如何连接引用，以及如何把路由链接到处理
 
 ## 框架感知
 
-CodeGraph 能识别 Web 框架的路由文件，生成 `route` 节点，并用 `references` 边把它们链接到对应的处理器类或函数——因此查询某个视图或控制器的调用方时，绑定它的 URL 模式会直接浮现。受支持框架的完整列表见[框架路由](/guides/framework-routes/)。
+CodeGraph 能识别 Web 框架的路由文件，生成 `route` 节点，并用 `references` 边把它们链接到对应的处理器类或函数——因此查询某个视图或控制器的调用方时，绑定它的 URL 模式会直接浮现。能识别的框架的完整列表见[框架路由](/guides/framework-routes/)。
 
 ## 动态派发覆盖
 
