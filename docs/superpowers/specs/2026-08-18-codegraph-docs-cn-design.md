@@ -42,7 +42,7 @@ C:\Users\lif3n\src\docs\codegraph-docs-cn\
   - sidebar 分组/条目标题译为中文：入门、核心概念、指南、参考、故障排查
   - `title`/`description` 译为中文
 - `index.astro`：`lang="zh-CN"`、`<title>`/meta description、hero 标题“以图谱理解任何代码库”、特性卡片、按钮（“快速开始”、“查看文档”）、复制反馈 "Copied"→“已复制”
-- `SiteTitle.astro`：副标题（如有英文）汉化
+- `SiteTitle.astro`：组件本身无英文文案（显示配置的 `title`，带 `translate="no"`），仅确认无需改动；标题“codegraph”保持原样（产品名）
 
 ## 翻译规范（18 篇文档）
 

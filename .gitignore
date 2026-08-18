@@ -1,0 +1,4 @@
+codegraph-main/
+node_modules/
+dist/
+.astro/
