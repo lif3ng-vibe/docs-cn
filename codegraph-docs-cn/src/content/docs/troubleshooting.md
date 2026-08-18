@@ -16,7 +16,7 @@ description: 最常见 CodeGraph 问题的修复方法。
 当前版本不应再出现此问题：CodeGraph 自带 Node 运行时，并使用 Node 内置的 `node:sqlite` 以 WAL 模式运行，并发读取永远不会被写入方阻塞。如果你仍然遇到：
 
 - **你的安装版本太旧（0.9 之前）。** 请重新安装以获得自带运行时——`curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`（macOS/Linux）、`irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex`（Windows），或 `npm i -g @colbymchenry/codegraph@latest`。
-- **`codegraph status` 显示的 `Journal:` 不是 `wal`** —— 该文件系统无法启用 WAL（网络共享与 WSL2 的 `/mnt` 下很常见），读取就可能被写入阻塞。请把项目（连同 `.codegraph/` 目录）移到本地磁盘。
+- **`codegraph status` 显示的 `Journal:` 不是 `wal`**——该文件系统无法启用 WAL（网络共享与 WSL2 的 `/mnt` 下很常见），读取就可能被写入阻塞。请把项目（连同 `.codegraph/` 目录）移到本地磁盘。
 
 ## MCP 服务器连不上
 
@@ -24,7 +24,7 @@ description: 最常见 CodeGraph 问题的修复方法。
 
 ## 符号缺失
 
-MCP 服务器会在保存时自动同步（稍等几秒）。必要时可手动运行 `codegraph sync`。检查该文件的语言是否属于[受支持的语言](/reference/languages/)，并且不在被 `.gitignore` 或默认排除的目录里（如 `node_modules`、`dist`）。
+MCP 服务器会在保存时自动同步（稍等几秒）。必要时可手动运行 `codegraph sync`。检查该文件的语言是否属于[受支持的语言](/reference/languages/)，并且不在被 `.gitignore` 忽略或默认排除的目录里（如 `node_modules`、`dist`）。
 
 ## 在 Windows 与 WSL 之间共享同一份检出
 
