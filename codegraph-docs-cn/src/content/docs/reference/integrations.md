@@ -1,11 +1,11 @@
 ---
-title: Integrations
-description: Supported agents, and manual MCP setup.
+title: 集成
+description: 受支持的智能体，以及手动 MCP 配置。
 ---
 
-The interactive installer auto-detects and configures each supported agent — wiring the CodeGraph MCP server into each. For the agents that use an instructions file, it also writes a short marker-fenced CodeGraph section (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) so subagents and non-MCP harnesses learn the `codegraph explore` command; `codegraph uninstall` removes it.
+交互式安装器会自动检测并配置每一个受支持的智能体——把 CodeGraph MCP 服务器接入其中。对于使用指令文件的智能体，它还会写入一小段由标记围起来的 CodeGraph 区块（`CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md`），让子智能体和不通过 MCP 接入的智能体外壳知晓 `codegraph explore` 命令；`codegraph uninstall` 可将其移除。
 
-## Supported agents
+## 受支持的智能体
 
 - **Claude Code**
 - **Cursor**
@@ -16,17 +16,17 @@ The interactive installer auto-detects and configures each supported agent — w
 - **Antigravity IDE**
 - **Kiro**
 
-Run `npx @colbymchenry/codegraph` and pick your agent(s); see [Installation](/getting-started/installation/) for the non-interactive flags.
+运行 `npx @colbymchenry/codegraph` 并选择你的智能体；非交互式标志见[安装](/getting-started/installation/)。
 
-## Manual setup
+## 手动配置
 
-If you'd rather wire it up yourself, install globally:
+如果你更愿意自己接入，可以全局安装：
 
 ```bash
 npm install -g @colbymchenry/codegraph
 ```
 
-Add the MCP server to `~/.claude.json`:
+将 MCP 服务器添加到 `~/.claude.json`：
 
 ```json
 {
@@ -40,7 +40,7 @@ Add the MCP server to `~/.claude.json`:
 }
 ```
 
-Optionally auto-allow CodeGraph's tools in `~/.claude/settings.json`:
+（可选）在 `~/.claude/settings.json` 中为 CodeGraph 的工具设置自动放行：
 
 ```json
 {
@@ -52,8 +52,8 @@ Optionally auto-allow CodeGraph's tools in `~/.claude/settings.json`:
 }
 ```
 
-One wildcard auto-approves every CodeGraph tool. The server lists a single tool by default — `codegraph_explore` — but if you re-enable others via the `CODEGRAPH_MCP_TOOLS` environment variable, they're already permitted with no prompt.
+一条通配符就能自动批准每一个 CodeGraph 工具。服务器默认只列出一个工具——`codegraph_explore`——但如果你通过 `CODEGRAPH_MCP_TOOLS` 环境变量重新启用其他工具，它们同样已获准，不会再弹确认。
 
 :::tip
-Cursor launches MCP subprocesses with the wrong working directory. The installer handles this for you by injecting a `--path` argument; if you wire Cursor up by hand, pass the project path explicitly.
+Cursor 启动 MCP 子进程时所用的工作目录是错的。安装器会替你注入 `--path` 参数解决这一问题；如果你手动接入 Cursor，请显式传入项目路径。
 :::

@@ -1,9 +1,9 @@
 ---
 title: API
-description: Use CodeGraph as a TypeScript library.
+description: 将 CodeGraph 作为 TypeScript 库使用。
 ---
 
-CodeGraph ships a TypeScript API. The public surface is the `CodeGraph` class.
+CodeGraph 提供了一套 TypeScript API。公开的接口面就是 `CodeGraph` 类。
 
 ```typescript
 import CodeGraph from '@colbymchenry/codegraph';
@@ -30,25 +30,25 @@ cg.unwatch(); // stop watching
 cg.close();
 ```
 
-## Key methods
+## 关键方法
 
-| Method | Purpose |
+| 方法 | 用途 |
 |---|---|
-| `CodeGraph.init(path)` / `CodeGraph.open(path)` | Create or open a project index |
-| `indexAll(opts)` | Full index, with progress callback |
-| `sync()` | Incremental update |
-| `searchNodes(query)` | Full-text symbol search |
-| `getCallers(id)` / `getCallees(id)` | Walk the call graph |
-| `getImpactRadius(id, depth)` | Transitive impact of a change |
-| `buildContext(task, opts)` | Markdown / JSON context for AI |
-| `watch()` / `unwatch()` | Start / stop the file watcher |
-| `close()` | Close the database connection |
+| `CodeGraph.init(path)` / `CodeGraph.open(path)` | 创建或打开项目索引 |
+| `indexAll(opts)` | 全量索引，带进度回调 |
+| `sync()` | 增量更新 |
+| `searchNodes(query)` | 符号全文搜索 |
+| `getCallers(id)` / `getCallees(id)` | 沿调用图遍历 |
+| `getImpactRadius(id, depth)` | 某次变更的传递影响 |
+| `buildContext(task, opts)` | 面向 AI 的 Markdown / JSON 上下文 |
+| `watch()` / `unwatch()` | 启动 / 停止文件监听器 |
+| `close()` | 关闭数据库连接 |
 
-CommonJS works too — `const { CodeGraph } = require('@colbymchenry/codegraph');`.
+CommonJS 也可以——`const { CodeGraph } = require('@colbymchenry/codegraph');`。
 
-## Lower-level building blocks
+## 更底层的构建块
 
-The same entry point exports primitives for callers that drive the graph directly rather than through the `CodeGraph` facade: `DatabaseConnection`, `QueryBuilder`, `getDatabasePath`, `initGrammars` / `loadGrammarsForLanguages`, and `FileLock`.
+同一个入口还导出一批底层原语，供绕过 `CodeGraph` 门面、直接驱动图谱的调用方使用：`DatabaseConnection`、`QueryBuilder`、`getDatabasePath`、`initGrammars` / `loadGrammarsForLanguages`，以及 `FileLock`。
 
 ```typescript
 import {
@@ -62,8 +62,8 @@ import {
 } from '@colbymchenry/codegraph';
 ```
 
-## Embedding requirements
+## 嵌入要求
 
-- **Install from npm** (`npm i @colbymchenry/codegraph`) so the matching per-platform package — which carries the compiled library — is fetched alongside the shim.
-- The API runs on **your** runtime, so it needs **Node 22.5+** for the built-in `node:sqlite` module (an Electron main process qualifies when its bundled Node is 22.5+). The CLI and MCP server are unaffected — they ship with a self-contained bundled runtime and need no Node at all.
-- TypeScript types ship with the package. Keep `@types/node` available and `skipLibCheck: true` (the common default).
+- **从 npm 安装**（`npm i @colbymchenry/codegraph`），确保承载编译后库文件的对应平台包随 shim 一起被拉取。
+- 这套 API 运行在**你自己的**运行时上，因此需要 **Node 22.5+** 才有内置的 `node:sqlite` 模块可用（Electron 主进程只要其捆绑的 Node 达到 22.5+ 即符合条件）。CLI 和 MCP 服务器不受影响——它们自带完整打包的运行时，完全不需要 Node。
+- TypeScript 类型随包附带。请保持 `@types/node` 可用，并设置 `skipLibCheck: true`（常见默认值）。
