@@ -2,17 +2,18 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-// Project page on GitHub Pages: https://colbymchenry.github.io/codegraph/
-// `site` + `base` make every internal link resolve under the /codegraph/ prefix.
 export default defineConfig({
-	site: 'https://colbymchenry.github.io',
-	base: '/codegraph',
+	base: '/',
 	integrations: [
 		starlight({
 			title: 'codegraph',
 			description:
-				'A local-first code-intelligence tool that turns any codebase into a queryable knowledge graph for AI coding agents.',
+				'一款本地优先的代码智能工具，把任何代码库变成可供 AI 编码智能体查询的知识图谱。',
 			favicon: '/favicon.svg',
+			defaultLocale: 'root',
+			locales: {
+				root: { label: '简体中文', lang: 'zh-CN' },
+			},
 			head: [
 				{
 					// Default to the light / paper theme on first visit; the toggle still
@@ -52,43 +53,43 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Getting Started',
+					label: '入门',
 					items: [
-						{ label: 'Introduction', slug: 'getting-started/introduction' },
-						{ label: 'Quickstart', slug: 'getting-started/quickstart' },
-						{ label: 'Installation', slug: 'getting-started/installation' },
-						{ label: 'Configuration', slug: 'getting-started/configuration' },
-						{ label: 'Your First Graph', slug: 'getting-started/your-first-graph' },
-						{ label: 'Next Steps', slug: 'getting-started/next-steps' },
+						{ label: '简介', slug: 'getting-started/introduction' },
+						{ label: '快速开始', slug: 'getting-started/quickstart' },
+						{ label: '安装', slug: 'getting-started/installation' },
+						{ label: '配置', slug: 'getting-started/configuration' },
+						{ label: '你的第一个图谱', slug: 'getting-started/your-first-graph' },
+						{ label: '下一步', slug: 'getting-started/next-steps' },
 					],
 				},
 				{
-					label: 'Core Concepts',
+					label: '核心概念',
 					items: [
-						{ label: 'How It Works', slug: 'core-concepts/how-it-works' },
-						{ label: 'The Knowledge Graph', slug: 'core-concepts/knowledge-graph' },
-						{ label: 'Resolution & Frameworks', slug: 'core-concepts/resolution' },
+						{ label: '工作原理', slug: 'core-concepts/how-it-works' },
+						{ label: '知识图谱', slug: 'core-concepts/knowledge-graph' },
+						{ label: '解析与框架', slug: 'core-concepts/resolution' },
 					],
 				},
 				{
-					label: 'Guides',
+					label: '指南',
 					items: [
-						{ label: 'Indexing a Project', slug: 'guides/indexing' },
-						{ label: 'Framework Routes', slug: 'guides/framework-routes' },
-						{ label: 'Affected Tests in CI', slug: 'guides/affected-tests' },
+						{ label: '索引一个项目', slug: 'guides/indexing' },
+						{ label: '框架路由', slug: 'guides/framework-routes' },
+						{ label: 'CI 中的受影响测试', slug: 'guides/affected-tests' },
 					],
 				},
 				{
-					label: 'Reference',
+					label: '参考',
 					items: [
-						{ label: 'MCP Server', slug: 'reference/mcp-server' },
-						{ label: 'Integrations', slug: 'reference/integrations' },
+						{ label: 'MCP 服务器', slug: 'reference/mcp-server' },
+						{ label: '集成', slug: 'reference/integrations' },
 						{ label: 'CLI', slug: 'reference/cli' },
 						{ label: 'API', slug: 'reference/api' },
-						{ label: 'Languages', slug: 'reference/languages' },
+						{ label: '语言支持', slug: 'reference/languages' },
 					],
 				},
-				{ label: 'Troubleshooting', slug: 'troubleshooting' },
+				{ label: '故障排查', slug: 'troubleshooting' },
 			],
 		}),
 	],

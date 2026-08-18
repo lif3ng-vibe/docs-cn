@@ -16,7 +16,7 @@ The interactive installer auto-detects and configures each supported agent — w
 - **Antigravity IDE**
 - **Kiro**
 
-Run `npx @colbymchenry/codegraph` and pick your agent(s); see [Installation](/codegraph/getting-started/installation/) for the non-interactive flags.
+Run `npx @colbymchenry/codegraph` and pick your agent(s); see [Installation](/getting-started/installation/) for the non-interactive flags.
 
 ## Manual setup
 

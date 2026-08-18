@@ -28,7 +28,7 @@ codegraph version                 # Print the installed version (also -v, --vers
 codegraph help [command]          # Show help, optionally for one command
 ```
 
-The MCP server (`codegraph serve --mcp`) is launched automatically by your agent — you don't run it by hand. See [MCP Server](/codegraph/reference/mcp-server/).
+The MCP server (`codegraph serve --mcp`) is launched automatically by your agent — you don't run it by hand. See [MCP Server](/reference/mcp-server/).
 
 ## init, index, and sync
 
@@ -48,4 +48,4 @@ codegraph impact AuthMiddleware --depth 3
 
 ## affected
 
-Traces import dependencies transitively to find which test files are affected by changed source files. See [Affected Tests in CI](/codegraph/guides/affected-tests/) for options and a CI example.
+Traces import dependencies transitively to find which test files are affected by changed source files. See [Affected Tests in CI](/guides/affected-tests/) for options and a CI example.

@@ -24,7 +24,7 @@ Your agent starts the server itself, so you don't launch it by hand. Make sure t
 
 ## Missing symbols
 
-The MCP server auto-syncs on save (wait a couple of seconds). Run `codegraph sync` manually if needed. Check that the file's language is [supported](/codegraph/reference/languages/) and isn't inside a `.gitignore`d or default-excluded directory (e.g. `node_modules`, `dist`).
+The MCP server auto-syncs on save (wait a couple of seconds). Run `codegraph sync` manually if needed. Check that the file's language is [supported](/reference/languages/) and isn't inside a `.gitignore`d or default-excluded directory (e.g. `node_modules`, `dist`).
 
 ## Sharing one checkout between Windows and WSL
 

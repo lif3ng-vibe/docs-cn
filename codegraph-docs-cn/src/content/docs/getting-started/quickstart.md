@@ -36,4 +36,4 @@ codegraph init
 
 `codegraph init` creates the local `.codegraph/` directory and builds the full graph in the same step — one command, done. Your agent will use CodeGraph tools automatically when a `.codegraph/` directory exists.
 
-Next: build [Your First Graph](/codegraph/getting-started/your-first-graph/), or see the full [Installation](/codegraph/getting-started/installation/) options.
+Next: build [Your First Graph](/getting-started/your-first-graph/), or see the full [Installation](/getting-started/installation/) options.
