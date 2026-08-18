@@ -1,25 +1,25 @@
 ---
-title: Installation
-description: Install CodeGraph and configure your AI coding agents.
+title: 安装
+description: 安装 CodeGraph 并配置你的 AI 编码智能体。
 ---
 
-## 1. Run the installer
+## 1. 运行安装器
 
 ```bash
 npx @colbymchenry/codegraph
 ```
 
-The installer will:
+安装器会：
 
-- Ask which agent(s) to configure — auto-detecting installed ones from **Claude Code**, **Cursor**, **Codex CLI**, **opencode**, **Hermes Agent**, **Gemini CLI**, **Antigravity IDE**, and **Kiro**.
-- Prompt to install `codegraph` on your `PATH` (so agents can launch the MCP server).
-- Ask whether configs apply to all your projects or just this one.
-- Write each chosen agent's MCP server config, plus a small marker-fenced CodeGraph section in the agent's instructions file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`). Cursor and Kiro get the MCP config only. Removed cleanly by `codegraph uninstall`.
-- Set up auto-allow permissions when Claude Code is one of the targets.
+- 询问要配置哪些智能体——从 **Claude Code**、**Cursor**、**Codex CLI**、**opencode**、**Hermes Agent**、**Gemini CLI**、**Antigravity IDE** 和 **Kiro** 中自动检测已安装者。
+- 提示是否把 `codegraph` 安装到你的 `PATH`（以便智能体能够启动 MCP 服务器）。
+- 询问配置作用于你的所有项目，还是仅当前项目。
+- 为每个选定的智能体写入 MCP 服务器配置，并在其指令文件（`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`）中写入一小段由标记围起来的 CodeGraph 区块。Cursor 和 Kiro 只写入 MCP 配置。这些内容都可由 `codegraph uninstall` 干净移除。
+- 当 Claude Code 是目标之一时，配置自动放行（auto-allow）权限。
 
-The installer **wires up your agents only — it does not index your code.** After it finishes, build each project's graph yourself with `codegraph init` (step 3 below).
+安装器**只负责接通你的智能体——它不会索引你的代码。**安装完成后，请自行运行 `codegraph init` 为每个项目构建图谱（见下面第 3 步）。
 
-## Non-interactive (scripting / CI)
+## 非交互式（脚本 / CI）
 
 ```bash
 codegraph install --yes                              # auto-detect agents, install global
@@ -28,43 +28,43 @@ codegraph install --target=auto --location=local     # detected agents, project-
 codegraph install --print-config codex               # print snippet, no file writes
 ```
 
-| Flag | Values | Default |
+| 标志 | 取值 | 默认行为 |
 |---|---|---|
-| `--target` | `auto`, `all`, `none`, or csv (`claude,cursor,…`) | prompt |
-| `--location` | `global`, `local` | prompt |
-| `--yes` | (boolean) | prompt every step |
-| `--no-permissions` | (boolean) skip Claude auto-allow list | permissions on |
-| `--print-config <id>` | dump snippet for one agent and exit | — |
+| `--target` | `auto`、`all`、`none` 或逗号分隔列表（`claude,cursor,…`） | 询问 |
+| `--location` | `global`、`local` | 询问 |
+| `--yes` | （布尔值） | 每一步都询问 |
+| `--no-permissions` | （布尔值）跳过 Claude 自动放行列表 | 权限默认开启 |
+| `--print-config <id>` | 打印指定智能体的配置片段后退出 | — |
 
-## 2. Restart your agent
+## 2. 重启你的智能体
 
-Restart your agent (Claude Code / Cursor / Codex CLI / opencode / Hermes Agent / Gemini CLI / Antigravity IDE / Kiro) for the MCP server to load.
+重启你的智能体（Claude Code / Cursor / Codex CLI / opencode / Hermes Agent / Gemini CLI / Antigravity IDE / Kiro），让 MCP 服务器加载生效。
 
-## 3. Initialize projects
+## 3. 初始化项目
 
 ```bash
 cd your-project
 codegraph init
 ```
 
-`codegraph init` creates the local `.codegraph/` directory and builds the full graph in the same step — one command. A single global `codegraph install` covers every project; you run `codegraph init` once per project.
+`codegraph init` 会创建本地 `.codegraph/` 目录，并在同一步完成全量图谱的构建——一条命令搞定。全局执行一次 `codegraph install` 即可覆盖所有项目；而 `codegraph init` 需要每个项目各运行一次。
 
-## Supported platforms
+## 支持的平台
 
-Every release ships a self-contained build (bundled Node runtime — nothing to compile) for all three desktop OSes, on both x64 and arm64:
+每个发布版本都为三大桌面操作系统提供自包含的构建（内置 Node 运行时——无需编译），x64 和 arm64 架构均有覆盖：
 
-| Platform | Architectures | Install |
+| 平台 | 架构 | 安装方式 |
 |---|---|---|
-| Windows | x64, arm64 | PowerShell installer or npm |
-| macOS | x64, arm64 | shell installer or npm |
-| Linux | x64, arm64 | shell installer or npm |
+| Windows | x64, arm64 | PowerShell 安装脚本或 npm |
+| macOS | x64, arm64 | shell 安装脚本或 npm |
+| Linux | x64, arm64 | shell 安装脚本或 npm |
 
-## Uninstall
+## 卸载
 
-Changed your mind? One command removes CodeGraph from every agent it configured:
+改变主意了？一条命令即可把 CodeGraph 从它配置过的每个智能体中移除：
 
 ```bash
 codegraph uninstall
 ```
 
-This reverses the installer — stripping CodeGraph's MCP server config, instructions, and permissions from each configured agent. Your project indexes (`.codegraph/`) are left untouched; remove those per-project with `codegraph uninit`. Use `--target` to remove from specific agents, or `--yes` to run non-interactively.
+这条命令会逆向执行安装器的操作——从每个已配置的智能体中剥离 CodeGraph 的 MCP 服务器配置、指令区块和权限。项目的索引（`.codegraph/`）不受影响；如需移除，请在各项目内运行 `codegraph uninit`。可用 `--target` 指定从哪些智能体移除，或用 `--yes` 非交互式执行。

@@ -1,34 +1,34 @@
 ---
-title: Introduction
-description: What CodeGraph is, and why it makes AI coding agents faster and more precise.
+title: 简介
+description: CodeGraph 是什么，以及它为什么能让 AI 编码智能体更快、更精准。
 ---
 
-CodeGraph is a **local-first code-intelligence tool**. It parses your codebase with [tree-sitter](https://tree-sitter.github.io/), stores every symbol, edge, and file in a local SQLite database, and exposes the result as a queryable **knowledge graph** — over the [Model Context Protocol (MCP)](/reference/mcp-server/), a CLI, and a TypeScript library.
+CodeGraph 是一款**本地优先的代码智能工具**。它用 [tree-sitter](https://tree-sitter.github.io/) 解析你的代码库，把每一个符号、边和文件存入本地 SQLite 数据库，并将结果以可查询的**知识图谱**的形式暴露出来——通过[模型上下文协议（MCP）](/reference/mcp-server/)、CLI 和 TypeScript 库三种途径。
 
-It exists to make AI coding agents — Claude Code, Cursor, Codex CLI, opencode, Hermes Agent, Gemini CLI, Antigravity IDE, and Kiro — **answer structural questions without scanning files**. Instead of fanning out across `grep`, `glob`, and `Read` to reconstruct how code fits together, an agent queries a pre-built index and gets the answer in a handful of calls.
+它的存在，是为了让 AI 编码智能体——Claude Code、Cursor、Codex CLI、opencode、Hermes Agent、Gemini CLI、Antigravity IDE 和 Kiro——**无需扫描文件就能回答结构性问题**。智能体不必再靠 `grep`、`glob` 和 `Read` 层层展开、重新拼凑代码之间的组织关系，而是直接查询一份预构建的索引，几次调用就能拿到答案。
 
-## Why it matters
+## 为什么重要
 
-When an agent explores a codebase, it spends most of its budget on *discovery* — finding the right files before it can read them. CodeGraph removes that step: it hands the agent the exact code it needs in one call, so symbol relationships, call graphs, and structure don't have to be rebuilt file by file.
+智能体在探索一个代码库时，大部分预算都花在*发现*环节——先找到正确的文件，然后才能去读。CodeGraph 把这一步整个去掉：一次调用就把智能体需要的确切代码递到它手上，符号关系、调用图和整体结构都不必再逐个文件重建。
 
-The universal win is **surgical context and speed** — fewer tool calls, faster answers, on every codebase. Tested across 7 real-world open-source codebases (median of 4 runs per arm), giving an agent CodeGraph meant, regardless of repo size:
+最具普适性的收益是**精准的上下文与速度**——在任何代码库上，工具调用更少，答案来得更快。在 7 个真实开源代码库上测试（每组各运行 4 次、取中位数），无论仓库大小，给智能体接上 CodeGraph 都意味着：
 
-- **58% fewer tool calls**
-- **22% faster**
-- **file reads cut to ~zero**
+- **工具调用减少 58%**
+- **提速 22%**
+- **文件读取降到约零次**
 
-Token and dollar savings are real too, but they're the **scale-dependent bonus** that shows up on large, tangled codebases run at volume — small and noisy on a modest repo, material only once the codebase (and the team) gets big.
+Token 和费用的节省同样真实存在，但那是**随规模显现的红利**——只有大型、盘根错节且高频使用的代码库才能明显体会到；在规模适中的仓库上数字小且带噪声，要等代码库（和团队）变大之后才真正可观。
 
-## What's in the graph
+## 图谱里有什么
 
-- **Symbols** — functions, classes, methods, types, routes, components, and more.
-- **Edges** — calls, imports, inheritance, references, and framework-specific relationships.
-- **Files** — structure plus full-text search (FTS5).
+- **符号**——函数、类、方法、类型、路由、组件等。
+- **边**——调用、导入、继承、引用，以及框架特有的关系。
+- **文件**——结构信息外加全文检索（FTS5）。
 
-Extraction is **deterministic** — derived from the AST, never LLM-summarized.
+提取是**确定性的**——全部由 AST 推导，绝不经过 LLM 摘要。
 
-## 100% local
+## 100% 本地
 
-No data leaves your machine. No API keys, no external services — just a SQLite database in `.codegraph/`.
+任何数据都不会离开你的机器。不需要 API 密钥，不依赖外部服务——只有 `.codegraph/` 里的一个 SQLite 数据库。
 
-Ready to try it? Head to the [Quickstart](/getting-started/quickstart/).
+准备试试？前往[快速开始](/getting-started/quickstart/)。
