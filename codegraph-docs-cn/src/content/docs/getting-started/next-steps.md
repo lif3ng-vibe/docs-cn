@@ -15,7 +15,7 @@ CodeGraph 已装好，图谱已建成。接下来可以去这些地方。
 
 - [索引一个项目](/guides/indexing/)——全量索引、增量同步与文件监听器。
 - [框架路由](/guides/framework-routes/)——把 URL 模式关联到对应的处理函数。
-- [CI 中的受影响测试](/guides/affected-tests/)——只运行一次变更所波及的测试。
+- [CI 中的受影响测试](/guides/affected-tests/)——只运行某次变更所波及的测试。
 
 ## 参考
 

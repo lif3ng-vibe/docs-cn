@@ -29,7 +29,7 @@ codegraph status
 
 ## 运行查询
 
-优先用 `codegraph explore`——一句自然语言问题或一组符号名，一次调用就能拿到相关源码以及这些符号之间的调用路径（与 `codegraph_explore` 工具提供给你智能体的输出完全相同）：
+优先用 `codegraph explore`——一句自然语言问题或一组符号名，一次调用就能拿到相关源码以及这些符号之间的调用路径（与 `codegraph_explore` 工具提供给智能体的输出完全相同）：
 
 ```bash
 codegraph explore "how does login work"
