@@ -7,6 +7,8 @@
 
 ## 本地运行
 
+前置要求：Node.js ≥ 22.12。
+
 ```bash
 npm install
 npm run dev      # http://localhost:4321/

@@ -65,7 +65,7 @@ The rest of this response is fresh.
 
 ### 核验监听器看到了什么
 
-`codegraph_status` 把待处理集合作为一等信息公开——智能体想一次调用就问清“索引追上了吗”时正好用得上：
+`codegraph_status` 完整公开待处理集合——智能体想一次调用就问清“索引追上了吗”时正好用得上：
 
 ```
 codegraph_status →

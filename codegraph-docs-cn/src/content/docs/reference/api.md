@@ -39,7 +39,7 @@ cg.close();
 | `sync()` | 增量更新 |
 | `searchNodes(query)` | 符号全文搜索 |
 | `getCallers(id)` / `getCallees(id)` | 沿调用图遍历 |
-| `getImpactRadius(id, depth)` | 某次变更的传递影响 |
+| `getImpactRadius(id, depth)` | 某次变更的影响半径 |
 | `buildContext(task, opts)` | 面向 AI 的 Markdown / JSON 上下文 |
 | `watch()` / `unwatch()` | 启动 / 停止文件监听器 |
 | `close()` | 关闭数据库连接 |
