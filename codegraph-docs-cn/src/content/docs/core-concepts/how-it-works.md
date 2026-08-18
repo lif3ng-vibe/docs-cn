@@ -1,9 +1,9 @@
 ---
-title: How It Works
-description: The extraction, storage, resolution, and auto-sync pipeline.
+title: 工作原理
+description: 提取、存储、解析与自动同步的四段流水线。
 ---
 
-CodeGraph turns source code into a queryable graph in four stages.
+CodeGraph 分四个阶段把源代码变成一张可查询的图谱。
 
 ```
 files → Extraction (tree-sitter) → DB (nodes/edges/files)
@@ -15,18 +15,18 @@ files → Extraction (tree-sitter) → DB (nodes/edges/files)
       Context building (markdown / JSON for AI consumption)
 ```
 
-## 1. Extraction
+## 1. 提取
 
-[tree-sitter](https://tree-sitter.github.io/) parses source into ASTs. Language-specific queries extract **nodes** (functions, classes, methods, types…) and **edges** (calls, imports, extends, implements). Heavy parsing runs off the main thread.
+[tree-sitter](https://tree-sitter.github.io/) 把源码解析成 AST，再由针对各语言的查询从中提取**节点**（函数、类、方法、类型等）和**边**（调用、导入、继承、实现）。繁重的解析都在主线程之外进行。
 
-## 2. Storage
+## 2. 存储
 
-Everything goes into a local SQLite database (`.codegraph/codegraph.db`) with FTS5 full-text search, using Node's built-in `node:sqlite` in WAL mode from the bundled runtime.
+所有内容都存入本地 SQLite 数据库（`.codegraph/codegraph.db`），自带 FTS5 全文检索，底层通过捆绑运行时中 Node 内置的 `node:sqlite` 以 WAL 模式运行。
 
-## 3. Resolution
+## 3. 引用解析
 
-After extraction, references are resolved: function calls → definitions, imports → source files, class inheritance, and framework-specific patterns. Some dynamic-dispatch boundaries (callbacks, observers, React re-render, JSX children) are bridged by synthesizers so flows connect end-to-end. See [Resolution & Frameworks](/core-concepts/resolution/).
+提取完成后，各类引用会被解析：函数调用 → 定义、导入 → 源文件，外加类继承和框架特有的模式。一些动态派发边界（回调、观察者、React 重渲染、JSX 子组件）由合成器桥接，让流程端到端连通。详见[解析与框架](/core-concepts/resolution/)。
 
-## 4. Auto-sync
+## 4. 自动同步
 
-The MCP server watches your project using native OS file events (FSEvents / inotify / ReadDirectoryChangesW). Changes are debounced, filtered to source files, and incrementally synced — the graph stays fresh as you code, with no configuration.
+MCP 服务器借助操作系统原生文件事件（FSEvents / inotify / ReadDirectoryChangesW）监听你的项目。变更先经防抖，再过滤出源文件，然后增量同步——你写代码的同时图谱始终保持最新，无需任何配置。
