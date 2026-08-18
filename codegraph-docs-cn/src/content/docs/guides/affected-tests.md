@@ -1,6 +1,6 @@
 ---
 title: CI 中的受影响测试
-description: 只运行一次变更真正触及的测试。
+description: 只运行某次变更真正触及的测试。
 ---
 
 `codegraph affected` 会沿导入依赖传递追踪，找出一组已变更的源文件会波及哪些测试文件——CI 因此可以只运行相关的测试。
