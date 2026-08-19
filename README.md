@@ -33,12 +33,21 @@ npm run preview      # 预览构建产物
 
 ```
 docs-cn/
-├── index.html             # GitHub Pages 入口页（列出所有子站）
+├── sites.json             # 子站点清单（入口页数据源）
+├── scripts/gen-index.cjs  # 由 sites.json 生成入口页 index.html
+├── index.html             # 入口页（由脚本生成，勿手改）
 ├── .github/workflows/     # Pages 部署 CI
 ├── codegraph-docs-cn/     # codegraph 中文文档（Starlight）
 ├── orca-docs-cn/          # Orca 中文文档（Starlight）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
+
+## 新增一个翻译站点
+
+1. 新建子目录（如 `foo-docs-cn/`），完成翻译站点。
+2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL" }`。
+3. 在 `.github/workflows/deploy-pages.yml` 加一段构建步骤（以 `DOCS_BASE=/docs-cn/foo/` 构建，构建前 `sed` 给正文内链加前缀），并在 Assemble 步骤里 `mv foo-docs-cn/dist _site/foo`。
+4. 本地跑 `node scripts/gen-index.cjs` 刷新 `index.html`，提交。
 
 ## 本地开发 vs GitHub Pages 部署
 
@@ -56,10 +65,11 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 
 推送到 `master` 即触发 `.github/workflows/deploy-pages.yml`，在 Linux runner 上：
 
-1. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
-2. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
-3. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`。
-4. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
+1. 用 `sites.json` 生成入口页 `index.html`。
+2. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
+3. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
+4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`。
+5. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
 
 部署后访问地址：
 - 入口：https://lif3ng-vibe.github.io/docs-cn/

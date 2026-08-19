@@ -53,7 +53,8 @@ jobs:
       - name: Assemble Pages artifact
         run: |
           mkdir -p _site
-          # 入口页放根
+          # 入口页由 sites.json 生成（加新站点改 sites.json 即可）
+          node scripts/gen-index.cjs
           cp index.html _site/
           # 子站点分别放子目录
           mv codegraph-docs-cn/dist _site/codegraph

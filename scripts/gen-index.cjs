@@ -1,4 +1,29 @@
-<!doctype html>
+#!/usr/bin/env node
+/**
+ * gen-index.cjs — 读 sites.json 生成入口页 index.html。
+ * CI 和本地都用它：加新站点只需改 sites.json，重跑此脚本。
+ * 中文文档链接用相对路径（slug/），CI 下从 /docs-cn/ 解析为 /docs-cn/<slug>/，本地根路径也正确。
+ */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const sites = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sites.json'), 'utf8'));
+
+const cards = sites
+	.map(
+		(s) => `
+			<div class="item">
+				<a class="row" href="${s.slug}/" target="_blank" rel="noopener">
+					<p class="name">${s.name}</p>
+					<p class="desc">${s.desc}</p>
+				</a>
+				<a class="orig" href="${s.orig}" target="_blank" rel="noopener">原文档</a>
+			</div>`
+	)
+	.join('');
+
+const html = `<!doctype html>
 <html lang="zh-CN">
 	<head>
 		<meta charset="utf-8" />
@@ -118,21 +143,7 @@
 		<div class="wrap">
 			<h1>docs-cn</h1>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<div class="list">
-			<div class="item">
-				<a class="row" href="codegraph/" target="_blank" rel="noopener">
-					<p class="name">codegraph</p>
-					<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
-				</a>
-				<a class="orig" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">原文档</a>
-			</div>
-			<div class="item">
-				<a class="row" href="orca/" target="_blank" rel="noopener">
-					<p class="name">Orca</p>
-					<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
-				</a>
-				<a class="orig" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">原文档</a>
-			</div>
+			<div class="list">${cards}
 			</div>
 			<footer>
 				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
@@ -140,3 +151,8 @@
 		</div>
 	</body>
 </html>
+`;
+
+const out = path.join(__dirname, '..', 'index.html');
+fs.writeFileSync(out, html, 'utf8');
+console.log(`generated ${out} with ${sites.length} site(s)`);

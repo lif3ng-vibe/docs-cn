@@ -1,0 +1,14 @@
+[
+  {
+    "name": "codegraph",
+    "slug": "codegraph",
+    "desc": "把代码库解析成可供 AI 智能体查询的知识图谱。",
+    "orig": "https://colbymchenry.github.io/codegraph/"
+  },
+  {
+    "name": "Orca",
+    "slug": "orca",
+    "desc": "跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。",
+    "orig": "https://www.onorca.dev/docs"
+  }
+]
