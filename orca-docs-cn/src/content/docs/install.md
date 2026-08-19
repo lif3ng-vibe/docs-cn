@@ -4,10 +4,6 @@ description: "下载 macOS、Windows 或 Linux 版 Orca，并选择加入 RC 构
 source: "https://www.onorca.dev/docs/install"
 ---
 
-# 安装
-
-下载 macOS、Windows 或 Linux 版 Orca，并选择加入 RC 构建。
-
 ## 下载
 
 Orca 是一款桌面应用。把下面的链接发给自己，在 macOS、Windows 或 Linux 上打开：

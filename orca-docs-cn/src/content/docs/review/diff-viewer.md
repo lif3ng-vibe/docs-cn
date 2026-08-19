@@ -4,8 +4,6 @@ description: "Diff 查看器——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/diff-viewer"
 ---
 
-# Diff 查看器
-
 Orca 的 Diff 查看器为认真评审 AI 生成的代码而设计——不是扫一眼了事。每个 worktree 都内置了相对其起始引用（start-from ref）的 diff。
 
 ## 功能特性

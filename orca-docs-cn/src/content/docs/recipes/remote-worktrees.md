@@ -4,8 +4,6 @@ description: "通过 SSH 在远程机器上工作——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/remote-worktrees"
 ---
 
-# 通过 SSH 在远程机器上工作
-
 把 Orca 指向任意 SSH 目标——更强的开发机、GPU 主机、云沙箱——用起来就像本地 worktree。同样的编辑器、同样的 diff 视图、同样的智能体，只是算力不同。你可以打开远程仓库，*或者*只打开任意文件夹。本地 / SSH / 服务器 / 临时虚拟机等全部运行方式的清单，参见 [Orca 的运行方式](/ways-to-run)。
 
 ## 设置

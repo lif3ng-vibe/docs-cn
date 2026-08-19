@@ -4,10 +4,6 @@ description: "退出 Orca、重新打开，然后从你离开的地方继续—�
 source: "https://www.onorca.dev/docs/model/session-restore"
 ---
 
-# 会话恢复
-
-退出 Orca、重新打开，然后从你离开的地方继续——worktree、分屏、回滚缓冲区、聚焦的标签页。
-
 关闭 Orca 后，下一次启动会复原整个工作区：每个打开的 worktree、每个终端分屏、每个窗格中的回滚缓冲区（scrollback），以及你聚焦过的标签页。哪些智能体跑在哪些分支上不该由你来记——那是 Orca 的事。
 
 重启 Orca，会话——终端、分屏、回滚缓冲区、聚焦的标签页——原样归来。

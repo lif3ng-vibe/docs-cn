@@ -4,8 +4,6 @@ description: "托管评审、议题与 Actions——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/github"
 ---
 
-# 托管评审、议题与 Actions
-
 托管代码评审是 worktree 的一等能力。Orca 把 worktree 与它们的 PR 或合并请求关联起来，就地呈现评审状态，还能让你不离开应用就分诊议题。
 
 *GitHub 集成——不离开 worktree 即可打开 PR、关注检查并分诊议题。*

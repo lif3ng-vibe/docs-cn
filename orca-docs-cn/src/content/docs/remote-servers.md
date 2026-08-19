@@ -4,10 +4,6 @@ description: "让 Orca 在另一台计算机上持续运行，从你的笔记本
 source: "https://www.onorca.dev/docs/remote-servers"
 ---
 
-# 远程服务器
-
-让 Orca 在另一台计算机上持续运行，从你的笔记本电脑连接。
-
 远程 Orca 服务器让一台计算机干活、另一台计算机提供 UI。服务器持有项目、worktree、终端、标签页、提供商账号与智能体会话。你的笔记本电脑连接到那个运行中的 Orca 实例。
 
 最简单的方案是两台机器都装 Orca 桌面应用，通过 [Tailscale](https://tailscale.com/) 连接。这条路不需要运行 `orca serve`。

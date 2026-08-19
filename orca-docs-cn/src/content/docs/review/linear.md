@@ -4,8 +4,6 @@ description: "Linear 事项抽屉——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/linear"
 ---
 
-# Linear 事项抽屉
-
 Linear 与各托管评审服务商并排出现在任务抽屉中。浏览、创建、更新 Linear 事项并把它们关联到 worktree，方式与关联 GitHub 议题相同。
 
 ## 设置

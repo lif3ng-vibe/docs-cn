@@ -4,8 +4,6 @@ description: "通知与收件箱——智能体完成提醒、常驻铃铛与自
 source: "https://www.onorca.dev/docs/notifications"
 ---
 
-# 通知
-
 $undefined
 
 Orca 运行的是智能体而不只是终端，因此它能分辨智能体是真的完成还是只是暂停。通知依托这一信号，让你可以排三个智能体、走开，等第一个完成再回来。

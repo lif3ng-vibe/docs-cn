@@ -4,8 +4,6 @@ description: "Worktree 检查点——用 worktree 评论字段记录进度快�
 source: "https://www.onorca.dev/docs/cli/worktree-checkpoints"
 ---
 
-# Worktree 检查点
-
 $undefined
 
 每个 Orca worktree 都带一个轻量的自由文本**评论（comment）**字段，在 UI 中可见——它是 worktree 当前所做工作的状态快照。智能体可以从 CLI 更新它；这是我们把人类协作者保持在环内、又不必强求聊天的推荐模式。

@@ -4,8 +4,6 @@ description: "归属——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/attribution"
 ---
 
-# 归属
-
 Orca 会在它看到智能体改动的每一行上追踪来源，因此阅读 diff 时一眼就能分辨哪些行是人写的、哪些来自 AI。
 
 ## 工作原理

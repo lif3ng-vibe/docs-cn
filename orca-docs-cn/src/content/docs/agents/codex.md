@@ -4,8 +4,6 @@ description: "Codex 是 Orca 中集成最深的智能体之一——用量、热
 source: "https://www.onorca.dev/docs/agents/codex"
 ---
 
-# 在 Orca 中使用 Codex
-
 Codex 是 OpenAI 的智能体 CLI。Orca 对 Codex 的集成是全应用最深的一档——用量、热切换与重启全程保持账号身份。
 
 ## 安装

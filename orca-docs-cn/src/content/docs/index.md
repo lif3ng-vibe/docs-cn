@@ -4,10 +4,6 @@ description: "60 秒介绍：Orca 适合谁、什么时候该用它。"
 source: "https://www.onorca.dev/docs"
 ---
 
-# Orca 是什么？
-
-60 秒介绍：Orca 适合谁、什么时候该用它。
-
 Orca 是一个桌面 IDE，用于并行运行多个 AI 编码智能体。每个任务都有自己独立的 git worktree（工作树）、自己的智能体终端和自己的浏览器标签页——你可以把工作分发给 Claude Code、Codex、Cursor CLI 等多个智能体，而不必来回 stash、折腾分支，也不会打断心流。
 
 Orca 主窗口：worktree 侧边栏、带智能体终端和 diff 视图的分屏窗格

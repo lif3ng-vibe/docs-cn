@@ -4,10 +4,6 @@ description: "让 Orca 暂停闲置的后台智能体终端，并在你重新打
 source: "https://www.onorca.dev/docs/agents/hibernation"
 ---
 
-# 智能体休眠
-
-让 Orca 暂停闲置的后台智能体终端，并在你重新打开 worktree 时自动恢复。
-
 同时开着几十个 worktree 时，闲置的智能体会不断累积——每一个都是一个在内存中托着模型会话的活跃 PTY。智能体休眠让 Orca 在终端完成且长时间无人触碰后悄悄停掉它们，等你下次打开 worktree 时再恢复同一会话。
 
 > **实验性**：智能体休眠默认关闭。在我们继续打磨安全模型期间，可在 **Settings → Experimental → Agent hibernation**（设置 → 实验 → 智能体休眠）中开启。

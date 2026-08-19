@@ -4,10 +4,6 @@ description: "从 shell 驱动 Orca 的命令、选择器与适合智能体的�
 source: "https://www.onorca.dev/docs/cli/reference"
 ---
 
-# CLI 参考
-
-从 shell 驱动 Orca 的命令、选择器与适合智能体的使用模式。
-
 `orca` CLI 与运行中的 Orca 运行时通信。当 shell 脚本或智能体需要检查 worktree、启动终端、打开文件、自动化内置浏览器，或把进度回报给 Orca 时使用它。
 
 ## 验证运行时

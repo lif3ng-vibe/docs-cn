@@ -4,8 +4,6 @@ description: "在 Orca 中提交与推送——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/commit-push"
 ---
 
-# 在 Orca 中提交与推送
-
 你可以提交、推送并打开评审，全程不必离开 Orca。提交面板位于 Diff 查看器旁边，为最常见的流程而设计——评审、暂存、提交、推送、继续下一项。
 
 ## 提交

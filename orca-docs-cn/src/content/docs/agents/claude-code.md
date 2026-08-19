@@ -4,8 +4,6 @@ description: "Claude Code 作为 Orca 的一等终端智能体运行——账号
 source: "https://www.onorca.dev/docs/agents/claude-code"
 ---
 
-# 在 Orca 中使用 Claude Code
-
 Claude Code 是 Anthropic 的智能体 CLI。Orca 将其作为一等终端智能体运行，提供账号感知的会话启动、用量追踪和账号热切换。
 
 ## 安装

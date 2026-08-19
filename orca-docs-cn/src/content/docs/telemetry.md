@@ -4,10 +4,6 @@ description: "Orca 收集哪些匿名使用数据、绝不收集什么，以及�
 source: "https://www.onorca.dev/docs/telemetry"
 ---
 
-# 隐私与遥测
-
-Orca 收集哪些匿名使用数据、绝不收集什么，以及如何退出。
-
 本页说明我们在打包版 Orca 中收集的匿名产品使用遥测（telemetry）、我们绝不收集的内容，以及如何退出。
 
 ## 摘要

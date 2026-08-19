@@ -4,10 +4,6 @@ description: "状态圆点、Restart 卡片，以及一个智能体会话的完�
 source: "https://www.onorca.dev/docs/model/agents-sessions"
 ---
 
-# 智能体与会话
-
-状态圆点、Restart 卡片，以及一个智能体会话的完整生命周期。
-
 一个**智能体会话（agent session）**是运行在一个 worktree 的一个终端中的一个 CLI 智能体。Orca 会跟踪其生命周期，让你随时知道哪些会话在工作、哪些在闲置——不必逐个点进标签页检查。
 
 每张 worktree 卡片上的内联智能体状态——工作时黄色，完成时绿色

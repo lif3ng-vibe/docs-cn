@@ -4,8 +4,6 @@ description: "故障排查与常见问题——Orca 文档。"
 source: "https://www.onorca.dev/docs/troubleshooting"
 ---
 
-# 故障排查与常见问题
-
 ## 智能体无法启动
 
 - 打开终端，手动运行该智能体的 CLI。如果在那里也失败，问题出在 CLI 本身的认证或安装上——与 Orca 无关。

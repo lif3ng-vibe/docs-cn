@@ -4,10 +4,6 @@ description: "Cmd-J 跨 worktree、最近记录和标签页的范围跳转。"
 source: "https://www.onorca.dev/docs/model/quick-open"
 ---
 
-# 快速打开与跳转面板
-
-Cmd-J 跨 worktree、最近记录和标签页的范围跳转。
-
 一旦 worktree 多到一屏放不下，导航就成了瓶颈。Orca 内置两个键盘优先的导航工具。
 
 ## 快速打开（Cmd-P）

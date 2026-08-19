@@ -4,8 +4,6 @@ description: "设计模式——点击页面元素，直接把 DOM、计算样�
 source: "https://www.onorca.dev/docs/browser/design-mode"
 ---
 
-# 设计模式
-
 $undefined
 
 设计模式把 Orca 浏览器变成"指针到代码"的工具。打开它，点击渲染页面上任意 UI 元素，该元素就会作为富上下文落入智能体对话——附带它的 DOM、计算样式和一张截图。

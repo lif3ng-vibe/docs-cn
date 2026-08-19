@@ -4,8 +4,6 @@ description: "Mermaid、PDF 与图片查看器——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/viewers"
 ---
 
-# Mermaid、PDF 与图片查看器
-
 Orca 为大多数仓库里常见的格式内置了查看器。
 
 ## Mermaid

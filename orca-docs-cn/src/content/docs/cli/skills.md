@@ -4,10 +4,6 @@ description: "用 npx skills add 安装 Orca 智能体技能。混合桩保持�
 source: "https://www.onorca.dev/docs/cli/skills"
 ---
 
-# 技能
-
-用 npx skills add 安装 Orca 智能体技能。混合桩保持轻量；orca skills get 提供与版本匹配的指南。Orca 支持在后台更新技能。
-
 Orca 自带**技能（skills）**，供智能体安装到各自的技能目录。公开的安装包是**混合发现桩（hybrid discovery stub）**：简短的 `SKILL.md` 文件，告诉智能体*何时*调用 Orca，以及如何从运行中的 CLI 加载完整指南。命令标志放在二进制里，因此不会与应用版本脱节。
 
 ## 可安装的 Orca 技能

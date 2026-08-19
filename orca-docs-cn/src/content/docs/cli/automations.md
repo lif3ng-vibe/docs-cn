@@ -4,8 +4,6 @@ description: "计划自动化——用 CLI 按时间表运行提示词。"
 source: "https://www.onorca.dev/docs/cli/automations"
 ---
 
-# 自动化
-
 $undefined
 
 Orca 自动化让你从 CLI 按计划运行一条提示词，因此周期性的分诊、评审与维护任务无需手动打开 worktree 就能启动。读完本页，你将创建一个处于禁用状态的自动化，检查它，并在准备就绪时运行它。

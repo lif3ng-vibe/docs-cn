@@ -4,10 +4,6 @@ description: "使用 Orca CLI 在终端中脚本化驱动 Orca：管理 worktree
 source: "https://www.onorca.dev/docs/cli/overview"
 ---
 
-# CLI 概览
-
-使用 Orca CLI 在终端中脚本化驱动 Orca：管理 worktree、控制智能体终端、自动化内置浏览器、安装智能体技能。
-
 Orca CLI 是 `orca` 命令行接口，用于在任意 shell 中脚本化驱动正在运行的 Orca 编辑器。可以用它创建和检查 worktree（工作树）、驱动智能体终端、打开文件与 Diff、自动化内置浏览器、运行计划内自动化任务、分享 HTML/Markdown artifact，并在脚本或 AI 智能体中控制 Orca 原生工具。
 
 它随桌面应用一并提供；在 [Settings → General → Orca CLI](/settings) 中注册。

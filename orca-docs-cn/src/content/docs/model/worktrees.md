@@ -4,10 +4,6 @@ description: "Orca 如何把每个功能或 bug 变成一个独立的 git worktr
 source: "https://www.onorca.dev/docs/model/worktrees"
 ---
 
-# Worktree
-
-Orca 如何把每个功能或 bug 变成一个独立的 git worktree。
-
 Orca 是 worktree 原生的。它不在单一检出上反复分支和 stash，而是通过 `git worktree` 让每个任务都拥有仓库自己的磁盘副本。这正是并行智能体安全的原因——它们绝不会互相踩踏文件。
 
 ## 模型

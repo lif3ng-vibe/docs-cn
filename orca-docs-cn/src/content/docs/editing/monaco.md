@@ -4,8 +4,6 @@ description: "Monaco 编辑器与自动保存——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/monaco"
 ---
 
-# Monaco 编辑器与自动保存
-
 Orca 的代码编辑器是 Monaco——与 VS Code 同款——外加一些 Orca 特有的调整。
 
 ## 自动保存

@@ -4,8 +4,6 @@ description: "SSH worktree——通过 SSH 在远程机器上运行智能体，�
 source: "https://www.onorca.dev/docs/ssh"
 ---
 
-# SSH
-
 $undefined
 
 Orca 可以通过 SSH 在远程机器上驱动智能体——适合长时间构建、GPU 主机，或任何不适合在你的笔记本上跑工作的环境。

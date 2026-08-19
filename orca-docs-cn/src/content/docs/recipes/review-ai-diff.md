@@ -4,8 +4,6 @@ description: "逐行评审 AI diff——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/review-ai-diff"
 ---
 
-# 逐行评审 AI diff
-
 认真评审 AI diff，是快速发布与发布 bug 之间的分水岭。流程如下。
 
 ## 步骤

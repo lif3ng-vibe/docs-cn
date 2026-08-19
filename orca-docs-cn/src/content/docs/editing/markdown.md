@@ -4,8 +4,6 @@ description: "富文本 Markdown 编辑器——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/markdown"
 ---
 
-# 富文本 Markdown 编辑器
-
 Markdown 文件默认在富文本编辑器中打开——斜杠菜单、工具栏、图片和代码的行内预览、内链自动补全。随时可用 `Cmd-Shift-M` 切换到原始 Monaco。
 
 *富文本 Markdown 编辑器——斜杠菜单、行内预览、内链自动补全*

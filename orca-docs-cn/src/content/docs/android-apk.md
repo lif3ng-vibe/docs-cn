@@ -4,10 +4,6 @@ description: "在 Android 上下载并安装 Orca 移动版。"
 source: "https://www.onorca.dev/docs/android-apk"
 ---
 
-# Android APK
-
-在 Android 上下载并安装 Orca 移动版。
-
 ## 安装 Orca 移动版
 
 1. 在 Chrome 或其他完整浏览器中打开 [Orca 下载页](/download)，选择 **Android**。

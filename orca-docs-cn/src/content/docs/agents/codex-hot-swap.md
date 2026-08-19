@@ -4,8 +4,6 @@ description: "一键热切换活动 Codex 账号——无需重新登录，无�
 source: "https://www.onorca.dev/docs/agents/codex-hot-swap"
 ---
 
-# 热切换 Codex 账号
-
 同时运行多个 Codex 账号来最大化 token 用量是常见做法。Orca 让你一键热切换活动账号，无需重新登录，也无需编辑配置。同一套流程也适用于 Claude Code 账号。
 
 状态栏中的 Codex 账号切换器下拉菜单

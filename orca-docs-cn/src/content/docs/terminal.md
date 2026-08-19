@@ -4,8 +4,6 @@ description: "终端——基于 xterm.js，为 AI 智能体工作流调校，�
 source: "https://www.onorca.dev/docs/terminal"
 ---
 
-# 终端
-
 $undefined
 
 Orca 的终端与 VS Code 使用的一样，都基于 xterm.js，外加一些为 AI 智能体工作流调校的功能。

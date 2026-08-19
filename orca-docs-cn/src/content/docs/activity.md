@@ -4,10 +4,6 @@ description: "覆盖所有 worktree 的线程式智能体动态流：完成、�
 source: "https://www.onorca.dev/docs/activity"
 ---
 
-# 活动
-
-覆盖所有 worktree 的线程式智能体动态流：完成、阻塞、回复预览与 worktree 创建事件。
-
 侧边栏的 **Agents** 入口打开一个覆盖所有 worktree 的线程式智能体事件流——完成、阻塞提问、未读状态与 worktree 创建。它补充按 worktree 的[通知](/notifications)视图，给你一个按时间顺序分诊的统一界面。
 
 该入口默认开启。自你上次查看后有新事件到达时显示未读徽标；点击某条会跳到对应的 worktree 与窗格——与系统通知的交接方式相同。

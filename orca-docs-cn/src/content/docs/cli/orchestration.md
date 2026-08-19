@@ -4,10 +4,6 @@ description: "用 Run、任务、受监督的工作者、消息与决策门协�
 source: "https://www.onorca.dev/docs/cli/orchestration"
 ---
 
-# 编排
-
-用 Run、任务、受监督的工作者、消息与决策门协调多个智能体。
-
 编排是 Orca 的结构化多智能体层：**Run**（命名空间 + 协调者收件箱）、任务（Task）、调度（Dispatch）、受监督的工作者（worker）、消息与决策门（decision gate）。
 
 当你需要明确的归属、完成追踪或 DAG 时使用它。一次性提示用 `orca terminal send`；不做监督、完全移交归属时，用 `orca-cli` 技能里的 worktree/终端命令。

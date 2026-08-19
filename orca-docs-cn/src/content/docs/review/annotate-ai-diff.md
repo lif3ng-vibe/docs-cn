@@ -4,8 +4,6 @@ description: "标注 AI Diff——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/annotate-ai-diff"
 ---
 
-# 标注 AI Diff
-
 标注 AI Diff 是 Orca 面向智能体生成代码的行内评审回路。你可以在任何 AI 生成的 hunk 的任意行上留言，然后作为一批一次性发回给智能体修改——不用复制行号，不用来回切换上下文。
 
 *标注 AI Diff——行内评论固定在 diff 行上*

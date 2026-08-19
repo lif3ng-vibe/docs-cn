@@ -4,10 +4,6 @@ description: "配置 Claude Code 及其他 CLI 智能体外壳，在 Orca worktr
 source: "https://www.onorca.dev/docs/agents/glm-agent"
 ---
 
-# 在 Orca 中使用 GLM-5.2
-
-配置 Claude Code 及其他 CLI 智能体外壳，在 Orca worktree 中运行 GLM-5.2。
-
 GLM-5.2 通过你既有的智能体外壳（agent harness）在 Orca 中运行。在 Claude Code、OpenCode、Cline、Kilo Code、Roo Code、Droid、OpenClaw 或其他 CLI 智能体中配置好 GLM-5.2，然后从 Orca 的选择器启动该智能体即可。
 
 Orca 提供隔离的 worktree、终端窗格、浏览器标签页、审查流程和会话管理；[Z.ai CodePlan 订阅](https://z.ai/subscribe)与智能体配置提供模型访问。

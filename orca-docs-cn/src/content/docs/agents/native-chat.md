@@ -4,10 +4,6 @@ description: "叠加在受支持智能体终端之上的可选聊天界面——
 source: "https://www.onorca.dev/docs/agents/native-chat"
 ---
 
-# 聊天界面（原生聊天）
-
-叠加在受支持智能体终端之上的可选聊天界面——技能、模型选择器与转录视图。
-
 Chat UI 是一个叠加在受支持智能体终端会话之上的实验性视图。终端仍是唯一事实来源；Chat UI 是同一个 PTY 的结构化转录 + 输入区。转录解码覆盖 **Claude**、**Codex**、**Grok** 和 **OMP**——OMP 会话可以和其他智能体一样在 Chat UI 中打开，而不再只能停留在裸终端。
 
 ## 启用

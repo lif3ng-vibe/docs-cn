@@ -4,8 +4,6 @@ description: "Cursor CLI 以一等支持运行——下拉框启动、完整 OSC
 source: "https://www.onorca.dev/docs/agents/cursor-cli"
 ---
 
-# 在 Orca 中使用 Cursor CLI
-
 Cursor CLI 是 Cursor 的命令行智能体。Orca 以一等支持运行它——可从下拉框启动、完整的 OSC 状态检测，退出后还有重启微标。
 
 ## 安装

@@ -4,10 +4,6 @@ description: "像关联 Linear 或 GitHub 条目一样，浏览、编辑 Jira Cl
 source: "https://www.onorca.dev/docs/review/jira"
 ---
 
-# Jira 事项抽屉
-
-像关联 Linear 或 GitHub 条目一样，浏览、编辑 Jira Cloud 或自托管 Server/Data Center 事项并关联到 worktree。
-
 Jira 与 GitHub、Linear 并排出现在任务抽屉中。浏览 Jira 事项、更新它们，并从任意事项创建 worktree，全程不必离开 Orca。
 
 ## 接入 Jira 站点

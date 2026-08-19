@@ -4,10 +4,6 @@ description: "从 Orca 右侧边栏浏览并恢复过去的 Claude、Codex、Cur
 source: "https://www.onorca.dev/docs/agents/session-history"
 ---
 
-# 智能体会话历史
-
-从 Orca 右侧边栏浏览并恢复过去的 Claude、Codex、Cursor、Gemini 等智能体会话。
-
 Orca 会扫描受支持的智能体 CLI 留在磁盘上的会话转录，并在右侧边栏一个名为 **Agent Session History**（智能体会话历史）的面板中列出它们。选中某个过去的会话，点击 **Resume**（恢复），Orca 就会在一个新终端里运行该智能体的恢复命令——同样的 `cwd`、同样的会话 ID，不必再手动折腾 `--resume` 标志。
 
 ## 打开面板

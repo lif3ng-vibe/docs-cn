@@ -4,8 +4,6 @@ description: "Orca 读取并遵循 Claude Code 与 Codex 既有的钩子和记�
 source: "https://www.onorca.dev/docs/agents/hooks-memory"
 ---
 
-# 智能体钩子与记忆
-
 Orca 与 Claude Code、Codex 既有的智能体钩子和记忆约定相处融洽——它读取这些约定、遵循这些约定，并为其中适合 IDE 场景的部分提供 UI。
 
 ## 按仓库配置的钩子

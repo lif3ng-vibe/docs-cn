@@ -4,8 +4,6 @@ description: "每个 worktree 专属的内置浏览器——地址栏、历史�
 source: "https://www.onorca.dev/docs/browser/overview"
 ---
 
-# 概览
-
 $undefined
 
 每个 Orca worktree 都有自己专属的浏览器。这是一个真正的 Chromium 窗口——地址栏、历史记录、开发者工具——内嵌在窗格里。标签页以 worktree（工作树）为作用域，你正在开发的应用不会干扰其他工作。

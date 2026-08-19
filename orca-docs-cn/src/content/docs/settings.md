@@ -4,8 +4,6 @@ description: "设置参考——Orca 文档。"
 source: "https://www.onorca.dev/docs/settings"
 ---
 
-# 设置参考
-
 设置按窗格分组。这里的一切都可以用 `Cmd-,` 再输入关键字搜索到。文档中的功能页面会直接链接到对应的窗格。
 
 ## General

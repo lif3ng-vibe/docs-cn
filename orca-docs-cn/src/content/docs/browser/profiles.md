@@ -4,8 +4,6 @@ description: "浏览器配置——让 Orca 浏览器以特定登录身份、Coo
 source: "https://www.onorca.dev/docs/browser/profiles"
 ---
 
-# 浏览器配置
-
 $undefined
 
 浏览器配置让你以特定身份运行 Orca 浏览器——某个已登录用户、一套特定的 Cookie 集合、一个自定义 user agent。当智能体需要登录、复现特定会话下的 bug 或模拟多个用户时很有用。

@@ -4,10 +4,6 @@ description: "诊断 Orca PR 检查、Tasks 与源代码管理中的限流、认
 source: "https://www.onorca.dev/docs/github-errors"
 ---
 
-# GitHub 错误
-
-诊断 Orca PR 检查、Tasks 与源代码管理中的限流、认证失败及其他 GitHub CLI 错误。
-
 Orca 通过你机器上（或远程 Orca 主机上）的 **GitHub CLI（`gh`）** 与 GitHub 通信。当 PR 状态、检查、议题或 Tasks 刷新失败时，原因几乎总是 GitHub 认证、权限或 API 限流——而不是 PR 面板本身坏了。
 
 本页介绍你最常遇到的错误及修复方法。

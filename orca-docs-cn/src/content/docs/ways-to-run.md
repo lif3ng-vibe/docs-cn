@@ -4,10 +4,6 @@ description: "本地桌面、SSH 主机、自托管 Orca 服务器和按需的�
 source: "https://www.onorca.dev/docs/ways-to-run"
 ---
 
-# Orca 的运行方式
-
-本地桌面、SSH 主机、自托管 Orca 服务器和按需的每工作区 VM——为每个任务选对算力。
-
 Orca 并不锁定在你的笔记本上。每个 worktree 总要运行在某处——你面前的机器上、你已有的一台主机上、一台常开的共享服务器上，或专为那个工作区临时拉起的云 VM 上。
 
 本页是全景地图。深入内容见各链接页面。

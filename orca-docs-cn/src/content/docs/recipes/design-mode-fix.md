@@ -4,8 +4,6 @@ description: "用设计模式修复 UI bug——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/design-mode-fix"
 ---
 
-# 用设计模式修复 UI bug
-
 设计模式把"这个按钮看着不对"到"提交修复"的回路压缩到一分钟以内。
 
 ## 步骤

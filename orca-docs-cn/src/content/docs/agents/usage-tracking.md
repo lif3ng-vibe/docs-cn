@@ -4,8 +4,6 @@ description: "在状态栏查看 Claude Code、Codex 等智能体的本地用量
 source: "https://www.onorca.dev/docs/agents/usage-tracking"
 ---
 
-# 用量与限流追踪
-
 Orca 读取 Claude Code、Codex、Gemini、OpenCode、Kimi Code 和 MiniMax 的本地用量状态并显示在状态栏，让你在智能体被限流卡住之前就知道距离限额还有多近。
 
 ## 显示内容

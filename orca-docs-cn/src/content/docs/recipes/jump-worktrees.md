@@ -4,8 +4,6 @@ description: "在 10 个 worktree 之间跳转——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/jump-worktrees"
 ---
 
-# 在 10 个 worktree 之间跳转
-
 十个 worktree 管理起来不轻松。跳转面板 + Restart 微标 + 智能体状态圆点正是为这个规模而生。
 
 ## 步骤

@@ -4,8 +4,6 @@ description: "让三个智能体竞跑同一个任务——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/parallel-agents"
 ---
 
-# 让三个智能体竞跑同一个任务
-
 把同一个任务并行交给多个智能体是 Orca 的杀手锏。同一段提示词、三个分支，选出胜出的那个。
 
 ## 步骤
