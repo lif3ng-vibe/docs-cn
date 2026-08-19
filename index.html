@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>docs-cn — 开源文档中文翻译</title>
+		<meta
+			name="description"
+			content="开源项目文档的中文翻译集合：codegraph、Orca。"
+		/>
+		<style>
+			:root {
+				--bg: #0d1117;
+				--surface: #161b22;
+				--border: #30363d;
+				--text: #e6edf3;
+				--muted: #8b949e;
+				--accent: #2f81f7;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+					'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+				line-height: 1.6;
+				-webkit-font-smoothing: antialiased;
+			}
+			.wrap {
+				max-width: 880px;
+				margin: 0 auto;
+				padding: 4rem 1.5rem 6rem;
+			}
+			header h1 {
+				font-size: 2.2rem;
+				font-weight: 800;
+				letter-spacing: -0.02em;
+				margin: 0 0 0.5rem;
+			}
+			header p {
+				color: var(--muted);
+				font-size: 1.1rem;
+				margin: 0 0 0.5rem;
+			}
+			.badge {
+				display: inline-block;
+				margin-top: 0.5rem;
+				font-size: 0.8rem;
+				color: var(--muted);
+				border: 1px solid var(--border);
+				padding: 0.2rem 0.6rem;
+				border-radius: 999px;
+			}
+			main {
+				margin-top: 2.5rem;
+				display: grid;
+				gap: 1rem;
+			}
+			.card {
+				display: block;
+				text-decoration: none;
+				color: inherit;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 1.5rem 1.6rem;
+				transition: border-color 0.15s, transform 0.15s;
+			}
+			.card:hover {
+				border-color: var(--accent);
+				transform: translateY(-1px);
+			}
+			.card h2 {
+				margin: 0 0 0.4rem;
+				font-size: 1.25rem;
+			}
+			.card p {
+				margin: 0 0 0.6rem;
+				color: var(--muted);
+				font-size: 0.95rem;
+			}
+			.card .meta {
+				font-size: 0.8rem;
+				color: var(--muted);
+			}
+			.card .meta a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+			.card .enter {
+				color: var(--accent);
+				font-weight: 600;
+				font-size: 0.9rem;
+			}
+			footer {
+				margin-top: 3rem;
+				color: var(--muted);
+				font-size: 0.85rem;
+			}
+			footer a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<header>
+				<h1>docs-cn</h1>
+				<p>开源项目文档的中文翻译集合</p>
+				<span class="badge">非官方翻译 · 一次性快照</span>
+			</header>
+
+			<main>
+				<a class="card" href="codegraph/">
+					<h2>codegraph</h2>
+					<p>
+						一款本地优先的代码智能工具，把任何代码库变成可供 AI 编码智能体查询的知识图谱。
+					</p>
+					<div class="meta">
+						原站：<a href="https://colbymchenry.github.io/codegraph/">colbymchenry.github.io/codegraph</a>
+						· 上游：<a href="https://github.com/colbymchenry/codegraph">stablyai/colbymchenry/codegraph</a>
+						· 快照 2026-08-18
+					</div>
+					<div class="enter">进入文档 →</div>
+				</a>
+
+				<a class="card" href="orca/">
+					<h2>Orca</h2>
+					<p>
+						跨 git worktree 编排编码智能体的桌面应用——让 Claude Code、Codex、Cursor CLI 并行工作。
+					</p>
+					<div class="meta">
+						原站：<a href="https://www.onorca.dev/docs">onorca.dev/docs</a>
+						· 上游：<a href="https://github.com/stablyai/orca">stablyai/orca</a>
+						· 快照 2026-08-19
+					</div>
+					<div class="enter">进入文档 →</div>
+				</a>
+			</main>
+
+			<footer>
+				源码与翻译说明见 <a href="https://github.com/lif3ng-vibe/docs-cn">GitHub 仓库</a>。
+			</footer>
+		</div>
+	</body>
+</html>

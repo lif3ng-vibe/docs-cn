@@ -3,7 +3,8 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-	base: '/',
+	// 日常 dev/build 不设 DOCS_BASE → base '/'；GitHub Pages CI 设 DOCS_BASE=/docs-cn/codegraph/
+	base: process.env.DOCS_BASE || '/',
 	integrations: [
 		starlight({
 			title: 'codegraph',

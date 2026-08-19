@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# 允许 Pages 部署
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一条部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            codegraph-docs-cn/package-lock.json
+            orca-docs-cn/package-lock.json
+
+      - name: Build codegraph-docs-cn
+        working-directory: codegraph-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/codegraph/
+        run: |
+          # 正文 markdown 内链 ](/path) 加 base 前缀（Astro 对 markdown 内链不会自动加 base，
+          # 只对 Starlight 组件链接加；源码保持 ](/) 不带前缀，仅 CI 临时加前缀）
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/codegraph/|g' {} +
+          npm ci
+          npm run build
+
+      - name: Build orca-docs-cn
+        working-directory: orca-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/orca/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/orca/|g' {} +
+          npm ci
+          npm run build
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p _site
+          # 入口页放根
+          cp index.html _site/
+          # 子站点分别放子目录
+          mv codegraph-docs-cn/dist _site/codegraph
+          mv orca-docs-cn/dist _site/orca
+          # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

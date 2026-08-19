@@ -33,10 +33,40 @@ npm run preview      # 预览构建产物
 
 ```
 docs-cn/
+├── index.html             # GitHub Pages 入口页（列出所有子站）
+├── .github/workflows/     # Pages 部署 CI
 ├── codegraph-docs-cn/     # codegraph 中文文档（Starlight）
 ├── orca-docs-cn/          # Orca 中文文档（Starlight）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
+
+## 本地开发 vs GitHub Pages 部署
+
+**日常迭代**（不带前缀，直接访问）：
+
+```bash
+cd <子目录>
+npm run dev          # http://localhost:4321/
+npm run build        # dist/ 可直接用 npm run preview 预览
+```
+
+子站点的 `astro.config.mjs` 用 `base: process.env.DOCS_BASE || '/'`——日常不设该变量即 `base: '/'`，所有链接为根路径。
+
+**GitHub Pages 部署**（带前缀，CI 自动处理）：
+
+推送到 `master` 即触发 `.github/workflows/deploy-pages.yml`，在 Linux runner 上：
+
+1. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
+2. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
+3. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`。
+4. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
+
+部署后访问地址：
+- 入口：https://lif3ng-vibe.github.io/docs-cn/
+- codegraph：https://lif3ng-vibe.github.io/docs-cn/codegraph/
+- Orca：https://lif3ng-vibe.github.io/docs-cn/orca/
+
+> 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
 ## 许可
 

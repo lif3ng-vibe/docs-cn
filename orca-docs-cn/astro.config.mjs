@@ -7,7 +7,8 @@ import starlight from '@astrojs/starlight';
 // 写 'zh' 会强制 /zh/ URL 前缀导致 sidebar slug 失配。
 export default defineConfig({
 	site: undefined,
-	base: '/',
+	// 日常 dev/build 不设 DOCS_BASE → base '/'；GitHub Pages CI 设 DOCS_BASE=/docs-cn/orca/
+	base: process.env.DOCS_BASE || '/',
 	integrations: [
 		starlight({
 			title: 'Orca 文档',
