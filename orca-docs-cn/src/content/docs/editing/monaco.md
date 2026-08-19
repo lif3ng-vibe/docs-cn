@@ -22,19 +22,19 @@ Files save on blur and after short idle periods. There is no "dirty" dot because
 
 ## Changes view mode
 
-Toggle **Changes view mode** in any editor tab to flip the file into an in-tab HEAD-vs-working-tree diff without leaving your cursor position. Same shortcuts as the [Diff viewer](/docs/review/diff-viewer) — `n`/`p` to walk hunks, `s` to stage. Toggle again to return to the regular file view.
+Toggle **Changes view mode** in any editor tab to flip the file into an in-tab HEAD-vs-working-tree diff without leaving your cursor position. Same shortcuts as the [Diff viewer](/review/diff-viewer) — `n`/`p` to walk hunks, `s` to stage. Toggle again to return to the regular file view.
 
 ## Word wrap
 
-File editors wrap long lines by default. Toggle **Word Wrap** from the editor tab's **⋯** menu, press `Alt+Z` (same as VS Code; remappable under [Settings → Shortcuts](/docs/settings)), or set the default under [Settings → General → Editor Word Wrap](/docs/settings). This setting is separate from **Diff Word Wrap**, which only affects diff editors.
+File editors wrap long lines by default. Toggle **Word Wrap** from the editor tab's **⋯** menu, press `Alt+Z` (same as VS Code; remappable under [Settings → Shortcuts](/settings)), or set the default under [Settings → General → Editor Word Wrap](/settings). This setting is separate from **Diff Word Wrap**, which only affects diff editors.
 
 ## Minimap
 
-A minimap is available in the file editor under [Settings → Appearance](/docs/settings). It's off by default; turn it on if you prefer the VS Code-style overview rail.
+A minimap is available in the file editor under [Settings → Appearance](/settings). It's off by default; turn it on if you prefer the VS Code-style overview rail.
 
 ## Custom editor font
 
-By default the editor and diff views use the same font as the terminal. Leave **Editor Font Family** empty under [Settings → Appearance](/docs/settings) to keep that link; set a font to override editors only (UI font stays separate).
+By default the editor and diff views use the same font as the terminal. Leave **Editor Font Family** empty under [Settings → Appearance](/settings) to keep that link; set a font to override editors only (UI font stays separate).
 
 ## Language support
 

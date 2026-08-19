@@ -25,7 +25,7 @@ Comments pin to the exact line; Orca tracks them across edits so they follow the
 
 When your review is done, click **Send to agent** at the top of the diff. Orca composes a single prompt with all your comments, line-anchored, then opens a **Send notes to** menu for the worktree's available agents. Pick the agent that should revise the change, or start a new agent from the same menu.
 
-**Send Review Notes to Agent** is unbound by default so it won't collide with other chords. Assign it under [Settings → Shortcuts](/docs/settings) to open that send menu from the keyboard (works even while the editor is focused).
+**Send Review Notes to Agent** is unbound by default so it won't collide with other chords. Assign it under [Settings → Shortcuts](/settings) to open that send menu from the keyboard (works even while the editor is focused).
 
 ## Why batch?
 

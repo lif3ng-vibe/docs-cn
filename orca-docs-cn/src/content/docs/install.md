@@ -42,7 +42,7 @@ On first launch Orca will:
 
 Orca auto-updates by default, tracking the **stable** channel. Stable releases are vetted; **RC (release candidate)** builds ship new features first, often daily.
 
-There is no permanent in-app opt-in for the RC channel. Modifier clicks on **Check for Updates** ([Settings → General → Updates](/docs/settings), or the app / Help menu):
+There is no permanent in-app opt-in for the RC channel. Modifier clicks on **Check for Updates** ([Settings → General → Updates](/settings), or the app / Help menu):
 
 | Modifier | Effect |
 | --- | --- |
@@ -62,7 +62,7 @@ Signed and notarized. On first launch, macOS may still ask you to confirm — th
 
 ### Windows
 
-The default shell can be set to PowerShell or CMD under [Settings → Terminal](/docs/settings). Most users want PowerShell.
+The default shell can be set to PowerShell or CMD under [Settings → Terminal](/settings). Most users want PowerShell.
 
 ### Linux
 

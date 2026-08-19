@@ -16,7 +16,7 @@ Orca reads each repo's `.claude/` and `.codex/` configuration. Hooks you already
 
 ## Worktree setup hooks
 
-Configure commands to run automatically after a worktree is created — e.g. `pnpm install`, `direnv allow`, or a script that restores `.env` files. Set them under [Settings → Repository → Hooks](/docs/settings).
+Configure commands to run automatically after a worktree is created — e.g. `pnpm install`, `direnv allow`, or a script that restores `.env` files. Set them under [Settings → Repository → Hooks](/settings).
 
 ## Memory files
 
@@ -30,4 +30,4 @@ Claude's `CLAUDE.md` and Codex's `AGENTS.md` (at repo root or nested) are left a
 
 Hook endpoints are written to disk (`{userData}/agent-hooks/endpoint.env` on POSIX, `endpoint.cmd` on Windows) and re-sourced on every hook invocation, so long-lived agent sessions keep reaching the live Orca server even after an app restart — no more dead-port POSTs from a PTY that outlived the previous session.
 
-> $undefined The Orca CLI exposes a commented worktree status field agents can update themselves. See [Worktree checkpoints](/docs/cli/worktree-checkpoints).
+> $undefined The Orca CLI exposes a commented worktree status field agents can update themselves. See [Worktree checkpoints](/cli/worktree-checkpoints).

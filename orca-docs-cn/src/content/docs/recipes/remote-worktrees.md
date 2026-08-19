@@ -8,11 +8,11 @@ source: "https://www.onorca.dev/docs/recipes/remote-worktrees"
 
 $undefined
 
-Point Orca at any SSH target — a beefier dev box, a GPU host, a cloud sandbox — and it feels like a local worktree. Same editor, same diff view, same agents, different compute. You can open remote repos *or* just arbitrary folders. For the full menu of local / SSH / server / ephemeral-VM modes, see [Ways to run Orca](/docs/ways-to-run).
+Point Orca at any SSH target — a beefier dev box, a GPU host, a cloud sandbox — and it feels like a local worktree. Same editor, same diff view, same agents, different compute. You can open remote repos *or* just arbitrary folders. For the full menu of local / SSH / server / ephemeral-VM modes, see [Ways to run Orca](/ways-to-run).
 
 ## Setup
 
-1. Add the host under [Settings → SSH](/docs/settings).
+1. Add the host under [Settings → SSH](/settings).
 2. Test the connection. Make sure git is installed on the host if you're working with a repo.
 3. Add the repo to Orca, selecting the SSH target as its location — or open any remote folder directly from the file picker.
 

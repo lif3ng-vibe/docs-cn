@@ -37,4 +37,4 @@ Combined diffs can show a collapsible file tree beside the hunks. Drag the tree'
 - `n` / `p` — next / previous hunk.
 - `F7` / `Shift+F7` — next / previous change in the active editor.
 - `s` — stage the hunk under the cursor.
-- `c` — start a comment ([Annotate AI Diff](/docs/review/annotate-ai-diff)).
+- `c` — start a comment ([Annotate AI Diff](/review/annotate-ai-diff)).

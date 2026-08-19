@@ -68,7 +68,7 @@ On the computer that should keep the sessions running:
 
 If the Tailscale address is missing, confirm Tailscale is connected and click the refresh button beside **Connection address**.
 
-![On the server: choose its Tailscale address, generate an access link, and copy the redacted pairing URL. The grant can be revoked later.](/docs/remote-server-share-desktop.png)
+![On the server: choose its Tailscale address, generate an access link, and copy the redacted pairing URL. The grant can be revoked later.](/remote-server-share-desktop.png)
 
 On the server: choose its Tailscale address, generate an access link, and copy the redacted pairing URL. The grant can be revoked later.
 
@@ -85,7 +85,7 @@ On the computer you want to use as the client:
 5. Click **Add Server**.
 6. If the saved server shows **Disconnected**, click **Connect**.
 
-![On the client: name the server, paste its access link, and add it. The pairing code is redacted in this example.](/docs/remote-server-add-client.png)
+![On the client: name the server, paste its access link, and add it. The pairing code is redacted in this example.](/remote-server-add-client.png)
 
 On the client: name the server, paste its access link, and add it. The pairing code is redacted in this example.
 
@@ -95,7 +95,7 @@ Adding a server saves it without forcing every new project onto it. Open **Advan
 
 Once the server shows **Connected**, select it or one of its projects and use Orca normally. Terminals, agent processes, files, worktrees, and session state live on the server computer.
 
-When several paired clients share that server, the sidebar filter can offer **Hide other-client workspaces** so this device only lists workspaces it created. See [Worktrees → Sidebar layout](/docs/model/worktrees#sidebar-layout).
+When several paired clients share that server, the sidebar filter can offer **Hide other-client workspaces** so this device only lists workspaces it created. See [Worktrees → Sidebar layout](/model/worktrees#sidebar-layout).
 
 That means:
 
@@ -170,11 +170,11 @@ Keep the phone on the same tailnet, open Orca Mobile, choose **Pair**, and scan 
 
 ## Remote Orca Server or SSH?
 
-Use [SSH worktrees](/docs/ssh) when Orca on your laptop should own the runtime and use another machine only to run selected worktrees and terminals.
+Use [SSH worktrees](/ssh) when Orca on your laptop should own the runtime and use another machine only to run selected worktrees and terminals.
 
 Use a Remote Orca Server when the other machine should own the full Orca runtime and preserve shared sessions for desktop, browser, mobile, or automation clients.
 
-See [Ways to run Orca](/docs/ways-to-run) for the full comparison.
+See [Ways to run Orca](/ways-to-run) for the full comparison.
 
 ## Troubleshooting
 
@@ -208,6 +208,6 @@ Do not use a wildcard address or `127.0.0.1` for a remote client.
 
 ## Next steps
 
-- Compare every run mode in [Ways to run Orca](/docs/ways-to-run).
-- Use [SSH worktrees](/docs/ssh) when the laptop should own the Orca runtime.
-- See the [Orca CLI reference](/docs/cli/reference) for `orca serve` flags and automation commands.
+- Compare every run mode in [Ways to run Orca](/ways-to-run).
+- Use [SSH worktrees](/ssh) when the laptop should own the Orca runtime.
+- See the [Orca CLI reference](/cli/reference) for `orca serve` flags and automation commands.

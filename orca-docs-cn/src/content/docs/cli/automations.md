@@ -131,5 +131,5 @@ If a run fails before it opens a workspace or reconnects to its target, open tha
 
 ## Next steps
 
-- [Orca CLI overview](/docs/cli/overview) — see the rest of the CLI surface for worktrees, terminals, and browser control.
-- [Skills registry & MCP](/docs/cli/skills) — install the Orca CLI skill so agents can call the same commands.
+- [Orca CLI overview](/cli/overview) — see the rest of the CLI surface for worktrees, terminals, and browser control.
+- [Skills registry & MCP](/cli/skills) — install the Orca CLI skill so agents can call the same commands.

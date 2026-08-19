@@ -16,7 +16,7 @@ Running the same task across multiple agents in parallel is Orca's killer move. 
 2. Launch a different agent in each — Claude Code, Codex, Cursor CLI.
 3. Paste the same prompt into all three.
 4. Split the panes so you can see them work — drag tabs to edges.
-5. When they finish, review each diff. Use [Annotate AI Diff](/docs/review/annotate-ai-diff) on the winner.
+5. When they finish, review each diff. Use [Annotate AI Diff](/review/annotate-ai-diff) on the winner.
 6. Commit, push, open PR from the winning worktree.
 7. Delete the two losers — one click removes the worktree and branch.
 

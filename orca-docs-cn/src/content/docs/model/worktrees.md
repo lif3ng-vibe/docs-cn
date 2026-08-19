@@ -73,13 +73,13 @@ The Create Workspace dialog uses type-ahead comboboxes for **Project** and **Run
 - **Project** always keeps **Add a new project** pinned at the bottom — create never dead-ends when the install has no projects yet.
 - **Run on** lists ready hosts and recipes, plus hosts that still need project setup on that machine. Setup-needed rows show detail such as *Project not set up on this host*; they are visible but not selectable until ready. Disconnected SSH / remote hosts can offer **Connect** without selecting them as the run target. **Add host** stays pinned for SSH or Remote Orca Server targets.
 - The **Agent** selector (collapsed or expanded) can **Set as default** for the agent you pick on create, including Blank Terminal.
-- Link a GitHub PR, Linear issue, GitLab MR, or **Jira** issue from the name field (paste a Jira URL or search in **Jira** mode). Linked issues appear on the worktree card. See [Jira items drawer](/docs/review/jira).
+- Link a GitHub PR, Linear issue, GitLab MR, or **Jira** issue from the name field (paste a Jira URL or search in **Jira** mode). Linked issues appear on the worktree card. See [Jira items drawer](/review/jira).
 
-See [Ways to run Orca](/docs/ways-to-run).
+See [Ways to run Orca](/ways-to-run).
 
 ## Emoji workspace names
 
-In the workspace name field you can type Slack-style shortcodes (`:rocket:`) and pick from a shortcode suggestion popover. The same picker works when you double-click to rename a worktree, edit it in **Edit Worktree Details**, or type a shortcode in [Worktree Jump Palette](/docs/model/quick-open) (`Cmd-J`). The display name keeps the emoji; when Orca derives a git branch name it rewrites known emoji to readable shortcodes (e.g. 🚀 → `rocket`). Jump Palette search matches emoji-named workspaces by that shortcode-derived fragment.
+In the workspace name field you can type Slack-style shortcodes (`:rocket:`) and pick from a shortcode suggestion popover. The same picker works when you double-click to rename a worktree, edit it in **Edit Worktree Details**, or type a shortcode in [Worktree Jump Palette](/model/quick-open) (`Cmd-J`). The display name keeps the emoji; when Orca derives a git branch name it rewrites known emoji to readable shortcodes (e.g. 🚀 → `rocket`). Jump Palette search matches emoji-named workspaces by that shortcode-derived fragment.
 
 ## Naming the branch
 
@@ -100,20 +100,20 @@ The sidebar header filter menu groups host and project scope under a shared **Sh
 - **Default branch** workspaces (the main checkout row)
 - **Automation-created** workspaces
 - **CLI-created** workspaces — created via `orca worktree create` (hover the card for an **Orca CLI** provenance detail)
-- **Other-client** workspaces — **Hide other-client workspaces** appears when a shared [Remote Orca Server](/docs/remote-servers) has workspaces created from another paired client; turn it on to keep this device's list to workspaces you created here. Empty `Cmd-J` recents and numeric shortcuts follow the same filter; typing a query still finds hidden rows.
+- **Other-client** workspaces — **Hide other-client workspaces** appears when a shared [Remote Orca Server](/remote-servers) has workspaces created from another paired client; turn it on to keep this device's list to workspaces you created here. Empty `Cmd-J` recents and numeric shortcuts follow the same filter; typing a query still finds hidden rows.
 - **Detached HEAD** workspaces — checkouts sitting on a commit rather than a branch
 
-Active filter count shows on the filter control; **Clear** resets only the filters that are on. Text search and [Worktree Jump Palette](/docs/model/quick-open) (`Cmd-J`) still reach workspaces hidden only by these filters once you type a query — the jump palette also has its own host/project filters (**Tab**).
+Active filter count shows on the filter control; **Clear** resets only the filters that are on. Text search and [Worktree Jump Palette](/model/quick-open) (`Cmd-J`) still reach workspaces hidden only by these filters once you type a query — the jump palette also has its own host/project filters (**Tab**).
 
 When you add a parent folder that contains multiple Git repos, Orca can import the selected repos separately or group them under one project group.
 
-A **Search** button at the top of the sidebar opens [Worktree Jump Palette](/docs/model/quick-open) (`Cmd-J`) — same surface, click-driven for users who don't lean on the keyboard for navigation. The status bar shows agent activity inline; unread worktrees are bolded rather than badged.
+A **Search** button at the top of the sidebar opens [Worktree Jump Palette](/model/quick-open) (`Cmd-J`) — same surface, click-driven for users who don't lean on the keyboard for navigation. The status bar shows agent activity inline; unread worktrees are bolded rather than badged.
 
 You can pin a worktree to the top of its project to keep long-running work in view, and right-clicking a worktree exposes archive / sleep / delete actions. Hold `Cmd` (`Ctrl` on Linux/Windows) while clicking to add worktrees to a multi-selection, or hold `Shift` to select a contiguous range — right-clicking any selected worktree applies the action to every worktree in the selection. Repo rows themselves can be reordered by drag.
 
 When a worktree has nested child worktrees (for example from orchestration or `worktree create` with a parent), the context menu can also offer **Sleep with Descendants (N)** and **Delete with Descendants…**. Sleep with descendants closes active panels on the selected workspace and every validated nested child in the same project, repo, and host — only workspaces with live terminals or browser tabs are targeted for sleep. Delete with descendants makes the existing cascading delete explicit. Stale lineage links, cycles, and children across host or repo boundaries are excluded.
 
-Double-click a worktree title in the sidebar to rename it inline. Double-clicking elsewhere on the card still opens the full edit dialog. In **Edit Worktree Details**, the issue field accepts **GitHub** or **Linear** (chip on the field; paste a URL to auto-detect). One linked issue per workspace — changing provider or clearing the field unlinks the previous one. For SSH workspaces whose host is disconnected, the card title row can show an inline reconnect control (see [SSH worktrees](/docs/ssh)).
+Double-click a worktree title in the sidebar to rename it inline. Double-clicking elsewhere on the card still opens the full edit dialog. In **Edit Worktree Details**, the issue field accepts **GitHub** or **Linear** (chip on the field; paste a URL to auto-detect). One linked issue per workspace — changing provider or clearing the field unlinks the previous one. For SSH workspaces whose host is disconnected, the card title row can show an inline reconnect control (see [SSH worktrees](/ssh)).
 
 ## Preserved branches
 

@@ -30,7 +30,7 @@ In-editor markdown search respects rendered text, not raw markdown — so search
 
 When you're reviewing markdown in Orca's rich editor, select rendered text to add an annotation without switching back to raw markdown. Orca keeps the note tied to the selected source range so it can show the comment while you continue editing the rendered document.
 
-**Add Review Note** is a remappable shortcut (`Cmd+Shift+A` / `Ctrl+Shift+A` by default under [Settings → Shortcuts](/docs/settings)).
+**Add Review Note** is a remappable shortcut (`Cmd+Shift+A` / `Ctrl+Shift+A` by default under [Settings → Shortcuts](/settings)).
 
 ## Front matter
 
@@ -55,4 +55,4 @@ For long documents, click the **Table of Contents** button (tree icon) in the ed
 
 ## Share as artifact
 
-From the editor header, **Share as artifact** publishes the open Markdown file as a public view link through your signed-in Orca account. Requires **Settings → Artifacts → Allow publishing public artifact links** (off by default). Republish updates the same link when Orca still has the mapping; manage or delete links from the sidebar **Artifacts** page. Agents and scripts can use `orca artifacts share|update|list|delete` — see [CLI reference → Artifacts](/docs/cli/reference#artifacts).
+From the editor header, **Share as artifact** publishes the open Markdown file as a public view link through your signed-in Orca account. Requires **Settings → Artifacts → Allow publishing public artifact links** (off by default). Republish updates the same link when Orca still has the mapping; manage or delete links from the sidebar **Artifacts** page. Agents and scripts can use `orca artifacts share|update|list|delete` — see [CLI reference → Artifacts](/cli/reference#artifacts).

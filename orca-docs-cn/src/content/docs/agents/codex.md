@@ -22,7 +22,7 @@ Pick **Codex** from the agent combobox. Orca launches `codex` with the worktree 
 
 ## Account hot-swap
 
-Many Codex users run multiple accounts to stretch rate limits. Orca's account switcher swaps the active account without re-login or config edits. See [Hot-swap Codex accounts](/docs/agents/codex-hot-swap).
+Many Codex users run multiple accounts to stretch rate limits. Orca's account switcher swaps the active account without re-login or config edits. See [Hot-swap Codex accounts](/agents/codex-hot-swap).
 
 ## System default vs extra accounts
 
@@ -30,7 +30,7 @@ Many Codex users run multiple accounts to stretch rate limits. Orca's account sw
 
 ## Nested Task subagents
 
-When Codex spawns Task subagents, Orca can show them as child rows under the parent agent on the worktree agent list and [Agent Dashboard](/docs/model/agents-sessions#agent-dashboard). Expand the chevron to see each child; click a child to focus the parent terminal (subagents do not own a separate pane).
+When Codex spawns Task subagents, Orca can show them as child rows under the parent agent on the worktree agent list and [Agent Dashboard](/model/agents-sessions#agent-dashboard). Expand the chevron to see each child; click a child to focus the parent terminal (subagents do not own a separate pane).
 
 ## Continue in a new session
 
@@ -42,7 +42,7 @@ When Codex exits, the restart chip relaunches the agent with the same account. I
 
 ## Usage & rate limits
 
-Orca reads local Codex usage state for the active account and surfaces it in the status bar. See [Usage & rate-limit tracking](/docs/agents/usage-tracking).
+Orca reads local Codex usage state for the active account and surfaces it in the status bar. See [Usage & rate-limit tracking](/agents/usage-tracking).
 
 ## Codex on Windows (WSL)
 

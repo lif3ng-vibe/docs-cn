@@ -14,7 +14,7 @@ Ghostty-style terminal — import your Ghostty theme, font, and cursor on first 
 
 ## Panes & tabs
 
-Terminals are just tabs — see [Tabs, panes & split layouts](/docs/model/tabs-panes-splits). Splitting a terminal pane gives you two shells side by side.
+Terminals are just tabs — see [Tabs, panes & split layouts](/model/tabs-panes-splits). Splitting a terminal pane gives you two shells side by side.
 
 Agent terminal tabs show the agent identity plus live state: working, waiting for input, completed, or completed-but-unread. For Claude and Codex, tab titles can also show the **AI Vault conversation name** (custom title / thread name) when Orca can map the pane to that session — manual renames still win.
 
@@ -22,7 +22,7 @@ Agent terminal tabs show the agent identity plus live state: working, waiting fo
 
 Many terminal UIs (Zellij, tmux, Neovim, fzf, Grok) copy via **OSC 52** instead of OS clipboard APIs. Orca allows those writes **by default** so copy-from-remote/TUI works over SSH the same way as locally.
 
-Toggle: [Settings → Terminal → Allow TUI Clipboard Writes (OSC 52)](/docs/settings).
+Toggle: [Settings → Terminal → Allow TUI Clipboard Writes (OSC 52)](/settings).
 
 ## Search
 
@@ -30,9 +30,9 @@ Toggle: [Settings → Terminal → Allow TUI Clipboard Writes (OSC 52)](/docs/se
 
 ## Link actions
 
-A plain click on a terminal link (HTTP/OSC 8 URL, file path, workspace, terminal, or task handle) opens a compact action popover instead of navigating immediately. For local web links the popover offers **Orca Browser** and **System Browser**; remote links stay system-only. Web links also get **Copy link**, which copies the resolved URL (including hidden OSC 8 destinations) without closing the popover — file and workspace destinations stay unchanged. `Cmd`-click (macOS) / `Ctrl`-click (Windows / Linux) still opens directly, and `Shift+Cmd` / `Shift+Ctrl`-click still uses the [link-routing](/docs/browser/overview#link-routing) alternate.
+A plain click on a terminal link (HTTP/OSC 8 URL, file path, workspace, terminal, or task handle) opens a compact action popover instead of navigating immediately. For local web links the popover offers **Orca Browser** and **System Browser**; remote links stay system-only. Web links also get **Copy link**, which copies the resolved URL (including hidden OSC 8 destinations) without closing the popover — file and workspace destinations stay unchanged. `Cmd`-click (macOS) / `Ctrl`-click (Windows / Linux) still opens directly, and `Shift+Cmd` / `Shift+Ctrl`-click still uses the [link-routing](/browser/overview#link-routing) alternate.
 
-Turn the popover off under [Settings → Browser → Show terminal link actions](/docs/settings). With it off, opening a link requires the modifier-click.
+Turn the popover off under [Settings → Browser → Show terminal link actions](/settings). With it off, opening a link requires the modifier-click.
 
 ## Copy terminal context
 
@@ -40,28 +40,28 @@ Right-click a terminal and choose **Copy Context** to copy a bounded transcript 
 
 ## Themes
 
-Terminal color themes are configurable under [Settings → Terminal](/docs/settings). Orca ships a library of popular themes and lets you customize any of them.
+Terminal color themes are configurable under [Settings → Terminal](/settings). Orca ships a library of popular themes and lets you customize any of them.
 
 ## Ghostty import
 
-If you use Ghostty, Orca can import its theme, font, and cursor config on first launch. You can re-run the import later from [Settings → Terminal → Import from Ghostty](/docs/settings).
+If you use Ghostty, Orca can import its theme, font, and cursor config on first launch. You can re-run the import later from [Settings → Terminal → Import from Ghostty](/settings).
 
 ## Warp theme import
 
-If you've collected themes in Warp, click **Import themes from Warp** in the terminal-theme picker under [Settings → Terminal](/docs/settings) to bring them in as Orca terminal themes. Orca scans Warp's theme directory for the current OS (`~/.warp/themes` on macOS, `$$XDG_DATA_HOME/warp-terminal/themes` on Linux, `%APPDATA%\warp\Warp\data\themes` on Windows) and lets you pick which YAML themes to import. The button next to it, **Import from YAML**, takes the same picker and points it at any folder of Warp-format `.yaml`/`.yml` files — useful when you store themes outside the default location.
+If you've collected themes in Warp, click **Import themes from Warp** in the terminal-theme picker under [Settings → Terminal](/settings) to bring them in as Orca terminal themes. Orca scans Warp's theme directory for the current OS (`~/.warp/themes` on macOS, `$$XDG_DATA_HOME/warp-terminal/themes` on Linux, `%APPDATA%\warp\Warp\data\themes` on Windows) and lets you pick which YAML themes to import. The button next to it, **Import from YAML**, takes the same picker and points it at any folder of Warp-format `.yaml`/`.yml` files — useful when you store themes outside the default location.
 
 Imported themes appear alongside Orca's built-ins in the theme dropdown.
 
 ## Windows shell
 
-The default shell on Windows is configurable between PowerShell, Command Prompt, and WSL under [Settings → Terminal](/docs/settings). WSL is offered automatically when `wsl.exe --status` succeeds. The **+** dropdown on the tab bar also shows a submenu so you can open a one-off tab in any shell without changing your default.
+The default shell on Windows is configurable between PowerShell, Command Prompt, and WSL under [Settings → Terminal](/settings). WSL is offered automatically when `wsl.exe --status` succeeds. The **+** dropdown on the tab bar also shows a submenu so you can open a one-off tab in any shell without changing your default.
 
 For repos on a WSL filesystem (`\\wsl.localhost\...`), Orca launches through `wsl.exe -d <distro>`. For Windows-path repos opened in WSL, Orca translates the cwd to `/mnt/<drive>/...` and drops you into a login bash.
 
 ## Shortcuts
 
 - `Cmd-T` — new terminal tab in the current worktree.
-- `Cmd-Alt-T` (macOS) — new agent tab using your default agent. On Linux and Windows this chord ships unbound; assign one under [Settings → Shortcuts](/docs/settings) (search for "New agent tab"). Each supported agent also has its own per-agent "New agent tab" action — bind a chord to launch a specific CLI directly without going through the default.
+- `Cmd-Alt-T` (macOS) — new agent tab using your default agent. On Linux and Windows this chord ships unbound; assign one under [Settings → Shortcuts](/settings) (search for "New agent tab"). Each supported agent also has its own per-agent "New agent tab" action — bind a chord to launch a specific CLI directly without going through the default.
 - `Cmd-W` — close the current tab.
 - `Cmd-\` — split right.
 - `Cmd-Shift-\` — split down.
@@ -79,7 +79,7 @@ For Japanese JIS keyboards on macOS, enable **Settings → Terminal → JIS Yen 
 The floating terminal is a global shell surface that's always one chord away, regardless of which worktree or tab you're on. It's on by default for new installs.
 
 - Toggle it with `Cmd+Option+A` (macOS) / `Ctrl+Alt+A` (Linux/Windows). The same chord focuses the panel if it's already open and dismisses it if it's already focused.
-- Click the floating button on the edge of the window, or move the trigger to the status bar under [Settings → Terminal → Floating terminal](/docs/settings).
+- Click the floating button on the edge of the window, or move the trigger to the status bar under [Settings → Terminal → Floating terminal](/settings).
 - Set the starting working directory under the same setting (`~` by default) so new floating tabs land where you expect.
 - The floating panel hosts its own tabs and supports orchestration setup — kick off background runs without claiming a worktree pane.
 
@@ -87,6 +87,6 @@ The floating terminal is a global shell surface that's always one chord away, re
 
 Quick Commands save terminal commands you run often, such as `npm run dev`, `pnpm test`, or a project-specific setup script. They can also save reusable agent prompts for launch-time prompt agents such as Claude and Codex. Create them from **Settings → Quick Commands** or the tab bar's **Add command** button, then run them from the Quick Commands split-button in a worktree tab bar or from the terminal context menu.
 
-Each command has a label, command text, and scope. Use **Global** for commands that apply everywhere, or **Project** to show the command only in worktrees for a specific repo. The tab-bar button opens a fresh terminal tab and runs the command; the terminal context menu can insert commands into the current terminal. Use the copy control on a command row (Settings list, tab-bar menu, or [mobile Quick Commands](/docs/mobile#quick-commands)) to put the command body on the clipboard.
+Each command has a label, command text, and scope. Use **Global** for commands that apply everywhere, or **Project** to show the command only in worktrees for a specific repo. The tab-bar button opens a fresh terminal tab and runs the command; the terminal context menu can insert commands into the current terminal. Use the copy control on a command row (Settings list, tab-bar menu, or [mobile Quick Commands](/mobile#quick-commands)) to put the command body on the clipboard.
 
-When you work with a paired [Remote Orca Server](/docs/remote-servers) (or another execution host), the picker can show **local and remote** collections side by side, labeled by host (for example *Local Mac* and *Orca Server*). **Saved on** is where the command is stored; running a command still executes in the terminal or workspace where you invoke it — so a client-owned command can run inside a remote worktree. Older servers that do not advertise multi-host Quick Commands fall back to the local-only list.
+When you work with a paired [Remote Orca Server](/remote-servers) (or another execution host), the picker can show **local and remote** collections side by side, labeled by host (for example *Local Mac* and *Orca Server*). **Saved on** is where the command is stored; running a command still executes in the terminal or workspace where you invoke it — so a client-owned command can run inside a remote worktree. Older servers that do not advertise multi-host Quick Commands fall back to the local-only list.

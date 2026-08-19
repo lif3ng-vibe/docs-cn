@@ -27,17 +27,17 @@ Orca does **not** sell managed VPS hosting. Remote modes always use machines and
 
 Install Orca, open a project, create worktrees. Agents, terminals, and the browser run on the same machine as the UI.
 
-![Sidebar worktrees on Local Mac — each card is a worktree with its own agents and branch.](/docs/ways-to-run-local-sidebar.png)
+![Sidebar worktrees on Local Mac — each card is a worktree with its own agents and branch.](/ways-to-run-local-sidebar.png)
 
 Sidebar worktrees on Local Mac — each card is a worktree with its own agents and branch.
 
-This is the default path for most people. See [Your first 3-agent session](/docs/first-session) and [Worktrees](/docs/model/worktrees).
+This is the default path for most people. See [Your first 3-agent session](/first-session) and [Worktrees](/model/worktrees).
 
 ## 2. SSH targets
 
 Point Orca at any SSH host — a beefier Mac mini, a Linux VPS, a GPU box, a cloud sandbox with SSH. When you create a worktree, pick that host under **Run on**. Agents and `git worktree` run on the remote; the editor, diff, and UI stay on your laptop.
 
-![Create worktree → Run on — choose Local or a configured remote host (here: openclaw over SSH).](/docs/ways-to-run-run-on.png)
+![Create worktree → Run on — choose Local or a configured remote host (here: openclaw over SSH).](/ways-to-run-run-on.png)
 
 Create worktree → Run on — choose Local or a configured remote host (here: openclaw over SSH).
 
@@ -45,11 +45,11 @@ Create worktree → Run on — choose Local or a configured remote host (here: o
 
 **Setup sketch:**
 
-1. Add the host under [Settings → SSH](/docs/settings).
+1. Add the host under [Settings → SSH](/settings).
 2. Test the connection (git must be available on the host for repo worktrees).
 3. Create a worktree and select the SSH target under **Run on**. The type-ahead lists ready hosts and, for hosts that are connected but not yet set up for this project, non-selectable **setup-needed** rows.
 
-SSH worktrees can open in VS Code Remote-SSH, download remote folders when SFTP allows it, and stay usable for files/git even when the remote cannot compile terminal natives (install build tools for shells). Details: [SSH worktrees](/docs/ssh) and the recipe [Work on a remote machine over SSH](/docs/recipes/remote-worktrees).
+SSH worktrees can open in VS Code Remote-SSH, download remote folders when SFTP allows it, and stay usable for files/git even when the remote cannot compile terminal natives (install build tools for shells). Details: [SSH worktrees](/ssh) and the recipe [Work on a remote machine over SSH](/recipes/remote-worktrees).
 
 ## 3. Remote Orca Servers
 
@@ -69,7 +69,7 @@ For a headless Linux server or service-managed VM, use `orca serve` as the alter
 orca serve --pairing-address <reachable-tailscale-ip-or-hostname>
 ```
 
-Full detail: [Remote Orca Servers](/docs/remote-servers).
+Full detail: [Remote Orca Servers](/remote-servers).
 
 ### SSH vs Remote Orca Server
 
@@ -84,11 +84,11 @@ Full detail: [Remote Orca Servers](/docs/remote-servers).
 
 Each worktree can boot its own on-demand environment — a cloud sandbox, VM, or local Docker container — from a **recipe** checked into the repo (`orca.yaml` + lifecycle scripts). Create spins it up; suspend/resume/destroy tear it down. Orca is a thin wrapper: your provider account, images, and billing stay yours.
 
-In the product UI this surface is labeled **Cloud VM** under [Settings → Experimental](/docs/settings). Recipes still create per-workspace environments.
+In the product UI this surface is labeled **Cloud VM** under [Settings → Experimental](/settings). Recipes still create per-workspace environments.
 
 Providers people wire today include Vercel Sandbox, Fly, Modal, plain SSH hosts, and local Docker. Connection is either **Orca server** (recipe starts `orca serve` and returns a pairing URL) or **SSH** (recipe returns connection details Orca dials).
 
-![Settings → Experimental → Cloud VM — enable the skill, then have an agent set up a recipe for the repo.](/docs/ways-to-run-per-workspace-env.png)
+![Settings → Experimental → Cloud VM — enable the skill, then have an agent set up a recipe for the repo.](/ways-to-run-per-workspace-env.png)
 
 Settings → Experimental → Cloud VM — enable the skill, then have an agent set up a recipe for the repo.
 
@@ -96,7 +96,7 @@ Settings → Experimental → Cloud VM — enable the skill, then have an agent 
 
 **Setup sketch:**
 
-1. Enable **Cloud VM** under [Settings → Experimental](/docs/settings). The pane includes a short **Create a Cloud VM** guide and recipe/runtime controls.
+1. Enable **Cloud VM** under [Settings → Experimental](/settings). The pane includes a short **Create a Cloud VM** guide and recipe/runtime controls.
 
 2. Install/update the Cloud VM / per-workspace environment skill if needed.
 
@@ -125,8 +125,8 @@ You can mix modes in one install: local worktrees for quick edits, SSH for a GPU
 
 ## Related
 
-- [SSH worktrees](/docs/ssh)
-- [Remote Orca Servers](/docs/remote-servers)
-- [Worktrees](/docs/model/worktrees)
-- [Mobile](/docs/mobile)
-- [Settings reference](/docs/settings)
+- [SSH worktrees](/ssh)
+- [Remote Orca Servers](/remote-servers)
+- [Worktrees](/model/worktrees)
+- [Mobile](/mobile)
+- [Settings reference](/settings)

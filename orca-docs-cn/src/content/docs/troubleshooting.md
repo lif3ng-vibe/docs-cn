@@ -11,7 +11,7 @@ $undefined
 ## Agent won't start
 
 - Open the terminal and run the agent's CLI manually. If it fails there, it's an auth or install problem in the CLI itself — not Orca.
-- Make sure the CLI is on the `PATH` Orca sees (check [Settings → Agents](/docs/settings)).
+- Make sure the CLI is on the `PATH` Orca sees (check [Settings → Agents](/settings)).
 - Try the **Restart** chip on the tab.
 
 ## Diff view looks wrong / stuck
@@ -26,12 +26,12 @@ $undefined
 
 ## Orca CLI says "command not found"
 
-Register the CLI under [Settings → General → Orca CLI](/docs/settings). On macOS it installs a shim into `~/.local/bin`; make sure that's on your shell's `PATH`.
+Register the CLI under [Settings → General → Orca CLI](/settings). On macOS it installs a shim into `~/.local/bin`; make sure that's on your shell's `PATH`.
 
 ## SSH connects but remote terminals fail
 
 - Confirm the remote has Node and network access for the first-time relay install.
-- On Linux, install a C/C++ toolchain if terminals never spawn: make, g++/clang++, python3 (see [SSH worktrees](/docs/ssh)).
+- On Linux, install a C/C++ toolchain if terminals never spawn: make, g++/clang++, python3 (see [SSH worktrees](/ssh)).
 - Reconnect after installing tools so Orca can reinstall native modules.
 
 ## SSH works for files but not “Download Folder”
@@ -60,7 +60,7 @@ No tab is open in the current worktree. Open one with `orca tab create --url ...
 
 ## GitHub PR panel / checks / Tasks errors
 
-Rate limits, bad `gh` auth, missing scopes, and repo access issues all show up in Source Control and the PR Checks panel. See **[Troubleshooting GitHub errors](/docs/github-errors)** for the full matrix (including why **GitHub API Budget** in Settings can look fine while REST is still blocked).
+Rate limits, bad `gh` auth, missing scopes, and repo access issues all show up in Source Control and the PR Checks panel. See **[Troubleshooting GitHub errors](/github-errors)** for the full matrix (including why **GitHub API Budget** in Settings can look fine while REST is still blocked).
 
 Quick checks:
 

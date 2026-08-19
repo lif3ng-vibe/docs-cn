@@ -8,7 +8,7 @@ source: "https://www.onorca.dev/docs/activity"
 
 Threaded feed of agent completions, blocking states, response previews, and worktree creation events across every worktree.
 
-The **Agents** entry in the sidebar opens a threaded feed of agent events across every worktree — completions, blocking questions, unread state, and worktree creation. It complements the per-worktree [notifications](/docs/notifications) view by giving you one chronological surface to triage from.
+The **Agents** entry in the sidebar opens a threaded feed of agent events across every worktree — completions, blocking questions, unread state, and worktree creation. It complements the per-worktree [notifications](/notifications) view by giving you one chronological surface to triage from.
 
 The entry is on by default. It shows an unread badge when new events have arrived since you last visited; clicking an entry jumps you to the matching worktree and pane — the same handoff Orca does from a system notification.
 
@@ -27,9 +27,9 @@ Threads are grouped by status — running agents stay pinned at the top so you c
 
 ## Interplay with notifications
 
-The Agents feed doesn't replace the [header bell](/docs/notifications) or system notifications — those still fire on agent-finished pings. The feed is the catch-up surface when you've been away from Orca: instead of scrolling each worktree to find what changed, scan it.
+The Agents feed doesn't replace the [header bell](/notifications) or system notifications — those still fire on agent-finished pings. The feed is the catch-up surface when you've been away from Orca: instead of scrolling each worktree to find what changed, scan it.
 
 ## Next steps
 
-- [Notifications & Inbox](/docs/notifications) — system pings, the header bell, and per-category tuning.
-- [Agents & sessions](/docs/model/agents-sessions) — how Orca tracks the working/idle/blocked transitions this feed surfaces.
+- [Notifications & Inbox](/notifications) — system pings, the header bell, and per-category tuning.
+- [Agents & sessions](/model/agents-sessions) — how Orca tracks the working/idle/blocked transitions this feed surfaces.

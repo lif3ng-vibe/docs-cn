@@ -18,7 +18,7 @@ File search scoped to the current worktree. Type a fragment; Orca ranks by recen
 
 The tab strip **+** omnibox searches **open tabs**, files, URLs, and agents in one field (placeholder: *Search open tabs, files, URLs, agents…*). File rows use the same filename-first layout as Quick Open. Matching an already-open editor tab prefers that tab over a duplicate file result, so you jump to the open buffer instead of opening a second copy.
 
-Type a web search instead of a path or URL to open it in the worktree browser with your [Default Search Engine](/docs/settings). A single token still ranks file matches first; a multi-word phrase promotes the search row. Prefix the query with `?` to skip file and tab matching and search immediately.
+Type a web search instead of a path or URL to open it in the worktree browser with your [Default Search Engine](/settings). A single token still ranks file matches first; a multi-word phrase promotes the search row. Prefix the query with `?` to skip file and tab matching and search immediately.
 
 ## Worktree Jump Palette (Cmd-J)
 
@@ -41,4 +41,4 @@ Shift-Enter on a worktree opens it in a new split instead of swapping the curren
 
 When the query does not match an existing worktree, the palette offers a **Create worktree** row using the typed text as the name. Existing matches stay selected first, so pressing Enter still jumps when a real result is available.
 
-> $undefined Shortcut bindings are remappable under [Settings → Shortcuts](/docs/settings).
+> $undefined Shortcut bindings are remappable under [Settings → Shortcuts](/settings).

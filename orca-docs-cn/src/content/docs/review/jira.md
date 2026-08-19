@@ -34,7 +34,7 @@ Jira sits next to GitHub and Linear in the task drawer. Browse Jira issues, upda
 
 You can connect more than one Atlassian site. The Tasks header has a site picker once a site is connected; choose **All sites** to combine issues across them.
 
-If you don't use Jira at all, hide it from the source picker via [Settings → Tasks](/docs/settings).
+If you don't use Jira at all, hide it from the source picker via [Settings → Tasks](/settings).
 
 ## Using Jira
 
@@ -50,6 +50,6 @@ If you don't use Jira at all, hide it from the source picker via [Settings → T
 
 ## Next steps
 
-- [Linear items drawer](/docs/review/linear) — same flow against Linear.
-- [Hosted reviews, issues & Actions](/docs/review/github) — hand off the worktree to a hosted review once the Jira issue is in progress.
-- [Commit & push from Orca](/docs/review/commit-push) — ship the branch without leaving Orca.
+- [Linear items drawer](/review/linear) — same flow against Linear.
+- [Hosted reviews, issues & Actions](/review/github) — hand off the worktree to a hosted review once the Jira issue is in progress.
+- [Commit & push from Orca](/review/commit-push) — ship the branch without leaving Orca.

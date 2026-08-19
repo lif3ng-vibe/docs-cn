@@ -16,7 +16,7 @@ This page covers the errors you’ll see most often and how to fix them.
 
 | What you see | Likely cause | First thing to try |
 | --- | --- | --- |
-| “GitHub is rate-limiting requests” / “rate limit exceeded (core)” | GitHub REST (core) quota exhausted for your user | Wait for reset; stop extra `gh` / agent / Orca usage; check [Settings → Git → GitHub API Budget](/docs/settings) |
+| “GitHub is rate-limiting requests” / “rate limit exceeded (core)” | GitHub REST (core) quota exhausted for your user | Wait for reset; stop extra `gh` / agent / Orca usage; check [Settings → Git → GitHub API Budget](/settings) |
 | “GitHub authentication is unavailable” / `gh auth` prompts | `gh` not logged in, expired token, or bad `GITHUB_TOKEN` | `gh auth status`, then `gh auth login` |
 | “GitHub did not allow access” / HTTP 403 (not rate limit) | Missing scopes or no access to the repo |
 
@@ -149,7 +149,7 @@ If Orca reports the GitHub CLI is unavailable:
 
 ## Check GitHub API Budget in Orca
 
-Open **[Settings → Git](/docs/settings)** and find **GitHub API Budget**:
+Open **[Settings → Git](/settings)** and find **GitHub API Budget**:
 
 - **REST / Search / GraphQL** remaining counts from GitHub’s probe
 - Refresh after waiting out a limit
@@ -166,7 +166,7 @@ Open **[Settings → Git](/docs/settings)** and find **GitHub API Budget**:
 
 ## Related
 
-- [Hosted reviews, issues & Actions](/docs/review/github) — PR and Checks features that depend on GitHub
-- [Settings reference](/docs/settings) — Integrations and Git panes
-- [Usage & rate-limit tracking](/docs/agents/usage-tracking) — AI provider limits (Claude/Codex), not GitHub API
-- [Troubleshooting & FAQ](/docs/troubleshooting) — general Orca issues
+- [Hosted reviews, issues & Actions](/review/github) — PR and Checks features that depend on GitHub
+- [Settings reference](/settings) — Integrations and Git panes
+- [Usage & rate-limit tracking](/agents/usage-tracking) — AI provider limits (Claude/Codex), not GitHub API
+- [Troubleshooting & FAQ](/troubleshooting) — general Orca issues

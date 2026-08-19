@@ -26,11 +26,11 @@ Right-click a notification to mark unread — useful when you've triaged somethi
 
 ## Tuning
 
-Turn off specific categories (system, sound, chip-only) under [Settings → Notifications](/docs/settings).
+Turn off specific categories (system, sound, chip-only) under [Settings → Notifications](/settings).
 
 ## Custom sounds
 
-Pick a custom desktop notification sound per category under [Settings → Notifications](/docs/settings) — point at any audio file on disk, or pick from Orca's built-in set. Useful when you want agent-finished pings to stand out from system mail and Slack.
+Pick a custom desktop notification sound per category under [Settings → Notifications](/settings) — point at any audio file on disk, or pick from Orca's built-in set. Useful when you want agent-finished pings to stand out from system mail and Slack.
 
 Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC. One file applies to all delivered desktop notifications.
 

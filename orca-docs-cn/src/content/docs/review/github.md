@@ -14,7 +14,7 @@ GitHub integration — open PRs, watch checks, and triage issues without leaving
 
 ## Connecting a provider
 
-Connect the provider your repository uses from [Settings → Integrations](/docs/settings). GitHub has the deepest Actions and issue support; GitLab merge requests and issues use the same worktree review flow.
+Connect the provider your repository uses from [Settings → Integrations](/settings). GitHub has the deepest Actions and issue support; GitLab merge requests and issues use the same worktree review flow.
 
 Bitbucket Cloud connects in-app from the same pane — **Connect** with **Email & API token** or an **Access token**. Orca verifies the credential before saving and can create pull requests from Source Control. Bitbucket Cloud has no draft PRs, so the composer hides the Draft toggle. `ORCA_BITBUCKET_*` environment variables still win over a saved credential. Azure DevOps and Gitea pull requests appear in the worktree sidebar and the Checks panel alongside GitHub, GitLab, and Bitbucket — the worktree creation flow checks them for remote conflicts before pushing.
 
@@ -64,10 +64,10 @@ Orca surfaces a full GitHub Projects view under the **Tasks** sidebar entry — 
 
 ## Troubleshooting
 
-If PR status, checks, or Tasks fail to refresh — rate limits, `gh` auth, permissions, or network — see **[Troubleshooting GitHub errors](/docs/github-errors)**.
+If PR status, checks, or Tasks fail to refresh — rate limits, `gh` auth, permissions, or network — see **[Troubleshooting GitHub errors](/github-errors)**.
 
 ## Next steps
 
-- [Commit & push from Orca](/docs/review/commit-push) — stage changes, push the branch, then create the hosted review.
-- [Linear items drawer](/docs/review/linear) — use Linear when the task source is outside your git provider.
-- [Troubleshooting GitHub errors](/docs/github-errors) — rate limits, auth, and `gh` failures.
+- [Commit & push from Orca](/review/commit-push) — stage changes, push the branch, then create the hosted review.
+- [Linear items drawer](/review/linear) — use Linear when the task source is outside your git provider.
+- [Troubleshooting GitHub errors](/github-errors) — rate limits, auth, and `gh` failures.

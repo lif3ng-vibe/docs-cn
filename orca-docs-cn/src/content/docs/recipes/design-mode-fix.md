@@ -13,7 +13,7 @@ Design Mode collapses the "that button looks wrong" → "fixed commit" loop to u
 ## Steps
 
 1. Open the worktree's browser pane. Navigate to the page with the bug.
-2. Toggle [Design Mode](/docs/browser/design-mode) on.
+2. Toggle [Design Mode](/browser/design-mode) on.
 3. Click the broken element. It lands in the agent chat as a rich attachment.
 4. Type what you want fixed: "this padding is too tight, increase to match the cards above."
 5. The agent edits the source. Hot reload refreshes the browser.

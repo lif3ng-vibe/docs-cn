@@ -46,7 +46,7 @@ You can disable telemetry in three ways. Any one of them is sufficient; they com
 
 1. **In the app.** Settings → Privacy → toggle "Share anonymous usage data" off. The change is immediate and persistent.
 
-![Settings → Privacy — toggle 'Share anonymous usage data' off to disable telemetry.](/docs/privacy-toggle.png)
+![Settings → Privacy — toggle 'Share anonymous usage data' off to disable telemetry.](/privacy-toggle.png)
 
 Settings → Privacy — toggle 'Share anonymous usage data' off to disable telemetry.
 

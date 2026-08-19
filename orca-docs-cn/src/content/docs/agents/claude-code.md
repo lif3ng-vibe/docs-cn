@@ -22,16 +22,16 @@ In any worktree, open a terminal and pick **Claude Code** from the agent combobo
 
 ## Usage & rate limits
 
-Orca reads your local `~/.claude` usage state and shows current usage plus rate-limit proximity in the status bar. See [Usage & rate-limit tracking](/docs/agents/usage-tracking).
+Orca reads your local `~/.claude` usage state and shows current usage plus rate-limit proximity in the status bar. See [Usage & rate-limit tracking](/agents/usage-tracking).
 
 ## Account hot-swap
 
-Orca supports multiple Claude accounts and can swap between them in one click, matching the Codex flow. Switching accounts works even with live Claude sessions running — Orca holds the in-progress switch behind a guard so you don't trigger overlapping auth refreshes. See [Hot-swap Codex accounts](/docs/agents/codex-hot-swap) — the Claude flow is identical in shape.
+Orca supports multiple Claude accounts and can swap between them in one click, matching the Codex flow. Switching accounts works even with live Claude sessions running — Orca holds the in-progress switch behind a guard so you don't trigger overlapping auth refreshes. See [Hot-swap Codex accounts](/agents/codex-hot-swap) — the Claude flow is identical in shape.
 
 ## Subagents and teams
 
-Background subagents and Agent Teams teammates can show as expandable child rows under the lead agent in the worktree agent list and [Agent Dashboard](/docs/model/agents-sessions#agent-dashboard). Selecting a child focuses the lead terminal.
+Background subagents and Agent Teams teammates can show as expandable child rows under the lead agent in the worktree agent list and [Agent Dashboard](/model/agents-sessions#agent-dashboard). Selecting a child focuses the lead terminal.
 
 ## Hooks & memory
 
-Claude Code supports per-repo hooks and memory files. Orca surfaces these under [Agent hooks & memory](/docs/agents/hooks-memory).
+Claude Code supports per-repo hooks and memory files. Orca surfaces these under [Agent hooks & memory](/agents/hooks-memory).

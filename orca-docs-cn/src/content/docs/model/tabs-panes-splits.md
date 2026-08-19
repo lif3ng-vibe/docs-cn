@@ -29,7 +29,7 @@ Default chords on **new installs**:
 | --- | --- | --- |
 | Next / previous tab (all types) |
 
-Remap under [Settings → Shortcuts](/docs/settings). Existing installs keep customized overrides in `~/.orca/keybindings.json`.
+Remap under [Settings → Shortcuts](/settings). Existing installs keep customized overrides in `~/.orca/keybindings.json`.
 
 ## Split panes
 

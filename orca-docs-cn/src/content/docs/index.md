@@ -27,6 +27,6 @@ Orca is designed for people who already write code for a living and want to use 
 
 - **Not a model.** Orca runs agents you already use — bring your own Claude, Codex, or OpenCode subscription.
 - **Not a git replacement.** Every worktree is a real git worktree. You can `cd` in and use plain git whenever you want.
-- **Not a hosted VPS product.** Orca runs on your desktop by default. Remote compute uses machines and cloud accounts you control — [SSH targets](/docs/ssh), [self-hosted Orca servers](/docs/remote-servers), or [Cloud VMs / per-workspace environments](/docs/ways-to-run#4-cloud-vms-per-workspace-environments).
+- **Not a hosted VPS product.** Orca runs on your desktop by default. Remote compute uses machines and cloud accounts you control — [SSH targets](/ssh), [self-hosted Orca servers](/remote-servers), or [Cloud VMs / per-workspace environments](/ways-to-run#4-cloud-vms-per-workspace-environments).
 
-> Next steps Head to [Install](/docs/install), then walk through [Your first 3-agent session](/docs/first-session) — the single most important page in these docs. When you're ready to move agents off the laptop, start with [Ways to run Orca](/docs/ways-to-run).
+> Next steps Head to [Install](/install), then walk through [Your first 3-agent session](/first-session) — the single most important page in these docs. When you're ready to move agents off the laptop, start with [Ways to run Orca](/ways-to-run).

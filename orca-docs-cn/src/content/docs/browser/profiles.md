@@ -12,7 +12,7 @@ Browser-use profiles let you run the Orca browser with a specific identity — a
 
 ## Create a profile
 
-1. Open [Settings → Browser → Profiles](/docs/settings).
+1. Open [Settings → Browser → Profiles](/settings).
 2. Click **Add profile**, give it a name.
 3. Optionally seed it with cookies, a user-agent, and a viewport size.
 4. For sites that reject Orca's default Chrome-shaped UA (some Google sign-in flows), create a profile that keeps the **native Electron user agent** instead of spoofing. Default profiles still use the cleaned Chrome UA for broader Cloudflare compatibility.

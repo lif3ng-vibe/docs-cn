@@ -19,15 +19,15 @@ Orca only hibernates an agent terminal when **all** of the following are true:
 - The agent is in a **done** state — it has finished its last turn and isn't waiting on input.
 - The terminal isn't in the active worktree or any worktree currently rendering a foreground terminal.
 - It hasn't received keystrokes since the agent finished.
-- The agent is one with a [resumable session](/docs/agents/session-history): Claude, Codex, Gemini, Antigravity, OpenCode, Pi, MiMo Code, Droid, Grok, Devin, or OMP.
+- The agent is one with a [resumable session](/agents/session-history): Claude, Codex, Gemini, Antigravity, OpenCode, Pi, MiMo Code, Droid, Grok, Devin, or OMP.
 - It's been idle for at least the configured idle window (default 30 minutes).
 - No mobile session is currently driving the terminal.
-- No [orchestration](/docs/cli/orchestration) Dispatch is still unsettled (`pending`, `dispatched`, or unknown). Sleep is allowed again after runtime-confirmed `completed`, `failed`, or `circuit_broken`.
+- No [orchestration](/cli/orchestration) Dispatch is still unsettled (`pending`, `dispatched`, or unknown). Sleep is allowed again after runtime-confirmed `completed`, `failed`, or `circuit_broken`.
 - No live subagent / teammate roster remains on the pane (provider "done" alone is not enough while children are still attached).
 
 A terminal that fails any check stays running. If a worktree has multiple agent panes, they hibernate together as a unit so a partially-paused worktree never ships.
 
-You can also sleep worktrees manually from the sidebar (including **Sleep with Descendants** when nested children exist). See [Worktrees](/docs/model/worktrees). Manual sleep keeps **finished** and **interrupted** resumable sessions so reopening the worktree can still relaunch with the same resume flags — it does not wipe those session records just because the pane was no longer "live."
+You can also sleep worktrees manually from the sidebar (including **Sleep with Descendants** when nested children exist). See [Worktrees](/model/worktrees). Manual sleep keeps **finished** and **interrupted** resumable sessions so reopening the worktree can still relaunch with the same resume flags — it does not wipe those session records just because the pane was no longer "live."
 
 ## Tuning the idle window
 
@@ -41,11 +41,11 @@ Longer windows trade memory savings for fewer pauses; shorter windows pause more
 
 ## Finding sleeping worktrees
 
-The sidebar filter menu controls whether sleeping worktrees are shown. If you hide them often, assign **Toggle Sleeping Workspaces** under [Settings → Shortcuts](/docs/settings) to show or hide them without opening the filter menu.
+The sidebar filter menu controls whether sleeping worktrees are shown. If you hide them often, assign **Toggle Sleeping Workspaces** under [Settings → Shortcuts](/settings) to show or hide them without opening the filter menu.
 
 ## Resuming
 
-When you open a hibernated worktree, Orca relaunches the agent CLI with the same resume flags it would use from [Agent Session History](/docs/agents/session-history) — `claude --resume <id>`, `codex resume <id>`, and so on — so the conversation, working directory, and provider session pick up where they left off. There's nothing to click; the resume happens as part of bringing the terminal back into the foreground.
+When you open a hibernated worktree, Orca relaunches the agent CLI with the same resume flags it would use from [Agent Session History](/agents/session-history) — `claude --resume <id>`, `codex resume <id>`, and so on — so the conversation, working directory, and provider session pick up where they left off. There's nothing to click; the resume happens as part of bringing the terminal back into the foreground.
 
 Resume also reuses the launch command, arguments, and private environment captured when Orca first opened the agent.
 
@@ -57,5 +57,5 @@ Only the listed resumable agents hibernate. Cursor CLI, Hermes, Copilot, Trae, a
 
 ## Next steps
 
-- [Agent session history](/docs/agents/session-history) — manually resume any past session, including ones Orca didn't hibernate.
-- [Hot-swap Codex accounts](/docs/agents/codex-hot-swap) — swap the active Codex login without restarting the session, which works alongside hibernation.
+- [Agent session history](/agents/session-history) — manually resume any past session, including ones Orca didn't hibernate.
+- [Hot-swap Codex accounts](/agents/codex-hot-swap) — swap the active Codex login without restarting the session, which works alongside hibernation.

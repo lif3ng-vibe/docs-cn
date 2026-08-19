@@ -15,7 +15,7 @@ Ten worktrees is a lot to juggle. The Jump Palette + Restart chip + agent state 
 1. `Cmd-J` opens the jump palette. Type a fragment of the task name. Enter jumps; Shift-Enter opens in a split. Press **Tab** to filter by host or project when the list is large.
 2. Scan the sidebar — worktrees with active agents have a green dot. Go to the ones that need input (yellow) first.
 3. In each worktree, the **Restart** chip relaunches any agent that exited. Great for mass-resuming after a laptop sleep.
-4. Use the [persistent bell](/docs/notifications) to drain the "agent finished" queue — click a notification, it jumps you to the worktree.
+4. Use the [persistent bell](/notifications) to drain the "agent finished" queue — click a notification, it jumps you to the worktree.
 
 ## Hygiene
 

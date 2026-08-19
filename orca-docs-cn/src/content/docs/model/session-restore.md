@@ -44,5 +44,5 @@ Session restore runs on every launch. The cases divide by whether the **daemon**
 
 ## Next steps
 
-- [Agents & sessions](/docs/model/agents-sessions) — state dots and the lifecycle of an agent session.
-- [Tabs, panes & split layouts](/docs/model/tabs-panes-splits) — how the layout you'll be restoring is built in the first place.
+- [Agents & sessions](/model/agents-sessions) — state dots and the lifecycle of an agent session.
+- [Tabs, panes & split layouts](/model/tabs-panes-splits) — how the layout you'll be restoring is built in the first place.

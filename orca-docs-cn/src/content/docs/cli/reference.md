@@ -12,7 +12,7 @@ The `orca` CLI talks to a running Orca runtime. Use it when a shell script or ag
 
 ## Verify the runtime
 
-Register the CLI under [Settings -> Experimental -> CLI](/docs/settings), then check that it can reach Orca:
+Register the CLI under [Settings -> Experimental -> CLI](/settings), then check that it can reach Orca:
 
 ```
 command -v orca
@@ -50,7 +50,7 @@ orca status --json
 orca serve --port 6768 --pairing-address 100.64.1.20 --json
 ```
 
-`orca serve` starts a runtime server in the foreground without opening the desktop window. Use it for [Remote Orca Servers](/docs/remote-servers) or headless environments, and stop it with `Ctrl-C`.
+`orca serve` starts a runtime server in the foreground without opening the desktop window. Use it for [Remote Orca Servers](/remote-servers) or headless environments, and stop it with `Ctrl-C`.
 
 ## Repos
 
@@ -172,7 +172,7 @@ orca computer click --app com.apple.Safari --element-index 12 --json
 orca computer paste-text --app com.apple.Safari --text "hello" --json
 ```
 
-See [Computer use](/docs/cli/computer-use) for the full workflow and permission setup.
+See [Computer use](/cli/computer-use) for the full workflow and permission setup.
 
 ## Mobile emulator
 
@@ -257,7 +257,7 @@ orca skills install --all --dry-run
 orca skills update --all
 ```
 
-`install` / `update` shell out to the same `npx skills` commands Settings uses. They do not contact the Orca runtime. See [Orca skills](/docs/cli/skills#keep-skills-up-to-date).
+`install` / `update` shell out to the same `npx skills` commands Settings uses. They do not contact the Orca runtime. See [Orca skills](/cli/skills#keep-skills-up-to-date).
 
 ## Account (host-local runtime)
 
@@ -323,5 +323,5 @@ orca agent hooks off --json
 - Prefer `--json` for automation and agent calls.
 - Prefer selectors over parsing UI labels.
 - Read terminal state before sending input unless the next input is obvious.
-- Use worktree comments for progress checkpoints. See [Worktree checkpoints](/docs/cli/worktree-checkpoints).
-- Use [Orchestration](/docs/cli/orchestration) for tracked multi-agent dispatches instead of ad hoc terminal prompts.
+- Use worktree comments for progress checkpoints. See [Worktree checkpoints](/cli/worktree-checkpoints).
+- Use [Orchestration](/cli/orchestration) for tracked multi-agent dispatches instead of ad hoc terminal prompts.

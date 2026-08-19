@@ -10,7 +10,7 @@ Use the Orca CLI to script Orca from a terminal, manage worktrees, control agent
 
 The Orca CLI is the `orca` command-line interface for scripting a running Orca editor from any shell. Use it to create and inspect worktrees, drive agent terminals, open files and diffs, automate the built-in browser, run scheduled automations, share HTML/Markdown artifacts, and control Orca-native tools from scripts or AI agents.
 
-It ships with the desktop app; register it under [Settings → General → Orca CLI](/docs/settings).
+It ships with the desktop app; register it under [Settings → General → Orca CLI](/settings).
 
 Agents can install the matching Orca CLI skill with:
 
@@ -20,7 +20,7 @@ npx skills add https://github.com/stablyai/orca --skill orca-cli
 orca skills install --skill orca-cli
 ```
 
-See [Skills registry & MCP](/docs/cli/skills) for every installable Orca skill, including `orca skills install` / `orca skills update`.
+See [Skills registry & MCP](/cli/skills) for every installable Orca skill, including `orca skills install` / `orca skills update`.
 
 Orca CLI — drive worktrees, terminals, and the built-in browser from any shell
 
@@ -41,7 +41,7 @@ orca worktree set --worktree active --comment "reproduced bug" --json
 orca worktree rm --worktree id:<id> --force --json
 ```
 
-For selectors, setup flags, parent/child worktrees, and the broader command map, see [Orca CLI reference](/docs/cli/reference).
+For selectors, setup flags, parent/child worktrees, and the broader command map, see [Orca CLI reference](/cli/reference).
 
 ## Terminal commands
 
@@ -54,7 +54,7 @@ orca terminal create --worktree path:/projects/app --command "npm test" --json
 orca terminal split --direction vertical --command "npm run dev" --json
 ```
 
-For tracked multi-agent work, use [Orchestration](/docs/cli/orchestration) instead of plain terminal prompts.
+For tracked multi-agent work, use [Orchestration](/cli/orchestration) instead of plain terminal prompts.
 
 ## File commands
 
@@ -74,11 +74,11 @@ Browser profiles isolate tab session state, so a script or agent can test with d
 
 ## Scheduled automations
 
-Use `orca automations` to create, inspect, run, and remove scheduled Orca tasks from a shell. Start with [Scheduled automations](/docs/cli/automations) when you want a recurring prompt to run against a repo or an existing worktree.
+Use `orca automations` to create, inspect, run, and remove scheduled Orca tasks from a shell. Start with [Scheduled automations](/cli/automations) when you want a recurring prompt to run against a repo or an existing worktree.
 
 ## Artifacts
 
-Share HTML or Markdown as public view links through the signed-in Orca account (`orca artifacts share|update|list|delete`). Publishing is **opt-in** under Settings → Artifacts. Command details: [CLI reference → Artifacts](/docs/cli/reference#artifacts).
+Share HTML or Markdown as public view links through the signed-in Orca account (`orca artifacts share|update|list|delete`). Publishing is **opt-in** under Settings → Artifacts. Command details: [CLI reference → Artifacts](/cli/reference#artifacts).
 
 ## Browser automation
 
@@ -115,4 +115,4 @@ orca emulator kill --json
 
 Use `--worktree <selector>`, `--device <udid-or-name>`, or `--emulator <id>` when a script needs an explicit target.
 
-> $undefined For the full command surface including tabs, waits, cookies, and frames, see [Orca CLI reference](/docs/cli/reference), then install the Orca CLI skill (see [Skills registry](/docs/cli/skills)) and point your agent at it.
+> $undefined For the full command surface including tabs, waits, cookies, and frames, see [Orca CLI reference](/cli/reference), then install the Orca CLI skill (see [Skills registry](/cli/skills)) and point your agent at it.

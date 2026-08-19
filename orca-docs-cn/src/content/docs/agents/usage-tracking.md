@@ -31,13 +31,13 @@ Click the usage segment in the status bar to open the **Usage** popover. It list
 - full bars, labels, and percentages for every window
 - **Compact** — only the tightest window per provider
 
-Under [Settings → Appearance](/docs/settings), choose **% used** vs **% remaining** for how those numbers read.
+Under [Settings → Appearance](/settings), choose **% used** vs **% remaining** for how those numbers read.
 
 Rows without live numbers show a short status instead: **Loading usage…**, **not signed in**, **Usage unavailable**, **No usage data**, or a provider-specific error. Claude and Codex rows can drill into account switching; **Manage accounts** opens Settings.
 
 ### Mobile
 
-On the companion app, open the host **Accounts** screen for the same switcher/usage readout. When Codex has earned **rate-limit reset** credits, spend one from that screen (see [Mobile companion](/docs/mobile)).
+On the companion app, open the host **Accounts** screen for the same switcher/usage readout. When Codex has earned **rate-limit reset** credits, spend one from that screen (see [Mobile companion](/mobile)).
 
 ## Estimated cost (Stats)
 

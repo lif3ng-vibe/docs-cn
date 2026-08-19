@@ -56,5 +56,5 @@ Orca reads each agent's own on-disk session store — Codex's `~/.codex/sessions
 
 ## Next steps
 
-- [Hot-swap Codex accounts](/docs/agents/codex-hot-swap) — switch the Codex login behind an active session without restarting it.
-- [Hooks & memory](/docs/agents/hooks-memory) — control what context an agent picks up on every launch (including resumed sessions).
+- [Hot-swap Codex accounts](/agents/codex-hot-swap) — switch the Codex login behind an active session without restarting it.
+- [Hooks & memory](/agents/hooks-memory) — control what context an agent picks up on every launch (including resumed sessions).

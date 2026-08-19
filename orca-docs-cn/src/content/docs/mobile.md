@@ -31,7 +31,7 @@ Orca Mobile — agent status, scrollback, and quick replies from your phone.
 - Create a workspace from mobile with the same Smart source modes as desktop: Smart, GitHub, Linear, GitLab, Branch, and Name. With **multiple connected desktops**, **New Workspace** asks which host should create it first (one connected host skips the picker).
 - Open a host card's **⋯** menu for **Edit**, **Connect**, **Remove**, and related actions (long-press still works as a shortcut).
 - Edit a saved host's display name or connection address without re-pairing (for example when the desktop moves between home LAN and Tailscale).
-- Get push notifications when an agent finishes, mirroring [desktop notifications](/docs/notifications).
+- Get push notifications when an agent finishes, mirroring [desktop notifications](/notifications).
 
 The mobile app is intentionally not a full editor — it's a remote control for the desktop you already have running.
 
@@ -46,7 +46,7 @@ Closing the desktop app drops a direct/LAN session until you reopen it. Relay-ba
 
 ## Chat UI
 
-For chat-capable agents (Claude, Codex, and others Orca recognizes), mobile can open the session in **Chat UI** instead of the raw terminal — the same idea as desktop's [Chat UI](/docs/agents/native-chat): a readable transcript, composer, permissions/questions, and image attachments.
+For chat-capable agents (Claude, Codex, and others Orca recognizes), mobile can open the session in **Chat UI** instead of the raw terminal — the same idea as desktop's [Chat UI](/agents/native-chat): a readable transcript, composer, permissions/questions, and image attachments.
 
 - **Device default** — on first launch, mobile asks how sessions should open on this phone. Change it later under **Settings → Chat UI → Open sessions in Chat UI**. The default is terminal until you choose Chat UI.
 - **Per-session** — long-press a session tab and choose **Switch to chat view** or **Switch to terminal view**. That override sticks for that tab without changing the device default.
@@ -73,7 +73,7 @@ Long-press a tab in the session strip for tab actions, including **Close**, **Cl
 
 The mobile app exposes the same account switcher as the desktop status bar, including inline usage for inactive accounts. The accounts screen shows reset countdowns when a provider reports reset timestamps for its session or weekly window. Switching here switches on the paired desktop.
 
-When the active Codex account has earned **rate-limit reset** credits, the accounts screen shows how many are available (and when the next one expires) and a **Use reset** action. Confirming spends one credit for the current Codex target (host or WSL distro) and refreshes eligible rate-limit windows. The phone journals the attempt so a retry after a flaky connection does not double-spend. Outcomes include success, nothing eligible to reset, no credit left, or that a reset was already applied. See also [Usage & rate-limit tracking](/docs/agents/usage-tracking).
+When the active Codex account has earned **rate-limit reset** credits, the accounts screen shows how many are available (and when the next one expires) and a **Use reset** action. Confirming spends one credit for the current Codex target (host or WSL distro) and refreshes eligible rate-limit windows. The phone journals the attempt so a retry after a flaky connection does not double-spend. Outcomes include success, nothing eligible to reset, no credit left, or that a reset was already applied. See also [Usage & rate-limit tracking](/agents/usage-tracking).
 
 ## Create a workspace
 
@@ -112,4 +112,4 @@ The mobile terminal has a dedicated **Terminal settings** screen (Settings → T
 - **Quick Commands unavailable** — update the paired desktop so it advertises the quick-commands capability.
 - **Can't reach desktop** — phone and desktop must share a network path (LAN, Tailscale, or the pairing path you used). Closing the desktop app drops the connection; reopen desktop and the phone reconnects automatically.
 
-> Next steps Pair mobile notifications with [desktop notifications](/docs/notifications) so agent-finished alerts reach the right device. For headless machines, use [Remote Orca Server](/docs/remote-servers) mobile pairing. Track provider usage on desktop and mobile under [Usage & rate-limit tracking](/docs/agents/usage-tracking).
+> Next steps Pair mobile notifications with [desktop notifications](/notifications) so agent-finished alerts reach the right device. For headless machines, use [Remote Orca Server](/remote-servers) mobile pairing. Track provider usage on desktop and mobile under [Usage & rate-limit tracking](/agents/usage-tracking).

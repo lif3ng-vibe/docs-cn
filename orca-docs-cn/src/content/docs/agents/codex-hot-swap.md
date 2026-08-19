@@ -15,7 +15,7 @@ Codex account switcher dropdown in the status bar
 ## Add accounts
 
 1. Log into each Codex account from a terminal at least once, so the auth sits under `~/.codex`.
-2. Open [Settings → Agents → Codex Accounts](/docs/settings).
+2. Open [Settings → Agents → Codex Accounts](/settings).
 3. Orca lists all detected accounts with their usage and current limit.
 4. Give each one a friendly label — "personal", "work", etc.
 

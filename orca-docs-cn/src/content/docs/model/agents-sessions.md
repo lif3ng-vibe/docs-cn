@@ -45,7 +45,7 @@ Use the header toggle to switch **Dashboard** (kanban columns) and **Agent Map**
 - Map-only filters can narrow by host kind (local / SSH / WSL / remote) and optionally show agentless workspaces. Under **Filter → Map content**, toggle **Orchestration links** (on by default) to hide or show those edges without removing agent nodes; hiding counts toward the filter badge, and **Clear all filters** turns links back on.
 - Right-click a worktree ring in the **in-window** map for the same workspace context menu as the sidebar (local, SSH, folder, and remote hosts). Pop-out map workspace menus stay limited because that window does not own the main sidebar store.
 
-Dashboard cards and Agent Map project rings show a host badge for SSH workspaces and paired [Remote Orca Servers](/docs/remote-servers). Hover or focus the badge to see the saved host name, such as **SSH host · openclaw** or **Remote Orca host · Build Mac**. Local workspaces do not show a host badge.
+Dashboard cards and Agent Map project rings show a host badge for SSH workspaces and paired [Remote Orca Servers](/remote-servers). Hover or focus the badge to see the saved host name, such as **SSH host · openclaw** or **Remote Orca host · Build Mac**. Local workspaces do not show a host badge.
 
 ### Open as
 
@@ -78,13 +78,13 @@ If you want different defaults for an agent, open **Settings → Agents**, expan
 
 ## Restart chip
 
-When an agent exits (clean or crash), the tab shows a **Restart** chip. One click rehydrates the same agent with the same working directory. Codex's restart chip also preserves the current account (see [Hot-swap Codex accounts](/docs/agents/codex-hot-swap)).
+When an agent exits (clean or crash), the tab shows a **Restart** chip. One click rehydrates the same agent with the same working directory. Codex's restart chip also preserves the current account (see [Hot-swap Codex accounts](/agents/codex-hot-swap)).
 
 ## Session lifecycle
 
 1. **Launch** — pick an agent from the combobox; Orca spawns the CLI.
 2. **Work** — OSC titles update state; terminal output scrolls with search, copy, and Ghostty theming.
-3. **Idle** — Orca detects the working→idle transition and fires an [agent-finished notification](/docs/notifications).
+3. **Idle** — Orca detects the working→idle transition and fires an [agent-finished notification](/notifications).
 4. **Exit** — the process ends; the Restart chip appears.
 
-> $undefined For the exact detection rules, see the `terminal wait --for tui-idle` command in the [Orca CLI](/docs/cli/overview).
+> $undefined For the exact detection rules, see the `terminal wait --for tui-idle` command in the [Orca CLI](/cli/overview).

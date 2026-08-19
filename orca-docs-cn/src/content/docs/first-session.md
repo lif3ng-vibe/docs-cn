@@ -24,7 +24,7 @@ Click the **+** next to the repo name. Type a task name ("fix-login-race" is fin
 
 One-click workspace launcher — pick an agent or open an empty terminal. Customize the default in Settings.
 
-The launcher opens with your **default agent** preselected (configurable under [Settings → Agents](/docs/settings)) or an empty terminal if you'd rather start cold. Pinned worktrees stand out in the sidebar so the ones you actually live in stay visible.
+The launcher opens with your **default agent** preselected (configurable under [Settings → Agents](/settings)) or an empty terminal if you'd rather start cold. Pinned worktrees stand out in the sidebar so the ones you actually live in stay visible.
 
 Pick a **start-from** ref. Most of the time this is your base ref (`origin/main`), but you can start from any branch or commit.
 
@@ -32,7 +32,7 @@ Orca creates a real git worktree under its managed directory, checks out the bra
 
 ## 3. Pick an agent
 
-In the new worktree, a terminal opens with an **agent combobox**. Pick Claude Code, Codex, Cursor CLI, or any of the [supported agents](/docs/agents/supported). Orca will launch the agent's CLI with the correct working directory and forward your subscription credentials.
+In the new worktree, a terminal opens with an **agent combobox**. Pick Claude Code, Codex, Cursor CLI, or any of the [supported agents](/agents/supported). Orca will launch the agent's CLI with the correct working directory and forward your subscription credentials.
 
 ## 4. Race three agents on the same task
 
@@ -46,12 +46,12 @@ Paste the same prompt into each. Three branches. Three diffs. Same prompt. Let t
 
 ## 5. Split panes so you can watch them all
 
-Drag a worktree's tab to the right or bottom edge of a pane to split. You can watch all three agents at once. See [Tabs, panes & split layouts](/docs/model/tabs-panes-splits).
+Drag a worktree's tab to the right or bottom edge of a pane to split. You can watch all three agents at once. See [Tabs, panes & split layouts](/model/tabs-panes-splits).
 
 ## 6. Pick a winner, review the diff, ship it
 
-Once agents settle, open each worktree's diff view. Use [Annotate AI Diff](/docs/review/annotate-ai-diff) to leave inline comments and send them back to whichever agent got closest.
+Once agents settle, open each worktree's diff view. Use [Annotate AI Diff](/review/annotate-ai-diff) to leave inline comments and send them back to whichever agent got closest.
 
-Commit and push directly from Orca — see [Commit & push from Orca](/docs/review/commit-push). The other two worktrees can be deleted with one click; their branches go with them.
+Commit and push directly from Orca — see [Commit & push from Orca](/review/commit-push). The other two worktrees can be deleted with one click; their branches go with them.
 
 > That's it This flow — add → worktree → agent → split → diff → ship — is the whole of Orca. Every other page in these docs is a deeper look at one of those steps.

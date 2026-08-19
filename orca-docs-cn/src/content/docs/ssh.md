@@ -10,13 +10,13 @@ $undefined
 
 Orca can drive agents on remote machines over SSH — useful for long-running builds, GPU boxes, or any environment where your laptop isn't the right place to run the work.
 
-> One of four run modes SSH is one way to put agents on remote compute. For local, self-hosted servers, and ephemeral VMs, see [Ways to run Orca](/docs/ways-to-run).
+> One of four run modes SSH is one way to put agents on remote compute. For local, self-hosted servers, and ephemeral VMs, see [Ways to run Orca](/ways-to-run).
 
 SSH remote workspace — agents run on the remote host, the editor and diff stay local
 
 ## Add an SSH target
 
-1. Open [Settings → SSH](/docs/settings).
+1. Open [Settings → SSH](/settings).
 2. Click **Add Target**. The host form opens in a modal (not inline under the list), so Host, Advanced, and Save stay reachable even with a long host list. Edit uses the same dialog and shows the target label plus `user@host:port`.
 3. Fill in host, user, port, and optional identity file — or open the **OpenSSH config** picker in the same dialog to search `~/.ssh/config` (including files), pick one host, and prefill the form. Hosts already saved in Orca show an badge. You can still import hosts in bulk from config when that flow is available.
 4. If the key is passphrase-protected, Orca will prompt the first time.
@@ -42,7 +42,7 @@ Passphrases are held in memory for the life of the Orca session. Closing Orca cl
 
 ## Status
 
-Remote worktrees show a chip with live SSH status — green connected, yellow reconnecting, red disconnected. While an SSH host is still connecting, Orca can list workspaces from **persisted local metadata** so the sidebar is not empty until the live provider comes up; those rows refresh to authoritative remote state once the connection settles. Disconnects don't kill running agents; Orca reconnects and re-attaches. When a host drops, the affected workspace card can show an inline **Connect** / reconnect control so you can recover without opening a terminal overlay or hunting the status bar. If an SSH relay drops with a "Multiplexer disposed" style failure, Orca recovers automatically instead of leaving the pane stuck until you restart. Agent status (working / idle / blocked) propagates over SSH the same way it does locally, so the sidebar and [Agents feed](/docs/activity) reflect remote agents in real time.
+Remote worktrees show a chip with live SSH status — green connected, yellow reconnecting, red disconnected. While an SSH host is still connecting, Orca can list workspaces from **persisted local metadata** so the sidebar is not empty until the live provider comes up; those rows refresh to authoritative remote state once the connection settles. Disconnects don't kill running agents; Orca reconnects and re-attaches. When a host drops, the affected workspace card can show an inline **Connect** / reconnect control so you can recover without opening a terminal overlay or hunting the status bar. If an SSH relay drops with a "Multiplexer disposed" style failure, Orca recovers automatically instead of leaving the pane stuck until you restart. Agent status (working / idle / blocked) propagates over SSH the same way it does locally, so the sidebar and [Agents feed](/activity) reflect remote agents in real time.
 
 ## Sessions across app close
 

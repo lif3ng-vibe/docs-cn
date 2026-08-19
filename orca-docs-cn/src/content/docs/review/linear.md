@@ -12,7 +12,7 @@ Linear sits next to hosted review providers in the task drawer. Browse, create, 
 
 ## Setup
 
-1. Open [Settings → Integrations → Linear](/docs/settings).
+1. Open [Settings → Integrations → Linear](/settings).
 2. Paste a personal API token from [Linear → Settings → API](https://linear.app/settings/api).
 3. Pick the team(s) you want to see.
 
@@ -33,9 +33,9 @@ Linear sits next to hosted review providers in the task drawer. Browse, create, 
 
 ## Agents and CLI
 
-Agents can read and write Linear through `orca linear` (and the `orca-linear` skill). That surface includes MCP-compatible create/update and list filters (`save-issue`, `list-issues`, relation add/remove) plus issue context flags such as `--activity` and `--full`. See [CLI reference → Linear](/docs/cli/reference#linear).
+Agents can read and write Linear through `orca linear` (and the `orca-linear` skill). That surface includes MCP-compatible create/update and list filters (`save-issue`, `list-issues`, relation add/remove) plus issue context flags such as `--activity` and `--full`. See [CLI reference → Linear](/cli/reference#linear).
 
 ## Next steps
 
-- [Hosted reviews, issues & Actions](/docs/review/github) — connect code review state to the worktree after the task is in progress.
-- [Commit & push from Orca](/docs/review/commit-push) — ship the branch without leaving Orca.
+- [Hosted reviews, issues & Actions](/review/github) — connect code review state to the worktree after the task is in progress.
+- [Commit & push from Orca](/review/commit-push) — ship the branch without leaving Orca.

@@ -102,9 +102,9 @@ The shipped `computer-use` skill packages the same command surface with safety g
 npx skills add https://github.com/stablyai/orca --skill computer-use
 ```
 
-See [Skills registry & MCP](/docs/cli/skills) for how skills are picked up.
+See [Skills registry & MCP](/cli/skills) for how skills are picked up.
 
 ## Next steps
 
-- [Orca CLI overview](/docs/cli/overview) — the rest of the CLI surface (worktrees, terminal, browser).
-- [Skills registry & MCP](/docs/cli/skills) — distributing this CLI to agents.
+- [Orca CLI overview](/cli/overview) — the rest of the CLI surface (worktrees, terminal, browser).
+- [Skills registry & MCP](/cli/skills) — distributing this CLI to agents.

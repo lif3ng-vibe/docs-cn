@@ -28,7 +28,7 @@ When you've rewritten history (rebase, amend, squash) and the remote only has ol
 
 ## Open a hosted review
 
-After the branch is pushed, use the Source Control panel's hosted review action to create the pull request or merge request. Confirm the base branch, title, description, and draft state before submitting. Bitbucket Cloud can create pull requests from the same composer; it has no draft PRs, so Draft is hidden. For GitHub, when the selected base already has an open PR you can **Stack this PR above #N** — see [Stacked pull requests](/docs/review/github#stacked-pull-requests).
+After the branch is pushed, use the Source Control panel's hosted review action to create the pull request or merge request. Confirm the base branch, title, description, and draft state before submitting. Bitbucket Cloud can create pull requests from the same composer; it has no draft PRs, so Draft is hidden. For GitHub, when the selected base already has an open PR you can **Stack this PR above #N** — see [Stacked pull requests](/review/github#stacked-pull-requests).
 
 If Orca needs to run a follow-up commit as part of the Create PR flow and that commit fails — hooks reject it, or the working tree has an uncommittable state — the dialog surfaces a detailed failure summary with the hook output and next-step buttons instead of dropping you back into the panel with no context. Use **Fix with AI** from the summary to hand the failure to an agent, or resolve it yourself and rerun.
 
@@ -36,7 +36,7 @@ Use **Generate pull request details with AI** in the create-review dialog when y
 
 ## Per-repo AI action recipes
 
-**Generate with AI**, **Generate pull request details with AI**, **Fix with AI**, and **Resolve with AI** are all Source Control AI actions — each one is backed by an **action recipe** that picks the agent, CLI arguments, and prompt template Orca runs when you trigger the action. Edit them under [Settings → Git & Source Control](/docs/settings) → **Action recipes**, either as your global default or scoped to the current repository.
+**Generate with AI**, **Generate pull request details with AI**, **Fix with AI**, and **Resolve with AI** are all Source Control AI actions — each one is backed by an **action recipe** that picks the agent, CLI arguments, and prompt template Orca runs when you trigger the action. Edit them under [Settings → Git & Source Control](/settings) → **Action recipes**, either as your global default or scoped to the current repository.
 
 Templates can include variables such as `{basePrompt}`, `{branch}`, `{stagedFiles}`, `{stagedPatch}`, and **`{linkedIssue}`** for commit messages; PR details also support `{baseBranch}`, `{currentTitle}`, `{currentBody}`, `{commitSummary}`, `{changedFiles}`, and `{patch}`.
 
@@ -62,5 +62,5 @@ When a merge, rebase, cherry-pick, or revert leaves conflicts, Source Control sh
 
 ## Next steps
 
-- [Hosted reviews, issues & Actions](/docs/review/github) — connect the provider that owns the review.
-- [Annotate AI Diff](/docs/review/annotate-ai-diff) — leave line notes before committing.
+- [Hosted reviews, issues & Actions](/review/github) — connect the provider that owns the review.
+- [Annotate AI Diff](/review/annotate-ai-diff) — leave line notes before committing.

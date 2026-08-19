@@ -26,10 +26,10 @@ Toggle Chat UI ↔ terminal from the agent pane once enabled.
 
 ## Questions from the agent
 
-When Claude shows an **AskUserQuestion** (or similar structured permission/question card), Chat UI should render the question card in the transcript so you can answer from the composer path instead of treating it as a collapsed tool call. Confirm with **Submit** on the card. That includes agents running on a paired [Remote Orca Server](/docs/remote-servers) / headless host — not only local panes.
+When Claude shows an **AskUserQuestion** (or similar structured permission/question card), Chat UI should render the question card in the transcript so you can answer from the composer path instead of treating it as a collapsed tool call. Confirm with **Submit** on the card. That includes agents running on a paired [Remote Orca Server](/remote-servers) / headless host — not only local panes.
 
 ## Availability
 
-Chat UI ships on desktop for supported local and remote (paired server) agent sessions. The [mobile companion](/docs/mobile) reuses chat-style transcript patterns for the same paired sessions.
+Chat UI ships on desktop for supported local and remote (paired server) agent sessions. The [mobile companion](/mobile) reuses chat-style transcript patterns for the same paired sessions.
 
 > Experimental Transcript fidelity, streaming, and terminal parity are still under active tuning. Prefer the raw TUI when you need every OSC/status detail.

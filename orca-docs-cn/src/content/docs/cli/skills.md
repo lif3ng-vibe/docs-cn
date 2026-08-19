@@ -75,7 +75,7 @@ Prefer the in-app updater when Orca offers it so the same global placements the 
 npx skills add https://github.com/stablyai/orca --skill orca-cli --global
 ```
 
-After install, load the version-matched command guide with `orca skills get orca-cli`. See [Orca CLI](/docs/cli/overview).
+After install, load the version-matched command guide with `orca skills get orca-cli`. See [Orca CLI](/cli/overview).
 
 ## orchestration
 
@@ -83,7 +83,7 @@ After install, load the version-matched command guide with `orca skills get orca
 npx skills add https://github.com/stablyai/orca --skill orchestration --global
 ```
 
-Use this when an agent should coordinate other agents through Runs, tasks, supervised workers, and decision gates. See [Orchestration](/docs/cli/orchestration). Always load `orca skills get orchestration --full` before mutating orchestration state — the legacy `orchestration run` command is retired.
+Use this when an agent should coordinate other agents through Runs, tasks, supervised workers, and decision gates. See [Orchestration](/cli/orchestration). Always load `orca skills get orchestration --full` before mutating orchestration state — the legacy `orchestration run` command is retired.
 
 ## computer-use
 
@@ -91,7 +91,7 @@ Use this when an agent should coordinate other agents through Runs, tasks, super
 npx skills add https://github.com/stablyai/orca --skill computer-use --global
 ```
 
-Use this when an agent needs to inspect and operate local desktop app windows. See [Computer use](/docs/cli/computer-use).
+Use this when an agent needs to inspect and operate local desktop app windows. See [Computer use](/cli/computer-use).
 
 ## orca-linear
 
@@ -99,7 +99,7 @@ Use this when an agent needs to inspect and operate local desktop app windows. S
 npx skills add https://github.com/stablyai/orca --skill orca-linear --global
 ```
 
-Agents should load `orca skills get orca-linear` before mutating tickets. Covers `issue --full`, `save-issue`, `list-issues`, relations, completion attach+comment flow, and untrusted-ticket rules. Existing `linear-tickets` installs still resolve. See [CLI reference → Linear](/docs/cli/reference#linear).
+Agents should load `orca skills get orca-linear` before mutating tickets. Covers `issue --full`, `save-issue`, `list-issues`, relations, completion attach+comment flow, and untrusted-ticket rules. Existing `linear-tickets` installs still resolve. See [CLI reference → Linear](/cli/reference#linear).
 
 ## orca-emulator
 
@@ -123,7 +123,7 @@ Use for adb-connected Android AVDs/devices: list/boot, tap/swipe/type, hardware 
 npx skills add https://github.com/stablyai/orca --skill orca-per-workspace-env --global
 ```
 
-Use when setting up or debugging per-workspace environment recipes in `orca.yaml`. See [Ways to run Orca](/docs/ways-to-run#4-cloud-vms-per-workspace-environments).
+Use when setting up or debugging per-workspace environment recipes in `orca.yaml`. See [Ways to run Orca](/ways-to-run#4-cloud-vms-per-workspace-environments).
 
 ## Discovery sources
 
@@ -135,4 +135,4 @@ Any repo with a `skills/<name>/SKILL.md` file can be installed via `npx skills a
 
 ## MCP servers
 
-Model Context Protocol (MCP) servers expose external tools to compatible agents. Register MCP endpoints under [Settings → Integrations → MCP](/docs/settings); those tools appear inside agent CLIs that support MCP.
+Model Context Protocol (MCP) servers expose external tools to compatible agents. Register MCP endpoints under [Settings → Integrations → MCP](/settings); those tools appear inside agent CLIs that support MCP.

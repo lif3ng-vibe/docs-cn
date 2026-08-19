@@ -29,4 +29,4 @@ All of that ships into the active agent terminal as one attachment, and you type
 
 ## Use the result
 
-The agent edits the source, Orca hot-reloads, you click again to verify. The tightest version of this loop is the hero recipe [Fix a UI bug with Design Mode](/docs/recipes/design-mode-fix).
+The agent edits the source, Orca hot-reloads, you click again to verify. The tightest version of this loop is the hero recipe [Fix a UI bug with Design Mode](/recipes/design-mode-fix).

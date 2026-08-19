@@ -42,7 +42,7 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 - Commit signing options.
 - Editor for external git tools.
 - Auto-Rename Branch From Work — rename Orca-generated creature branches after an agent starts work.
-- **GitHub API Budget** — remaining REST (core), Search, and GraphQL quota from the local `gh` CLI. Useful when PR checks or Tasks stop refreshing; see [Troubleshooting GitHub errors](/docs/github-errors) if the numbers look fine but GitHub still rate-limits live calls.
+- **GitHub API Budget** — remaining REST (core), Search, and GraphQL quota from the local `gh` CLI. Useful when PR checks or Tasks stop refreshing; see [Troubleshooting GitHub errors](/github-errors) if the numbers look fine but GitHub still rate-limits live calls.
 
 ## Terminal
 
@@ -56,8 +56,8 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 ## Quick Commands
 
 - Saved terminal commands and agent-prompt presets, scoped globally or to a project. Each row has a copy control for the command body.
-- Scope filters for reviewing and editing the command list. The same list syncs to the [mobile companion](/docs/mobile).
-- With remote or multi-host setups, commands are grouped by the Orca host that owns them (**Saved on**). Host ownership is separate from Global/Project scope and from where the command runs — see [Terminal → Quick Commands](/docs/terminal#quick-commands).
+- Scope filters for reviewing and editing the command list. The same list syncs to the [mobile companion](/mobile).
+- With remote or multi-host setups, commands are grouped by the Orca host that owns them (**Saved on**). Host ownership is separate from Global/Project scope and from where the command runs — see [Terminal → Quick Commands](/terminal#quick-commands).
 
 ## Agents
 
@@ -68,17 +68,17 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 - Startup hooks per agent.
 - **Agent status hooks** — show working / waiting / done states in Orca. Toggle takes effect without restarting the app (including the Windows WSL hook relay). CLI: `orca agent hooks on|off|status`.
 - **Keep computer awake** — **On** (stay awake continuously), **Agent** (stay awake while an agent is working), or **Off**. The same control lives on the desktop status bar as **Caffeinate** (coffee icon). Hidden on paired web clients.
-- **Skill freshness** — the Agents pane and skill cards still show full status. Sidebar navigation only badges skills that need action (**Update available**, **Needs attention** / review); healthy, loading, and optional not-installed rows stay quiet. Use **Update** in the dialog to refresh global skills in the background (no terminal). Progress appears on the status bar; closing the dialog does not cancel the run. See [Orca skills](/docs/cli/skills#keep-skills-up-to-date).
+- **Skill freshness** — the Agents pane and skill cards still show full status. Sidebar navigation only badges skills that need action (**Update available**, **Needs attention** / review); healthy, loading, and optional not-installed rows stay quiet. Use **Update** in the dialog to refresh global skills in the background (no terminal). Progress appears on the status bar; closing the dialog does not cancel the run. See [Orca skills](/cli/skills#keep-skills-up-to-date).
 
 ## Browser
 
-- Profiles (see [Browser-use profiles](/docs/browser/profiles)).
+- Profiles (see [Browser-use profiles](/browser/profiles)).
 - Default Zoom — zoom level applied to newly opened browser tabs (per-tab adjustments via Cmd-wheel are remembered separately).
 - Design Mode defaults.
 - Devtools opt-in.
-- **Link Routing** — open http(s) links from the terminal, markdown, and editor in Orca's browser or the system browser. Nested **Hold Shift…** inverts that default for one click (`⇧⌘-click` / `Shift+Ctrl+click`). See [Per-worktree browser](/docs/browser/overview#link-routing).
-- **Show terminal link actions** — **on by default**. A plain click on a terminal link opens a compact action popover. Turn off to require `⌘`-click / `Ctrl`-click. See [Terminal → Link actions](/docs/terminal#link-actions).
-- **Default Search Engine** — used when you type non-URL text in the browser address bar or the [new-tab omnibox](/docs/model/quick-open#new-tab-omnibox).
+- **Link Routing** — open http(s) links from the terminal, markdown, and editor in Orca's browser or the system browser. Nested **Hold Shift…** inverts that default for one click (`⇧⌘-click` / `Shift+Ctrl+click`). See [Per-worktree browser](/browser/overview#link-routing).
+- **Show terminal link actions** — **on by default**. A plain click on a terminal link opens a compact action popover. Turn off to require `⌘`-click / `Ctrl`-click. See [Terminal → Link actions](/terminal#link-actions).
+- **Default Search Engine** — used when you type non-URL text in the browser address bar or the [new-tab omnibox](/model/quick-open#new-tab-omnibox).
 
 ## Artifacts
 
@@ -86,14 +86,14 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 - **Allow publishing public artifact links** — **off by default**. Device-wide gate: when on, you, agents, and the `orca` CLI on this machine can upload HTML/Markdown and mint public view links. Turning it off does not delete existing links.
 - **Show Artifacts** / sidebar shortcut — open the Artifacts list to search, preview, copy, or delete account-owned links.
 - **Ask Before Deleting Artifacts** — optional confirmation before breaking a public link.
-- Share from an open local HTML page or Markdown editor with **Share as artifact**, or via `orca artifacts …`. See [CLI reference → Artifacts](/docs/cli/reference#artifacts).
+- Share from an open local HTML page or Markdown editor with **Share as artifact**, or via `orca artifacts …`. See [CLI reference → Artifacts](/cli/reference#artifacts).
 
 ## Integrations
 
 - GitHub OAuth.
 - Linear API token.
-- Jira — Cloud (email + API token) or self-hosted Server/Data Center (PAT or username/password). See [Jira items drawer](/docs/review/jira).
-- Bitbucket Cloud — **Connect** with **Email & API token** (default) or an **Access token**. Orca verifies the credential before saving. `ORCA_BITBUCKET_*` environment variables take precedence and hide Connect / Disconnect. Saved credentials stay on this machine — on a [Remote Orca Server](/docs/remote-servers), set the env vars on the server instead. See [Hosted reviews](/docs/review/github).
+- Jira — Cloud (email + API token) or self-hosted Server/Data Center (PAT or username/password). See [Jira items drawer](/review/jira).
+- Bitbucket Cloud — **Connect** with **Email & API token** (default) or an **Access token**. Orca verifies the credential before saving. `ORCA_BITBUCKET_*` environment variables take precedence and hide Connect / Disconnect. Saved credentials stay on this machine — on a [Remote Orca Server](/remote-servers), set the env vars on the server instead. See [Hosted reviews](/review/github).
 - MiniMax — paste a MiniMax session cookie (from `platform.minimax.io/console/usage`) to enable local usage and rate-limit tracking for the MiniMax CLI. Optional group ID and usage models fields override the defaults picked from the cookie.
 - MCP servers.
 
@@ -126,7 +126,7 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 
 - SSH worktrees, targets, passphrases, default identity file.
 - Advanced: proxy / jump host; **Reuse SSH connection for faster setup** (system OpenSSH multiplexing; default on).
-- Kerberos hosts: `GSSAPIAuthentication` from OpenSSH config drives system OpenSSH auth (see [SSH worktrees](/docs/ssh)).
+- Kerberos hosts: `GSSAPIAuthentication` from OpenSSH config drives system OpenSSH auth (see [SSH worktrees](/ssh)).
 
 ## Remote Orca Servers
 
@@ -150,7 +150,7 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 - Auto-run commands on worktree create.
 - Repo icons for the sidebar: choose an icon, full searchable emoji picker, uploaded image, website favicon, or GitHub avatar, then pick a preset or custom hex badge color.
 - Source Control AI overrides for commit messages, pull request details, and branch names.
-- **Worktree Shared Paths** — gitignored paths to materialize from the primary checkout into each new worktree (APFS clone-copy on macOS when possible, otherwise symlink). Complements repo-checked-in `worktree.sharedDirectories` in `orca.yaml` and `.worktreeinclude` (see [Worktrees](/docs/model/worktrees)).
+- **Worktree Shared Paths** — gitignored paths to materialize from the primary checkout into each new worktree (APFS clone-copy on macOS when possible, otherwise symlink). Complements repo-checked-in `worktree.sharedDirectories` in `orca.yaml` and `.worktreeinclude` (see [Worktrees](/model/worktrees)).
 
 ## Floating Workspace
 
@@ -167,10 +167,10 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 
 ## Experimental
 
-- [Activity Page](/docs/activity) — Slack-style worktree feed for agent events.
+- [Activity Page](/activity) — Slack-style worktree feed for agent events.
 - Compact worktree cards — hide redundant second lines in the sidebar while the layout is still experimental.
-- [Agent hibernation](/docs/agents/hibernation) — pause idle background agents and auto-resume them on reopen.
-- **Agent Dashboard** — kanban of Needs You / Working / Done agents (optional Idle), plus experimental **Agent Map**; search and project/workspace/PR filters; open in-window or as a pop-out. **Show idle agents** lives on the dashboard board settings control, not here. See [Agents & sessions](/docs/model/agents-sessions#agent-dashboard).
-- **Chat UI** — optional chat surface on supported agent terminals. See [Chat UI](/docs/agents/native-chat).
-- **Cloud VM** — show setup controls and workspace **Run on** targets for repo-owned, on-demand environments (cloud sandboxes, VMs, or local Docker). Setup guide and recipe install live under this experimental toggle. See [Ways to run Orca](/docs/ways-to-run#4-cloud-vms-per-workspace-environments).
+- [Agent hibernation](/agents/hibernation) — pause idle background agents and auto-resume them on reopen.
+- **Agent Dashboard** — kanban of Needs You / Working / Done agents (optional Idle), plus experimental **Agent Map**; search and project/workspace/PR filters; open in-window or as a pop-out. **Show idle agents** lives on the dashboard board settings control, not here. See [Agents & sessions](/model/agents-sessions#agent-dashboard).
+- **Chat UI** — optional chat surface on supported agent terminals. See [Chat UI](/agents/native-chat).
+- **Cloud VM** — show setup controls and workspace **Run on** targets for repo-owned, on-demand environments (cloud sandboxes, VMs, or local Docker). Setup guide and recipe install live under this experimental toggle. See [Ways to run Orca](/ways-to-run#4-cloud-vms-per-workspace-environments).
 - Features not yet stable — behavior may change.

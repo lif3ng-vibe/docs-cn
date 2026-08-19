@@ -15,7 +15,7 @@ The file explorer lives on the left side of each worktree. It tracks your on-dis
 - Drop files from Finder/Explorer into the file tree to copy them in.
 - Drop an image into a markdown editor to insert it at the cursor.
 - Drop files onto an agent terminal to paste their paths at the prompt.
-- For [SSH worktrees](/docs/ssh), drag-drop also works — Orca uploads the file to the remote host before completing the drop, so the agent sees the file as a real on-disk path.
+- For [SSH worktrees](/ssh), drag-drop also works — Orca uploads the file to the remote host before completing the drop, so the agent sees the file as a real on-disk path.
 
 ## Git status
 
@@ -33,5 +33,5 @@ Right-click a folder and choose **Find in Folder** to open Search with that fold
 
 ## Next steps
 
-- [Monaco editor & autosave](/docs/editing/monaco) — edit files after you find the match you need.
-- [Diff viewer](/docs/review/diff-viewer) — review the changes your agent or editor made.
+- [Monaco editor & autosave](/editing/monaco) — edit files after you find the match you need.
+- [Diff viewer](/review/diff-viewer) — review the changes your agent or editor made.
