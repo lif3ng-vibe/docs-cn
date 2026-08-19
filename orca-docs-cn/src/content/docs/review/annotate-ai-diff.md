@@ -1,38 +1,36 @@
 ---
-title: "Annotate AI Diff"
-description: "Annotate AI Diff — Orca documentation."
+title: "标注 AI Diff"
+description: "标注 AI Diff——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/annotate-ai-diff"
 ---
 
-# Annotate AI Diff
+# 标注 AI Diff
 
-$undefined
+标注 AI Diff 是 Orca 面向智能体生成代码的行内评审回路。你可以在任何 AI 生成的 hunk 的任意行上留言，然后作为一批一次性发回给智能体修改——不用复制行号，不用来回切换上下文。
 
-Annotate AI Diff is Orca's inline review loop for agent-generated code. You leave comments on any line of any AI-generated hunk, then send them back to the agent as a single batch for revision — no copying line numbers, no context-switching.
+*标注 AI Diff——行内评论固定在 diff 行上*
 
-Annotate AI Diff — inline comments pinned to diff lines
+## 发表评论
 
-## Leave a comment
+1. 把鼠标悬停在 diff 的任意行上，行号槽会出现 **+**。
+2. 点击它（或光标位于该行时按 `c`）。
+3. 输入你的反馈——支持 markdown 语法。
+4. 按 `Cmd-Enter` 保存，`Esc` 取消。
 
-1. Hover any line in the diff. A **+** appears in the gutter.
-2. Click it (or press `c` with the cursor on the line).
-3. Type your feedback — markdown supported.
-4. Press `Cmd-Enter` to save, `Esc` to cancel.
+评论会固定在精确的行上；Orca 会跨编辑追踪它们，diff 位移后评论仍跟随该行。
 
-Comments pin to the exact line; Orca tracks them across edits so they follow the line if the diff shifts.
+## 整批发送
 
-## Send the batch
+评审完成后，点击 diff 顶部的 **Send to agent**（发送给智能体）。Orca 会把你的全部评论组装成一个带行锚点的提示词，然后打开 **Send notes to**（发送备注给）菜单，列出该 worktree 可用的智能体。选择应当修改这次变更的智能体，或从同一菜单启动新智能体。
 
-When your review is done, click **Send to agent** at the top of the diff. Orca composes a single prompt with all your comments, line-anchored, then opens a **Send notes to** menu for the worktree's available agents. Pick the agent that should revise the change, or start a new agent from the same menu.
+**Send Review Notes to Agent**（发送评审备注给智能体）默认未绑定快捷键，以免与其他组合键冲突。在 [Settings → Shortcuts](/settings) 下为它分配按键，即可从键盘打开该发送菜单（编辑器聚焦时同样有效）。
 
-**Send Review Notes to Agent** is unbound by default so it won't collide with other chords. Assign it under [Settings → Shortcuts](/settings) to open that send menu from the keyboard (works even while the editor is focused).
+## 为什么要整批发送
 
-## Why batch?
+一条一条发评论会让智能体来回摇摆。整批发送让反馈保持连贯：一轮思考、一次修改，命中率也高得多。
 
-Sending comments one at a time causes the agent to swing back and forth. Batching keeps the feedback coherent: one round of thinking, one revision pass, and a much higher hit rate.
+## 回复、解决、复审
 
-## Reply, resolve, re-review
-
-- Comments stay pinned after the agent revises — use them to verify the fix.
-- Click **Resolve** to collapse a thread.
-- Unresolved comments are part of the next batch if you hit **Send** again.
+- 智能体修改后评论仍固定在原处——用它们核对修复情况。
+- 点击 **Resolve**（解决）可折叠一个话题。
+- 再次点击 **Send** 时，未解决的评论会进入下一批。

@@ -1,49 +1,47 @@
 ---
-title: "Codex in Orca"
-description: "Codex in Orca — Orca documentation."
+title: "在 Orca 中使用 Codex"
+description: "Codex 是 Orca 中集成最深的智能体之一——用量、热切换与重启全程保持账号身份。"
 source: "https://www.onorca.dev/docs/agents/codex"
 ---
 
-# Codex in Orca
+# 在 Orca 中使用 Codex
 
-$undefined
+Codex 是 OpenAI 的智能体 CLI。Orca 对 Codex 的集成是全应用最深的一档——用量、热切换与重启全程保持账号身份。
 
-Codex is OpenAI's agentic CLI. Orca's Codex integration is one of the deepest in the app — usage, hot-swap, and restart all preserve account identity.
+## 安装
 
-## Setup
+1. 按 OpenAI 文档安装 Codex。
+2. 在任意终端登录。
+3. Orca 从 `~/.codex` 读取账号与凭据。
 
-1. Install Codex per OpenAI's docs.
-2. Log in from any terminal.
-3. Orca reads `~/.codex` for accounts and credentials.
+## 启动
 
-## Launching
+在智能体下拉框中选择 **Codex**。Orca 会以该 worktree 为 `cwd` 启动 `codex`，并让身份验证走当前选中的账号。
 
-Pick **Codex** from the agent combobox. Orca launches `codex` with the worktree as `cwd` and routes auth through the currently selected account.
+## 账号热切换
 
-## Account hot-swap
+很多 Codex 用户会同时跑多个账号来摊薄限流。Orca 的账号切换器无需重新登录或改配置即可换掉活动账号。参见[热切换 Codex 账号](/agents/codex-hot-swap)。
 
-Many Codex users run multiple accounts to stretch rate limits. Orca's account switcher swaps the active account without re-login or config edits. See [Hot-swap Codex accounts](/agents/codex-hot-swap).
+## 系统默认账号与附加账号
 
-## System default vs extra accounts
+**System default**（系统默认）使用你真实的 `~/.codex` 登录（与在 Orca 之外裸跑 `codex` 所用的 home 相同）。Orca 托管的附加账号则在 Orca 的账号数据下拥有各自的 home，凭据与 rollout 相互隔离。新启动的 Codex 跟随活动账号；已在运行的会话则保留其启动时的 home，直到你重启它。
 
-**System default** uses your real `~/.codex` login (the same home a bare `codex` outside Orca would use). Extra accounts Orca manages get their own home under Orca's account data so credentials and rollouts stay isolated. New Codex launches follow the active account; already-running sessions keep the home they started with until you restart them.
+## 嵌套 Task 子智能体
 
-## Nested Task subagents
+当 Codex 派生 Task 子智能体时，Orca 可以在 worktree 智能体列表和[智能体仪表盘](/model/agents-sessions#智能体仪表盘)中把它们显示为父智能体下的子行。展开箭头可查看每个子项；点击某个子项会聚焦父终端（子智能体不独占单独的窗格）。
 
-When Codex spawns Task subagents, Orca can show them as child rows under the parent agent on the worktree agent list and [Agent Dashboard](/model/agents-sessions#agent-dashboard). Expand the chevron to see each child; click a child to focus the parent terminal (subagents do not own a separate pane).
+## 在新会话中继续
 
-## Continue in a new session
+在智能体终端的头部或上下文菜单中选择 **Continue in New Session…**（在新会话中继续）。Orca 会启动一个全新的智能体会话（CLI 可同可不同），并从之前的转录或已捕获的上下文中注入一段有边界的交接提示。原会话保持原样——这不是 `codex resume`。
 
-From an agent terminal's header or context menu, choose **Continue in New Session…**. Orca starts a fresh agent session (same or different CLI) and injects a bounded handoff prompt from the prior transcript or captured context. The original session is left alone — this is not `codex resume`.
+## 重启微标
 
-## Restart chip
+Codex 退出后，重启微标会用同一账号重新启动智能体。如果你在会话中途切换过账号并想用新账号重启，请先用账号切换器切换，再重启。
 
-When Codex exits, the restart chip relaunches the agent with the same account. If you swapped accounts mid-session and want to restart with the new one, use the account switcher first, then restart.
+## 用量与限流
 
-## Usage & rate limits
+Orca 读取活动账号的本地 Codex 用量状态，并显示在状态栏。参见[用量与限流追踪](/agents/usage-tracking)。
 
-Orca reads local Codex usage state for the active account and surfaces it in the status bar. See [Usage & rate-limit tracking](/agents/usage-tracking).
+## Windows 上的 Codex（WSL）
 
-## Codex on Windows (WSL)
-
-On Windows, Orca can run Codex either from your host install or from a WSL distro. Add a WSL-hosted Codex account from the account switcher — Orca creates an isolated account home inside the distro (under `~/.local/share/orca/codex-accounts/<id>/home`), maps it back to the host as a `\\wsl.localhost\<distro>\...` path for auth reads, and routes launches, hot-swap, and rate-limit fetches through the selected distro. If Codex isn't installed in the target distro, the **Add account** dialog fails with an actionable message telling you which distro is missing the binary.
+在 Windows 上，Orca 既可以从宿主机安装运行 Codex，也可以从某个 WSL 发行版运行。在账号切换器中添加一个 WSL 托管的 Codex 账号——Orca 会在该发行版内创建隔离的账号 home（位于 `~/.local/share/orca/codex-accounts/<id>/home`），并以 `\\wsl.localhost\<distro>\...` 路径映射回宿主机供身份验证读取，同时让启动、热切换和限流查询都经由选中的发行版。如果目标发行版未安装 Codex，**Add account**（添加账号）对话框会报错并给出可操作的提示，指明哪个发行版缺少该二进制文件。

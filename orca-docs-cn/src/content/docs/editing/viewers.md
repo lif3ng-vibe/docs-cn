@@ -1,33 +1,31 @@
 ---
-title: "Mermaid, PDF &amp; image viewers"
-description: "Mermaid, PDF &amp; image viewers — Orca documentation."
+title: "Mermaid、PDF 与图片查看器"
+description: "Mermaid、PDF 与图片查看器——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/viewers"
 ---
 
-# Mermaid, PDF & image viewers
+# Mermaid、PDF 与图片查看器
 
-$undefined
-
-Orca includes built-in viewers for the formats that show up in most repos.
+Orca 为大多数仓库里常见的格式内置了查看器。
 
 ## Mermaid
 
-Mermaid diagrams render inline inside markdown preview. Standalone `.mmd` files open in a dedicated viewer with pan/zoom.
+Mermaid 图在 markdown 预览中行内渲染。独立的 `.mmd` 文件在带平移/缩放的专用查看器中打开。
 
 ## PDF
 
-Scroll, zoom, and text selection. Useful for design docs checked into the repo. Scroll position is restored when you switch away from a PDF tab and come back (including close-and-reopen in the same session) — page plus mid-page offset, so you land where you left off. Positions are session-only and clear when Orca restarts.
+滚动、缩放和文字选择。适合检入仓库的设计文档。切走 PDF 标签页再回来时（包括同一会话内关闭后重开），滚动位置会恢复——页码加页内偏移，落点就是你离开的地方。位置仅在会话内有效，Orca 重启后清空。
 
-## Images
+## 图片
 
-`.png`, `.jpg`, `.svg`, `.webp`, `.gif`. Image-diff mode compares two versions of the same file side-by-side.
+`.png`、`.jpg`、`.svg`、`.webp`、`.gif`。图片 diff 模式可并排比较同一文件的两个版本。
 
 ## CSV / TSV
 
-`.csv` and `.tsv` files open in a table viewer with sortable columns and quick search. Useful for fixtures, exports, and any tabular data checked into the repo. Use the toolbar to flip back to the raw text view if you need to edit cells directly.
+`.csv` 和 `.tsv` 文件在表格查看器中打开，支持可排序的列和快速搜索。适合测试夹具、导出文件以及任何检入仓库的表格数据。需要直接编辑单元格时，用工具栏切回原始文本视图。
 
-## Jupyter notebooks
+## Jupyter notebook
 
-`.ipynb` files open in a notebook viewer with rendered markdown, syntax-highlighted code cells, and saved outputs. Editing cells writes back to the on-disk `.ipynb` while preserving nbformat, so diffs stay clean.
+`.ipynb` 文件在 notebook 查看器中打开，带渲染的 markdown、语法高亮的代码单元格和已保存的输出。编辑单元格会写回磁盘上的 `.ipynb` 并保留 nbformat，diff 保持干净。
 
-> Beta The notebook editor is marked beta. Cell execution and richer output rendering are still settling — file an issue if a notebook in your repo doesn't load cleanly.
+> **Beta**：notebook 编辑器标记为 beta。单元格执行和更丰富的输出渲染仍在打磨——如果仓库里有 notebook 无法干净加载，请提一个 issue。

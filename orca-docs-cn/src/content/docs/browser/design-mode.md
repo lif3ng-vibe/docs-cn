@@ -1,32 +1,32 @@
 ---
-title: "Design Mode"
-description: "Design Mode — Orca documentation."
+title: "设计模式"
+description: "设计模式——点击页面元素，直接把 DOM、计算样式与截图送进智能体对话。"
 source: "https://www.onorca.dev/docs/browser/design-mode"
 ---
 
-# Design Mode
+# 设计模式
 
 $undefined
 
-Design Mode turns the Orca browser into a pointer-to-code tool. Toggle it on, click any UI element on the rendered page, and the element drops into the agent chat as rich context — with its DOM, computed styles, and a screenshot.
+设计模式把 Orca 浏览器变成"指针到代码"的工具。打开它，点击渲染页面上任意 UI 元素，该元素就会作为富上下文落入智能体对话——附带它的 DOM、计算样式和一张截图。
 
-Design Mode: click a button, it lands in the agent chat
+设计模式：点一个按钮，它就落进智能体对话
 
-## Turn it on
+## 打开它
 
-Click the **Design Mode** toggle in the browser toolbar. Your cursor becomes a picker; hovering highlights the element under it.
+点击浏览器工具栏中的 **Design Mode** 开关。光标变为拾取器，悬停时高亮其下的元素。
 
-## Drop into chat
+## 落入对话
 
-Click an element. Orca captures:
+点击一个元素，Orca 会捕获：
 
-- The element's HTML (outer and a small neighborhood).
-- Its computed CSS — colors, fonts, spacing.
-- A cropped screenshot of the element.
-- The source file/line if a dev-mode source map is available.
+- 元素的 HTML（外层及邻近的一小段）。
+- 计算后的 CSS——颜色、字体、间距。
+- 该元素的裁剪截图。
+- 若有开发模式的 source map，还包含源文件与行号。
 
-All of that ships into the active agent terminal as one attachment, and you type what you want changed.
+以上内容作为单个附件进入当前活动的智能体终端，然后你输入想改成什么样。
 
-## Use the result
+## 使用结果
 
-The agent edits the source, Orca hot-reloads, you click again to verify. The tightest version of this loop is the hero recipe [Fix a UI bug with Design Mode](/recipes/design-mode-fix).
+智能体修改源码，Orca 热重载，你再点一次验证。这个循环最紧凑的形态见招牌方案[用设计模式修复 UI bug](/recipes/design-mode-fix)。

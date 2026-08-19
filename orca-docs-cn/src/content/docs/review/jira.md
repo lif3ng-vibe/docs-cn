@@ -1,55 +1,55 @@
 ---
-title: "Jira items drawer"
-description: "Browse, edit, and link Jira Cloud or self-hosted Server/Data Center issues to worktrees the same way you link Linear or GitHub items."
+title: "Jira 事项抽屉"
+description: "像关联 Linear 或 GitHub 条目一样，浏览、编辑 Jira Cloud 或自托管 Server/Data Center 事项并关联到 worktree。"
 source: "https://www.onorca.dev/docs/review/jira"
 ---
 
-# Jira items drawer
+# Jira 事项抽屉
 
-Browse, edit, and link Jira Cloud or self-hosted Server/Data Center issues to worktrees the same way you link Linear or GitHub items.
+像关联 Linear 或 GitHub 条目一样，浏览、编辑 Jira Cloud 或自托管 Server/Data Center 事项并关联到 worktree。
 
-Jira sits next to GitHub and Linear in the task drawer. Browse Jira issues, update them, and create a worktree from any issue without leaving Orca.
+Jira 与 GitHub、Linear 并排出现在任务抽屉中。浏览 Jira 事项、更新它们，并从任意事项创建 worktree，全程不必离开 Orca。
 
-## Connect a Jira site
+## 接入 Jira 站点
 
-1. Open the **Tasks** sidebar entry and pick **Jira** from the source picker — Jira sits next to GitHub and Linear by default, even before any credentials are saved.
-2. Click **Connect Jira**. The **Connect Jira site** dialog appears.
-3. Choose **Cloud** or **Self-hosted (Server / Data Center)**.
+1. 打开侧边栏 **Tasks**（任务）条目，从来源选择器选择 **Jira**——即使尚未保存任何凭据，Jira 默认就排在 GitHub 和 Linear 旁边。
+2. 点击 **Connect Jira**。**Connect Jira site**（接入 Jira 站点）对话框出现。
+3. 选择 **Cloud** 或 **Self-hosted (Server / Data Center)**（自托管 Server / Data Center）。
 
 **Cloud**
 
-- **Jira Cloud site URL** — e.g. `https://example.atlassian.net`.
-- **Atlassian email** — the address on your Atlassian account.
-- **Atlassian API token** — create one at [id.atlassian.com → Security → API tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
+- **Jira Cloud site URL**（Jira Cloud 站点 URL）——例如 `https://example.atlassian.net`。
+- **Atlassian email**（Atlassian 邮箱）——你的 Atlassian 账号上的地址。
+- **Atlassian API token**（Atlassian API 令牌）——在 [id.atlassian.com → Security → API tokens](https://id.atlassian.com/manage-profile/security/api-tokens) 创建。
 
-**Self-hosted**
+**Self-hosted**（自托管）
 
-- **Jira base URL** — your Server/DC base (including path if Jira is not at `/`).
-- Auth method:
+- **Jira base URL**（Jira 基础 URL）——你的 Server/DC 站点根地址（Jira 不在 `/` 下时含路径）。
+- 认证方式：
 
-- **Personal access token** — Bearer PAT (preferred on modern Server/DC).
-- **Username and password** — Basic auth for older instances without PATs.
+- **Personal access token**（个人访问令牌）——Bearer PAT（现代 Server/DC 首选）。
+- **Username and password**（用户名和密码）——供没有 PAT 的旧实例使用的 Basic 认证。
 
-1. Click **Connect**. Orca verifies the credentials and loads your sites.
+1. 点击 **Connect**。Orca 验证凭据并加载你的站点。
 
-You can connect more than one Atlassian site. The Tasks header has a site picker once a site is connected; choose **All sites** to combine issues across them.
+可以接入多个 Atlassian 站点。接入一个站点后，Tasks 标题栏会出现站点选择器；选择 **All sites**（所有站点）可合并各站点的事项。
 
-If you don't use Jira at all, hide it from the source picker via [Settings → Tasks](/settings).
+如果你完全不用 Jira，可在 [Settings → Tasks](/settings) 中把它从来源选择器隐藏。
 
-## Using Jira
+## 使用 Jira
 
-- The task drawer shows GitHub, Linear, and Jira issues in a unified list once each source is enabled.
-- Open an issue to see the full description, comments, and metadata in a side drawer. Edit status (via available transitions), priority, assignee, and custom fields inline.
-- Add a comment from the drawer's comment composer.
-- **New Jira issue** keeps title and description if you dismiss the dialog by accident — Escape, Cancel, outside click, or close. Text restores when you reopen the dialog in the same app session; drafts clear after a successful create and do not survive an app restart. Issue type and other pickers still use their usual open-time defaults.
-- Creating a worktree from a Jira issue pre-fills the task name and links the worktree to the issue, so the review and the issue stay tied together.
-- From the **Create workspace** dialog you can also paste a Jira issue URL (`https://…/browse/ABC-123`) into the name field, or switch the field to **Jira** search and pick an issue by text. Orca fills the workspace name, links the issue, and shows the key + summary on the worktree card with **View on Jira**. Paste is multi-site aware: when more than one connected site matches the URL origin, Orca asks which site to use; when none match, it says the site is not connected.
-- Orca remembers your last-used task source per repo, so a Jira-driven repo defaults to Jira on next open.
+- 各来源启用后，任务抽屉会在统一列表中显示 GitHub、Linear 和 Jira 事项。
+- 打开事项，在侧边抽屉查看完整描述、评论和元数据。可就地编辑状态（通过可用的流转）、优先级、经办人和自定义字段。
+- 从抽屉的评论编写器添加评论。
+- **New Jira issue**（新建 Jira 事项）在你误关对话框时保留标题和描述——Escape、Cancel、点击外部或关闭。同一应用会话内重开对话框时文本会恢复；草稿在成功创建后清空，应用重启后不保留。事项类型等其他选择器仍沿用打开时的默认值。
+- 从 Jira 事项创建 worktree 会预填任务名并把 worktree 关联到该事项，评审与事项始终绑定在一起。
+- 在 **Create workspace**（创建工作区）对话框中，也可以把 Jira 事项 URL（`https://…/browse/ABC-123`）粘贴到名称字段，或把字段切换为 **Jira** 搜索并按文本选取事项。Orca 会填入工作区名、关联事项，并在 worktree 卡片上显示键值 + 摘要与 **View on Jira**（在 Jira 查看）。粘贴支持多站点：连接的多个站点匹配该 URL 来源时，Orca 会询问用哪一个；都不匹配时，会提示该站点未连接。
+- Orca 按仓库记住你上次使用的任务来源，因此以 Jira 为主的仓库下次打开时默认是 Jira。
 
-> Where credentials live Your Atlassian API token or self-hosted credentials are encrypted via the OS keychain and stored locally — they're only used to call your configured Jira site. Revoke tokens from Atlassian account settings if you stop using Orca.
+> **凭据存放位置**：你的 Atlassian API 令牌或自托管凭据通过操作系统钥匙串加密并存储在本地——仅用于调用你配置的 Jira 站点。不再使用 Orca 时，可从 Atlassian 账号设置撤销令牌。
 
-## Next steps
+## 后续步骤
 
-- [Linear items drawer](/review/linear) — same flow against Linear.
-- [Hosted reviews, issues & Actions](/review/github) — hand off the worktree to a hosted review once the Jira issue is in progress.
-- [Commit & push from Orca](/review/commit-push) — ship the branch without leaving Orca.
+- [Linear 事项抽屉](/review/linear)——对 Linear 使用同一套流程。
+- [托管评审、议题与 Actions](/review/github)——Jira 事项进行中后，把 worktree 交给托管评审。
+- [在 Orca 中提交与推送](/review/commit-push)——不离开 Orca 发布分支。

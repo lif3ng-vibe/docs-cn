@@ -1,37 +1,37 @@
 ---
-title: "Orca CLI overview"
-description: "Use the Orca CLI to script Orca from a terminal, manage worktrees, control agent terminals, automate the built-in browser, and install agent skills."
+title: "CLI 概览"
+description: "使用 Orca CLI 在终端中脚本化驱动 Orca：管理 worktree、控制智能体终端、自动化内置浏览器、安装智能体技能。"
 source: "https://www.onorca.dev/docs/cli/overview"
 ---
 
-# Orca CLI overview
+# CLI 概览
 
-Use the Orca CLI to script Orca from a terminal, manage worktrees, control agent terminals, automate the built-in browser, and install agent skills.
+使用 Orca CLI 在终端中脚本化驱动 Orca：管理 worktree、控制智能体终端、自动化内置浏览器、安装智能体技能。
 
-The Orca CLI is the `orca` command-line interface for scripting a running Orca editor from any shell. Use it to create and inspect worktrees, drive agent terminals, open files and diffs, automate the built-in browser, run scheduled automations, share HTML/Markdown artifacts, and control Orca-native tools from scripts or AI agents.
+Orca CLI 是 `orca` 命令行接口，用于在任意 shell 中脚本化驱动正在运行的 Orca 编辑器。可以用它创建和检查 worktree（工作树）、驱动智能体终端、打开文件与 Diff、自动化内置浏览器、运行计划内自动化任务、分享 HTML/Markdown artifact，并在脚本或 AI 智能体中控制 Orca 原生工具。
 
-It ships with the desktop app; register it under [Settings → General → Orca CLI](/settings).
+它随桌面应用一并提供；在 [Settings → General → Orca CLI](/settings) 中注册。
 
-Agents can install the matching Orca CLI skill with:
+智能体可以用以下命令安装配套的 Orca CLI 技能：
 
 ```
 npx skills add https://github.com/stablyai/orca --skill orca-cli
-# headless / no Settings UI:
+# 无头环境 / 没有 Settings 界面：
 orca skills install --skill orca-cli
 ```
 
-See [Skills registry & MCP](/cli/skills) for every installable Orca skill, including `orca skills install` / `orca skills update`.
+所有可安装的 Orca 技能（包括 `orca skills install` / `orca skills update`）见[技能](/cli/skills)。
 
-Orca CLI — drive worktrees, terminals, and the built-in browser from any shell
+Orca CLI——在任意 shell 中驱动 worktree、终端与内置浏览器
 
-## Install & verify
+## 安装与验证
 
 ```
 command -v orca
 orca status --json
 ```
 
-## Worktree commands
+## Worktree 命令
 
 ```
 orca worktree ps --json
@@ -41,9 +41,9 @@ orca worktree set --worktree active --comment "reproduced bug" --json
 orca worktree rm --worktree id:<id> --force --json
 ```
 
-For selectors, setup flags, parent/child worktrees, and the broader command map, see [Orca CLI reference](/cli/reference).
+关于选择器、setup 标志、父子 worktree 以及更完整的命令图谱，见 [CLI 参考](/cli/reference)。
 
-## Terminal commands
+## 终端命令
 
 ```
 orca terminal list --json
@@ -54,11 +54,11 @@ orca terminal create --worktree path:/projects/app --command "npm test" --json
 orca terminal split --direction vertical --command "npm run dev" --json
 ```
 
-For tracked multi-agent work, use [Orchestration](/cli/orchestration) instead of plain terminal prompts.
+需要可追踪的多智能体协作时，请使用[编排](/cli/orchestration)，而不是直接向终端发送提示。
 
-## File commands
+## 文件命令
 
-Open files and diffs in the active Orca worktree from a shell:
+在 shell 中打开当前 Orca worktree 里的文件与 Diff：
 
 ```
 orca file open src/App.tsx
@@ -66,42 +66,42 @@ orca file diff src/App.tsx --staged
 orca file open-changed --mode both
 ```
 
-Use `--worktree <selector>` when the shell's current directory is not inside the target worktree.
+当 shell 的当前目录不在目标 worktree 内时，使用 `--worktree <selector>`。
 
-## Browser profiles
+## 浏览器配置
 
-Browser profiles isolate tab session state, so a script or agent can test with different cookies, local storage, and logged-in identities. The CLI exposes profile commands under `orca tab profile`; start with `orca tab profile list --json`, then use `create`, `set`, `clone`, or `use-default` as needed.
+浏览器配置隔离标签页的会话状态，让脚本或智能体可以用不同的 Cookie、localStorage 和已登录身份进行测试。CLI 在 `orca tab profile` 下提供配置命令；先用 `orca tab profile list --json` 查看，再按需使用 `create`、`set`、`clone` 或 `use-default`。
 
-## Scheduled automations
+## 计划自动化
 
-Use `orca automations` to create, inspect, run, and remove scheduled Orca tasks from a shell. Start with [Scheduled automations](/cli/automations) when you want a recurring prompt to run against a repo or an existing worktree.
+用 `orca automations` 在 shell 中创建、检查、运行和删除 Orca 计划任务。当你希望让一条提示词按周期在仓库或既有 worktree 上运行时，从[自动化](/cli/automations)开始。
 
 ## Artifacts
 
-Share HTML or Markdown as public view links through the signed-in Orca account (`orca artifacts share|update|list|delete`). Publishing is **opt-in** under Settings → Artifacts. Command details: [CLI reference → Artifacts](/cli/reference#artifacts).
+通过已登录的 Orca 账号把 HTML 或 Markdown 分享为公开查看链接（`orca artifacts share|update|list|delete`）。发布需要在 Settings → Artifacts 下**主动开启**。命令详情见 [CLI 参考 → Artifacts](/cli/reference#artifacts)。
 
-## Browser automation
+## 浏览器自动化
 
-The CLI also drives the built-in browser with a snapshot-interact-re-snapshot loop:
+CLI 还能以"快照 → 交互 → 再快照"的循环驱动内置浏览器：
 
 ```
 orca goto --url https://example.com --json
-orca snapshot --json # returns refs like @e1, @e3
+orca snapshot --json # 返回 @e1、@e3 这样的 ref
 orca click --element @e3 --json
 orca fill --element @e1 --value "user@example.com" --json
 orca screenshot --json
 ```
 
-For responsive browser checks, switch the active tab to a named device profile:
+要做响应式检查时，把当前标签页切换到具名设备配置：
 
 ```
 orca set device --name "iPhone 12" --json
 orca screenshot --json
 ```
 
-## Mobile emulator
+## 移动模拟器
 
-The CLI can also drive an iOS Simulator through Orca's mobile emulator bridge. It is scoped to the active worktree, so agents and scripts can attach a simulator from `orca emulator list`, tap normalized coordinates, type text, send gestures, rotate the device, and shut it down without leaving Orca.
+CLI 还能通过 Orca 的移动模拟器桥接驱动 iOS Simulator。它以当前 worktree 为作用域，因此智能体和脚本无需离开 Orca，就能从 `orca emulator list` 附着模拟器、按归一化坐标点按、输入文本、发送手势、旋转设备并关闭它。
 
 ```
 orca emulator list --json
@@ -113,6 +113,6 @@ orca emulator rotate landscape_left --json
 orca emulator kill --json
 ```
 
-Use `--worktree <selector>`, `--device <udid-or-name>`, or `--emulator <id>` when a script needs an explicit target.
+脚本需要显式指定目标时，使用 `--worktree <selector>`、`--device <udid-or-name>` 或 `--emulator <id>`。
 
-> $undefined For the full command surface including tabs, waits, cookies, and frames, see [Orca CLI reference](/cli/reference), then install the Orca CLI skill (see [Skills registry](/cli/skills)) and point your agent at it.
+> $undefined 完整命令面（含标签页、等待、Cookie 与 frame）见 [CLI 参考](/cli/reference)；随后安装 Orca CLI 技能（见[技能](/cli/skills)）并交给你的智能体使用。

@@ -1,60 +1,60 @@
 ---
-title: "Privacy &amp; Telemetry"
-description: "What anonymous usage data Orca collects, what it never collects, and how to opt out."
+title: "隐私与遥测"
+description: "Orca 收集哪些匿名使用数据、绝不收集什么，以及如何退出。"
 source: "https://www.onorca.dev/docs/telemetry"
 ---
 
-# Privacy & Telemetry
+# 隐私与遥测
 
-What anonymous usage data Orca collects, what it never collects, and how to opt out.
+Orca 收集哪些匿名使用数据、绝不收集什么，以及如何退出。
 
-This page describes the anonymous product-usage telemetry we collect in packaged Orca builds, what we never collect, and how to opt out.
+本页说明我们在打包版 Orca 中收集的匿名产品使用遥测（telemetry）、我们绝不收集的内容，以及如何退出。
 
-## Summary
+## 摘要
 
-- **Anonymous.** Events are keyed by a random ID stored locally on your machine. No account, email, IP address, or user name is collected.
-- **No content.** We never transmit file contents, prompts, agent output, terminal output, repo names, branch names, URLs, paths, or commit messages.
-- **Always off when:**`DO_NOT_TRACK=1` or `ORCA_TELEMETRY_DISABLED=1` is set.
+- **匿名。** 事件以一个存储在你本机的随机 ID 为键。不收集账号、邮箱、IP 地址或用户名。
+- **不含内容。** 我们绝不传输文件内容、提示词、智能体输出、终端输出、仓库名、分支名、URL、路径或提交信息。
+- **以下情况始终关闭：**设置了 `DO_NOT_TRACK=1` 或 `ORCA_TELEMETRY_DISABLED=1`。
 
-## What we collect
+## 我们收集什么
 
-Alongside each event we include basic build and platform information: the Orca version, your operating system (e.g. `darwin` / `win32` / `linux`), CPU architecture, coarse OS release string, release channel (`stable` or `rc`), and the anonymous local ID described above. No hostname, no username, no IP.
+伴随每个事件，我们会附上基本的构建与平台信息：Orca 版本、你的操作系统（如 `darwin` / `win32` / `linux`）、CPU 架构、粗略的系统版本字符串、发布通道（`stable` 或 `rc`），以及上述匿名本地 ID。没有主机名，没有用户名，没有 IP。
 
-The categories of behavior we observe:
+我们观察的行为类别：
 
-- **Lifecycle** — when the app opens. Used to estimate daily, weekly, and monthly active users.
-- when you add a repo or create a workspace. We record you did it (e.g. folder picker vs. clone URL; command palette vs. drag-and-drop), never the repo name, URL, path, branch name, or any free-form text.
-- **Agents** — when you start an agent, which agent kind it was (from a fixed list like `claude-code`, `codex`, `gemini`, etc.), and where you launched it from. Never the prompt, model details, or agent output.
-- **Agent errors** — a coarse error category and which agent kind was involved. We never see raw error messages or stack traces; per-incident detail stays in a local diagnostic trace file on your machine and only reaches Orca if you explicitly share a diagnostic bundle.
-- **Settings** — when you toggle one of a small whitelisted set of feature-flag or UX preferences. We record which preference changed and whether it's a boolean or an enum, never the raw value of any free-form setting.
-- **Privacy controls** — when you opt in or out of telemetry, so we can tell from aggregate data whether our consent UI is working.
+- **生命周期**——应用打开时。用于估算日活、周活和月活用户。
+- **工作区**——添加仓库或创建工作区时。我们记录你做了这个动作（例如文件夹选择器 vs. 克隆 URL；命令面板 vs. 拖放），绝不记录仓库名、URL、路径、分支名或任何自由文本。
+- **智能体**——启动智能体时、它是哪一种智能体（来自 `claude-code`、`codex`、`gemini` 等固定列表），以及你从哪里启动。绝不含提示词、模型详情或智能体输出。
+- **智能体错误**——一个粗略的错误类别和涉及的智能体种类。我们绝看不到原始错误信息或堆栈；单次事件的细节留在你本机的本地诊断追踪文件中，只有你显式分享诊断包时才会到达 Orca。
+- **设置**——切换一小部分白名单内的功能开关或 UX 偏好时。我们记录哪个偏好变了、它是布尔还是枚举，绝不记录任何自由形式设置的原始值。
+- **隐私控制**——你加入或退出遥测时，以便我们从汇总数据判断同意 UI 是否有效。
 
-Every field we transmit is either a fixed enum value, a version string, or the anonymous local ID. No free-form strings from any UI input ever leave your machine.
+我们传输的每个字段要么是固定枚举值、版本字符串，要么是匿名本地 ID。任何 UI 输入的自由文本都不会离开你的机器。
 
-## What we never send
+## 我们绝不发送什么
 
-- No file paths, repo names, branch names, URLs, commit messages, or current working directory.
-- No agent prompts, responses, or terminal contents.
-- No raw error messages or stack frames. Per-incident error context stays in a local diagnostic trace file on your machine and only reaches us if you explicitly share a diagnostic bundle.
-- No user account information (Orca has no account system).
-- No IP address and no precise geoip; country is the only geographic signal derived from the request.
-- No vendor-side user profile tied to your anonymous ID.
+- 没有文件路径、仓库名、分支名、URL、提交信息或当前工作目录。
+- 没有智能体提示词、回复或终端内容。
+- 没有原始错误信息或堆栈帧。单次事件的错误上下文留在你本机的本地诊断追踪文件中，只有你显式分享诊断包时才会到达我们这里。
+- 没有用户账号信息（Orca 没有账号系统）。
+- 没有 IP 地址，也没有精确的 geoip；国家是从请求推导出的唯一地理信号。
+- 没有绑定到你匿名 ID 的供应商侧用户画像。
 
-## How to opt out
+## 如何退出
 
-You can disable telemetry in three ways. Any one of them is sufficient; they compose.
+你可以用三种方式禁用遥测。任何一种都足够；它们可以叠加。
 
-1. **In the app.** Settings → Privacy → toggle "Share anonymous usage data" off. The change is immediate and persistent.
+1. **在应用内。** Settings → Privacy → 关闭 "Share anonymous usage data"。更改立即生效并持久保存。
 
-![Settings → Privacy — toggle 'Share anonymous usage data' off to disable telemetry.](/privacy-toggle.png)
+   ![Settings → Privacy——关闭 "Share anonymous usage data" 即可禁用遥测。](/privacy-toggle.png)
 
-Settings → Privacy — toggle 'Share anonymous usage data' off to disable telemetry.
+   Settings → Privacy——关闭 "Share anonymous usage data" 即可禁用遥测。
 
-1. **`DO_NOT_TRACK=1`** — community-standard environment variable. Disables transmission for that launch. Unsetting it restores your stored preference on the next launch.
-2. **`ORCA_TELEMETRY_DISABLED=1`** — Orca-specific kill switch with the same semantics as `DO_NOT_TRACK`.
+2. **`DO_NOT_TRACK=1`**——社区标准环境变量。为该次启动禁用传输。取消设置后，下次启动会恢复你存储的偏好。
+3. **`ORCA_TELEMETRY_DISABLED=1`**——Orca 专属的终止开关，语义与 `DO_NOT_TRACK` 相同。
 
-## Where the data goes
+## 数据去向
 
-- **Vendor:** PostHog Cloud, **United States** region.
-- **Retention:** PostHog Cloud's plan-level default per their pricing page. We do not set a custom retention window.
-- **Access:** project membership is restricted to a small number of Orca maintainers.
+- **供应商：**PostHog Cloud，**美国**区域。
+- **保留期：**PostHog Cloud 按其定价页的套餐级默认值执行。我们没有设置自定义保留窗口。
+- **访问：**项目成员资格仅限少数 Orca 维护者。

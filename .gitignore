@@ -2,3 +2,5 @@ codegraph-main/
 node_modules/
 dist/
 .astro/
+orca-docs-cn-content/
+orca-main/

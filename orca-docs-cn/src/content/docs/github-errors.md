@@ -1,96 +1,96 @@
 ---
-title: "Troubleshooting GitHub errors"
-description: "Diagnose rate limits, auth failures, and other GitHub CLI errors in Orca PR checks, Tasks, and Source Control."
+title: "GitHub 错误"
+description: "诊断 Orca PR 检查、Tasks 与源代码管理中的限流、认证失败及其他 GitHub CLI 错误。"
 source: "https://www.onorca.dev/docs/github-errors"
 ---
 
-# Troubleshooting GitHub errors
+# GitHub 错误
 
-Diagnose rate limits, auth failures, and other GitHub CLI errors in Orca PR checks, Tasks, and Source Control.
+诊断 Orca PR 检查、Tasks 与源代码管理中的限流、认证失败及其他 GitHub CLI 错误。
 
-Orca talks to GitHub through the **GitHub CLI (`gh`)** on your machine (or remote Orca host). When PR status, checks, issues, or Tasks fail to refresh, the cause is almost always GitHub auth, permissions, or API rate limits — not a broken PR panel by itself.
+Orca 通过你机器上（或远程 Orca 主机上）的 **GitHub CLI（`gh`）** 与 GitHub 通信。当 PR 状态、检查、议题或 Tasks 刷新失败时，原因几乎总是 GitHub 认证、权限或 API 限流——而不是 PR 面板本身坏了。
 
-This page covers the errors you’ll see most often and how to fix them.
+本页介绍你最常遇到的错误及修复方法。
 
-## Quick triage
+## 快速分诊
 
-| What you see | Likely cause | First thing to try |
+| 你看到的现象 | 可能原因 | 首先尝试 |
 | --- | --- | --- |
-| “GitHub is rate-limiting requests” / “rate limit exceeded (core)” | GitHub REST (core) quota exhausted for your user | Wait for reset; stop extra `gh` / agent / Orca usage; check [Settings → Git → GitHub API Budget](/settings) |
-| “GitHub authentication is unavailable” / `gh auth` prompts | `gh` not logged in, expired token, or bad `GITHUB_TOKEN` | `gh auth status`, then `gh auth login` |
-| “GitHub did not allow access” / HTTP 403 (not rate limit) | Missing scopes or no access to the repo |
+| “GitHub is rate-limiting requests” / “rate limit exceeded (core)” | 你的账号的 GitHub REST（core）配额耗尽 | 等待重置；暂停多余的 `gh` / 智能体 / Orca 调用；查看 [Settings → Git → GitHub API Budget](/settings) |
+| “GitHub authentication is unavailable” / `gh auth` 提示登录 | `gh` 未登录、令牌过期或 `GITHUB_TOKEN` 无效 | `gh auth status`，然后 `gh auth login` |
+| “GitHub did not allow access” / HTTP 403（非限流） | 缺少 scope 或无权访问该仓库 | |
 
-## Rate limits (most common)
+## 限流（最常见）
 
-GitHub gives each **authenticated user** a shared hourly budget. **Every tool on that account shares it**: Orca, `gh` in terminals, Claude/Codex/Grok agents that call `gh`, CI scripts, browser extensions, and other apps.
+GitHub 给每个**已认证用户**一份按小时共享的预算。**该账号下的所有工具共用它**：Orca、终端里的 `gh`、调用 `gh` 的 Claude/Codex/Grok 智能体、CI 脚本、浏览器扩展和其他应用。
 
-### Buckets Orca cares about
+### Orca 关注的配额桶
 
-| Bucket | What it covers | Typical limit (authenticated) |
+| 配额桶 | 覆盖范围 | 典型限额（已认证） |
 | --- | --- | --- |
-| **REST (core)** | Most PR/issue/API calls (`gh pr view`, checks metadata, many REST endpoints) | 5,000 / hour |
-| **GraphQL** | Project/Tasks and some richer PR queries | 5,000 points / hour |
-| **Search** | Search-driven lists | 30 / minute |
+| **REST (core)** | 大多数 PR/议题/API 调用（`gh pr view`、检查元数据、许多 REST 端点） | 每小时 5,000 |
+| **GraphQL** | Project/Tasks 与一些更丰富的 PR 查询 | 每小时 5,000 点 |
+| **Search** | 由搜索驱动的列表 | 每分钟 30 |
 
-When a primary bucket is exhausted, GitHub returns HTTP **403** with a message like `API rate limit exceeded`. Orca classifies that as rate-limited, keeps the last known PR status when it can, and **stops spawning more `gh` calls** for a short window so a single limit doesn’t turn into a storm of failures.
+当主配额桶耗尽时，GitHub 返回 HTTP **403** 及 `API rate limit exceeded` 之类的消息。Orca 把它归类为限流，尽可能保留最后已知的 PR 状态，并在短时间内**停止再派生 `gh` 调用**，避免单个限额演变成一片失败风暴。
 
-### Why Settings can look “OK” while the PR panel is blocked
+### 为什么 Settings 看起来"正常"而 PR 面板被限流
 
-**Settings → Git → GitHub API Budget** reads GitHub’s special `rate_limit` endpoint. That probe is **exempt** from rate-limit accounting and sometimes still reports remaining quota while real REST calls for the same user already return `remaining: 0`.
+**Settings → Git → GitHub API Budget** 读取 GitHub 专门的 `rate_limit` 端点。该探测**不计入**限流统计，有时同一用户的真实 REST 调用已经返回 `remaining: 0`，它仍显示有剩余配额。
 
-Trust this order when they disagree:
+两者矛盾时，按这个优先级判断：
 
-1. The **error on the PR / Checks panel** (live request failed)
-2. A real CLI check (below)
-3. The Settings budget numbers (useful, but probe-only)
+1. **PR / Checks 面板上的错误**（实时请求失败）
+2. 真实的 CLI 检查（见下文）
+3. Settings 里的预算数字（有用，但仅是探测值）
 
-Also don’t confuse **GitHub API Budget** with **Claude / Codex / Grok usage** under Accounts — those are AI provider limits, not GitHub’s REST quota.
+也不要把 **GitHub API Budget** 与账号页里的 **Claude / Codex / Grok 用量**混为一谈——后者是 AI 提供商限额，不是 GitHub 的 REST 配额。
 
-### Confirm a rate limit from a terminal
+### 在终端确认限流
 
 ```
-# Probe (does not consume quota; can look healthier than reality)
+# 探测（不消耗配额；可能比实际情况显得更健康）
 gh api rate_limit --jq '.resources | {core, graphql, search}'
 
-# Real REST call — this is what PR refresh depends on
+# 真实 REST 调用——PR 刷新依赖的就是它
 gh api user -i 2>&1 | head -40
 ```
 
-If `gh api user` returns **403** with `API rate limit exceeded` and `X-Ratelimit-Remaining: 0`, the account is blocked for REST until `X-Ratelimit-Reset` (Unix epoch seconds).
+如果 `gh api user` 返回 **403**、`API rate limit exceeded` 与 `X-Ratelimit-Remaining: 0`，该账号的 REST 会被封到 `X-Ratelimit-Reset`（Unix 纪元秒）为止。
 
-### What usually burns the quota
+### 通常什么会耗尽配额
 
-- Many Orca windows or electron-dev builds open at once (each may refresh PRs / Tasks)
-- Agents automating `gh` (assign PRs/issues, poll checks, bulk GraphQL)
-- Heavy Tasks / multi-repo fan-out while also refreshing PR panels
-- Other apps using the same GitHub user token
+- 同时打开多个 Orca 窗口或 electron-dev 构建（每个都可能刷新 PR / Tasks）
+- 自动化 `gh` 的智能体（指派 PR/议题、轮询检查、批量 GraphQL）
+- 重度 Tasks / 多仓库扇出，同时还在刷新 PR 面板
+- 其他使用同一 GitHub 用户令牌的应用
 
-### What to do
+### 应对措施
 
-1. **Wait** for the hourly reset shown in the error or in `X-Ratelimit-Reset`.
-2. **Reduce concurrent GitHub clients** — quit extra Orca instances and pause bulk `gh` automations.
-3. Avoid hammering refresh on the PR panel while limited; Orca is already backing off.
-4. Prefer batching GraphQL in scripts; don’t loop REST one-PR-at-a-time across large sets on a personal account.
-5. After reset, if PR refresh still fails, re-check auth (next section).
+1. **等待**错误信息或 `X-Ratelimit-Reset` 里显示的小时级重置。
+2. **减少并发的 GitHub 客户端**——退出多余的 Orca 实例，暂停批量 `gh` 自动化。
+3. 限流期间不要猛刷 PR 面板；Orca 已在退避。
+4. 脚本里优先批量 GraphQL；不要在个人账号上对大批 PR 逐条循环 REST。
+5. 重置后如果 PR 刷新仍失败，再查认证（下一节）。
 
-## Authentication problems
+## 认证问题
 
-Orca inherits whatever `gh` uses on that host.
+Orca 继承该主机上 `gh` 使用的登录方式。
 
-### Check status
+### 检查状态
 
 ```
 gh auth status -h github.com
 gh api user --jq '{login, id}'
 ```
 
-Healthy output: logged in, token valid, `gh api user` returns your login.
+健康输出：已登录、令牌有效、`gh api user` 返回你的登录名。
 
-### Common footguns
+### 常见的坑
 
-**`GITHUB_TOKEN` / `GH_TOKEN` in your shell profile**
+**shell 配置里的 `GITHUB_TOKEN` / `GH_TOKEN`**
 
-If these are exported (for example `export GITHUB_TOKEN=$(gh auth token)` in `~/.bash_profile` or `~/.zshrc`), `gh` prefers them over the keyring. A stale or wrong env token produces confusing auth or rate-limit behavior. Unset them and re-login:
+如果导出了这些变量（例如在 `~/.bash_profile` 或 `~/.zshrc` 里的 `export GITHUB_TOKEN=$(gh auth token)`），`gh` 会优先用它们而不是钥匙串。过期或错误的环境变量令牌会导致莫名其妙的认证或限流表现。先取消再重新登录：
 
 ```
 unset GITHUB_TOKEN GH_TOKEN
@@ -98,75 +98,75 @@ gh auth logout -h github.com
 gh auth login -h github.com
 ```
 
-**Expired or revoked token**
+**过期或已撤销的令牌**
 
-`gh auth status` may show the token as invalid. Run `gh auth login` (or `gh auth refresh`) and restart Orca so it picks up the new credentials.
+`gh auth status` 可能显示令牌无效。运行 `gh auth login`（或 `gh auth refresh`）并重启 Orca，让它拿到新凭据。
 
-**Org SAML SSO**
+**组织 SAML SSO**
 
-Private org repos may need SSO authorization for the token. Open the org’s SSO authorize link from the GitHub token settings, then retry.
+私有组织仓库可能需要为令牌做 SSO 授权。在 GitHub 令牌设置里打开该组织的 SSO 授权链接，然后重试。
 
-**Remote / SSH worktrees**
+**远程 / SSH worktree**
 
-GitHub auth is **per host**. Logging in on your laptop does not log in `gh` on a remote machine. SSH into the host and run `gh auth login` there, or use Orca’s remote-server GitHub budget view for that environment.
+GitHub 认证**按主机隔离**。在笔记本上登录不会让远程机器上的 `gh` 登录。SSH 到主机在那里运行 `gh auth login`，或在 Orca 的远程服务器 GitHub 预算视图里查看该环境。
 
-## Permission and repository errors
+## 权限与仓库错误
 
-| Symptom | Meaning |
+| 症状 | 含义 |
 | --- | --- |
-| HTTP 403 without “rate limit” | Token lacks scope or you’re not allowed to see the resource |
-| HTTP 404 / “could not resolve to a Repository” | Repo missing, renamed, or invisible to this token |
-| “resource not accessible by integration” | App/token type can’t perform that action |
+| 不含 "rate limit" 的 HTTP 403 | 令牌缺少 scope，或你无权查看该资源 |
+| HTTP 404 / "could not resolve to a Repository" | 仓库不存在、已改名，或对该令牌不可见 |
+| "resource not accessible by integration" | 该应用/令牌类型无法执行此操作 |
 
-Fixes:
+修复方法：
 
-- Confirm the PR/repo opens in the browser while logged in as the same user as `gh api user`
-- Re-auth with classic scopes that include `repo` (and `read:org` / `project` if you use those features)
-- For GitHub Enterprise, ensure `gh` is authenticated to that hostname (`gh auth login --hostname …`)
+- 确认以与 `gh api user` 相同的用户在浏览器中登录后能打开该 PR/仓库
+- 用包含 `repo` 的经典 scope 重新认证（用到那些功能时再加 `read:org` / `project`）
+- 对 GitHub Enterprise，确保 `gh` 已在该主机名上认证（`gh auth login --hostname …`）
 
-## Network and GitHub outages
+## 网络与 GitHub 故障
 
-Messages about timeouts, “could not resolve host”, or “GitHub is unreachable” are connectivity issues:
+关于超时、"could not resolve host" 或 "GitHub is unreachable" 的消息属于连通性问题：
 
-- Check [GitHub Status](https://www.githubstatus.com/)
-- Try without VPN / corporate proxy
-- On remote hosts, confirm outbound HTTPS to `api.github.com` works
+- 查看 [GitHub Status](https://www.githubstatus.com/)
+- 尝试关闭 VPN / 公司代理
+- 在远程主机上确认到 `api.github.com` 的出站 HTTPS 正常
 
-## GitHub CLI missing
+## 缺少 GitHub CLI
 
-If Orca reports the GitHub CLI is unavailable:
+如果 Orca 报告 GitHub CLI 不可用：
 
-1. Install [`gh`](https://cli.github.com/)
-2. Confirm `which gh` works in a normal terminal
-3. Fully quit and reopen Orca (so PATH matches)
-4. On Windows, install for the same environment Orca launches (WSL vs native)
+1. 安装 [`gh`](https://cli.github.com/)
+2. 确认 `which gh` 在普通终端可用
+3. 完全退出并重新打开 Orca（让 PATH 对上）
+4. 在 Windows 上，安装到 Orca 启动时所用的同一环境（WSL 还是原生）
 
-## How Orca behaves when GitHub fails
+## GitHub 失败时 Orca 的行为
 
-- **Rate limit / outage**: PR and Checks panels prefer **last known status** plus a short banner instead of wiping the UI.
-- **Hard auth / permission failures**: You’ll get clear empty-state or banner copy telling you to fix login or access.
-- **Circuit breaker**: After a primary rate-limit 403, Orca briefly refuses new `gh` spawns for that bucket (`core`, `search`, or `graphql`) so the app stays responsive and doesn’t dig a deeper hole.
+- **限流 / 故障**：PR 与 Checks 面板优先显示**最后已知状态**加一条简短横幅，而不是清空 UI。
+- **硬性认证 / 权限失败**：你会看到明确的空状态或横幅文案，提示修复登录或访问权限。
+- **熔断器**：主配额桶限流 403 之后，Orca 会短暂拒绝为该桶（`core`、`search` 或 `graphql`）再派生 `gh`，让应用保持响应，不越陷越深。
 
-## Check GitHub API Budget in Orca
+## 在 Orca 中查看 GitHub API 预算
 
-Open **[Settings → Git](/settings)** and find **GitHub API Budget**:
+打开 **[Settings → Git](/settings)**，找到 **GitHub API Budget**：
 
-- **REST / Search / GraphQL** remaining counts from GitHub’s probe
-- Refresh after waiting out a limit
-- On remote Orca servers, use the remote advanced budget view for the **server-owned**`gh` identity (local Settings only shows the desktop client)
+- GitHub 探测到的 **REST / Search / GraphQL** 剩余额度
+- 等限流过去后刷新
+- 在远程 Orca 服务器上，用远程高级预算视图查看**服务器持有**的 `gh` 身份（本地 Settings 只显示桌面客户端）
 
-## Still stuck?
+## 仍然卡住？
 
-1. Reproduce once in a terminal with `gh pr view` or `gh api user` from the same machine/user Orca uses.
-2. Collect logs: **Help → Open Logs**.
-3. File an issue with the classified error text (not secrets), `gh auth status` redacted output, and whether terminal `gh` fails the same way.
+1. 在与 Orca 相同的机器/用户下，用 `gh pr view` 或 `gh api user` 在终端复现一次。
+2. 收集日志：**Help → Open Logs**。
+3. 提 issue 时附上分类后的错误文本（不要机密）、脱敏的 `gh auth status` 输出，以及终端里的 `gh` 是否同样失败。
 
 - [GitHub Issues](https://github.com/stablyai/orca/issues)
 - [Discord](https://discord.gg/fzjDKHxv8Q)
 
-## Related
+## 相关页面
 
-- [Hosted reviews, issues & Actions](/review/github) — PR and Checks features that depend on GitHub
-- [Settings reference](/settings) — Integrations and Git panes
-- [Usage & rate-limit tracking](/agents/usage-tracking) — AI provider limits (Claude/Codex), not GitHub API
-- [Troubleshooting & FAQ](/troubleshooting) — general Orca issues
+- [GitHub 评审、议题与 Actions](/review/github)——依赖 GitHub 的 PR 与 Checks 功能
+- [设置](/settings)——Integrations 与 Git 面板
+- [用量与限流追踪](/agents/usage-tracking)——AI 提供商限额（Claude/Codex），不是 GitHub API
+- [故障排查](/troubleshooting)——Orca 通用问题

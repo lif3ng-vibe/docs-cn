@@ -1,55 +1,55 @@
 ---
-title: "Orchestration"
-description: "Coordinate agents with Runs, tasks, supervised workers, messages, and decision gates."
+title: "编排"
+description: "用 Run、任务、受监督的工作者、消息与决策门协调多个智能体。"
 source: "https://www.onorca.dev/docs/cli/orchestration"
 ---
 
-# Orchestration
+# 编排
 
-Coordinate agents with Runs, tasks, supervised workers, messages, and decision gates.
+用 Run、任务、受监督的工作者、消息与决策门协调多个智能体。
 
-Orchestration is Orca's structured multi-agent layer: a **Run** (namespace + coordinator inbox), **Tasks**, **Dispatches**, supervised **workers**, messages, and decision gates.
+编排是 Orca 的结构化多智能体层：**Run**（命名空间 + 协调者收件箱）、任务（Task）、调度（Dispatch）、受监督的工作者（worker）、消息与决策门（decision gate）。
 
-Use it when you need ownership, completion tracking, or a DAG. For one-off prompts, use `orca terminal send`. For full ownership handoffs without supervision, use worktree/terminal commands from the `orca-cli` skill.
+当你需要明确的归属、完成追踪或 DAG 时使用它。一次性提示用 `orca terminal send`；不做监督、完全移交归属时，用 `orca-cli` 技能里的 worktree/终端命令。
 
-> Experimental Enable orchestration under Settings → Experimental before using these commands. The CLI talks to the running Orca runtime, so `orca status --json` should succeed first.
+> **实验性** 使用这些命令前，先在 Settings → Experimental 中启用编排。CLI 与运行中的 Orca 运行时通信，因此 `orca status --json` 应当先成功。
 
-> Legacy commands retired `orca orchestration run` and `run-stop` (and `coordinator-start` / `coordinator-stop`) perform **no effects**. They return recovery text pointing at `orca skills get orchestration --full`. Use the Run + worker-start flow below.
+> **旧命令已退役** `orca orchestration run` 和 `run-stop`（以及 `coordinator-start` / `coordinator-stop`）**不产生任何效果**。它们返回指向 `orca skills get orchestration --full` 的恢复说明。请使用下面的 Run + worker-start 流程。
 
-## Core model
+## 核心模型
 
-- **Run** — durable namespace and home inbox. Never schedules or places workers.
-- **Task** — a work item with a spec, dependencies, and status: `pending`, `ready`, `dispatched`, `completed`, `failed`, or `blocked`.
-- **Dispatch** — one attempt of a task on a terminal; lifecycle authority for `worker_done` / heartbeat.
-- **Message** — inbox mail (`status`, `dispatch`, `worker_done`, `escalation`, `question`, `heartbeat`, …).
-- **Decision gate** — a coordinator-owned question that blocks a task until it is resolved.
+- **Run**——持久命名空间与主收件箱。从不调度或安置工作者。
+- **任务（Task）**——带规格、依赖与状态的工作项，状态取值：`pending`、`ready`、`dispatched`、`completed`、`failed`、`blocked`。
+- **调度（Dispatch）**——任务在某终端上的一次执行尝试；是 `worker_done` / 心跳的生命周期权威。
+- **消息（Message）**——收件箱邮件（`status`、`dispatch`、`worker_done`、`escalation`、`question`、`heartbeat` 等）。
+- **决策门（decision gate）**——由协调者持有的问题，在解决之前会阻塞任务。
 
-Completion authority comes from the active dispatch context. Worker completion and heartbeat messages should include both `taskId` and `dispatchId`.
+完成权威来自活动调度上下文。工作者的完成与心跳消息应同时带 `taskId` 和 `dispatchId`。
 
-Task IDs printed in terminals, such as `task_...`, are clickable links. Clicking one asks the Orca runtime for the task's current dispatch and focuses the assigned terminal, including when the task lives in a remote or SSH runtime.
+终端里打印的任务 ID（形如 `task_...`）是可点击链接。点击后会向 Orca 运行时查询该任务当前的调度，并聚焦被指派的终端——即使任务位于远程或 SSH 运行时也是如此。
 
-## Preferred supervised loop
+## 推荐的受监督循环
 
 ```
 orca orchestration run-create --objective "Split checkout QA and summarize blockers" --json
 orca orchestration task-create --spec "Audit billing settings for mobile layout" --task-title "Billing audit" --json
 orca orchestration worker-start --task <taskId> --worktree current --agent codex --json
-# or new worktree:
+# 或新建 worktree：
 orca orchestration worker-start --task <taskId> --worktree new-child --name billing-audit --agent codex --setup run --json
-# optional per-worker model / effort (Claude, Codex, Cursor only; not with --terminal):
+# 可选的按工作者 model / effort（仅 Claude、Codex、Cursor；不能与 --terminal 同用）：
 orca orchestration worker-start --task <taskId> --worktree current --agent claude --model <opaque-model-id> --effort high --json
 ```
 
-`--model` accepts opaque provider model IDs for Claude, Codex, and Cursor. `--effort` requires `--model` and only applies when that agent/model supports the level. Neither flag can combine with `--terminal` (reuse an existing pane). Overrides apply to that launch only and show under `launch.requested` / `launch.effective` in the start receipt. Federated starts need a worker host that advertises launch-preference support.
+`--model` 接受 Claude、Codex 与 Cursor 的提供商不透明模型 ID。`--effort` 必须搭配 `--model`，且仅在该智能体/模型支持相应档位时生效。两个标志都不能与 `--terminal`（复用既有窗格）同用。覆盖只对那次启动生效，并显示在启动回执的 `launch.requested` / `launch.effective` 中。联邦启动要求工作者所在主机声明支持启动偏好。
 
-Wait for completions (process every message in a Delivery, then ack):
+等待完成（处理某次投递中的每条消息，然后确认）：
 
 ```
 orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json
 orca orchestration check --ack <deliveryId> --wait --types worker_done,escalation,question --timeout-ms 900000 --json
 ```
 
-Worker completion (from the worker pane; include injected IDs):
+工作者上报完成（在工作者的窗格中执行；带上注入的 ID）：
 
 ```
 orca orchestration send \
@@ -63,26 +63,26 @@ orca orchestration send \
  --json
 ```
 
-`worker_done` requires `--outcome succeeded|failed`.
+`worker_done` 必须带 `--outcome succeeded|failed`。
 
-Inspect / recover:
+检查 / 恢复：
 
 ```
 orca orchestration worker-show --dispatch <dispatchId> --json
 orca orchestration worker-read --dispatch <dispatchId> --limit 50 --json
 orca orchestration worker-stop --dispatch <dispatchId> --json
-# After an accepted worker_done: reuse the same terminal for a follow-up Dispatch, or release it
-# (archives inspectable output, then closes only that coordinator-owned agent terminal):
+# worker_done 被接受后：复用同一终端做后续调度，或释放它
+#（先归档可查看的输出，再只关闭那个协调者持有的智能体终端）：
 orca orchestration worker-release --dispatch <dispatchId> --json
-# Keep a settled worker live for debugging when the user asked to retain it:
+# 用户要求保留时，让已收尾的工作者保持存活以便调试：
 orca orchestration worker-retain --dispatch <dispatchId> --json
-# retry placement is explicit — --retry-of does not inherit --on/worktree:
+# 重试安置是显式的——--retry-of 不继承 --on/worktree：
 orca orchestration worker-start --task <taskId> --retry-of <dispatchId> --worktree current --agent codex --json
 ```
 
-Do not leave completed worker terminals open just to re-read output — use `worker-read` after `worker-release`. Do not substitute a broad `terminal close` when release returns `release_pending` or `release_unknown`; follow the receipt's recovery action.
+不要为了重读输出而让已完成的工作者终端一直开着——`worker-release` 之后再 `worker-read` 即可。当 release 返回 `release_pending` 或 `release_unknown` 时，不要用宽泛的 `terminal close` 代替，按回执中的恢复操作处理。
 
-## Federated workers (optional)
+## 联邦工作者（可选）
 
 ```
 orca orchestration worker-start \
@@ -97,9 +97,9 @@ orca orchestration worker-start \
 orca orchestration send --to dispatch:<dispatchId> --subject "Follow-up" --body "…" --json
 ```
 
-Later commands route by Dispatch ID; do not repeat `--on`.
+后续命令按调度 ID 路由；不要重复 `--on`。
 
-## Low-level dispatch (custom topology)
+## 低层调度（自定义拓扑）
 
 ```
 orca worktree create --name billing-audit --agent codex --json
@@ -107,12 +107,12 @@ orca terminal wait --terminal <workerHandle> --for tui-idle --timeout-ms 60000 -
 orca orchestration dispatch --task <taskId> --to <workerHandle> --inject --json
 ```
 
-## Messaging notes
+## 消息说明
 
-- Default `check` is the bound Run's oldest unacked Delivery (FIFO). Replay until `--ack`.
-- `--peek` / `--all` do not consume mail.
-- Group addresses: `@all`, `@idle`, `@claude`, `@codex`, `@opencode`, `@gemini`, `@droid`, `@grok`, `@cursor`, `@worktree:<id>` — never for `worker_done` / heartbeat.
-- Quote PowerShell group addresses: `--to "@all"`.
+- 默认情况下 `check` 返回所绑定 Run 最早的未确认投递（FIFO）。反复执行直到 `--ack`。
+- `--peek` / `--all` 不消费邮件。
+- 组地址：`@all`、`@idle`、`@claude`、`@codex`、`@opencode`、`@gemini`、`@droid`、`@grok`、`@cursor`、`@worktree:<id>`——绝不能用于 `worker_done` / 心跳。
+- PowerShell 中组地址要加引号：`--to "@all"`。
 
 ```
 orca orchestration send --to @all --subject "Heads up" --body "Pausing dispatches for a review." --json
@@ -120,17 +120,17 @@ orca orchestration send --to @idle --subject "Anyone free?" --json
 orca orchestration send --to @codex --subject "Codex agents only" --json
 ```
 
-While a wait is active, the CLI emits small JSON heartbeat lines to stderr every 15 seconds. Stdout remains the final command result.
+等待期间，CLI 每 15 秒向 stderr 输出一行简短 JSON 心跳。stdout 始终是最终命令结果。
 
-## Worker contract
+## 工作者契约
 
-Dispatched workers receive a preamble that tells them how to communicate with the coordinator:
+被调度的工作者会收到一段前导说明，告知如何与协调者通信：
 
-- Send `worker_done` exactly once, even on failure, with `--outcome`.
-- Include a short `--body` summary: what was done, what was found, and what remains.
-- Include both task and dispatch IDs so stale retries cannot complete the wrong dispatch.
-- Send `heartbeat` messages during long active work.
-- Use `orca orchestration ask` for blocking questions instead of local TUI prompts.
+- `worker_done` 恰好发送一次，失败也要发，并带 `--outcome`。
+- 附一段简短的 `--body` 摘要：做了什么、发现了什么、还剩什么。
+- 同时带任务 ID 和调度 ID，防止过期的重试完成错误的调度。
+- 长时间活跃工作期间发送 `heartbeat` 消息。
+- 阻塞性提问用 `orca orchestration ask`，不要用本地 TUI 提示。
 
 ```
 orca orchestration ask \
@@ -141,11 +141,11 @@ orca orchestration ask \
  --json
 ```
 
-With `--json`, `ask` prints a single JSON object so workers can pipe it to `jq -r .answer`.
+带 `--json` 时，`ask` 输出单个 JSON 对象，工作者可以直接用管道接 `jq -r .answer`。
 
-## Decision gates
+## 决策门
 
-Use `ask` for worker-to-coordinator questions. Use explicit gates when the coordinator has created a task DAG and wants to block a task until a decision is recorded:
+工作者向协调者提问用 `ask`。当协调者已建好任务 DAG、想让某任务在决策记录之前保持阻塞时，使用显式决策门：
 
 ```
 orca orchestration gate-create \
@@ -157,7 +157,7 @@ orca orchestration gate-create \
 orca orchestration gate-resolve --id <gateId> --resolution "yes" --json
 ```
 
-## Recovery
+## 恢复
 
 ```
 orca orchestration dispatch-show --task <taskId> --json
@@ -166,7 +166,7 @@ orca orchestration task-list --json
 orca orchestration task-update --id <taskId> --status blocked --result '{"reason":"waiting on credentials"}' --json
 ```
 
-Reset only when you are intentionally abandoning orchestration state:
+只有在有意放弃编排状态时才重置：
 
 ```
 orca orchestration reset --tasks --json
@@ -174,19 +174,19 @@ orca orchestration reset --messages --json
 orca orchestration reset --all --json
 ```
 
-`reset` affects runtime-global orchestration state. Do not run it while another coordinator is active unless that is the intended cleanup.
+`reset` 影响运行时全局的编排状态。除非本意就是清理，否则不要在其他协调者活跃时运行它。
 
-## Choosing the right command
+## 选择正确的命令
 
-Use `orca terminal send` for a lightweight prompt to an agent you are watching.
+向你正盯着的智能体发轻量提示，用 `orca terminal send`。
 
-Use `orca orchestration worker-start` (or `dispatch --inject`) when a worker must report `worker_done`, ask questions through the coordinator, and be tracked by task ID.
+当工作者必须上报 `worker_done`、通过协调者提问、并按任务 ID 被追踪时，用 `orca orchestration worker-start`（或 `dispatch --inject`）。
 
-Use `orca orchestration run-create` + tasks + workers when you want a durable Run namespace and supervised multi-agent loop — not the retired `orchestration run` command.
+需要持久 Run 命名空间与受监督的多智能体循环时，用 `orca orchestration run-create` + 任务 + 工作者——而不是已退役的 `orchestration run` 命令。
 
-## Full guide
+## 完整指南
 
-Command flags evolve with the app. After install, agents should run:
+命令标志随应用演进。安装后，智能体应运行：
 
 ```
 orca skills get orchestration --full

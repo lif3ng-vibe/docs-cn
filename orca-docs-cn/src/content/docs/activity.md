@@ -1,35 +1,35 @@
 ---
-title: "Agents feed"
-description: "Threaded feed of agent completions, blocking states, response previews, and worktree creation events across every worktree."
+title: "活动"
+description: "覆盖所有 worktree 的线程式智能体动态流：完成、阻塞、回复预览与 worktree 创建事件。"
 source: "https://www.onorca.dev/docs/activity"
 ---
 
-# Agents feed
+# 活动
 
-Threaded feed of agent completions, blocking states, response previews, and worktree creation events across every worktree.
+覆盖所有 worktree 的线程式智能体动态流：完成、阻塞、回复预览与 worktree 创建事件。
 
-The **Agents** entry in the sidebar opens a threaded feed of agent events across every worktree — completions, blocking questions, unread state, and worktree creation. It complements the per-worktree [notifications](/notifications) view by giving you one chronological surface to triage from.
+侧边栏的 **Agents** 入口打开一个覆盖所有 worktree 的线程式智能体事件流——完成、阻塞提问、未读状态与 worktree 创建。它补充按 worktree 的[通知](/notifications)视图，给你一个按时间顺序分诊的统一界面。
 
-The entry is on by default. It shows an unread badge when new events have arrived since you last visited; clicking an entry jumps you to the matching worktree and pane — the same handoff Orca does from a system notification.
+该入口默认开启。自你上次查看后有新事件到达时显示未读徽标；点击某条会跳到对应的 worktree 与窗格——与系统通知的交接方式相同。
 
-Use `Cmd+F` on macOS or `Ctrl+F` on Windows and Linux to focus the feed filter. When the embedded terminal has focus, the same shortcut stays with the terminal instead.
+在 macOS 上用 `Cmd+F`、Windows 与 Linux 上用 `Ctrl+F` 聚焦动态流过滤器。当内嵌终端持有焦点时，同一快捷键仍留给终端。
 
-## What shows up
+## 显示什么内容
 
-Each entry in the feed is one of:
+动态流中的每条内容是以下之一：
 
-- An agent finishing a turn, either idle or blocked on a question.
-- A new worktree being created.
-- An agent that's been waiting on input long enough to surface as blocking.
-- A short preview of the agent's most recent response, so you can skim the feed without opening every thread.
+- 智能体完成一轮，可能是空闲，也可能是被问题阻塞。
+- 新 worktree 被创建。
+- 等待输入已久、从而显示为阻塞状态的智能体。
+- 智能体最近回复的简短预览，让你不必逐个打开线程就能浏览动态流。
 
-Threads are grouped by status — running agents stay pinned at the top so you can spot the ones still working at a glance.
+线程按状态分组——运行中的智能体固定在顶部，一眼就能看到还在干活的那些。
 
-## Interplay with notifications
+## 与通知的配合
 
-The Agents feed doesn't replace the [header bell](/notifications) or system notifications — those still fire on agent-finished pings. The feed is the catch-up surface when you've been away from Orca: instead of scrolling each worktree to find what changed, scan it.
+智能体动态流不取代[顶栏铃铛](/notifications)或系统通知——智能体完成提醒仍由它们发出。动态流是离开 Orca 一段时间后的补看界面：不必逐个滚动 worktree 找变化，扫一眼它即可。
 
-## Next steps
+## 后续步骤
 
-- [Notifications & Inbox](/notifications) — system pings, the header bell, and per-category tuning.
-- [Agents & sessions](/model/agents-sessions) — how Orca tracks the working/idle/blocked transitions this feed surfaces.
+- [通知](/notifications)——系统提醒、顶栏铃铛与按类别调整。
+- [智能体与会话](/model/agents-sessions)——Orca 如何追踪本动态流呈现的工作中/空闲/阻塞状态转换。

@@ -1,48 +1,48 @@
 ---
-title: "Session restore"
-description: "Quit Orca, reopen it, and pick up exactly where you left off — worktrees, splits, scrollback, focused tab."
+title: "会话恢复"
+description: "退出 Orca、重新打开，然后从你离开的地方继续——worktree、分屏、回滚缓冲区、聚焦的标签页。"
 source: "https://www.onorca.dev/docs/model/session-restore"
 ---
 
-# Session restore
+# 会话恢复
 
-Quit Orca, reopen it, and pick up exactly where you left off — worktrees, splits, scrollback, focused tab.
+退出 Orca、重新打开，然后从你离开的地方继续——worktree、分屏、回滚缓冲区、聚焦的标签页。
 
-When you close Orca, the next launch rehydrates the whole workspace: every open worktree, every terminal split, the scrollback in each pane, and the tab you had focused. You shouldn't have to remember which agents you had running on which branches — that's Orca's job.
+关闭 Orca 后，下一次启动会复原整个工作区：每个打开的 worktree、每个终端分屏、每个窗格中的回滚缓冲区（scrollback），以及你聚焦过的标签页。哪些智能体跑在哪些分支上不该由你来记——那是 Orca 的事。
 
-Restart Orca and the session — terminals, splits, scrollback, focused tab — comes back intact.
+重启 Orca，会话——终端、分屏、回滚缓冲区、聚焦的标签页——原样归来。
 
-## What gets restored
+## 会恢复什么
 
-- **Open worktrees** — every worktree you had open in the sidebar.
-- **Tabs and splits** — pane layout per worktree, including nested splits and which tab was focused.
-- **Running agent processes** — agents you had running keep running across an Orca quit. A background daemon owns the PTYs, so closing the app window doesn't kill Claude Code, Codex, or any other agent CLI mid-task. On next launch, Orca warm-reattaches to the same processes.
-- **Terminal scrollback** — the buffer in each terminal, including output produced while Orca was closed.
-- **Focused worktree and tab** — Orca opens to the same view you closed.
+- **打开的 worktree**——侧边栏中打开过的每个 worktree。
+- **标签页与分屏**——每个 worktree 的窗格布局，包括嵌套分屏和当时聚焦的标签页。
+- **运行中的智能体进程**——你运行过的智能体在 Orca 退出后继续运行。一个后台守护进程持有 PTY，因此关闭应用窗口不会在中途杀掉 Claude Code、Codex 或其他任何智能体 CLI。下次启动时，Orca 会热重接到同一批进程。
+- **终端回滚缓冲区**——每个终端中的缓冲区，包括 Orca 关闭期间产生的输出。
+- **聚焦的 worktree 和标签页**——Orca 打开的就是你关闭时的那个视图。
 
-## What doesn't get restored
+## 不会恢复什么
 
-The daemon dies when the host does, so anything that takes the whole machine down — reboot, OS update, kernel panic, hard power-off — ends every running agent. On next launch the worktrees, tabs, splits, and last-known scrollback come back, but the agent processes themselves are gone. Re-run the agent in any tab to keep going.
+守护进程随宿主机一同消亡，所以任何让整台机器下电的事——重启、系统更新、内核崩溃、硬断电——都会终止所有运行中的智能体。下次启动时，worktree、标签页、分屏和最后已知的回滚缓冲区会回来，但智能体进程本身没有了。在任意标签页重新运行智能体即可继续。
 
-A daemon crash while Orca is closed has the same effect for any sessions it was holding, but the layout and scrollback still restore on next launch.
+Orca 关闭期间守护进程崩溃，对其持有的会话效果相同，但布局和回滚缓冲区仍会在下次启动时恢复。
 
-## When restore runs
+## 何时触发恢复
 
-Session restore runs on every launch. The cases divide by whether the **daemon** survived the gap or not:
+会话恢复在每次启动时运行。情形按**守护进程**是否熬过了这段间隔分为两类：
 
-**Daemon survives → agents keep running:**
+**守护进程存活 → 智能体继续运行：**
 
-- **Cmd-Q** — the normal way to quit. Agents keep working in the background.
-- **Auto-updater relaunch** — Orca restarts to install an update; agents are unaffected.
-- **App crash** — if Orca itself crashes, the daemon keeps your sessions alive for warm reattach on next launch.
+- **Cmd-Q**——常规的退出方式。智能体在后台继续工作。
+- **自动更新重启**——Orca 重启以安装更新；智能体不受影响。
+- **应用崩溃**——如果 Orca 自己崩溃了，守护进程会让你的会话保持存活，供下次启动热重接。
 
-**Daemon dies → agents are gone, layout still restores:**
+**守护进程消亡 → 智能体没了，布局仍恢复：**
 
-- **Host reboot** — laptop restart, OS update, kernel panic, hard power-off. Worktrees, tabs, splits, and the last-persisted scrollback still come back on next launch.
+- **宿主机重启**——笔记本重启、系统更新、内核崩溃、硬断电。worktree、标签页、分屏和最后持久化的回滚缓冲区仍会在下次启动时回来。
 
-> Starting fresh If you want a clean slate, close worktrees explicitly before quitting. There is no "open in a new session" mode — Orca always restores. Closed worktrees stay closed.
+> **想从头开始？** 如果你想要一个干净的起点，退出前显式关闭 worktree。没有"在新会话中打开"模式——Orca 总是恢复。已关闭的 worktree 保持关闭。
 
-## Next steps
+## 下一步
 
-- [Agents & sessions](/model/agents-sessions) — state dots and the lifecycle of an agent session.
-- [Tabs, panes & split layouts](/model/tabs-panes-splits) — how the layout you'll be restoring is built in the first place.
+- [智能体与会话](/model/agents-sessions)——状态圆点和智能体会话的生命周期。
+- [标签页、窗格与分屏](/model/tabs-panes-splits)——你将要恢复的那套布局，最初是怎么搭起来的。

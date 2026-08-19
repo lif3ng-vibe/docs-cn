@@ -1,37 +1,35 @@
 ---
-title: "File explorer &amp; external drag-drop"
-description: "File explorer &amp; external drag-drop — Orca documentation."
+title: "文件浏览器与外部拖放"
+description: "文件浏览器与外部拖放——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/file-explorer"
 ---
 
-# File explorer & external drag-drop
+# 文件浏览器与外部拖放
 
-$undefined
+文件浏览器位于每个 worktree 的左侧。它实时追踪磁盘上的文件——创建、重命名、删除和移动都映射为文件系统操作，因此外部变更（比如来自智能体的）会即时出现。目录列表先排目录再排文件，采用**自然（数字感知）名称排序**——`9`、`99`、`100` 而不是字典序的 `100`、`99`。同一排序也适用于 SSH、远程运行时、Source Control 树节点、文件夹选择器和移动端文件树。
 
-The file explorer lives on the left side of each worktree. It tracks your on-disk files in real time — create, rename, delete, and move all map to filesystem operations, so external changes (say, from the agent) show up instantly. Directory listings sort directories first, then files, with **natural (numeric-aware) name order** — `9`, `99`, `100` instead of lexicographic `100`, `99`. The same ordering applies to SSH, remote runtime, Source Control tree nodes, folder pickers, and the mobile file tree.
+## 外部拖放
 
-## External drag-drop
+- 从 Finder/Explorer 把文件拖入文件树即可复制进来。
+- 把图片拖入 markdown 编辑器即可插入到光标处。
+- 把文件拖到智能体终端上，即可把路径粘贴到提示符处。
+- 对 [SSH worktree](/ssh) 同样支持拖放——Orca 会先把文件上传到远程主机再完成放置，智能体看到的就是真实的磁盘路径。
 
-- Drop files from Finder/Explorer into the file tree to copy them in.
-- Drop an image into a markdown editor to insert it at the cursor.
-- Drop files onto an agent terminal to paste their paths at the prompt.
-- For [SSH worktrees](/ssh), drag-drop also works — Orca uploads the file to the remote host before completing the drop, so the agent sees the file as a real on-disk path.
+## Git 状态
 
-## Git status
+文件按 git 状态着色——未跟踪、已修改、已暂存、已忽略。右键可执行常规操作：丢弃、暂存、重命名、**Copy Path**（复制路径）和 **Copy Relative Path**（复制相对路径）（默认 `Cmd+Option+Shift+C` / `Ctrl+Alt+Shift+C`；可重映射）。
 
-Files are colored by git status — untracked, modified, staged, ignored. Right-click for the usual actions: discard, stage, rename, **Copy Path**, and **Copy Relative Path** (`Cmd+Option+Shift+C` / `Ctrl+Alt+Shift+C` by default; remappable).
+右键单个文件并选择 **Copy**（复制），把文件本身放进操作系统剪贴板。对 SSH worktree，Orca 会先把远程文件在本地暂存，再把该暂存文件引用写入剪贴板；远程文件夹被排除在外。
 
-Right-click a single file and choose **Copy** to place the file itself on the OS clipboard. For SSH worktrees, Orca first stages the remote file locally, then writes that staged file reference to the clipboard; remote folders are excluded.
+## 下载（SSH / 远程）
 
-## Download (SSH / remote)
+在桌面应用中，右键远程文件 → **Download**（下载），或右键远程文件夹 → **Download Folder**（下载文件夹，连接支持递归传输时可用）。Orca 会打开系统保存/选择文件夹对话框。Web 客户端不可用。本地 worktree 不显示该操作。
 
-On the desktop app, right-click a remote file → **Download**, or a remote folder → **Download Folder** when the connection supports recursive transfer. Orca opens a native save/folder dialog. Not available in the web client. Local worktrees do not show this action.
+## 在文件夹中查找
 
-## Search a folder
+右键文件夹并选择 **Find in Folder**（在文件夹中查找），打开搜索且范围已限定为该文件夹。也可以在文件浏览器中选中文件夹后，在 macOS 上按 `Cmd-Shift-F`，在 Windows 和 Linux 上按 `Ctrl-Shift-F`。
 
-Right-click a folder and choose **Find in Folder** to open Search with that folder already scoped. You can also select a folder in the file explorer and press `Cmd-Shift-F` on macOS or `Ctrl-Shift-F` on Windows and Linux.
+## 后续步骤
 
-## Next steps
-
-- [Monaco editor & autosave](/editing/monaco) — edit files after you find the match you need.
-- [Diff viewer](/review/diff-viewer) — review the changes your agent or editor made.
+- [Monaco 编辑器与自动保存](/editing/monaco)——找到匹配后即可编辑文件。
+- [Diff 查看器](/review/diff-viewer)——评审智能体或编辑器做出的变更。

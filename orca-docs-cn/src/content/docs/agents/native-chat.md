@@ -1,35 +1,35 @@
 ---
-title: "Chat UI (native chat)"
-description: "Optional chat surface over supported agent terminals — skills, model pickers, and transcript view."
+title: "聊天界面（原生聊天）"
+description: "叠加在受支持智能体终端之上的可选聊天界面——技能、模型选择器与转录视图。"
 source: "https://www.onorca.dev/docs/agents/native-chat"
 ---
 
-# Chat UI (native chat)
+# 聊天界面（原生聊天）
 
-Optional chat surface over supported agent terminals — skills, model pickers, and transcript view.
+叠加在受支持智能体终端之上的可选聊天界面——技能、模型选择器与转录视图。
 
-Chat UI is an experimental view layered on supported agent terminal sessions. The terminal remains the source of truth; Chat UI is a structured transcript + composer for the same PTY. Transcript decoding covers **Claude**, **Codex**, **Grok**, and **OMP** — OMP sessions open in Chat UI like the others instead of staying raw-terminal-only.
+Chat UI 是一个叠加在受支持智能体终端会话之上的实验性视图。终端仍是唯一事实来源；Chat UI 是同一个 PTY 的结构化转录 + 输入区。转录解码覆盖 **Claude**、**Codex**、**Grok** 和 **OMP**——OMP 会话可以和其他智能体一样在 Chat UI 中打开，而不再只能停留在裸终端。
 
-## Enable
+## 启用
 
-1. Open **Settings → Experimental → Chat UI**.
-2. Turn **Chat UI** on.
-3. Optionally set **Default view** to **Chat UI** so new supported agent tabs open in chat; keep **Terminal** to open the TUI first.
+1. 打开 **Settings → Experimental → Chat UI**（设置 → 实验 → 聊天界面）。
+2. 开启 **Chat UI**。
+3. 可选：把 **Default view**（默认视图）设为 **Chat UI**，让新开的受支持智能体标签页直接进入聊天；保留 **Terminal** 则先打开 TUI。
 
-Toggle Chat UI ↔ terminal from the agent pane once enabled.
+启用后，可从智能体窗格在 Chat UI 与终端之间来回切换。
 
-## Composer
+## 输入区
 
-- Type a message and send (or stop a working turn). Attach files/images when the host supports it. Unsent draft text and attachments stay with the pane across disconnect/reconnect when the host can restore them. A settled transcript also stays on screen while the same session reconnects, instead of blanking until the fresh load finishes (desktop and mobile share that retention).
-- Type for slash commands and discovered (filtered per agent when possible). The slash catalog is agent-aware (Claude vs Codex command sets) and shared with mobile Chat UI.
-- Use the **model** and options pills (thought level, mode, agent-specific session options) when the agent exposes them. **Claude** model choices come from the **installed Claude CLI on that host** (not a hardcoded list), so new models show up after you update the CLI. **Codex** supports direct model selection from the pill (sends `/model <id>`), with bare `/model` still opening the agent picker. **Grok** exposes **model** (`-m` at launch, `/model` mid-session) and **reasoning effort** (`--reasoning-effort` at launch, `/effort` mid-session); the model list is probed from the signed-in Grok CLI (`grok models`) so retired ids drop out of the picker. **Before the agent process starts**, the composer can show draft launch options that apply on first start; after the session is live, pills that only affect a running turn stay disabled or labeled until the session is ready. Live values go to the CLI in that tab.
+- 输入消息并发送（或停止正在进行的回合）。宿主机支持时可附加文件/图片。未发送的草稿文本与附件会在断开/重连期间留在窗格中（前提是宿主机能恢复它们）。同一会话重连时，已稳定下来的转录也会保持在屏幕上，而不是先清空再等新内容加载完成（桌面端与移动端共享这一保留行为）。
+- 输入 `/` 即可使用斜杠命令，命令会被自动发现（在可能时按智能体筛选）。斜杠命令目录具备智能体感知（区分 Claude 与 Codex 的命令集），并与移动端 Chat UI 共享。
+- 当智能体暴露相应能力时，使用 **model**（模型）与选项胶囊（思考级别、模式、智能体专属的会话选项）。**Claude** 的模型选项来自**该宿主机上已安装的 Claude CLI**（而非硬编码列表），因此更新 CLI 后新模型就会出现。**Codex** 支持直接从胶囊选择模型（发送 `/model <id>`），裸的 `/model` 仍会打开智能体选择器。**Grok** 暴露 **model**（启动时 `-m`，会话中 `/model`）与 **reasoning effort**（推理投入档位；启动时 `--reasoning-effort`，会话中 `/effort`）；模型列表通过已登录的 Grok CLI（`grok models`）探测，因此已停用的 id 会从选择器中消失。**在智能体进程启动之前**，输入区可以显示将在首次启动时生效的草稿启动选项；会话投入运行后，只影响运行中回合的胶囊会保持禁用或带标注状态，直到会话就绪。实时值会发送到该标签页中的 CLI。
 
-## Questions from the agent
+## 来自智能体的提问
 
-When Claude shows an **AskUserQuestion** (or similar structured permission/question card), Chat UI should render the question card in the transcript so you can answer from the composer path instead of treating it as a collapsed tool call. Confirm with **Submit** on the card. That includes agents running on a paired [Remote Orca Server](/remote-servers) / headless host — not only local panes.
+当 Claude 显示 **AskUserQuestion**（或类似的结构化权限/问题卡片）时，Chat UI 会把问题卡片渲染进转录，让你从输入区作答，而不是把它当作折叠的工具调用。用卡片上的 **Submit** 确认。这同样适用于运行在已配对[远程 Orca 服务器](/remote-servers)或无头宿主机上的智能体——并不限于本地窗格。
 
-## Availability
+## 可用性
 
-Chat UI ships on desktop for supported local and remote (paired server) agent sessions. The [mobile companion](/mobile) reuses chat-style transcript patterns for the same paired sessions.
+Chat UI 在桌面端提供，覆盖受支持的本地与远程（已配对服务器）智能体会话。[移动伴侣应用](/mobile)会为同一批配对会话复用聊天式转录的呈现模式。
 
-> Experimental Transcript fidelity, streaming, and terminal parity are still under active tuning. Prefer the raw TUI when you need every OSC/status detail.
+> **实验性**：转录保真度、流式呈现与终端一致性仍在持续调优。需要逐条 OSC/状态细节时，请优先使用原生 TUI。

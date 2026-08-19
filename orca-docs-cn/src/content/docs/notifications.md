@@ -1,37 +1,37 @@
 ---
-title: "Notifications &amp; Inbox"
-description: "Notifications &amp; Inbox — Orca documentation."
+title: "通知"
+description: "通知与收件箱——智能体完成提醒、常驻铃铛与自定义提示音。"
 source: "https://www.onorca.dev/docs/notifications"
 ---
 
-# Notifications & Inbox
+# 通知
 
 $undefined
 
-Orca runs agents, not just terminals, so it knows when an agent actually finishes versus when it's just paused. Notifications lean on that signal so you can queue three agents, walk away, and come back when the first one is done.
+Orca 运行的是智能体而不只是终端，因此它能分辨智能体是真的完成还是只是暂停。通知依托这一信号，让你可以排三个智能体、走开，等第一个完成再回来。
 
-## Agent-finished pings
+## 智能体完成提醒
 
-When an agent transitions from working to idle, Orca fires a notification — system notification, sound, and a chip on the worktree.
+当智能体从工作转入空闲，Orca 会发出通知——系统通知、提示音，以及 worktree 上的角标。
 
-## Persistent bell
+## 常驻铃铛
 
-The header bell shows unread notifications across all worktrees. Clicking a notification jumps to the matching worktree and pane.
+顶栏铃铛显示所有 worktree 的未读通知。点击某条通知会跳到对应的 worktree 与窗格。
 
-On macOS, the same unread count is mirrored as a badge on the Dock icon, so you can spot pending agent pings without bringing Orca to the foreground.
+在 macOS 上，同一未读数还会镜像为 Dock 图标上的徽标，无需把 Orca 调到前台即可看到待处理的智能体提醒。
 
-## Mark unread
+## 标记未读
 
-Right-click a notification to mark unread — useful when you've triaged something but want to come back to it later.
+右键某条通知可标记为未读——当你已经处理过一件事、但想稍后再回来看时有用。
 
-## Tuning
+## 调整
 
-Turn off specific categories (system, sound, chip-only) under [Settings → Notifications](/settings).
+在 [Settings → Notifications](/settings) 关闭特定类别（系统、提示音、仅角标）。
 
-## Custom sounds
+## 自定义提示音
 
-Pick a custom desktop notification sound per category under [Settings → Notifications](/settings) — point at any audio file on disk, or pick from Orca's built-in set. Useful when you want agent-finished pings to stand out from system mail and Slack.
+在 [Settings → Notifications](/settings) 为每个类别挑选自定义桌面通知音——指向磁盘上的任意音频文件，或从 Orca 内置音色中挑选。想让智能体完成提醒与系统邮件、Slack 区分开时很有用。
 
-Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC. One file applies to all delivered desktop notifications.
+支持的格式：MP3、WAV、OGG、M4A、AAC、FLAC。一个文件应用于所有发出的桌面通知。
 
-When you use a custom sound, set its playback volume from the same settings pane.
+使用自定义提示音时，可在同一设置页设置播放音量。

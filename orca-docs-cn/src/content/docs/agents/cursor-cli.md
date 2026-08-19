@@ -1,25 +1,23 @@
 ---
-title: "Cursor CLI in Orca"
-description: "Cursor CLI in Orca — Orca documentation."
+title: "在 Orca 中使用 Cursor CLI"
+description: "Cursor CLI 以一等支持运行——下拉框启动、完整 OSC 状态检测、退出后的重启微标。"
 source: "https://www.onorca.dev/docs/agents/cursor-cli"
 ---
 
-# Cursor CLI in Orca
+# 在 Orca 中使用 Cursor CLI
 
-$undefined
+Cursor CLI 是 Cursor 的命令行智能体。Orca 以一等支持运行它——可从下拉框启动、完整的 OSC 状态检测，退出后还有重启微标。
 
-Cursor CLI is Cursor's command-line agent. Orca runs it with first-class support — launch from the combobox, full OSC state detection, and restart chip on exit.
+## 安装
 
-## Setup
+1. 安装 Cursor CLI，按 [Cursor 文档](https://cursor.com/cli)操作。
+2. 登录一次。
+3. Orca 自动检测 `PATH` 上的 CLI。
 
-1. Install Cursor CLI per [Cursor's docs](https://cursor.com/cli).
-2. Log in once.
-3. Orca auto-detects the CLI on `PATH`.
+## 启动
 
-## Launching
+在下拉框中选择 **Cursor**。Orca 会以该 worktree 为作用域启动 CLI。Cursor 的 TUI 会发出 Orca 渲染智能体状态圆点所需的状态事件。
 
-Pick **Cursor** from the combobox. Orca launches the CLI scoped to the worktree. Cursor's TUI emits the state events Orca needs for agent state dots.
+## 模型选择
 
-## Model selection
-
-Model selection is driven by Cursor's own settings. Orca doesn't override it — configure inside the CLI.
+模型选择由 Cursor 自己的设置驱动。Orca 不会覆盖它——请在 CLI 内配置。

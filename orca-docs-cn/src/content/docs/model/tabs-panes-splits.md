@@ -1,55 +1,55 @@
 ---
-title: "Tabs, panes &amp; split layouts"
-description: "Drag-to-split panes, tab groups, and pinned boundaries."
+title: "标签页、窗格与分屏"
+description: "拖拽分屏窗格、标签组，以及固定不动的边界。"
 source: "https://www.onorca.dev/docs/model/tabs-panes-splits"
 ---
 
-# Tabs, panes & split layouts
+# 标签页、窗格与分屏
 
-Drag-to-split panes, tab groups, and pinned boundaries.
+拖拽分屏窗格、标签组，以及固定不动的边界。
 
-Orca's pane system is designed for watching multiple agents work without losing context. Tabs group into panes; panes split into layouts.
+Orca 的窗格系统为同时观察多个智能体工作而不丢失上下文而设计。标签页组成窗格；窗格分屏成布局。
 
-Drag a tab to a pane edge to split — terminals, diffs, and browser tabs side by side
+把标签页拖到窗格边缘即可分屏——终端、diff 和浏览器标签页并排
 
-## Tabs
+## 标签页
 
-Each tab holds one thing: a terminal, an editor buffer, a browser, a diff, a PR. Tabs live inside a **tab group**.
+每个标签页装一样东西：一个终端、一个编辑器缓冲区、一个浏览器、一个 diff、一个 PR。标签页存在于**标签组（tab group）**中。
 
-- Drag a tab up-down within a group to reorder.
-- Drag a tab onto another group to move it.
-- Close every editor file tab in the active worktree with `Cmd+Option+W` on macOS or `Ctrl+Alt+W` on Windows / Linux.
-- An active-tab color bar marks which pane is focused.
+- 在组内上下拖动标签页可重排。
+- 把标签页拖到另一个组可移动它。
+- 在 macOS 上用 `Cmd+Option+W`、Windows / Linux 上用 `Ctrl+Alt+W` 关闭活动 worktree 中的所有编辑器文件标签页。
+- 活动标签页的色条标记哪个窗格拥有焦点。
 
-### Switching tabs
+### 切换标签页
 
-Default chords on **new installs**:
+**新安装**的默认组合键：
 
-| Action | macOS | Linux / Windows |
+| 操作 | macOS | Linux / Windows |
 | --- | --- | --- |
-| Next / previous tab (all types) |
+| 下一个 / 上一个标签页（所有类型） | `Cmd+Shift+]` / `Cmd+Shift+[` | `Ctrl+Shift+]` / `Ctrl+Shift+[` |
 
-Remap under [Settings → Shortcuts](/settings). Existing installs keep customized overrides in `~/.orca/keybindings.json`.
+可在 [Settings → Shortcuts](/settings) 中重新映射。既有安装保留 `~/.orca/keybindings.json` 中的自定义覆盖。
 
-## Split panes
+## 分屏窗格
 
-Drag a tab to the edge of a pane to create a split:
+把标签页拖到窗格边缘创建分屏：
 
-- **Right edge** — splits left/right (horizontal split).
-- **Bottom edge** — splits top/bottom (vertical split).
+- **右缘**——左右分屏（水平分割）。
+- **底缘**——上下分屏（垂直分割）。
 
-Splits nest. You can have an agent terminal on the left, a diff view on the top-right, and a browser tab on the bottom-right — all at once.
+分屏可以嵌套。你可以左边放智能体终端、右上放 diff 视图、右下放浏览器标签页——同时进行。
 
-![Any tab type can split with any other — agent terminal, diff, browser, editor, PR view all coexist in one pane tree.](/whats-new/split-anything.webp)
+![任意标签页类型都可以彼此分屏——智能体终端、diff、浏览器、编辑器、PR 视图共存于一棵窗格树。](/whats-new/split-anything.webp)
 
-Any tab type can split with any other — agent terminal, diff, browser, editor, PR view all coexist in one pane tree.
+任意标签页类型都可以彼此分屏——智能体终端、diff、浏览器、编辑器、PR 视图共存于一棵窗格树。
 
-Terminal tabs can also split inside the tab. Use the terminal tab menu for **Split terminal right** or **Split terminal down**, or use the split button in the active terminal pane header for a right split.
+终端标签页还可以在标签内部分屏。用终端标签菜单的 **Split terminal right** 或 **Split terminal down**，或用活动终端窗格头部的分屏按钮做右分屏。
 
-## Pinned boundaries
+## 固定边界
 
-Pane boundaries stay where you put them. Resizing the window doesn't shuffle your layout; boundary positions are saved per worktree.
+窗格边界停在你放置的位置。调整窗口大小不会打乱你的布局；边界位置按 worktree 保存。
 
-## Tab groups across worktrees
+## 跨 worktree 的标签组
 
-Each worktree owns its own tab layout. Switching worktrees swaps the entire pane tree — your browser tab, terminal, and diff reappear exactly as you left them.
+每个 worktree 拥有自己的标签布局。切换 worktree 会换掉整棵窗格树——你的浏览器标签页、终端和 diff 会原样重现。

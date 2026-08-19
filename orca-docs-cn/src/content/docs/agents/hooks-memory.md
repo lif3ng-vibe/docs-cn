@@ -1,33 +1,31 @@
 ---
-title: "Agent hooks &amp; memory"
-description: "Agent hooks &amp; memory — Orca documentation."
+title: "智能体钩子与记忆"
+description: "Orca 读取并遵循 Claude Code 与 Codex 既有的钩子和记忆约定，并为适合 IDE 场景的部分提供 UI。"
 source: "https://www.onorca.dev/docs/agents/hooks-memory"
 ---
 
-# Agent hooks & memory
+# 智能体钩子与记忆
 
-$undefined
+Orca 与 Claude Code、Codex 既有的智能体钩子和记忆约定相处融洽——它读取这些约定、遵循这些约定，并为其中适合 IDE 场景的部分提供 UI。
 
-Orca plays nicely with the agent hook and memory conventions Claude Code and Codex already use — it reads them, respects them, and gives you a UI for the ones that make sense in an IDE context.
+## 按仓库配置的钩子
 
-## Per-repo hooks
+Orca 会读取各仓库的 `.claude/` 和 `.codex/` 配置。当 Orca 在该仓库的某个 worktree 中启动智能体时，你已有的钩子照常运行。
 
-Orca reads each repo's `.claude/` and `.codex/` configuration. Hooks you already have will run when Orca launches the agent in a worktree of that repo.
+## worktree 设置钩子
 
-## Worktree setup hooks
+可配置在 worktree 创建后自动运行的命令——例如 `pnpm install`、`direnv allow`，或一个恢复 `.env` 文件的脚本。在 [Settings → Repository → Hooks](/settings)（设置 → 仓库 → 钩子）中设置。
 
-Configure commands to run automatically after a worktree is created — e.g. `pnpm install`, `direnv allow`, or a script that restores `.env` files. Set them under [Settings → Repository → Hooks](/settings).
+## 记忆文件
 
-## Memory files
+Claude 的 `CLAUDE.md` 和 Codex 的 `AGENTS.md`（位于仓库根目录或嵌套位置）保持原样——它们属于智能体。Orca 会像对待其他文件一样把它们呈现在文件浏览器中，方便你就地编辑。
 
-Claude's `CLAUDE.md` and Codex's `AGENTS.md` (at repo root or nested) are left alone — they belong to the agent. Orca surfaces them in the file explorer like any other file so you can edit them inline.
+## 智能体状态钩子
 
-## Agent status hooks
+**Settings → Agents → Agent status hooks**（设置 → 智能体 → 智能体状态钩子）控制由 Orca 托管的那些把 working / waiting / done 状态上报到 UI 的钩子。关闭该设置会移除这些托管钩子并不再重装；重新开启则会恢复它们，**无需重启 Orca**（在 Windows 上，WSL 钩子 relay 也遵循同一实时开关）。CLI 等价命令：`orca agent hooks status|on|off --json`。
 
-**Settings → Agents → Agent status hooks** controls the Orca-managed hooks that report working / waiting / done into the UI. Turning the setting off removes those managed hooks and stops reinstalling them; turning it back on restores them **without restarting Orca** (on Windows, the WSL hook relay follows the same live gate). CLI equivalents: `orca agent hooks status|on|off --json`.
+## 在重启后存活
 
-## Surviving a restart
+钩子端点会写入磁盘（POSIX 上是 `{userData}/agent-hooks/endpoint.env`，Windows 上是 `endpoint.cmd`），并在每次钩子调用时重新加载，因此长生命周期的智能体会话即使在应用重启后仍能连到存活的 Orca 服务器——不会再有比上一个会话活得还久的 PTY 向已失效的端口发 POST。
 
-Hook endpoints are written to disk (`{userData}/agent-hooks/endpoint.env` on POSIX, `endpoint.cmd` on Windows) and re-sourced on every hook invocation, so long-lived agent sessions keep reaching the live Orca server even after an app restart — no more dead-port POSTs from a PTY that outlived the previous session.
-
-> $undefined The Orca CLI exposes a commented worktree status field agents can update themselves. See [Worktree checkpoints](/cli/worktree-checkpoints).
+> **提示**：Orca CLI 暴露了一个带注释的 worktree 状态字段，智能体可以自行更新。参见 [worktree 检查点](/cli/worktree-checkpoints)。

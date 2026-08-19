@@ -1,92 +1,92 @@
 ---
-title: "Terminal"
-description: "Terminal — Orca documentation."
+title: "终端"
+description: "终端——基于 xterm.js，为 AI 智能体工作流调校，支持主题导入、OSC 52、原生按键绑定与快速命令。"
 source: "https://www.onorca.dev/docs/terminal"
 ---
 
-# Terminal
+# 终端
 
 $undefined
 
-Orca's terminal is the same xterm.js-based terminal VS Code uses, with a few additions tuned for AI-agent workflows.
+Orca 的终端与 VS Code 使用的一样，都基于 xterm.js，外加一些为 AI 智能体工作流调校的功能。
 
-Ghostty-style terminal — import your Ghostty theme, font, and cursor on first launch
+Ghostty 风格的终端——首次启动即可导入你的 Ghostty 主题、字体与光标
 
-## Panes & tabs
+## 窗格与标签页
 
-Terminals are just tabs — see [Tabs, panes & split layouts](/model/tabs-panes-splits). Splitting a terminal pane gives you two shells side by side.
+终端就是标签页——见[标签页、窗格与分屏布局](/model/tabs-panes-splits)。把终端窗格分屏，就得到并排的两个 shell。
 
-Agent terminal tabs show the agent identity plus live state: working, waiting for input, completed, or completed-but-unread. For Claude and Codex, tab titles can also show the **AI Vault conversation name** (custom title / thread name) when Orca can map the pane to that session — manual renames still win.
+智能体终端标签页显示智能体身份与实时状态：工作中、等待输入、已完成或已完成未读。对 Claude 与 Codex，当 Orca 能把窗格对应到会话时，标签页标题还可以显示 **AI Vault 会话名**（自定义标题 / 线程名）——手动重命名仍然优先。
 
-## TUI clipboard (OSC 52)
+## TUI 剪贴板（OSC 52）
 
-Many terminal UIs (Zellij, tmux, Neovim, fzf, Grok) copy via **OSC 52** instead of OS clipboard APIs. Orca allows those writes **by default** so copy-from-remote/TUI works over SSH the same way as locally.
+许多终端 UI（Zellij、tmux、Neovim、fzf、Grok）通过 **OSC 52** 而不是操作系统剪贴板 API 复制。Orca **默认允许**这类写入，因此从远程/TUI 复制经 SSH 与在本地效果一致。
 
-Toggle: [Settings → Terminal → Allow TUI Clipboard Writes (OSC 52)](/settings).
+开关：[Settings → Terminal → Allow TUI Clipboard Writes (OSC 52)](/settings)。
 
-## Search
+## 搜索
 
-`Cmd-F` opens find-in-scrollback. Match highlighting, case, regex, and match navigation are all supported.
+`Cmd-F` 打开回滚缓冲内查找。支持匹配高亮、大小写、正则与匹配项导航。
 
-## Link actions
+## 链接操作
 
-A plain click on a terminal link (HTTP/OSC 8 URL, file path, workspace, terminal, or task handle) opens a compact action popover instead of navigating immediately. For local web links the popover offers **Orca Browser** and **System Browser**; remote links stay system-only. Web links also get **Copy link**, which copies the resolved URL (including hidden OSC 8 destinations) without closing the popover — file and workspace destinations stay unchanged. `Cmd`-click (macOS) / `Ctrl`-click (Windows / Linux) still opens directly, and `Shift+Cmd` / `Shift+Ctrl`-click still uses the [link-routing](/browser/overview#link-routing) alternate.
+直接点击终端链接（HTTP/OSC 8 URL、文件路径、工作区、终端或任务句柄）会打开一个紧凑的操作浮层，而不是立即导航。对本地 Web 链接，浮层提供 **Orca Browser** 与 **System Browser**；远程链接只能走系统浏览器。Web 链接还有 **Copy link**，它复制解析后的 URL（包括隐藏的 OSC 8 目标地址）且不关闭浮层——文件与工作区目标保持不变。`Cmd`-点击（macOS）/ `Ctrl`-点击（Windows / Linux）仍然直接打开，`Shift+Cmd` / `Shift+Ctrl`-点击仍然使用[链接路由](/browser/overview#链接路由)的备用方向。
 
-Turn the popover off under [Settings → Browser → Show terminal link actions](/settings). With it off, opening a link requires the modifier-click.
+在 [Settings → Browser → Show terminal link actions](/settings) 关闭该浮层。关闭后，打开链接需要修饰键点击。
 
-## Copy terminal context
+## 复制终端上下文
 
-Right-click a terminal and choose **Copy Context** to copy a bounded transcript from that pane. Use it when you want to paste recent agent output into another tool without starting an Orca fork.
+右键终端并选择 **Copy Context**，复制该窗格一段有边界的记录。当你想把智能体最近的输出粘贴到其他工具、又不想启动一个 Orca fork 时使用。
 
-## Themes
+## 主题
 
-Terminal color themes are configurable under [Settings → Terminal](/settings). Orca ships a library of popular themes and lets you customize any of them.
+终端配色主题可在 [Settings → Terminal](/settings) 配置。Orca 自带一组流行主题，且每个都可自定义。
 
-## Ghostty import
+## Ghostty 导入
 
-If you use Ghostty, Orca can import its theme, font, and cursor config on first launch. You can re-run the import later from [Settings → Terminal → Import from Ghostty](/settings).
+如果你使用 Ghostty，Orca 可以在首次启动时导入它的主题、字体与光标配置。之后可在 [Settings → Terminal → Import from Ghostty](/settings) 重新导入。
 
-## Warp theme import
+## Warp 主题导入
 
-If you've collected themes in Warp, click **Import themes from Warp** in the terminal-theme picker under [Settings → Terminal](/settings) to bring them in as Orca terminal themes. Orca scans Warp's theme directory for the current OS (`~/.warp/themes` on macOS, `$$XDG_DATA_HOME/warp-terminal/themes` on Linux, `%APPDATA%\warp\Warp\data\themes` on Windows) and lets you pick which YAML themes to import. The button next to it, **Import from YAML**, takes the same picker and points it at any folder of Warp-format `.yaml`/`.yml` files — useful when you store themes outside the default location.
+如果你在 Warp 里攒了主题，在 [Settings → Terminal](/settings) 的终端主题选择器中点击 **Import themes from Warp**，即可把它们导入为 Orca 终端主题。Orca 会扫描当前操作系统的 Warp 主题目录（macOS 为 `~/.warp/themes`，Linux 为 `$$XDG_DATA_HOME/warp-terminal/themes`，Windows 为 `%APPDATA%\warp\Warp\data\themes`），让你挑选要导入的 YAML 主题。旁边的 **Import from YAML** 按钮使用同一选择器，可指向任意存放 Warp 格式 `.yaml`/`.yml` 文件的文件夹——当你的主题不在默认位置时很有用。
 
-Imported themes appear alongside Orca's built-ins in the theme dropdown.
+导入的主题会与 Orca 内置主题一起出现在主题下拉列表中。
 
 ## Windows shell
 
-The default shell on Windows is configurable between PowerShell, Command Prompt, and WSL under [Settings → Terminal](/settings). WSL is offered automatically when `wsl.exe --status` succeeds. The **+** dropdown on the tab bar also shows a submenu so you can open a one-off tab in any shell without changing your default.
+Windows 的默认 shell 可在 [Settings → Terminal](/settings) 中于 PowerShell、Command Prompt 与 WSL 之间配置。`wsl.exe --status` 成功时会自动提供 WSL。标签栏的 **+** 下拉还有子菜单，可以临时以任意 shell 打开一次性标签页，而不改变默认值。
 
-For repos on a WSL filesystem (`\\wsl.localhost\...`), Orca launches through `wsl.exe -d <distro>`. For Windows-path repos opened in WSL, Orca translates the cwd to `/mnt/<drive>/...` and drops you into a login bash.
+对位于 WSL 文件系统（`\\wsl.localhost\...`）的仓库，Orca 通过 `wsl.exe -d <distro>` 启动。对在 WSL 中打开的 Windows 路径仓库，Orca 把工作目录换算为 `/mnt/<drive>/...` 并放入登录 bash。
 
-## Shortcuts
+## 快捷键
 
-- `Cmd-T` — new terminal tab in the current worktree.
-- `Cmd-Alt-T` (macOS) — new agent tab using your default agent. On Linux and Windows this chord ships unbound; assign one under [Settings → Shortcuts](/settings) (search for "New agent tab"). Each supported agent also has its own per-agent "New agent tab" action — bind a chord to launch a specific CLI directly without going through the default.
-- `Cmd-W` — close the current tab.
-- `Cmd-\` — split right.
-- `Cmd-Shift-\` — split down.
+- `Cmd-T`——在当前 worktree 新建终端标签页。
+- `Cmd-Alt-T`（macOS）——用默认智能体新建智能体标签页。Linux 与 Windows 上该组合键默认未绑定；可在 [Settings → Shortcuts](/settings) 分配（搜索 "New agent tab"）。每个受支持的智能体还有各自的 "New agent tab" 操作——绑定组合键即可直接启动特定 CLI，不必经过默认智能体。
+- `Cmd-W`——关闭当前标签页。
+- `Cmd-\`——向右分屏。
+- `Cmd-Shift-\`——向下分屏。
 
-## Native key bindings
+## 原生按键绑定
 
-Orca advertises the kitty keyboard protocol, so terminal apps see real `Shift+Enter`, `Ctrl+Enter`, and other modifier-aware keystrokes — the bindings work the same in Orca as they do in Ghostty, WezTerm, or your native terminal.
+Orca 声明支持 kitty 键盘协议，因此终端应用能看到真实的 `Shift+Enter`、`Ctrl+Enter` 等感知修饰键的按键——这些绑定在 Orca 中的行为与在 Ghostty、WezTerm 或你的原生终端中一致。
 
-Native key bindings via the kitty keyboard protocol — Shift+Enter and friends reach the agent CLI exactly like in your standalone terminal.
+经 kitty 键盘协议的原生按键绑定——Shift+Enter 等按键到达智能体 CLI 的方式与独立终端完全一致。
 
-For Japanese JIS keyboards on macOS, enable **Settings → Terminal → JIS Yen (¥) to Backslash (\)** if you want the physical Yen key to send a backslash in terminal sessions.
+对 macOS 上的日文 JIS 键盘，如果你希望物理日元键在终端会话中发送反斜杠，请启用 **Settings → Terminal → JIS Yen (¥) to Backslash (\)**。
 
-## Floating terminal
+## 浮动终端
 
-The floating terminal is a global shell surface that's always one chord away, regardless of which worktree or tab you're on. It's on by default for new installs.
+浮动终端是全局 shell 界面，无论你处于哪个 worktree 或标签页，一个组合键即可唤出。新安装默认开启。
 
-- Toggle it with `Cmd+Option+A` (macOS) / `Ctrl+Alt+A` (Linux/Windows). The same chord focuses the panel if it's already open and dismisses it if it's already focused.
-- Click the floating button on the edge of the window, or move the trigger to the status bar under [Settings → Terminal → Floating terminal](/settings).
-- Set the starting working directory under the same setting (`~` by default) so new floating tabs land where you expect.
-- The floating panel hosts its own tabs and supports orchestration setup — kick off background runs without claiming a worktree pane.
+- 用 `Cmd+Option+A`（macOS）/ `Ctrl+Alt+A`（Linux/Windows）切换。面板已打开时同一组合键聚焦它，已聚焦时则收起。
+- 点击窗口边缘的浮动按钮，或在 [Settings → Terminal → Floating terminal](/settings) 把触发器移到状态栏。
+- 在同一设置下配置起始工作目录（默认 `~`），让新的浮动标签页落在你期望的位置。
+- 浮动面板有自己的标签页，并支持编排 setup——无需占用 worktree 窗格即可启动后台 Run。
 
-## Quick Commands
+## 快速命令
 
-Quick Commands save terminal commands you run often, such as `npm run dev`, `pnpm test`, or a project-specific setup script. They can also save reusable agent prompts for launch-time prompt agents such as Claude and Codex. Create them from **Settings → Quick Commands** or the tab bar's **Add command** button, then run them from the Quick Commands split-button in a worktree tab bar or from the terminal context menu.
+快速命令保存你经常运行的终端命令，例如 `npm run dev`、`pnpm test` 或项目专属的 setup 脚本。也可以为 Claude、Codex 这类启动时接收提示的智能体保存可复用的提示词。在 **Settings → Quick Commands** 或标签栏的 **Add command** 按钮创建，然后在 worktree 标签栏的快速命令分体按钮或终端右键菜单中运行。
 
-Each command has a label, command text, and scope. Use **Global** for commands that apply everywhere, or **Project** to show the command only in worktrees for a specific repo. The tab-bar button opens a fresh terminal tab and runs the command; the terminal context menu can insert commands into the current terminal. Use the copy control on a command row (Settings list, tab-bar menu, or [mobile Quick Commands](/mobile#quick-commands)) to put the command body on the clipboard.
+每条命令有标签、命令文本与作用域。到处通用的命令用 **Global**；只想在特定仓库的 worktree 里显示的用 **Project**。标签栏按钮会新建终端标签页并运行命令；终端右键菜单可以把命令插入当前终端。用命令行上的复制控件（Settings 列表、标签栏菜单或[移动端快速命令](/mobile#快速命令)）把命令正文放进剪贴板。
 
-When you work with a paired [Remote Orca Server](/remote-servers) (or another execution host), the picker can show **local and remote** collections side by side, labeled by host (for example *Local Mac* and *Orca Server*). **Saved on** is where the command is stored; running a command still executes in the terminal or workspace where you invoke it — so a client-owned command can run inside a remote worktree. Older servers that do not advertise multi-host Quick Commands fall back to the local-only list.
+当你连接了配对的[远程 Orca 服务器](/remote-servers)（或其他执行主机）时，选择器可以**本地与远程**并列显示，按主机标注（例如 *Local Mac* 与 *Orca Server*）。**Saved on** 表示命令存储在哪台主机上；运行命令仍在你在哪个终端或工作区里调用的地方执行——因此客户端的命令也可以在远程 worktree 里运行。不声明多主机快速命令的旧服务器会回退为仅本地列表。

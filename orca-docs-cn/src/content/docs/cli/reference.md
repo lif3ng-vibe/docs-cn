@@ -1,36 +1,36 @@
 ---
-title: "Orca CLI reference"
-description: "Commands, selectors, and agent-friendly patterns for driving Orca from a shell."
+title: "CLI 参考"
+description: "从 shell 驱动 Orca 的命令、选择器与适合智能体的使用模式。"
 source: "https://www.onorca.dev/docs/cli/reference"
 ---
 
-# Orca CLI reference
+# CLI 参考
 
-Commands, selectors, and agent-friendly patterns for driving Orca from a shell.
+从 shell 驱动 Orca 的命令、选择器与适合智能体的使用模式。
 
-The `orca` CLI talks to a running Orca runtime. Use it when a shell script or agent needs to inspect worktrees, launch terminals, open files, automate the built-in browser, or report progress back into Orca.
+`orca` CLI 与运行中的 Orca 运行时通信。当 shell 脚本或智能体需要检查 worktree、启动终端、打开文件、自动化内置浏览器，或把进度回报给 Orca 时使用它。
 
-## Verify the runtime
+## 验证运行时
 
-Register the CLI under [Settings -> Experimental -> CLI](/settings), then check that it can reach Orca:
+先在 [Settings -> Experimental -> CLI](/settings) 中注册 CLI，再确认它能连上 Orca：
 
 ```
 command -v orca
 orca status --json
 ```
 
-If Orca is not already running:
+如果 Orca 尚未运行：
 
 ```
 orca open --json
 orca status --json
 ```
 
-Use `--json` when another tool will parse the result. Human-readable output is for quick terminal checks.
+当结果要交给其他工具解析时使用 `--json`；人类可读输出用于终端快速检查。
 
-## Selectors
+## 选择器
 
-Most commands accept selectors instead of requiring long IDs:
+大多数命令接受选择器，而不要求完整的长 ID：
 
 ```
 orca repo show --repo id:<repoId> --json
@@ -40,9 +40,9 @@ orca worktree show --worktree branch:feature-name --json
 orca worktree show --worktree issue:123 --json
 ```
 
-`active` and `current` resolve to the enclosing Orca-managed worktree from the shell's current directory or terminal context. Use explicit selectors in scripts that may run outside the target worktree. For remote runtimes, prefer full server-side selectors such as `id:<repoId>::<absolute-worktree-path>` or `path:<absolute-server-path>` because the local shell's current directory may not exist on the runtime host.
+`active` 和 `current` 会根据 shell 的当前目录或终端上下文解析出所在的 Orca 托管 worktree。可能运行在目标 worktree 之外的脚本请使用显式选择器。对于远程运行时，优先使用完整的服务器端选择器，例如 `id:<repoId>::<absolute-worktree-path>` 或 `path:<absolute-server-path>`，因为本地 shell 的当前目录在运行时主机上未必存在。
 
-## Runtime commands
+## 运行时命令
 
 ```
 orca open --json
@@ -50,9 +50,9 @@ orca status --json
 orca serve --port 6768 --pairing-address 100.64.1.20 --json
 ```
 
-`orca serve` starts a runtime server in the foreground without opening the desktop window. Use it for [Remote Orca Servers](/remote-servers) or headless environments, and stop it with `Ctrl-C`.
+`orca serve` 在前台启动运行时服务器，不打开桌面窗口。用于[远程 Orca 服务器](/remote-servers)或无头环境，按 `Ctrl-C` 停止。
 
-## Repos
+## 仓库
 
 ```
 orca repo list --json
@@ -62,9 +62,9 @@ orca repo set-base-ref --repo id:<repoId> --ref origin/main --json
 orca repo search-refs --repo id:<repoId> --query main --limit 10 --json
 ```
 
-Set the repo base ref before creating lots of worktrees so new tasks branch from the right place by default.
+在批量创建 worktree 之前先设置仓库的基准引用（base ref），让新任务默认从正确的位置分叉。
 
-## Worktrees
+## Worktree
 
 ```
 orca worktree list --repo id:<repoId> --json
@@ -77,9 +77,9 @@ orca worktree set --worktree active --comment "reproduced failure; testing token
 orca worktree rm --worktree id:<worktreeId> --force --json
 ```
 
-When `worktree create` runs from inside an Orca-managed worktree, Orca records the new worktree as a child when it can infer the relationship. Pass `--parent-worktree active` to be explicit, or `--no-parent` when the new work is independent.
+当 `worktree create` 在某个 Orca 托管 worktree 内部执行时，只要能推断出关系，Orca 就会把新 worktree 记录为子级。想显式指定就加 `--parent-worktree active`；新工作独立时用 `--no-parent`。
 
-Agent startup flags:
+智能体启动标志：
 
 ```
 orca worktree create --name review-api --agent claude --setup run --json
@@ -87,9 +87,9 @@ orca worktree create --name quick-check --agent codex --prompt "Summarize the di
 orca worktree create --name hidden-setup --setup inherit --json
 ```
 
-`--agent` launches the selected agent in the first terminal. `--prompt` sends initial work to that agent. `--setup run|skip|inherit` controls repo setup hooks; `inherit` follows the repo policy.
+`--agent` 会在第一个终端里启动所选智能体。`--prompt` 向该智能体发送初始工作。`--setup run|skip|inherit` 控制仓库 setup 钩子；`inherit` 遵循仓库策略。
 
-## Terminals
+## 终端
 
 ```
 orca terminal list --worktree active --json
@@ -105,13 +105,13 @@ orca terminal switch --terminal <handle> --json
 orca terminal close --terminal <handle> --json
 ```
 
-Omit `--terminal` to target the active terminal in the current worktree. Read before sending when you are not sure what the terminal is waiting for.
+省略 `--terminal` 即以当前 worktree 的活动终端为目标。不确定终端在等什么时，先读再发。
 
-> Terminal handles Terminal handles are runtime-scoped. If Orca restarts or a command reports a stale terminal handle, run `orca terminal list --json` and reacquire the handle.
+> **终端句柄** 终端句柄的作用域是运行时。如果 Orca 重启，或某条命令报告句柄已失效，运行 `orca terminal list --json` 重新获取句柄。
 
-For long output, use cursor reads. Save `nextCursor` from one read, then pass it back with `--cursor` to fetch only new output.
+输出很长时用游标读取：保存一次读取返回的 `nextCursor`，之后带 `--cursor` 传回，即可只获取新增输出。
 
-## Files
+## 文件
 
 ```
 orca file open src/App.tsx --worktree active --json
@@ -119,13 +119,13 @@ orca file diff src/App.tsx --staged --worktree active --json
 orca file open-changed --mode both --worktree active --json
 ```
 
-Paths are relative to the selected worktree. `open-changed` reads git status and opens changed files in edit, diff, or both modes.
+路径相对所选 worktree。`open-changed` 读取 git status，并以编辑、Diff 或两者兼有的模式打开变更文件。
 
-## Built-in browser
+## 内置浏览器
 
-Browser commands control Orca's embedded browser tab for the selected worktree. They do not control Chrome, Safari, or the Orca desktop UI.
+浏览器命令控制所选 worktree 对应的 Orca 内嵌浏览器标签页，不控制 Chrome、Safari 或 Orca 桌面 UI。
 
-Use a snapshot -> act -> snapshot loop:
+使用"快照 → 操作 → 快照"循环：
 
 ```
 orca goto --url http://localhost:3000 --worktree active --json
@@ -136,9 +136,9 @@ orca wait --text "Welcome" --worktree active --json
 orca screenshot --worktree active --json
 ```
 
-Refs such as `@e3` come from `snapshot`. Re-snapshot after navigation, tab switches, clicks that change the page, and any stale-ref error.
+`@e3` 这类 ref 来自 `snapshot`。导航、切换标签页、引起页面变化的点击之后，以及遇到 ref 失效错误时，都要重新快照。
 
-Tab and capture commands:
+标签页与抓取命令：
 
 ```
 orca tab list --worktree active --json
@@ -151,18 +151,18 @@ orca full-screenshot --worktree active --json
 orca pdf --worktree active --json
 ```
 
-Use `orca exec --command "<agent-browser command>" --json` only for browser actions that do not have a typed Orca command yet.
+仅当某个浏览器操作还没有对应的 Orca 类型化命令时，才使用 `orca exec --command "<agent-browser command>" --json`。
 
-Browser device emulation:
+浏览器设备仿真：
 
 ```
 orca set device --name "iPhone 12" --worktree active --json
 orca screenshot --worktree active --json
 ```
 
-## Desktop computer use
+## 桌面计算机使用
 
-Use `orca computer` for native desktop apps outside the built-in browser:
+对内置浏览器之外的本地桌面应用，使用 `orca computer`：
 
 ```
 orca computer permissions --json
@@ -172,11 +172,11 @@ orca computer click --app com.apple.Safari --element-index 12 --json
 orca computer paste-text --app com.apple.Safari --text "hello" --json
 ```
 
-See [Computer use](/cli/computer-use) for the full workflow and permission setup.
+完整工作流与权限设置见[计算机使用](/cli/computer-use)。
 
-## Mobile emulator
+## 移动模拟器
 
-The mobile emulator commands control iOS Simulator devices through Orca's worktree-scoped bridge. Use them instead of raw `serve-sim` or `simctl` when an agent is operating from inside Orca, so lifecycle and active-device state stay attached to the current worktree.
+移动模拟器命令通过 Orca 以 worktree 为作用域的桥接控制 iOS Simulator 设备。当智能体在 Orca 内部操作时，请用这些命令而不是裸的 `serve-sim` 或 `simctl`，这样生命周期与活动设备状态始终挂在当前 worktree 上。
 
 ```
 orca emulator list --worktree active --json
@@ -191,13 +191,13 @@ orca emulator kill --worktree active --json
 orca emulator shutdown --worktree active --json
 ```
 
-Coordinates are normalized from `0` to `1`. Prefer `tap` for single taps, and use `gesture` for drags or multi-step touch input. Pass `--device <udid-or-name>` or `--emulator <id>` when a script must target a specific simulator instead of the worktree's active emulator.
+坐标归一化到 `0` 到 `1` 之间。单击优先用 `tap`，拖动或多步触摸输入用 `gesture`。脚本必须指向特定模拟器而非 worktree 的活动模拟器时，传入 `--device <udid-or-name>` 或 `--emulator <id>`。
 
 ## Linear
 
-The `orca linear` surface is what agents use via the `orca-linear` skill (legacy install name `linear-tickets` still works). Prefer `--json`. Linked worktrees resolve with `--current`.
+`orca linear` 命令面即智能体通过 `orca-linear` 技能使用的能力（旧安装名 `linear-tickets` 仍然有效）。优先使用 `--json`。已关联的 worktree 用 `--current` 解析。
 
-### Read
+### 读取
 
 ```
 orca linear issue --current --full --json
@@ -212,12 +212,12 @@ orca linear team labels --team ENG --json
 orca linear project list --query launch --json
 ```
 
-`--full` expands comments, children, attachments, relations, and activity. Section flags (`--comments`, `--children`, `--attachments`, `--relations`, `--activity`) work individually.
+`--full` 展开评论、子事项、附件、关联与动态。分区标志（`--comments`、`--children`、`--attachments`、`--relations`、`--activity`）也可单独使用。
 
-### MCP-style write
+### MCP 风格写入
 
 ```
-# Create or update (omit id/--current to create; requires --team and --title on create)
+# 创建或更新（省略 id/--current 即为创建；创建时必须提供 --team 与 --title）
 orca linear save-issue --team ENG --title "Fix auth" --priority high --json
 orca linear save-issue ENG-123 --state "In Progress" --assignee me --json
 orca linear save-issue --current --project null --due-date null --json
@@ -226,9 +226,9 @@ orca linear relation add ENG-1 --related ENG-2 --type blocks --json
 orca linear relation remove ENG-1 --related ENG-2 --type related --json
 ```
 
-`save-issue` labels **replace** the full label set (Linear MCP `save_issue` semantics). Literal `null` clears assignee, estimate, due date, project, or parent.
+`save-issue` 的标签会**整体替换**标签集（Linear MCP `save_issue` 语义）。字面量 `null` 用于清除经办人、预估、截止日期、项目或父事项。
 
-### Field helpers (still valid)
+### 字段辅助命令（仍然有效）
 
 ```
 orca linear status set --current --to "In Progress" --json
@@ -242,11 +242,11 @@ orca linear attach --current --url https://example.com/repro --title "Repro" --j
 orca linear create --title "Flaky login test" --team ENG --priority high --json
 ```
 
-Run `orca linear --help` or `orca skills get orca-linear` for the version-matched list. Pass an explicit issue id (e.g. `ENG-123`) when a script may run outside an Orca-linked worktree.
+运行 `orca linear --help` 或 `orca skills get orca-linear` 查看与版本匹配的命令清单。脚本可能运行在未关联 Linear 的 worktree 之外时，请传入显式的事项 ID（例如 `ENG-123`）。
 
-## Skills (local, no runtime required)
+## 技能（本地，无需运行时）
 
-List bundled guides, print a version-matched guide, or install/update hybrid skill packages without the desktop Settings UI:
+列出内置指南、打印与版本匹配的指南，或在没有桌面 Settings 界面的情况下安装/更新混合技能包：
 
 ```
 orca skills list
@@ -257,23 +257,23 @@ orca skills install --all --dry-run
 orca skills update --all
 ```
 
-`install` / `update` shell out to the same `npx skills` commands Settings uses. They do not contact the Orca runtime. See [Orca skills](/cli/skills#keep-skills-up-to-date).
+`install` / `update` 实际调用的是 Settings 所用的同一批 `npx skills` 命令，不会连接 Orca 运行时。见[技能](/cli/skills#保持技能最新)。
 
-## Account (host-local runtime)
+## 账号（主机本地运行时）
 
-On a headless host running Orca (`orca serve` or the desktop app), add managed Claude/Codex accounts when the remote client cannot use **Add account** (remote runtime scope disables that button):
+在运行 Orca 的无头主机上（`orca serve` 或桌面应用），当远程客户端无法使用 **Add account** 时（远程运行时作用域会禁用该按钮），在此添加托管的 Claude/Codex 账号：
 
 ```
 orca account list
-orca account add # Claude by default
+orca account add # 默认为 Claude
 orca account add --agent codex
 ```
 
-`account add` runs `claude login` / `codex login` in **this** terminal on the host, then registers the captured credentials with the local runtime. Codex uses device authorization so the browser can finish on another machine. Run these on the machine that owns the accounts — not through a client-only remote session.
+`account add` 会在主机的**当前**终端里运行 `claude login` / `codex login`，然后把拿到的凭据注册到本地运行时。Codex 使用设备授权，因此可以在另一台机器的浏览器里完成登录。请在拥有这些账号的机器上运行这些命令，而不是在仅有客户端的远程会话里运行。
 
 ## Artifacts
 
-Publish HTML or Markdown through the signed-in Orca account. Viewing a public link does not require sign-in; create/list/update/delete do. **Publishing is off by default** — a human must enable **Settings → Artifacts → Allow publishing public artifact links** on the device. There is no CLI flag that grants the gate. `list`, `unshare`, and `delete` stay available so you can audit or revoke links after turning publishing off.
+通过已登录的 Orca 账号发布 HTML 或 Markdown。查看公开链接无需登录；创建/列出/更新/删除则需要。**发布默认关闭**——必须由人在设备上启用 **Settings → Artifacts → Allow publishing public artifact links**。没有任何 CLI 标志可以越过这道门槛。`list`、`unshare` 和 `delete` 始终可用，方便你在关闭发布后审计或撤销链接。
 
 ```
 orca artifacts share ./report.html --json
@@ -285,16 +285,16 @@ orca artifacts list --cursor <cursor> --json
 orca artifacts delete <id> --json
 ```
 
-- Accepted files: `.html`, `.htm`, `.md`, `.markdown`.
-- `share` stores the edit token in the active Orca profile and does not print it. `update` / `unshare` resolve by the same local path and profile that originally shared the file.
-- `list` is paged (`nextCursor` → `--cursor`). `delete` takes the artifact id from `list` and does not need the original file.
-- Relative HTML assets are not uploaded — share self-contained HTML or absolute asset URLs.
-- Denied publish/update fails with `artifact_sharing_disabled`; fix Settings instead of retrying.
-- Desktop: open a local HTML or Markdown file and use **Share as artifact**, or manage links from the sidebar **Artifacts** page.
+- 接受的文件类型：`.html`、`.htm`、`.md`、`.markdown`。
+- `share` 把编辑令牌存入活动的 Orca 配置（profile），不会打印出来。`update` / `unshare` 按最初分享该文件时的本地路径与配置来定位。
+- `list` 分页返回（`nextCursor` → `--cursor`）。`delete` 使用 `list` 里的 artifact ID，不需要原文件。
+- 不会上传相对引用的 HTML 资源——请分享自包含的 HTML，或使用资源的绝对 URL。
+- 被拒绝的发布/更新会以 `artifact_sharing_disabled` 失败；请修改 Settings，不要重试。
+- 桌面端：打开本地 HTML 或 Markdown 文件并使用 **Share as artifact**，或在侧边栏 **Artifacts** 页面管理链接。
 
-## Automations, environments, and hooks
+## 自动化、环境与钩子
 
-Scheduled prompts:
+计划提示：
 
 ```
 orca automations list --json
@@ -302,7 +302,7 @@ orca automations create --name "Daily review" --trigger daily --time 09:00 --pro
 orca automations run <automationId> --json
 ```
 
-Remote runtime environments:
+远程运行时环境：
 
 ```
 orca environment add --name work-laptop --pairing-code "orca://pair?code=..." --json
@@ -310,7 +310,7 @@ orca environment list --json
 orca environment rm --environment <selector> --json
 ```
 
-Agent status hooks:
+智能体状态钩子：
 
 ```
 orca agent hooks status --json
@@ -318,10 +318,10 @@ orca agent hooks on --json
 orca agent hooks off --json
 ```
 
-## Agent habits
+## 智能体习惯
 
-- Prefer `--json` for automation and agent calls.
-- Prefer selectors over parsing UI labels.
-- Read terminal state before sending input unless the next input is obvious.
-- Use worktree comments for progress checkpoints. See [Worktree checkpoints](/cli/worktree-checkpoints).
-- Use [Orchestration](/cli/orchestration) for tracked multi-agent dispatches instead of ad hoc terminal prompts.
+- 自动化与智能体调用优先使用 `--json`。
+- 优先使用选择器，而不是解析 UI 标签。
+- 除非下一条输入显而易见，否则发输入前先读终端状态。
+- 用 worktree 评论记录进度检查点，见 [Worktree 检查点](/cli/worktree-checkpoints)。
+- 可追踪的多智能体调度请使用[编排](/cli/orchestration)，而不是临时性的终端提示。

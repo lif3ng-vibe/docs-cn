@@ -1,26 +1,26 @@
 ---
-title: "Install Orca Mobile on Android"
-description: "Download and install Orca Mobile on Android."
+title: "Android APK"
+description: "在 Android 上下载并安装 Orca 移动版。"
 source: "https://www.onorca.dev/docs/android-apk"
 ---
 
-# Install Orca Mobile on Android
+# Android APK
 
-Download and install Orca Mobile on Android.
+在 Android 上下载并安装 Orca 移动版。
 
-## Install Orca Mobile
+## 安装 Orca 移动版
 
-1. Open the [Orca download page](/download) in Chrome or another full browser and select **Android**.
-2. When the download finishes, open your browser's **Downloads** or your device's **Files → Downloads**, then tap `app-release.apk`.
-3. Follow Android's installation prompt. If asked, allow only the browser or Files app to install unknown apps, then turn that permission off after Orca is installed.
+1. 在 Chrome 或其他完整浏览器中打开 [Orca 下载页](/download)，选择 **Android**。
+2. 下载完成后，打开浏览器的 **Downloads** 或设备的 **Files → Downloads**，点按 `app-release.apk`。
+3. 按 Android 的安装提示操作。如被询问，仅允许浏览器或 Files 应用安装未知应用，Orca 装好后把该权限关掉。
 
-## Troubleshooting
+## 故障排查
 
-### The download never starts or never finishes
+### 下载一直不开始或一直不完成
 
-1. If the link opened inside Discord, GitHub, or another app, choose **Open in browser** / **Open in Chrome**, or copy it into a full browser.
-2. Start the [Android download](/download/started?platform=android) again and wait for it to finish.
+1. 如果链接在 Discord、GitHub 或其他应用内打开，选择 **Open in browser** / **Open in Chrome**，或把它复制到完整浏览器中。
+2. 重新开始 [Android 下载](/download/started?platform=android) 并等待完成。
 
-### Samsung Galaxy: Auto Blocker
+### 三星 Galaxy：Auto Blocker
 
-If your Samsung Galaxy says **Auto Blocker** prevented the install, open **Settings → Security and privacy → Auto Blocker**, temporarily turn it off, install Orca, then turn it back on. Do not disable Play Protect.
+如果你的三星 Galaxy 提示 **Auto Blocker** 阻止了安装，打开 **Settings → Security and privacy → Auto Blocker**，暂时关闭，安装 Orca，再重新打开。不要禁用 Play Protect。

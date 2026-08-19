@@ -1,21 +1,19 @@
 ---
-title: "Review an AI diff line-by-line"
-description: "Review an AI diff line-by-line — Orca documentation."
+title: "逐行评审 AI diff"
+description: "逐行评审 AI diff——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/review-ai-diff"
 ---
 
-# Review an AI diff line-by-line
+# 逐行评审 AI diff
 
-$undefined
+认真评审 AI diff，是快速发布与发布 bug 之间的分水岭。流程如下。
 
-Reviewing an AI diff well is the difference between shipping fast and shipping bugs. Here's the loop.
+## 步骤
 
-## Steps
-
-1. Open the worktree's diff view.
-2. Go file-by-file with `j` / `k`. For each hunk, ask: is the change necessary? is it minimal? does it match the rest of the file?
-3. Drop comments with `c` on anything you want changed — full sentences work best.
-4. When you've been through the whole diff, click **Send to agent**. Orca batches all comments into one prompt.
-5. Watch the agent revise. The state dot will go yellow (waiting for more input) or green (working).
-6. When it's idle, re-open the diff. Your comments are pinned; resolve the ones that are fixed and leave follow-ups on the rest.
-7. Repeat until clean, then commit.
+1. 打开 worktree 的 diff 视图。
+2. 用 `j` / `k` 逐文件推进。对每个 hunk 自问：这个变更是必要的吗？是最小化的吗？与文件其余部分一致吗？
+3. 对任何想改的地方用 `c` 留评论——完整句子效果最好。
+4. 过完整份 diff 后，点击 **Send to agent**（发送给智能体）。Orca 会把所有评论打包成一个提示词。
+5. 看着智能体修改。状态圆点会变黄（等待更多输入）或变绿（工作中）。
+6. 它空闲后重新打开 diff。你的评论都还固定在原处；把已修复的标记解决，其余的留下跟进备注。
+7. 如此往复直到干净，然后提交。

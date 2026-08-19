@@ -1,44 +1,44 @@
 ---
-title: "Quick Open &amp; Jump Palette"
-description: "Cmd-J scoped jump across worktrees, recents, and tabs."
+title: "快速打开与跳转面板"
+description: "Cmd-J 跨 worktree、最近记录和标签页的范围跳转。"
 source: "https://www.onorca.dev/docs/model/quick-open"
 ---
 
-# Quick Open & Jump Palette
+# 快速打开与跳转面板
 
-Cmd-J scoped jump across worktrees, recents, and tabs.
+Cmd-J 跨 worktree、最近记录和标签页的范围跳转。
 
-Once you have more than a handful of worktrees, navigation becomes the bottleneck. Orca ships two keyboard-first navigation tools.
+一旦 worktree 多到一屏放不下，导航就成了瓶颈。Orca 内置两个键盘优先的导航工具。
 
-## Quick Open (Cmd-P)
+## 快速打开（Cmd-P）
 
-File search scoped to the current worktree. Type a fragment; Orca ranks by recency plus match score and opens the file in a new editor tab. Result rows lead with the **filename** and truncate the parent directory when space is tight (hover for the full path). Gitignored files are included in results — they're surfaced as a second pass after tracked matches, so the files you frequently quick-open (build outputs, env files) stay reachable without polluting the top of the list.
+限定在当前 worktree 内的文件搜索。输入一个片段；Orca 按近期使用加匹配得分排序，并在新的编辑器标签页中打开文件。结果行以**文件名**开头，空间不足时截断父目录（悬停可见完整路径）。gitignored 文件也包含在结果中——它们在已跟踪匹配之后作为第二轮出现，这样你经常快速打开的文件（构建产物、环境文件）触手可及，又不会污染列表顶部。
 
-## New-tab omnibox (+)
+## 新标签页 omnibox（+）
 
-The tab strip **+** omnibox searches **open tabs**, files, URLs, and agents in one field (placeholder: *Search open tabs, files, URLs, agents…*). File rows use the same filename-first layout as Quick Open. Matching an already-open editor tab prefers that tab over a duplicate file result, so you jump to the open buffer instead of opening a second copy.
+标签条上的 **+** omnibox 在一个输入框中搜索**已打开的标签页**、文件、URL 和智能体（占位符：*Search open tabs, files, URLs, agents…*）。文件行使用与快速打开相同的文件名优先布局。匹配到已打开的编辑器标签页时，会优先跳到该标签页而不是重复的文件结果，你会跳到已打开的缓冲区而不是再开一份副本。
 
-Type a web search instead of a path or URL to open it in the worktree browser with your [Default Search Engine](/settings). A single token still ranks file matches first; a multi-word phrase promotes the search row. Prefix the query with `?` to skip file and tab matching and search immediately.
+输入一段网页搜索词而非路径或 URL，即可用你的[默认搜索引擎](/settings)在 worktree 浏览器中打开。单个词仍会优先排文件匹配；多词短语会提升搜索行。查询前加 `?` 可跳过文件和标签页匹配，立即搜索。
 
-## Worktree Jump Palette (Cmd-J)
+## worktree 跳转面板（Cmd-J）
 
-Jump across every worktree and every tab in one search. The placeholder in the empty input reads *repo/worktree* — type either half and Orca filters accordingly. Once you start typing, search includes non-archived worktrees even if they are hidden by the sidebar's current filters. Slack-style emoji shortcodes (`:rocket:`) use the same suggestion popover as workspace naming.
+一次搜索即可跳转所有 worktree 和所有标签页。空输入时的占位符是 *repo/worktree*——输入其中一半，Orca 都会相应过滤。开始输入后，即使 worktree 被侧边栏当前过滤器隐藏，搜索也会包含未归档的 worktree。Slack 风格的 emoji 短代码（`:rocket:`）使用与工作区命名相同的建议弹出框。
 
-Press **Tab** in the palette for a host and project filter menu. Selected hosts and projects narrow the result set and show as chips you can remove one at a time; closing the palette clears the filter so the next open is unscoped.
+在面板中按 **Tab** 可打开主机和项目过滤菜单。选中的主机和项目会收窄结果集，并显示为可逐个移除的 chip；关闭面板即清除过滤，下次打开不带范围。
 
-Results include:
+结果包括：
 
-- **Recent Chats & Terminals** — with an empty query, up to six recent agent/terminal sessions ranked by activity (needs-you first, then done, then idle). The idle tab you're already viewing is omitted so the list stays actionable; a current tab still appears when it is working, waiting on you, or has unread activity. Rows use the same live attention badges as the tab bar (spinner, question mark, bell, check). Digit shortcuts (`Cmd-1`–`Cmd-6` on macOS, `Ctrl-1`–`Ctrl-6` on Windows / Linux) jump straight to those rows; membership and order freeze when the palette opens so rows don't shuffle under the cursor.
-- **Recent Worktrees** — the next empty-query section, ordered by last focus, capped so the list stays scannable.
-- Projects and repo groups, so you can jump to a sidebar section by name.
-- Every worktree grouped by repo once you start typing.
-- Worktrees matched by cached GitHub PR title or number (`#123`) and cached GitLab merge request title or number (`!123`) when that review metadata is already available.
-- Every open tab, scoped first by current worktree, then globally. Type aliases such as `terminal` or `simulator` still match those tab types without cluttering the row label.
+- **Recent Chats & Terminals**——空查询时，按活动排序的最多六个近期智能体/终端会话（先是需要你的，然后是完成的，再是闲置的）。你正在查看的闲置标签页会被省略，让列表保持可操作性；当前标签页在工作、等你或未读时仍会出现。各行使用与标签栏相同的实时注意徽标（旋转、问号、铃铛、对勾）。数字快捷键（macOS 上 `Cmd-1`–`Cmd-6`，Windows / Linux 上 `Ctrl-1`–`Ctrl-6`）直达这些行；面板打开时成员和顺序冻结，行不会在光标下洗牌。
+- **Recent Worktrees**——下一个空查询区块，按最近聚焦排序，数量有上限以保持可扫读。
+- 项目和仓库组，让你按名字跳到侧边栏分区。
+- 开始输入后，按仓库分组的每个 worktree。
+- 由缓存的 GitHub PR 标题或编号（`#123`）和缓存的 GitLab 合并请求标题或编号（`!123`）匹配的 worktree（前提是这些审查元数据已可用）。
+- 每个打开的标签页，先按当前 worktree 范围，再全局。`terminal` 或 `simulator` 这类别名仍能匹配那些标签页类型，而不会弄乱行标签。
 
-When a typed query hits **both** open tabs and worktrees, the palette interleaves a short preview of each section (with a *N more — scroll or keep typing* hint) so neither primary list is buried. Single-section results keep a full hard-capped list.
+当输入的查询**同时**命中打开的标签页和 worktree 时，面板会交错显示每个区块的简短预览（带 *N more — scroll or keep typing* 提示），两个主列表都不会被埋没。单区块结果保持完整的硬上限列表。
 
-Shift-Enter on a worktree opens it in a new split instead of swapping the current pane.
+在一个 worktree 上按 Shift-Enter 会以新分屏打开它，而不是替换当前窗格。
 
-When the query does not match an existing worktree, the palette offers a **Create worktree** row using the typed text as the name. Existing matches stay selected first, so pressing Enter still jumps when a real result is available.
+当查询不匹配任何现有 worktree 时，面板会提供一行 **Create worktree**，用输入的文本作为名称。已有匹配仍排在前面并保持选中，所以存在真实结果时按 Enter 仍然是跳转。
 
-> $undefined Shortcut bindings are remappable under [Settings → Shortcuts](/settings).
+> **提示** 快捷键绑定可在 [Settings → Shortcuts](/settings) 中重新映射。

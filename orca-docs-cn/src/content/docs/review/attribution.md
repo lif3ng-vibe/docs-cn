@@ -1,25 +1,23 @@
 ---
-title: "Attribution"
-description: "Attribution — Orca documentation."
+title: "归属"
+description: "归属——Orca 文档。"
 source: "https://www.onorca.dev/docs/review/attribution"
 ---
 
-# Attribution
+# 归属
 
-$undefined
+Orca 会在它看到智能体改动的每一行上追踪来源，因此阅读 diff 时一眼就能分辨哪些行是人写的、哪些来自 AI。
 
-Orca tracks provenance on every line it sees an agent touch, so when you read a diff you can tell at a glance which lines were written by a human and which came from an AI.
+## 工作原理
 
-## How it works
+智能体通过其工具写入文件时，Orca 会记录相应的范围。Diff 查看器会在行号槽以细微的标记渲染 AI 来源的行。在 AI 代码之上的人工编辑会把归属翻回人类。
 
-When an agent writes to a file through its tooling, Orca records the ranges. The diff viewer renders AI-originated lines with a subtle marker in the gutter. Human edits on top of AI code flip the attribution back to human.
+## 为什么重要
 
-## Why it matters
+- 你知道 PR 中哪些部分值得格外细看。
+- 安全与合规审计可以区分 AI 编写与人工编写的代码。
+- 评审更快——不必重读自己刚手写的代码。
 
-- You know which parts of a PR deserve extra scrutiny.
-- Security and compliance audits can separate AI-written from human-written code.
-- Reviews get faster — you don't re-read code you just wrote by hand.
+## 范围
 
-## Scope
-
-Attribution is local to Orca — it doesn't get committed to git. If you want persistent attribution, export the diff metadata from the diff toolbar.
+归属仅存在于 Orca 本地——不会提交进 git。如需持久化的归属信息，可从 diff 工具栏导出 diff 元数据。

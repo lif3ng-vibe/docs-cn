@@ -1,115 +1,115 @@
 ---
-title: "Mobile companion"
-description: "Pair the Orca mobile app to your desktop to monitor agents and unstick worktrees from your phone."
+title: "移动端伴侣应用"
+description: "将 Orca 移动应用与桌面配对，在手机上监视智能体、疏通 worktree。"
 source: "https://www.onorca.dev/docs/mobile"
 ---
 
-# Mobile companion
+# 移动端伴侣应用
 
-Pair the Orca mobile app to your desktop to monitor agents and unstick worktrees from your phone.
+将 Orca 移动应用与桌面配对，在手机上监视智能体、疏通 worktree。
 
-The Orca mobile companion is an iOS/Android app that pairs with your desktop Orca and gives you a read-mostly view of running agents — agent status, recent terminal scrollback, and the controls you actually want from a phone (replying to a prompt, sleeping a worktree, reviewing source control, switching agent accounts). Pairing is one-time and the desktop is always the source of truth.
+Orca 移动伴侣应用是一个 iOS/Android 应用，与桌面端 Orca 配对，为你提供以只读为主的运行中智能体视图——智能体状态、最近的终端回滚缓冲，以及你真正想在手机上用的控制（回复提示、休眠 worktree、查看源代码管理、切换智能体账号）。配对只需一次，桌面端永远是唯一事实来源。
 
-Orca Mobile — agent status, scrollback, and quick replies from your phone.
+Orca 移动版——在手机上查看智能体状态、回滚缓冲并发送快速回复。
 
-> Beta The mobile companion is in beta. Install iOS from the [App Store](https://apps.apple.com/us/app/orca-ide/id6766130217), join the [TestFlight preview channel](https://testflight.apple.com/join/YjeGMQBA), or install Android from the [current APK 0.0.43](https://github.com/stablyai/orca/releases/download/mobile-android-v0.0.43/app-release.apk).
+> **Beta** 移动伴侣应用处于 beta 阶段。iOS 从 [App Store](https://apps.apple.com/us/app/orca-ide/id6766130217) 安装、加入 [TestFlight 预览通道](https://testflight.apple.com/join/YjeGMQBA)，或 Android 从[当前 APK 0.0.43](https://github.com/stablyai/orca/releases/download/mobile-android-v0.0.43/app-release.apk) 安装。
 
-## What you can do from mobile
+## 在移动端能做什么
 
-- See every worktree, its agent, and its current status (working / done / waiting on input). Mobile lists worktrees from every host you're connected to (local desktops and remote Orca servers) in a single view, so switching between them doesn't need a device change.
-- Browse the workspace's full file tree from mobile — including deeply nested paths — so you can jump into any file without waiting for the desktop.
-- Open supported agent sessions in **Chat UI** (a chat-style transcript) or the raw terminal. Set the device default under Settings → Chat UI, or long-press a session tab to switch that tab only.
-- Hydrate recent terminal scrollback so you can read what an agent did or asked. Markdown in chat-style views can render **Mermaid** diagrams when the message includes them.
-- Select, copy, and paste text from the mobile terminal view — long-press to select, share-sheet to paste back into a reply.
-- Use the terminal accessory row for keys that are awkward on a phone keyboard, including `Tab` and `Shift+Tab`, or switch to **Live** when each typed character should go straight to the active terminal.
-- Send a short reply (`continue`, `yes`, free-text) when an agent is waiting on input, attach a photo or file, or tap the microphone to dictate a response. In **Live** mode, dictated text is inserted into the active terminal without pressing Return for you. In Chat UI, attached images show as thumbnails on your message and can be sent with or without text.
-- Run **Quick Commands** from the session tab strip — saved terminal commands or agent prompts that sync with the desktop list.
-- Long-press a session tab for bulk close actions (**Close Other Tabs**, **Close Tabs to the Left**, **Close Tabs to the Right**). Unsaved markdown tabs and pinned tabs are skipped.
-- Open a browser session in **Web** or **Mobile** view when you need to check a responsive page from your phone.
-- Open Source Control for a worktree to review changed files, stage or unstage, and commit from your phone.
-- Switch your active agent account and see usage / rate-limit state on the go. When Codex has earned reset credits, spend one from the accounts screen.
-- Create a workspace from mobile with the same Smart source modes as desktop: Smart, GitHub, Linear, GitLab, Branch, and Name. With **multiple connected desktops**, **New Workspace** asks which host should create it first (one connected host skips the picker).
-- Open a host card's **⋯** menu for **Edit**, **Connect**, **Remove**, and related actions (long-press still works as a shortcut).
-- Edit a saved host's display name or connection address without re-pairing (for example when the desktop moves between home LAN and Tailscale).
-- Get push notifications when an agent finishes, mirroring [desktop notifications](/notifications).
+- 查看每个 worktree、其智能体与当前状态（工作中 / 已完成 / 等待输入）。移动端把你连接的所有主机（本地桌面与远程 Orca 服务器）的 worktree 汇总在一个视图里，切换无需换设备。
+- 在移动端浏览工作区的完整文件树——包括深层嵌套路径——无需等待桌面端即可跳进任意文件。
+- 以 **Chat UI**（聊天界面，聊天式记录）或裸终端打开受支持的智能体会话。在 Settings → Chat UI 里设置设备默认值，或长按会话标签页只切换那一个。
+- 拉取最近的终端回滚缓冲，阅读智能体做了什么、问了什么。聊天式视图中的 markdown 在消息包含 **Mermaid** 图表时可以渲染。
+- 在移动终端视图中选择、复制与粘贴文本——长按选择，用系统分享面板粘贴回回复。
+- 使用终端辅助按键栏输入手机键盘上不顺手的按键，包括 `Tab` 与 `Shift+Tab`；当希望每个输入的字符直接进入活动终端时，切换到 **Live** 模式。
+- 当智能体等待输入时发送简短回复（`continue`、`yes`、自由文本），附加照片或文件，或点麦克风口述回复。**Live** 模式下，口述文本会插入活动终端，但不会替你按回车。Chat UI 中，附加图片以缩略图显示在你的消息上，可以带文字或不带文字发送。
+- 从会话标签页条运行**快速命令**——与桌面端列表同步的已保存终端命令或智能体提示。
+- 长按会话标签页可批量关闭（**Close Other Tabs**、**Close Tabs to the Left**、**Close Tabs to the Right**）。未保存的 markdown 标签页与固定的标签页会被跳过。
+- 需要用手机检查响应式页面时，以 **Web** 或 **Mobile** 视图打开浏览器会话。
+- 打开某个 worktree 的源代码管理，在手机上查看变更文件、暂存或取消暂存并提交。
+- 随时切换当前智能体账号并查看用量 / 限流状态。当 Codex 攒下重置额度时，可在账号页面消耗一条。
+- 在移动端以与桌面端相同的 Smart 来源模式创建工作区：Smart、GitHub、Linear、GitLab、Branch 与 Name。连接**多台桌面**时，**New Workspace** 会先询问由哪台主机创建（只连一台时跳过选择器）。
+- 打开主机卡片的 **⋯** 菜单使用 **Edit**、**Connect**、**Remove** 等操作（长按仍可用作快捷方式）。
+- 无需重新配对即可编辑已保存主机的显示名称或连接地址（例如桌面在家用局域网与 Tailscale 之间切换时）。
+- 智能体完成时收到推送通知，与[桌面通知](/notifications)一致。
 
-The mobile app is intentionally not a full editor — it's a remote control for the desktop you already have running.
+移动端有意不做完整编辑器——它是你正在运行的桌面端的遥控器。
 
-## Pairing
+## 配对
 
-1. On desktop, open Orca's pairing flow from the account / status menu. Orca shows a one-time pairing code.
-2. On mobile, open the Orca companion app and choose **Pair**, then paste the code. (You can also follow a deep link from the desktop directly into the mobile pairing screen.)
-3. Prefer **Orca Relay** for pairing when it is available — sign-in is required for Relay only. The local network address picker is optional on Relay (expand it when you want a LAN fast path); LAN pairing still needs an address.
-4. The pairing exchange establishes a device token for that phone; keep desktop reachable on the path you chose.
+1. 在桌面端，从账号 / 状态菜单打开 Orca 的配对流程。Orca 会显示一次性配对码。
+2. 在移动端打开 Orca 伴侣应用并选择 **Pair**，粘贴配对码。（也可以通过桌面端的深度链接直接进入移动端配对界面。）
+3. 当 **Orca Relay** 可用时优先用它配对——只有 Relay 需要登录。Relay 下局域网地址选择器是可选的（想要局域网快路径时展开它）；纯局域网配对仍需要填地址。
+4. 配对交换会为该手机建立设备令牌；请保持桌面端在你选择的路径上可达。
 
-Closing the desktop app drops a direct/LAN session until you reopen it. Relay-backed pairing follows the desktop Relay connection — reopen desktop if the host goes offline.
+关闭桌面应用会断开直连/局域网会话，直到重新打开。基于 Relay 的配对跟随桌面端的 Relay 连接——主机离线时请重新打开桌面端。
 
 ## Chat UI
 
-For chat-capable agents (Claude, Codex, and others Orca recognizes), mobile can open the session in **Chat UI** instead of the raw terminal — the same idea as desktop's [Chat UI](/agents/native-chat): a readable transcript, composer, permissions/questions, and image attachments.
+对支持聊天的智能体（Claude、Codex 及 Orca 识别的其他智能体），移动端可以用 **Chat UI** 而不是裸终端打开会话——与桌面端的 [Chat UI](/agents/native-chat) 同一思路：可读的对话记录、输入框、权限/提问与图片附件。
 
-- **Device default** — on first launch, mobile asks how sessions should open on this phone. Change it later under **Settings → Chat UI → Open sessions in Chat UI**. The default is terminal until you choose Chat UI.
-- **Per-session** — long-press a session tab and choose **Switch to chat view** or **Switch to terminal view**. That override sticks for that tab without changing the device default.
-- **Composer** — type a reply, `@` mention workspace files, use agent-aware `/` slash commands from the shared catalog (Claude vs Codex sets, with descriptions), attach a photo, or dictate. Attached images appear as removable thumbnails and ride along on send (including image-only sends and multi-image attachments).
-- **Model and session options** — the composer shows a pill row for the current model and session options. Tap it to pick a model or option (including direct Codex model selection) without dropping into the raw terminal.
-- **Desktop still owns the agent** — Chat UI is a view over the paired desktop session, not a separate cloud agent.
+- **设备默认值**——首次启动时，移动端会询问这部手机上会话如何打开。之后可在 **Settings → Chat UI → Open sessions in Chat UI** 修改。在你选择 Chat UI 之前默认是终端。
+- **按会话**——长按会话标签页，选择 **Switch to chat view** 或 **Switch to terminal view**。该覆盖只对那个标签页生效，不改变设备默认值。
+- **输入框**——输入回复、用 `@` 提及工作区文件、使用共享目录中按智能体区分的 `/` 斜杠命令（Claude 与 Codex 各一套，带说明）、附加照片或口述。附加图片显示为可移除的缩略图，随发送一起带出（支持纯图片发送与多图附加）。
+- **模型与会话选项**——输入框上方显示当前模型与会话选项的胶囊条。点按即可选择模型或选项（包括直接选择 Codex 模型），无需进入裸终端。
+- **桌面端仍是宿主**——Chat UI 是已配对桌面会话之上的视图，不是独立的云端智能体。
 
-## Quick Commands
+## 快速命令
 
-From a worktree session, open **Quick Commands** from the session tab strip (next to new terminal). Commands are the same saved list as desktop and sync both ways.
+在 worktree 会话中，从会话标签页条（新建终端旁边）打开**快速命令**。命令与桌面端是同一份保存列表，双向同步。
 
-- **Terminal Command** — paste or run a shell command in a new tab (optionally without pressing Enter so you can edit first).
-- **Agent Prompt** — open a chosen agent with a saved prompt body.
-- Copy a command body to the clipboard from the row's copy control (disabled when the body is empty).
-- Scope commands globally or to the current project. Add, edit, and delete from the sheet; the desktop host enforces the shared list cap.
+- **终端命令**——在新标签页粘贴或运行 shell 命令（可选择不自动按回车，方便先编辑）。
+- **智能体提示**——用保存的提示词正文打开指定智能体。
+- 通过行上的复制控件把命令正文复制到剪贴板（正文为空时禁用）。
+- 命令可设为全局或当前项目作用域。在面板中增删改；共享列表的数量上限由桌面端主机强制执行。
 
-If the paired desktop is too old, the launcher is disabled until you update desktop.
+如果配对的桌面端版本过旧，启动器会被禁用，直到你更新桌面端。
 
-## Session tabs
+## 会话标签页
 
-Long-press a tab in the session strip for tab actions, including **Close**, **Close Other Tabs**, **Close Tabs to the Left**, and **Close Tabs to the Right**. Bulk close skips dirty markdown tabs (mobile has no save prompt on close) and pinned tabs. For chat-capable agent tabs, the same long-press sheet can switch Chat UI ↔ terminal.
+长按会话条中的标签页可执行标签页操作，包括 **Close**、**Close Other Tabs**、**Close Tabs to the Left** 与 **Close Tabs to the Right**。批量关闭会跳过有未保存内容的 markdown 标签页（移动端关闭时不弹保存提示）与固定的标签页。对支持聊天的智能体标签页，同一长按面板还能在 Chat UI 与终端之间切换。
 
-## Account switcher
+## 账号切换器
 
-The mobile app exposes the same account switcher as the desktop status bar, including inline usage for inactive accounts. The accounts screen shows reset countdowns when a provider reports reset timestamps for its session or weekly window. Switching here switches on the paired desktop.
+移动端提供与桌面状态栏相同的账号切换器，包括非活动账号的内联用量。当提供商上报其会话或每周窗口的重置时间戳时，账号页面会显示重置倒计时。在这里切换会同时切换配对的桌面端。
 
-When the active Codex account has earned **rate-limit reset** credits, the accounts screen shows how many are available (and when the next one expires) and a **Use reset** action. Confirming spends one credit for the current Codex target (host or WSL distro) and refreshes eligible rate-limit windows. The phone journals the attempt so a retry after a flaky connection does not double-spend. Outcomes include success, nothing eligible to reset, no credit left, or that a reset was already applied. See also [Usage & rate-limit tracking](/agents/usage-tracking).
+当活动的 Codex 账号攒下**限流重置**额度时，账号页面会显示可用数量（以及下一条何时过期）和一个 **Use reset** 操作。确认后会为当前 Codex 目标（主机或 WSL 发行版）消耗一条额度，并刷新符合条件的限流窗口。手机端会记录这次尝试，因此连接不稳后的重试不会重复消耗。结果包括成功、没有可重置的窗口、额度用尽，或已应用过重置。另见[用量与限流追踪](/agents/usage-tracking)。
 
-## Create a workspace
+## 创建工作区
 
-From the mobile home screen, open **Create Workspace** / **New Workspace** and choose a source mode. **Smart** searches across supported task providers and branches; the provider-specific modes narrow creation to GitHub, Linear, GitLab, a branch, or a plain workspace name. After selecting a source, use **Advanced** for naming and branch controls before creating the workspace on the paired desktop. If more than one desktop is connected, pick the host first (the picker shows each endpoint so similar names stay distinguishable). With no connected desktops, the action stays disabled.
+在移动端主界面打开 **Create Workspace** / **New Workspace** 并选择来源模式。**Smart** 会在受支持的任务提供商与分支中搜索；按提供商的模式把创建范围收窄到 GitHub、Linear、GitLab、某个分支或普通工作区名称。选定来源后，可用 **Advanced** 设置命名与分支，再在配对的桌面端上创建工作区。连接了多台桌面时先选主机（选择器会显示各端点，便于区分相似名称）。没有已连接的桌面时，该操作保持禁用。
 
-## Edit a paired host
+## 编辑已配对主机
 
-On the hosts list, tap the host card's **⋯** button (or long-press the card) and choose **Edit host**.
+在主机列表中，点主机卡片的 **⋯** 按钮（或长按卡片），选择 **Edit host**。
 
-- **Name** — display name on this phone only.
-- **Address** — IP, `host:port`, or `ws://` / `wss://`. Missing port keeps the current port (or defaults to `6768`). Address edits only change where this phone connects; they do **not** re-pair. Use this when the same desktop is reachable at a different path (for example home LAN vs Tailscale).
+- **Name**——仅这部手机上的显示名称。
+- **Address**——IP、`host:port` 或 `ws://` / `wss://`。缺省端口保留当前端口（或默认 `6768`）。修改地址只改变这部手机的连接位置，**不会**重新配对。同一桌面换了路径可达时（例如家用局域网与 Tailscale 之间）可使用它。
 
-Saving an address change reconnects to the new endpoint. Pairing token stays the same.
+保存地址变更后会重连新端点。配对令牌保持不变。
 
-## Source control on mobile
+## 移动端源代码管理
 
-From a worktree session, tap the branch icon to open Source Control. Use it for small follow-ups: check the branch state, inspect changed paths, stage or unstage files, and commit once the staged set is ready. If the branch already has a GitHub pull request, use **Link an existing PR** from the empty PR state to attach it instead of creating a new one.
+在 worktree 会话中，点分支图标打开源代码管理。它适合做小收尾：查看分支状态、检查变更路径、暂存或取消暂存文件，暂存集就绪后提交。如果分支已有 GitHub PR，在 PR 空状态里用 **Link an existing PR** 关联它，而不是新建。
 
-## Browser view on mobile
+## 移动端浏览器视图
 
-The mobile browser pane has a **Web / Mobile** switch. Use **Web** to see the normal page and **Mobile** to ask the paired desktop browser for a phone-sized responsive viewport.
+移动端浏览器窗格有 **Web / Mobile** 开关。**Web** 查看普通页面，**Mobile** 让配对的桌面端浏览器提供手机尺寸的响应式视口。
 
-## Terminal settings
+## 终端设置
 
-The mobile terminal has a dedicated **Terminal settings** screen (Settings → Terminal):
+移动终端有专门的 **Terminal settings** 页面（Settings → Terminal）：
 
-- **Text size** — a 50%–200% baseline zoom the WebView applies on top of fit-to-width. Pinch-to-zoom in the terminal snaps to the same presets and persists. The setting is per-device and doesn't change the desktop terminal.
-- **Autocomplete & autocorrect** — off by default so the OS never rewrites commands, flags, or paths in the command bar. Turn it on for phone-style typing; the live keyboard-capture input still streams raw keystrokes either way.
+- **Text size**——50%–200% 的基准缩放，由 WebView 在自适应宽度之上应用。终端内的双指缩放会吸附到同样的档位并持久化。该设置按设备生效，不影响桌面终端。
+- **Autocomplete & autocorrect**——默认关闭，让操作系统绝不改写命令栏中的命令、标志或路径。想要手机式输入可打开；无论开关，实时键盘捕获输入始终传输原始按键。
 
-## Troubleshooting
+## 故障排查
 
-- **Stuck spinner on a worktree** — the phone tracks a heartbeat from the desktop agent process. If the desktop says idle but the phone shows working, force-refresh the worktree row to sync state.
-- **Pairing fails** — make sure your desktop and phone are signed into the same Orca account. Pairing codes expire after a few minutes; generate a fresh one if it's been sitting on the screen.
-- **Authentication failed / pairing invalid** — the desktop no longer accepts this device token (for example after desktop cleared paired devices). Try **Retry** on the banner first (transient rejections can recover without re-pairing). If it keeps failing, use **Re-pair** from desktop, or **Remove** the host and pair again.
-- **Update Orca Mobile / Update Orca on your computer** — the phone and desktop speak a versioned mobile protocol. If either side is too old, mobile blocks that host and points you at the App Store (iOS), [GitHub Releases](https://github.com/stablyai/orca/releases) (Android APK or desktop), then back to hosts. After updating, refresh the connection; if the message stays, remove the host and pair again.
-- **Quick Commands unavailable** — update the paired desktop so it advertises the quick-commands capability.
-- **Can't reach desktop** — phone and desktop must share a network path (LAN, Tailscale, or the pairing path you used). Closing the desktop app drops the connection; reopen desktop and the phone reconnects automatically.
+- **worktree 上的转圈卡住**——手机追踪桌面智能体进程的心跳。如果桌面端显示空闲而手机显示工作中，强制刷新该 worktree 行以同步状态。
+- **配对失败**——确保桌面端与手机登录了同一个 Orca 账号。配对码几分钟后过期；如果已在屏幕上放了一阵子，请重新生成。
+- **认证失败 / 配对失效**——桌面端不再接受此设备令牌（例如桌面端清除了已配对设备之后）。先试横幅上的 **Retry**（瞬时拒绝可能无需重新配对即可恢复）。若持续失败，在桌面端使用 **Re-pair**，或 **Remove** 该主机后重新配对。
+- **Update Orca Mobile / Update Orca on your computer**——手机与桌面端使用带版本的移动协议。任一方过旧时，移动端会阻止该主机并引导你前往 App Store（iOS）、[GitHub Releases](https://github.com/stablyai/orca/releases)（Android APK 或桌面端），然后回到主机列表。更新后刷新连接；若提示仍在，移除该主机并重新配对。
+- **快速命令不可用**——更新配对的桌面端，使其声明 quick-commands 能力。
+- **无法连接桌面端**——手机与桌面端必须共享一条网络路径（局域网、Tailscale 或你配对时使用的路径）。关闭桌面应用会断开连接；重新打开桌面端后手机会自动重连。
 
-> Next steps Pair mobile notifications with [desktop notifications](/notifications) so agent-finished alerts reach the right device. For headless machines, use [Remote Orca Server](/remote-servers) mobile pairing. Track provider usage on desktop and mobile under [Usage & rate-limit tracking](/agents/usage-tracking).
+> **后续步骤** 把移动端通知与[桌面通知](/notifications)搭配，让智能体完成提醒到达正确的设备。对无头机器，使用[远程 Orca 服务器](/remote-servers)的移动配对。在[用量与限流追踪](/agents/usage-tracking)下查看桌面与移动端的提供商用量。

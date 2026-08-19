@@ -1,25 +1,23 @@
 ---
-title: "Race three agents on the same task"
-description: "Race three agents on the same task — Orca documentation."
+title: "让三个智能体竞跑同一个任务"
+description: "让三个智能体竞跑同一个任务——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/parallel-agents"
 ---
 
-# Race three agents on the same task
+# 让三个智能体竞跑同一个任务
 
-$undefined
+把同一个任务并行交给多个智能体是 Orca 的杀手锏。同一段提示词、三个分支，选出胜出的那个。
 
-Running the same task across multiple agents in parallel is Orca's killer move. Same prompt, three branches, pick the winner.
+## 步骤
 
-## Steps
+1. 从同一个起始引用（start-from ref）创建三个 worktree。命名为 `fix-bug`、`fix-bug-2`、`fix-bug-3`。
+2. 在每个 worktree 里启动不同的智能体——Claude Code、Codex、Cursor CLI。
+3. 把同一段提示词粘贴到全部三个。
+4. 分屏窗格，看着它们干活——把标签页拖到边缘。
+5. 完成后逐个评审 diff。在胜者上使用 [标注 AI Diff](/review/annotate-ai-diff)。
+6. 从胜出的 worktree 提交、推送、打开 PR。
+7. 删掉两个落选者——一次点击即可移除 worktree 和分支。
 
-1. Create three worktrees from the same start-from ref. Name them `fix-bug`, `fix-bug-2`, `fix-bug-3`.
-2. Launch a different agent in each — Claude Code, Codex, Cursor CLI.
-3. Paste the same prompt into all three.
-4. Split the panes so you can see them work — drag tabs to edges.
-5. When they finish, review each diff. Use [Annotate AI Diff](/review/annotate-ai-diff) on the winner.
-6. Commit, push, open PR from the winning worktree.
-7. Delete the two losers — one click removes the worktree and branch.
+## 原理
 
-## Why it works
-
-Different agents make different mistakes. Running the same task in parallel is cheaper than sequential retries and surfaces disagreement as a signal. Where three agents agree, the answer is probably right. Where they split, you've found the hard part.
+不同智能体会犯不同的错误。并行跑同一个任务比顺序重试更省，而且分歧本身就是信号。三个智能体一致的地方，答案多半是对的；它们分歧的地方，就是难点所在。

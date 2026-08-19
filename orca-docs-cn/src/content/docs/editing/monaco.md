@@ -1,41 +1,39 @@
 ---
-title: "Monaco editor &amp; autosave"
-description: "Monaco editor &amp; autosave — Orca documentation."
+title: "Monaco 编辑器与自动保存"
+description: "Monaco 编辑器与自动保存——Orca 文档。"
 source: "https://www.onorca.dev/docs/editing/monaco"
 ---
 
-# Monaco editor & autosave
+# Monaco 编辑器与自动保存
 
-$undefined
+Orca 的代码编辑器是 Monaco——与 VS Code 同款——外加一些 Orca 特有的调整。
 
-Orca's code editor is Monaco — the same editor VS Code uses — with a few Orca-specific tweaks.
+## 自动保存
 
-## Autosave
+文件在失焦和短暂空闲后保存。没有"脏"圆点，因为正常流程中不存在未保存的变更。
 
-Files save on blur and after short idle periods. There is no "dirty" dot because there are no unsaved changes in normal flow.
+## 多光标、跳转、查找
 
-## Multi-cursor, go-to, find
+- `Cmd-D`——选中下一个相同词。
+- `Cmd-F` / `Cmd-Shift-F`——文件内查找 / worktree 查找。选中文字时，文件内查找会以当前选区填充搜索框。
+- `Cmd-Click`——转到定义（语言扩展支持处可用）。
 
-- `Cmd-D` — select next occurrence.
-- `Cmd-F` / `Cmd-Shift-F` — file find / worktree find. File find seeds the search box from the current selection when text is selected.
-- `Cmd-Click` — go to definition (where supported by language extensions).
+## 变更视图模式
 
-## Changes view mode
+在任意编辑器标签页切换 **Changes view mode**（变更视图模式），即可把文件变成标签页内的 HEAD 对比工作树 diff，且不打断光标位置。快捷键与 [Diff 查看器](/review/diff-viewer) 相同——`n`/`p` 遍历 hunk，`s` 暂存。再次切换即回到常规文件视图。
 
-Toggle **Changes view mode** in any editor tab to flip the file into an in-tab HEAD-vs-working-tree diff without leaving your cursor position. Same shortcuts as the [Diff viewer](/review/diff-viewer) — `n`/`p` to walk hunks, `s` to stage. Toggle again to return to the regular file view.
+## 自动换行
 
-## Word wrap
-
-File editors wrap long lines by default. Toggle **Word Wrap** from the editor tab's **⋯** menu, press `Alt+Z` (same as VS Code; remappable under [Settings → Shortcuts](/settings)), or set the default under [Settings → General → Editor Word Wrap](/settings). This setting is separate from **Diff Word Wrap**, which only affects diff editors.
+文件编辑器默认对长行换行。可从编辑器标签页的 **⋯** 菜单切换 **Word Wrap**（自动换行），按 `Alt+Z`（与 VS Code 相同；可在 [Settings → Shortcuts](/settings) 重映射），或在 [Settings → General → Editor Word Wrap](/settings) 设置默认值。该设置与 **Diff Word Wrap** 相互独立，后者只影响 diff 编辑器。
 
 ## Minimap
 
-A minimap is available in the file editor under [Settings → Appearance](/settings). It's off by default; turn it on if you prefer the VS Code-style overview rail.
+文件编辑器可在 [Settings → Appearance](/settings) 中开启 minimap（小地图）。默认关闭；喜欢 VS Code 式概览栏的话可以打开。
 
-## Custom editor font
+## 自定义编辑器字体
 
-By default the editor and diff views use the same font as the terminal. Leave **Editor Font Family** empty under [Settings → Appearance](/settings) to keep that link; set a font to override editors only (UI font stays separate).
+默认情况下，编辑器与 diff 视图使用与终端相同的字体。保持 [Settings → Appearance](/settings) 中 **Editor Font Family**（编辑器字体族）为空即可维持这一联动；设置字体则仅覆盖编辑器（UI 字体保持独立）。
 
-## Language support
+## 语言支持
 
-Syntax highlighting ships for the languages Monaco supports out of the box. Orca is intentionally editor-first, not IDE-first — run type-checkers and linters in a terminal pane.
+Monaco 开箱支持的语法高亮全部可用。Orca 有意做编辑器优先而非 IDE 优先——类型检查器和 linter 请在终端窗格中运行。

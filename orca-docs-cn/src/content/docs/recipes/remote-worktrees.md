@@ -1,28 +1,26 @@
 ---
-title: "Work on a remote machine over SSH"
-description: "Work on a remote machine over SSH — Orca documentation."
+title: "通过 SSH 在远程机器上工作"
+description: "通过 SSH 在远程机器上工作——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/remote-worktrees"
 ---
 
-# Work on a remote machine over SSH
+# 通过 SSH 在远程机器上工作
 
-$undefined
+把 Orca 指向任意 SSH 目标——更强的开发机、GPU 主机、云沙箱——用起来就像本地 worktree。同样的编辑器、同样的 diff 视图、同样的智能体，只是算力不同。你可以打开远程仓库，*或者*只打开任意文件夹。本地 / SSH / 服务器 / 临时虚拟机等全部运行方式的清单，参见 [Orca 的运行方式](/ways-to-run)。
 
-Point Orca at any SSH target — a beefier dev box, a GPU host, a cloud sandbox — and it feels like a local worktree. Same editor, same diff view, same agents, different compute. You can open remote repos *or* just arbitrary folders. For the full menu of local / SSH / server / ephemeral-VM modes, see [Ways to run Orca](/ways-to-run).
+## 设置
 
-## Setup
+1. 在 [Settings → SSH](/settings) 下添加主机。
+2. 测试连接。要使用仓库的话，确认主机上装了 git。
+3. 把仓库添加到 Orca，位置选该 SSH 目标——或直接从文件选择器打开任意远程文件夹。
 
-1. Add the host under [Settings → SSH](/settings).
-2. Test the connection. Make sure git is installed on the host if you're working with a repo.
-3. Add the repo to Orca, selecting the SSH target as its location — or open any remote folder directly from the file picker.
+## 运行
 
-## Run
+1. 创建 worktree。Orca 在远程执行 `git worktree add`。
+2. 启动智能体——它运行在远程主机上，而不是你的笔记本上。
+3. 就地编辑文件——Orca 把保存流式写入远程文件系统。
+4. 照常在笔记本上评审 diff、提交并推送。
 
-1. Create a worktree. Orca runs `git worktree add` on the remote.
-2. Launch an agent — it runs on the remote host, not your laptop.
-3. Edit files inline — Orca streams saves to the remote filesystem.
-4. Review the diff, commit, and push from your laptop as usual.
+## 断线
 
-## Disconnects
-
-Laptop sleeps, Wi-Fi drops — the agent keeps running remotely. Orca reconnects and re-attaches the terminal. Nothing lost.
+笔记本睡眠、Wi-Fi 掉线——智能体仍在远程继续运行。Orca 会重连并重新挂接终端。什么都不会丢。

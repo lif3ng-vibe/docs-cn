@@ -1,68 +1,66 @@
 ---
-title: "Troubleshooting &amp; FAQ"
-description: "Troubleshooting &amp; FAQ — Orca documentation."
+title: "故障排查与常见问题"
+description: "故障排查与常见问题——Orca 文档。"
 source: "https://www.onorca.dev/docs/troubleshooting"
 ---
 
-# Troubleshooting & FAQ
+# 故障排查与常见问题
 
-$undefined
+## 智能体无法启动
 
-## Agent won't start
+- 打开终端，手动运行该智能体的 CLI。如果在那里也失败，问题出在 CLI 本身的认证或安装上——与 Orca 无关。
+- 确保 CLI 位于 Orca 可见的 `PATH` 上（查看 [Settings → Agents](/settings)）。
+- 试试标签页上的 **Restart** 卡片。
 
-- Open the terminal and run the agent's CLI manually. If it fails there, it's an auth or install problem in the CLI itself — not Orca.
-- Make sure the CLI is on the `PATH` Orca sees (check [Settings → Agents](/settings)).
-- Try the **Restart** chip on the tab.
+## Diff 视图显示异常 / 卡住
 
-## Diff view looks wrong / stuck
+- 点击 diff 工具栏上的刷新图标——Orca 会重新读取 worktree。
+- 外部 `git` 操作（rebase、reset）可能落在两次刷新之间。
 
-- Click the refresh icon on the diff toolbar — Orca re-reads the worktree.
-- External `git` operations (rebase, reset) can land between refreshes.
+## Worktree 创建失败
 
-## Worktree creation fails
+- 起始引用（start-from ref）可能尚未拉取。在仓库中打开终端并运行 `git fetch origin`。
+- 目标目录中可能已存在该分支的 worktree——删除它，或换一个新的分支名。
 
-- The start-from ref may not be fetched. Open a terminal in the repo and run `git fetch origin`.
-- The target directory may already have a worktree for that branch — delete it or pick a new branch name.
+## Orca CLI 提示 "command not found"
 
-## Orca CLI says "command not found"
+在 [Settings → General → Orca CLI](/settings) 中注册 CLI。在 macOS 上它会向 `~/.local/bin` 安装一个 shim；请确保该目录在你的 shell `PATH` 上。
 
-Register the CLI under [Settings → General → Orca CLI](/settings). On macOS it installs a shim into `~/.local/bin`; make sure that's on your shell's `PATH`.
+## SSH 能连上但远程终端失败
 
-## SSH connects but remote terminals fail
+- 确认远程机器装有 Node 且有网络访问，供首次 relay 安装使用。
+- 在 Linux 上，如果终端始终无法启动，请安装 C/C++ 工具链：make、g++/clang++、python3（参见 [SSH worktree](/ssh)）。
+- 安装工具后重新连接，让 Orca 重新安装原生模块。
 
-- Confirm the remote has Node and network access for the first-time relay install.
-- On Linux, install a C/C++ toolchain if terminals never spawn: make, g++/clang++, python3 (see [SSH worktrees](/ssh)).
-- Reconnect after installing tools so Orca can reinstall native modules.
+## SSH 对文件有效但 "Download Folder" 不可用
 
-## SSH works for files but not “Download Folder”
+文件夹下载需要递归 SFTP 传输。在仅有系统 SSH 的连接上，文件下载可能仍然可用。可以退回用终端里的 `tar`/`scp`。
 
-Folder download needs recursive SFTP transfer. File download may still work on system-SSH-only connections. Use a terminal `tar`/`scp` as a fallback.
+## "Open in VS Code" 被禁用或仅限本地
 
-## “Open in VS Code” is disabled or Local only
+- 使用 SSH worktree（而不是远程 Orca 服务器的活动运行时）。
+- 将 Open-in 命令设为 VS Code / Insiders，而不是 Cursor 或多参数 shell 命令。
+- 如果主机已被移除，请刷新 SSH 目标。
 
-- Use an SSH worktree (not a Remote Orca Server active runtime).
-- Set the Open-in command to VS Code / Insiders, not Cursor or a multi-arg shell command.
-- Refresh SSH targets if the host was removed.
+## Kerberos 登录失败
 
-## Kerberos login fails
+- 确保 `klist` 显示该主机 realm 的有效票据。
+- 确认 OpenSSH 配置中该 Host 的 `GSSAPIAuthentication yes`，然后在 Settings → SSH 中重新导入或重新测试该目标。
 
-- Ensure `klist` shows a valid ticket for the host realm.
-- Confirm `GSSAPIAuthentication yes` for that Host in OpenSSH config, then re-import or re-test the target in Settings → SSH.
+## 浏览器报 `browser_no_tab`
 
-## Browser says `browser_no_tab`
+当前 worktree 中没有打开的标签页。用 `orca tab create --url ...` 打开一个，或手动打开浏览器窗格并导航。
 
-No tab is open in the current worktree. Open one with `orca tab create --url ...` or open the browser pane manually and navigate.
+## 性能与内存
 
-## Performance & memory
+- 关掉你不再使用的 worktree。每个 worktree 都会让文件监视器保持活动。
+- 带大量浏览器标签页的分屏布局是最大的内存消耗者——关掉不需要的浏览器。
 
-- Close worktrees you're not actively using. Each worktree keeps file watchers alive.
-- Split layouts with many browser tabs are the biggest RAM users — close browsers you don't need.
+## GitHub PR 面板 / 检查 / Tasks 报错
 
-## GitHub PR panel / checks / Tasks errors
+限流、`gh` 认证失效、缺少 scope 和仓库访问问题都会反映在 Source Control 和 PR Checks 面板中。完整排查矩阵见 **[GitHub 错误排查](/github-errors)**（包括为什么 Settings 里的 **GitHub API Budget** 看起来正常而 REST 调用仍被拦截）。
 
-Rate limits, bad `gh` auth, missing scopes, and repo access issues all show up in Source Control and the PR Checks panel. See **[Troubleshooting GitHub errors](/github-errors)** for the full matrix (including why **GitHub API Budget** in Settings can look fine while REST is still blocked).
-
-Quick checks:
+快速检查：
 
 ```
 gh auth status -h github.com
@@ -70,12 +68,12 @@ gh api user
 gh api rate_limit --jq '.resources.core'
 ```
 
-## Logs
+## 日志
 
-**Help → Open Logs** opens the directory with Orca's logs. Attach these when filing a bug.
+**Help → Open Logs** 会打开 Orca 的日志目录。提交 bug 时请附上。
 
-## Reporting issues
+## 报告问题
 
-- **Help → Send Feedback** (in-app) — paste or drag screenshots into the dialog, or pick image files; thumbnails show before you submit. Attach [logs](#logs) when the bug is hard to reproduce.
-- [GitHub Issues](https://github.com/stablyai/orca/issues) — bugs and feature requests.
-- [Discord](https://discord.gg/fzjDKHxv8Q) — real-time help.
+- **Help → Send Feedback**（应用内）——把截图粘贴或拖入对话框，或选择图片文件；提交前会显示缩略图。难以复现的 bug 请附上[日志](#日志)。
+- [GitHub Issues](https://github.com/stablyai/orca/issues)——bug 和功能请求。
+- [Discord](https://discord.gg/fzjDKHxv8Q)——实时求助。

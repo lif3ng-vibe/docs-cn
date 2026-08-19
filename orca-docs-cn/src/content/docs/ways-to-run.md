@@ -1,132 +1,132 @@
 ---
-title: "Ways to run Orca"
-description: "Local desktop, SSH hosts, self-hosted Orca servers, and on-demand per-workspace VMs — pick the right compute for each task."
+title: "Orca 的运行方式"
+description: "本地桌面、SSH 主机、自托管 Orca 服务器和按需的每工作区 VM——为每个任务选对算力。"
 source: "https://www.onorca.dev/docs/ways-to-run"
 ---
 
-# Ways to run Orca
+# Orca 的运行方式
 
-Local desktop, SSH hosts, self-hosted Orca servers, and on-demand per-workspace VMs — pick the right compute for each task.
+本地桌面、SSH 主机、自托管 Orca 服务器和按需的每工作区 VM——为每个任务选对算力。
 
-Orca is not locked to your laptop. Every worktree runs somewhere — on the machine in front of you, on a box you already own, on a shared always-on server, or on a fresh cloud VM spun up for that one workspace.
+Orca 并不锁定在你的笔记本上。每个 worktree 总要运行在某处——你面前的机器上、你已有的一台主机上、一台常开的共享服务器上，或专为那个工作区临时拉起的云 VM 上。
 
-This page is the map. Deep dives live on the linked pages.
+本页是全景地图。深入内容见各链接页面。
 
-## At a glance
+## 一览
 
-| Mode | Where files and agents live | Who owns the machine | Best for |
+| 模式 | 文件与智能体所在 | 机器归谁所有 | 最适合 |
 | --- | --- | --- | --- |
-| **Local** | Your desktop | You | Day-to-day coding, fast iteration |
-| **SSH target** | A remote host you connect to over SSH | You (or your team) | Dev boxes, GPU hosts, always-on VPS |
-| **Remote Orca Server** | A machine running Orca desktop or `orca serve` | You (or your team) | Persistent shared runtime, mobile, automation |
-| **Cloud VM / per-workspace environment** | A disposable VM/sandbox per workspace | Your cloud account (BYO provider) | Isolated, ephemeral agent compute |
+| **本地** | 你的桌面 | 你 | 日常编码、快速迭代 |
+| **SSH 主机** | 你通过 SSH 连接的远程主机 | 你（或你的团队） | 开发机、GPU 主机、常开 VPS |
+| **远程 Orca 服务器** | 运行 Orca 桌面版或 `orca serve` 的机器 | 你（或你的团队） | 持久共享运行时、移动端、自动化 |
+| **云 VM / 每工作区环境** | 每个工作区一个用后即弃的 VM/沙箱 | 你的云账号（自带提供商） | 隔离的临时智能体算力 |
 
-Orca does **not** sell managed VPS hosting. Remote modes always use machines and cloud accounts you control.
+Orca **不**销售托管 VPS。远程模式使用的机器和云账号始终归你掌控。
 
-## 1. Local desktop
+## 1. 本地桌面
 
-Install Orca, open a project, create worktrees. Agents, terminals, and the browser run on the same machine as the UI.
+安装 Orca，打开项目，创建 worktree。智能体、终端和浏览器与 UI 运行在同一台机器上。
 
-![Sidebar worktrees on Local Mac — each card is a worktree with its own agents and branch.](/ways-to-run-local-sidebar.png)
+![Local Mac 上的侧边栏 worktree——每张卡片是一个 worktree，带有自己的智能体和分支。](/ways-to-run-local-sidebar.png)
 
-Sidebar worktrees on Local Mac — each card is a worktree with its own agents and branch.
+Local Mac 上的侧边栏 worktree——每张卡片是一个 worktree，带有自己的智能体和分支。
 
-This is the default path for most people. See [Your first 3-agent session](/first-session) and [Worktrees](/model/worktrees).
+对大多数人来说这是默认路径。参见[你的第一个三智能体会话](/first-session)和 [Worktree](/model/worktrees)。
 
-## 2. SSH targets
+## 2. SSH 主机
 
-Point Orca at any SSH host — a beefier Mac mini, a Linux VPS, a GPU box, a cloud sandbox with SSH. When you create a worktree, pick that host under **Run on**. Agents and `git worktree` run on the remote; the editor, diff, and UI stay on your laptop.
+把 Orca 指向任意 SSH 主机——一台更强悍的 Mac mini、一台 Linux VPS、一台 GPU 主机、一个支持 SSH 的云沙箱。创建 worktree 时，在 **Run on** 下选择那台主机。智能体和 `git worktree` 在远程运行；编辑器、diff 和 UI 留在你的笔记本上。
 
-![Create worktree → Run on — choose Local or a configured remote host (here: openclaw over SSH).](/ways-to-run-run-on.png)
+![Create worktree → Run on——选择 Local 或一个已配置的远程主机（此处：通过 SSH 连接的 openclaw）。](/ways-to-run-run-on.png)
 
-Create worktree → Run on — choose Local or a configured remote host (here: openclaw over SSH).
+Create worktree → Run on——选择 Local 或一个已配置的远程主机（此处：通过 SSH 连接的 openclaw）。
 
-**Good fit when:** the remote already has your repo, tools, and credentials, and you want one laptop Orca to drive many boxes.
+**适合场景：** 远程机器上已经有你的仓库、工具和凭据，而你想用笔记本上的一个 Orca 驱动多台主机。
 
-**Setup sketch:**
+**配置概要：**
 
-1. Add the host under [Settings → SSH](/settings).
-2. Test the connection (git must be available on the host for repo worktrees).
-3. Create a worktree and select the SSH target under **Run on**. The type-ahead lists ready hosts and, for hosts that are connected but not yet set up for this project, non-selectable **setup-needed** rows.
+1. 在 [Settings → SSH](/settings) 中添加主机。
+2. 测试连接（主机上必须装有 git 才能做仓库 worktree）。
+3. 创建一个 worktree 并在 **Run on** 下选择该 SSH 主机。预输入列表会列出就绪的主机；对已连接但尚未为此项目完成设置的主机，则以不可选的 **setup-needed** 行显示。
 
-SSH worktrees can open in VS Code Remote-SSH, download remote folders when SFTP allows it, and stay usable for files/git even when the remote cannot compile terminal natives (install build tools for shells). Details: [SSH worktrees](/ssh) and the recipe [Work on a remote machine over SSH](/recipes/remote-worktrees).
+SSH worktree 可以在 VS Code Remote-SSH 中打开，在 SFTP 允许时可下载远程文件夹，即使远程无法编译终端原生模块，文件/git 功能依然可用（要使用 shell 请安装构建工具）。详情见 [SSH worktree](/ssh) 和实用方案[通过 SSH 在远程机器上工作](/recipes/remote-worktrees)。
 
-## 3. Remote Orca Servers
+## 3. 远程 Orca 服务器
 
-Keep Orca running on a machine you control—an old laptop, Mac mini, home server, cloud VPS, or team box. Pair your laptop, browser client, or phone to that runtime. The **server** owns projects, worktrees, terminals, and agent processes; clients are the UI.
+让 Orca 在一台你掌控的机器上持续运行——旧笔记本、Mac mini、家庭服务器、云 VPS 或团队主机。把你的笔记本、浏览器客户端或手机与该运行时配对。**服务器**拥有项目、worktree、终端和智能体进程；客户端只是 UI。
 
-**Good fit when:**
+**适合场景：**
 
-- You want agents to keep running after your laptop sleeps
-- Mobile should reconnect to the same sessions
-- Automation or a backend should start sessions on a stable host
+- 你希望笔记本合盖睡眠后智能体继续运行
+- 移动端应能重连到同一批会话
+- 自动化或后端需要在一台稳定的主机上启动会话
 
-**Easiest setup:** install Orca and Tailscale on both computers. On the server, open **Settings → Remote Orca Servers → Advertise this app as a server → New Link**, choose its Tailscale address, and generate an access link. On the client, choose **Add Server** and paste that link.
+**最简配置：** 在两台电脑上都安装 Orca 和 Tailscale。在服务器上打开 **Settings → Remote Orca Servers → Advertise this app as a server → New Link**，选择其 Tailscale 地址并生成访问链接。在客户端上选择 **Add Server** 并粘贴该链接。
 
-For a headless Linux server or service-managed VM, use `orca serve` as the alternative:
+对于无头 Linux 服务器或由服务管理的 VM，可改用 `orca serve`：
 
 ```
 orca serve --pairing-address <reachable-tailscale-ip-or-hostname>
 ```
 
-Full detail: [Remote Orca Servers](/remote-servers).
+完整细节见[远程 Orca 服务器](/remote-servers)。
 
-### SSH vs Remote Orca Server
+### SSH 与远程 Orca 服务器对比
 
-| | SSH worktrees | Remote Orca Server |
+| | SSH worktree | 远程 Orca 服务器 |
 | --- | --- | --- |
-| Runtime owner | Laptop Orca | Remote machine (Orca desktop or `orca serve`) |
-| Disconnect | Agents keep running on the host; laptop reattaches | Full session state lives on the server |
-| Multi-client | One laptop drives the host | Laptop, web, mobile, and automation can share the same runtime |
-| Typical setup | Import SSH config, pick **Run on** | Share the server app or run `orca serve`, then pair with a URL |
+| 运行时所有者 | 笔记本上的 Orca | 远程机器（Orca 桌面版或 `orca serve`） |
+| 断开连接 | 智能体继续在主机上运行；笔记本重新接入 | 完整会话状态保存在服务器上 |
+| 多客户端 | 一台笔记本驱动该主机 | 笔记本、网页、移动端和自动化可共享同一运行时 |
+| 典型配置 | 导入 SSH 配置，选择 **Run on** | 分享服务器应用或运行 `orca serve`，然后通过 URL 配对 |
 
-## 4. Cloud VMs (per-workspace environments)
+## 4. 云 VM（每工作区环境）
 
-Each worktree can boot its own on-demand environment — a cloud sandbox, VM, or local Docker container — from a **recipe** checked into the repo (`orca.yaml` + lifecycle scripts). Create spins it up; suspend/resume/destroy tear it down. Orca is a thin wrapper: your provider account, images, and billing stay yours.
+每个 worktree 都可以启动自己的按需环境——云沙箱、VM 或本地 Docker 容器——由检入仓库的**配方（recipe）**定义（`orca.yaml` + 生命周期脚本）。创建即拉起；挂起/恢复/销毁即拆除。Orca 只是一层薄封装：你的提供商账号、镜像和账单都归你自己。
 
-In the product UI this surface is labeled **Cloud VM** under [Settings → Experimental](/settings). Recipes still create per-workspace environments.
+在产品 UI 中，这个能力在 [Settings → Experimental](/settings) 下标记为 **Cloud VM**。配方创建的仍然是每工作区环境。
 
-Providers people wire today include Vercel Sandbox, Fly, Modal, plain SSH hosts, and local Docker. Connection is either **Orca server** (recipe starts `orca serve` and returns a pairing URL) or **SSH** (recipe returns connection details Orca dials).
+目前大家接入的提供商包括 Vercel Sandbox、Fly、Modal、普通 SSH 主机和本地 Docker。连接方式为 **Orca server**（配方启动 `orca serve` 并返回配对 URL）或 **SSH**（配方返回连接详情，由 Orca 去拨号）。
 
-![Settings → Experimental → Cloud VM — enable the skill, then have an agent set up a recipe for the repo.](/ways-to-run-per-workspace-env.png)
+![Settings → Experimental → Cloud VM——启用该技能，然后让智能体为仓库配置一个配方。](/ways-to-run-per-workspace-env.png)
 
-Settings → Experimental → Cloud VM — enable the skill, then have an agent set up a recipe for the repo.
+Settings → Experimental → Cloud VM——启用该技能，然后让智能体为仓库配置一个配方。
 
-**Good fit when:** you want clean isolation per task, disposable compute, or a standard environment every agent boots into.
+**适合场景：** 你想为每个任务获得干净的隔离、用后即弃的算力，或让每个智能体启动时都进入同一套标准环境。
 
-**Setup sketch:**
+**配置概要：**
 
-1. Enable **Cloud VM** under [Settings → Experimental](/settings). The pane includes a short **Create a Cloud VM** guide and recipe/runtime controls.
+1. 在 [Settings → Experimental](/settings) 下启用 **Cloud VM**。该窗格包含一份简短的 **Create a Cloud VM** 指南和配方/运行时控制。
 
-2. Install/update the Cloud VM / per-workspace environment skill if needed.
+2. 如有需要，安装/更新 Cloud VM / 每工作区环境技能。
 
-3. In any workspace, ask your agent:
+3. 在任意工作区中，对你的智能体说：
 
 ```
 Use the orca-per-workspace-env skill to set up a per-workspace environment for this repo.
 ```
 
-4. The skill walks prerequisites → base snapshot → agent auth → `orca.yaml` recipe → doctor validation.
+4. 该技能会引导你走完前置条件 → 基础快照 → 智能体认证 → `orca.yaml` 配方 → doctor 校验。
 
-5. When a recipe appears under **Recipes**, create a worktree and choose it under **Run on**.
+5. 当 **Recipes** 下出现配方后，创建一个 worktree 并在 **Run on** 下选择它。
 
-Recipes only show up for workspace create once the `environmentRecipes` entry is on the project's **primary** checkout of `orca.yaml` (not only a feature branch). Doctor and live provision can still run from any branch while you iterate on scripts.
+只有当 `orca.yaml` 的 `environmentRecipes` 条目位于项目的**主**检出上时（而不仅在某个功能分支上），配方才会出现在工作区创建入口中。在你迭代脚本期间，doctor 和实时开通仍可在任意分支上运行。
 
-> BYO cloud — not an Orca VPS Cloud VMs do not give you an Orca-hosted VPS. You bring the provider (and pay that provider). Orca runs your create/suspend/resume/destroy scripts and connects over the pairing URL or SSH details they print.
+> **自带云——不是 Orca VPS** Cloud VM 给你的不是一台 Orca 托管的 VPS。提供商由你自己带来（并向其付费）。Orca 只负责运行你的创建/挂起/恢复/销毁脚本，并通过它们输出的配对 URL 或 SSH 详情来连接。
 
-## How to choose
+## 如何选择
 
-- **Stay local** if the laptop is fast enough and agents are short-lived.
-- **SSH** if you already have a VPS or dev box and want agents there without installing a second Orca runtime.
-- **Remote Orca Server** if you want one always-on Orca runtime for mobile, browser, and automation.
-- **Cloud VM / per-workspace environments** if each task should get a fresh, recipe-defined sandbox that dies with the worktree.
+- 笔记本够快、智能体任务短暂，就**留在本地**。
+- 已有 VPS 或开发机、想让智能体在那边跑且不想装第二个 Orca 运行时，选 **SSH**。
+- 想要一个常开的 Orca 运行时供移动端、浏览器和自动化使用，选**远程 Orca 服务器**。
+- 希望每个任务都得到一个随 worktree 消亡的、由配方定义的全新沙箱，选**云 VM / 每工作区环境**。
 
-You can mix modes in one install: local worktrees for quick edits, SSH for a GPU box, and a recipe for CI-like isolation.
+你可以在一个安装中混用多种模式：快速改动用本地 worktree，GPU 主机走 SSH，类 CI 的隔离用配方。
 
-## Related
+## 相关页面
 
-- [SSH worktrees](/ssh)
-- [Remote Orca Servers](/remote-servers)
-- [Worktrees](/model/worktrees)
-- [Mobile](/mobile)
-- [Settings reference](/settings)
+- [SSH worktree](/ssh)
+- [远程 Orca 服务器](/remote-servers)
+- [Worktree](/model/worktrees)
+- [移动端](/mobile)
+- [设置参考](/settings)

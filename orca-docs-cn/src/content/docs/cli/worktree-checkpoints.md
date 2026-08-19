@@ -1,24 +1,24 @@
 ---
-title: "Worktree checkpoints"
-description: "Worktree checkpoints — Orca documentation."
+title: "Worktree 检查点"
+description: "Worktree 检查点——用 worktree 评论字段记录进度快照。"
 source: "https://www.onorca.dev/docs/cli/worktree-checkpoints"
 ---
 
-# Worktree checkpoints
+# Worktree 检查点
 
 $undefined
 
-Every Orca worktree carries a lightweight, free-text **comment** field visible in the UI — a status snapshot of what the worktree is doing right now. Agents can update it from the CLI, and it's the pattern we recommend for keeping human collaborators in the loop without forcing chat.
+每个 Orca worktree 都带一个轻量的自由文本**评论（comment）**字段，在 UI 中可见——它是 worktree 当前所做工作的状态快照。智能体可以从 CLI 更新它；这是我们把人类协作者保持在环内、又不必强求聊天的推荐模式。
 
-## The pattern
+## 这一模式
 
 ```
 orca worktree set --worktree active --comment "reproduced auth failure; testing credential-chain fix" --json
 ```
 
-## Card status (optional)
+## 卡片状态（可选）
 
-Alongside the free-text comment, set the workspace card status when the phase changes:
+除自由文本评论外，阶段变化时还可以设置工作区卡片状态：
 
 ```
 orca worktree set --worktree active \
@@ -27,31 +27,31 @@ orca worktree set --worktree active \
  --json
 ```
 
-Statuses: `todo`, `in-progress`, `in-review`, `completed` (or a custom id your workspace uses).
+状态取值：`todo`、`in-progress`、`in-review`、`completed`（或你的工作区使用的自定义 ID）。
 
-## Good checkpoint moments
+## 适合记录检查点的时机
 
-- Finished a meaningful slice of implementation.
-- Confirmed or refuted a hypothesis.
-- Completed a code review.
-- Hit a blocker (waiting on external input, upstream bug, missing access).
-- Transitioning from investigation to fix, or fix to verify.
+- 完成了一块有意义的实现。
+- 证实或推翻了一个假设。
+- 完成了一次代码评审。
+- 遇到阻塞（等待外部输入、上游 bug、缺少权限）。
+- 从调查转入修复，或从修复转入验证。
 
-## Format
+## 格式
 
-First line is the action: what just happened, where, and the status or next step.
+第一行写动作：刚发生了什么、在哪里、状态或下一步是什么。
 
 ```
 orca worktree set --worktree active --comment "added debounce to SearchBar onChange (src/components/SearchBar.tsx); ready for review
 goal: reduce redundant API calls per #298" --json
 ```
 
-## Reading before writing
+## 先读后写
 
-If the comment might have user-written context, read it first so you don't clobber goals or constraints:
+如果评论里可能已有用户手写的内容，先读再写，避免覆盖目标或约束：
 
 ```
 orca worktree current --json
 ```
 
-Preserve what's still valid, drop what's stale, and weave in your update.
+保留仍然有效的部分，删掉过期的部分，把你的更新编织进去。

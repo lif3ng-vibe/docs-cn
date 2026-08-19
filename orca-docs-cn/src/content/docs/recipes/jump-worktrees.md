@@ -1,22 +1,20 @@
 ---
-title: "Jump between 10 worktrees"
-description: "Jump between 10 worktrees — Orca documentation."
+title: "在 10 个 worktree 之间跳转"
+description: "在 10 个 worktree 之间跳转——Orca 文档。"
 source: "https://www.onorca.dev/docs/recipes/jump-worktrees"
 ---
 
-# Jump between 10 worktrees
+# 在 10 个 worktree 之间跳转
 
-$undefined
+十个 worktree 管理起来不轻松。跳转面板 + Restart 微标 + 智能体状态圆点正是为这个规模而生。
 
-Ten worktrees is a lot to juggle. The Jump Palette + Restart chip + agent state dots are built for this exact scale.
+## 步骤
 
-## Steps
+1. `Cmd-J` 打开跳转面板。输入任务名的片段。Enter 跳转；Shift-Enter 在分屏中打开。列表很长时按 **Tab** 按主机或项目筛选。
+2. 扫一眼侧边栏——有活跃智能体的 worktree 带绿点。先去那些需要输入的（黄点）。
+3. 在每个 worktree 中，**Restart**（重启）微标可重新启动任何已退出的智能体。笔记本电脑睡醒后批量恢复特别好用。
+4. 用[常驻铃铛](/notifications)清空"智能体完成"队列——点击一条通知，它就会把你跳到对应的 worktree。
 
-1. `Cmd-J` opens the jump palette. Type a fragment of the task name. Enter jumps; Shift-Enter opens in a split. Press **Tab** to filter by host or project when the list is large.
-2. Scan the sidebar — worktrees with active agents have a green dot. Go to the ones that need input (yellow) first.
-3. In each worktree, the **Restart** chip relaunches any agent that exited. Great for mass-resuming after a laptop sleep.
-4. Use the [persistent bell](/notifications) to drain the "agent finished" queue — click a notification, it jumps you to the worktree.
+## 日常清理
 
-## Hygiene
-
-Delete merged worktrees aggressively. Orca makes this cheap — one click, worktree and branch both gone. Leaving dozens of merged worktrees around just slows down the palette.
+大胆删除已合并的 worktree。Orca 让这件事零成本——一次点击，worktree 和分支一并消失。留几十个已合并的 worktree 在身边，只会拖慢跳转面板。
