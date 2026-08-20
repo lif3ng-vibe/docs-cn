@@ -3,15 +3,14 @@ title: "Stateless（无状态）"
 source: "https://www.aihero.dev/ai-coding-dictionary/stateless"
 ---
 
+不向前携带任何信息。[model](/terms/model)在[模型提供商请求](/terms/model-provider-request)之间无状态——每次请求重发整个[上下文窗口](/terms/context-window)，因为模型没有别的办法看见任何东西。[agent](/terms/agent)默认在[会话](/terms/session)之间无状态：新会话从空开始，不带先前会话的痕迹。与[有状态](/terms/stateful)相对。
 
-Carries no information forward. The [model](/terms/model) is stateless across [model provider requests](/terms/model-provider-request) — each request resends the full [context window](/terms/context-window), because the model has no way to see anything else. An [agent](/terms/agent) is stateless across [sessions](/terms/session) by default: a new session starts empty, with no trace of prior ones. Counterpart to [stateful](/terms/stateful).
+模型本身永久无状态：它的[参数](/terms/parameters)在[训练](/terms/training)后冻结，你在[推理](/terms/inference)时做的任何事都改变不了它们。模型不从你的纠正中学习，不记得昨天被告知过同样的事，也不会渐渐认识你——无论对话给你多少相反的感觉。会话内的连续感由[harness](/terms/harness)制造：它保管对话记录，随每次请求重发。模型不是在记住对话；它是在重读对话。
 
-The model itself is permanently stateless: its [parameters](/terms/parameters) are frozen after [training](/terms/training), and nothing you do at [inference](/terms/inference) changes them. The model doesn't learn from your corrections, doesn't remember being told the same thing yesterday, and isn't getting to know you — however much the conversation feels otherwise. The feeling of continuity within a session is manufactured by the [harness](/terms/harness), which keeps the transcript and re-sends it with every request. The model isn't remembering the conversation; it's re-reading it.
+实际推论：要有什么东西跨会话被记住，你必须把它写到一个 agent 会回头读的地方。[AGENTS.md](/terms/agents-md)文件、[记忆系统](/terms/memory-system)、[交接产物](/terms/handoff-artifact)正是这种东西——被加载进未来会话[上下文](/terms/context)的文件，替模型顶上它没有的记忆。当 agent 反复犯一个你纠正过的错，问题不是它为什么没学会——它不能——而是那条纠正该写到哪里，好让未来的每个会话都读到。
 
-The practical consequence: if you want something remembered across sessions, you have to write it down somewhere the agent will read it back. That's what [AGENTS.md](/terms/agents-md) files, [memory systems](/terms/memory-system), and [handoff artifacts](/terms/handoff-artifact) are — files that get loaded into the [context](/terms/context) of future sessions, standing in for the memory the model doesn't have. When the agent keeps making a mistake you've corrected before, the question isn't why it didn't learn — it can't — but where that correction should be written down so every future session reads it.
+用法：
 
-_Usage:_
+"为什么每次我[清空](/terms/clearing)之后它就忘了约定？"
 
-"Why does it forget the convention every time I [clear](/terms/clearing)?"
-
-"The model's stateless — the new session starts empty. If you want it carried, write it to AGENTS.md or a memory file the harness loads at session start."
+"模型无状态——新会话从空开始。想留住就写进 AGENTS.md 或一个 harness 在会话开始时加载的记忆文件。"

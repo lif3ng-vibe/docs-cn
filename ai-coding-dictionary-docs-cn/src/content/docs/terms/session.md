@@ -3,17 +3,16 @@ title: "Session（会话）"
 source: "https://www.aihero.dev/ai-coding-dictionary/session"
 ---
 
+与[agent](/terms/agent)的一段有界交互。从空开始，积累消息、[工具结果](/terms/tool-result)和读过的文件，在[清空](/terms/clearing)、关闭、或被[压缩](/terms/compaction)成新会话时结束。会话正是_填满_[上下文窗口](/terms/context-window)的东西：如果说上下文窗口是箱子，会话就是慢慢把它装满的物件。装不进单个上下文窗口的工作，必须拆到多个会话里。
 
-One bounded run of interaction with an [agent](/terms/agent). Starts empty, accumulates messages, [tool results](/terms/tool-result), and files read, and ends when [cleared](/terms/clearing), closed, or [compacted](/terms/compaction) into a fresh session. The session is what _fills_ the [context window](/terms/context-window): if the context window is the box, the session is the stuff slowly filling it up. Work too large for a single context window must be split across sessions.
+会话的消息历史是 agent 的工作记忆。[model](/terms/model)是[无状态](/terms/stateless)的，所以它表面记得的一切——你要过什么、测试说了什么、它三轮前决定过什么——都在消息历史里，随每次[模型提供商请求](/terms/model-provider-request)重发。不在会话里的东西，对 agent 来说不存在。
 
-The session's message history is the agent's working memory. The [model](/terms/model) is [stateless](/terms/stateless), so everything it appears to remember — what you asked for, what the tests said, what it decided three turns ago — is in the message history, re-sent with every [model provider request](/terms/model-provider-request). Whatever isn't in the session doesn't exist for the agent.
+那段记忆随会话一起终结。新会话从零开始：昨天会话结束时还熟悉你代码库的 agent，今天早上对此一无所知。活下来的是[文件系统](/terms/filesystem)——一个会话里写的文件，下一个会话能读，[handoff](/terms/handoff)、[记忆系统](/terms/memory-system)和[AGENTS.md](/terms/agents-md)靠的正是这个。
 
-That memory ends with the session. A new session starts from nothing: the agent that knew your codebase well at the end of yesterday's session knows none of it this morning. What survives is the [filesystem](/terms/filesystem) — files written during one session can be read by the next, which is what [handoffs](/terms/handoff), [memory systems](/terms/memory-system), and [AGENTS.md](/terms/agents-md) rely on.
+会话在哪结束由你选。会话里的一切影响之后的每个[turn](/terms/turn)，所以塞在一个会话里的不相关任务会留下残渣，染脏下一个回答。一个会话一个任务，让上下文保持相关；做完一个任务正是清空的自然时点。
 
-You choose where a session ends. Everything in a session influences every later [turn](/terms/turn), so unrelated tasks done in one session leave residue that colours the next answer. One task per session keeps the context relevant; finishing a task is a natural point to clear.
+用法：
 
-_Usage:_
+"一个会话能跑多久才散架？"
 
-"How long can one session run before it falls apart?"
-
-"Depends on the work — a focused refactor stays sharp longer than open-ended research. Once the session bloats, hand off or compact, don't push through."
+"看活儿——聚焦的重构比开放式调研保持锋利更久。会话一虚胖，就交接或压缩，别硬推。"

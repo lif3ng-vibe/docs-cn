@@ -3,23 +3,22 @@ title: "Context（上下文）"
 source: "https://www.aihero.dev/ai-coding-dictionary/context"
 ---
 
+[agent](/terms/agent)此刻能接触到的相关信息。这是抽象名词——不是模型看到的原始输入（那是[上下文窗口](/terms/context-window)），不是滚动的历史（那是[会话](/terms/session)），而是_agent 拥有的、与任务相关的所知_。"把某物加载进上下文"意思是把它变成这个集合的一部分；"上下文工程"是策展它的纪律。
 
-The relevant information the [agent](/terms/agent) has access to right now. The abstract noun — not the raw input the model sees (that's the [context window](/terms/context-window)), not the running history (that's the [session](/terms/session)), but _what the agent knows that's pertinent to the task_. "Loading something into context" means making it part of this set; "context engineering" is the discipline of curating it.
+三个术语分得干净：
 
-The three terms separate cleanly:
+| 术语 | 指什么 |
+| --- | --- |
+| Context（上下文） | agent 当前拥有的任务相关信息 |
+| Context window（上下文窗口） | 模型每次请求看到的字面[token](/terms/token)序列 |
+| Session（会话） | [harness](/terms/harness)存储的滚动对话 |
 
-| Term           | What it names                                                       |
-| -------------- | ------------------------------------------------------------------- |
-| Context        | The task-relevant information the agent currently has               |
-| Context window | The literal [token](/terms/token) sequence the model sees per request |
-| Session        | The running conversation the [harness](/terms/harness) stores         |
+这个区分要紧，因为上下文是质量的度量，不是数量的。一个上下文窗口可以几乎满而上下文仍然差——几千 token 的过期工具输出，没有一段关于手头任务。它也可以几乎空而上下文极好：任务系于其上的那一个类型定义。
 
-The separation matters because context is a measure of quality, not quantity. A context window can be nearly full and the context still poor — thousands of tokens of stale tool output, none of it about the task at hand. It can also be nearly empty and the context excellent: the one type definition the task turns on.
+多数日常失败可以追到上下文。当 agent 编造一个 API、推翻一个决定、或瞎猜一个 schema，第一个问题是它那么做时上下文里有什么——通常是要紧的事实从没被加载，或被埋在[注意力退化](/terms/attention-degradation)之下。解法是策展：加载任务需要的，挡掉不需要的。
 
-Most day-to-day failures trace back to context. When the agent invents an API, contradicts a decision, or guesses at a schema, the first question is what was in context when it did — usually the relevant fact was never loaded, or was buried under [attention degradation](/terms/attention-degradation). The fix is curation: load what the task needs, keep out what it doesn't.
+用法：
 
-_Usage:_
+"它老是编出类型里没有的字段。"
 
-"It keeps inventing fields that aren't in the type."
-
-"The type file isn't in context — it's reading the call sites and guessing. Read the definition in first."
+"类型文件不在上下文里——它在读调用点然后猜。先把定义读进来。"

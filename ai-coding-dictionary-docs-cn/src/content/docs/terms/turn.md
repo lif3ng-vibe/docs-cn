@@ -3,15 +3,14 @@ title: "Turn（轮）"
 source: "https://www.aihero.dev/ai-coding-dictionary/turn"
 ---
 
+一条用户消息，加上[agent](/terms/agent)随之做的一切，直到它让回给你。包含一次或多次[模型提供商请求](/terms/model-provider-request)——如果 agent 调[工具](/terms/tool)，就是很多次。一个澄清问题收掉一轮；你的回答开启下一轮。层级是[会话](/terms/session) **> 轮 > 模型提供商请求**。
 
-One user message plus everything the [agent](/terms/agent) does in response, up until it yields back to the user. Contains one or more [model provider requests](/terms/model-provider-request) — many, if the agent calls [tools](/terms/tool). A clarifying question closes the turn; your reply opens the next one. The hierarchy is [session](/terms/session) **> Turn > Model provider request**.
+让"轮"值得命名的是：它的长度是 agent 的决定，不是你的。你递过去一条消息；agent 决定在交还之前串多少次工具调用。一轮可以是一句话的回答，也可以是二十分钟的读、改、跑测试。同一个属性两个视角：长轮正是[AFK](/terms/afk)得以可能的东西，长轮也是无人监督下出乱子的地方——等 agent 交还时，它可能已经漂到离你的本意很远的地方。
 
-What makes the turn worth naming is that its length is the agent's decision, not yours. You hand over one message; the agent decides how many tool calls to chain before yielding. A turn can be a one-sentence answer or twenty minutes of reading, editing, and running tests. That's the same property from two angles: long turns are what make [AFK](/terms/afk) work possible, and long turns are also where things go wrong unsupervised — by the time the agent yields, it may have drifted a long way from what you meant.
+轮也是掌舵的自然单位。一轮之内的一切发生时你不在场；轮与轮之间的空隙是你改道的地方。多数[harness](/terms/harness)把这个软化了：你可以在轮中途打断、停下 agent 改个方向，或在它干活时敲一条消息，等轮完成时被读到。如果你反复不满轮的落点，解法通常是要求更小的轮——先计划、一次一步——用自主性换更密的掌舵空隙。
 
-The turn is also the natural unit for steering. Everything inside a turn happens without you; the gaps between turns are where you redirect. Most [harnesses](/terms/harness) soften this: you can interrupt mid-turn to stop the agent and redirect it, or type a message while it works, which gets read once the turn completes. If you find yourself repeatedly unhappy with where turns end up, the fix is usually to ask for smaller ones — a plan first, one step at a time — trading autonomy for more frequent gaps to steer in.
+用法：
 
-_Usage:_
+"一轮花了两分钟？"
 
-"One turn took two minutes?"
-
-"It made fourteen [tool calls](/terms/tool-call) inside that turn — each one is a separate model provider request. Latency stacks up before the agent finally yields back to you."
+"那一轮里它做了十四次[工具调用](/terms/tool-call)——每次都是独立的一次模型提供商请求。延迟在 agent 最终交还给你之前一路堆高。"
