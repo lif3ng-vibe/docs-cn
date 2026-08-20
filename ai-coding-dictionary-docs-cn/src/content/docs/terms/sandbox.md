@@ -3,23 +3,22 @@ title: "Sandbox（沙箱）"
 source: "https://www.aihero.dev/ai-coding-dictionary/sandbox"
 ---
 
+[agent](/terms/agent)跑在里面的隔离[环境](/terms/environment)——一个容器、虚拟机、一次性[文件系统](/terms/filesystem)、或受限权限的 shell。限制 agent 动作的爆炸半径：就算 agent 跑了破坏性命令或取回恶意的东西，损害也被兜住。让[AFK](/terms/afk)变得可行的安全底座。
 
-An isolated [environment](/terms/environment) the [agent](/terms/agent) runs inside — a container, VM, ephemeral [filesystem](/terms/filesystem), or restricted-permission shell. Limits the blast radius of agent actions: even if the agent runs destructive commands or fetches something malicious, the damage is contained. The safety substrate that makes [AFK](/terms/afk) practical.
+沙箱和[权限模式](/terms/permission-mode)从两端解同一个问题。权限在动作运行之前问；沙箱限制动作真跑起来时够得着什么。权限需要你[在回路](/terms/human-in-the-loop)里——每次提示都是一次打断——不停发问的会话谈不上自主。沙箱用基础设施换注意力：隔离越强，需要问的问题越少。
 
-The sandbox and the [permission mode](/terms/permission-mode) solve the same problem from opposite ends. Permissions ask before an action runs; a sandbox limits what the action can reach if it does run. Permissions need you running [in the loop](/terms/human-in-the-loop) — every prompt is an interruption — and a session that asks constantly is barely autonomous. A sandbox spends infrastructure instead of attention: the stronger the isolation, the fewer questions need asking.
+隔离有档次：
 
-Isolation comes in grades:
+| 档次 | 是什么 | 兜住什么 |
+| --- | --- | --- |
+| 受限 shell | 每条命令外围的操作系统级约束 | 项目之外的写入、网络访问 |
+| 容器 | 全新文件系统、不挂凭证、用完即弃 | agent 对自己那台机器做的一切 |
+| 虚拟机 / 云 | 一台完全独立的机器，常由 harness 提供 | 一切，包括内核级逃逸 |
 
-| Grade            | What it is                                                 | What it contains                           |
-| ---------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| Restricted shell | OS-level confinement around each command                   | Writes outside the project, network access |
-| Container        | Fresh filesystem, no credentials mounted, discarded after  | Anything the agent does to its own machine |
-| VM / cloud       | A separate machine entirely, often provided by the harness | Everything, including kernel-level escapes |
+没有沙箱兜得住的：合法离开它的动作。一个拿着你 git 凭证的 agent 能 push；一个有网络访问的能调生产 API。先决定什么可以跨界，再决定边界筑多厚。
 
-What no sandbox contains: actions that leave it legitimately. An agent with your git credentials can push; one with network access can call production APIs. Decide what crosses the boundary before deciding how thick to make it.
+用法：
 
-_Usage:_
+"我想让它[绕过权限](/terms/agent-mode)过夜跑，但还没到那个信任度。"
 
-"I want to let it run [bypass-permissions](/terms/agent-mode) overnight but I'm not ready for that."
-
-"Put it in a sandbox — fresh container, no credentials mounted, no network out. Worst case it nukes its own filesystem and you discard the container."
+"放进沙箱——新容器、不挂凭证、无出网。最坏的情况它把自己那套文件系统炸了，你把容器扔掉。"

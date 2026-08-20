@@ -3,17 +3,16 @@ title: "MCP（模型上下文协议）"
 source: "https://www.aihero.dev/ai-coding-dictionary/mcp"
 ---
 
+**Model Context Protocol（模型上下文协议）。**把外部工具服务器插进[harness](/terms/harness)的协议——[agent](/terms/agent)借此获得 harness 自带之外的[工具](/terms/tool)。agent 从不"调用 MCP"；它调用一个工具，而 harness 恰好是从一个 MCP 服务器拿到那个工具的。协议也暴露资源（只读数据）和提示（可复用模板），但工具供给是主要用途。
 
-**Model Context Protocol.** A protocol for plugging external tool servers into a [harness](/terms/harness) — how an [agent](/terms/agent) gets [tools](/terms/tool) beyond what the harness ships with. The agent never "calls MCP"; it calls a tool, and the harness happens to have gotten that tool from an MCP server. Also exposes resources (read-only data) and prompts (reusable templates), but tool provision is the primary use.
+协议解决的是集成问题。没有标准的话，每个 harness 都要自己的 Linear 集成、自己的 Slack 集成、自己的数据库集成——各自编写、各自维护。有了 MCP，集成一次写成一个服务器，任何兼容 MCP 的 harness 都能用。harness 连上服务器，服务器报出它提供哪些工具，这些工具就和内置工具一起对 agent 可用。
 
-The protocol solves an integration problem. Without a standard, every harness would need its own Linear integration, its own Slack integration, its own database integration — written and maintained separately for each. With MCP, the integration is written once as a server, and any MCP-compatible harness can use it. The harness connects to the server, the server advertises what tools it offers, and those tools become available to the agent alongside the built-in ones.
+代价付在[上下文](/terms/context)。服务器报出的每个工具都以定义抵达——名字、描述、参数 schema——而[model](/terms/model)只能调用它知道的工具。朴素做法把所有定义预先装进[上下文窗口](/terms/context-window)：装几个大方的服务器，一个[会话](/terms/session)在你敲下任何字之前，就从几千[token](/terms/token)的工具 schema 开始，把[注意力预算](/terms/attention-budget)花在任务永远用不到的工具上。
 
-The cost is paid in [context](/terms/context). Every tool a server advertises arrives as a definition — name, description, parameter schema — and the [model](/terms/model) can only call tools it knows about. The naive approach loads every definition into the [context window](/terms/context-window) up front: install a few generous servers and a [session](/terms/session) starts with thousands of [tokens](/terms/token) of tool schemas before you've typed anything, spending [attention budget](/terms/attention-budget) on tools the task will never use.
+许多 harness 现在用工具搜索缓解这一点：上下文里装的不是完整定义，而是指向可用工具的[上下文指针](/terms/context-pointer)——agent 按名字或用途搜工具，只在需要时加载定义。如果你的 harness 不做这件事，预付成本仍然成立，只启用项目真正需要的服务器就值得。
 
-Many harnesses now mitigate this with tool search: instead of the full definitions, the context holds a [context pointer](/terms/context-pointer) to the available tools — the agent searches for a tool by name or purpose and loads its definition only when it needs it. If your harness doesn't do this, the up-front cost still applies, and it's worth enabling only the servers a project actually needs.
+用法：
 
-_Usage:_
+"agent 需要读 Linear 上的工单。"
 
-"The agent needs to read tickets from Linear."
-
-"Configure the harness to use the Linear MCP server — it exposes the Linear API as tools the agent can call. Saves you writing custom tool wrappers."
+"把 harness 配上 Linear 的 MCP 服务器——它把 Linear API 暴露成 agent 能调的工具。省得你写自定义工具包装。"

@@ -3,21 +3,20 @@ title: "Agent mode（智能体模式）"
 source: "https://www.aihero.dev/ai-coding-dictionary/agent-mode"
 ---
 
+一组塑造[agent](/terms/agent)运行时表现的预设——把一个[权限模式](/terms/permission-mode)和注入[系统提示词](/terms/system-prompt)的行为指令捆在一起。例子：危险调用时询问的默认模式、阻止编辑并把 agent 引向调研的**计划模式（plan mode）**、自动批准编辑的**接受编辑（accept-edits）**模式、自动批准一切的**绕过权限（bypass permissions）**模式（俗称 **YOLO 模式**）。可以[会话](/terms/session)中途切换。
 
-A preset that shapes how the [agent](/terms/agent) operates at runtime — bundles a [permission mode](/terms/permission-mode) with behavioral instructions injected into the [system prompt](/terms/system-prompt). Examples: a default that prompts on risky calls, a **plan mode** that blocks edits and steers the agent toward research, an **accept-edits** mode that auto-approves edits, a **bypass permissions** mode (colloquially **YOLO mode**) that auto-approves everything. Can flip [mid-session](/terms/session).
+这个捆绑正是模式区别于裸权限设置的地方。权限模式只是一道闸门：它决定哪些[工具调用](/terms/tool-call)放行。光有闸门会得到一个想编辑却不能的 agent——它提议写入、被拦、再试别的路。注入的指令把"想"拿掉：计划模式不只是拦编辑，它告诉 agent 自己处在规划阶段，于是它去读、去问、去提议，而不是顶着闸门较劲。闸门和转向指向同一个方向。
 
-The bundling is what distinguishes a mode from a bare permission setting. A permission mode is only a gate: it decides which [tool calls](/terms/tool-call) go through. A gate alone produces an agent that wants to edit but can't — it proposes the write, gets blocked, and tries another way. The injected instructions remove the want: plan mode doesn't just block edits, it tells the agent it's in a planning phase, so it reads, asks, and proposes instead of straining against the gate. Gate and steer point the same direction.
+实践中，你随着一项任务中信任的变化换模式。同一个任务可以穿过几种模式：思路还在成形时用计划模式，头几次精细编辑用会询问的默认档，agent 证明它理解这个改动后用接受编辑，沙箱里的[AFK](/terms/afk)运行用绕过。换模式没有成本：对话在原地继续，只是换了权限和指令。如果你发现自己在不看内容地批准每个提示，模式设得比你的实际信任紧；如果你不断拒绝编辑，就是设松了。
 
-In practice, you change mode as your trust changes over the course of a task. The same task can pass through several modes: plan mode while the approach is still being shaped, the prompting default for the first delicate edits, accept-edits once the agent has shown it understands the change, bypass for an [AFK](/terms/afk) run inside a [sandbox](/terms/sandbox). Changing mode costs you nothing: the conversation continues exactly where it was, with new permissions and new instructions. If you find yourself approving every prompt without reading it, the mode is set tighter than your actual trust; if you keep rejecting edits, it's set looser.
+厂商用语：Claude Code 叫这些"permission modes"，Codex 叫"approval modes"——两者都早于行为捆绑的出现。
 
-_Vendor terms:_ Claude Code calls these "permission modes," Codex calls them "approval modes" — both predate behavioral bundling.
+用法：
 
-_Usage:_
+"我只想要个计划，它却一直在改文件。"
 
-"It keeps editing files when I just want a plan."
+"切到计划模式——它会拦住写入，停在调研里。"
 
-"Switch to plan mode — it'll block writes and stay in research."
+"那待会儿的 AFK 运行呢？"
 
-"What about for the AFK run later?"
-
-"Bypass mode, but only inside the sandbox."
+"绕过模式，但只在沙箱里。"
