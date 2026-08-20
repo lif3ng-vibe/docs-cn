@@ -3,15 +3,14 @@ title: "Progressive disclosure（渐进披露）"
 source: "https://www.aihero.dev/ai-coding-dictionary/progressive-disclosure"
 ---
 
+只加载[agent](/terms/agent)当下需要的[上下文](/terms/context)，其余留在[上下文指针](/terms/context-pointer)后面。借自 UI 设计，那里它的意思是：只给用户看与当前任务相关的控件，其余藏在一次点击之后。
 
-Loading only the [context](/terms/context) an [agent](/terms/agent) needs right now, with [context pointers](/terms/context-pointer) to the rest. Borrowed from UI design, where it means showing users only the controls relevant to their current task and hiding the rest behind a click.
+这门技术存在，因为上下文是双重成本。预先加载的每个[token](/terms/token)，每[turn](/terms/turn)都按[输入 token](/terms/input-tokens)计费；而每个 token 都花[注意力预算](/terms/attention-budget)，无论 agent 需不需要。一份塞满完整风格指南、部署手册、数据库约定的[AGENTS.md](/terms/agents-md)，让 agent 在所有这些上都变差——当前任务要紧的指令，被不相干的那些稀释。信号是 agent 无视你明知在它上下文里的规则：规则在，但被埋着。
 
-The technique exists because context is a cost twice over. Every [token](/terms/token) loaded up front is billed as [input tokens](/terms/input-tokens) on every [turn](/terms/turn), and every token spends [attention budget](/terms/attention-budget) whether the agent needs it or not. An [AGENTS.md](/terms/agents-md) stuffed with the full style guide, deployment runbook, and database conventions makes the agent worse at all of them — the instructions that matter for the current task are diluted by the ones that don't. The tell is an agent that ignores rules you know are in its context: they're in there, but buried.
+渐进披露把它反过来。常驻层保持小——每个主题一句话、一个指向细节所在处的指针。agent 写组件时读风格指南，部署时读部署手册，修测试时两者都不读。[技能](/terms/skill)是内建于[harness](/terms/harness)的这个模式：一段短描述每个[会话](/terms/session)加载，完整指令只在触发时加载。
 
-Progressive disclosure inverts this. Keep the always-loaded layer small — a sentence per topic and a pointer to where the detail lives. The agent reads the style guide when it's writing a component, the deployment runbook when it's deploying, and neither when it's fixing a test. [Skills](/terms/skill) are the pattern built into the [harness](/terms/harness): a short description loaded every [session](/terms/session), the full instructions only when triggered.
+用法：
 
-_Usage:_
+"要不要把整份风格指南倒进 AGENTS.md？"
 
-"Should I dump the entire style guide into AGENTS.md?"
-
-"No — progressive disclosure. Reference the style guide as a skill the agent loads when it actually needs to write a component. AGENTS.md pays the token cost every turn."
+"不——渐进披露。把风格指南引用成一个技能，agent 真要写组件时才加载。AGENTS.md 可是每 turn 都付 token 成本的。"

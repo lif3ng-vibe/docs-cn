@@ -3,15 +3,14 @@ title: "Subagent（子智能体）"
 source: "https://www.aihero.dev/ai-coding-dictionary/subagent"
 ---
 
+由另一个 agent 经一次[工具调用](/terms/tool-call)派生的[agent](/terms/agent)。跑在它自己的[会话](/terms/session)、自己的[上下文窗口](/terms/context-window)里，报告回一个单一的[工具结果](/terms/tool-result)。区别于[交接](/terms/handoff)——父级明确期待一次返回；交接没有回头路。**不能再派生子智能体**——树只有一层深。子智能体为隔离[上下文](/terms/context)而存在，不为组装层级。
 
-An [agent](/terms/agent) spawned by another agent via a [tool call](/terms/tool-call). Runs in its own [session](/terms/session) with its own [context window](/terms/context-window), and reports a single [tool result](/terms/tool-result) back. Distinct from a [handoff](/terms/handoff) — the parent specifically expects a return; a handoff has no return path. **Cannot spawn further subagents** — the tree is one level deep. Subagents exist to isolate [context](/terms/context), not to compose hierarchies.
+要点是把嘈杂的工作挡在父级上下文之外。一场大范围搜索或一次漫长的读文件远征产出成页的工具结果，其中大多数只在找到答案前的片刻有用。在父级里跑，这一切留在父级上下文里直到会话结束。在子智能体里跑，噪音灌进一个用完即弃的窗口——只有最终报告落进父级上下文。报告是[二手来源](/terms/secondary-source)：父级拿到的是子智能体对所见的记述，不是原始结果，所以报告漏掉的任何东西对父级不可见。
 
-The point is to keep noisy work out of the parent's context. A broad search or a long file-reading expedition produces pages of tool results, most of which matter only long enough to find the answer. Run inside the parent and all of it stays in the parent's context for the rest of the session. Run inside a subagent and the noise fills a disposable window instead — only the final report lands in the parent's context. The report is a [secondary source](/terms/secondary-source): the parent gets the subagent's account of what it found, not the raw results, so anything the report leaves out is invisible to the parent.
+子智能体也并发跑——一个父级可以同时扇出好几个，各做一块独立的工作。
 
-Subagents also run concurrently — a parent can fan several out at once over independent pieces of work.
+用法：
 
-_Usage:_
+"grep 结果把我的上下文炸了。"
 
-"The grep results are blowing out my context."
-
-"Spawn a subagent to do the search — it'll burn its own context window on the noise and report back the two file paths you actually need."
+"派一个子智能体去做搜索——它烧自己的上下文窗口盛噪音，回报你真正需要的那两个文件路径。"
