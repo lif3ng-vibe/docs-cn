@@ -3,26 +3,25 @@ title: "Effort（用力度）"
 source: "https://www.aihero.dev/ai-coding-dictionary/effort"
 ---
 
+用力度（effort）是一个旋钮，控制[model](/terms/model)在回答前做多少推理。按[模型提供商请求](/terms/model-provider-request)设定，它决定模型在动笔写你看到的回答之前，先推演多长的思考。那段思考和别的一切一样在[推理](/terms/inference)时生成；[harness](/terms/harness)常常把它藏起来，但那是模型真实在做的工作。
 
-Effort is a dial for how much reasoning a [model](/terms/model) does before it answers. Set per [model provider request](/terms/model-provider-request), it controls the length of the thinking the model works through before it starts writing the response you see. That thinking is generated at [inference](/terms/inference) time like everything else; the [harness](/terms/harness) often hides it, but it's real work the model is doing.
+更高的用力度更贵也更慢。推理以[token](/terms/token)吐出，按[输出 token](/terms/output-tokens)计费——哪怕你从没见过它们——而且一次一个 token 地产出，所以调高用力度既拉长答案到达前的等待，也加厚账单。这笔交易是更多的斟酌，换走速度和成本。
 
-Higher effort costs more and runs slower. The reasoning is emitted as [tokens](/terms/token), billed as [output tokens](/terms/output-tokens) even when you never see them, and produced one token at a time — so turning effort up lengthens the wait before the answer arrives and adds to the bill. The trade is more deliberation against speed and cost.
+多数 harness 把用力度暴露成一小段阶梯：
 
-Most harnesses expose effort as a small ladder:
+| 档位 | 用途 |
+| ------ | --- |
+| Low | 机械编辑、查询、路径唯一明确的改动。 |
+| Medium | 日常编码——通常的默认档。 |
+| High | 棘手的 bug、设计决策、多步计划。 |
+| Max | 最难的问题，答错之后解开销昂贵的那种。 |
 
-| Level  | What it's for                                                          |
-| ------ | ---------------------------------------------------------------------- |
-| Low    | Mechanical edits, lookups, well-specified changes with one clear path. |
-| Medium | Everyday coding — the usual default.                                   |
-| High   | Tricky bugs, design decisions, multi-step plans.                       |
-| Max    | The hardest problems, where a wrong answer is expensive to unwind.     |
+调错的症状两头都疼。难题上把用力度调低，你得到一个自信而肤浅的回答，跳过了问题所需的推理——它读着挺好，错得让你日后买单。一行重命名调到 max，你就坐着听完一场最低档也能产出的漫长思考。
 
-The symptom of getting it wrong cuts both ways. Set effort too low on a hard problem and you get a confident, shallow answer that skipped the reasoning the problem needed — it reads fine and is wrong in a way that costs you later. Set it to max for a one-line rename and you sit through a long think that produces nothing the lowest setting wouldn't have.
+让用力度对齐任务，而不是对齐[会话](/terms/session)。真正难推理的那一段调上去，周围的重复劳动调回来。
 
-Match effort to the task, not the [session](/terms/session). Turn it up for the part that's genuinely hard to reason about, and back down for the rote work around it.
+用法：
 
-_Usage:_
+"这个并发修复它老是搞砸——我都重讲三遍了。"
 
-"It keeps botching this concurrency fix — I've re-explained it three times."
-
-"Bump the effort up. That's a reasoning-heavy bug, and on the default setting it's not thinking long enough before it commits to an approach."
+"把用力度调上去。那是重推理的 bug，默认档下它没想够久就押了一个方案。"

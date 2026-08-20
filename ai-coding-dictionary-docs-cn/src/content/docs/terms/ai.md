@@ -3,27 +3,26 @@ title: "AI（人工智能）"
 source: "https://www.aihero.dev/ai-coding-dictionary/ai"
 ---
 
+一个移动的标签，不是一种技术。"AI"不像[model](/terms/model)或[token](/terms/token)那样指向一个固定的东西——它指向计算机新近能做到的、令人惊艳的事情。此刻它指向大语言模型。以前它指向过很不一样的东西：
 
-A moving label, not a technology. "AI" doesn't name a fixed thing the way [model](/terms/model) or [token](/terms/token) does — it points at whatever computers can newly, impressively do. Right now it points at large language models. It has pointed at very different things before:
+| 时代 | "AI" 当时指什么 |
+| --------- | --- |
+| 1950 年代 | 符号推理——定理证明器、跳棋程序。 |
+| 1960–70 年代 | 基于规则的符号程序——ELIZA、SHRDLU。 |
+| 1980 年代 | 专家系统——成千上万条手写的 if-then 规则，编码人类专家知识。 |
+| 1990 年代 | 博弈树搜索——Deep Blue 击败 Kasparov（1997）。研究者那时干脆回避 "AI" 一词 |
+| 2000 年代 | 统计机器学习——垃圾邮件过滤器、推荐系统。仍以"机器学习"而非"AI"的名义出售 |
+| 2010 年代 | 深度学习——图像识别（AlexNet，2012）、AlphaGo（2016）。 |
+| 2020 年代 | 大语言模型——ChatGPT（2022）让 "AI" 变成聊天机器人的意思 |
 
-| Era       | What "AI" meant                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------- |
-| 1950s     | Symbolic reasoning — theorem provers, checkers programs.                                              |
-| 1960s–70s | Rule-based symbolic programs — ELIZA, SHRDLU.                                                         |
-| 1980s     | Expert systems — thousands of hand-written if-then rules encoding human expertise.                    |
-| 1990s     | Game-tree search — Deep Blue beating Kasparov (1997). Researchers avoided the word "AI" entirely      |
-| 2000s     | Statistical machine learning — spam filters, recommenders. Still sold as "machine learning", not "AI" |
-| 2010s     | Deep learning — image recognition (AlexNet, 2012), AlphaGo (2016).                                    |
-| 2020s     | Large language models — ChatGPT (2022) made "AI" mean chatbots                                        |
+这个指针按一个已知机制移动，有时被称为 AI 效应：一项技术一旦稳定起效，就会被改名——它"只是"搜索、"只是"统计——而 "AI" 滑向下一个未解之谜。这个观察由来已久。Bertram Raphael 在 1971 年这样说："AI 是一堆我们尚不知道如何用计算机妥善解决的问题的统称。"Larry Tesler 的版本大约出自 1979 年："智能就是机器还没做到的那些事。"
 
-The pointer moves by a known mechanism, sometimes called the AI effect: once a technique works reliably, it gets renamed — it's "just" search, "just" statistics — and "AI" slides forward to the next unsolved thing. The observation is old. Bertram Raphael put it this way in 1971: "AI is a collective name for problems which we do not yet know how to solve properly by computer." Larry Tesler's version, from around 1979: "Intelligence is whatever machines haven't done yet."
+这正是关于 AI 的讨论经常各说各话的原因。"AI 不会推理"或"AI 被吹过头了"这类论断，都藏着一个时间戳——它可能在说专家系统、2010 年代的图像分类器、或上个月的大模型，而每个参照系支撑不同的结论。一场关于 AI 的讨论卡住时，解法通常是把这个词换成实际所指的精确术语：模型、[harness](/terms/harness)、[agent](/terms/agent)、它拿到的[context](/terms/context)。
 
-This is why conversations about AI so often talk past each other. A claim like "AI can't reason" or "AI is overhyped" carries a hidden timestamp — it may be about expert systems, about 2010s image classifiers, or about last month's LLM, and each reference supports a different conclusion. When a discussion about AI stalls, the fix is usually to swap the word for whichever precise term is actually meant: the model, the [harness](/terms/harness), the [agent](/terms/agent), the [context](/terms/context) it was given.
+避免：在任何技术论断里使用 "AI"——换成你实际指的那个部分。"AI coding" 作为实践的门面标签没问题；"the AI is hallucinating"（AI 在幻觉）不行。
 
-_Avoid:_ "AI" in any technical claim — name the part you mean instead. "AI coding" as a label for the practice is fine; "the AI is hallucinating" is not.
+用法：
 
-_Usage:_
+"CTO 想知道 AI 能不能处理分诊队列。"
 
-"The CTO wants to know whether AI could handle the triage queue."
-
-"Translate that before scoping it — she means an LLM in a harness with access to the ticket system. 'AI' on its own isn't a spec."
+"评估范围前先把它翻译过来——她指的是跑在 harness 里、接了工单系统的一个 LLM。光一个 'AI' 不是规格。"

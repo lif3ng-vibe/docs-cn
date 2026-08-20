@@ -3,17 +3,16 @@ title: "Model（模型）"
 source: "https://www.aihero.dev/ai-coding-dictionary/model"
 ---
 
+那些[参数](/terms/parameters)。[无状态](/terms/stateless)——只做[下一 token 预测](/terms/next-token-prediction)，别的不做。"Claude Opus 4.x"和"GPT-5.x"是模型。模型自身做不了任何智能体式的事情；它得被装进[harness](/terms/harness)。
 
-The [parameters](/terms/parameters). [Stateless](/terms/stateless) — does [next-token prediction](/terms/next-token-prediction) and nothing else. "Claude Opus 4.x" and "GPT-5.x" are models. On its own a model can't do anything agentic; it has to be [harnessed](/terms/harness).
+模型读不了文件、跑不了命令、浏览不了网页、记不住昨天——它吞进[token](/terms/token)，吐出预测的 token，每次[模型提供商请求](/terms/model-provider-request)一轮。一切看起来像[agent](/terms/agent)在工作的东西——挑[工具](/terms/tool)、读结果、循环到任务完成——都是 harness 在把许多次这样的预测串起来编排。
 
-Models can't read files, run commands, browse the web, or remember yesterday — it takes [tokens](/terms/token) in and predicts tokens out, once per [model provider request](/terms/model-provider-request). Everything that feels like an [agent](/terms/agent) working — choosing [tools](/terms/tool), reading results, looping until the task is done — is the harness orchestrating many of those predictions in a row.
+[模型提供商](/terms/model-provider)分档发布模型：最大的一档最聪明但慢且贵，小一些的更快更便宜但能力弱。选档是个真实的决策——规划和硬调试用重量级，机械改动用轻量级——而 harness 允许你在[会话](/terms/session)中途切换。
 
-[Model providers](/terms/model-provider) ship models in tiers: a large one that's smartest but slow and expensive, and smaller ones that are faster and cheaper but less capable. Picking a tier is a real decision — heavyweight for planning and hard debugging, lightweight for mechanical changes — and harnesses let you switch mid-[session](/terms/session).
+对这个词严格，也让诊断更锋利。"模型不擅长这个"是一个具体的主张——同一个模型换一个 harness、或换一份[上下文](/terms/context)，表现常常完全不同。怪模型之前，先查它拿到了什么：多数令人失望的输出，根子都在上下文或 harness，不在参数。
 
-Being strict about the word also sharpens diagnosis. "The model is bad at this" is a specific claim — the same model in a different harness, or with a different [context](/terms/context), often behaves completely differently. Before blaming the model, check what it was given: most disappointing output traces back to context or harness, not parameters.
+用法：
 
-_Usage:_
+"规划这一步要不要把模型从 Sonnet 换成 Opus？"
 
-"Should we switch the model from Sonnet to Opus for the planning step?"
-
-"Try it — but the harness is doing most of the lifting on this task. The model swap won't help if the [system prompt](/terms/system-prompt) and tools are wrong."
+"可以试——但这个任务上 harness 承担了大部分工作。[系统提示词](/terms/system-prompt)和工具不对的话，换模型没用。"

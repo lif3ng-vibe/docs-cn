@@ -3,22 +3,21 @@ title: "Inference（推理）"
 source: "https://www.aihero.dev/ai-coding-dictionary/inference"
 ---
 
+运行一个训练好的[model](/terms/model)来生成输出——每次[模型提供商请求](/terms/model-provider-request)发生的事。[参数](/terms/parameters)保持冻结；模型只是对给它的[上下文](/terms/context)做[下一 token 预测](/terms/next-token-prediction)。相对[训练](/terms/training)便宜，但按[token](/terms/token)计费，是用一项模型的主要成本。
 
-Running a trained [model](/terms/model) to generate output — what happens on every [model provider request](/terms/model-provider-request). [Parameters](/terms/parameters) stay fixed; the model just does [next-token prediction](/terms/next-token-prediction) over the [context](/terms/context) it's given. Cheap relative to [training](/terms/training), but billed per [token](/terms/token) and the dominant cost of using a model.
+模型的一生分两个阶段：
 
-A model's life splits into two phases:
+| 阶段 | 何时发生 | 做什么 | 参数 |
+| --------- | --- | --- | --- |
+| 训练 | 发布前一次 | 从训练语料产出参数 | 被写入 |
+| 推理 | 任何人每次使用模型 | 用冻结的参数跑你的上下文，生成 token | 只读 |
 
-| Phase     | When it happens                  | What it does                                                    | Parameters    |
-| --------- | -------------------------------- | --------------------------------------------------------------- | ------------- |
-| Training  | Once, before release             | Produces the parameters from a training corpus                  | Being written |
-| Inference | Every time anyone uses the model | Runs the frozen parameters over your context to generate tokens | Read-only     |
+你在推理时做的任何事都不会写回参数——这正是你今天作的纠正明天不粘的原因。下一个[会话](/terms/session)里，在你仔细解释过修法之后又犯同一个错的模型，不是没听你的；它没有能力从这场交流中学习。模型[无状态](/terms/stateless)——连续性必须来自它之外：[上下文窗口](/terms/context-window)或[记忆系统](/terms/memory-system)。
 
-Nothing you do at inference time writes back to the parameters — that's the reason a correction you make today doesn't stick tomorrow. The model that makes the same mistake next [session](/terms/session), after you carefully explained the fix, hasn't ignored you; it's incapable of learning from the exchange. The model is [stateless](/terms/stateless) — continuity has to come from outside it — from the [context window](/terms/context-window) or a [memory system](/terms/memory-system).
+这个机制也解释了账单怎么算。每次请求都在完整上下文上运行模型，所以成本随[输入 token](/terms/input-tokens)和[输出 token](/terms/output-tokens)缩放，一个做几十次[工具](/terms/tool)调用的智能体，每个来回都在为推理付费。这就是上下文体量既是质量问题也是成本问题的原因。
 
-This mechanism also explains how you're billed. Every request runs the model over the full context, so cost scales with [input tokens](/terms/input-tokens) and [output tokens](/terms/output-tokens), and an agent making dozens of [tool](/terms/tool) calls pays for inference on each round trip. This is why context size is a cost question as well as a quality one.
+用法：
 
-_Usage:_
+"为什么账单随用量涨，而不是一个固定的授权费？"
 
-"Why does the bill scale with usage instead of being a flat license?"
-
-"You're paying for inference — every model provider request runs the model on the provider's hardware. Training already happened, but inference costs accrue per request, and a single [turn](/terms/turn) can expand into many requests when tools are called."
+"你付的是推理——每次模型提供商请求都在提供商的硬件上跑模型。训练早就发生了，但推理成本按请求累积，而调用工具时单个[turn](/terms/turn)能膨胀成很多次请求。"

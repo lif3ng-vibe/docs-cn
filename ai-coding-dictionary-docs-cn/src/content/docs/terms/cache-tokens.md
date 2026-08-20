@@ -3,24 +3,23 @@ title: "Cache tokens（缓存 token）"
 source: "https://www.aihero.dev/ai-coding-dictionary/cache-tokens"
 ---
 
+[提供商](/terms/model-provider)从上一次[模型提供商请求](/terms/model-provider-request)缓存下来的[输入 token](/terms/input-tokens)，免得重复处理。连续请求共享前缀时，提供商经[前缀缓存](/terms/prefix-cache)复用工作，把缓存部分按低得多的费率计价。这是让长[会话](/terms/session)付得起的杠杆——没有它，每个[turn](/terms/turn)都要为整个历史重新付费。
 
-[Input tokens](/terms/input-tokens) the [provider](/terms/model-provider) has cached from a previous [model provider request](/terms/model-provider-request) so it doesn't have to re-process them. When consecutive requests share a prefix, the provider reuses the work via its [prefix cache](/terms/prefix-cache) and bills the cached portion at a much lower rate. The lever that makes long [sessions](/terms/session) affordable — without it, every [turn](/terms/turn) re-pays for the whole history.
+要紧的原因在于会话怎么计费。[model](/terms/model)[无状态](/terms/stateless)，所以每次请求重发整个对话——[系统提示词](/terms/system-prompt)、每条消息、每个[工具结果](/terms/tool-result)——作为输入 token。到第 50 轮，每次请求携带 50 轮历史，而你要为全部按全价付费，每次都是。缓存改变这笔数学：提供商在完全相同的前缀里已处理过的 token，按缓存 token 计，通常是输入单价的十分之一或更低。长会话上，你送出的大多是缓存 token，账单才保持清醒。
 
-The reason this matters is how sessions are billed. The [model](/terms/model) is [stateless](/terms/stateless), so every request resends the entire conversation — [system prompt](/terms/system-prompt), every message, every [tool result](/terms/tool-result) — as input tokens. By turn fifty, each request carries fifty turns of history, and you'd pay full rate on all of it, every time. The cache changes the maths: tokens the provider has already processed in an identical prefix are billed as cache tokens, often at a tenth of the input rate or less. On a long session, most of what you send is cache tokens, and the bill stays sane.
+一个例子展示哪些 token 被缓存、哪些不。每个字母代表一段对话内容；每次请求送出至此的对话：
 
-An example shows when tokens are cached and when they're not. Each letter stands for a block of conversation content; each request sends the conversation so far:
+| 请求发送 | 已缓存 | 按全价计 | 原因 |
+| --- | --- | --- | --- |
+| `AB` | 无 | `AB` | 首次请求——没有可匹配的对象 |
+| `ABC` | `AB` | `C` | `AB` 是上次请求的精确前缀 |
+| `ABCD` | `ABC` | `D` | 前缀仍然完好 |
+| `AXCD` | `A` | `XCD` | 一处编辑把 `B` 改成 `X`；匹配在那里失败 |
 
-| Request sends | Cached  | Billed at full rate | Why                                               |
-| ------------- | ------- | ------------------- | ------------------------------------------------- |
-| `AB`          | nothing | `AB`                | First request — nothing to match against          |
-| `ABC`         | `AB`    | `C`                 | `AB` is an exact prefix of the previous request   |
-| `ABCD`        | `ABC`   | `D`                 | Prefix still intact                               |
-| `AXCD`        | `A`     | `XCD`               | An edit changed `B` to `X`; the match fails there |
+缓存以一种特定方式脆弱：它匹配精确前缀。对话更早处若有任何变化——[harness](/terms/harness)重排内容、时间戳更新、文件表示漂移——缓存从该点起失配，其后一切按全输入价计。缓存也在几分钟不活动后过期，长暂停后恢复的会话要为历史重付一次。当会话成本无故跳升时，对着用量报告里的缓存 token 和输入 token 比——缓存破裂最先在那里显形。
 
-The cache is fragile in a specific way: it matches exact prefixes. If anything changes earlier in the conversation — the [harness](/terms/harness) reorders content, a timestamp updates, a file's representation shifts — the cache misses from that point onward and everything after it is billed at full input rate. Caches also expire after a few minutes of inactivity, so a session resumed after a long pause re-pays its history once. When a session's cost jumps without an obvious cause, compare cache tokens to input tokens in the usage report — a broken cache shows up there first.
+用法：
 
-_Usage:_
+"长会话成本太狠——一次重构八美元。"
 
-"Cost on long sessions is brutal — eight bucks for a refactor."
-
-"Check the cache tokens. If the harness is reordering the system prompt or files between turns, the prefix breaks and you re-pay full input rate every request."
+"查缓存 token。如果 harness 在轮间重排系统提示词或文件，前缀断裂，每个请求你都在按全输入价重付。"

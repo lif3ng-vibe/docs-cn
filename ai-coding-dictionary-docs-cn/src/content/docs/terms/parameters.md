@@ -3,15 +3,14 @@ title: "Parameters（参数量）"
 source: "https://www.aihero.dev/ai-coding-dictionary/parameters"
 ---
 
+[model](/terms/model)内部的那些数字——常常数十亿个——在[训练](/terms/training)中调定。模型"知道"的一切都住在里面。训练设定它们；[推理](/terms/inference)原样使用。也叫 _weights_（权重）。
 
-The numbers inside a [model](/terms/model) — often billions of them — tuned during [training](/terms/training). Everything the model "knows" lives in them. Training sets them; [inference](/terms/inference) uses them unchanged. Also called _weights_.
+机制上，参数就是把输入变成输出的东西。[下一 token 预测](/terms/next-token-prediction)是一场巨大的计算：[上下文窗口](/terms/context-window)里的[token](/terms/token)进去，被参数乘过一遍，出来一个对下一个 token 的预测。模型内部没有事实数据库，没有代码查表——只有这些数字，排列得让这场计算倾向于产出有用的输出。模型能从训练里背诵出来的事实，比如某个标准库的 API，是[参数化知识](/terms/parametric-knowledge)：存在参数里，不是从哪里检索来的。
 
-Mechanically, the parameters are what turn input into output. [Next-token prediction](/terms/next-token-prediction) is a giant calculation: the [tokens](/terms/token) in the [context window](/terms/context-window) go in, get multiplied through the parameters, and a prediction for the next token comes out. There is no database of facts inside the model, no code lookup table — just these numbers, arranged so that the calculation tends to produce useful output. Facts the model can recite from training, like a standard library API, are [parametric knowledge](/terms/parametric-knowledge): stored in the parameters, not retrieved from anywhere.
+值得内化的细节是：参数在训练后冻结。你在[会话](/terms/session)里做的任何事都改不了它们——你作的纠正、你给它看的代码库、它该吸取的教训，都不行。每个会话跑在同一套数字上。这正是模型[无状态](/terms/stateless)的原因，是它内置知识止步于[知识截止点](/terms/knowledge-cutoff)的原因，也是项目相关的东西必须经由[上下文](/terms/context)抵达的原因。参数唯一的变更方式是再训练——那实际上产出了另一个模型。
 
-The detail worth internalising is that parameters are frozen after training. Nothing you do in a [session](/terms/session) changes them — no correction you make, no codebase you show it, no mistake it learns from. Every session runs on the same numbers. This is why the model is [stateless](/terms/stateless), why its built-in knowledge stops at the [knowledge cutoff](/terms/knowledge-cutoff), and why anything project-specific has to arrive via [context](/terms/context) instead. The only way parameters change is more training — which produces, in effect, a different model.
+用法：
 
-_Usage:_
+"能不能在我们的代码库上微调它？"
 
-"Can we fine-tune it on our codebase?"
-
-"That'd update the parameters — different model afterwards. For one project it's almost always cheaper to load the codebase as context than to retrain."
+"那会更新参数——之后就是另一个模型了。为一个项目，把代码库当上下文加载，几乎总是比重训练便宜。"

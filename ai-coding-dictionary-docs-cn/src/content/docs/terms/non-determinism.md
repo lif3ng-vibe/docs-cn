@@ -3,17 +3,16 @@ title: "Non-determinism（非确定性）"
 source: "https://www.aihero.dev/ai-coding-dictionary/non-determinism"
 ---
 
+同样的输入可以产出不同的输出。用相同的[上下文](/terms/context)跑一个[model](/terms/model)两次，你可能得到两个不同的答案——有时差一个词，有时是完全不同的思路。你的代码什么都不用改，它也会发生。
 
-The same input can produce different output. Run a [model](/terms/model) twice with identical [context](/terms/context) and you may get two different answers — sometimes a word, sometimes a completely different approach. Nothing in your code has to change for this to happen.
+这是模型生成文本的方式、以及[模型提供商](/terms/model-provider)服务[请求](/terms/model-provider-request)的方式的属性。[推理](/terms/inference)期间，模型在候选下一个[token](/terms/token)上产出一个概率分布，从中采样出一个——通常故意带些随机，因为永远挑最可能的 token 会产出重复、质量低的文本。回答早期一个采样不同的 token，改变它之后的每一个 token，一个不同的词就这样变成一种完全不同的思路。提供商一侧的服务再叠一层变化：请求被批次拼在共享硬件上跑，批次间微小的浮点差异能翻转两个 token 间的势均力敌。没有一个开关能让这一切消失。
 
-It's a property of how models generate text, and how [model providers](/terms/model-provider) serve [requests](/terms/model-provider-request). During [inference](/terms/inference), the model produces a probability distribution over possible next [tokens](/terms/token) and one is sampled from it — usually with some randomness on purpose, since always picking the most likely token produces repetitive, lower-quality text. One differently-sampled token early in a response changes every token after it, which is how a single different word becomes a completely different approach. Provider-side serving adds more variation on top: requests are batched together on shared hardware, and tiny floating-point differences between batches can tip a close call between two tokens. There's no setting you can flip to make it all go away.
+对同一个任务，要预期[agent](/terms/agent)产出一组分布。多数回答落在一条合理的能力正态曲线内——这正是非确定性勉强可容忍的原因——但尾部是真实的：有些天模型手感锋利；有些天它像丢了剧情。同一任务，不同的掷骰。这有两个实际推论。重试是正当策略：一次失败只是分布里的一次抽样，同一任务的全新一抽可能就落得好些。而验证比确定性工具下更要紧——你不能测一次 agent 的行为就指望它复现，所以得靠[自动化检查](/terms/automated-check)去抓住坏抽样。
 
-Expect a spread of results from an [agent](/terms/agent) on the same task. Most responses fall within a reasonable bell curve of quality — that's why the non-determinism is tolerable at all — but the tails are real: some days the model will feel sharp; some days it'll feel like it's lost the plot. Same task, different rolls of the dice. This has two practical consequences. Retrying is a legitimate strategy: a failed attempt is one draw from the distribution, and a fresh attempt at the same task may simply land better. And verification matters more than it would with deterministic tools — you can't test an agent's behaviour once and rely on it repeating, so [automated checks](/terms/automated-check) have to catch the bad draws.
+小心别过度叙事。人类是模式匹配机器，连着几把坏运行会被感觉成"模型这周变差了"的证据。通常那只是分布。
 
-Be careful not to over-narrativize this. Humans are pattern-matching machines, and a string of bad runs can feel like proof that "the model got worse this week." Usually it's just the distribution.
+用法：
 
-_Usage:_
+"Claude 今天糟透了。他们是不是发了更差的版本？"
 
-"Claude has been awful today. Did they ship a worse version?"
-
-"Probably not — model output is non-deterministic. You're going to have good days and bad days on the same task. Try again tomorrow before you go looking for a cause."
+"多半不是——模型输出是非确定的。同一个任务你有好日子有坏日子。先重试，明天再找原因。"

@@ -3,19 +3,18 @@ title: "Token（词元）"
 source: "https://www.aihero.dev/ai-coding-dictionary/token"
 ---
 
+[model](/terms/model)读和写的原子单位。大致词级但不精确——常见词是一个 token，罕见或长的词拆成几个。[上下文窗口](/terms/context-window)大小、成本、延迟全以 token 计。
 
-The atomic unit a [model](/terms/model) reads and writes. Roughly word-sized but not exactly — common words are one token, rare or long ones split into several. [Context window](/terms/context-window) size, cost, and latency are all counted in tokens.
+文本经分词器变成 token：一个固定词表，数万个片段，在[训练](/terms/training)之前学得，把任何输入切成一串词表条目。模型从不看见字符或单词——每段文本进门前被转成 token，出门时[下一 token 预测](/terms/next-token-prediction)一次吐一个 token。
 
-Text becomes tokens via a tokenizer: a fixed vocabulary of tens of thousands of fragments, learned before [training](/terms/training), that splits any input into a sequence of vocabulary entries. The model never sees characters or words — every piece of text is converted to tokens on the way in, and [next-token prediction](/terms/next-token-prediction) produces output one token at a time on the way out.
+经验上，一个 token 约等于四分之三个英文单词，一千 token 约 750 词。代码没那么好预测：常见关键字和惯用法分得很紧凑，而生成的标识符、哈希、base64 块、压缩产物，一个"词"拆成很多 token。规律是：在分词器源材料里频繁出现过的文本，拿到短而高效的编码；没出现过的被剁成很多小块。像 `a3f9c2e1` 这样的哈希从没在任何地方出现过，所以拆成很多 token；`function` 是一个。这就是一个看着不大、装满怪异字符串的文件，能出人意料地占掉一大块上下文窗口的原因。
 
-As a rule of thumb, a token is about three-quarters of an English word, so a thousand tokens is roughly 750 words. Code is less predictable: common keywords and idioms tokenize compactly, while generated identifiers, hashes, base64 blobs, and minified output split into many tokens per "word". The pattern: text that appeared often in the tokenizer's source material gets short, efficient encodings; text that didn't gets chopped into many small pieces. A hash like `a3f9c2e1` never appeared anywhere, so it splits into many tokens, while `function` is one. This is why a small-looking file full of unusual strings can occupy a surprising share of the context window.
+Token 是衡量其余一切的计量单位。成本按 token 算——提供商对[输入 token](/terms/input-tokens)和[输出 token](/terms/output-tokens)分开计价。速度是每秒 token 数，因为输出一次生成一个。而上下文窗口是固定数量的 token，所以你文件的 token 数决定了装得下多少。
 
-Tokens are the unit everything else is measured in. Cost is per token — providers bill [input tokens](/terms/input-tokens) and [output tokens](/terms/output-tokens) separately. Speed is tokens per second, since output is generated one token at a time. And the context window is a fixed number of tokens, so the token count of your files decides how much fits.
+避免："word"——token 边界不按词边界走，而每秒 token 数、每美元 token 数才是真正要紧的计量。
 
-_Avoid:_ "word" — token boundaries don't match word boundaries, and tokens-per-second / tokens-per-dollar are the units that actually matter.
+用法：
 
-_Usage:_
+"这个提示词大概多大？"
 
-"How big is this prompt going to be?"
-
-"Run it through the tokenizer — the schema's compact but the JSON keys are weird, so they'll split into more tokens than you think."
+"过一遍分词器——schema 紧凑，但 JSON 键名怪，拆出来的 token 会比你以为的多。"

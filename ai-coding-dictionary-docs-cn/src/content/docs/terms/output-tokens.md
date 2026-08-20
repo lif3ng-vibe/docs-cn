@@ -3,15 +3,14 @@ title: "Output tokens（输出 token）"
 source: "https://www.aihero.dev/ai-coding-dictionary/output-tokens"
 ---
 
+[model](/terms/model)生成回来的[token](/terms/token)。计价高于[输入 token](/terms/input-tokens)——通常约五倍——因为产出的算力成本更高。
 
-[Tokens](/terms/token) the [model](/terms/model) generates back. Billed at a higher rate than [input tokens](/terms/input-tokens) — commonly around five times the rate — since they cost more compute to produce.
+模型写的一切都算：你读的行文、它吐的代码、[工具调用](/terms/tool-call)、以及回答前做的任何扩展思考。最后这项让人意外——推理 token 按输出计费，哪怕[harness](/terms/harness)常常不给你看；而调高[用力度](/terms/effort)花掉更多这类 token。
 
-Everything the model writes counts: the prose you read, the code it emits, [tool calls](/terms/tool-call), and any extended thinking the model does before answering. That last one surprises people — reasoning tokens are billed as output even when the [harness](/terms/harness) often doesn't show them to you, and turning up [effort](/terms/effort) spends more of them.
+输出 token 也定[会话](/terms/session)的节奏。模型读输入快，产出却一次一个 token，所以当一个[turn](/terms/turn)感觉慢时，几乎总是输出在写，不是输入在读。漫长的等待通常意味着漫长的回答在路上。
 
-Output tokens also set the pace of a [session](/terms/session). The model reads input quickly but generates output one token at a time, so when a [turn](/terms/turn) feels slow, it's almost always the output being written, not the input being read. A long wait usually means a long answer is coming.
+用法：
 
-_Usage:_
+"重构会话的积分烧得飞快，输入明明很小。"
 
-"The refactor session is burning through credit even though the inputs are small."
-
-"Agent's rewriting whole files instead of patching. Output tokens cost roughly five times the input rate — get it emitting edits and the bill drops."
+"agent 在整文件重写而不是打补丁。输出 token 约五倍于输入单价——让它改成吐编辑，账单就掉下来。"

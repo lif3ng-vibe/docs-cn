@@ -3,15 +3,14 @@ title: "Input tokens（输入 token）"
 source: "https://www.aihero.dev/ai-coding-dictionary/input-tokens"
 ---
 
+[harness](/terms/harness)在每次[模型提供商请求](/terms/model-provider-request)送出的[token](/terms/token)——[系统提示词](/terms/system-prompt)、对话历史、[工具结果](/terms/tool-result)，[model](/terms/model)动笔之前读到的一切。计价低于[输出 token](/terms/output-tokens)，因为处理它们比处理输出便宜。
 
-[Tokens](/terms/token) the [harness](/terms/harness) sends on each [model provider request](/terms/model-provider-request) — the [system prompt](/terms/system-prompt), the conversation history, [tool results](/terms/tool-result), everything the [model](/terms/model) reads before it writes. Billed at a lower rate than [output tokens](/terms/output-tokens), because they are less expensive to process than output tokens.
+做[AI](/terms/ai)编码时，输入 token 构成账单的大头。模型[无状态](/terms/stateless)，所以每个[turn](/terms/turn)都把整个[会话](/terms/session)重发为输入：你的第一条消息、此后的每个回答、每个工具结果。第 50 轮的输入包含此前 49 轮。单独一次模型提供商请求可能只产出几百个输出 token，却重发十万条积累历史的输入 token。
 
-When doing [AI](/terms/ai) coding, input tokens make up most of your bill. The model is [stateless](/terms/stateless), so each [turn](/terms/turn) re-sends the entire [session](/terms/session) as input: your first message, every response, every tool result since. The input for turn fifty contains the previous forty-nine turns. A single model provider request might produce a few hundred output tokens but re-send a hundred thousand input tokens of accumulated history.
+[前缀缓存](/terms/prefix-cache)压低这笔成本：与上次请求精确吻合的历史，按便宜的[缓存 token](/terms/cache-tokens)计费，而非全价输入。输入还是贵得疼时，解法是缩小重发的量——任务之间[清空](/terms/clearing)或[压缩](/terms/compaction)。
 
-The [prefix cache](/terms/prefix-cache) reduces the cost: history that exactly matches a previous request is billed as cheap [cache tokens](/terms/cache-tokens) rather than full-price input. When input costs still hurt, the fix is to shrink what gets re-sent — [clearing](/terms/clearing) or [compacting](/terms/compaction) between tasks.
+用法：
 
-_Usage:_
+"账单很高，可[agent](/terms/agent)几乎没写什么。"
 
-"Bill's high but the [agent](/terms/agent)'s barely writing anything."
-
-"It's the input tokens — every turn re-sends the whole session. Without the prefix cache you re-pay for the history each request."
+"是输入 token——每轮重发整个会话。没有前缀缓存的话，每次请求你都在为历史重新付费。"
