@@ -3,100 +3,100 @@ title: "implement：按规格实现"
 source: "https://www.aihero.dev/skills-implement"
 ---
 
-## What it does
+## 它做什么
 
-`implement` builds work that has already been decided. You point it at a [ticket](https://www.aihero.dev/ai-coding-dictionary/ticket), a [spec](https://www.aihero.dev/ai-coding-dictionary/spec), or the plan you just agreed in the conversation, and it writes the code, drives [tdd](/engineering/tdd) at the seams, typechecks as it goes, runs [code-review](/engineering/code-review) at the end, and commits to the current branch.
+`implement` 构建已经定好的工作。你把它指向一张[工单（ticket）](https://www.aihero.dev/ai-coding-dictionary/ticket)、一份[规格（spec）](https://www.aihero.dev/ai-coding-dictionary/spec)，或你刚在对话里谈定的计划，它就写代码、在接缝（seam）处驱动 [tdd](/engineering/tdd)、边做边跑类型检查、最后跑 [code-review](/engineering/code-review)，并提交到当前分支。
 
-It never reopens the plan. There is no interview, no clarifying round, no proposal of a different approach. Whatever was settled upstream is the input, and the skill's whole job is to turn that into a commit. That is what separates it from typing "build this" at a fresh [agent](https://www.aihero.dev/ai-coding-dictionary/agent), which will happily redesign the work while it builds it.
+它从不重开计划。没有访谈，没有澄清轮次，也不会提议另一种方案。上游敲定的一切就是输入，这个技能的全部工作就是把它变成一个 commit。这也是它与对着一个全新[智能体（agent）](https://www.aihero.dev/ai-coding-dictionary/agent)敲一句 “build this” 的区别——后者会一边施工一边兴致勃勃地把方案重新设计一遍。
 
-## When to reach for it
+## 什么时候该用它
 
-You invoke this by typing `/implement` yourself: the agent won't reach for it on its own. It ships with `disable-model-invocation: true`, so no other skill can call it either. Wherever [ask-matt](/engineering/ask-matt) or [to-tickets](/engineering/to-tickets) says "then `/implement` per ticket", that is an instruction to you, not something the agent will do unprompted.
+你要自己输入 `/implement` 来调用：智能体不会主动用它。它自带 `disable-model-invocation: true`，所以其他技能也无法调用它。凡是 [ask-matt](/engineering/ask-matt) 或 [to-tickets](/engineering/to-tickets) 说“然后每张工单 `/implement`”的地方，那都是给你的指令，不是智能体会自觉去做的事。
 
-Where the work currently lives decides whether this is the right skill:
+工作现在待在哪，决定这是不是对的技能：
 
-| The work is… | Reach for |
+| 工作是…… | 该用什么 |
 | --- | --- |
-| A ticket on the tracker | `/implement #42`, one ticket per [session](https://www.aihero.dev/ai-coding-dictionary/session), [clearing](https://www.aihero.dev/ai-coding-dictionary/clearing) context between tickets |
-| A spec, not yet split up, and the build spans sessions | [to-tickets](/engineering/to-tickets) first, then `/implement` per ticket |
-| A spec, and the build is small | `/implement` directly against the spec |
-| Only in the conversation you just had, and it's still small | `/implement` right there, in the same window |
-| Not written down anywhere yet | [grill-with-docs](/engineering/grill-with-docs), or [grill-me](/productivity/grill-me) if there's no codebase |
-| One concrete behaviour you want test-first, with no spec | [tdd](/engineering/tdd) directly |
-| Already built, and you want it checked | [code-review](/engineering/code-review) directly |
+| 追踪器上的一张工单 | `/implement #42`，一张工单一个[会话（session）](https://www.aihero.dev/ai-coding-dictionary/session)，工单之间[清空（clearing）](https://www.aihero.dev/ai-coding-dictionary/clearing)上下文 |
+| 一份规格，还没拆，且构建跨会话 | 先 [to-tickets](/engineering/to-tickets)，然后每张工单 `/implement` |
+| 一份规格，且构建很小 | 直接对着规格 `/implement` |
+| 只在你刚进行的对话里，且规模还小 | 就地 `/implement`，同一个窗口里 |
+| 还哪儿都没写下来 | [grill-with-docs](/engineering/grill-with-docs)，没有代码库则用 [grill-me](/productivity/grill-me) |
+| 一个想测试先行、没有规格的具体行为 | 直接 [tdd](/engineering/tdd) |
+| 已经建好了，你想检查它 | 直接 [code-review](/engineering/code-review) |
 
-The same-session case is worth naming because the skill's own first line doesn't cover it. `SKILL.md` says "the spec or tickets", which nudges the [model](https://www.aihero.dev/ai-coding-dictionary/model) to go hunting for a file that doesn't exist. If the plan lives only in the thread, say so when you invoke it.
+“同会话”这种情况值得一提，因为技能自己的第一行没覆盖它。`SKILL.md` 说的是 “the spec or tickets”，这会引着[模型（model）](https://www.aihero.dev/ai-coding-dictionary/model)去猎取一个并不存在的文件。如果计划只存在于线程里，调用时就直说。
 
-## Prerequisites
+## 前置条件
 
-`implement` commits to the branch you are on. It does not create one, and it does not ask. Check you are on the branch you want the work on before you start.
+`implement` 提交到你当前所在的分支。它不建分支，也不问。开工前确认自己就在想让这份工作落上去的那个分支上。
 
-If the tickets came from [to-tickets](/engineering/to-tickets), the tracker they live on was configured by [setup-matt-pocock-skills](/engineering/setup-matt-pocock-skills). `code-review` reads the same configuration to find the originating spec at close-out.
+如果工单来自 [to-tickets](/engineering/to-tickets)，它们所在的追踪器就是由 [setup-matt-pocock-skills](/engineering/setup-matt-pocock-skills) 配置的。`code-review` 收尾时读同一份配置，找到最初那份规格。
 
-## What one run does
+## 一次运行做什么
 
-A run is five beats, in order:
+一次运行是五个节拍，依序：
 
-1. Read the ticket or spec and work out the seams.
-2. Drive [tdd](/engineering/tdd) at the pre-agreed seams, one red-green slice at a time.
-3. Typecheck often, run single test files as it goes.
-4. Run the full test suite once, at the end.
-5. Run [code-review](/engineering/code-review), then commit to the current branch.
+1. 读工单或规格，理出接缝。
+2. 在事先约定的接缝上驱动 [tdd](/engineering/tdd)，一次一个红-绿（red-green）切片。
+3. 频繁类型检查，边做边跑单个测试文件。
+4. 完整测试套件只在最后跑一次。
+5. 跑 [code-review](/engineering/code-review)，然后提交到当前分支。
 
-One run covers one ticket. The tickets [to-tickets](/engineering/to-tickets) produces are tracer-bullet vertical slices sized to fit a single fresh [context window](https://www.aihero.dev/ai-coding-dictionary/context-window), so the intended rhythm is: clear context, implement one ticket, commit, clear again. Each ticket is self-contained, which is what makes the previous ticket's context disposable.
+一次运行覆盖一张工单。[to-tickets](/engineering/to-tickets) 产出的工单是曳光弹（tracer bullet）式的垂直切片（vertical slice），体量按单个全新[上下文窗口（context window）](https://www.aihero.dev/ai-coding-dictionary/context-window)裁剪，所以预期的节奏是：清空上下文，实现一张工单，提交，再清空。每张工单自包含，正因如此，上一张工单的上下文才是可丢弃的。
 
-## Pre-agreed seams
+## 事先约定的接缝
 
-The idea the skill runs on is the **seam**: the public boundary you observe behaviour at, without reaching inside. Tests live at seams. Working at a seam agreed before any code is written is what keeps the tests durable, because the implementation underneath can be rewritten without the tests moving.
+这个技能赖以运转的概念是**接缝（seam）**：你在其上观察行为的公共边界，而不伸进内部。测试住在接缝上。在写任何代码之前就约定好的接缝上工作，正是让测试耐久的原因，因为底下的实现可以整个重写而测试不动。
 
-The word "pre-agreed" is doing real work, and it is also the skill's weakest joint. Nothing inside `implement` agrees the seams. `tdd` is the skill that asks, and it refuses to write a test at an unconfirmed seam. So in practice the agreement happens either upstream in the spec, or in the first exchange of the run. If it happens nowhere, the precondition never fires and the run quietly becomes "just write the code". Naming the seams in the spec is what stops that.
+“事先约定”这四个字承担着实际功能，也是这个技能最薄弱的关节。`implement` 内部没有任何东西去约定接缝。发问的是 `tdd`，它拒绝在未经确认的接缝上写测试。所以实践中，约定要么发生在上游的规格里，要么发生在运行的头几个来回里。如果哪儿都没发生，前置条件永不触发，运行就悄悄变成“直接写代码吧”。在规格里点名接缝，正是为了拦住这一点。
 
-## Common questions
+## 常见问题
 
-**It finished, but my ticket is still open and the acceptance criteria are still unchecked.**
+**它跑完了，可我的工单还开着，验收标准也还没勾。**
 
-Correct, and expected. `implement` has no completion step. It ends at the commit and never touches the work item, confirmed on GitHub Issues and on the local markdown tracker, so it is not a tracker integration problem. It also does not act on the findings `code-review` produced, and does not tick the `- [ ]` boxes on the originating issue. Close the ticket and reconcile the criteria yourself. This bites hardest on a dependency chain, because `to-tickets` defines the frontier as tickets whose blockers are all closed. If nothing gets closed, nothing ever becomes visibly unblocked.
+对，而且符合预期。`implement` 没有收尾步骤。它止于 commit，从不碰工作项——GitHub Issues 和本地 markdown 追踪器上都已确认，所以这不是追踪器集成的问题。它也不处置 `code-review` 产出的发现，不去勾最初那张工单上的 `- [ ]` 框。关工单、对账验收标准，都由你自己来。这在依赖链上咬得最狠，因为 `to-tickets` 把前线（frontier）定义为阻塞项全部关闭的那些工单。什么都不关，就永远没有任何东西看起来被解锁了。
 
-**Can I point it at all my tickets at once, or run several in parallel?**
+**我能把它对准全部工单一次跑，或者并行跑好几个吗？**
 
-No. One invocation, one ticket. Batch dispatch across a ticket queue and [subagent](https://www.aihero.dev/ai-coding-dictionary/subagent) fan-out are both requested repeatedly, and neither exists. Running several `/implement` sessions side by side in one checkout is worse than unsupported: one field report describes a `git commit --amend` in one session landing on another session's commit, a stash vanishing from `refs/stash`, and commits landing on the wrong branch, all in a single afternoon across three issues. The sessions share one working directory, one index, and one HEAD. Git worktrees are the community workaround, and note that `refs/stash` is shared across worktrees too, so worktrees alone do not fix the stash case. If you want parallelism today, you are assembling it yourself.
+不能。一次调用，一张工单。跨工单队列的批量派发和[子智能体（subagent）](https://www.aihero.dev/ai-coding-dictionary/subagent)扇出都有人反复要，两者都不存在。在同一个检出里并排跑多个 `/implement` 会话，比“不支持”更糟：一份实地报告描述过，一个会话里的 `git commit --amend` 落到了另一个会话的 commit 上，一个 stash 从 `refs/stash` 里消失，commit 落上了错误的分支——这一切发生在同一个下午、横跨三张工单。这些会话共享同一个工作目录、同一个 index、同一个 HEAD。Git worktree 是社区的变通办法，但注意 `refs/stash` 也是跨 worktree 共享的，所以光靠 worktree 解决不了 stash 那种情况。今天想要并行，就得自己动手拼。
 
-**Can it open a pull request instead of committing?**
+**它能不开 commit、改开 pull request 吗？**
 
-Not built in. It commits straight to the current branch, which several people find too eager: the code lands before they have had a chance to verify it works. There is no configuration flag and no PR mode. People override it in the invocation ("commit to a branch and open a PR") or by editing their local copy of the skill.
+没有内置。它直接提交到当前分支，好几个人觉得这太急了：代码还没等他们验证能不能用就落了地。没有配置开关，也没有 PR 模式。大家的变通是在调用时改口（“提交到一个分支并开一个 PR”），或者改自己本地那份技能。
 
-**`code-review` says it cannot see my changes.**
+**`code-review` 说看不到我的改动。**
 
-`code-review` reviews `git diff <fixed-point>...HEAD`, which excludes staged and working-tree changes. `implement` runs it before committing, so unless an interim commit already exists there is nothing in that diff to review. Multiple people have reported this and it is unfixed on both sides. Commit first, then review against the point you branched from.
+`code-review` 评审的是 `git diff <fixed-point>...HEAD`，不含已暂存和工作区的改动。`implement` 在提交前运行它，所以除非已经存在一个中间 commit，那个 diff 里没什么可评审的。多人报告过，双方都没修。先提交，再对照你切分支的那个点做评审。
 
-Separately, some people deliberately do not want the review inside the run at all, because an agent reviewing the code it just wrote is biased toward its own solution. Running [code-review](/engineering/code-review) in a fresh session against a fixed point is a legitimate alternative, and is the same reason that skill runs its two axes in separate sub-agents.
+另一层：有人刻意根本不想要评审发生在运行内部，因为智能体评审自己刚写的代码时，会偏向自己的解法。在一个全新会话里对照某个固定点跑 [code-review](/engineering/code-review) 是正当的替代方案——那个技能把自己的两条轴放进分开的子智能体里跑，也是同一个原因。
 
-**One ticket burned 150k tokens. Am I using it wrong?**
+**一张工单烧掉 150k token。是我用错了吗？**
 
-Probably the ticket is too big rather than the skill being misused. A run does codebase exploration, a red-green loop per seam, a full suite, and a review, so a non-trivial ticket exceeding 100k [tokens](https://www.aihero.dev/ai-coding-dictionary/token) is normal rather than a sign something broke. The lever is upstream: right-size the tickets in [to-tickets](/engineering/to-tickets) so each fits one fresh window. If a single ticket keeps blowing out, split it rather than raising the [effort](https://www.aihero.dev/ai-coding-dictionary/effort) level.
+多半是工单太大，而不是技能被误用。一次运行要做代码库勘察、每个接缝一轮红-绿循环、完整套件、外加一次评审，所以一张不小的工单超过 100k [token](https://www.aihero.dev/ai-coding-dictionary/token) 属于正常，不是出了故障的信号。杠杆在上游：在 [to-tickets](/engineering/to-tickets) 里把工单裁到合适体量，让每张都装进一个全新窗口。单张工单老是爆，就拆它，而不是调高[用力度（effort）](https://www.aihero.dev/ai-coding-dictionary/effort)。
 
-**`/implement #2` in a fresh session worked on something completely unrelated.**
+**全新会话里 `/implement #2` 做了一件完全不相关的事。**
 
-`#2` is resolved against whatever numbered list the agent can see, which in a fresh session may be a todo file, a checklist, or another work list rather than the configured tracker. The resolution is confident rather than fail-closed, so the mistake is not obvious until it has started. Pass the full reference, the issue URL or `owner/repo#2`, and ask it to confirm the title back before it begins.
+`#2` 是对着智能体当时看得见的随便哪张编号清单解析的，在全新会话里，那可能是一个 todo 文件、一张核对清单，或别的什么工作清单，而不是配置好的追踪器。这个解析自信满满，而不是失败即停，所以错误在它开工之前并不明显。传入完整引用——工单 URL 或 `owner/repo#2`——并让它开工前先把标题复述给你确认。
 
-## It's working if
+## 怎么算正常工作
 
-- The session opens by reading the ticket or spec and restating what it will build, rather than asking you what to build.
-- You can see an actual `/tdd` invocation in the trace, not just tests appearing in the diff.
-- Typechecks and single test files run repeatedly during the run, and the full suite runs once near the end.
-- The run reaches a commit on your current branch without you prompting it to carry on.
-- The diff is one ticket's worth of change: a vertical slice through every layer, not several tickets swept together.
+- 会话开场先读工单或规格、复述它要构建什么，而不是反过来问你构建什么。
+- 你能在轨迹里看到货真价实的 `/tdd` 调用，而不只是 diff 里凭空冒出的测试。
+- 运行期间类型检查和单个测试文件反复执行，完整套件在临近结尾跑一次。
+- 不用你催它继续，运行自己走到当前分支上的一个 commit。
+- diff 恰是一张工单的体量：一条纵贯各层的垂直切片，而不是几张工单扫在一起。
 
-## Where it fits
+## 它在整体中的位置
 
-`implement` is the build step of the main chain, second from the end:
+`implement` 是主链路的构建步骤，倒数第二：
 
 ```txt
 grill-with-docs → to-spec → to-tickets → implement → code-review
 ```
 
-Its neighbours are [to-tickets](/engineering/to-tickets), which produces the tickets it consumes and declares the blocking edges that decide their order; [tdd](/engineering/tdd), which it drives internally at each seam; and [code-review](/engineering/code-review), which it runs before committing. It sits downstream of the planning skills and trusts them. It does not re-validate the shape of what it was handed, so a badly-structured map or a horizontally-layered ticket gets built as written.
+它的邻居是 [to-tickets](/engineering/to-tickets)，产出它消费的工单、声明决定先后顺序的阻塞边；[tdd](/engineering/tdd)，它在每条接缝上内部驱动；以及 [code-review](/engineering/code-review)，提交前运行。它位于规划类技能的下游，并且信任它们。它不会重新校验交到手里的东西的形状，所以一张结构糟糕的地图或按层横切的工单会照着写的样子被建出来。
 
-That trust is why [wayfinder](/engineering/wayfinder) merges onto the chain at [to-spec](/engineering/to-spec) rather than looping its map straight into `implement`. Go straight to `implement` from a map only when the effort turned out genuinely small.
+正是这份信任，[wayfinder](/engineering/wayfinder) 才在 [to-spec](/engineering/to-spec) 处汇入链路，而不是把自己的地图直接绕进 `implement`。只有当工作量事后证明确实很小，才从地图直接进 `implement`。
 
-[ask-matt](/engineering/ask-matt) is the router over the whole set when you are not sure which flow you are in.
+拿不准自己身处哪条流程时，[ask-matt](/engineering/ask-matt) 是整个技能集的路由器。

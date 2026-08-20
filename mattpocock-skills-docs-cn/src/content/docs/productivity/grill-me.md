@@ -3,79 +3,79 @@ title: "grill-me：追问到底"
 source: "https://www.aihero.dev/skills-grill-me"
 ---
 
-## What it does
+## 它是做什么的
 
-`grill-me` takes a **loose idea** and interviews you until you can commit to it. You do not need a worked-out plan to start: producing one is what the [session](https://www.aihero.dev/ai-coding-dictionary/session) is for. It asks in **rounds**: each round is the whole **frontier** (every question whose prerequisites you have already settled), so you are never asked something that hinges on an answer it hasn't heard yet.
+`grill-me` 拿来一个**松散的想法**，然后访谈你，直到你能对它做出承诺。你不需要先有一份想清楚的方案才能开始：把方案问出来，正是这场[会话](https://www.aihero.dev/ai-coding-dictionary/session)的用途。它按**轮（round）**提问：每一轮都是完整的**前沿（frontier）**（前置问题已被你敲定的全部问题），所以你永远不会被问到某个取决于它还没听到的答案的问题。
 
-It is **[stateless](https://www.aihero.dev/ai-coding-dictionary/stateless)**. It writes no files and leaves no workspace behind. The only thing it leaves is a sharper version of the idea, in your own head.
+它是**[无状态](https://www.aihero.dev/ai-coding-dictionary/stateless)**的。不写任何文件，也不留下任何工作区。它唯一留下的，是一个变得更锐利的想法版本，就在你自己的脑子里。
 
-## When to reach for it
+## 何时该用它
 
-You invoke this by typing `/grill-me`; the [agent](https://www.aihero.dev/ai-coding-dictionary/agent) won't reach for it on its own. Start it in a **fresh conversation**, not on top of a plan you already had an agent write.
+敲 `/grill-me` 由你来调用；[智能体](https://www.aihero.dev/ai-coding-dictionary/agent)不会自己主动去用它。在**全新的对话**里启动它，而不是在一份你已经让智能体写好的方案之上叠加。
 
-Reach for it as soon as you have an idea worth taking seriously (a feature, a product direction, a business call, a piece of writing), and long before you have worked out what it involves. Vagueness is not a reason to wait; it is the thing the session eats. If you can already specify the thing precisely, you don't need to grill it.
+只要你有了一个值得认真对待的想法（一个功能、一个产品方向、一个业务决策、一篇文章），就该用它——而且要远在你想清楚它涉及什么之前。模糊不是等待的理由；模糊恰恰是这场会话要吃掉的东西。如果你已经能把这件事描述得很精确，那就不需要追问它。
 
-Which of the three grilling skills you want depends on what is in front of you:
+三个追问技能该选哪个，取决于你眼前是什么：
 
-- **Anything, anywhere**: `grill-me`. It needs no repo and writes no files, and the subject doesn't have to be code.
-- **A codebase to align against**: [grill-with-docs](/engineering/grill-with-docs). The same interview, but [stateful](https://www.aihero.dev/ai-coding-dictionary/stateful): it reads your code and keeps what it learns in `CONTEXT.md` and ADRs.
-- **Too big for one session**: [wayfinder](/engineering/wayfinder). It charts the effort as a map and runs grilling sessions inside it.
+- **任何事、任何地方**：`grill-me`。它不需要仓库，不写文件，主题也不必是代码。
+- **要对齐一个代码库**：[grill-with-docs](/engineering/grill-with-docs)。同一场访谈，但[有状态](https://www.aihero.dev/ai-coding-dictionary/stateful)：它会读你的代码，并把学到的东西保存在 `CONTEXT.md` 和 ADR 里。
+- **大到一场会话装不下**：[wayfinder](/engineering/wayfinder)。它把这项工作绘成一张地图，并在其中运行追问会话。
 
-Leave [plan mode](https://www.aihero.dev/ai-coding-dictionary/agent-mode) off. Plan mode primes the agent to rush toward producing a plan, which is the opposite of staying in inquiry.
+把[计划模式](https://www.aihero.dev/ai-coding-dictionary/agent-mode)关掉。计划模式会让智能体一门心思奔向产出方案，这与待在探询之中恰好相反。
 
-## It's a conversation, not an interview
+## 这是对话，不是访谈
 
-The skill asks the questions, but **you** own the scope. That is the part people miss, and it separates a session that turns an idea into decisions from one that produces confident nonsense.
+问题由技能来问，但**你**才是范围的主人。这是人们最容易漏掉的一点，也是"把想法变成决策的会话"与"产出自信满满的胡话的会话"之间的分界线。
 
-The failure mode is **passivity**: answering "agreed, agreed, agreed" for forty questions and coming out with a plan the agent wrote and you nodded at. It feels productive because it was long. Nothing was actually decided, and the result carries a certainty it hasn't earned.
+失败模式是**被动**：对四十个问题一路答"同意、同意、同意"，最后拿着一份智能体写的、你点过头的方案。它显得有产出，因为它很长。实际上什么都没有被决定，而结果带着一份自己没挣来的确定性。
 
-Being active means steering. Push back on a question pitched beneath the fidelity you need. Say when the scope is drifting. Answer "I don't know" and mean it. This skill is built to aid an engineer, not to replace one: what comes out tracks the quality of your answers, not the number of questions asked.
+主动意味着掌舵。问题问得太粗、低于你需要的精度时，顶回去。范围在漂移时，说出来。回答"我不知道"，并且当真。这个技能是用来辅助工程师的，不是取代工程师的：产出什么，取决于你回答的质量，而不是提问的数量。
 
-The opposite error is real but rarer: staying in the interview so long you never reach code.
+反方向的错误也存在，只是更少见：在访谈里待太久，以至于永远到不了代码。
 
-## Grillable and ungrillable
+## 可追问与不可追问
 
-Some questions can be answered by talking. Others can't, and no amount of grilling will get you there.
+有些问题靠谈就能回答。另一些不能——追问多少遍也到不了那里。
 
-"One long form or three pages?" and "how should this interaction feel?" are **ungrillable**: they need something to react to. When you hit one, stop grilling. Build the throwaway version with [prototype](/engineering/prototype), look at it, then come back and answer in one line.
+"一个长表单还是三个页面？"和"这个交互应该是什么手感？"是**不可追问的**：它们需要有东西可以对着反应。撞上一个时，停下追问。用 [prototype](/engineering/prototype) 做出用完即弃的版本，看一眼，然后回来用一句话回答。
 
-Talking your way through an ungrillable question is where sessions balloon. The agent keeps rephrasing, you keep guessing, and the scope grows to fill the uncertainty.
+靠谈话硬磨一个不可追问的问题，正是会话膨胀失控的地方。智能体不停换措辞，你不停猜，范围就一直长，直到把不确定性填满为止。
 
-## It's working if
+## 怎样算生效
 
-- You disagree with something. A session with no pushback from you is a session you didn't need.
-- Questions arrive in a few rounds rather than one long drip, and later rounds clearly build on what you said earlier.
-- You end up somewhere you didn't expect, because a question surfaced a decision you had been making implicitly.
-- At the end you could defend each choice to someone who wasn't there.
+- 你对某些东西不同意。一场你没有顶撞过的会话，是一场你本来不需要的会话。
+- 问题分几轮到达，而不是一条接一条地挤牙膏，且后面的轮明显建立在你先前所说的基础上。
+- 你最后落在了没料到的地方，因为某个问题翻出了一个你一直隐式做出的决策。
+- 结束时，你能够向一个不在场的人捍卫每一个选择。
 
-## Common questions
+## 常见问题
 
-**How many questions should I expect, and how do I know when it ends?**
-Count rounds, not questions. Forty-six questions across four rounds is an ordinary session. It ends when the frontier is empty: every branch visited, nothing left silently assumed.
+**我该预期多少个问题？怎么知道它什么时候结束？**
+数轮数，别数问题数。四轮四十六问，是一场普通的会话。它在前沿清空时结束：每个分支都走到了，没有任何东西被默默假设。
 
-**It asked me two hundred questions. What went wrong?**
-Usually the scope was too large. Ask the agent to break the work into smaller pieces first, then grill each one. Very long sessions also drift into the **[dumb zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**, where the [context window](https://www.aihero.dev/ai-coding-dictionary/context-window) is full enough that the questions get worse.
+**它问了我两百个问题。哪里出了问题？**
+通常是范围太大了。先让智能体把工作拆小，再逐个追问。超长的会话还会漂进**[愚钝区](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**（dumb zone）：[上下文窗口](https://www.aihero.dev/ai-coding-dictionary/context-window)已经满到让问题开始变差的地步。
 
-**Can I go back to one question at a time?**
-Yes. Add this to your global `CLAUDE.md`:
+**能不能回到一次只问一个问题？**
+可以。把这行加进你的全局 `CLAUDE.md`：
 
 ```
 When grilling, ask one question at a time.
 ```
 
-**What if I genuinely don't know the answer?**
-Say so. "I don't know" is a real answer, and a question you can't answer is usually a sign to prototype rather than to guess.
+**如果我真的不知道答案呢？**
+直说。"我不知道"是一个真实的回答，而一个你回答不了的问题，通常是需要做原型而不是瞎猜的信号。
 
-**Do I start a fresh session before writing the spec?**
-No. The value of the session is the [context](https://www.aihero.dev/ai-coding-dictionary/context) you just built. Hand the same conversation straight to [to-spec](/engineering/to-spec).
+**写规格（spec）之前，要不要新开一场会话？**
+不要。这场会话的价值恰恰是你刚刚建立的[上下文](https://www.aihero.dev/ai-coding-dictionary/context)。把同一段对话直接交给 [to-spec](/engineering/to-spec)。
 
-**Does the model matter?**
-More than for most skills. Grilling leans on the [model](https://www.aihero.dev/ai-coding-dictionary/model)'s own sense of how systems break, so give it your best one. Implementation mostly follows context and tolerates a cheaper model.
+**模型重要吗？**
+比对大多数技能都重要。追问依赖[模型](https://www.aihero.dev/ai-coding-dictionary/model)自己对系统在哪里会出问题的直觉，所以把最好的模型给它。实现大体是跟着上下文走的，用便宜些的模型也扛得住。
 
-## Where it fits
+## 它在全局中的位置
 
-`grill-me` is a **standalone you can run anywhere, on anything**. Being stateless is what makes it portable: no repo, no workspace, no setup, and no assumption that the idea is even about software. People point it at business decisions, at writing, at what to do next: anything that won't sit still in their head.
+`grill-me` 是一个**随处可用、什么主题都能追问的独立技能**。无状态正是它可移植的来源：没有仓库、没有工作区、没有前置准备，甚至不假定这个想法与软件有关。人们把它对准业务决策、对准写作、对准"接下来做什么"：任何在脑子里安定不下来的东西。
 
-That portability is the whole difference from [grill-with-docs](/engineering/grill-with-docs), which runs the same interview but reads a codebase to align against and records what it learns as `CONTEXT.md` and ADRs. Both sit on the [grilling](/productivity/grilling) primitive; `grill-me` is the user-invoked front door that carries nothing with it.
+这种可移植性，正是它与 [grill-with-docs](/engineering/grill-with-docs) 的全部区别——后者跑的是同一场访谈，但要读一个代码库来对齐，并把学到的东西记录成 `CONTEXT.md` 和 ADR。两者都坐落在 [grilling](/productivity/grilling) 这个原语之上；`grill-me` 是那个什么都不携带的用户调用入口。
 
-If what you grilled does turn out to be software, you can hand the same conversation to [to-spec](/engineering/to-spec) and carry on into the build flow (an option, not the point of the skill). When you're unsure which flow fits, [ask-matt](/engineering/ask-matt) routes you.
+如果你追问的东西最后确实是软件，可以把同一段对话交给 [to-spec](/engineering/to-spec)，继续走进构建流程（这是个选项，不是这个技能的意义所在）。拿不准哪条流程合适时，[ask-matt](/engineering/ask-matt) 会为你指路。
