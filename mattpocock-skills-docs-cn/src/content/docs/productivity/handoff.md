@@ -3,79 +3,88 @@ title: "handoff：会话交接"
 source: "https://www.aihero.dev/skills-handoff"
 ---
 
-## What it does
+## 它做什么
 
-`handoff` compacts the conversation you are in into a **handoff document**: one markdown file, written to your OS's temporary directory rather than into the workspace, that a fresh [agent](https://www.aihero.dev/ai-coding-dictionary/agent) can read to pick the work up.
+`handoff` 把你正身处的对话压缩成一份**交接（handoff）文档**：一个 markdown 文件，写进操作系统的临时目录而不是工作区，一个新的[智能体](https://www.aihero.dev/ai-coding-dictionary/agent)读它就能接手工作。
 
-What it buys is **portability**, not compression. That makes the skill narrower than it sounds. You need a file only when the work has to *travel*: to a new [harness](https://www.aihero.dev/ai-coding-dictionary/harness), a new directory, a colleague, or a side task you want to fork off. If nothing is travelling, you do not need a handoff: staying in the [session](https://www.aihero.dev/ai-coding-dictionary/session), `/clear`, a [subagent](https://www.aihero.dev/ai-coding-dictionary/subagent) and `/compact` cover the ordinary end-of-phase case, and `/compact` covers it more often than this skill does.
+它买到的是**可移植性**，不是压缩。这让技能比听上去更窄。只有当工作必须*旅行*时你才需要一份文件：去一个新的[框架](https://www.aihero.dev/ai-coding-dictionary/harness)、一个新目录、一位同事，或一件你想叉出去的支线任务。没有东西在旅行，你就不需要交接：留在[会话](https://www.aihero.dev/ai-coding-dictionary/session)里、`/clear`、[子智能体](https://www.aihero.dev/ai-coding-dictionary/subagent)和 `/compact` 已覆盖寻常的阶段收尾，而且 `/compact` 覆盖得比本技能更频繁。
 
-## When to reach for it
+## 什么时候该用它
 
-You invoke this by typing `/handoff`; the agent won't reach for it on its own. Pass a note about what the next session is for, and the document is written for it.
+输入 `/handoff` 调用；智能体不会自己够到它。附一句话说明下一个会话是干什么的，文档就为它而写。
 
-Four situations are the whole trigger:
+四种处境就是全部触发条件：
 
-| Situation | Why a file |
+| 处境 | 为什么要文件 |
 | --- | --- |
-| Swapping harness (Claude → Codex) | The new harness cannot see the old [context](https://www.aihero.dev/ai-coding-dictionary/context) |
-| Moving to a different directory or repo | A prototype directory is the common case |
-| Sending the work to a colleague | They need something they can read |
-| Forking a side task found mid-phase | You keep working; a second agent takes the fork |
+| 换框架（Claude → Codex） | 新框架看不见旧[上下文](https://www.aihero.dev/ai-coding-dictionary/context) |
+| 挪去另一个目录或仓库 | 原型目录是最常见的情形 |
+| 把工作发给同事 | 他们需要一份能读的东西 |
+| 叉出阶段中途发现的支线任务 | 你继续干；第二个智能体领走岔路 |
 
-For anything else (same harness, same directory, you are done [grilling](https://www.aihero.dev/ai-coding-dictionary/grilling) and moving to implementation), `/compact` is the move. [ask-matt](/engineering/ask-matt) carries the ordered tree over all five options at a phase boundary.
+其余一切（同框架、同目录、你[追问](https://www.aihero.dev/ai-coding-dictionary/grilling)完准备进入实现），该走 `/compact`。阶段边界上全部五个选项的有序决策树，[ask-matt](/engineering/ask-matt) 替你带着。
 
-## Branching is the use people skip
+## 分叉是人们漏掉的用法
 
-The skill's description reads like session resumption: write a summary, end here, resume there. Read that way it looks like a worse `/compact`, so it gets skimmed past. The fork case is the one worth knowing. You **stay in your session** and hand a copy of the accumulated context to a second agent working in parallel.
+技能的描述读起来像会话恢复：写一份摘要，在这里结束，在那里继续。这么读它就像一个更差的 `/compact`，于是被略过。分叉这一用例才是值得记住的。你**留在自己的会话里**，把积累的上下文递一份副本给第二个并行工作的智能体。
 
-That is what the detour through [prototype](/engineering/prototype) uses. You are deep in a design conversation, you hit a question that only running code will settle, and you do not want to spend the thread you built on finding out. Hand off to a prototype session, get the answer, hand the answer back, and reference it from the original thread. Two crossings, one live conversation, nothing re-explained.
+[prototype](/engineering/prototype) 的绕道用的正是这一招。你正深入一场设计对话，撞上一个只有跑起来的代码才能了结的问题，而你不想花掉你好不容易攒下的线程去弄清它。交接给一个原型会话，拿回答案，把答案递回来，再从原线程引用它。两次穿越，一场活的对话，什么都不用重新解释。
 
-Three of the five options at a phase boundary preserve different things: `/compact` preserves your intent, `/clear` preserves nothing, `/handoff` preserves the work's ability to move.
+阶段边界上五个选项里的三个，各自保住不同的东西：`/compact` 保住你的意图，`/clear` 什么都不保，`/handoff` 保住工作的可移动性。
 
-## What travels, and what doesn't
+## 什么随行，什么不随
 
-The document carries the live thread (what's in flight, why, and what's next) plus a **suggested skills** section naming what the next agent should reach for. Secrets are redacted before it's written.
+文档载着活线程（在飞的是什么、为什么、下一步是什么），外加一节**建议技能**，点名下一个智能体该够到什么。密钥在写入前被脱敏。
 
-What it deliberately does not carry is anything already written down. Specs, plans, ADRs, issues, commits and diffs are referenced by path or URL, never copied. That keeps the file small, and it keeps the settled detail in one place instead of two that drift.
+它刻意不载的，是一切已经写下来的东西。规格、计划、ADR、工单、commit 和 diff 以路径或 URL 引用，绝不复制。这让文件保持小，也让已敲定的细节只住在一个地方，而不是两个会漂移的地方。
 
-## Common questions
+## 常见问题
 
-**Handoff or compact?**
-`/compact` unless something is travelling. Staying on the same task is a compact, not a handoff: same harness, same directory, and you need to stay in the loop is where the phase-boundary tree lands most days. `/handoff`'s advantage is not that it summarises better; it's that the result is a file you can carry somewhere `/compact` can't reach.
+**用 handoff 还是 compact？**
 
-**So what's the actual difference between compact, clear and handoff?**
-Three different things being preserved. `/compact` compresses this context and keeps you going in a fresh window: intent survives. `/clear` empties the window and starts from nothing: correct when everything behind you is disposable, and one-way if it isn't. `/handoff` writes a portable file: the work survives the move to somewhere else. Note that all three turn a **[primary source](https://www.aihero.dev/ai-coding-dictionary/primary-source)** (the conversation as it happened) into a **[secondary source](https://www.aihero.dev/ai-coding-dictionary/secondary-source)** (a summary of it). Continuing is the only move that doesn't, which is why it's the first one to rule out.
+没有东西在旅行就用 `/compact`。留在同一个任务上是 compact，不是 handoff：同框架、同目录、且你需要留在回路里——阶段边界的那棵树大多数日子落在这里。`/handoff` 的优势不在于摘要做得更好，而在于产物是一个文件，能带到 `/compact` 够不着的地方。
 
-**Where did my handoff file go?**
-The temp directory, which is the most-reported friction with the skill: the paths are long, they differ per OS, and on Windows agents sometimes take several attempts to find the right one. Ask for the path back and keep it before you move on. Temp is deliberate: a handoff is a transit document, not an artifact you maintain. It is not a durable one either; see the next question.
+**那 compact、clear 和 handoff 的实际区别到底是什么？**
 
-**My handoff vanished between sessions.**
-Some environments clear temp between sessions (Codex is the reported case), and `/private/tmp` goes on reboot. If the next session isn't starting within the hour, or is starting under a different harness, copy the file somewhere durable yourself as soon as it's written. The same applies to anything the document *points at*: a dispatch that references other files in temp is a dispatch the next agent can't follow.
+保全的三样东西不同。`/compact` 压缩当前上下文、让你在新窗口里继续：意图幸存。`/clear` 清空窗口、从零开始：身后一切皆可弃时它是对的，不可弃时它是单行道。`/handoff` 写一个可移植的文件：工作在搬往别处后幸存。注意三者都把**[一手来源](https://www.aihero.dev/ai-coding-dictionary/primary-source)**（实际发生的对话）变成**[二手来源](https://www.aihero.dev/ai-coding-dictionary/secondary-source)**（它的摘要）。继续是唯一不变的动作，所以它第一个排除。
 
-**How do I actually hand it to the next agent?**
-Open the fresh session and point it at the path: read this file, then continue. Point at the file rather than pasting the summary into a shell command: a summary containing backticks or `$(...)` gets mangled when it's interpolated into `claude "<summary>"`, and the usual failure is silent truncation rather than an error, so the new agent starts with a quietly incomplete brief.
+**我的交接文件去哪了？**
 
-**Is this the same as `/branch`, `--fork-session`, or the built-in `/handoff`?**
-Analogous, not identical, and `/branch` isn't a shipped skill here; `/handoff` is the canonical name. A fork inherits an exact copy of the context; this skill produces a *targeted* compression aimed at a stated next task, in a file. Where a fork will do (same machine, same harness, same directory), a fork is less work. The file wins the moment the destination is somewhere the fork can't go.
+临时目录，这是技能被报告最多的摩擦：路径长、各 OS 不同，而且在 Windows 上智能体有时要试几次才找对。让它把路径报给你，在挪窝前留好。选临时目录是刻意的：交接是一份在途文档，不是你要维护的产物。它也不是耐久的；见下一问。
 
-**When does something belong in `CLAUDE.md` instead?**
-Ask whether it's true next month. `CLAUDE.md` is standing context about the project, loaded into every session whether it's relevant or not. A handoff is about one piece of work in flight and is dead once that work lands. Facts that keep getting re-explained are a `CLAUDE.md` problem; a half-finished task is a handoff.
+**我的交接在会话之间消失了。**
 
-**It captures the what, not the why.**
-A fair and repeated criticism. Two things help. Pass the argument (tell it what the next session is for) so the reasoning that bears on *that* is kept rather than flattened. And watch for confident claims the session never actually verified: "X isn't built", "Y is done". The next agent treats the document as a contract and will not re-check it, so a belief written as a fact becomes a false premise for everything that follows. Read the document before you hand it over, and downgrade anything you only assumed.
+有些环境在会话之间清临时目录（Codex 是被报告的案例），`/private/tmp` 重启即清。如果下一个会话不是一小时内开始，或在另一个框架下开始，文件一写完就自己把它复制到耐久的地方。文档*指向*的东西同理：一份引用着临时目录里其他文件的派遣书，是下一个智能体跟不动的派遣书。
 
-**Why is it a skill rather than a slash command?**
-Both work; they suit different situations. As a skill it ships and updates through the same install path as everything else here, which is what makes it shareable; the constraint that the agent won't fire it itself is set by its frontmatter rather than by the mechanism.
+**到底怎么把它交给下一个智能体？**
 
-## It's working if
+开新会话，把路径指给它：读这个文件，然后继续。指向文件，而不是把摘要粘进 shell 命令：含反引号或 `$(...)` 的摘要被插值进 `claude "<summary>"` 时会被弄残，而常见的失败是无声截断而非报错，于是新智能体揣着一份悄悄不完整的简报开工。
 
-- The document is a small fraction of the conversation, and the specs, issues and diffs appear in it as paths and URLs rather than as copied text.
-- You can read it cold, without the original session open, and know what to do next.
-- The fresh agent starts working instead of asking you to re-explain the setup.
-- In the fork case, your original session is still sitting there untouched when you come back to it.
-- The suggested-skills section names the skill you'd have reached for yourself.
-- Nothing in it is a key, a token, or a password.
+**它和 `/branch`、`--fork-session` 或内置的 `/handoff` 是一回事吗？**
 
-## Where it fits
+类似，不相同，而且 `/branch` 不是这里发布的技能；`/handoff` 是权威名字。fork 继承的是上下文的精确副本；这个技能产出的是瞄准既定下一任务的*定向*压缩，装在一个文件里。fork 够用时（同机器、同框架、同目录），fork 更省事。目的地一到 fork 去不了的地方，文件就赢。
 
-`handoff` is a **reach-for-it-anytime standalone** that lives at the seam between sessions rather than inside a build chain, but a narrow one, and the honest map is that you'll use it less often than the other four options at a phase boundary. Its closest neighbour is [prototype](/engineering/prototype), because a prototype lives in its own directory and the round trip out and back is exactly the crossing this skill is for. When you're at a boundary and unsure whether to continue, clear, hand off, delegate or compact, [ask-matt](/engineering/ask-matt) carries the tree that orders those five, and routes you over the rest of the set.
+**什么时候该写进 `CLAUDE.md` 而不是这里？**
+
+问它下个月还成不成立。`CLAUDE.md` 是关于项目的常驻上下文，每个会话都加载，无论相不相关。交接是关于一件在飞的工作的，工作落地即死。反复被重新解释的事实是 `CLAUDE.md` 的问题；半成品任务是交接。
+
+**它抓的是 what，不是 why。**
+
+公允且反复出现的批评。两招能帮上。传入论据（告诉它下一个会话是干什么的），让对*那件事*要紧的推理被保住而不是被抹平。再盯住会话从未真正核实的断言："X 没建"、"Y 好了"。下一个智能体把文档当契约，不会复核它，于是一条被写成事实的猜想成了之后一切的前提。递出去之前读一遍文档，把只是你假设的降级。
+
+**为什么是一个技能而不是一个斜杠命令？**
+
+都行；各配各的场景。作为技能，它和这里的其他一切走同一条安装与更新路径，这才是它可分享的原因；智能体不会自己触发它这一约束，由 frontmatter 而非机制设定。
+
+## 正常工作的标志
+
+- 文档只是对话的一小部分，规格、工单和 diff 以路径和 URL 出现，而不是被复制的文本。
+- 不开原会话，你能冷读它，并知道下一步做什么。
+- 新智能体直接开工，而不是要你重新解释背景。
+- 分叉场景里，你回来时原来的会话原封不动地坐在那。
+- 建议技能一节点名的，正是你自己会去够的那个技能。
+- 里面没有任何密钥、token 或密码。
+
+## 它在全局中的位置
+
+`handoff` 是一个**随时可单独够到的独立技能**，住在会话之间的接缝上而不是构建链里，但它是一个窄技能，诚实的地图是：阶段边界上你会比用其他四个选项更少用到它。它最近的邻居是 [prototype](/engineering/prototype)：原型住在自己的目录里，而出去再回来的往返正是这个技能为之存在的那种穿越。当你身处边界、拿不准该继续、清空、交接、委托还是压缩时，[ask-matt](/engineering/ask-matt) 带着给这五个排好序的决策树，并在技能集其余部分上为你路由。
