@@ -3,17 +3,16 @@ title: "Secondary source（二手来源）"
 source: "https://www.aihero.dev/ai-coding-dictionary/secondary-source"
 ---
 
+对[一手来源](/terms/primary-source)的记述，隔了一步——描述代码的文档、描述转录的摘要、描述搜索结果的报告。加载进[上下文窗口](/terms/context-window)比它描述的来源便宜，且构造上就有损：写它的人决定了什么要紧，被丢掉的任何东西，对一个只有摘要的读者是不可见的。
 
-An account of a [primary source](/terms/primary-source), one step removed — documentation describing code, a summary describing a transcript, a report describing search results. Cheaper to load into the [context window](/terms/context-window) than the source it describes, and lossy by construction: whoever wrote it decided what mattered, and whatever they dropped is invisible to a reader who only has the summary.
+大量[上下文](/terms/context)工程就是二手来源的制造。[压缩](/terms/compaction)把[会话](/terms/session)历史变成给下一个会话做种的摘要。一个[子智能体](/terms/subagent)烧掉自己的上下文做一场嘈杂的搜索，带回一份短报告。一份[交接产物](/terms/handoff-artifact)把会话的决定浓缩成下一个会话读的文档。[记忆系统](/terms/memory-system)把一个会话学到的东西蒸馏成笔记。每一个都做同一笔交易：保真度换空间。
 
-A lot of [context](/terms/context) engineering is the manufacture of secondary sources. [Compaction](/terms/compaction) turns the [session](/terms/session) history into a summary that seeds the next session. A [subagent](/terms/subagent) burns its own context on a noisy search and returns a short report. A [handoff artifact](/terms/handoff-artifact) condenses a session's decisions into a document the next session reads. [Memory systems](/terms/memory-system) distil what a session learned into notes. Each makes the same trade: fidelity for headroom.
+二手来源以两种方式失败。有损——丢了 schema 决定的压缩摘要、没提边界情形的报告。还有漂移——一手来源变了、记述没跟上，于是文档用这个季度的自信描述上个季度的架构。当一个[agent](/terms/agent)基于任一方式失败的二手来源行动时，它在自信地从错误信息工作；修法是把它送回一手来源。
 
-Secondary sources fail in two ways. They're lossy — the compaction summary that lost the schema decision, the report that didn't mention the edge case. And they drift — the primary source changes and the account doesn't follow, so docs describe last quarter's architecture with this quarter's confidence. When an [agent](/terms/agent) acts on a secondary source that has failed either way, it works confidently from wrong information; the fix is sending it back to the primary source.
+两种失败都不使二手来源成为错误。上下文窗口有限，一手来源昂贵；没有摘要、报告和交接文档，装不进任何大东西。技术在于知道哪些细节能幸存于损失——以及在不能时对着一手来源核验。一份做得好的二手来源带着一个指回原件的[上下文指针](/terms/context-pointer)——点名它出自哪份转录的摘要、点名它描述哪个文件的文档——于是当记述不够时，读者可以顺着指针走，而不是对着损失硬干。
 
-Neither failure makes secondary sources a mistake. The context window is finite, and primary sources are expensive; without summaries, reports, and handoff documents, nothing large fits. The skill is knowing which details can survive the loss — and verifying against the primary source when one can't. A well-made secondary source carries a [context pointer](/terms/context-pointer) back to its original — the summary that names the transcript it came from, the doc that names the file it describes — so when the account isn't enough, the reader can follow the pointer rather than work from the loss.
+用法：
 
-_Usage:_
+"交接文档说认证做完了，可新会话总发现 token 刷新是坏的。"
 
-"The handoff doc says auth is done, but the new session keeps finding broken token refresh."
-
-"The doc's a secondary source — the last session wrote down what it believed, not what's true. Have the new session run the auth tests and trust the primary source."
+"文档是二手来源——上一个会话写下的是它相信的，不是真实的。让新会话跑认证测试，信一手来源。"

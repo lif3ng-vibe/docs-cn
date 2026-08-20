@@ -3,17 +3,16 @@ title: "Primary source（一手来源）"
 source: "https://www.aihero.dev/ai-coding-dictionary/primary-source"
 ---
 
+以原始形态存在的真相之源——代码、对话转录、原始日志、实际的 API 响应。不是对那样东西的记述；是那样东西本身。与[二手来源](/terms/secondary-source)相对。
 
-A source of truth in its original form — the code, the conversation transcript, the raw log, the actual API response. Not an account of the thing; the thing. Counterpart to [secondary source](/terms/secondary-source).
+想知道你的代码库做什么，代码就是一手来源。文档、架构图、README 都是它的描述——写下那一刻准确，此后各行其是。当一个[agent](/terms/agent)自信地对你的项目断言错话，该问的是它当时依据哪个来源：读了文档的 agent 继承文档的过期；读了代码的 agent 读的是当前的真相。
 
-If you want to know what your codebase does, the code is the primary source. The docs, the architecture diagram, and the README are all descriptions of it — accurate when written, on their own schedule ever since. When an [agent](/terms/agent) confidently asserts something wrong about your project, the question to ask is which source it was working from: an agent that read a doc inherits the doc's staleness; an agent that read the code is reading the current truth.
+成本是一手来源成不了默认项的原因。加载一个进[上下文窗口](/terms/context-window)很贵——整个文件、整份转录、每个[token](/terms/token)按[输入](/terms/input-tokens)计费并争抢[注意力预算](/terms/attention-budget)。这份钱买到的是完整：没有任何东西被别人"什么要紧"的判断预先过滤。上个月写的摘要装不下今天才发现要紧的细节；一手来源仍然装得下。
 
-The cost is what keeps primary sources from being the default. Loading one into the [context window](/terms/context-window) is expensive — the full file, the full transcript, every [token](/terms/token) billed as [input](/terms/input-tokens) and competing for [attention budget](/terms/attention-budget). What you get for the cost is completeness: nothing has been pre-filtered by someone else's judgement about what mattered. A summary written last month can't contain the detail that turned out to matter today; the primary source still does.
+精确要紧时够一手来源——确切的签名、真实的报错、抛错的那一行。管理[上下文](/terms/context)的一大半，就是决定什么时候为一手来源付钱、什么时候二手来源够用。
 
-Reach for the primary source when precision matters — the exact signature, the actual error, the line that throws. Much of managing [context](/terms/context) is deciding when to pay for the primary source and when a secondary source is good enough.
+用法：
 
-_Usage:_
+"agent 说重试逻辑是指数退避，可我看着它在猛捶端点。"
 
-"The agent says the retry logic backs off exponentially, but I'm watching it hammer the endpoint."
-
-"It read that out of the design doc. Point it at the actual retry module — work from the primary source when the behaviour matters."
+"那是它从设计文档里读来的。把它指向真正的重试模块——行为要紧时，从一手来源干。"

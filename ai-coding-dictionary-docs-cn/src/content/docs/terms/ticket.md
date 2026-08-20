@@ -3,17 +3,16 @@ title: "Ticket（工单）"
 source: "https://www.aihero.dev/ai-coding-dictionary/ticket"
 ---
 
+界定一个[会话](/terms/session)工作量的[交接产物](/terms/handoff-artifact)。独立存在，或作为某份[规格](/terms/spec)的子项挂在它下面。工单之间可以阻塞或被阻塞，于是工作顺序从它们的依赖图里落出来，而不是一张线性计划。
 
-A [handoff artifact](/terms/handoff-artifact) scoping one [session](/terms/session) of work. Stands alone, or hangs off a [spec](/terms/spec) as one of its children. Tickets can block or be blocked by sibling tickets, so the order of work falls out of their dependency graph rather than a linear plan.
+定义性约束是体量：一个会话。一张工单应该赶在会话漂出[聪明区](/terms/smart-zone)之前做得完——而且这个约束可测。如果你的工单上的会话经常在工作完成前退化，工单太大了；拆。如果每个会话把大半[上下文](/terms/context)花在铺垫、只干五分钟的活，工单太小了；合。
 
-The defining constraint is the size: one session. A ticket should be completable before the session drifts out of the [smart zone](/terms/smart-zone) — and that constraint is testable. If sessions on your tickets routinely degrade before the work is done, the tickets are too big; split them. If each session spends most of its [context](/terms/context) on setup before doing five minutes of work, they're too small; merge them.
+一张好工单是写给没有其他上下文的读者的。目标、验收标准、以及指向相关文件和决定的[上下文指针](/terms/context-pointer)——足够会话直接开工，而不必重新推导上一个会话已知的东西。
 
-A good ticket is written for a reader with no other context. The goal, the acceptance criteria, and [context pointers](/terms/context-pointer) to the relevant files and decisions — enough that the session can start working without re-deriving what the last one knew.
+依赖图也是解锁并行的东西。互相独立的工单——图的叶子——可以各自一个会话同时跑。这是同时运行多个 agent 的一种有效方式。
 
-The dependency graph is also what unlocks parallelism. Independent tickets — the leaves of the graph — can each run in their own session at the same time. This is an effective way of running multiple agents at once.
+用法：
 
-_Usage:_
+"迁移规格从哪开始？"
 
-"Where do I start on the migration spec?"
-
-"Look at the ticket graph — the schema change blocks the backfill, the backfill blocks the API switch. Pick a leaf and run a session on it."
+"看工单图——schema 变更阻塞回填，回填阻塞 API 切换。挑一片叶子，跑一个会话。"

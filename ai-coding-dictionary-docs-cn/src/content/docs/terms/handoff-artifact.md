@@ -3,19 +3,18 @@ title: "Handoff artifact（交接产物）"
 source: "https://www.aihero.dev/ai-coding-dictionary/handoff-artifact"
 ---
 
+用作一次[交接](/terms/handoff)携带机制的文档——由一个[会话](/terms/session)写进[环境](/terms/environment)，供另一个会话读。[规格](/terms/spec)、[工单](/terms/ticket)、计划文档都是交接产物。
 
-A document used as the carry mechanism for a [handoff](/terms/handoff) — written to the [environment](/terms/environment) by one [session](/terms/session) to be read by another. [Specs](/terms/spec), [tickets](/terms/ticket), and plan docs are all handoff artifacts.
+写它的理由：[model](/terms/model)[无状态](/terms/stateless)，会话里的任何东西都活不过对它的[清空](/terms/clearing)。决定、约束、半成的计划——随承载它们的[上下文](/terms/context)一起消失。环境持续存在。把重要状态写进文件，就把它挪到了下一个会话能回头读的地方。
 
-The reason to write one: the [model](/terms/model) is [stateless](/terms/stateless), so nothing in a session survives [clearing](/terms/clearing) it. Decisions, constraints, half-finished plans — all gone with the [context](/terms/context) that held them. The environment persists. Writing the important state into a file moves it somewhere the next session can read it back from.
+交接产物是[二手来源](/terms/secondary-source)——会话工作的记述，不是工作本身。这正是它小到能给新会话做简报的原因，也是它能误导一个会话的原因：它记录的是写作会话所相信的，它漏掉的或弄错的任何东西，对读者不可见。哪条断言要紧，下一个会话就该对着[一手来源](/terms/primary-source)——代码、测试——核验，而不是继承。
 
-The artifact is a [secondary source](/terms/secondary-source) — an account of the session's work, not the work itself. That's what makes it small enough to brief a fresh session, and also why it can mislead one: it records what the writing session believed, and anything it left out or got wrong is invisible to the reader. Where a claim matters, the next session should verify it against the [primary source](/terms/primary-source) — the code, the tests — rather than inherit it.
+一份好的产物，是写给一个零上下文的会话读的。具体的文件路径，而不是"我们讨论过的那个文件"。决定了什么、为什么，好让下一个会话不翻旧账。做完了什么、还剩什么。告诉写作会话产物要去哪也有帮助："给一个对此项工作一无所知的新会话写一份交接文档"。
 
-A good artifact is written to be read into a session that has zero context. Concrete file paths rather than "the file we discussed". What was decided and why, so the next session doesn't relitigate it. What's done and what's left. It helps to tell the writing session where the artifact is headed: "write a handoff doc for a fresh session that knows nothing about this work".
+另一种携带机制是[压缩](/terms/compaction)，在内存里做摘要。产物有两个优势：它住在磁盘上，在任何东西依赖它之前你能读能改；而且可复用——同一份规格能给五个并行会话做简报。
 
-The alternative carry mechanism is [compaction](/terms/compaction), which summarises in-memory. The artifact has two advantages: it lives on disk where you can read and correct it before anything depends on it, and it can be reused — the same spec can brief five parallel sessions.
+用法：
 
-_Usage:_
+"这个怎么拆给规划[agent](/terms/agent)和实现的那个？"
 
-"How do I split this between the planning [agent](/terms/agent) and the implementing one?"
-
-"Have the planner write a handoff artifact — file paths, decisions, constraints. The implementer's session opens with a pointer to the artifact and works from it as its brief."
+"让规划者写一份交接产物——文件路径、决定、约束。实现者的会话以一个指向产物的指针开场，拿它当简报干活。"

@@ -3,17 +3,16 @@ title: "Autocompact（自动压缩）"
 source: "https://www.aihero.dev/ai-coding-dictionary/autocompact"
 ---
 
+[harness](/terms/harness)在[上下文窗口](/terms/context-window)接近满时自动触发的[压缩](/terms/compaction)。
 
-[Compaction](/terms/compaction) triggered automatically by the [harness](/terms/harness) when the [context window](/terms/context-window) approaches full.
+harness 盯着上下文窗口有多满。越过阈值时——通常 80% 上下——它暂停，请[model](/terms/model)把至今的[会话](/terms/session)摘要一遍，用摘要给新会话做种。工作随后若无其事地继续。
 
-The harness watches how full the context window is. When it crosses a threshold — often around 80% — it pauses, asks the [model](/terms/model) to summarise the [session](/terms/session) so far, and seeds a fresh session with the summary. Work then continues as if nothing happened.
+只是确实发生了什么。压缩有损，而自动压缩有损在一个你没选的时刻。手动压缩发生在阶段边界，你能告诉模型保住什么。自动压缩在任务中途开火，不管阈值何时被碰到——可能正压在重构半路，摘要自作主张地决定你的哪些决定值得留。经典症状：[agent](/terms/agent)自信地继续，却悄悄忘了一小时前定下的约束，直到它的工作开始与之相悖，你才察觉。
 
-Except something did happen. Compaction is lossy, and autocompact is lossy at a moment you didn't choose. A manual compact happens at a phase boundary, when you can tell the model what to preserve. Autocompact fires mid-task, whenever the threshold is hit — possibly halfway through a refactor, with the summary deciding for itself which of your decisions were worth keeping. The classic symptom: the [agent](/terms/agent) carries on confidently but has quietly forgotten a constraint you established an hour ago, and you only notice when its work starts contradicting it.
+防御是不让它开火。盯着上下文指示条，在自然边界手动压缩；或把决定写进磁盘上的计划文档或[交接产物](/terms/handoff-artifact)，那里没有任何摘要能弄丢它们。多数 harness 也允许定制缓冲——把阈值调早或调晚，或干脆关掉自动压缩——你可以调教它开火前留多少余量。
 
-The defence is to not let it fire. Watch the context indicator and compact manually at a natural boundary, or write decisions into a plan doc or [handoff artifact](/terms/handoff-artifact) on disk, where no summary can lose them. Most harnesses also let you customise the buffer — moving the threshold earlier or later, or turning autocompact off entirely — so you can tune how much headroom you keep before it fires.
+用法：
 
-_Usage:_
+"它好像不记得我们先前对 schema 定的什么了。"
 
-"It doesn't seem to remember what we decided about the schema earlier."
-
-"Autocompact fired between [turns](/terms/turn) — the early decisions got summarised and we must have lost something. Reload the plan doc, or compact manually next time so you control what gets kept."
+"自动压缩在[轮](/terms/turn)之间开过火——早期决定被摘要掉了，肯定丢了点什么。重载计划文档，或下次手动压缩，让由你控制留下什么。"

@@ -3,20 +3,19 @@ title: "Handoff（交接）"
 source: "https://www.aihero.dev/ai-coding-dictionary/handoff"
 ---
 
+把[agent](/terms/agent)的[上下文](/terms/context)从一个[会话](/terms/session)转移到另一个。携带机制多样——一份写下的[交接产物](/terms/handoff-artifact)、一段内存中的摘要（[压缩](/terms/compaction)）等。区别于[清空](/terms/clearing)（完全不转移）。理由多样：换角色（规划者 → 实现者）、发起一次[AFK](/terms/afk)运行、扇出到并行会话、或腾出[上下文窗口](/terms/context-window)空间。
 
-Transferring [agent](/terms/agent) [context](/terms/context) from one [session](/terms/session) to another. The carry mechanism varies — a written [handoff artifact](/terms/handoff-artifact), an in-memory summary ([compaction](/terms/compaction)), and others. Distinct from [clearing](/terms/clearing) (no transfer at all). Reasons vary: switching roles (planner → implementer), kicking off an [AFK](/terms/afk) run, fanning out to parallel sessions, or freeing up [context window](/terms/context-window) room.
+接收方会话从零上下文开始——[model](/terms/model)[无状态](/terms/stateless)，旧会话的任何东西对新会话不可见。下一个会话需要的一切都必须显式携带；其余的都没了。"没有回头路"是塑造携带方式的约束：新会话没法问旧会话当初什么意思，所以被携带的材料必须自己站得住。
 
-The receiving session starts with zero context — the [model](/terms/model) is [stateless](/terms/stateless), and nothing from the old session is visible to the new one. Whatever the next session needs has to be carried explicitly; everything else is gone. "No return path" is the constraint that shapes the carry: the new session can't ask the old one what it meant, so the carried material has to stand on its own.
+| 机制 | 形态 | 特性 |
+| --- | --- | --- |
+| 交接产物 | [环境](/terms/environment)里的文件 | 在任何东西依赖它之前，你能读能改；跨多个会话可复用 |
+| 压缩 | 上下文窗口里的摘要 | 自动且便宜；难检视；只喂一个后继 |
 
-| Mechanism        | Form                                        | Properties                                                                               |
-| ---------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Handoff artifact | File in the [environment](/terms/environment) | You can read and correct it before anything depends on it; reusable across many sessions |
-| Compaction       | Summary in the context window               | Automatic and cheap; harder to inspect; feeds one successor                              |
+坏交接的可见失败是翻旧账：新会话重开旧会话已了结的决定，因为携带物记下了决定了什么、没记下为什么。评判一次交接的标准是：一个零上下文的会话拿着它能干什么。
 
-The visible failure of a bad handoff is relitigation: the new session re-opens decisions the old one had settled, because the carry recorded what was decided but not why. Judge a handoff by what a session with zero context could do with it.
+用法：
 
-_Usage:_
+"规划会话越来越重——要不要就这么继续？"
 
-"Planning session is getting heavy — should I just keep going?"
-
-"Do a handoff. Write the decisions to a doc, clear, start the implementation in a fresh session reading from it."
+"做一次交接。把决定写进文档，清空，开个新会话读着它进入实现。"
