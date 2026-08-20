@@ -3,21 +3,20 @@ title: "Vibe coding（氛围编程）"
 source: "https://www.aihero.dev/ai-coding-dictionary/vibe-coding"
 ---
 
+用户不经[人工评审](/terms/human-review)就接受[agent](/terms/agent)代码的工作模式。diff 被当作不透明的——要紧的是程序行为对不对，不是里面是什么。[自动化评审](/terms/automated-review)和[自动化检查](/terms/automated-check)仍可能跑；氛围编程对两者不置可否。
 
-A working pattern where the user accepts the [agent](/terms/agent)'s code without [human review](/terms/human-review). The diff is treated as opaque — what matters is whether the program behaves, not what's inside. [Automated review](/terms/automated-review) and [automated checks](/terms/automated-check) may still run; vibe coding is silent on both.
+这个词出自 Andrej Karpathy，[2025 年初创造](https://x.com/karpathy/status/1886192184808149383)：你"完全交给感觉（give in to the vibes）"、"忘了代码的存在"——描述你要什么，接受回来的，靠运行来判断它。
 
-The term comes from Andrej Karpathy, who [coined it in early 2025](https://x.com/karpathy/status/1886192184808149383): you "fully give in to the vibes" and "forget that the code even exists" — describe what you want, accept what comes back, and judge it by running it.
+氛围编程用检查换速度。读 diff 通常是 agent 驱动工作里最慢的一步，扔掉它就移除了主要瓶颈。对失败便宜的代码——[原型](/terms/prototyping)、一次性脚本、内部工具——这是笔合理的交易。风险随代码的寿命和赌注增长。
 
-Vibe coding trades inspection for speed. Reading diffs is usually the slowest step in agent-driven work, so dropping it removes the main bottleneck. For code whose failures are cheap — [prototypes](/terms/prototyping), one-off scripts, internal tools — that's a reasonable trade. The risk scales with the code's lifespan and stakes.
+账单晚些到。氛围编程出来的改动积累成一个没人读过的代码库，而且行为是唯一被检查过的东西——于是任何行为不暴露的问题，一个写进日志的秘密、一个缺失的边界情形、悄悄错了的数据处理，无声上线。第一次有人调这个系统，就是第一次有人读这些代码。人工评审没了之后，还在跑的任何自动化验证——测试、类型、自动化评审——是代码经过的唯一闸门。
 
-The cost arrives later. Vibe-coded changes accumulate into a codebase nobody has read, and behaviour was the only thing checked — so anything behaviour doesn't surface, like a secret written to logs, a missing edge case, or quietly wrong data handling, ships unseen. The first time someone debugs the system is the first time anyone reads the code. With human review gone, whatever automated verification still runs — tests, types, automated review — is the only gate the code passes through.
+避免：把"vibe coding"当"低质量 AI 编码"的同义词——这个词命名的是评审立场，不是产出的代码。
 
-_Avoid:_ "vibe coding" as a synonym for "low-quality AI coding" — the term names the review stance, not the resulting code.
+用法：
 
-_Usage:_
+"auth 流程里它改了什么你读了吗？"
 
-"Did you read what it changed in the auth flow?"
+"氛围编的——登录还能用，我就查了这么多。"
 
-"Vibe coded it — login still works, that's all I checked."
-
-"Read the diff before you push, vibing on auth is how secrets leak into logs."
+"push 前读读 diff 吧，auth 上凭感觉是秘密漏进日志的路子。"

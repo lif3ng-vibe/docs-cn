@@ -3,19 +3,18 @@ title: "Human-in-the-loop（人在回路）"
 source: "https://www.aihero.dev/ai-coding-dictionary/human-in-the-loop"
 ---
 
+一个或更多的人在[会话](/terms/session)期间与[agent](/terms/agent)结对的工作模式——实时评审、改道或协作。人在场且投入，而不只是给单个动作把门。
 
-A working pattern where one or more humans pair with the [agent](/terms/agent) during a [session](/terms/session) — reviewing, redirecting, or collaborating in real time. The human is present and engaged, not just gating individual actions.
+对照的是[AFK](/terms/afk)工作——agent 无人值守地跑，你事后评判结果。人在回路意味着趁问题还便宜时抓住它：你看见 agent 伸手拿错文件、误读需求、或一头扎进死胡同，一句话让它改道——而不是二十分钟后发现一段自信的工作全都建在那个错上。agent 不可靠地知道自己何时偏航；没人管时，它们倾向于硬推而不是停下来问。
 
-The contrast is with [AFK](/terms/afk) work, where the agent runs unattended and you judge the result afterwards. Human-in-the-loop means catching problems while they're still cheap: you see the agent reach for the wrong file, misread the requirement, or start down a dead end, and you redirect it in one sentence — rather than discovering twenty minutes of confident work built on that mistake. Agents don't reliably know when they're off track; left alone, they tend to push forward rather than stop and ask.
+哪种模式合适取决于工作。规格清晰、低风险、易验证的任务适合 AFK。含糊的、不可逆的、或你很难评审成品的工作——一次 schema 迁移、一个棘手的设计决定、任何碰生产的东西——适合留在回路里。判断归结为：一个错误的转弯多贵，以及你会多晚抓到它。
 
-Which pattern fits depends on the work. Well-specified, low-risk, easy-to-verify tasks suit AFK. Tasks that are ambiguous, irreversible, or where you'd struggle to review the finished result — a schema migration, a tricky design decision, anything touching production — suit staying in the loop. The judgement call is essentially: how expensive is a wrong turn, and how late would you catch it?
+有些工作天然在回路里，因为你的反应就是输入。[追问](/terms/grilling)只有你在场回答问题才成立；[原型](/terms/prototyping)只有你在场对产物作出反应才成立。
 
-Some work is in-the-loop by nature, because your reactions are the input. [Grilling](/terms/grilling) only works with you there to answer the questions; [prototyping](/terms/prototyping) only works with you there to react to the artifact.
+留在回路花的是你的注意力，而那是稀缺资源。与 agent 协作变好的一部分，就是把更多工作安全地移出回路——用计划、[自动化检查](/terms/automated-check)、和收尾时的一次[人工评审](/terms/human-review)，代替全程监督。
 
-Staying in the loop costs your attention, which is the scarce resource. Part of getting better with agents is moving more work safely out of the loop — with plans, [automated checks](/terms/automated-check), and [human review](/terms/human-review) at the end instead of supervision throughout.
+用法：
 
-_Usage:_
+"这个过夜 AFK 跑？"
 
-"Run this AFK overnight?"
-
-"No, schema migration — keep it human-in-the-loop. I want to see each step and steer if it picks the wrong column to backfill from."
+"不行，schema 迁移——保持人在回路。我要看着每一步，它要是挑错回填的列就纠正它。"

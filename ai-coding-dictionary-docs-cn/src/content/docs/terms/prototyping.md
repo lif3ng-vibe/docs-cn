@@ -3,19 +3,18 @@ title: "Prototyping（原型法）"
 source: "https://www.aihero.dev/ai-coding-dictionary/prototyping"
 ---
 
+让[agent](/terms/agent)快速搭一个粗糙版本，用于交谈的保真度不够、需要一个真实产物来谈论的时候。
 
-Having the [agent](/terms/agent) build a quick, rough version of something, for when conversation is too low-fidelity and you need a real artifact to talk about.
+[追问](/terms/grilling)在交谈中解决设计决定。交谈便宜，但保真度低：有些问题没法用语言回答——一个交互的手感、一个 API 形状在真实调用代码里顺不顺手、一个布局在真实数据量下行不行。访谈撞上这样的问题，你诚实的回答是"不知道，得看到才行"。过了这个点，讨论就开始绕圈。改为让 agent 把东西搭出来，看一眼，带着答案回到对话。
 
-[Grilling](/terms/grilling) resolves design decisions in conversation. Conversation is cheap, but it's low-fidelity: some questions can't be answered in words — how an interaction feels, whether an API shape is ergonomic in real calling code, whether the layout works at real data sizes. The interview hits a question and your honest answer is "I don't know, I'd have to see it." Past that point the discussion circles. Instead, have the agent build the thing, look at it, and come back to the conversation with an answer.
+agent 降低了构建成本，这让这件事变得实际。过去要花一天 mock 的粗糙版本，现在几分钟，于是值得日常去做。它是一门[人在回路](/terms/human-in-the-loop)技术：原型就是给你反应的。
 
-Agents lower the cost of building, which is what makes this practical. A rough version that used to take a day to mock up now takes minutes, so it's worth doing routinely. It's a [human-in-the-loop](/terms/human-in-the-loop) technique: the prototype is there for you to react to.
+你通常不会只看一眼。拿原型迭代——反应、要一个改动、再反应——让每一轮对着真实产物再解决一个决定，保真度高于交谈所允许的。
 
-You usually don't stop at one look. Iterate with the prototype — react, ask for a change, react again — so each round resolves another decision against the real artifact, at a higher fidelity than conversation allows.
+原型不必全是糙活。你可以把真正在评估的那些部分做到生产质量，于是决定落地时，你反应过的那个组件或 API 可以直接平移进真实的代码库。这让原型成为[规格](/terms/spec)要引用的必要材料。
 
-A prototype doesn't have to be all-scrappy. You can build the pieces you're actually evaluating to production quality, so when the decision lands, the component or API you reacted to can transfer into the real codebase. This makes prototyping essential material for the [spec](/terms/spec) to reference.
+用法：
 
-_Usage:_
+"向导该一页还是三步，我们已经吵了半小时。"
 
-"We've spent half an hour arguing about whether the wizard should be one page or three steps."
-
-"Words won't settle it — have the agent prototype both. We'll click through them and know in five minutes."
+"语言解决不了——让 agent 把两个都原型出来。点一遍，五分钟就有答案。"

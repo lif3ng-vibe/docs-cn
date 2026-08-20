@@ -3,19 +3,18 @@ title: "Human review（人工评审）"
 source: "https://www.aihero.dev/ai-coding-dictionary/human-review"
 ---
 
+用户阅读[agent](/terms/agent)产出的代码并对其形成判断。读 diff 或改动过的文件算；读 agent 对它所作所为的_描述_不算——叙述不是产物。描述是[二手来源](/terms/secondary-source)，出自被评审一方之手；diff 是[一手来源](/terms/primary-source)，评审的意思就是读它。
 
-The user reading the code the [agent](/terms/agent) produced and forming a judgement on it. Reading the diff or the changed files counts; reading the agent's _description_ of what it did does not — narration is not the artifact. The description is a [secondary source](/terms/secondary-source), written by the party being reviewed; the diff is the [primary source](/terms/primary-source), and review means reading it.
+agent 抬高了代码产量，评审成了瓶颈。一个有用的思路是分层配不同的评审策略。[自动化检查](/terms/automated-check)抓机械性失败，[自动化评审](/terms/automated-review)抓可描述的，人工评审留给只有你能判断的——这个改动是不是对的改动、方案合不合这个代码库、这东西到底该不该存在。
 
-Agents raise the volume of code produced, so review becomes the bottleneck. One useful idea is layering different review strategies. [Automated checks](/terms/automated-check) catch the mechanical failures, [automated review](/terms/automated-review) catches the describable ones, and human review is reserved for what only you can judge — whether the change is the right change, whether the approach fits the codebase, whether this should exist at all.
+评审也越早越便宜。开工前读一份计划、飞行途中读一个小 diff，花几分钟；[AFK](/terms/afk)运行后开挖一条完工的分支，花得更久。评审检查点放哪，是一个[人在回路](/terms/human-in-the-loop)决策，不是事后想法。
 
-Review is also cheaper earlier. Reading a plan before work starts, or a small diff mid-flight, takes minutes; excavating a finished branch after an [AFK](/terms/afk) run takes longer. Where you place the review checkpoint is a [human-in-the-loop](/terms/human-in-the-loop) decision, not an afterthought.
+避免：光说"code review"——人工还是自动，含糊。
 
-_Avoid:_ "code review" alone — ambiguous between human and automated.
+用法：
 
-_Usage:_
+"我对 AFK 产出做了人工评审。"
 
-"I human-reviewed the AFK output."
+"你读了 diff 还是只读了摘要？"
 
-"You read the diff or just the summary?"
-
-"Diff. The summary said it deleted dead code — turned out the function was called from a generated file."
+"diff。摘要说它删了死代码——结果那函数被一个生成的文件调用着。"

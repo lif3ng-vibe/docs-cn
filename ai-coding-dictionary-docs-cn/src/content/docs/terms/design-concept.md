@@ -3,15 +3,14 @@ title: "Design concept（设计概念）"
 source: "https://www.aihero.dev/ai-coding-dictionary/design-concept"
 ---
 
+对"在建的是什么"的共享理解，为用户与[agent](/terms/agent)共同持有，又独立于任何资产。Brooks 的术语（《The Design of Design》）：对话、[交接产物](/terms/handoff-artifact)和代码都是试图捕捉或触及设计概念的资产，但没有一个_是_它。设计概念的质量，透过构建它的对话的质量被感知。
 
-The shared understanding of what's being built, held in common between user and [agent](/terms/agent) but separate from any asset. Brooks' term (_The Design of Design_): the conversation, [handoff artifacts](/terms/handoff-artifact), and the code are all assets that try to capture or reach the design concept, but none of them _are_ it. Quality of the design concept is felt through the quality of the conversation that built it.
+这个词命名了一种熟悉挫败背后的缺口：agent 写的正是你要的，但它还是错的。常见原因是，你还没完全想清楚你要什么。设计概念在你自己脑子里还没成形——你的提示词捕捉了你已想清的部分，对没想清的部分保持沉默。agent 用它自己的假设填了那些沉默，因为没有可对齐的东西。没有任何东西失灵。只是不存在共享的设计概念，因为还不存在一个完整的可供分享。
 
-The term names the gap behind a familiar frustration: the agent writes exactly what you asked for and it's still wrong. The usual cause is that you hadn't fully figured out what you wanted. The design concept wasn't finished in your own head — your prompt captured the parts you'd worked out, and was silent on the parts you hadn't. The agent filled those silences with its own assumptions, because there was nothing to align with. Nothing malfunctioned. There was no shared design concept, because there wasn't yet a whole one to share.
+判断一个设计概念已被共享，和判断一位同事的方法相同：对方开始以你的方式回答你还没问的问题。在那之前，工作是交谈——[追问](/terms/grilling)是它的刻意版本——而过早写[规格](/terms/spec)，只是把错位捕获进一个更耐久的资产。设计概念还随学习而移动；资产滞后于它，这就是为什么一份忠实于上周理解的规格，仍会误导本周的会话。
 
-You can tell a design concept is shared the same way you can with a colleague: the other party starts answering questions you haven't asked yet the way you would. Until then, the work is conversation — [grilling](/terms/grilling) is the deliberate version — and writing a [spec](/terms/spec) too early just captures the misalignment in a more durable asset. The design concept also moves as you learn; assets lag it, which is why a spec faithful to last week's understanding can still mislead this week's session.
+用法：
 
-_Usage:_
+"它写的正是我要的，可还是错的。"
 
-"It's writing exactly what I asked for and it's still wrong."
-
-"You don't share a design concept yet — it's filling gaps with assumptions. Keep talking until cancellation, refunds, and partial fulfilment all line up between you before you let it write a spec."
+"你们还没有共享的设计概念——它在用假设填缺口。继续谈，谈到取消、退款、部分履行在你们之间全部对齐，再让它写规格。"
