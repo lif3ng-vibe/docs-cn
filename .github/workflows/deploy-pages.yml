@@ -29,6 +29,8 @@ jobs:
           cache-dependency-path: |
             codegraph-docs-cn/package-lock.json
             orca-docs-cn/package-lock.json
+            mattpocock-skills-docs-cn/package-lock.json
+            ai-coding-dictionary-docs-cn/package-lock.json
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -50,6 +52,24 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build mattpocock-skills-docs-cn
+        working-directory: mattpocock-skills-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/mattpocock-skills/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/mattpocock-skills/|g' {} +
+          npm ci
+          npm run build
+
+      - name: Build ai-coding-dictionary-docs-cn
+        working-directory: ai-coding-dictionary-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/ai-coding-dictionary/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/ai-coding-dictionary/|g' {} +
+          npm ci
+          npm run build
+
       - name: Assemble Pages artifact
         run: |
           mkdir -p _site
@@ -59,6 +79,8 @@ jobs:
           # 子站点分别放子目录
           mv codegraph-docs-cn/dist _site/codegraph
           mv orca-docs-cn/dist _site/orca
+          mv mattpocock-skills-docs-cn/dist _site/mattpocock-skills
+          mv ai-coding-dictionary-docs-cn/dist _site/ai-coding-dictionary
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

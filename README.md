@@ -8,6 +8,8 @@
 |---|---|---|---|---|
 | codegraph | `codegraph-docs-cn/` | https://colbymchenry.github.io/codegraph/ | https://github.com/colbymchenry/codegraph | 2026-08-18 |
 | Orca | `orca-docs-cn/` | https://www.onorca.dev/docs | https://github.com/stablyai/orca | 2026-08-19 |
+| Matt Pocock Skills | `mattpocock-skills-docs-cn/` | https://www.aihero.dev/skills | https://github.com/mattpocock/skills | 2026-08-20 |
+| AI 编码词典 | `ai-coding-dictionary-docs-cn/` | https://www.aihero.dev/ai-coding-dictionary | https://github.com/mattpocock/dictionary-of-ai-coding | 2026-08-20 |
 
 ## 运行任意子项目
 
@@ -25,6 +27,7 @@ npm run preview      # 预览构建产物
 
 - **复用原站工程**：拿到上游站点源码时，沿用原工具链（配置/主题/组件），仅中文化内容（codegraph）。
 - **从渲染站点重建**：上游站点源码不公开时，从线上站点的 Next.js RSC payload 提取正文重建为 Markdown，再用 Starlight 搭站（orca）。
+- **从内容仓库新建**：上游只有 markdown 内容、没有站点工程时（托管平台不开源），用 Starlight 新建中文站（mattpocock-skills、ai-coding-dictionary）；原站的站内链接改写为本站路径，词典类词条保留英文术语加中文译名。
 - 术语口径见各子目录的 `GLOSSARY.md`（如适用）。
 - 代码块、命令、配置键、产品名保留英文；按钮/菜单名保留英文加粗并首次出现括注中文。
 - 每页 frontmatter 的 `source` 字段记录原站 URL，便于后续手动同步。
@@ -39,6 +42,8 @@ docs-cn/
 ├── .github/workflows/     # Pages 部署 CI
 ├── codegraph-docs-cn/     # codegraph 中文文档（Starlight）
 ├── orca-docs-cn/          # Orca 中文文档（Starlight）
+├── mattpocock-skills-docs-cn/          # Matt Pocock Skills 中文文档（Starlight）
+├── ai-coding-dictionary-docs-cn/       # AI 编码词典中文版（Starlight）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -68,13 +73,15 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 1. 用 `sites.json` 生成入口页 `index.html`。
 2. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
 3. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
-4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`。
+4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`。
 5. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
 
 部署后访问地址：
 - 入口：https://lif3ng-vibe.github.io/docs-cn/
 - codegraph：https://lif3ng-vibe.github.io/docs-cn/codegraph/
 - Orca：https://lif3ng-vibe.github.io/docs-cn/orca/
+- Matt Pocock Skills：https://lif3ng-vibe.github.io/docs-cn/mattpocock-skills/
+- AI 编码词典：https://lif3ng-vibe.github.io/docs-cn/ai-coding-dictionary/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
