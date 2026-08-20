@@ -111,6 +111,10 @@ Create Workspace 对话框为 **Project** 和 **Run on** 使用预输入组合�
 
 双击侧边栏中的 worktree 标题可就地重命名。双击卡片其他位置仍会打开完整编辑对话框。在 **Edit Worktree Details** 中，议题字段接受 **GitHub** 或 **Linear**（字段上的微标；粘贴 URL 即自动识别）。每个工作区一个关联议题——更换提供商或清空字段会解除上一个的关联。对于主机已断开的 SSH 工作区，卡片标题行可以显示内联重连控件（参见 [SSH worktree](/ssh)）。
 
+## Resource Manager 清理
+
+当你需要在移除前审视整个环境中的工作区时，使用 **Resource Manager → Clean up workspaces**。列表涵盖本地 worktree、主 worktree、文件夹工作区，以及位于已断开 SSH 主机上的工作区。你可以搜索、过滤或排序列表，逐一查看每个工作区的状态、近期活动、体积、Git 状态和关联的 review，然后再选择要移除的项。
+
 ## 保留分支
 
 批量删除工作区（侧边栏多选或 Resource Manager 清理）仍会移除磁盘上的文件夹。如果 git 因为某个本地分支可能含有未合并提交而拒绝丢弃它，Orca 会保留这些分支并显示一条 toast，例如 **Review N Branches**。打开它可以列出保留的分支，让你强制删除一部分、保留其余。未选择的分支留在仓库中；工作区文件夹不会恢复。
