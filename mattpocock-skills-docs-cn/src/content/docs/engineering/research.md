@@ -3,76 +3,76 @@ title: "research：调研"
 source: "https://www.aihero.dev/skills-research"
 ---
 
-## What it does
+## 它做什么
 
-`research` answers a question by reading the sources that own the answer, then leaves a cited Markdown file in the repo. It works only from **[primary sources](https://www.aihero.dev/ai-coding-dictionary/primary-source)**: official docs, source code, specs, first-party APIs. It follows every claim back to the source that owns it, so it will not repeat a blog post's account of an API when the API's own docs are reachable.
+`research` 通过阅读握有答案的来源来回答问题，然后在仓库里留下一份带引用的 Markdown 文件。它只从**[一手来源](https://www.aihero.dev/ai-coding-dictionary/primary-source)**工作：官方文档、源码、规格、第一方 API。它把每个论断追回到拥有它的那个来源，所以在 API 自己的文档够得着时，它不会复述一篇博客对那个 API 的转述。
 
-It does not answer you in the conversation. The output is a file, written where the repo already keeps such notes, with a link on each claim. That is the point: a document you can react to, hand to another agent, or throw away, rather than an answer that vanishes when the [session](https://www.aihero.dev/ai-coding-dictionary/session) ends.
+它不在对话里回答你。产出是一个文件，写在仓库本来就存放此类笔记的地方，每个论断带一条链接。这正是意义所在：一份你可以作出反应、递给另一个智能体、或干脆扔掉的文档，而不是一个[会话](https://www.aihero.dev/ai-coding-dictionary/session)结束就消失的答案。
 
-## When to reach for it
+## 什么时候该用它
 
-Type `/research`, or the [agent](https://www.aihero.dev/ai-coding-dictionary/agent) reaches for it automatically when a task turns into reading legwork.
+输入 `/research`，或任务变成阅读型跑腿时[智能体](https://www.aihero.dev/ai-coding-dictionary/agent)自动够到。
 
-Reach for it when the next step is *finding something out* from outside the working directory (how a third-party API behaves, what a spec actually says, whether a version claim holds), and you'd rather not stall your own thread doing the reading. What you need decides which skill:
+下一步是到工作目录*之外*去弄清一件事时用它（一个第三方 API 怎么表现、一份规格实际说了什么、一个版本说法是否成立），而你不想让自己的线程停在阅读上。你要什么，决定用哪个技能：
 
-| What you need | Reach for |
+| 你需要什么 | 够哪个 |
 | --- | --- |
-| An external fact a decision is waiting on | `research` |
-| A decision made *with* you, by interview | [grilling](/productivity/grilling) |
-| A durable architecture decision, written into `CONTEXT.md` and ADRs | [grill-with-docs](/engineering/grill-with-docs) |
-| To find out whether an approach works in your codebase | [prototype](/engineering/prototype) |
-| A plan too big to hold in one session | [wayfinder](/engineering/wayfinder) |
+| 一个决策正在等的外部事实 | `research` |
+| 一个*和你一起*、靠访谈做出的决策 | [grilling](/productivity/grilling) |
+| 一项要写进 `CONTEXT.md` 和 ADR 的耐久架构决策 | [grill-with-docs](/engineering/grill-with-docs) |
+| 弄清一个方案在你的代码库里行不行 | [prototype](/engineering/prototype) |
+| 一个大到单个会话装不下的计划 | [wayfinder](/engineering/wayfinder) |
 
-The line between `research` and `grill-with-docs` is the **shelf life of what comes back**. Research produces short-lived assets: what this library's auth mechanism does as of this week. An ADR records a decision you keep. If what you are producing is a decision rather than a fact, you are [grilling](https://www.aihero.dev/ai-coding-dictionary/grilling), not researching.
+`research` 与 `grill-with-docs` 的分界线，是**带回来的东西的保质期**。调研产出短命资产：这个库的鉴权机制本周是怎样的。ADR 记录的是你留着的一项决策。如果你产出的是决策而非事实，你在[追问](https://www.aihero.dev/ai-coding-dictionary/grilling)，不在调研。
 
-## Delegated legwork
+## 被委托的跑腿
 
-The defining move is that the reading runs as a **background agent**. You keep working; it goes off, follows each claim to its primary source, writes one Markdown file, and reports back. Research is legwork you delegate, not thinking you outsource: you get a document to grill, plan, or design against, and you still make the call.
+定义性的一招，是阅读作为一个**后台智能体**运行。你继续干活；它跑出去，把每个论断追到一手来源，写一份 Markdown 文件，然后回来报告。调研是你委托出去的跑腿，不是你外包出去的思考：你拿到一份可以对着追问、规划或设计的文档，而拍板的仍是你。
 
-The delegation is unguarded, and the background agent can spawn a further background agent of its own. This is the skill's best-documented rough edge.
+这个委托没有护栏，而后台智能体可以再派生自己的后台智能体。这是技能被记录得最清楚的毛边。
 
-Where the file lands is decided by the repo, not by the skill: it matches whatever convention already exists for notes, and if there is none it picks somewhere sensible and tells you where. It writes one file per run.
+文件落在哪由仓库决定，不由技能决定：它顺着笔记类文件已有的约定走，没有约定就挑个合理的地方并告诉你。每次运行写一个文件。
 
-## Common questions
+## 常见问题
 
-**It spawned a second research agent. Is that meant to happen?**
+**它派生了第二个调研智能体。是设计如此吗？**
 
-No. This is an open bug, [issue #530](https://github.com/mattpocock/skills/issues/530). The skill tells its caller to spin up a background agent but does not restrict the agent type, so the agent it spawns is a `general-purpose` one that holds the `Agent` tool and the same instructions, and fires them again. One reporter measured a single research task costing roughly 450k [tokens](https://www.aihero.dev/ai-coding-dictionary/token) across three overlapping runs, with the duplicate finishing half an hour later entirely out of view. It reproduces outside Claude Code too; the same nesting was confirmed in Codex with GPT-5.6-sol. There is no shipped fix. Users have patched their own installed copy with a line telling an agent that is already a [subagent](https://www.aihero.dev/ai-coding-dictionary/subagent) to do the work itself, which helps but is instruction-level, not structural. Watch your background task list after invoking, and stop the duplicate.
+不是。这是一个开放 bug，[issue #530](https://github.com/mattpocock/skills/issues/530)。技能告诉调用者起一个后台智能体，但不限制智能体类型，于是它派生的是一个持有 `Agent` 工具和同一套指令的 `general-purpose` 智能体，然后它又开火。一位报告者测过，单个调研任务在三次交叠的运行中烧掉约 450k [token](https://www.aihero.dev/ai-coding-dictionary/token)，副本在半小时后才跑完，全程无感。在 Claude Code 之外也能复现；Codex 上用 GPT-5.6-sol 确认过同样的嵌套。没有随附的修复。有用户给自己装的副本打了一行补丁，告诉一个已经是[子智能体](https://www.aihero.dev/ai-coding-dictionary/subagent)的智能体自己把活干了——有用，但那是指令级的，不是结构级的。调用之后盯一眼你的后台任务列表，把副本停掉。
 
-The opposite failure exists as well: if your own global instructions forbid an agent from re-delegating work, the background agent will politely decline the task and the skill quietly does nothing.
+反方向的失败也存在：如果你自己的全局指令禁止智能体再委托工作，后台智能体会客气地拒绝任务，于是技能悄悄什么都没做。
 
-**Where should the file live, and should I commit it?**
+**文件该放哪，要提交吗？**
 
-The skill puts the file where the repo already keeps notes and does not have an opinion beyond that. The community one is fairly settled: ADRs are kept, research files are not. The sharpest version of it, from a Discord thread on exactly this question: "ADRs yes. Everything else archive or delete after done. It otherwise becomes cruft of work and can poison future repo reads if you've drifted away from the spec/research." A research file records what was true on the day it was written, so a stale one is worse than none. On balance these artifacts don't really belong in git, and there is no canonical home for them: people use Obsidian, a separate knowledge repo, or the issue tracker instead.
+技能把文件放在仓库本来就放笔记的地方，此外没有意见。社区的意见相当一致：ADR 留下，调研文件不留。最锋利的版本来自 Discord 上恰好讨论这个问题的线程："ADR 留。其余做完就归档或删掉。否则它会变成工作的残渣，而且一旦你偏离了规格/调研，还会毒害未来对仓库的阅读。"调研文件记录的是写它那天为真的东西，所以一份过期的比没有更糟。总体上这些产物不太属于 git，也没有权威归宿：人们用 Obsidian、一个单独的知识库，或工单追踪器。
 
-**What counts as a "high-trust" primary source, and who decides?**
+**什么算"高信任"的一手来源，谁说了算？**
 
-The [model](https://www.aihero.dev/ai-coding-dictionary/model) does. The skill names the *kinds* of source that qualify (official docs, source code, specs, first-party APIs), and there is no allowlist, no domain gate, and no verification pass. This was the loudest objection when the skill was first proposed and it has never been answered publicly: "Five research subagents pointed at junk just gives you five confident wrong answers faster. How are you gating what counts as high-trust sources?" The mitigation you actually have is the citation on each claim. Follow two or three of them. If they land on a summary of the thing rather than the thing, the run failed at its one job.
+[模型](https://www.aihero.dev/ai-coding-dictionary/model)说了算。技能点名了够格的来源*种类*（官方文档、源码、规格、第一方 API），没有白名单，没有领域闸门，没有核验环节。这是技能初提时最响的反对，而且从未被公开回应："五个调研子智能体对准垃圾，只是更快地给你五个自信的错误答案。你怎么把关什么算高信任来源？"你实际拥有的缓解，是每个论断上的引用。随机跟两三条。如果它们落在对那样东西的概述而不是那样东西本身上，这次运行就在它唯一的职责上失败了。
 
-**Does a later session reuse what an earlier run found?**
+**后来的会话会复用先前运行找到的东西吗？**
 
-No. Nothing auto-loads a past research file; it is a document sitting in the repo until a human or a skill points at it. This was raised early as the strongest challenge to the design: "the value's the markdown becoming context the agent re-reads later, not the fetch itself. A write-once dead file is just a fancy search." The shipped skill does not solve it. In practice the file earns its keep by being fed into the next step deliberately: attach it to a spec, quote it into a grilling session, point a [ticket](https://www.aihero.dev/ai-coding-dictionary/ticket) at it.
+不会。没有什么会自动加载过去的调研文件；它是一份坐在仓库里的文档，直到有人或某个技能指向它。这在早期就被当作对设计最重的挑战提出来："价值在于这份 markdown 变成智能体之后重读的上下文，而不是抓取本身。一个写完即死的文件只是个花哨的搜索。"已发布的技能没有解决它。实践中，这个文件靠被有意喂进下一步来挣得存在感：附到规格上、引述进追问会话、让[工单](https://www.aihero.dev/ai-coding-dictionary/ticket)指向它。
 
-**Why not just ask the agent to go read the docs?**
+**为什么不直接让智能体去读文档？**
 
-You can, and a two-line prompt saying exactly that was the practice this skill replaced. Two things the skill buys over the prompt: it runs in the background so your session keeps its [context](https://www.aihero.dev/ai-coding-dictionary/context) clean, and the primary-source constraint and the cited-file output come out the same way every time rather than however you happened to phrase it. Against a [harness](https://www.aihero.dev/ai-coding-dictionary/harness)'s own deep-research mode, the difference is the artifact and the source discipline, not the search. If a two-line prompt gets you what you need on a small question, use the two-line prompt.
+可以，而一条两行的提示词说的正是这件事——这个技能取代的就是那个做法。技能比提示词多买两样：它在后台跑，你的会话保持[上下文](https://www.aihero.dev/ai-coding-dictionary/context)干净；而且一手来源约束和带引用的文件产出每次都一样，不随你恰好怎么措辞而变。对比[框架](https://www.aihero.dev/ai-coding-dictionary/harness)自带的深度调研模式，差别在产物和来源纪律，不在搜索本身。小问题上两行提示词够用，就用两行提示词。
 
-**When does it stop reading?**
+**它什么时候停止阅读？**
 
-There is no stopping criterion in the skill, and this shows up as two complaints that look opposite but are the same gap: agents that go far too deep, and agents that cover a topic broadly while missing the one specific detail that mattered. One practitioner put it as "deep-research skills are a bit too deep sometimes. And telling an agent to research usually results in missing crucial details." Scoping is on you. A narrow, answerable question (one API, one behaviour, one version claim) comes back far better than "research X".
+技能里没有停止判据，而这表现为两种看着相反、实为同一缺口的抱怨：走得太深的智能体，和把一个主题覆盖得很广、却漏掉真正要紧的那一个细节的智能体。一位实践者的说法是："深度调研技能有时候太深了。而让一个智能体去 research，结果通常是漏掉关键细节。"圈定范围是你的活。一个窄的、可回答的问题（一个 API、一种行为、一个版本说法）带回来的结果，远好过"调研 X"。
 
-**`/wayfinder` created research tickets. Do I resolve those myself?**
+**`/wayfinder` 建了调研工单。要我自己去做掉吗？**
 
-No, it now fires them for you. In the unreleased changes since v1.1, a charting session spawns a `/research` subagent per research ticket and burns them down in parallel, capturing findings on a throwaway `research/<name>` branch with a [context pointer](https://www.aihero.dev/ai-coding-dictionary/context-pointer) from the ticket. Research tickets are the one exception to wayfinder's one-ticket-per-session rule, because they are [AFK](https://www.aihero.dev/ai-coding-dictionary/afk): nothing waits on you. Two known snags with those branches: the subagent has been seen opening a draft PR from a branch that is never meant to merge ([issue #576](https://github.com/mattpocock/skills/issues/576)), and deleting the branch later breaks the context pointers the tickets hold.
+不用，它现在替你开火。v1.1 之后未发布的变更里，一场绘图会话会为每张调研工单派生一个 `/research` 子智能体并行烧掉它们，把发现捕获到一个一次性 `research/<name>` 分支，并从工单留一个[上下文指针](https://www.aihero.dev/ai-coding-dictionary/context-pointer)。调研工单是 wayfinder"一工单一会话"规则的唯一例外，因为它们是 [AFK](https://www.aihero.dev/ai-coding-dictionary/afk) 的：没有什么在等你。那些分支有两个已知的坑：见过子智能体从一个绝不打算合并的分支开出草稿 PR（[issue #576](https://github.com/mattpocock/skills/issues/576)）；以及事后删掉分支会弄断工单持有的上下文指针。
 
-## It's working if
+## 正常工作的标志
 
-- Your own session keeps going. If you are sitting watching it read, the delegation didn't happen.
-- Exactly one new background task appears. A second one with a near-identical name is the nesting bug.
-- One new Markdown file shows up, in the folder the repo already uses for notes, and the agent tells you the path.
-- Every claim in it carries a link, and following two at random lands you on an official doc, a spec, or the actual source file, not on someone's write-up of it.
-- You can make the decision you were stuck on from the file alone, without going back to the sources yourself.
+- 你自己的会话一直在走。如果你坐着看它读，委托就没有发生。
+- 恰好出现一个新后台任务。第二个名字几乎一样的，就是嵌套 bug。
+- 出现一个新 Markdown 文件，在仓库本来放笔记的文件夹里，而且智能体告诉你路径。
+- 其中每个论断都带链接，随机跟两条，落在官方文档、规格或源码文件本身上，而不是落在谁的转述上。
+- 只凭这份文件，你就能做出你原本卡住的那个决策，不必自己回头去翻来源。
 
-## Where it fits
+## 它在全局中的位置
 
-A reach-for-it-anytime standalone that feeds the thinking skills rather than sitting in the build chain. Its file is something to take *into* the flow: [grilling](/productivity/grilling) and [grill-with-docs](/engineering/grill-with-docs) ask sharper questions when the facts are already on the table, and [to-spec](/engineering/to-spec) can synthesise against it. [wayfinder](/engineering/wayfinder) is the one skill that invokes it directly, resolving each research ticket on its map with a `/research` subagent. For the whole map, see [ask-matt](/engineering/ask-matt).
+一个随时可单独够到的独立技能，喂养思考类技能，而不坐在构建链上。它的文件是要*带进*流程的东西：事实已经摆在桌面上时，[grilling](/productivity/grilling) 和 [grill-with-docs](/engineering/grill-with-docs) 的问题问得更锋利，[to-spec](/engineering/to-spec) 可以对着它做综合。直接调用它的只有一个：[wayfinder](/engineering/wayfinder)，用 `/research` 子智能体解决地图上的每张调研工单。要看全图，见 [ask-matt](/engineering/ask-matt)。
