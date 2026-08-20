@@ -3,17 +3,16 @@ title: "Parametric knowledge（参数化知识）"
 source: "https://www.aihero.dev/ai-coding-dictionary/parametric-knowledge"
 ---
 
+[model](/terms/model)从[训练](/terms/training)中"知道"的东西，存在它的[参数](/terms/parameters)里。训练时冻结——模型看不见自己的参数，也更新不了它们。细节在挤压中丢失：数十亿条事实塞进固定数量的参数，罕见的那些就糊掉。它既是常见话题上流畅的来源，也是罕见话题上编造的来源。与[情境知识](/terms/contextual-knowledge)相对。
 
-What the [model](/terms/model) "knows" from [training](/terms/training), stored in its [parameters](/terms/parameters). Frozen at training time — the model can't see its own parameters or update them. Detail is lost in the squeeze: billions of facts cram into a fixed number of parameters, and the rare ones blur. Source of fluency on common topics, and of fabrication on uncommon ones. Counterpart to [contextual knowledge](/terms/contextual-knowledge).
+参数化知识不以事实的形式存储。训练从不给模型一个可查的数据库；它调整参数直到模型把文本预测好，而一个能把某话题的文本预测好的模型，表现得就像它懂这个话题。知识的可靠度追随着它在训练数据里出现的频度：有百万级样本的话题被准确复现，只有寥寥几条样本的话题，模型就照相似话题的样子猜。复现和猜测对模型是同一个过程，所以它分不清自己在做哪个。一个编造的答案和正确的答案以同样的流畅度抵达。[幻觉](/terms/hallucination)就是模型猜错了。
 
-Parametric knowledge is not stored as facts. Training never gives the model a database to look things up in; it adjusts parameters until the model predicts text well, and a model that predicts text about a topic well behaves as if it knows the topic. How reliable the knowledge is tracks how often something appeared in the training data: a topic with millions of examples is reproduced accurately, for a topic with only a handful, the model guesses based on what similar topics look like. Reproducing and guessing are the same process to the model, so it can't tell which one it's doing. A fabricated answer arrives with the same fluency as a correct one. [Hallucination](/terms/hallucination) is the model guessing wrong.
+参数化知识还会变旧。参数在[知识截止点](/terms/knowledge-cutoff)停止变化，之后发布或改名的库在参数里不存在，改过的 API 被记成旧样子。
 
-Parametric knowledge also ages. The parameters stop changing at the [knowledge cutoff](/terms/knowledge-cutoff), so a library released or renamed after that date doesn't exist in them, and an API that changed is remembered in its old form.
+两个缺口——太罕见和太新——的解药相同：知识加不进参数，所以必须以情境知识的形式供给。
 
-For both gaps — too rare and too recent — the remedy is the same: the knowledge can't be added to the parameters, so it has to be supplied as contextual knowledge instead.
+用法：
 
-_Usage:_
+"它写 React 无懈可击，却在我们内部 SDK 上编方法。"
 
-"It writes flawless React but invents methods on our internal SDK."
-
-"React is dense in the parametric knowledge — millions of training examples. Your SDK isn't, so the model fills in plausible-looking shapes. Load the SDK docs into [context](/terms/context)."
+"React 在参数化知识里很稠密——训练样本百万级。你们的 SDK 不是，所以模型用看似合理的形状来填。把 SDK 文档加载进[上下文](/terms/context)。"

@@ -3,17 +3,16 @@ title: "Smart zone（聪明区）"
 source: "https://www.aihero.dev/ai-coding-dictionary/smart-zone"
 ---
 
+[会话](/terms/session)早期，[agent](/terms/agent)处在"聪明区"——锋利、聚焦、召回良好。随着会话增长，它漂进"笨区"：更马虎、更健忘、更多错误——以及更多忠实性[幻觉](/terms/hallucination)。同一个[model](/terms/model)、同一个[harness](/terms/harness)——只是[上下文](/terms/context)更多。[注意力退化](/terms/attention-degradation)的体感。在前沿模型上，笨区通常在约 125K–150K [token](/terms/token) 处开始——尽管这点有争议。会话虚胖时就[清空](/terms/clearing)或[压缩](/terms/compaction)；别硬推。
 
-Early in a [session](/terms/session) the [agent](/terms/agent) is in a "smart zone" — sharp, focused, recall is good. As the session grows it drifts into a "dumb zone": sloppier, forgetful, more mistakes — and more faithfulness [hallucinations](/terms/hallucination). Same [model](/terms/model), same [harness](/terms/harness) — just more [context](/terms/context). The felt effect of [attention degradation](/terms/attention-degradation). On frontier models, the dumb zone commonly begins around 125K-150K [tokens](/terms/token) — though this is debated. [Clear](/terms/clearing) or [compact](/terms/compaction) when the session bloats; don't push through.
+下坡是渐进的，这让它容易被错过。没有报错信息，没有可见的边界；agent 只是一开始表现得略差，然后明显地差。常见信号：它忘了你二十轮前给的指令，重复一个已经纠正过的错误，或笃定地断言某个与上下文相悖的东西。因为下滑是平滑的，通常的反应是硬推加重讲——这又添了上下文，把问题弄得更糟。
 
-The decline is gradual, which makes it easy to miss. There's no error message and no visible boundary; the agent just starts performing slightly worse, then noticeably worse. Common signs: it forgets an instruction you gave twenty turns ago, repeats a mistake it had already corrected, or confidently asserts something the context contradicts. Because the slide is smooth, the usual response is to push through and re-explain — which adds more context and makes the problem worse.
+两个区不跟随[上下文窗口](/terms/context-window)上限。一个会话可以深陷笨区而窗口大部分还空着：上限是 harness 拒绝继续的地方，而质量在远早于那之前就开始跌落。围着聪明区做计划，不是围着窗口——一个任务的实际预算是 agent 在其中工作良好的 token 数，不是它技术上装得下的 token 数。
 
-The zones don't track the [context window](/terms/context-window) limit. A session can be deep in the dumb zone with most of the window still free: the limit is where the harness refuses to continue, but quality falls off long before that. Plan around the smart zone, not the window — the practical budget for a task is the tokens the agent works well within, not the tokens it can technically hold.
+聪明区是一份预算，不相关的工作花掉它。会话里做的每个任务都耗 token，于是在同一会话里开第二个任务，意味着离笨区更近地开始它。一个会话一个任务，让每个任务拿到会话最锋利的那段。当单个任务大过一个聪明区时，拆开它：在自然边界[交接](/terms/handoff)或压缩，让新会话做下一块。
 
-The smart zone is a budget, and unrelated work spends it. Every task done in a session uses up tokens, so starting a second task in the same session means starting it closer to the dumb zone. Doing one task per session gives each task the sharpest part of the session. When a single task is bigger than one smart zone, split it: [hand off](/terms/handoff) or compact at a natural boundary, and let a fresh session do the next piece.
+用法：
 
-_Usage:_
+"前三个组件它做得漂亮，第四个彻底砸了。"
 
-"It nailed the first three components and just butchered the fourth."
-
-"You're out of the smart zone — same model, just deep into the dumb zone now. Compact and reload the plan, the next component will land."
+"你的聪明区用完了——同一个模型，只是现在深处笨区。压缩后重载计划，下一个组件就能落好。"

@@ -3,17 +3,16 @@ title: "Attention degradation（注意力退化）"
 source: "https://www.aihero.dev/ai-coding-dictionary/attention-degradation"
 ---
 
+随着[会话](/terms/session)增长，每个[token](/terms/token)的[注意力预算](/terms/attention-budget)被摊到更多竞争者头上。任一[有意义关系](/terms/attention-relationship)上的信号缩小；无关[上下文](/terms/context)的噪音挤进来。同一个[model](/terms/model)、同一套[参数](/terms/parameters)——只是同一盘菜要喂的嘴更多。聪明区/笨区[效应](/terms/smart-zone)的成因。
 
-As a [session](/terms/session) grows, each [token](/terms/token)'s [attention budget](/terms/attention-budget) is spread across more competitors. The signal on any one [meaningful relationship](/terms/attention-relationship) shrinks; noise from irrelevant [context](/terms/context) crowds in. Same [model](/terms/model), same [parameters](/terms/parameters) — just more mouths to feed from the same plate. Cause of the smart zone / dumb [zone effect](/terms/smart-zone).
+它表现为模型在会话中途变差：遵守了一个小时的约束开始滑脱，重新问起被告知过的事，写出的代码无视它先前读过的文件。模型什么都没变——唯一的变量是它此刻在其上分配注意力的上下文有多少。
 
-It presents as the model getting worse mid-session: constraints it followed for an hour start slipping, it re-asks things it was told, it writes code that ignores a file it read earlier. Nothing about the model changed — the only variable is how much context it's now attending over.
+它是渐进的，这正是从会话内部难以察觉的原因。没有报错，没有阈值，每个[turn](/terms/turn)只比上一个略差，等到滑脱显而易见时，你在笨区里已经待了一阵了。
 
-It's gradual, which is what makes it hard to catch from inside the session. There's no error and no threshold; each [turn](/terms/turn) is only slightly worse than the last, and by the time the slips are obvious you've been in the dumb zone for a while.
+恢复靠移除上下文，不是添加。重新粘贴被无视的指令，是往同一个拥挤的窗口里再加一个竞争者，只有片刻药效。管用的是：[清空](/terms/clearing)后只重载任务需要的、或[压缩](/terms/compaction)、或[交接](/terms/handoff)给一个新会话。把指令遵循的下降当作关于上下文长度的信号，而不是关于模型的。
 
-You recover by removing context, not adding more. Re-pasting the ignored instruction adds another competitor to the same crowded window and helps only briefly. What works: [clear](/terms/clearing) and reload only what the task needs, or [compact](/terms/compaction), or [hand off](/terms/handoff) to a fresh session. Treat declining instruction-following as a signal about context length, not about the model.
+用法：
 
-_Usage:_
+"它深陷笨区——在编类型文件里没有的泛型。"
 
-"It's deep in the dumb zone — inventing generics that aren't in the type file."
-
-"Attention degradation. The type definitions are still in context, but the signal on them is buried under everything we've added since. Clear and reload."
+"注意力退化。类型定义还在上下文里，但它们上面的信号被我们之后加进的一切埋住了。清空，重载。"

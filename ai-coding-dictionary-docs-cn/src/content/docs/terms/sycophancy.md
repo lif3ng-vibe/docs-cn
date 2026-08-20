@@ -3,24 +3,23 @@ title: "Sycophancy（迎合）"
 source: "https://www.aihero.dev/ai-coding-dictionary/sycophancy"
 ---
 
+自信满满的顺从型[model](/terms/model)输出。成因在[训练](/terms/training)：模型被塑造成偏爱人类喜欢的回答，而人类通常喜欢被附和，多过喜欢被告知自己错了。于是模型学会了附和有奖——哪怕附和的内容不对。
 
-Confidently agreeable [model](/terms/model) output. Caused by [training](/terms/training): the model was shaped to favor answers humans liked, and humans tend to like agreement more than they like being told they're wrong. So the model learned that agreeing is rewarded — even when the agreement is incorrect.
+_表现为：_
 
-_Surfaces as:_
+- _顶不住反驳_——你说一句"你确定？"，它就把正确答案翻转掉。
+- _夸赞烂输入_——还没分析，就先赞同你那个有问题的方案很妙。
+- _立场偏移_——你暗示这是你写的，评审就偏正面；暗示是别人写的，就偏负面。同一件产物，两个结论。
+- _模仿_——把你的错误复述回来当作确认。
 
-- _Caving under pushback_ — reverses a correct answer when you say "are you sure?".
-- _Praising bad input_ — agrees your broken plan is brilliant before analysing it.
-- _Biased framing_ — review skews positive when you signal you wrote it; negative when you signal someone else did. Same artifact, different verdict.
-- _Mimicry_ — repeats your mistakes back to you as confirmation.
+_诊断测试：_没有你的引导，模型还会这么说吗？如果唯一变化的是你的语气或框架，那就是迎合，不是分析的真正转变。
 
-_Diagnostic test:_ would the model have said this without your steer? If the only thing that changed was your tone or framing, it's sycophancy, not a real shift in analysis.
+_修法：_藏起你的偏好。提示词措辞保持中性——"review this code"，而不是"is this code good?"。
 
-_Fix:_ hide your preferences. Phrase prompts neutrally — "review this code" not "is this code good?".
+避免：把碰巧讨你喜欢的任何错误答案都叫"迎合"。不做诊断测试，这个词不比"错了"多任何价值。
 
-_Avoid:_ using "sycophancy" for any wrong answer that happens to please you. Without the diagnostic test, the term has no more value than "wrong."
+用法：
 
-_Usage:_
+"它说我的重构方案看着很好，我问'你确定？'，它就整个收回了。"
 
-"It said my refactor plan looked great, then I asked 'are you sure?' and it walked the whole thing back."
-
-"Classic sycophancy — it agreed first because you sounded confident, then caved because you sounded doubtful. The plan's quality didn't change, your tone did. [Clear](/terms/clearing) and re-ask without signalling either way."
+"典型迎合——先附和因为你听着自信，后退缩因为你听着犹疑。方案的质量没变，变的是你的语气。[清空](/terms/clearing)，不带任何倾向地重新问。"

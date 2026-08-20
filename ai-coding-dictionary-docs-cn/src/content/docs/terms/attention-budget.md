@@ -3,17 +3,16 @@ title: "Attention budget（注意力预算）"
 source: "https://www.aihero.dev/ai-coding-dictionary/attention-budget"
 ---
 
+每个[token](/terms/token)能分给[上下文](/terms/context)其余部分的影响力有限。在[某个关系](/terms/attention-relationship)上影响重，留给别人的就少。预算按 token 计，不随上下文增长，这正是长[会话](/terms/session)会稀释的原因。
 
-Each [token](/terms/token) has a finite amount of influence to distribute across the rest of the [context](/terms/context). Heavy influence on [one relationship](/terms/attention-relationship) leaves less for others. The budget is per-token and doesn't grow when the context does, which is why long [sessions](/terms/session) dilute.
+把它想成信号与噪音。你的指令是一个音量固定的信号；[上下文窗口](/terms/context-window)里其余每个 token 都是竞争的声响。指令从没变小声——它还在那儿，一字不差——但随着上下文增长，它周围的房间越来越吵，信噪比下降。在 1 万 token 上下文里曾是最大声的指令，到 15 万 token 时成了背景嗡鸣。这是[注意力退化](/terms/attention-degradation)背后的机制：模型没有忘记；是信号淹在了噪音里。
 
-Think of it as signal and noise. Your instruction is a signal at fixed volume; every other token in the [context window](/terms/context-window) is competing sound. The instruction never gets quieter — it's still there, character for character — but as the context grows, the room gets louder around it, and the signal-to-noise ratio drops. An instruction that was the loudest thing at 10k tokens of context is background hum at 150k. This is the mechanism behind [attention degradation](/terms/attention-degradation): the model doesn't forget; the signal gets lost in the noise.
+症状读起来像不服从——agent 早早答应了一个约束，随后渐渐偏离，重新粘贴约束也只有片刻药效。病因不在指令；在窗口里与它竞争的其他一切。
 
-The symptom reads as disobedience — the agent agreed to a constraint early on and then drifts from it, and re-pasting the constraint helps only briefly. The cause isn't the instruction; it's everything else in the window competing with it.
+你能控制的是进上下文的东西。不为任务服务的内容不是中性的——它是压在一切有用内容上的噪音。把窗口保持小，积累的上下文不再物有所值时就[清空](/terms/clearing)，要紧的约束重新陈述，而不是指望它早先的出场能撑到底。
 
-What you can control is what goes into the context. Content that doesn't serve the task isn't neutral — it's noise over everything that does. Keep the window small, [clear](/terms/clearing) when the accumulated context stops paying for itself, and restate the constraints that matter instead of trusting their early mention to hold.
+用法：
 
-_Usage:_
+"为什么它一直无视我粘在最顶上的 schema？"
 
-"Why does it keep ignoring the schema I pasted at the top?"
-
-"We're well into the [dumb zone](/terms/smart-zone) — every token's attention budget is fixed, but the context kept growing. The signal on the schema is now competing with thousands of newer tokens."
+"我们早就进笨区（见[smart zone](/terms/smart-zone)）了——每个 token 的注意力预算固定，上下文却一直在涨。schema 上的信号正在和几千个更新的 token 抢。"
