@@ -209,7 +209,7 @@ command: ["serve", "--transport", "http", "--bind", "0.0.0.0:49374", "--enable-w
 
 Web UI 只读：项目列表、逐项目页面树、面包屑、渲染的 markdown、元数据与 FTS5 检索。渲染页面里，`[[wiki links]]` 变成指向目标页的可点链接——支持 `[[path]]`、`[[path|label]]`、`[[project:path]]` 与 `[[workspace/project:path]]`（按当前页的项目解析，除非目标自带作用域）。围栏代码（` ``` ` 与 `~~~` 只被自己的字形闭合）、行内 `` `…` `` 代码与 4 空格缩进代码里 `[[…]]` 保持字面；括号内的外部 scheme（`http://`、`https://`、`mailto:`、`data:`、`javascript:`、`vbscript:`、`tel:`、`file:`）也保持字面。服务器设了 `AI_MEMORY_AUTH_TOKEN` 时，浏览器用 HTTP Basic 认证：用户名留空、token 作密码粘贴。MCP 与钩子客户端继续用 `Authorization: Bearer <token>`。
 
-想在反向代理后面把 Web UI 挂在 URL 子路径下，`--base-path` / `--web-slug` 标志负责——标志语义见[前端集成的「自定义 UI 托管与 base 路径」](/frontend-api/#6-自定义-ui-托管与-base-路径)，代理侧走查见[HTTPS 反向代理的「挂在子路径下」](/https-via-proxy/#挂在子路径下hosting-under-a-subpath)。
+想在反向代理后面把 Web UI 挂在 URL 子路径下，`--base-path` / `--web-slug` 标志负责——标志语义见[前端集成的「自定义 UI 托管与 base 路径」](/frontend-api/#6-自定义-ui-托管与-base-路径)，代理侧走查见[HTTPS 反向代理的「挂在子路径下」](/https-via-proxy/#挂在子路径下)。
 
 ![项目列表首页，四个项目以卡片展示，含页数与最近活动。](/web-projects-home.png)
 

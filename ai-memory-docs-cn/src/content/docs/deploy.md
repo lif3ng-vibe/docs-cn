@@ -94,7 +94,7 @@ curl -sI http://homelab:49374/handoff \
 - 何时加 TLS、何时跳过（环回 + stdio 两种情形确实不需要）。
 - 可直接复制的 docker compose 模板：[Caddy](https://github.com/akitaonrails/ai-memory/blob/main/docker/compose.tls.caddy.yml) 与 [Cloudflare Tunnel](https://github.com/akitaonrails/ai-memory/blob/main/docker/compose.tls.cloudflared.yml)。
 - 内部 CA 路径的各操作系统信任库安装（承重的手工步骤）。
-- ai-memory 与其他应用共享主机名时，经 `--base-path` / `AI_MEMORY_BASE_PATH` [挂在子路径下](/https-via-proxy/#挂在子路径下hosting-under-a-subpath)。
+- ai-memory 与其他应用共享主机名时，经 `--base-path` / `AI_MEMORY_BASE_PATH` [挂在子路径下](/https-via-proxy/#挂在子路径下)。
 - 明确的「哪里会出问题」小节，免得你无意间上线安全表演。
 
 对单用户环回的快速开始，只有 bearer token 仍然可接受——token 挡住局域网邻居，环回挡住抓包。部署形态一旦不再是「单用户单机」，TLS 就开始值回票价。
