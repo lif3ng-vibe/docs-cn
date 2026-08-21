@@ -1,24 +1,23 @@
 ---
-title: "basic-memory - Research Report"
-description: "Basic Memory is a local-first, MCP-native, Markdown-based personal knowledge graph. Its tagline is \"Your AI never forgets again\": notes live as plain Markdown files on disk, both h"
+title: "basic-memory 调研报告"
+description: "Basic Memory 是本地优先、MCP 原生、基于 Markdown 的个人知识图谱。它的口号是「你的 AI 再也不会忘记」。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-basic-memory.md"
 ---
 
-# basic-memory - Research Report
+# basic-memory 调研报告
 
-> Source project: `basicmachines-co/basic-memory` (Python, MCP-native, markdown-on-disk).
-> Studied as inspiration *and* as the manual-write-note model we explicitly
-> diverge from.
+> 源项目：`basicmachines-co/basic-memory`（Python，MCP 原生，markdown 落盘）。
+> 既作为灵感研究，也作为我们明确背离的手工 write_note 模型的样本。
 
-## 1. Purpose & Scope
+## 1. 目的与范围
 
-Basic Memory is a **local-first, MCP-native, Markdown-based personal knowledge graph**. Its tagline is "Your AI never forgets again": notes live as plain Markdown files on disk, both humans (in Obsidian, VS Code) and LLMs (over MCP) read and write them, and a SQLite/Postgres index keeps a knowledge graph in sync.
+Basic Memory 是**本地优先、MCP 原生、基于 Markdown 的个人知识图谱**。它的口号是「你的 AI 再也不会忘记」：笔记以纯 Markdown 文件存在于磁盘，人类（在 Obsidian、VS Code 里）与 LLM（经 MCP）都读写它们，一个 SQLite/Postgres 索引保持知识图同步。
 
-**The model is explicitly *manual*.** The user (or, more often, the agent in response to the user) calls `write_note`, `edit_note`, `move_note`, etc. There is **no implicit capture** of conversation content. The "How it works" example in `README.md:317-356` is literally *"Ask the LLM to capture it: 'Make a note on coffee brewing methods.'"* The README even prescribes user prompts ("Create a note about our project architecture decisions") as the activation step. Nothing in the codebase auto-saves conversation turns. The closest thing to automation is the `continue_conversation` *prompt* (`src/basic_memory/mcp/prompts/continue_conversation.py:18-90`), which only *retrieves* - it asks the model to search recent activity and load context; it never writes.
+**该模型明确是*手工的*。** 用户（或者更常见地，响应用户的智能体）调用 `write_note`、`edit_note`、`move_note` 等。对话内容**没有隐式捕获**。`README.md:317-356` 的「工作原理」示例字面就是*「让 LLM 捕获它：『做一个关于咖啡冲泡方法的笔记。』』* README 甚至把用户提示词（「为我们的项目架构决策创建一个笔记」）规定为激活步骤。代码库里没有任何自动保存对话回合的东西。最接近自动化的是 `continue_conversation` *提示词*（`src/basic_memory/mcp/prompts/continue_conversation.py:18-90`），而它只*检索*——它让模型搜索近期活动并加载上下文；从不写。
 
-## 2. Storage Model
+## 2. 存储模型
 
-**Both Markdown and SQL, with the files being source-of-truth.** Each note is one Markdown file with YAML frontmatter:
+**Markdown 与 SQL 双份，文件是事实源。** 每条笔记是一个带 YAML frontmatter 的 Markdown 文件：
 
 ```yaml
 ---
@@ -29,85 +28,85 @@ tags: [coffee, brewing]
 ---
 ```
 
-The grammar is documented in `docs/NOTE-FORMAT.md` and parsed at `src/basic_memory/markdown/entity_parser.py:1-27` using `markdown-it` plus custom `observation_plugin` and `relation_plugin`. Three semantic primitives:
+语法定义在 `docs/NOTE-FORMAT.md`，由 `src/basic_memory/markdown/entity_parser.py:1-27` 用 `markdown-it` 加自定义 `observation_plugin` 与 `relation_plugin` 解析。三个语义原语：
 
-- **Entity** (one per file): `src/basic_memory/models/knowledge.py:28-149`. Holds `title`, `note_type`, `permalink`, `file_path`, `checksum`, `mtime`, `size`, `entity_metadata` (JSON for custom frontmatter), `external_id` (stable UUID).
-- **Observation**: `- [category] text #tag (context)` lines, indexed in the `observation` table (`knowledge.py:220-263`).
-- **Relation**: `- relation_type [[Other Entity]]` lines, indexed in `relation` (`knowledge.py:265-311`). Bare `[[X]]` becomes `links_to`. Relations can be *unresolved* (`to_id` NULL until the target exists), then auto-resolved on sync.
+- **实体**（每文件一个）：`src/basic_memory/models/knowledge.py:28-149`。持有 `title`、`note_type`、`permalink`、`file_path`、`checksum`、`mtime`、`size`、`entity_metadata`（自定义 frontmatter 的 JSON）、`external_id`（稳定 UUID）。
+- **观察**：`- [category] text #tag (context)` 行，索引进 `observation` 表（`knowledge.py:220-263`）。
+- **关系**：`- relation_type [[Other Entity]]` 行，索引进 `relation`（`knowledge.py:265-311`）。裸 `[[X]]` 变成 `links_to`。关系可以是*未解析的*（目标存在前 `to_id` 为 NULL），同步时自动解析。
 
-**Search** is dual-stack and selected by `database_backend` config (`src/basic_memory/config.py:222-226`):
+**检索**是双栈，按 `database_backend` 配置选择（`src/basic_memory/config.py:222-226`）：
 
-- **SQLite**: FTS5 virtual table `search_index` with custom tokenizer `'unicode61 tokenchars 0x2F'` so `/` is searchable (`src/basic_memory/models/search.py:62-94`). Semantic vectors via `sqlite-vec` virtual table `search_vector_embeddings` (`search.py:146-153`).
-- **Postgres**: real `search_index` table with `tsvector` GIN + `pgvector` (`search.py:17-58`) and `pg_trgm` for fuzzy link resolution (migration `f8a9b2c3d4e5`).
+- **SQLite**：FTS5 虚拟表 `search_index`，自定义分词器 `'unicode61 tokenchars 0x2F'` 让 `/` 可检索（`src/basic_memory/models/search.py:62-94`）。语义向量经 `sqlite-vec` 虚拟表 `search_vector_embeddings`（`search.py:146-153`）。
+- **Postgres**：真 `search_index` 表，带 `tsvector` GIN + `pgvector`（`search.py:17-58`），加 `pg_trgm` 做模糊链接解析（迁移 `f8a9b2c3d4e5`）。
 
-Hybrid search defaults: vector candidates `semantic_vector_k=100`, similarity threshold `0.55`, model `bge-small-en-v1.5` via FastEmbed (`config.py:233-313`). Search type is `hybrid` when semantic is on, else `text` (`config.py:313-318`).
+混合检索默认：向量候选 `semantic_vector_k=100`、相似度阈值 `0.55`、模型 `bge-small-en-v1.5` 经 FastEmbed（`config.py:233-313`）。语义开启时检索类型为 `hybrid`，否则 `text`（`config.py:313-318`）。
 
-There is also a `NoteContent` table (`knowledge.py:152-217`) that **materializes the markdown body in the DB** with a `file_write_status` state machine (`pending|writing|synced|failed|external_change_detected`) and `db_version`/`file_version` for conflict resolution between AI writes and human file edits.
+还有一张 `NoteContent` 表（`knowledge.py:152-217`），把 markdown 正文**物化进 DB**，带 `file_write_status` 状态机（`pending|writing|synced|failed|external_change_detected`）与 `db_version`/`file_version` 做 AI 写入与人类文件编辑之间的冲突解决。
 
-## 3. MCP Tools Exposed
+## 3. 暴露的 MCP 工具
 
-All tools are registered via the `@mcp.tool` decorator and exported from `src/basic_memory/mcp/tools/__init__.py:9-65`. Every tool is annotated with MCP `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint` so agents can pick safely. Every single tool requires **explicit invocation** - none are triggered by the server itself.
+所有工具经 `@mcp.tool` 装饰器注册并从 `src/basic_memory/mcp/tools/__init__.py:9-65` 导出。每个工具都带 MCP `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint` 标注，让智能体安全选择。每一个工具都要求**显式调用**——没有一个由服务器自己触发。
 
-| Tool | Hint | File |
+| 工具 | 标注 | 文件 |
 |---|---|---|
-| `write_note` | destructive, not idempotent | `tools/write_note.py:21` |
-| `edit_note` (append/prepend/find_replace/replace_section/insert_*) | not destructive | `tools/edit_note.py:225` |
-| `read_note`, `view_note`, `read_content` | read-only | `tools/read_note.py:64`, `view_note.py:13`, `read_content.py:157` |
-| `delete_note` | destructive | `tools/delete_note.py:184` |
-| `move_note` | not destructive (updates links) | `tools/move_note.py:346` |
-| `search_notes` (advanced: tags, status, metadata_filters, after_date, search_type=text/vector/hybrid) | read-only | `tools/search.py:564` |
-| `recent_activity` | read-only | `tools/recent_activity.py:28` |
-| `build_context` (resolves `memory://` URIs, walks relation graph N hops, `depth=1..3`) | read-only | `tools/build_context.py:114` |
-| `list_directory`, `canvas` (Obsidian canvas), `list_workspaces` | mixed | various |
-| `list_memory_projects`, `create_memory_project`, `delete_project` | mixed | `tools/project_management.py` |
-| `schema_infer`, `schema_validate`, `schema_diff` (Picoschema over frontmatter) | read-only | `tools/schema.py:206-440` |
-| ChatGPT-compat `search` / `fetch` | read-only | `tools/chatgpt_tools.py:107-171` |
-| `cloud_info`, `release_notes` | read-only | |
+| `write_note` | 破坏性、非幂等 | `tools/write_note.py:21` |
+| `edit_note`（append/prepend/find_replace/replace_section/insert_*） | 非破坏性 | `tools/edit_note.py:225` |
+| `read_note`、`view_note`、`read_content` | 只读 | `tools/read_note.py:64`、`view_note.py:13`、`read_content.py:157` |
+| `delete_note` | 破坏性 | `tools/delete_note.py:184` |
+| `move_note` | 非破坏性（更新链接） | `tools/move_note.py:346` |
+| `search_notes`（高级：tags、status、metadata_filters、after_date、search_type=text/vector/hybrid） | 只读 | `tools/search.py:564` |
+| `recent_activity` | 只读 | `tools/recent_activity.py:28` |
+| `build_context`（解析 `memory://` URI、走关系图 N 跳、`depth=1..3`） | 只读 | `tools/build_context.py:114` |
+| `list_directory`、`canvas`（Obsidian canvas）、`list_workspaces` | 混合 | 各处 |
+| `list_memory_projects`、`create_memory_project`、`delete_project` | 混合 | `tools/project_management.py` |
+| `schema_infer`、`schema_validate`、`schema_diff`（frontmatter 上的 Picoschema） | 只读 | `tools/schema.py:206-440` |
+| ChatGPT 兼容 `search` / `fetch` | 只读 | `tools/chatgpt_tools.py:107-171` |
+| `cloud_info`、`release_notes` | 只读 | |
 
-Two MCP **prompts** ship: `continue_conversation` and `recent_activity` (both retrieve-only). There is also a `view_note` UI artifact path.
+随附两个 MCP **提示词**：`continue_conversation` 与 `recent_activity`（都只检索）。还有一条 `view_note` UI 工件路径。
 
-## 4. Memory Lifecycle
+## 4. 记忆生命周期
 
-**There is no lifecycle.** Grep'd the entire `src/` tree for `decay|aging|consolidat|summariz|forget|expire|ttl|prune|archive_old` - zero matches outside of unrelated OAuth-token expiry and SQLAlchemy `expire_on_commit`. Notes are **append-only forever** unless a human or agent explicitly calls `delete_note`, `move_note`, or `edit_note`. There is no auto-summarization, no auto-merge of duplicates, no recency weighting in search ranking (only an `after_date` filter), no "cold storage" tier. `recent_activity` (`tools/recent_activity.py:28`) just queries by `created_at`/`updated_at`; it doesn't shape memory.
+**没有生命周期。** 对整个 `src/` 树 grep `decay|aging|consolidat|summariz|forget|expire|ttl|prune|archive_old`——无关的 OAuth token 过期与 SQLAlchemy `expire_on_commit` 之外零命中。笔记**永远只追加**，除非人类或智能体显式调 `delete_note`、`move_note`、`edit_note`。没有自动摘要、没有自动合并重复、检索排序没有新近度加权（只有 `after_date` 过滤器）、没有「冷存储」层。`recent_activity`（`tools/recent_activity.py:28`）只是按 `created_at`/`updated_at` 查询；它不塑造记忆。
 
-The only background process is the `WatchService` (`src/basic_memory/sync/watch_service.py:81-145`) + `SyncService` (`src/basic_memory/sync/sync_service.py:153-188`), which reconcile file changes with the DB after a `sync_delay` of 1000 ms (`config.py:338`). That's housekeeping, not lifecycle.
+唯一的后台进程是 `WatchService`（`src/basic_memory/sync/watch_service.py:81-145`）+ `SyncService`（`src/basic_memory/sync/sync_service.py:153-188`），在 1000 ms 的 `sync_delay`（`config.py:338`）后对账文件与 DB。那是内务，不是生命周期。
 
-## 5. Cross-Project / Cross-Agent
+## 5. 跨项目 / 跨智能体
 
-Projects are a first-class concept. Config holds a `Dict[str, ProjectEntry]` (`config.py:184-195`), each with a `path`, a `mode` (`LOCAL` or `CLOUD` - per-project routing), optional `workspace_id`, and bisync state. A `default_project` is auto-set to the first project (`config.py:705-711`).
+项目是一等概念。配置持有 `Dict[str, ProjectEntry]`（`config.py:184-195`），每个带 `path`、`mode`（`LOCAL` 或 `CLOUD`——逐项目路由）、可选 `workspace_id`、与 bisync 状态。`default_project` 自动设为第一个项目（`config.py:705-711`）。
 
-**Project resolution is a unified three-tier chain** (`docs/ARCHITECTURE.md:298-324`): explicit `project` argument → default → single-project fallback. Every MCP tool accepts `project` and `project_id` (UUID) parameters. `get_project_client(project, ...)` (`mcp/project_context.py`) routes to local ASGI or cloud HTTP per-project, so you can mix.
+**项目解析是统一的三级链**（`docs/ARCHITECTURE.md:298-324`）：显式 `project` 参数 → 默认 → 单项目回退。每个 MCP 工具接受 `project` 与 `project_id`（UUID）参数。`get_project_client(project, ...)`（`mcp/project_context.py`）按项目路由到本地 ASGI 或云 HTTP，所以可以混用。
 
-For agent handoffs, there is no special handshake - basic-memory treats all MCP clients identically. The "handoff" story is: agent A writes notes to project `foo`, agent B (any other MCP client pointed at the same project) reads them. The Markdown files on disk are the lingua franca. There is no session/agent identifier, no per-agent scratchpad. `created_by`/`last_updated_by` columns exist (`knowledge.py:99-102`) but are populated only in cloud (user_profile_id), null for local/CLI.
+智能体交接上，没有特殊握手——basic-memory 同等对待所有 MCP 客户端。「交接」的故事是：智能体 A 往项目 `foo` 写笔记，智能体 B（任何指向同一项目的其他 MCP 客户端）读它们。磁盘上的 Markdown 文件是通用语。没有会话/智能体标识符、没有逐智能体的草稿区。`created_by`/`last_updated_by` 列存在（`knowledge.py:99-102`）但只在云端填充（user_profile_id），本地/CLI 为 null。
 
-## 6. Backup & Portability
+## 6. 备份与可移植性
 
-- **Default location**: `~/basic-memory` for notes (per `BASIC_MEMORY_HOME` env, README:197), `~/.basic-memory/` for SQLite DB + config (`config.py:24, 67-80`). Config in `~/.basic-memory/config.json`, chmod 0600.
-- **Portability**: Excellent for files (they're just Markdown - `git clone`, `rsync`, Syncthing, rclone all work). The DB is a derived index - `bm sync` rebuilds it from the files.
-- **Schema migrations**: 22 Alembic migrations in `src/basic_memory/alembic/versions/`, auto-run on startup via `get_or_create_db` (`services/initialization.py:23-38`). Migrations cover both SQLite and Postgres.
-- **Importers** for Claude conversations, ChatGPT exports, and `memory.json` (the original MCP "memory" server format) live in `src/basic_memory/importers/`.
-- **Cloud sync** uses `rclone bisync` (`config.py:136-138, 164-167`), not a custom protocol - another portable choice.
+- **默认位置**：笔记在 `~/basic-memory`（按 `BASIC_MEMORY_HOME` 环境变量，README:197），SQLite DB + 配置在 `~/.basic-memory/`（`config.py:24, 67-80`）。配置在 `~/.basic-memory/config.json`，chmod 0600。
+- **可移植性**：对文件极佳（就是 Markdown——`git clone`、`rsync`、Syncthing、rclone 都行）。DB 是派生索引——`bm sync` 从文件重建它。
+- **schema 迁移**：`src/basic_memory/alembic/versions/` 里 22 个 Alembic 迁移，启动时经 `get_or_create_db` 自动跑（`services/initialization.py:23-38`）。迁移同时覆盖 SQLite 与 Postgres。
+- **导入器**（Claude 对话、ChatGPT 导出、`memory.json`——原版 MCP "memory" 服务器格式）在 `src/basic_memory/importers/`。
+- **云同步**用 `rclone bisync`（`config.py:136-138, 164-167`），不是自定义协议——又一个可移植的选择。
 
-## 7. Strengths Worth Borrowing
+## 7. 值得借鉴的优点
 
-1. **Files are source of truth, DB is derived index.** Survives any DB corruption, plays nice with git, version control, and grep. Bidirectional human/AI editing via file-watcher + checksum.
-2. **MCP behavior annotations on every tool** (`readOnlyHint`, `destructiveHint`, etc., `tools/write_note.py:23`). Agents can plan multi-step actions without trial-and-error.
-3. **Aggressive `AliasChoices` aliasing** of parameter names (`write_note.py:31` accepts `directory|folder|dir|path`; `search.py:574` accepts `query|q|search|text`). LLMs use whatever name their training reaches for; the tool absorbs the variance.
-4. **`memory://` URI scheme + `build_context` graph walker** (`tools/build_context.py:114-247`) - turns wiki-links into navigable context. Cleaner than dumping the whole graph.
-5. **Unresolved relations as first-class state** (`knowledge.py:282`) - `to_id` nullable, resolves later when target appears. Forward references just work.
-6. **Per-project routing** with mixed local/cloud modes per project, not per-server.
-7. **Composition root + typed-client pattern** (`docs/ARCHITECTURE.md:14-256`) keeps MCP/CLI/API entrypoints clean and testable.
-8. **The `NoteContent` table** with `file_write_status` state machine (`knowledge.py:155-217`) handles the race between agent writes and on-disk human edits - worth replicating if you keep a DB cache.
+1. **文件是事实源、DB 是派生索引。** 任何 DB 损坏都能挺过去，与 git、版本控制、grep 相处融洽。经文件监视器 + 校验和实现双向人类/AI 编辑。
+2. **每个工具上的 MCP 行为标注**（`readOnlyHint`、`destructiveHint` 等，`tools/write_note.py:23`）。智能体无需试错就能规划多步动作。
+3. **激进的 `AliasChoices` 参数别名**（`write_note.py:31` 接受 `directory|folder|dir|path`；`search.py:574` 接受 `query|q|search|text`）。LLM 用训练里顺手够到的任何名字；工具吸收差异。
+4. **`memory://` URI 方案 + `build_context` 图走查器**（`tools/build_context.py:114-247`）——把 wiki 链接变成可导航的上下文。比倾倒整张图干净。
+5. **未解析关系是一等状态**（`knowledge.py:282`）——`to_id` 可空，目标出现后解析。前向引用直接可用。
+6. **逐项目路由**，本地/云模式按项目混配，不按服务器。
+7. **组合根 + 类型化客户端模式**（`docs/ARCHITECTURE.md:14-256`）让 MCP/CLI/API 入口干净可测。
+8. **`NoteContent` 表**带 `file_write_status` 状态机（`knowledge.py:155-217`）处理智能体写入与磁盘上人类编辑的竞态——保留 DB 缓存的话值得复制。
 
-## 8. Weaknesses / Friction (Avoid)
+## 8. 弱点 / 摩擦（避免）
 
-1. **The manual `write_note` ceremony is the headline friction.** Users must explicitly tell the model "make a note about this," and the model must decide *title*, *directory*, *tags*, *note_type*, and the semantic observation/relation grammar - all on every call. The `write_note` signature has 11 parameters (`write_note.py:25-45`). Skip this entirely: capture should be ambient (post-turn summarization, automatic salience scoring, etc.) - not a tool the model must remember to call.
-2. **Append-only forever.** No decay, no consolidation, no automatic deduplication. Long-running graphs accumulate cruft. Recent v0.20 added a guard so `write_note` *errors* on conflict instead of silently upserting (`write_note.py:240-262`), which protects data but pushes the burden back onto the agent to manage identity. For agent long-term memory, decay/merge/consolidation is essential and absent here.
-3. **The semantic grammar is human-authored convention.** `- [category] text #tag (context)` and `- relation_type [[Target]]` are intuitive for humans in Obsidian but require the LLM to *generate* this format correctly every time. Drift is normal. A Rust server can store edges natively and let the LLM emit prose.
-4. **Note identity is brittle.** `permalink` is derived from title/path; renames create work (`update_permalinks_on_move` defaults to `False`, `config.py:349-352`). The 11-column `entity` table + separate `note_content` is a lot of machinery to keep in sync with files.
-5. **No agent/session model.** No notion of "who wrote this," "which session," or "what was the user's intent." `created_by` exists only for cloud auth (`knowledge.py:99-102`). For multi-agent handoffs, you'd want provenance baked in.
-6. **Search ranking is keyword-or-vector with a fixed `min_similarity=0.55`** (`config.py:307-312`). No recency/importance reranking, no usage feedback, no per-query learning.
-7. **The Markdown source-of-truth tradeoff.** Filesystem latency, checksum recomputation, FTS5 rebuilds, and circuit-breaker retry tracking (`sync_service.py:179-281`) are a lot of infrastructure just to keep a DB consistent with files. For agent memory where the files exist only because LLMs wrote them, this is overhead with no payoff - keep the DB as primary and only export Markdown on demand.
-8. **Tool surface is wide (~25 tools).** Agents have to pick among `write_note`/`edit_note`/`move_note`/`delete_note`/`read_note`/`view_note`/`read_content`/`search`/`search_notes`/`build_context`/`recent_activity`/`list_directory`/`list_memory_projects`/`canvas`/`schema_*`. Even with hints, that's a lot of context burned describing tools. Aim for a smaller, more orthogonal set.
+1. **手工 `write_note` 仪式是头号摩擦。** 用户必须显式告诉模型「为这个做个笔记」，而模型每次调用都要决定*标题*、*目录*、*标签*、*note_type*、以及语义观察/关系语法。`write_note` 签名有 11 个参数（`write_note.py:25-45`）。整个跳过它：捕获应当是无感的（回合后摘要、自动显著度打分等）——不是模型必须记得调用的工具。
+2. **永远只追加。** 没有衰减、没有整编、没有自动去重。长期运行的图积累 cruft。近期 v0.20 加了守卫让 `write_note` 冲突时*报错*而不是静默 upsert（`write_note.py:240-262`），保护了数据但把管理身份的负担推回给智能体。对智能体长期记忆，衰减/合并/整编必不可少而这里缺席。
+3. **语义语法是人类书写的约定。** `- [category] text #tag (context)` 与 `- relation_type [[Target]]` 对 Obsidian 里的人类直观，但要求 LLM 每次都*正确生成*这个格式。漂移是常态。Rust 服务器可以原生存边、让 LLM 输出散文。
+4. **笔记身份脆弱。** `permalink` 从标题/路径派生；重命名制造工作（`update_permalinks_on_move` 默认 `False`，`config.py:349-352`）。11 列的 `entity` 表 + 独立的 `note_content` 是要和文件保持同步的一大堆机械。
+5. **没有智能体/会话模型。** 没有「谁写的」「哪个会话」「用户意图是什么」的概念。`created_by` 只为云认证存在（`knowledge.py:99-102`）。多智能体交接需要把出处烙进去。
+6. **检索排序是关键词或向量、带固定的 `min_similarity=0.55`**（`config.py:307-312`）。没有新近度/重要性重排、没有使用反馈、没有逐查询学习。
+7. **Markdown 事实源的取舍。** 文件系统延迟、校验和重算、FTS5 重建、断路器重试跟踪（`sync_service.py:179-281`）——一大堆基础设施只为让 DB 与文件一致。对文件只因 LLM 写过它们才存在的智能体记忆，这是没有回报的开销——保持 DB 为主、只在需要时导出 Markdown。
+8. **工具面宽（约 25 个工具）。** 智能体要在 `write_note`/`edit_note`/`move_note`/`delete_note`/`read_note`/`view_note`/`read_content`/`search`/`search_notes`/`build_context`/`recent_activity`/`list_directory`/`list_memory_projects`/`canvas`/`schema_*` 里挑。即便有标注，描述工具就烧掉大量上下文。瞄准更小、更正交的一组。
 
-**Bottom line**: borrow the *graph + observations + wiki-link* primitives, the *memory:// URI* navigation, the *typed-client + composition-root* layering, the *MCP annotations*, and the *file-as-portable-export* idea - but invert the capture model (ambient, not invoked), add a lifecycle (decay/consolidation/summarization), keep the DB primary, add agent/session provenance, and ship a much narrower MCP tool surface.
+**结论**：借鉴*图 + 观察 + wiki 链接*原语、*memory:// URI* 导航、*类型化客户端 + 组合根*分层、*MCP 标注*、以及*文件作可移植导出*的想法——但反转捕获模型（无感而非调用）、加生命周期（衰减/整编/摘要）、保持 DB 为主、加智能体/会话出处、并发布窄得多的 MCP 工具面。

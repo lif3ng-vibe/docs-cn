@@ -1,93 +1,98 @@
 ---
-title: "agentmemory - Issue & PR Pain-Point Synthesis"
-description: "1. Embedding the search indexes in the Node process while persisting through a remote KV with a 30s timeout. Drives #204, #309, the rebuild-on-boot cost, and 5-second window of dat"
+title: "agentmemory 问题与 PR 痛点综合"
+description: "在 Node 进程内嵌检索索引、同时经带 30s 超时的远程 KV 持久化。这驱动了 #204、#309、启动重建成本、以及每次崩溃 5 秒的数据丢失窗口。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-agentmemory.md"
 ---
 
-# agentmemory - Issue & PR Pain-Point Synthesis
+# agentmemory 问题与 PR 痛点综合
 
-> Source: GitHub `rohitg00/agentmemory`, captured 2026-05-21.
-> Repo health: 15.7k stars, very active. ~50 merged PRs in last week.
-> Architecture: TypeScript MCP server over a native Rust `iii-engine` KV.
+> 来源：GitHub `rohitg00/agentmemory`，2026-05-21 抓取。
+> 仓库健康度：15.7k star，非常活跃。上周约 50 个合并 PR。
+> 架构：TypeScript MCP 服务器，架在原生 Rust `iii-engine` KV 之上。
 
-## Top recurring pain points (ranked)
+## 高频痛点（按排名）
 
-### 1. Install / ops - the single largest bucket
-- **`iii-engine` is a separate native binary** with its own version, config file, and storage layout. Pinning is fragile: `iii-sdk@0.11.6` broke routing because `package.json` used `^0.11.2` (#555, fixed by PR #567 pinning exact). Migrating to `iii-database`/iii 0.11.7 is blocking the SQLite migration (#309 comment). The whole stack is held back by an upstream you don't control.
-- **Distroless engine + Docker named volumes** = silent permission denied. UID 65532 can't write to root-owned `/data`; engine logs the error but the wrapper buffers in RAM and looks fine until restart wipes everything (#301 - still OPEN despite an earlier 0.9.7 "fix").
-- **Engine writes `data/` to caller's `cwd`**, so launching from different directories produces different state stores. On Windows users believed memories vanished - they were stranded in `E:\文档\New project\data\state_store.db` while the dashboard read `C:\Users\Lenovo\data\` (#303, still OPEN even after PR #314 added `--data-dir`).
-- **Hooks break on Windows when username has spaces** because `hooks.json` doesn't quote `${CLAUDE_PLUGIN_ROOT}` (#477).
-- **Runaway log feedback loop** - `iii::workers::observability` warns about "subscriber lagged", that warn is captured by the same subscriber: 137 GB `daemon.log.new`, system at 98% (#519, still OPEN; `RUST_LOG` not honoured).
+### 1. 安装 / 运维——最大的一桶
 
-### 2. Data integrity / silent loss
-- **State persistence buffered behind a 5s `IndexPersistence` debounce**. When `state::set` times out at 30s, the uncaught `IIIInvocationError` crashes the Node process, losing every in-memory BM25/vector update since the last debounce flush (#204).
-- **BM25 index `mem%3Aindex%3Abm25.bin` stays at ~96 bytes** because every `state::set` times out at 180s on 10k-observation corpora; each restart pays a 5-minute rebuild (#309, OPEN).
-- **Sessions never end on Ctrl-C / SSH-drop / laptop sleep**, so the consolidation + graph-extraction pipeline never fires, then the eviction sweep deletes the entire session (#308, "graph would-have-extracted content is permanently lost").
-- **`AGENTMEMORY_DROP_STALE_INDEX=true` in `.env` did nothing** - the dimension guard read `process.env` directly while everything else reads `getMergedEnv()`. **Two config-read paths in the same codebase** (#456). Combined with #469 (vector index 2048-dim on disk vs 384-dim from provider), stranded users with no working recovery path.
-- **Sessions never created, but observations were** - separate KV scopes; OpenClaw plugin only wrote observations, so `GET /sessions` returned `[]` (#522, OPEN). Masked by `postJson({fallback_on_error:true})` swallowing the 4xx.
-- **`session.summary` and `session.firstPrompt` set to the same truncated title** (#276, OPEN, labelled CRITICAL).
+- **`iii-engine` 是独立原生二进制**，有自己的版本、配置文件与存储布局。钉版本脆弱：`iii-sdk@0.11.6` 弄坏了路由，因为 `package.json` 用了 `^0.11.2`（#555，PR #567 钉精确版本修复）。迁移到 `iii-database`/iii 0.11.7 阻塞着 SQLite 迁移（#309 评论）。整个技术栈被一个你不控制的上游拖住。
+- **Distroless 引擎 + Docker 具名卷** = 静默 permission denied。UID 65532 写不了 root 拥有的 `/data`；引擎记了错但包装器在内存里缓冲、看起来正常，直到重启抹掉一切（#301——早先 0.9.7 有过「修复」，仍然 OPEN）。
+- **引擎把 `data/` 写到调用方的 `cwd`**，从不同目录启动产生不同状态存储。Windows 用户以为记忆消失了——它们被困在 `E:\文档\New project\data\state_store.db`，而仪表盘读的是 `C:\Users\Lenovo\data\`（#303，即便 PR #314 加了 `--data-dir` 仍 OPEN）。
+- **用户名带空格时 Windows 上钩子损坏**，因为 `hooks.json` 不给 `${CLAUDE_PLUGIN_ROOT}` 加引号（#477）。
+- **失控的日志反馈循环**——`iii::workers::observability` 警告「subscriber lagged」，该警告又被同一订阅者捕获：137 GB `daemon.log.new`、系统 98%（#519，仍 OPEN；`RUST_LOG` 不被尊重）。
 
-### 3. LLM compression / token-cost
-- **`AGENTMEMORY_AUTO_COMPRESS=true` was the default in v0.8.7**. User olcor1: *"My allocation is busted within 20 minutes."* - the PostToolUse hook called the LLM on every tool call (#138, brown-paper-bag fix in v0.8.8 flipping default to false). Maintainer: *"this is a real bug in the tool's design, not your setup."*
-- **`SessionStart` hook was injecting ~1-2 K tokens into every new session**. Maintainer initially blamed Claude Pro caps, then retracted and gated injection behind `AGENTMEMORY_INJECT_CONTEXT=false` default in v0.8.10 (#143). His own retraction: *"I pattern-matched without verifying against the docs."*
-- **`mem::compress` silently failed on ~47% of Claude Code tool calls** because `post-tool-use.mjs` read `data.tool_output` but Claude Code sends `tool_response` (#539, fixed PR #561).
-- **Graph extraction parser drops self-closing `<entity .../>` tags** (#492). Same family: #338.
+### 2. 数据完整性 / 静默丢失
 
-### 4. Retrieval quality / API contract
-- **MCP `memory_recall` was aliased to `smart_search` and dropped the `format` param**, so full content was unreachable via MCP no matter what the caller asked for (#440 + #507, fixed PR #516). Six weeks of users getting only compact-mode hits.
-- **Viewer/status show 0 memories on real corpora** because `/agentmemory/memories?latest=true` and `/agentmemory/export` materialize the entire list, time out on >8k memories (#544, OPEN).
-- **Event-loop starvation from pure-JS dot products** - VectorIndex.search hangs the loop on 100k vectors; sqlite-vec swap took search from 200-250 ms to 20-40 ms (#195).
+- **状态持久化缓冲在 5s 的 `IndexPersistence` 防抖后面**。`state::set` 30s 超时时，未捕获的 `IIIInvocationError` 让 Node 进程崩溃，丢掉上次防抖冲刷以来的全部内存 BM25/向量更新（#204）。
+- **BM25 索引 `mem%3Aindex%3Abm25.bin` 停在约 96 字节**，因为万条观察的语料上每个 `state::set` 都 180s 超时；每次重启付 5 分钟重建（#309，OPEN）。
+- **Ctrl-C / SSH 掉线 / 笔记本休眠时会话永不结束**，于是整编 + 图提取管线从不触发，然后驱逐清扫删掉整个会话（#308，「图本可提取的内容永久丢失」）。
+- **`.env` 里的 `AGENTMEMORY_DROP_STALE_INDEX=true` 毫无作用**——维度守卫直接读 `process.env` 而其他一切读 `getMergedEnv()`。**同一代码库两条配置读取路径**（#456）。叠加 #469（磁盘上 2048 维向量索引 vs 提供方 384 维），用户被困且无可用的恢复路径。
+- **会话从未创建、观察却创建了**——分开的 KV scope；OpenClaw 插件只写观察，于是 `GET /sessions` 返回 `[]`（#522，OPEN）。被 `postJson({fallback_on_error:true})` 吞掉 4xx 掩盖。
+- **`session.summary` 与 `session.firstPrompt` 被设成同一个截断标题**（#276，OPEN，标记 CRITICAL）。
 
-### 5. Agent integration / MCP surface
-- **Claude Code requested protocol version 2025-03-26 but the shim pinned 2024-11-05**; Claude Code discarded the tools list as a result (#510, OPEN). Same root in #553 (OpenCode 8/51 tools) and #400.
-- **Codex worktrees treated as separate projects**, fragmenting lessons/sessions per ephemeral worktree path (#515, OPEN).
-- **Hooks blocked startup** - `await fetch(... 5000 ms timeout)` on session-start; 10 parallel `claude -p` jobs OOM-killed the engine (#221, fixed PR #222 making hooks fire-and-forget).
+### 3. LLM 压缩 / token 成本
 
-## Design choices that caused the most issues
+- **v0.8.7 里 `AGENTMEMORY_AUTO_COMPRESS=true` 是默认**。用户 olcor1：*「我的配额 20 分钟内就爆了。」*——PostToolUse 钩子每次工具调用都调 LLM（#138，v0.8.8 紧急把默认翻成 false 的牛皮纸袋修复）。维护者：*「这是工具设计里的真 bug，不是你的配置问题。」*
+- **`SessionStart` 钩子给每个新会话注入约 1-2K token**。维护者起初怪 Claude Pro 上限，随后撤回并把注入藏在 `AGENTMEMORY_INJECT_CONTEXT=false` 默认之后（v0.8.10，#143）。他自己的撤回声明：*「我没对照文档验证就模式匹配了。」*
+- **`mem::compress` 在约 47% 的 Claude Code 工具调用上静默失败**，因为 `post-tool-use.mjs` 读 `data.tool_output` 而 Claude Code 发的是 `tool_response`（#539，PR #561 修复）。
+- **图提取解析器丢掉自闭合 `<entity .../>` 标签**（#492）。同族：#338。
 
-1. **Embedding the search indexes in the Node process while persisting through a remote KV with a 30s timeout.** Drives #204, #309, the rebuild-on-boot cost, and 5-second window of data loss on every crash.
-2. **LLM compression on every observation, on by default** (#138, #143, #539).
-3. **Two config-read paths (`process.env` vs `getMergedEnv()`)** caused #456/#469.
-4. **XML as the compression/extraction wire format**, hand-parsed: drops self-closing tags (#492), accepts only specific casings, fails `CompressOutputSchema` on schema drift (#539).
-5. **Hooks that `await` REST round-trips during agent startup** (#221).
-6. **Relative paths in the bundled `iii-config.yaml`** (#303), distroless engine without a chown init container (#301), no log rotation (#519).
-7. **`fallback_on_error: true` everywhere with swallowed errors** (#522, #539).
-8. **Unpinned upstream native dep** (`iii-sdk: ^0.11.2`) → #555. No lockfile shipped → #540.
+### 4. 检索质量 / API 契约
 
-## Maintainer fixes reveal regrets
+- **MCP `memory_recall` 被别名到 `smart_search` 并丢了 `format` 参数**，所以无论调用方要什么，经 MCP 都拿不到完整内容（#440 + #507，PR #516 修复）。用户六周只能拿到紧凑模式命中。
+- **真实语料上查看器/状态显示 0 条记忆**，因为 `/agentmemory/memories?latest=true` 与 `/agentmemory/export` 物化整个列表，>8k 记忆时超时（#544，OPEN）。
+- **纯 JS 点积饿死事件循环**——VectorIndex.search 在 10 万向量上挂起循环；换 sqlite-vec 把检索从 200-250 ms 降到 20-40 ms（#195）。
 
-- **Auto-compress flipped from default-on to default-off** in v0.8.8 the same day #138 was filed - *"the closest thing to an admission that the headline feature was the headline misfeature"*. *"This is exactly the kind of brown-paper-bag issue."*
-- **Context injection moved behind `AGENTMEMORY_INJECT_CONTEXT=false`** in v0.8.10 (#143) - maintainer publicly retracted a wrong first diagnosis. Two defaults reversed in two minor versions.
-- **`VECTOR_BACKEND=sqlite-vec` introduced behind a flag**, not flipped on, explicitly because *"some Windows / Alpine Docker users will hit install issues we can't preempt"* (#195).
-- **Multiple GH-packages mirror experiments reverted within hours** - PRs #545 → #547 → #548. Lots of try/revert.
-- **PR #500: rebuildIndex made non-blocking on boot**, PR #504: batch-embed in rebuildIndex (25 h → 3 h on large corpora). Admits the original boot path made the daemon unusable for hours.
-- **OpenCode plugin (#236) shipped as separate subsystem** because the Claude Code hook abstraction didn't fit other agents.
+### 5. 智能体集成 / MCP 面
 
-## Still-open architectural debts
+- **Claude Code 请求协议版本 2025-03-26 而垫片钉死 2024-11-05**；Claude Code 因此丢弃了工具列表（#510，OPEN）。同一根因在 #553（OpenCode 8/51 个工具）与 #400。
+- **Codex 的 worktree 被当作独立项目**，按短命 worktree 路径把教训/会话碎片化（#515，OPEN）。
+- **钩子阻塞启动**——session-start 上 `await fetch(... 5000 ms timeout)`；10 个并行 `claude -p` 作业把引擎 OOM 杀掉（#221，PR #222 改成即发即忘修复）。
 
-- **#309 in-memory BM25/graph → SQLite/FTS5** - blocked on iii v0.11.7. Biggest debt in the repo.
-- **#519 daemon.log feedback loop** - offending warn is inside the closed-source `iii` binary.
-- **#303 cwd-relative state store on Windows** - still leaks the wrong dir despite #314.
-- **#301 distroless docker volume permissions** - still OPEN.
-- **#510 / #553 / #400 MCP protocol-version negotiation** - three reports, same root cause.
+## 制造了最多问题的设计选择
 
-## Seven "do not repeat" lessons for the Rust rewrite
+1. **在 Node 进程内嵌检索索引、同时经带 30s 超时的远程 KV 持久化。** 驱动了 #204、#309、启动重建成本、以及每次崩溃 5 秒的数据丢失窗口。
+2. **每条观察都 LLM 压缩、默认开启**（#138、#143、#539）。
+3. **两条配置读取路径（`process.env` vs `getMergedEnv()`）** 造成了 #456/#469。
+4. **XML 作为压缩/提取的线上格式**、手写解析：丢自闭合标签（#492）、只接受特定大小写、schema 漂移时 `CompressOutputSchema` 失败（#539）。
+5. **智能体启动期间 `await` REST 往返的钩子**（#221）。
+6. **捆绑的 `iii-config.yaml` 里用相对路径**（#303）、无 chown init 容器的 distroless 引擎（#301）、无日志轮换（#519）。
+7. **到处 `fallback_on_error: true` 且吞错误**（#522、#539）。
+8. **未钉住的原生上游依赖**（`iii-sdk: ^0.11.2`）→ #555。不发布 lockfile → #540。
 
-1. **Keep search indexes and durable storage in the same transaction boundary.** Don't buffer index writes in memory behind a debounce that loses 5s of data on crash (#204, #309). In Rust, use a single `sqlx` transaction per observation; SQLite FTS5 + `sqlite-vec` in one file solves all three search types and removes the entire "rebuild on boot" pathology.
+## 维护者的修复暴露了悔意
 
-2. **LLM compression must be opt-in, with a visible token-cost banner.** Default to a zero-LLM synthetic compression (extract title/files/narrative from raw tool I/O) (#138, #143).
+- **自动压缩从默认开翻成默认关**，就在 #138 提交当天的 v0.8.8——*「最接近于承认招牌功能就是招牌功能缺陷的举动」*。*「这正是那种牛皮纸袋级问题。」*
+- **上下文注入挪到 `AGENTMEMORY_INJECT_CONTEXT=false` 之后**（v0.8.10，#143）——维护者公开撤回了错误的首次诊断。两个小版本里反转了两个默认值。
+- **`VECTOR_BACKEND=sqlite-vec` 藏在标志后面引入**、不翻开，明确因为*「一些 Windows / Alpine Docker 用户会撞上我们无法预判的安装问题」*（#195）。
+- **多个 GH-packages 镜像实验数小时内回退**——PR #545 → #547 → #548。大量试了就撤。
+- **PR #500 让 rebuildIndex 启动时非阻塞、PR #504 在 rebuildIndex 里批量嵌入**（大语料 25h → 3h）。等于承认原始启动路径让守护进程数小时不可用。
+- **OpenCode 插件（#236）作为独立子系统发布**，因为 Claude Code 钩子抽象不适配其他智能体。
 
-3. **One config-read path.** Have `Config::load()` resolve env + file + CLI once into a typed struct; every reader takes `&Config` (#456 + #469).
+## 仍开放的架构债
 
-4. **Never use XML as a wire format for LLM extraction.** Use JSON-mode / structured outputs (#492, #539).
+- **#309 内存 BM25/图 → SQLite/FTS5**——阻塞在 iii v0.11.7。仓库最大的一笔债。
+- **#519 daemon.log 反馈循环**——肇事警告在闭源 `iii` 二进制内部。
+- **#303 Windows 上 cwd 相对的状态存储**——尽管有 #314 仍漏错误目录。
+- **#301 distroless docker 卷权限**——仍 OPEN。
+- **#510 / #553 / #400 MCP 协议版本协商**——三份报告、同一根因。
 
-5. **Hooks must be fire-and-forget by contract.** No `.await` on an HTTP round-trip during agent startup (#143, #221). Budget the response time hard (`tokio::time::timeout` with sub-second ceilings).
+## 给 Rust 重写的七条「勿重蹈」教训
 
-6. **Persist provider metadata next to the index.** A vector index file must record `{provider, model, dim}` and refuse to load on mismatch with a *single* clear error and an in-process re-embed migration path (#469).
+1. **检索索引与持久存储保持同一事务边界。** 不要把索引写缓冲在崩溃即丢 5s 数据的防抖后面（#204、#309）。Rust 里每条观察用一个 `sqlx` 事务；一个文件里的 SQLite FTS5 + `sqlite-vec` 解决全部三种检索，并根除整个「启动重建」病灶。
 
-7. **Don't depend on an unpinned native sidecar.** Statically link the engine (`tantivy` for BM25, `sqlite-vec` via `rusqlite`, `petgraph` for the concept graph) (#301, #519, #555). Half the install issues in the tracker exist because `iii-engine` is a separate binary the wrapper can't fix.
+2. **LLM 压缩必须选择启用，配显眼的 token 成本横幅。** 默认零 LLM 的合成压缩（从原始工具 I/O 提取标题/文件/叙事）（#138、#143）。
 
-**Bonus:** Default the data directory to a canonicalized absolute platform path (`dirs::data_local_dir().join("ai-memory")`) and log it loudly on startup - single change would have prevented #303 entirely.
+3. **一条配置读取路径。** 让 `Config::load()` 一次性解析 env + 文件 + CLI 进类型化结构体；每个读者拿 `&Config`（#456 + #469）。
 
-### Driver issues
-#138 (auto-compress default), #143 (context-injection default), #195 (CPU-bound JS), #204 (uncaught SDK timeout), #221 (blocking hooks), #274 (lesson discard), #276 (corrupt session fields), #301 (distroless volume), #303 (cwd state), #308 (sessions never end), #309 (in-memory BM25), #338/#492 (XML parser), #440/#507 (MCP recall aliased), #456/#469 (dim mismatch + two env paths), #477 (Windows quoting), #510/#553/#400 (MCP protocol version), #515 (Codex worktrees), #519 (log feedback loop), #522 (silent error swallow), #539 (tool_response vs tool_output), #540 (no lockfile), #544 (unbounded list endpoints), #555 (iii-sdk semver).
+4. **绝不用 XML 做 LLM 提取的线上格式。** 用 JSON 模式 / 结构化输出（#492、#539）。
+
+5. **钩子按契约必须即发即忘。** 智能体启动期间不对 HTTP 往返 `.await`（#143、#221）。响应时间硬预算（`tokio::time::timeout`、亚秒上限）。
+
+6. **提供方元数据与索引存放在一起。** 向量索引文件必须记录 `{provider, model, dim}`，不匹配时拒绝加载并给出*单个*清晰错误与进程内重嵌入迁移路径（#469）。
+
+7. **不要依赖未钉住的原生伴生进程。** 静态链接引擎（BM25 用 `tantivy`、`sqlite-vec` 经 `rusqlite`、概念图用 `petgraph`）（#301、#519、#555）。跟踪器里一半的安装问题之所以存在，就是因为 `iii-engine` 是包装器救不了的独立二进制。
+
+**附加**：数据目录默认为规范化的绝对平台路径（`dirs::data_local_dir().join("ai-memory")`）并在启动时大声打日志——单这一条改动就能完全避免 #303。
+
+### 驱动 issue 清单
+#138（自动压缩默认）、#143（上下文注入默认）、#195（CPU 密集 JS）、#204（未捕获 SDK 超时）、#221（阻塞钩子）、#274（教训丢弃）、#276（损坏会话字段）、#301（distroless 卷）、#303（cwd 状态）、#308（会话永不结束）、#309（内存 BM25）、#338/#492（XML 解析器）、#440/#507（MCP recall 别名）、#456/#469（维度不匹配 + 两条 env 路径）、#477（Windows 引号）、#510/#553/#400（MCP 协议版本）、#515（Codex worktree）、#519（日志反馈循环）、#522（静默吞错）、#539（tool_response vs tool_output）、#540（无 lockfile）、#544（无界列表端点）、#555（iii-sdk semver）。
