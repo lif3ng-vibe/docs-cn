@@ -1,376 +1,163 @@
 ---
-title: "Multi-user attribution"
-description: "ai-memory is single-tenant wiki data with optional multi-user attribution. Every authenticated request sees the same wiki pages — there is no per-page RBAC or group permission mode"
+title: "多用户归因"
+description: "ai-memory 是单租户 wiki 数据加可选的多用户归因。每个已认证请求看到同样的 wiki 页面——没有逐页 RBAC 或组权限模型。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/users.md"
 ---
 
-# Multi-user attribution
+# 多用户归因
 
-> **Status:** Introduced in v0.8; this page documents the current shipped
-> contract.
+> **状态：** v0.8 引入；本页记录当前已发布的契约。
 
-ai-memory is **single-tenant wiki data** with **optional multi-user
-attribution**. Every authenticated request sees the same wiki pages —
-there is no per-page RBAC or group permission model. Operational handoffs and
-open-session recovery are owner-scoped so one operator cannot accidentally
-consume or finalize another's live context. What multi-user mode also adds is
-*who-did-this*: every write
-attributes to a named user, audit-log rows carry that identity, and the
-web UI can show "Last edited by Alice Smith" instead of the anonymous
-default. Every `/admin/*` endpoint stays root-only once the deployment has a
-DB user or trusted-proxy identities, including read-only
-status/search/read-page helpers.
+ai-memory 是**单租户 wiki 数据**加**可选的多用户归因**。每个已认证请求看到同样的 wiki 页面——没有逐页 RBAC 或组权限模型。操作性的交接与开放会话恢复按所有者限定，让一个操作者不会意外消费或收尾另一个人的活跃上下文。多用户模式额外加的是*这是谁干的*：每次写入归因到具名用户、审计日志行携带该身份、Web UI 可以显示「Last edited by Alice Smith」而非匿名默认。部署一旦有 DB 用户或受信代理身份，每个 `/admin/*` 端点保持仅 root——含只读的 status/search/read-page 辅助。
 
-Hook session identifiers are also owner-bound. A hook authenticated as one
-operator cannot reuse another operator's UUID to append events or trigger a
-summary/handoff/end transition. Shared legacy sessions remain available to all
-callers. Cross-owner recovery is limited to root's explicit
-`finalize-session --all-owners` path.
+钩子会话标识符也绑定所有者。以一个操作者认证的钩子不能复用另一个操作者的 UUID 来追加事件或触发摘要/交接/结束转换。共享的遗留会话对所有调用者保持可用。跨所有者恢复仅限 root 显式的 `finalize-session --all-owners` 路径。
 
-Authenticated clients sharing one server must emit a distinct agent-run id for
-each run and forward that same id on their MCP requests when using session-aware
-auto-scope. Legacy sessions whose stored owner is `NULL` remain shared.
+共享一台服务器的已认证客户端必须为每次运行发出一个独立的智能体运行 id，并在使用会话感知 auto-scope 时在 MCP 请求上转发同一 id。存储所有者为 `NULL` 的遗留会话保持共享。
 
-If you run ai-memory alone, you can skip this page — your install
-keeps working unchanged.
+你一个人用 ai-memory 的话可以跳过本页——你的安装保持原样工作。
 
-## When to enable it
+## 何时启用
 
-You probably want multi-user mode when:
+以下情况你可能想要多用户模式：
 
-- More than one human shares a single ai-memory server (a household,
-  a small team's homelab).
-- You want the audit log to record *who* made each write (e.g. to
-  trace `Codex` writes vs `Claude Code` writes vs hand-rolled CLI
-  calls).
-- You're planning to use the admission webhook chain —
-  webhooks receive the actor identity in their payload.
+- 多于一个人共享一台 ai-memory 服务器（一个家庭、一个小团队的家庭实验室）。
+- 你想让审计日志记录每次写入*是谁*做的（如区分 `Codex` 写入、`Claude Code` 写入与手搓 CLI 调用）。
+- 你打算用准入 webhook 链——webhook 在其 payload 里收到行为者身份。
 
-You probably **don't** need it when:
+以下情况你多半**不需要**它：
 
-- You're the sole human user of your install. Single-user mode (no user rows)
-  remains compatible whether or not `init` has generated `[auth].token_pepper`.
-- You need permissions / access control. v1 of ai-memory does
-  not implement RBAC by design (see
-  [`design-decisions.md`](design-decisions.md) §13). Attribution
-  records *who* did a write; it does not gate *whether* they
-  could.
+- 你是安装的唯一人类用户。单用户模式（无用户行）保持兼容，无论 `init` 是否生成过 `[auth].token_pepper`。
+- 你需要权限/访问控制。ai-memory v1 刻意不实现 RBAC（见[设计决策](/design-decisions/) §13）。归因记录写入*是谁*做的；不门控*能不能*做。
 
-## The four resolution rungs
+## 四级解析阶梯
 
-Every HTTP request is resolved to one of four authentication tiers:
+每个 HTTP 请求解析到四个认证层级之一：
 
-| Rung | Trigger | What the request gets |
+| 档 | 触发 | 请求得到什么 |
 |---|---|---|
-| **0 — Anonymous** | No `[auth].bearer_token` set. | Allowed, no identity. Same as pre-multi-user defaults. |
-| **1 — Root** | Bearer matches `[auth].bearer_token`. | Allowed as **root**. When `[auth].root_username` is set, writes attribute to that name; otherwise attribution stays anonymous. |
-| **1b — Proxy-asserted user** | Bearer matches the distinct `[auth].actor_proxy_bearer_token`. | Identity is taken from trusted `X-Memory-Actor-*` headers. The request is a **user** unless its OIDC issuer/subject pair exactly matches the configured root pair. Missing or malformed identity is rejected. |
-| **2 — DB user** | Bearer doesn't match root, matches a `users.token_hash` row (via SHA-256 of token + `[auth].token_pepper`). | Allowed as **that user** for normal read/write APIs. All `/admin/*` endpoints are root-only in multi-user mode. The audit log records the username/email/name. |
-| **3 — 401** | Bearer present but matches nothing. | Rejected. Closes the bypass — unknown bearers can't slip through as anonymous. |
+| **0——匿名** | 未设 `[auth].bearer_token`。 | 允许，无身份。与多用户化之前的默认一致。 |
+| **1——root** | bearer 匹配 `[auth].bearer_token`。 | 以 **root** 允许。设了 `[auth].root_username` 时写入归因到该名字；否则归因保持匿名。 |
+| **1b——代理断言用户** | bearer 匹配独立的 `[auth].actor_proxy_bearer_token`。 | 身份取自受信的 `X-Memory-Actor-*` 头。该请求是**用户**——除非其 OIDC issuer/subject 对与配置的 root 对完全匹配。缺失或畸形的身份被拒绝。 |
+| **2——DB 用户** | bearer 不匹配 root、匹配一行 `users.token_hash`（经 token + `[auth].token_pepper` 的 SHA-256）。 | 以**该用户**允许使用正常读写 API。多用户模式下所有 `/admin/*` 端点仅 root。审计日志记录 username/email/name。 |
+| **3——401** | bearer 存在但不匹配任何东西。 | 拒绝。关上旁路——未知 bearer 不能混进匿名。 |
 
-The rungs are sticky: a request is matched at the first credential that
-applies, never escalates. Startup rejects equal root and proxy credentials;
-root and proxy credentials take precedence over any accidental DB-token
-collision.
+各档粘性：请求在第一个适用的凭据处匹配、绝不升级。启动拒绝 root 与代理凭据相等；root 与代理凭据优先于任何意外的 DB token 碰撞。
 
-## Trusted proxy identity
+## 受信代理身份
 
-A deployment that terminates SSO validates the end user's credential, then
-authenticates upstream with a proxy-only bearer and describes the human in
-`X-Memory-Actor-*` headers. Those headers are **ignored by default** on root
-and DB-user requests because anything that can reach the port could otherwise
-claim any identity.
+终结 SSO 的部署校验最终用户的凭据，然后以一个仅代理可用的 bearer 向上游认证，并在 `X-Memory-Actor-*` 头里描述该人类。这些头在 root 与 DB 用户请求上**默认被忽略**，否则任何够得到端口的请求都能声称任意身份。
 
-Configure a distinct proxy credential:
+配置一个独立的代理凭据：
 
 ```toml
-[auth]
-bearer_token = "<root-token>"                    # direct administration
-actor_proxy_bearer_token = "<different-token>"  # SSO proxy only
-secure_cookie = true                              # when `/web` is HTTPS-only
+ [auth]
+bearer_token = "<root-token>"                    # 直接管理
+actor_proxy_bearer_token = "<different-token>"  # 仅 SSO 代理
+secure_cookie = true                              # 当 /web 仅 HTTPS 时
 
-# Optional stable identity for the root human behind an OIDC proxy.
+# OIDC 代理背后 root 人类的可选稳定身份。
 root_issuer = "https://idp.example"
 root_subject = "<root-subject>"
 ```
 
-- The proxy token **is** the switch. A blank value counts as unset. It must
-  differ from `bearer_token`, and `serve` refuses startup otherwise or when the
-  root bearer is absent.
-- Only set it when the server is reachable *only* through that proxy.
-- `secure_cookie` is independent of proxy identity. Enable it when a trusted
-  reverse proxy terminates HTTPS for `/web`; ai-memory never trusts forwarded
-  protocol headers to infer it. Direct HTTP browsers will not send that cookie.
-- **The proxy MUST strip client-supplied `X-Memory-Actor-*` headers before
-  setting its own.** Use a directive that *replaces* the header rather than
-  appending to it (nginx `proxy_set_header`, Traefik `customRequestHeaders`) —
-  with an appending ingress the client's value arrives first and would be the
-  one read. Repeated headers and comma-folded values are rejected with `400`
-  rather than resolved to one identity.
-- Every proxy request must assert `X-Memory-Actor-User`, or both
-  `X-Memory-Actor-Issuer` and `X-Memory-Actor-Sub`. The OIDC fields are a pair:
-  the standard guarantees subject uniqueness only within an issuer. A partial
-  pair or a request that names nobody is rejected with `400`.
-- Proxy callers are users by default. A username-only assertion can never
-  become root, including one equal to `root_username`, because an OIDC display
-  username is not a stable unique identifier. Proxied root access requires an
-  exact match with `root_issuer` plus `root_subject`.
-- Origin health checks or maintenance calls that need root should use the root
-  bearer, not the proxy bearer. Raw actor headers on the root rung are ignored.
+- 代理 token **就是**开关。空值视为未设。它必须与 `bearer_token` 不同，否则 `serve` 拒绝启动（root bearer 缺失时同样）。
+- 只在服务器*只*经该代理可达时设置它。
+- `secure_cookie` 独立于代理身份。受信反向代理为 `/web` 终结 HTTPS 时启用它；ai-memory 绝不信转发的协议头来推断它。直接 HTTP 的浏览器不会发那个 cookie。
+- **代理必须在设置自己的 `X-Memory-Actor-*` 头之前剥掉客户端提供的同名头。**用*替换*头而非追加的指令（nginx `proxy_set_header`、Traefik `customRequestHeaders`）——追加式 ingress 下客户端的值先到、就成了被读的那个。重复头与逗号折叠值以 `400` 拒绝，而不是解析成一个身份。
+- 每个代理请求必须断言 `X-Memory-Actor-User`，或同时断言 `X-Memory-Actor-Issuer` 与 `X-Memory-Actor-Sub`。OIDC 字段是成对的：标准只在单个 issuer 内保证 subject 唯一。不完整的对或不点名任何人的请求以 `400` 拒绝。
+- 代理调用者默认是用户。仅用户名的断言永远不能变成 root——包括等于 `root_username` 的——因为 OIDC 显示用户名不是稳定的唯一标识。代理的 root 访问要求与 `root_issuer` 加 `root_subject` 精确匹配。
+- 需要 root 的源健康检查或维护调用应该用 root bearer，不是代理 bearer。root 档上的裸行为者头被忽略。
 
-## Identity keys
+## 身份键
 
-Identity-sensitive routing uses a *qualified* identity, never a bare string.
-`ActorContext::identity_key()` resolves a request to the OIDC
-`(issuer, subject)` pair when both are present, or to `user:<name>` for a
-username-only identity. The namespaces are disjoint, and identical subjects
-from different issuers stay different.
+身份敏感的路由用*限定*身份，绝不用裸字符串。`ActorContext::identity_key()` 把请求解析为 OIDC `(issuer, subject)` 对（两者都在时）或 `user:<name>`（仅用户名身份）。两个命名空间不相交，不同 issuer 的相同 subject 保持不同。
 
-The OIDC pair outranks `user` because OIDC defines `(iss, sub)` as the stable
-identifier and explicitly forbids relying on `preferred_username` for
-uniqueness. Configure the proxy to forward both values from day one. Adding a
-display username later then preserves the same identity; moving from a
-username-only assertion to the OIDC pair deliberately changes it once.
+OIDC 对优先于 `user`，因为 OIDC 把 `(iss, sub)` 定义为稳定标识并明确禁止依赖 `preferred_username` 做唯一性。从第一天就配置代理转发两个值。之后再添加显示用户名保持同一身份；从仅用户名断言迁到 OIDC 对则刻意一次性改变它。
 
-## Ownership of handoffs and sessions
+## 交接与会话的所有权
 
-Handoffs and sessions record the operator they belong to (`owner_user` /
-`actor_user`, holding the qualified `IdentityKey::storage_key()` TEXT). On a
-shared server this stops one operator's pending handoff from being delivered
-to — and consumed by — the next session to start, whoever it belongs to.
+交接与会话记录它们属于的操作者（`owner_user` / `actor_user`，持有限定 `IdentityKey::storage_key()` TEXT）。共享服务器上这阻止一个操作者的待处理交接被投递给——并被消费于——下一个启动的会话，无论属于谁。
 
-- A `NULL` owner means **shared with the project**: every row written before
-  ownership existed, and anything written without an authenticated actor, stays
-  visible to everyone.
-- **An owner is only stamped where the deployment distinguishes operators.**
-  Single-operator servers are unaffected even when they name their operator via
-  `[auth].root_username`: with no `users` rows and no proxy bearer there is
-  nobody to separate, and stamping the one name would separate that operator's
-  *transports* instead — HTTP requests carry the name, while the stdio /
-  in-process MCP transport and the local CLI carry no actor at all and would
-  stop seeing what the HTTP side wrote. Reads are deliberately **not** gated the
-  same way, so a row stamped while the deployment did distinguish operators
-  stays readable by that operator afterwards.
-- The owner is the qualified identity the request names —
-  `ActorContext::identity_key()`, so the issuer-qualified OIDC key when a
-  complete issuer/subject pair is asserted and `user:<name>` otherwise. It is
-  the same rule that decides the auth tier, so the proxy path gets real
-  per-operator isolation rather than one shared bucket.
-- `memory_handoff_begin` takes `shared: true` to publish a baton deliberately.
-- `memory_handoff_accept` / `memory_handoff_cancel` take `any_owner: true` to
-  act on somebody else's baton; that opt-out requires admin authority in
-  multi-user mode.
-- `ai-memory finalize-session --all-owners` does the same for sessions, and
-  `GET /admin/open-sessions?all_owners=true` is the underlying switch.
-  `--session-id <uuid>` / `session_id=<uuid>` narrows the same owner-scoped
-  lookup to one exact open session; it cannot be combined with `--all` /
-  `all=true`.
-- `GET /admin/sessions/by-agent` reports how many sessions each agent CLI
-  opened in a scope. It follows the same rule: the caller's own sessions
-  plus the unowned ones, with `all_owners=true` to see every operator's. Pass
-  the required `workspace` and `project` query parameters and optionally
-  `since_days=N`; zero or omission means all history. Results use the stable
-  shape `{"by_agent":[{"agent":"codex","sessions":3}]}`, ordered by count
-  descending and then agent name. An unknown scope returns 404 without creating
-  it. Like every `/admin/*` route, this endpoint is root-only when the
-  deployment distinguishes operators.
-- The read-only handoff listing (`GET
-  /api/v1/workspaces/{ws}/projects/{p}/handoffs`) serves its prompt-derived
-  fields — `summary`, `open_questions`, `next_steps` — to a caller the server
-  can name (their own rows plus the shared ones) and to the root operator, who
-  reads every page body through the wiki API anyway. A caller an authenticating
-  server can place as neither gets the metadata with `redacted: true`. A server
-  with no auth configured is unaffected: it already serves every page body
-  unauthenticated. The default listing remains own plus shared; root may request
-  the explicit recovery view with `?all_owners=true`, while user and anonymous
-  tiers receive `403`.
-- Handoff lifecycle events raise admission ops (`handoff_begin`,
-  `handoff_accept`, `handoff_cancel`), so an admission webhook can observe or —
-  with `failure_policy = "reject"` — refuse them. Only reject-policy hooks are
-  awaited on these ops; observers are notified after the operation is durable.
+- `NULL` 所有者意味着**与项目共享**：所有权存在之前的每行、以及任何无认证行为者的写入，对所有人保持可见。
+- **只有部署区分操作者时才盖所有者戳。**单操作者服务器不受影响，即使它们经 `[auth].root_username` 命名了操作者：没有 `users` 行、没有代理 bearer 就没有可区分的人，而给唯一名字盖戳反而会分开该操作者的*传输*——HTTP 请求带名字，而 stdio / 进程内 MCP 传输与本地 CLI 完全不带行为者、会看不到 HTTP 侧写的东西。读取刻意**不**同样门控，所以部署曾经区分操作者时盖了戳的行之后仍可被该操作者读到。
+- 所有者是请求点名的限定身份——`ActorContext::identity_key()`，断言了完整 issuer/subject 对时是 issuer 限定的 OIDC 键、否则是 `user:<name>`。这与决定认证档的是同一条规则，所以代理路径得到真正的逐操作者隔离而非一个共享桶。
+- `memory_handoff_begin` 带 `shared: true` 刻意发布接力棒。
+- `memory_handoff_accept` / `memory_handoff_cancel` 带 `any_owner: true` 作用于别人的接力棒；那个退出需要多用户模式下的管理员权限。
+- `ai-memory finalize-session --all-owners` 对会话做同样的事，`GET /admin/open-sessions?all_owners=true` 是底层开关。`--session-id <uuid>` / `session_id=<uuid>` 把同样的所有者限定查找收窄到一个确切的开放会话；不能与 `--all` / `all=true` 组合。
+- `GET /admin/sessions/by-agent` 报告一个作用域里每个智能体 CLI 开了多少会话。遵循同一规则：调用者自己的加未归因的，`all_owners=true` 看每个操作者的。传必需的 `workspace` 与 `project` 查询参数、可选 `since_days=N`；零或省略指全部历史。结果用稳定形状 `{"by_agent":[{"agent":"codex","sessions":3}]}`，按计数降序再按智能体名排序。未知作用域返回 404 而不创建它。与每个 `/admin/*` 路由一样，部署区分操作者时该端点仅 root。
+- 只读的交接列表（`GET /api/v1/workspaces/{ws}/projects/{p}/handoffs`）把它从提示词派生的字段——`summary`、`open_questions`、`next_steps`——服务给服务器能点名的调用者（自己的行加共享的）与 root 操作者（后者反正经 wiki API 读每个页面正文）。认证服务器放不进两类的调用者拿到 `redacted: true` 的元数据。未配置认证的服务器不受影响：它本来就无认证地服务每个页面正文。默认列表保持自己加共享；root 可以用 `?all_owners=true` 请求显式恢复视图，而用户与匿名档收到 `403`。
+- 交接生命周期事件触发准入 op（`handoff_begin`、`handoff_accept`、`handoff_cancel`），所以准入 webhook 可以观察或——带 `failure_policy = "reject"`——拒绝它们。这些 op 上只有 reject 策略钩子被等待；观察者在操作持久之后收到通知。
 
-"Multi-user mode" here means *the deployment distinguishes operators*: either
-`users` rows exist, or `[auth].actor_proxy_bearer_token` is configured. A trusted
-proxy never writes a `users` row, so counting only rows would leave every
-proxied caller on the single-operator escape hatch that waves admin through.
-One question, every gate: the MCP admin tools, the `/admin/*` route layer, and
-the ownership stamped on handoffs and sessions all ask it.
+「多用户模式」在这里指*部署区分操作者*：要么存在 `users` 行、要么配置了 `[auth].actor_proxy_bearer_token`。受信代理从不写 `users` 行，所以只数行会把每个代理调用者留在放行 admin 的单操作者逃生口上。一个问题问所有门：MCP admin 工具、`/admin/*` 路由层、交接与会话上盖的所有权戳问的都是它。
 
-## MCP client activity
+## MCP 客户端活动
 
-`GET /admin/activity/by-client` reports server-wide MCP tool calls rather than
-lifecycle sessions or project-owned data. Stateful HTTP and stdio use the
-sanitized MCP `clientInfo.name`; stateless requests fall back to an
-authenticated proxy's actor-agent label and then `unknown`. Results have the
-stable shape
-`{"by_client":[{"client":"claude-code","reads":12,"writes":3}]}` and are
-ordered by total calls, then client name.
+`GET /admin/activity/by-client` 报告服务器级 MCP 工具调用，而非生命周期会话或项目拥有的数据。有状态 HTTP 与 stdio 用净化的 MCP `clientInfo.name`；无状态请求回退到已认证代理的行为者-智能体标签、再回退 `unknown`。结果有稳定形状 `{"by_client":[{"client":"claude-code","reads":12,"writes":3}]}`，按总调用数再按客户端名排序。
 
-`since_days=N` includes every UTC day bucket intersecting that lookback; zero
-or omission means all history. Calls flush on a one-minute background interval
-even if no later request arrives, and retry failed batches once per interval;
-process exit can lose the current interval. Each UTC day stores at most 128
-distinct labels and folds additional labels into `other`. The endpoint takes
-no workspace or project because many MCP-only clients do not provide reliable
-per-call scope. Like every `/admin/*` route, it is root-only when the deployment
-distinguishes operators.
+`since_days=N` 纳入与该回看相交的每个 UTC 日桶；零或省略指全部历史。调用以一分钟后台间隔冲刷（即使没有后续请求到达），并每间隔重试一次失败批次；进程退出可能丢失当前间隔。每个 UTC 日至多存 128 个不同标签，多余折叠进 `other`。该端点不带 workspace 或 project，因为许多仅 MCP 客户端不提供可靠的逐调用作用域。与每个 `/admin/*` 路由一样，部署区分操作者时仅 root。
 
-## Per-operator memory slots
+## 按操作者的记忆槽位
 
-The "absent means shared" rule extends to memory slots, so a single-operator
-server behaves exactly as it always has. `_slots/current-focus.md` is injected
-into every operator's context; `_slots/<segment>/current-focus.md` is injected
-only into the operator whose `path_segment()` is `<segment>` (`u-alice`,
-`uh-<uuid>` for a mixed-case, trailing-period, or otherwise path-hostile
-username, or `o-<uuid>` for a complete OIDC issuer/subject pair). What the
-feature scopes is injection, not access: a slot is an ordinary wiki page, so
-exact reads and searches remain project-wide like every other page. Every slot
-written before this is unnamespaced, therefore shared.
+「缺失即共享」规则延伸到记忆槽位，所以单操作者服务器的行为与以往完全一致。`_slots/current-focus.md` 注入每个操作者的上下文；`_slots/<segment>/current-focus.md` 只注入 `path_segment()` 为 `<segment>` 的操作者（`u-alice`、混合大小写/尾点/路径不友好用户名的 `uh-<uuid>`、或完整 OIDC issuer/subject 对的 `o-<uuid>`）。该功能限定的是注入而非访问：槽位是普通 wiki 页面，所以精确读取与检索和其他页面一样保持全项目范围。此前的每个槽位都未命名空间化，因此共享。
 
-`[slots] per_user` (default off) is the switch for the whole regime. With it
-ON:
+`[slots] per_user`（默认关）是整个机制的开关。开启后：
 
-- session briefs and consolidation prompts show you the shared slots plus your
-  own — including the pointer list of recently touched pages, so another
-  operator's slot path and title stay out of your brief too;
-- the engine namespaces the slots it writes: a consolidation run that targets
-  the shared slot lands in the session operator's own namespace instead, and a
-  path the model aims at somebody else's namespace is skipped rather than
-  written or re-homed — that path comes from the model, and
-  anything reaching your observations can dictate it;
-- a `memory_write_page` call naming the SHARED slot is namespaced into your
-  own prefix, exactly as the engine would (the response reports the path the
-  page actually got), and writing into another operator's namespace is refused
-  (admins may still curate any namespace, the shared slot included).
+- 会话简报与整编提示词给你共享槽位加你自己的——包括最近触碰页面的指针列表，所以另一操作者的槽位路径与标题也不进你的简报；
+- 引擎给它写的槽位划命名空间：面向共享槽位的整编运行落进会话操作者自己的命名空间，而模型瞄向别人命名空间的路径被跳过而非写入或归位——那个路径来自模型，任何到达你观察的东西都能支配它；
+- 点名共享槽位的 `memory_write_page` 调用被命名空间化进你自己的前缀，与引擎的做法一致（响应报告页面实际得到的路径），写进另一操作者命名空间则被拒绝（管理员仍可策展任何命名空间，含共享槽位）。
 
-With it OFF a nested slot path means nothing in particular — every slot goes
-into every brief, exactly as before the feature existed — so turning it back
-off makes personal slots visible to everyone again rather than stranding them.
+关闭时嵌套槽位路径没有特殊含义——每个槽位进每个简报，与该功能存在之前一样——所以再关掉让个人槽位重新对所有人可见，而不是搁浅它们。
 
-The `<segment>` is derived from the qualified identity on this server: a short,
-lowercase, path-safe ASCII username stays readable, while a mixed-case,
-trailing-period, or otherwise path-hostile username or complete OIDC
-issuer/subject pair becomes a bounded deterministic identifier. Restricting
-readable segments to lowercase without trailing periods prevents distinct
-identities from producing pathnames that compare alike on supported
-case-insensitive filesystems. The OIDC pair
-outranks the username; see "Identity keys" above. Every named operator owns a
-working namespace, and long or path-hostile values never fall back onto the
-shared slot. One consequence of qualified segments is worth stating: a nested
-path written before the feature
-(`_slots/backend/…`) spells a segment no qualified identity can produce, so
-with the flag ON it belongs to nobody and reaches no brief until the flag is
-turned back off or an admin re-homes it.
+`<segment>` 从该服务器上的限定身份派生：短、小写、路径安全的 ASCII 用户名保持可读，而混合大小写、尾点或其他路径不友好的用户名或完整 OIDC issuer/subject 对变成有界的确定性标识。把可读段限制为无尾点小写，防止不同身份在受支持的大小写不敏感文件系统上产出比较起来一样的路径名。OIDC 对优先于用户名；见上文「身份键」。每个具名操作者拥有一个可用的命名空间，长或路径不友好的值绝不回退到共享槽位。限定段的一个后果值得明说：该功能之前写的嵌套路径（`_slots/backend/…`）拼出的段没有任何限定身份能产出，所以标志开启时它不属于任何人、到达不了任何简报——直到标志关回或管理员给它归位。
 
-Before the case-insensitive namespace fix, a mixed-case username such as
-`Alice` used the readable segment `u-Alice`, and a username ending in a period
-kept that period; both now use deterministic `uh-<uuid>` segments. ai-memory
-cannot safely move the old directory automatically because a case-insensitive
-filesystem may already have combined it with another identity. Administrators
-upgrading a shared deployment with `[slots] per_user = true` must inspect any
-affected `u-…` slot directories and re-home confirmed content into the owning
-operator's new namespace. Preserve the old pages until ownership is
-established; do not infer it from filename casing alone.
+大小写不敏感命名空间修复之前，`Alice` 这样的混合大小写用户名用可读段 `u-Alice`，尾点用户名保留尾点；两者现在都用确定性 `uh-<uuid>` 段。ai-memory 不能安全地自动移动旧目录，因为大小写不敏感文件系统可能已把它与另一身份合并。升级带 `[slots] per_user = true` 共享部署的管理员必须检视受影响的 `u-…` 槽位目录，把确认的内容归位到拥有它的操作者的新命名空间。所有权确立前保留旧页面；不要只从文件名大小写推断它。
 
-One gap is deliberate and documented rather than closed: `ai-memory bootstrap`
-writes pages at paths the model picks from the repository's own README, docs
-and code, with no operator to attribute them to, so a repo carrying injected
-instructions can make it write a `_slots/…` page. It is an admin-only
-operation on a repository the admin chose to ingest, and the behaviour is the
-same with the flag off; review `bootstrap.md` — it lists every path written.
+一个缺口是刻意记录而非关闭的：`ai-memory bootstrap` 以模型从仓库自身 README、docs 与代码里挑的路径写页面，没有可归因的操作者，所以带注入指令的仓库能让它写一页 `_slots/…`。它是管理员对管理员选择摄取的仓库做的仅管理员操作，且标志关闭时行为相同；审阅 `bootstrap.md`——它列出每个写入的路径。
 
-## Other per-operator state
+## 其他逐操作者状态
 
-Beyond attribution, some engine state is recorded per operator. "Absent means
-shared" is the rule throughout — a row with no recorded operator behaves
-exactly as it did before the column existed — so a single-operator server
-keeps its historical behaviour:
+归因之外，一些引擎状态按操作者记录。「缺失即共享」是贯穿始终的规则——未记录操作者的行表现得与该列存在之前完全一样——所以单操作者服务器保持其历史行为：
 
-- **Auto-improvement proposals.** Each records the operator who staged it (the
-  qualified identity key — username or complete OIDC issuer/subject pair — so
-  proxy-asserted humans count too, and it shows up on the proposal detail),
-  and the "one
-  pending proposal per page" rule applies per operator, so operators stop
-  blocking each other. Only where the deployment distinguishes operators,
-  though: elsewhere proposals stay unattributed and the original one-per-page
-  rule holds unchanged. A scheduled run has no caller and stages unattributed;
-  the telemetry report and the curator describe the project rather than a
-  person and stay unattributed too, so they neither block nor are blocked by
-  any named operator's pending proposal for the same page.
+- **自动改进提案。**每条记录暂存它的操作者（限定身份键——用户名或完整 OIDC issuer/subject 对——所以代理断言的人类也算，且显示在提案详情上），且「每页一条待处理提案」规则按操作者适用，操作者不再互相阻塞。不过只在部署区分操作者之处：别处提案保持未归因、原有的每页一条规则原样保持。计划运行没有调用者、未归因暂存；遥测报告与 curator 描述项目而非个人、同样保持未归因，所以它们既不阻塞也不被任何具名操作者对同一页面的待处理提案阻塞。
 
-  A proposal that does collide with one already pending is skipped on its own
-  — the run's other proposals still stage — and every staging surface reports
-  the skip with the target path and the reason (the `skipped` list in the MCP
-  and `/admin` responses, the CLI output, and the scheduler's log), so a run
-  of N-1 proposals is never silently indistinguishable from a clean run of
-  N-1.
-- **Page reinforcement.** The first reinforced read by each identified
-  operator is recorded per page alongside the existing shared access counter.
-  `[decay] breadth_weight` (default `0.0`) optionally lets a
-  page reinforced by many different people outrank one read repeatedly by a
-  single person — the forget sweep reads the per-page count of distinct
-  operators and feeds it into the retention score. At the default, and for
-  pages with fewer than two distinct readers at any weight, retention scores
-  are unchanged.
+  确实与一条已待处理提案碰撞的提案自己被跳过——该运行的其他提案照常暂存——且每个暂存面带着目标路径与理由报告跳过（MCP 与 `/admin` 响应的 `skipped` 列表、CLI 输出、调度器日志），所以一次 N-1 条提案的运行绝不与干净的 N-1 条运行静默难辨。
+- **页面强化。**每个已识别操作者的首次强化读取与既有共享访问计数器一起逐页记录。`[decay] breadth_weight`（默认 `0.0`）可选地让被许多不同人强化过的页面胜过被单人反复读的页面——遗忘清扫读逐页的不同操作者计数并喂进留存分数。默认下、以及任何权重下不同读者少于两名的页面，留存分数不变。
 
-## Implementation contract
+## 实现契约
 
-Request identity and authorization are separate:
+请求身份与授权分离：
 
-- `ActorContext` carries who made the request and is used for attribution,
-  frontmatter, audit payloads, and active-project keys.
-- `AuthLevel` carries what auth tier the middleware resolved.
-- `AuthLevel::authorize(Capability::...)` is the shared permission check for
-  admin routes, user-management routes, normal read/write surfaces, and the
-  admission-chain skip header.
+- `ActorContext` 携带谁发了请求，用于归因、frontmatter、审计 payload 与活跃项目键。
+- `AuthLevel` 携带中间件解析出的认证档。
+- `AuthLevel::authorize(Capability::...)` 是 admin 路由、用户管理路由、正常读写面与准入链跳过头的共享权限检查。
 
-Handlers should not compare usernames, infer root from `ActorContext`, or add
-ad hoc root-only branches. PRs that touch auth behavior should cover root,
-DB-user, and anonymous callers, including the single-user compatibility mode
-where `[auth].token_pepper` is absent.
+处理器不应比较用户名、从 `ActorContext` 推断 root、或添加临时的 root 专属分支。触碰认证行为的 PR 应覆盖 root、DB 用户与匿名调用者，包括 `[auth].token_pepper` 缺失的单用户兼容模式。
 
-## Quick start
+## 快速开始
 
-> Prerequisite: a fresh `ai-memory init`. Pre-v0.8 installs need
-> the [migration step](#migrating-an-existing-single-user-install)
-> below before any of these commands work.
+> 前提：一次全新的 `ai-memory init`。v0.8 之前的安装需要先做下面的[迁移步骤](#迁移既有的单用户安装)，这些命令才能工作。
 
-### 1. Set the root identity
+### 1. 设定 root 身份
 
-Edit your `config.toml` (typically `<data_dir>/config.toml` or
-`/etc/ai-memory/config.toml`) and uncomment the `root_*` lines in
-the `[auth]` block:
+编辑你的 `config.toml`（通常是 `<data_dir>/config.toml` 或 `/etc/ai-memory/config.toml`），取消 `[auth]` 块里 `root_*` 行的注释：
 
 ```toml
 [auth]
 bearer_token = "<your-existing-token-or-a-fresh-one>"
 token_pepper = "<auto-generated-by-ai-memory-init>"
 
-root_username = "boss"            # required for root attribution
-root_email    = "boss@example.com" # optional, surfaced in UIs
-root_name     = "Boss"             # optional, surfaced in UIs
+root_username = "boss"            # root 归因必需
+root_email    = "boss@example.com" # 可选，展示在 UI
+root_name     = "Boss"             # 可选，展示在 UI
 ```
 
-`token_pepper` was auto-generated by `ai-memory init`; **do not
-change it after adding users** — rotating the pepper invalidates
-every existing token. The pepper is what makes a stolen `users`
-table useless to an offline attacker; an attacker with both the
-DB and the config has tokens at their disposal anyway, so the
-pepper's job is closed by the file-permission boundary.
+`token_pepper` 由 `ai-memory init` 自动生成；**加用户之后不要改它**——轮换 pepper 使每个既有 token 失效。pepper 让被偷的 `users` 表对离线攻击者无用；同时拿到 DB 和配置的攻击者反正有 token 可用，所以 pepper 的职责由文件权限边界关闭。
 
-`init` creates the pepper before any users exist. Until the first user is
-added, operational admin endpoints retain single-user compatibility; creating
-that first user switches them to root-only immediately, without a restart.
-Expired user rows still keep admin mode root-only. If a database has users but
-either the pepper or static root bearer is missing or blank, `serve` refuses
-startup. Restore both original secrets from configuration backup (or set the
-root bearer from the secret manager) rather than removing users; the root token
-is required to administer the existing users.
+`init` 在任何用户存在之前创建 pepper。第一个用户加入前，运营 admin 端点保持单用户兼容；创建第一个用户立即把它们切成仅 root，无需重启。过期的用户行仍保持 admin 模式仅 root。数据库有用户而 pepper 或静态 root bearer 缺失或为空时，`serve` 拒绝启动。从配置备份恢复两个原始秘密（或从秘密管理器设 root bearer），而不是删用户；管理既有用户需要 root token。
 
-### 2. Add another user
+### 2. 添加另一个用户
 
-Each `ai-memory user add` issues one token, printed **exactly
-once**. Only its SHA-256 digest is kept in the DB.
+每次 `ai-memory user add` 发一个 token，**恰好**打印一次。DB 只保留其 SHA-256 摘要。
 
 ```console
 $ AI_MEMORY_AUTH_TOKEN=<root-token> \
@@ -387,10 +174,9 @@ SHA-256 digest is kept in the DB.
 mYi3pq...<43-chars>...wKp2Ze
 ```
 
-stderr carries the human chrome, stdout carries the bare token
-so you can pipe it (`> ~/.config/ai-memory/alice.token`).
+stderr 载人向装饰、stdout 载裸 token，所以你可以管道它（`> ~/.config/ai-memory/alice.token`）。
 
-### 3. List users
+### 3. 列出用户
 
 ```console
 $ AI_MEMORY_AUTH_TOKEN=<root-token> ai-memory user list
@@ -401,15 +187,11 @@ bob       -            bob@home          active
 carol     -            -                 expired
 ```
 
-The list never surfaces tokens — only their hashes are in the DB.
+列表绝不浮现 token——DB 里只有它们的哈希。
 
-### 4. Disable a token (without losing attribution history)
+### 4. 禁用一个 token（不丢归因历史）
 
-`ai-memory user expire <username>` stamps `token_expired_at = now()`
-on the row. The user's bearer stops authenticating immediately, but
-the row stays put so historical `author_id` references in
-`audit_log` and `pages` keep resolving to their
-real names.
+`ai-memory user expire <username>` 给该行盖 `token_expired_at = now()`。该用户的 bearer 立即停止认证，但行留在原地，让 `audit_log` 与 `pages` 里历史 `author_id` 引用继续解析到真实姓名。
 
 ```console
 $ ai-memory user expire alice
@@ -417,11 +199,11 @@ Expire token for user 'alice'? Their token stops authenticating immediately. (y/
 ✓ expired token for user 'alice'
 ```
 
-Pass `--yes` to skip the prompt (CI / scripts).
+传 `--yes` 跳过提示（CI / 脚本）。
 
-To re-enable later: `ai-memory user revive alice`.
+之后再启用：`ai-memory user revive alice`。
 
-### 5. Rotate a leaked / lost token
+### 5. 轮换泄漏/丢失的 token
 
 ```console
 $ ai-memory user rotate-token alice
@@ -433,97 +215,66 @@ Store this token now — it will NOT be shown again.
 XGqsBp...<43-chars>...zRm0Vt
 ```
 
-Rotation implicitly revives an expired token — you can recover an
-offboarded user without first running `revive`.
+轮换隐式复活过期 token——你可以直接恢复一个已离职用户而无需先跑 `revive`。
 
-## Backward compatibility
+## 向后兼容
 
-If you're upgrading from a pre-v0.8 ai-memory:
+从 v0.8 之前的 ai-memory 升级：
 
-- **No action is required.** Your existing
-  `[auth].bearer_token`-only setup continues to authenticate
-  exactly as before. The auth middleware just stamps an anonymous
-  `ActorContext` and your audit log records the same shape it did
-  before.
-- The `users` table is added by migration V14 and stays empty
-  until you actively run `ai-memory user add`. SQL queries against
-  it return no rows; the rest of the schema is unchanged.
-- Multi-user mode requires `[auth].token_pepper`. Without it, the
-  user-management endpoints return **503** with a clear
-  `multi-user not enabled` message. Existing installs never trip
-  this because they never call `user add`.
-- `/admin/*` endpoints are open to the configured bearer token in
-  single-user mode, matching historical behavior. Creating the first user row
-  immediately makes every admin endpoint root-only; DB-user tokens receive
-  **403** and anonymous requests receive **401**. Merely configuring
-  `[auth].token_pepper` does not activate that boundary.
+- **无需任何动作。**你既有的仅 `[auth].bearer_token` 设置完全照旧认证。认证中间件只是盖一个匿名 `ActorContext`，审计日志记录与之前相同的形状。
+- `users` 表由迁移 V14 添加，在你主动跑 `ai-memory user add` 之前保持为空。对它的 SQL 查询不返回行；schema 其余不变。
+- 多用户模式要求 `[auth].token_pepper`。没有它，用户管理端点返回 **503** 带清晰的 `multi-user not enabled` 消息。既有安装绝不会触发这个，因为它们从不调用 `user add`。
+- 单用户模式下 `/admin/*` 端点对配置的 bearer token 开放，匹配历史行为。创建第一行用户记录立即让每个 admin 端点仅 root；DB 用户 token 收到 **403**、匿名请求收到 **401**。仅配置 `[auth].token_pepper` 不激活该边界。
 
-### Migrating an existing single-user install
+### 迁移既有的单用户安装
 
-`ai-memory init` is idempotent and won't overwrite a config it
-finds. To populate `token_pepper` without losing your current
-config:
+`ai-memory init` 幂等、不覆盖它找到的配置。要在不丢当前配置的情况下填 `token_pepper`：
 
-1. **Back up the existing config** (`cp config.toml config.toml.bak`).
-2. **Generate a pepper**: `ai-memory generate-auth-token 32` — this
-   prints a hex string of the same shape `init` would have
-   generated.
-3. **Add the `[auth]` block** to your `config.toml`:
+1. **备份既有配置**（`cp config.toml config.toml.bak`）。
+2. **生成 pepper**：`ai-memory generate-auth-token 32`——打印与 `init` 会生成的同形状十六进制串。
+3. **把 `[auth]` 块加进**你的 `config.toml`：
 
    ```toml
    [auth]
-   # ... your existing settings (bearer_token, etc.) ...
+   # ……你的既有设置（bearer_token 等）……
    token_pepper = "<paste-the-generated-pepper-here>"
-   root_username = "boss"     # optional; enables root-token attribution
-   root_email    = "boss@..." # optional
-   root_name     = "Boss"     # optional
+   root_username = "boss"     # 可选；启用 root-token 归因
+   root_email    = "boss@..." # 可选
+   root_name     = "Boss"     # 可选
    ```
 
-4. Restart `ai-memory serve`. The new fields are picked up; existing
-   behaviour is unchanged.
+4. 重启 `ai-memory serve`。新字段被拾取；既有行为不变。
 
-You can defer steps 3-4 indefinitely — `bearer_token` alone keeps
-working as it always has.
+第 3-4 步可以无限期推迟——仅 `bearer_token` 一直照旧工作。
 
-## How tokens are stored
+## token 怎么存
 
-- 32 bytes of OS CSPRNG, URL-safe-base64-encoded → 43-character
-  string.
-- DB column `users.token_hash` stores `SHA-256(token || ":" ||
-  token_pepper)`, never the plaintext.
-- The per-server `token_pepper` makes a DB-only theft (e.g. a
-  copied SQLite file) useless to an offline attacker: the search
-  space for the unpeppered hash is `(token, pepper)` jointly.
-- Constant-time comparison (`subtle::ConstantTimeEq`) on the hash
-  side-steps timing attacks against the lookup path.
+- 32 字节 OS CSPRNG，URL 安全 base64 编码 → 43 字符字符串。
+- DB 列 `users.token_hash` 存 `SHA-256(token || ":" || token_pepper)`，绝不存明文。
+- 逐服务器 `token_pepper` 让只偷 DB（如拷走的 SQLite 文件）对离线攻击者无用：无 pepper 哈希的搜索空间是 `(token, pepper)` 联合的。
+- 哈希侧常数时间比较（`subtle::ConstantTimeEq`）绕开查找路径的时序攻击。
 
-We deliberately **don't** use argon2id here even though it would be
-the textbook choice. Tokens are 256-bit CSPRNG, so brute force is
-infeasible regardless of hash strength; argon2id's per-hash salt
-would force O(N) scans on every auth request, where SHA-256 +
-`UNIQUE` index gives us the O(1) lookup the hot path needs.
-See `crates/ai-memory-store/src/users.rs` for the full rationale.
+我们刻意**不**用 argon2id，尽管它是教科书选择。token 是 256 位 CSPRNG，暴力破解无论哈希强度都不可行；argon2id 的逐哈希盐会迫使每次认证请求 O(N) 扫描，而 SHA-256 + `UNIQUE` 索引给热路径所需的 O(1) 查找。完整理由见 `crates/ai-memory-store/src/users.rs`。
 
-## Where attribution shows up
+## 归因出现在哪
 
-| Surface | Status |
+| 面 | 状态 |
 |---|---|
-| Auth middleware injects `Extension<ActorContext>` on every request | ✓ P1.3 |
-| All `/admin/*` routes gate on `Extension<AuthLevel>::Root` in multi-user mode | ✓ P1.4 |
+| 认证中间件在每个请求上注入 `Extension<ActorContext>` | ✓ P1.3 |
+| 多用户模式下所有 `/admin/*` 路由按 `Extension<AuthLevel>::Root` 门控 | ✓ P1.4 |
 | `ai-memory user add/list/expire/revive/rotate-token` CLI | ✓ P1.5 |
-| `pages.author_id` populated, frontmatter `last_modified_by` block | ✓ P1.6 |
-| `/api/v1` page responses include `author: { username, name?, email? }` | ✓ P1.7 |
-| ETag invalidation on author change (so caches refresh attribution) | ✓ P1.7 |
-| `install-hooks --as-user <name>` metadata + flag validation | ✓ P1.8 |
-| Web UI shows author on the page view | ✓ shipped |
-| Attributed mutation audit rows carry `audit_log.author_id` | ✓ shipped |
+| `pages.author_id` 填充、frontmatter `last_modified_by` 块 | ✓ P1.6 |
+| `/api/v1` 页面响应含 `author: { username, name?, email? }` | ✓ P1.7 |
+| 作者变化时 ETag 失效（让缓存刷新归因） | ✓ P1.7 |
+| `install-hooks --as-user <name>` 元数据 + 标志校验 | ✓ P1.8 |
+| Web UI 在页面视图显示作者 | ✓ 已发布 |
+| 带归因的变更审计行携带 `audit_log.author_id` | ✓ 已发布 |
 
-Commit ids for each milestone are recorded in `CHANGELOG.md`.
+每个里程碑的提交 id 记录在 `CHANGELOG.md`。
 
-## Wiring agent hooks to a specific user
+## 把智能体钩子接到特定用户
 
-After `ai-memory user add` prints a user's token, point that user's
-agent install at it via `install-hooks`:
+`ai-memory user add` 打印某用户的 token 后，经 `install-hooks` 把该用户的智能体安装指向它：
 
 ```console
 $ ai-memory user add --username alice --email alice@home --name "Alice Smith"
@@ -532,7 +283,7 @@ $ ai-memory user add --username alice --email alice@home --name "Alice Smith"
   email: alice@home
   ...
 
-XGq...<43-chars>...zRm    # the token, stdout only
+XGq...<43-chars>...zRm    # token，仅 stdout
 
 $ ai-memory install-hooks --apply --agent claude-code \
     --as-user alice --auth-token XGq...<43-chars>...zRm
@@ -540,38 +291,13 @@ $ ai-memory install-hooks --apply --agent claude-code \
 ✓ staged 5 hook script(s) → ...
 ```
 
-`--as-user` is **metadata only**: it labels the install for the
-operator's records and prints a confirmation line so you can verify
-which identity the next session's writes will attribute to. The
-actual token wired into the hook env block is whatever you pass via
-`--auth-token`. Mismatching the two (e.g. `--as-user alice
---auth-token <bob's token>`) is permitted at the CLI layer; the
-server will resolve to bob at runtime. The flag is there to keep the
-operator honest, not to enforce.
+`--as-user` **仅是元数据**：它为操作者的记录标注安装、并打印一行确认，让你核对下一个会话的写入会归因到哪个身份。实际接进钩子 env 块的 token 是你经 `--auth-token` 传的任何东西。两者不匹配（如 `--as-user alice --auth-token <bob 的 token>`）在 CLI 层被允许；服务器运行时解析到 bob。该标志是为了让操作者诚实，不是为了强制。
 
-Without `--as-user`, hooks install the same way they always have —
-the bearer authenticates, attribution flows from the token's owner
-(root user or DB user) at write time.
+不带 `--as-user` 时钩子照常安装——bearer 认证，归因在写入时从 token 的所有者（root 用户或 DB 用户）流出。
 
-## Limitations
+## 限制
 
-- **No per-page RBAC.** Every authenticated user sees every page in
-  the workspace. All `/admin/*` endpoints are still root-only in
-  multi-user mode. If you need data isolation, run separate
-  ai-memory servers (per-user data dirs) and front them with a reverse
-  proxy.
-- **One token per user.** Rotation issues a new token and
-  invalidates the old in the same transaction. There's no
-  notion of multiple device-bound tokens per user.
-- **Root token is single.** `[auth].bearer_token` is the admin token
-  for every `/admin/*` endpoint. DB users created with `user add` are
-  normal users, not additional admins.
-- **OIDC is request authentication, not page authorization.** Native hooks and
-  thin-client CLI commands can send a per-developer OIDC bearer for an external
-  OIDC-aware gateway/bridge. Native ai-memory server auth still uses static root
-  bearer / DB-user tokens, and `/admin/*` stays root-only unless a gateway
-  translates accepted OIDC auth into upstream auth that ai-memory accepts.
-  ai-memory still has one shared wiki per server and no
-  per-page RBAC. The Keycloak/OIDC `sid` claim is also not an ai-memory agent
-  session id; session auto-scope needs the lifecycle-hook session id or explicit
-  `workspace` + `project` / `scopes`.
+- **无逐页 RBAC。**每个已认证用户看到 workspace 里的每个页面。多用户模式下所有 `/admin/*` 端点仍仅 root。需要数据隔离的话，跑多台 ai-memory 服务器（逐用户数据目录）并用反向代理挡在前面。
+- **每用户一个 token。**轮换在同一事务里发新 token 并作废旧 token。没有每用户多设备绑定 token 的概念。
+- **root token 是单个的。**`[auth].bearer_token` 是每个 `/admin/*` 端点的管理 token。经 `user add` 创建的 DB 用户是普通用户，不是额外管理员。
+- **OIDC 是请求认证，不是页面授权。**原生钩子与瘦客户端 CLI 命令可以为外部 OIDC 感知网关/桥发逐开发者 OIDC bearer。原生 ai-memory 服务器认证仍用静态 root bearer / DB 用户 token，且除非网关把接受的 OIDC 认证翻译成 ai-memory 接受的上游认证，`/admin/*` 保持仅 root。ai-memory 仍是每服务器一个共享 wiki、无逐页 RBAC。Keycloak/OIDC 的 `sid` 声明也不是 ai-memory 的智能体会话 id；会话 auto-scope 需要生命周期钩子会话 id 或显式 `workspace` + `project` / `scopes`。
