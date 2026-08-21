@@ -1,61 +1,43 @@
 ---
-title: "Auto-Improve SkillOpt-Inspired Roadmap"
-description: "This is the ongoing implementation plan for borrowing the best safety ideas from SkillOpt without turning ai-memory into a workflow manager, benchmark harness, or agent orchestrati"
+title: "自动改进 SkillOpt 路线图"
+description: "这是借鉴 SkillOpt 最佳安全思想的进行中实施计划，同时不把 ai-memory 变成工作流管理器、基准框架或智能体编排平台。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-improve-skillopt-roadmap.md"
 ---
 
-# Auto-Improve SkillOpt-Inspired Roadmap
+# 自动改进 SkillOpt 路线图
 
-This is the ongoing implementation plan for borrowing the best safety ideas from
-SkillOpt without turning ai-memory into a workflow manager, benchmark harness, or
-agent orchestration platform.
+这是借鉴 SkillOpt 最佳安全思想的进行中实施计划，同时不把 ai-memory 变成工作流管理器、基准框架或智能体编排平台。
 
-## Boundary
+## 边界
 
-ai-memory remains a memory substrate:
+ai-memory 保持为记忆基底：
 
-- automatic capture from lifecycle hooks;
-- markdown wiki as the source of truth;
-- SQLite as the derived index and audit store;
-- small, auditable wiki proposals through pending-writes;
-- optional LLM review outside hook latency.
+- 从生命周期钩子自动捕获；
+- markdown wiki 作事实源；
+- SQLite 作派生索引与审计存储；
+- 经待写入走小而可审计的 wiki 提案；
+- 可选的 LLM 评审在钩子延迟之外。
 
-This roadmap does **not** add a spec-driven workflow, mandatory task scoring,
-agent replay engine, skill router, code graph, or benchmark registry.
+本路线图**不**加规格驱动工作流、强制任务打分、智能体重放引擎、技能路由器、代码图或基准注册表。
 
-## Why this work matters
+## 这项工作为什么重要
 
-The current auto-improvement loop validates proposals structurally: path, kind,
-confidence, evidence, size, duplicate checks, and approval policy. That is useful
-but not enough for high-impact pages such as `_rules/` and `procedures/`, where a
-bad edit can shape future agent behavior. The biggest wins are to make proposed
-changes smaller, easier to review, harder to repeat after rejection, and optionally
-measurable when a project supplies its own scoring command.
+当前自动改进循环按结构验证提案：路径、类别、置信度、证据、大小、重复检查与批准策略。这有用但对 `_rules/` 与 `procedures/` 这类高影响页面不够——那里一个坏编辑能塑造未来智能体行为。最大的收益是让提议的变更更小、更易评审、被拒后更难重犯、并在项目自带评分命令时可选地可度量。
 
-## Invariants
+## 不变量
 
-- Existing full-page `create_or_update` proposals must continue to validate,
-  stage, diff, approve, reject, and audit.
-- New behavior must be additive migrations/config; existing installs keep the
-  same defaults.
-- Target wiki mutations must still pass through `Wiki::write_page`,
-  `Wiki::apply_batch`, or existing approval helpers.
-- Server/admin/MCP paths must preserve `ScopeResolver` and
-  `AuthLevel::authorize(Capability::...)` boundaries.
-- Hooks must remain fire-and-forget and must not run LLM review, patching, or
-  evaluation gates.
-- No new public MCP tool surface unless the existing `memory_auto_improve` and
-  pending-writes surface cannot express the workflow.
+- 既有整页 `create_or_update` 提案必须继续能验证、暂存、diff、批准、拒绝与审计。
+- 新行为必须是增量迁移/配置；既有安装保持相同默认。
+- 目标 wiki 变更仍必须经 `Wiki::write_page`、`Wiki::apply_batch` 或既有批准辅助函数。
+- 服务器/admin/MCP 路径必须保持 `ScopeResolver` 与 `AuthLevel::authorize(Capability::...)` 边界。
+- 钩子必须保持即发即忘，且不得运行 LLM 评审、打补丁或评审门。
+- 除非既有的 `memory_auto_improve` 与待写入面无法表达该工作流，不新增公共 MCP 工具面。
 
-## Phase 1 — Structured Patch Proposals With Minimal Budgets
+## 阶段 1——带最小预算的结构化补丁提案
 
-Add patch proposals as a backwards-compatible extension to the existing proposal
-shape. Full-page bodies remain supported forever, especially for new pages.
+把补丁提案作为向后兼容的扩展加进既有提案形状。整页正文永远继续支持，对新页面尤其如此。
 
-Preferred update mode for `_rules/` and `procedures/` should become small
-structured patches, but only when the reviewer has enough target-page context to
-name stable anchors. Full-page proposals still must not overwrite existing
-semantic/procedural pages; patch proposals require an existing target page.
+`_rules/` 与 `procedures/` 的首选更新模式应变成小的结构化补丁——但仅当评审者有足够目标页上下文能命名稳定锚点时。整页提案仍不得覆盖既有语义/程序页面；补丁提案要求存在目标页。
 
 ```json
 {
@@ -67,80 +49,60 @@ semantic/procedural pages; patch proposals require an existing target page.
 }
 ```
 
-Initial supported operations:
+初始支持的操作：
 
 - `add_section`
 - `append`
-- `replace_section` only with section hash/context verification
+- `replace_section` 仅带节哈希/上下文校验
 
-`delete_section` is deferred. If it is later added, it must either be excluded
-from auto-approval or force manual approval even when global auto-approve is
-enabled.
+`delete_section` 推迟。日后若加，要么排除在自动批准之外，要么即便全局自动批准开启也强制人工批准。
 
-Patch semantics:
+补丁语义：
 
-- Anchors use exact markdown heading text, including marker, e.g.
-  `## Release process`.
-- Anchors must be unique after normalized whitespace comparison; duplicate
-  anchors reject.
-- H1 replacement/deletion is not supported.
-- A section span starts at the anchor heading and ends before the next heading of
-  equal or higher level. Child subsections are included in `replace_section`.
-- `append` inserts content at the end of the anchored section before the next
-  equal-or-higher heading, preserving a blank-line boundary.
-- `add_section` inserts a new sibling section after the anchored section span.
-- `replace_section` requires a pre-edit section hash or exact context and
-  rejects if the section changed.
-- Final materialized bodies must still pass the normal H1, path, kind, and size
-  validation.
+- 锚点用精确的 markdown 标题文本，含标记，如 `## Release process`。
+- 锚点在归一化空白比较后必须唯一；重复锚点拒绝。
+- 不支持 H1 的替换/删除。
+- 节跨度从锚点标题起、到下一个同级或更高级标题之前止。子节包含在 `replace_section` 里。
+- `append` 在锚定节末尾、下一个同级或更高级标题之前插入内容，保留空行边界。
+- `add_section` 在锚定节跨度之后插入新的兄弟节。
+- `replace_section` 要求编辑前的节哈希或精确上下文，节变了就拒绝。
+- 最终物化的正文仍必须通过正常的 H1、路径、类别与大小校验。
 
-Minimum Phase 1 budget caps:
+阶段 1 最小预算上限：
 
-- max edits per proposal;
-- max content chars per edit;
-- max changed chars per proposal;
-- max final body size.
+- 每提案最大编辑数；
+- 每次编辑最大内容字符数；
+- 每提案最大变更字符数；
+- 最终正文最大尺寸。
 
-Implementation notes:
+实现注记：
 
-- Materialize patches into final `body_markdown` for compatibility with the
-  existing approval flow, but close the materialize-to-stage race by passing an
-  expected base hash into staging and rejecting if the current target hash
-  differs. Materialization may also move inside the same writer transaction if
-  that proves cleaner.
-- Store original patch JSON for audit/diff/debug.
-- Store `edit_mode`, original `patch_json`, expected base hash, materialized
-  base hash, and final body metadata through an additive migration. Existing
-  rows default to full-page mode.
-- Include bounded target page bodies or heading outlines for patchable `_rules/`
-  and `procedures/` pages in the reviewer prompt. Do not request patches for
-  pages whose anchors were not provided.
-- Store target page hash at staging and reject approval if the page changed.
-- Use markdown heading anchors and context/hash checks, not line-number patches.
+- 把补丁物化成最终 `body_markdown` 以兼容既有批准流，但把预期基础哈希传入暂存、当前目标哈希不同即拒绝，以此关闭物化到暂存的竞态。若更干净，物化也可以挪进同一个写入器事务。
+- 存原始补丁 JSON 供审计/diff/调试。
+- 经增量迁移存 `edit_mode`、原始 `patch_json`、预期基础哈希、物化基础哈希与最终正文元数据。既有行默认整页模式。
+- 评审者提示词中包含有界的目标页正文或可打补丁的 `_rules/` 与 `procedures/` 页面的标题大纲。不为未提供锚点的页面请求补丁。
+- 暂存时存目标页哈希，页面变了就拒绝批准。
+- 用 markdown 标题锚点与上下文/哈希检查，不用行号补丁。
 
-Required tests:
+必需测试：
 
-- old full-page proposals still work;
-- each patch operation materializes correctly;
-- invalid/missing anchors reject cleanly;
-- target hash conflict blocks approval;
-- page changes between materialization and staging reject;
-- old pending proposals remain readable and approvable after migration;
-- duplicate anchors reject;
-- patch to missing target rejects;
-- full-page proposal to an existing non-slot page still rejects;
-- destructive operations cannot auto-approve if added later;
-- `_rules/` and `procedures/` reviewer instructions prefer patch mode.
+- 旧整页提案仍工作；
+- 每个补丁操作正确物化；
+- 无效/缺失锚点干净拒绝；
+- 目标哈希冲突阻塞批准；
+- 物化与暂存之间页面变更拒绝；
+- 迁移后旧待处理提案仍可读可批；
+- 重复锚点拒绝；
+- 对缺失目标的补丁拒绝；
+- 对既有非槽位页的整页提案仍拒绝；
+- 破坏性操作日后加入时不能自动批准；
+- `_rules/` 与 `procedures/` 的评审者指令偏好补丁模式。
 
-## Phase 2 — Bounded Edit Budgets
+## 阶段 2——有界的编辑预算
 
-Phase 1 absorbed the minimum per-proposal caps needed to ship patch proposals
-safely: patchable page/context bounds, edits per proposal, edit content chars,
-changed chars per proposal, and global final body chars. Phase 2 adds the
-remaining run-level and page-class budgets. Defer cosine decay or maturity
-schedules until there is real operational data.
+阶段 1 吸收了安全发布补丁提案所需的最小逐提案上限：可打补丁页面/上下文界限、每提案编辑数、编辑内容字符、每提案变更字符与全局最终正文字符。阶段 2 加上其余的运行级与页面类别预算。余弦衰减或成熟度调度推迟到有真实运营数据再议。
 
-Proposed config shape:
+提议的配置形状：
 
 ```toml
 [auto_improve]
@@ -152,25 +114,21 @@ max_rule_page_tokens = 2000
 max_procedure_page_tokens = 2000
 ```
 
-Validation rejects proposals that exceed the run-level patch edit budget or
-procedural/rule final-page budgets. The earlier Phase 1 validators continue to
-enforce per-proposal edit count, changed-char, edit-content, and global final
-body limits.
+校验拒绝超过运行级补丁编辑预算或程序/规则最终页预算的提案。阶段 1 的校验器继续强制逐提案编辑数、变更字符、编辑内容与全局最终正文限额。
 
-Required tests:
+必需测试：
 
-- per-run patch edit limits;
-- `_rules/` / `procedures/` page-budget enforcement;
-- existing non-patch behavior remains unchanged except existing global limits.
+- 逐运行的补丁编辑限额；
+- `_rules/` / `procedures/` 页面预算强制；
+- 除既有全局限额外的既有非补丁行为保持不变。
 
-## Phase 3 — Rejected Proposal Buffer
+## 阶段 3——被拒提案缓冲
 
-Status: implemented.
+状态：已实现。
 
-Persist useful rejection memory and feed a bounded summary into future reviewer
-prompts so the model does not repeat failed edit patterns.
+持久化有用的拒绝记忆，并把有界的摘要喂进未来评审者提示词，让模型不重复失败的编辑模式。
 
-Proposed table:
+提议的表：
 
 ```text
 auto_improve_rejections
@@ -185,50 +143,42 @@ auto_improve_rejections
 - summary
 - evidence_json
 - source_run_id
-- source_proposal_id nullable
+- source_proposal_id 可空
 - created_at
 ```
 
-Populate from:
+来源：
 
-- validator rejects;
-- human pending-writes rejects;
-- approval conflicts;
-- admission failures;
-- future eval-gate failures.
+- 校验器拒绝；
+- 人工待写入拒绝；
+- 批准冲突；
+- 准入失败；
+- 未来的评审门失败。
 
-Prompt context should include only a bounded recent subset, e.g. latest 50 per
-project or 180 days. Do not add embeddings initially.
+提示词上下文只应包含有界的近期子集，如每项目最新 50 条或 180 天。初期不加嵌入。
 
-Implementation notes:
+实现注记：
 
-- `V24__auto_improve_rejections.sql` adds `auto_improve_rejections` with
-  workspace/project pairing enforcement plus recent, fingerprint, and path
-  indexes.
-- Human rejects, admission failures, and approval conflicts write rejection
-  records in the same decision transaction.
-- Validator/model rejected candidates are persisted at run staging when a reason
-  is present; target path/kind/operation/edit-mode are stored when the rejection
-  carries that metadata.
-- Reviewer prompts include recent same-scope rejection summaries bounded by
-  `max_rejection_context` and `rejection_context_days`.
+- `V24__auto_improve_rejections.sql` 加 `auto_improve_rejections`，带 workspace/project 配对强制加近期、指纹与路径索引。
+- 人工拒绝、准入失败与批准冲突在同一个决策事务里写拒绝记录。
+- 校验器/模型拒绝的候选在有 reason 时于运行暂存时持久化；拒绝携带该元数据时存目标路径/类别/操作/编辑模式。
+- 评审者提示词包含按 `max_rejection_context` 与 `rejection_context_days` 限界的近期同作用域拒绝摘要。
 
-Required tests:
+必需测试：
 
-- human rejection creates a reusable rejection record;
-- validator rejection creates a record when enough metadata is available;
-- future prompts include relevant prior rejections;
-- workspace/project isolation is preserved;
-- old pending proposals remain approvable/rejectable.
+- 人工拒绝创建可复用的拒绝记录；
+- 元数据足够时校验器拒绝创建记录；
+- 未来提示词包含相关的先前拒绝；
+- workspace/project 隔离保持；
+- 旧待处理提案仍可批/可拒。
 
-## Phase 4 — Optional Executable Evaluation Gate
+## 阶段 4——可选的可执行评审门
 
-Status: implemented.
+状态：已实现。
 
-Only run when a project explicitly supplies a scoring command. Disabled means the
-current validation + approval behavior is unchanged.
+只在项目显式提供评分命令时运行。禁用意味着当前验证 + 批准行为不变。
 
-Proposed config:
+提议配置：
 
 ```toml
 [auto_improve.eval]
@@ -239,51 +189,37 @@ targets = ["_rules", "procedures"]
 min_delta = 0.0
 ```
 
-Contract:
+契约：
 
-- ai-memory does not build a benchmark registry, replay harness, scoring DSL, or
-  agent simulator;
-- the external command is executed directly (not through a shell) with JSON on
-  stdin containing proposal metadata plus before/after bodies;
-- the command returns JSON such as
-  `{ "score_before": 0.72, "score_after": 0.76, "passed": true }`;
-- when scores are present, `score_after - score_before` must meet `min_delta`;
-- failed, timed-out, errored, or invalid-JSON evaluations fail closed for targeted
-  proposals and are recorded as rejected candidates with reasons such as
-  `eval_gate_failed`, `eval_gate_timeout`, or `eval_gate_error`.
+- ai-memory 不构建基准注册表、重放框架、评分 DSL 或智能体模拟器；
+- 外部命令直接执行（不经 shell），stdin 收含提案元数据加前后正文的 JSON；
+- 命令返回如 `{ "score_before": 0.72, "score_after": 0.76, "passed": true }` 的 JSON；
+- 分数存在时，`score_after - score_before` 必须达到 `min_delta`；
+- 失败、超时、出错或无效 JSON 的评估对被门控的提案失败关闭，并作为被拒候选记录，理由如 `eval_gate_failed`、`eval_gate_timeout` 或 `eval_gate_error`。
 
-If every proposal in a run fails eval, ai-memory stages the run with zero
-proposals and the eval rejections so the rejection buffer still learns from the
-attempt. Non-targeted proposals bypass eval even when the gate is enabled. Hook
-paths remain fire-and-forget and never run the eval command.
+一次运行里每个提案都过不了 eval 时，ai-memory 以零提案加 eval 拒绝暂存该运行，让拒绝缓冲仍能从这次尝试学习。非门控提案在门开启时也绕过 eval。钩子路径保持即发即忘、绝不运行 eval 命令。
 
-Non-goals:
+非目标：
 
-- no replay orchestration;
-- no benchmark/task registry;
-- no scoring DSL;
-- no agent simulator.
+- 无重放编排；
+- 无基准/任务注册表；
+- 无评分 DSL；
+- 无智能体模拟器。
 
-Required tests:
+必需测试：
 
-- eval disabled preserves current behavior;
-- passing eval allows staging/approval;
-- failing eval rejects and records rejection;
-- timeout/error fail closed for eval-targeted proposals;
-- eval never runs from hook paths.
+- eval 禁用保持当前行为；
+- 通过 eval 允许暂存/批准；
+- 失败 eval 拒绝并记录拒绝；
+- 超时/错误对 eval 门控的提案失败关闭；
+- eval 绝不在钩子路径上运行。
 
-## Phase 5 — Slow / Meta Update Later
+## 阶段 5——慢速/Meta 更新更晚
 
-Defer this until patch proposals, edit budgets, rejections, and optional evals
-produce enough data.
+推迟到补丁提案、编辑预算、拒绝与可选 eval 产出足够数据之后再做。
 
-First version should be report-only. Later, a protected `_meta` section can be
-updated through a normal pending proposal, never directly by a per-session review.
-Cross-project optimizer memory is explicitly out of scope until there is evidence
-it helps ai-memory users.
+第一版应仅报告。之后，一个受保护的 `_meta` 节可以经正常待处理提案更新，绝不由逐会话评审直接改。跨项目优化器记忆在有证据表明它帮助 ai-memory 用户之前明确出圈。
 
-## Completion Criteria
+## 完成标准
 
-This roadmap is complete when phases 1–4 are implemented with docs, migrations,
-tests, and changelog entries, and phase 5 has either a report-only design or a
-documented deferral with evidence requirements.
+本路线图在阶段 1-4 连同文档、迁移、测试与 changelog 条目实现完毕、且阶段 5 要么有仅报告的设计、要么有带证据要求的成文推迟时完成。

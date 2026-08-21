@@ -1,353 +1,250 @@
 ---
-title: "Prior-Art Implementation Findings"
-description: "ai-memory already captured the most important prior-art lessons: automatic capture, a narrow MCP surface, markdown-in-git as the human source of truth, SQLite as the derived index/"
+title: "先前技术实现发现"
+description: "ai-memory 已经吸收了最重要的先前技术教训：自动捕获、窄 MCP 面、markdown-in-git 作人类事实源、SQLite 作派生索引/状态存储。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/prior-art-implementation-findings.md"
 ---
 
-# Prior-Art Implementation Findings
+# 先前技术（Prior Art）实现发现
 
-> Scope: compare the checked-in prior-art analyses for agentmemory,
-> basic-memory, cognee, and MemPalace against the current ai-memory
-> implementation. This is an analysis document only; no code changes
-> are implied by this file.
+> 范围：把签入的 agentmemory、basic-memory、cognee 与 MemPalace 先前技术分析对照当前 ai-memory 实现。本文仅是分析文档；不隐含任何代码变更。
 
-## Executive Summary
+## 执行摘要
 
-ai-memory already captured the most important prior-art lessons:
-automatic capture, a narrow MCP surface, markdown-in-git as the human
-source of truth, SQLite as the derived index/state store, single-writer
-durability, opt-in LLM consolidation, structured JSON outputs, typed
-handoffs, versioned supersession, per-project UUID isolation, and an
-agentmemory-style retention formula.
+ai-memory 已经吸收了最重要的先前技术教训：自动捕获、窄 MCP 面、markdown-in-git 作人类事实源、SQLite 作派生索引/状态存储、单写入器持久性、选择启用的 LLM 整编、结构化 JSON 输出、类型化交接、版本化取代、逐项目 UUID 隔离、以及 agentmemory 式的留存公式。
 
-The remaining high-value improvements were not a rewrite. They were
-mostly lifecycle and retrieval layers on top of the solid base: small
-editable memory slots, scheduled maintenance, first-class graph/link
-retrieval, bounded raw/verbatim fallback recall, diagnostics, and real
-retrieval checks. The most important caution remains keeping the current
-substrate simple. Do not copy agentmemory's sidecar surface, cognee's
-multi-store orchestration, basic-memory's manual write-note workflow, or
-MemPalace's verbatim-everything storage model.
+剩余的高价值改进不是重写。它们多半是坚实基底之上的生命周期与检索层：小的可编辑记忆槽位、计划性维护、一等公民的图/链接检索、有界的裸/逐字回退召回、诊断、以及真正的检索检查。最重要的告诫仍是保持当前基底简单。不要照抄 agentmemory 的伴生面、cognee 的多存储编排、basic-memory 的手工 write-note 工作流、或 MemPalace 的逐字存一切存储模型。
 
-## Implementation Status
+## 实现状态
 
-The follow-up implementation landed the pragmatic subset of this roadmap:
+后续实现落地了本路线图的务实子集：
 
-| Area | Status |
+| 领域 | 状态 |
 |---|---|
-| Slots | `_slots/` pages are pinned automatically and surfaced in briefing/explore snapshots. |
-| Scheduled maintenance | Server-side schedule runs lint and forget sweep daily by default; embedding backfill is opt-in. |
-| Vector contract | Status reports missing embeddings and stored triples; batch writes leave vector completeness to backfill. |
-| Links / graph | Markdown and wikilinks are parsed into `links`; unresolved forward links resolve when targets appear; query uses graph-neighbor RRF. |
-| Raw fallback | `observations_fts` provides bounded raw fallback when compiled wiki search misses. |
-| Diagnostics | `status` includes FTS row counts, missing embeddings, embedding triples, and unresolved/stale link counts. |
-| Retrieval evals | Recall harness now covers FTS/entity/vector, graph expansion, and raw fallback. |
-| Procedural learning | Consolidation can classify procedural memory; auto-improvement creates or patches bounded `procedures/` pages. |
-| SessionEnd consolidation | The deterministic summary/handoff completes before optional provider work enters a durable, retryable queue outside hook latency. |
+| 槽位 | `_slots/` 页面自动置顶并在简报/explore 快照中露出。 |
+| 计划性维护 | 服务器侧计划默认每日跑 lint 与遗忘清扫；嵌入回填选择启用。 |
+| 向量契约 | status 报告缺失嵌入与已存三元组；批量写入把向量完整性留给回填。 |
+| 链接/图 | markdown 与 wikilink 解析进 `links`；未解析的前向链接在目标出现时解析；查询用图邻居 RRF。 |
+| 裸回退 | 编译 wiki 检索落空时 `observations_fts` 提供有界的裸回退。 |
+| 诊断 | `status` 含 FTS 行数、缺失嵌入、嵌入三元组、未解析/过期链接计数。 |
+| 检索评测 | 召回框架现已覆盖 FTS/实体/向量、图扩展与裸回退。 |
+| 程序性学习 | 整编可分类程序性记忆；自动改进创建或修补有界的 `procedures/` 页面。 |
+| SessionEnd 整编 | 确定性摘要/交接先完成，可选的提供方工作再进入钩子延迟之外的持久可重试队列。 |
 
-## Prior Art Summary
+## 先前技术摘要
 
-| Project | Main strengths | Main weaknesses | ai-memory stance |
+| 项目 | 主要优点 | 主要缺点 | ai-memory 立场 |
 |---|---|---|---|
-| agentmemory | Automatic hook capture, four memory tiers, versioned supersession, retention scoring, hybrid BM25/vector/graph retrieval, slots, handoff patterns, snapshots, diagnostics. | iii-engine sidecar, JSON-in-KV storage, in-memory indexes, XML parsing, too many tools/endpoints, early default-on LLM costs, hook blocking/config drift bugs. | ai-memory follows the concepts more than any other project, but replaces the substrate with one Rust binary, SQLite, markdown, structured JSON, and a narrow tool surface. |
-| basic-memory | Markdown files as source of truth, derived SQL index, human-editable notes, MCP hints/aliases, `memory://` style navigation, unresolved links, multi-project routing. | Manual `write_note` ceremony, append-only memory, fragile file watcher/sync, markdown grammar burden on the LLM, weak lifecycle/ranking. | ai-memory borrows markdown/source-of-truth and human editability, but rejects manual capture and adds lifecycle, decay, supersession, and hook capture. |
-| cognee | Task-list pipeline shape, structured graph extraction, provenance stamping, triplet embeddings, multi-collection retrieval, feedback-weighted `improve()`. | Heavy Python dependency stack, LiteLLM/Instructor brittleness, multi-store graph/vector/relational sync bugs, SQLite deadlocks, retrieval filter propagation regressions. | ai-memory should borrow only the pipeline and retrieval ideas, not the multi-store architecture or generic LLM gateway. |
-| MemPalace | Strong verbatim/raw recall story, deterministic IDs, resume-safe mining, transparent benchmark culture, temporal KG ideas. | Chroma/HNSW/FTS corruption under concurrent writers, deferred persistence, destructive repair paths, no decay causing bloat, embedding metadata drift. | ai-memory already avoids the durability failures through a single writer, one SQLite file, provider/model/dim metadata, and decay. The useful feature to steal is bounded raw fallback recall. |
+| agentmemory | 自动钩子捕获、四层记忆、版本化取代、留存打分、混合 BM25/向量/图检索、槽位、交接模式、快照、诊断。 | iii-engine 伴生进程、KV 里的 JSON 存储、内存索引、XML 解析、工具/端点过多、早期默认开启的 LLM 成本、钩子阻塞/配置漂移 bug。 | ai-memory 比任何其他项目都更追随其概念，但用单一 Rust 二进制、SQLite、markdown、结构化 JSON 与窄工具面替换了基底。 |
+| basic-memory | markdown 文件作事实源、派生 SQL 索引、人类可编辑笔记、MCP 标注/别名、`memory://` 式导航、未解析链接、多项目路由。 | 手工 `write_note` 仪式、只追加记忆、脆弱的文件监视器/同步、markdown 语法负担压给 LLM、弱生命周期/排序。 | ai-memory 借鉴 markdown/事实源与人类可编辑性，但拒绝手工捕获并加上生命周期、衰减、取代与钩子捕获。 |
+| cognee | 任务列表管线形状、结构化图提取、出处盖戳、三元组嵌入、多集合检索、反馈权重的 `improve()`。 | 重的 Python 依赖栈、LiteLLM/Instructor 脆弱、多存储图/向量/关系同步 bug、SQLite 死锁、检索过滤器传播回归。 | ai-memory 只应借鉴管线与检索想法，不借鉴多存储架构或通用 LLM 网关。 |
+| MemPalace | 强的逐字/裸召回故事、确定性 ID、可续跑挖掘、透明的基准文化、时间 KG 想法。 | 并发写入者下的 Chroma/HNSW/FTS 损坏、延迟持久化、破坏性修复路径、无衰减导致膨胀、嵌入元数据漂移。 | ai-memory 已通过单写入者、单一 SQLite 文件、provider/model/dim 元数据与衰减避开了这些持久性失败。值得偷的功能是有界的裸回退召回。 |
 
-## What ai-memory Already Implements Well
+## ai-memory 已经做得好的地方
 
-### Storage And Durability
+### 存储与持久性
 
-ai-memory's store matches the strongest lesson from the issue research:
-keep durable storage and mutation ordering boring. `Store::open` uses
-SQLite in WAL mode with foreign keys and migrations. `WriterHandle`
-serializes all mutations through one writer thread. Page writes go
-through `Wiki::write_page` or `Wiki::apply_batch`, which also update the
-store rows and FTS triggers.
+ai-memory 的存储吻合 issue 调研的最强教训：保持持久存储与变更顺序无聊。`Store::open` 用 WAL 模式带外键与迁移的 SQLite。`WriterHandle` 把所有变更经一个写入器线程串行化。页面写入经 `Wiki::write_page` 或 `Wiki::apply_batch`，它们同时更新存储行与 FTS 触发器。
 
-This directly avoids the major failure classes in cognee and MemPalace:
-parallel SQLite deadlocks, uncoordinated writer processes, Chroma/HNSW
-corruption, and write-success-before-durable-index bugs.
+这直接避开了 cognee 与 MemPalace 的主要失败类：并行 SQLite 死锁、无协调的写入者进程、Chroma/HNSW 损坏、写成功先于持久索引的 bug。
 
-### Source Of Truth
+### 事实源
 
-The markdown wiki is organized as
-`wiki/<workspace_id>/<project_id>/<page-path>`, so project renames do
-not move files and two projects can use the same page path without
-collision. That preserves basic-memory's best property, human-editable
-plain files, while avoiding the permalink/workspace retrofit problems
-documented in basic-memory's tracker.
+markdown wiki 组织为 `wiki/<workspace_id>/<project_id>/<page-path>`，所以项目重命名不移动文件、两个项目可以用同一路径不冲突。这保留了 basic-memory 最好的属性——人类可编辑的纯文件——同时避开 basic-memory 跟踪器里记录的 permalink/workspace 翻新问题。
 
-### Capture And Handoff
+### 捕获与交接
 
-The hook router accepts lifecycle events over HTTP, returns `202` fast
-unless saturated (`429`), and does the writer work outside the agent's
-critical path. `SessionEnd` creates a deterministic session page, ends the
-session, opens a typed handoff, and commits the wiki. `PreCompact`
-checkpoints state, using the LLM consolidator if configured and deterministic
-synthesis otherwise.
+钩子路由器经 HTTP 接受生命周期事件，未饱和时快速返回 `202`（饱和 `429`），并在智能体关键路径之外做写入器工作。`SessionEnd` 创建确定性会话页、结束会话、开类型化交接、提交 wiki。`PreCompact` 检查点状态，配置了 LLM 整编器就用它、否则用确定性合成。
 
-The explicit `memory_handoff_begin` / `memory_handoff_accept` model is a
-cleaner version of agentmemory's informal handoff behavior.
+显式的 `memory_handoff_begin` / `memory_handoff_accept` 模型是 agentmemory 非正式交接行为的更干净版本。
 
-### Consolidation Model
+### 整编模型
 
-ai-memory implements versioned page supersession (`is_latest`,
-`supersedes`) and structured JSON-schema consolidation. Multi-page
-consolidation can fan out into `sessions/`, `concepts/`, `decisions/`,
-`gotchas/`, and `_rules/`. Rule routing is a useful extension beyond the
-prior art: durable project rules are surfaced as `_rules/` pages and
-lint suggests moving them into `CLAUDE.md` / `AGENTS.md` where agents see
-them every turn.
+ai-memory 实现了版本化页面取代（`is_latest`、`supersedes`）与结构化 JSON-schema 整编。多页整编可扇出进 `sessions/`、`concepts/`、`decisions/`、`gotchas/`、`_rules/`。规则路由是超出先前技术的有用扩展：持久项目规则浮出为 `_rules/` 页面，lint 建议把它们挪进智能体每回合都看到的 `CLAUDE.md` / `AGENTS.md`。
 
-### Retrieval And Decay
+### 检索与衰减
 
-The current retrieval path is FTS5 + lexical entity + graph-neighbor RRF by
-default, with optional RRF fusion against stored page embeddings. Raw observation
-FTS is used as a bounded fallback when compiled wiki pages miss. The
-retention sweep implements the agentmemory-style decay/reinforcement
-formula for episodic pages and exempts semantic, procedural, pinned, and
-slot pages. Query and recent-page reads bump access counters, which feed
-the reinforcement term.
+当前检索路径默认 FTS5 + 词法实体 + 图邻居 RRF，可选与已存页面嵌入做 RRF 融合。编译 wiki 页面落空时用裸观察 FTS 作有界回退。留存清扫对情节页实现 agentmemory 式衰减/强化公式，并豁免语义、程序、置顶与槽位页。查询与最近页读取提升访问计数器，它们喂入强化项。
 
-### Operability
+### 可运维性
 
-The CLI is mostly a thin HTTP client to the server. State-changing admin
-routes cover backup, bootstrap, reorg, lint, forget sweep, embed,
-commit, purge, rename, and write-page. This preserves the single source
-of truth: the running server owns state.
+CLI 主要是服务器的瘦 HTTP 客户端。改状态的 admin 路由覆盖备份、bootstrap、reorg、lint、遗忘清扫、嵌入、提交、清除、重命名与写页。这保持了单一事实源：运行中的服务器拥有状态。
 
-## Gaps And Improvement Opportunities
+## 缺口与改进机会
 
-### P0: Add Bounded Editable Memory Slots
+### P0：加有界的可编辑记忆槽位
 
-agentmemory's most useful missing idea is the slot system: small,
-human-editable, durable memory blocks for project context, user
-preferences, current focus, and pending items. ai-memory now implements
-this as pinned `_slots/` markdown pages.
+agentmemory 最有用的缺失想法是槽位系统：小的、人类可编辑、持久的记忆块——项目上下文、用户偏好、当前焦点、待办事项。ai-memory 现在以置顶的 `_slots/` markdown 页面实现它。
 
-Recommended shape:
+推荐形状：
 
-| Slot | Purpose | Injection policy |
+| 槽位 | 用途 | 注入策略 |
 |---|---|---|
-| `_slots/project_context.md` | Stable project summary and active architecture constraints. | Small budget, eligible for session-start digest. |
-| `_slots/user_preferences.md` | User preferences that are not project rules. | Small budget, never auto-expanded. |
-| `_slots/current_focus.md` | What the next session should know before searching. | Expires or is overwritten frequently. |
-| `_slots/pending_items.md` | Short actionable queue distinct from handoffs. | Prefer bullets, capped length. |
+| `_slots/project_context.md` | 稳定的项目摘要与活跃的架构约束。 | 小预算，有资格进会话启动摘要。 |
+| `_slots/user_preferences.md` | 不是项目规则的用户偏好。 | 小预算，绝不自动展开。 |
+| `_slots/current_focus.md` | 下一个会话检索前该知道的。 | 过期或频繁覆写。 |
+| `_slots/pending_items.md` | 区别于交接的短行动队列。 | 偏好列表，长度有上限。 |
 
-The important constraint is budget. Do not copy agentmemory's broad
-always-injected context problem. Slots should be tiny, explicit, and
-auditable. When a slot's write regime matters, use frontmatter:
-`slot_kind: invariant` for stable context/preferences and
-`slot_kind: state` for mutable current focus or pending items. Missing
-`slot_kind` defaults to `state`.
+关键约束是预算。不要复制 agentmemory 广泛的总是注入上下文问题。槽位应当小、显式、可审计。槽位的写入模式要紧时用 frontmatter：稳定上下文/偏好用 `slot_kind: invariant`，可变的当前焦点或待办用 `slot_kind: state`。缺 `slot_kind` 默认 `state`。
 
-### P0: Schedule Maintenance Outside Hooks
+### P0：把维护排到钩子之外
 
-This recommendation is implemented. The server schedules maintenance with
-clear intervals and summaries while preserving the manual commands:
+这条建议已实现。服务器以清晰的间隔与摘要排期维护，同时保留手工命令：
 
-| Job | Current behavior |
+| 任务 | 当前行为 |
 |---|---|
-| forget sweep | Runs daily by default so retention does not depend on a manual request. |
-| lint | Runs daily by default to surface stale pages, duplicate titles, rule suggestions, broken cross-project links, and optional LLM contradictions. |
-| embedding backfill | Runs only when its interval is enabled and an embedder is configured. |
-| optional consolidation queue | Enqueues SessionEnd provider work durably when `AI_MEMORY_CONSOLIDATE_ON_SESSION_END` is enabled; one bounded worker retries it outside hook processing. |
+| 遗忘清扫 | 默认每日运行，让留存不依赖手工请求。 |
+| lint | 默认每日运行，浮出过期页面、重复标题、规则建议、断的跨项目链接、可选 LLM 矛盾。 |
+| 嵌入回填 | 只在其间隔启用且配置了嵌入器时运行。 |
+| 可选整编队列 | `AI_MEMORY_CONSOLIDATE_ON_SESSION_END` 启用时持久入队 SessionEnd 提供方工作；一个有界 worker 在钩子处理之外重试它。 |
 
-The deterministic SessionEnd page and handoff remain independent of provider
-availability. Agentmemory's hook-blocking incidents remain the warning label
-for keeping scheduled and queued provider work outside hook latency.
+确定性 SessionEnd 页面与交接保持独立于提供方可用性。agentmemory 的钩子阻塞事故仍是把计划与排队的提供方工作保持在钩子延迟之外的警示标签。
 
-### P0: Clarify And Fix The Vector Indexing Contract
+### P0：澄清并修复向量索引契约
 
-There was a concrete mismatch in the implementation notes: `Wiki`'s
-comment implied `write_page` / `apply_batch` both computed embeddings
-when an embedder was attached, but the code only embedded in
-`write_page`. The comment now states the contract explicitly:
-`apply_batch` keeps SQL/file fan-out atomic and vector completeness is
-owned by admin or scheduled backfill.
+实现笔记里有一个具体的不匹配：`Wiki` 的注释暗示 `write_page` / `apply_batch` 在挂了嵌入器时都算嵌入，但代码只在 `write_page` 里嵌。注释现在明确陈述契约：`apply_batch` 保持 SQL/文件扇出原子，向量完整性由 admin 或计划回填拥有。
 
-Also, `write_page` logs and continues if the embedder fails. That is a
-reasonable availability tradeoff, but docs and invariants should be
-precise: FTS5/page persistence is transactional; vector completeness is
-best-effort unless a backfill/status mechanism says otherwise.
+另外，`write_page` 在嵌入器失败时记日志并继续。那是合理的可用性取舍，但文档与不变量应当精确：FTS5/页面持久化是事务性的；向量完整性是尽力而为——除非有回填/status 机制另说。
 
-Options evaluated:
+评估过的选项：
 
-| Option | Tradeoff |
+| 选项 | 取舍 |
 |---|---|
-| Embed synchronously in `apply_batch` too | Stronger completeness, slower consolidation, external provider failures can delay writes. |
-| Add `embedding_status` and scheduled backfill | Better availability and observability, slightly more schema/state. |
-| Document vector indexing as optional best-effort | Minimal change, but less trustworthy without visible status. |
+| `apply_batch` 里也同步嵌入 | 更强完整性、更慢整编、外部提供方失败可能延迟写入。 |
+| 加 `embedding_status` 与计划回填 | 更好的可用性与可观测性、略多 schema/状态。 |
+| 把向量索引记成可选尽力而为 | 改动最小，但没有可见状态就较不可信。 |
 
-The implemented choice is status plus scheduled backfill. It preserves the
-durable FTS path, exposes vector gaps, and keeps backfill opt-in.
+实现的选型是 status 加计划回填。它保留持久 FTS 路径、暴露向量缺口、并保持回填选择启用。
 
-### Implemented: Graph/Link Retrieval
+### 已实现：图/链接检索
 
-The schema has a `links` table with nullable `to_page_id`. Markdown
-parsing now extracts wikilinks and markdown links into that table, and
-`memory_query` uses graph-neighbor expansion alongside FTS5 and optional
-page embeddings.
-This adopted two prior-art strengths without adding a graph database:
+schema 有带可空 `to_page_id` 的 `links` 表。markdown 解析现已把 wikilink 与 markdown 链接提取进那张表，`memory_query` 在 FTS5 与可选页面嵌入之外使用图邻居扩展。
+这在不加图数据库的情况下采纳了两条先前技术优点：
 
-| Source | Idea to adopt |
+| 来源 | 采纳的想法 |
 |---|---|
-| basic-memory | unresolved forward links and graph context building. |
-| agentmemory | graph as a third retrieval stream in RRF. |
-| cognee | Triplet-like relationship text remains deferred; V38 adds only bounded lexical entities. |
+| basic-memory | 未解析前向链接与图上下文构建。 |
+| agentmemory | 图作为 RRF 的第三条检索流。 |
+| cognee | 三元组式关系文本仍推迟；V38 只加有界词法实体。 |
 
-Implemented sequence:
+实现顺序：
 
-1. Parse `[[wiki links]]` and ordinary markdown links from page bodies.
-2. Store unresolved links with `to_page_id = NULL` and resolve them when
-   the target appears.
-3. Add graph-neighbor expansion for pages already retrieved by
-   FTS/vector.
-4. Fold graph hits into RRF, followed later by the V38 entity stream.
+1. 从页面正文解析 `[[wiki links]]` 与普通 markdown 链接。
+2. 以 `to_page_id = NULL` 存未解析链接，目标出现时解析。
+3. 为已被 FTS/向量检索到的页面加图邻居扩展。
+4. 把图命中折进 RRF，之后加上 V38 实体流。
 
-Avoid a separate graph database. SQLite tables and recursive CTEs are
-enough for the expected corpus size.
+避免单独的图数据库。预期语料规模下 SQLite 表与递归 CTE 足够。
 
-### P1: Add Bounded Raw/Verbatim Fallback Recall
+### P1：加有界的裸/逐字回退召回
 
-MemPalace's strongest useful idea is not its storage stack. It is the
-evidence that raw text recall can recover details that compiled summaries
-drop. ai-memory reserves `raw/`; the implemented fallback searches the
-durable `observations` table through `observations_fts`.
+MemPalace 最强的有用想法不是它的存储栈。它是「原始文本召回复得回编译摘要丢掉的细节」的证据。ai-memory 保留 `raw/`；已实现的回退经 `observations_fts` 检索持久的 `observations` 表。
 
-Recommended shape:
+推荐形状：
 
-| Layer | Role |
+| 层 | 角色 |
 |---|---|
-| compiled wiki | Default retrieval, high signal, human-readable. |
-| raw observation fallback | Only searched when compiled wiki misses or the user asks for raw/session detail. |
-| retention budget | Prevent MemPalace-style bloat. |
-| privacy boundary | Use the same sanitizer before raw text becomes durable/searchable. |
+| 编译 wiki | 默认检索，高信号，人类可读。 |
+| 裸观察回退 | 只在编译 wiki 落空或用户要裸/会话细节时检索。 |
+| 留存预算 | 防 MemPalace 式膨胀。 |
+| 隐私边界 | 裸文本变持久/可检索之前用同一个净化器。 |
 
-This gives ai-memory the best of both philosophies: compile first, but
-keep a bounded escape hatch for exact details.
+这给 ai-memory 两种哲学之长：先编译，但给精确细节留一个有界的逃生口。
 
-### P1: Add Diagnostics And Safe Heal Paths
+### P1：加诊断与安全修复路径
 
-The prior-art trackers show that users forgive complexity less than they
-forgive uncertainty. ai-memory has a simple architecture, but it should
-still expose health checks.
+先前技术跟踪器表明：用户对不确定性的原谅度低于对复杂度的原谅度。ai-memory 架构简单，但仍应暴露健康检查。
 
-Useful diagnostics:
+有用的诊断：
 
-| Check | Why |
+| 检查 | 为什么 |
 |---|---|
-| wiki file exists for latest page row | Detect file/db drift. |
-| FTS row count matches latest pages | Detect derived-index corruption. |
-| embedding triples are homogeneous | Already checked at startup, also useful on demand. |
-| pages missing embeddings | Supports vector-status/backfill contract. |
-| unresolved/broken links | Once link parsing exists. |
-| orphan sessions/observations/handoffs | Confirms FK/cascade expectations. |
-| watcher degraded streak | Make reconciliation failures visible in status. |
+| 最新页面行有 wiki 文件 | 检测文件/DB 漂移。 |
+| FTS 行数与最新页匹配 | 检测派生索引损坏。 |
+| 嵌入三元组同质 | 启动时已查，按需也有用。 |
+| 缺嵌入的页面 | 支撑向量状态/回填契约。 |
+| 未解析/断链 | 链接解析存在之后。 |
+| 孤儿会话/观察/交接 | 确认外键/级联预期。 |
+| 监视器降级连击 | 让对账失败在 status 里可见。 |
 
-Safe heal should rebuild derived indexes from markdown and backfill
-embeddings. It should not delete source files without a graveyard step.
+安全修复应从 markdown 重建派生索引并回填嵌入。没有坟场步骤不应删除源文件。
 
-### P1: Add Real Retrieval Evaluation
+### P1：加真正的检索评测
 
-The current recall@5 test is useful as a harness, but it is synthetic.
-Do not make LongMemEval-style claims until they are backed by a real
-held-out dataset.
+当前 recall@5 测试作为框架有用，但它是合成的。在真实留出数据集背书之前不要做 LongMemEval 式宣称。
 
-Recommended benchmark matrix:
+推荐的基准矩阵：
 
-| Variant | Purpose |
+| 变体 | 目的 |
 |---|---|
-| FTS5 only | Lexical baseline. |
-| vector only | Measures semantic signal independent of keywords. |
-| FTS5 + entity + graph RRF | Current zero-embedding project path. |
-| FTS5 + entity + vector + graph RRF | Current embedding-enabled hybrid path. |
-| compiled wiki + raw fallback | Current MemPalace-inspired miss path. |
+| 仅 FTS5 | 词法基线。 |
+| 仅向量 | 度量独立于关键词的语义信号。 |
+| FTS5 + 实体 + 图 RRF | 当前零嵌入项目路径。 |
+| FTS5 + 实体 + 向量 + 图 RRF | 当前启用嵌入的混合路径。 |
+| 编译 wiki + 裸回退 | 当前受 MemPalace 启发的落空路径。 |
 
-Borrow MemPalace's transparency, not its headline-chasing. Public claims
-should have tests or should not be claims.
+借鉴 MemPalace 的透明，不借鉴它的追头条。公开宣称应有测试背书，否则不配作宣称。
 
-### P2: Consider Feedback/Reinforcement Beyond Access Counts
+### P2：考虑访问计数之外的反馈/强化
 
-ai-memory already tracks access count and last access time. cognee's
-useful idea is finer-grained feedback: which memory items were used in a
-successful answer or handoff. This can wait until retrieval paths are
-more mature.
+ai-memory 已跟踪访问计数与最后访问时间。cognee 的有用想法是更细粒度反馈：哪些记忆条目被用在成功的答案或交接里。这可以等检索路径更成熟再做。
 
-Possible future signals:
+可能的未来信号：
 
-| Signal | Use |
+| 信号 | 用途 |
 |---|---|
-| page included in handoff | Boost because it supported continuity. |
-| page included in explore digest | Boost if repeatedly surfaced. |
-| user marks finding stale/wrong | Lower confidence or route to lint. |
-| query hit ignored repeatedly | Decay ranking without deleting. |
+| 页面被纳入交接 | 强化——它支撑了连续性。 |
+| 页面被纳入 explore 摘要 | 反复浮出则强化。 |
+| 用户标记发现过期/错误 | 降置信或路由给 lint。 |
+| 查询命中被反复忽略 | 降排名而不删除。 |
 
-### P2: Temporal Triples Later
+### P2：时间三元组更晚
 
-MemPalace's temporal triples are useful for facts that change over time,
-but ai-memory should not add them before basic link extraction and graph
-retrieval exist. A future lightweight table could model
-`subject/predicate/object/valid_from/valid_to/source_page_id`, but adding
-that now would be speculative.
+MemPalace 的时间三元组对随时间变化的事实有用，但 ai-memory 不应在基础链接提取与图检索存在之前加它。未来一张轻量表可以建模 `subject/predicate/object/valid_from/valid_to/source_page_id`，但现在加是投机。
 
-## Ideas Not To Copy
+## 不要照抄的想法
 
-| Temptation | Why not |
+| 诱惑 | 为什么不 |
 |---|---|
-| agentmemory's iii-engine sidecar | Install and ops fragility were the largest pain cluster. |
-| JSON blobs as primary state with in-memory indexes | Scaling, rebuild, and durability issues. |
-| XML or regex-parsed LLM output | Fragile extraction; ai-memory's JSON-schema path is better. |
-| 50+ MCP tools and 100+ REST endpoints | Burns context and confuses agents. |
-| Broad automatic context injection | Token costs and stale context outweigh convenience. |
-| basic-memory's manual `write_note` workflow | Ambient capture is ai-memory's core advantage. |
-| LLM-authored markdown grammar as storage API | Forces models to generate syntax instead of meaning. |
-| cognee's LiteLLM/Instructor gateway | Provider drift and silent kwarg drops are documented failure modes. |
-| cognee's three-store sync | Correctness bugs concentrate at graph/vector/relational seams. |
-| MemPalace's Chroma/HNSW surface | Concurrent-writer corruption and native-binding failures. |
-| Verbatim-everything with no decay | Leads to bloat and later destructive cleanup pressure. |
-| Destructive repair tooling | Any repair/rebuild must be graveyard-first or derived-index-only. |
+| agentmemory 的 iii-engine 伴生进程 | 安装与运维脆弱性是最大的痛点簇。 |
+| JSON blob 作主状态配内存索引 | 扩展、重建与持久性问题。 |
+| XML 或正则解析的 LLM 输出 | 脆弱提取；ai-memory 的 JSON-schema 路径更好。 |
+| 50+ MCP 工具与 100+ REST 端点 | 烧上下文并困惑智能体。 |
+| 广泛的自动上下文注入 | token 成本与过期上下文超过便利。 |
+| basic-memory 的手工 `write_note` 工作流 | 无感捕获是 ai-memory 的核心优势。 |
+| LLM 书写的 markdown 语法作存储 API | 逼模型生成语法而不是意义。 |
+| cognee 的 LiteLLM/Instructor 网关 | 提供方漂移与静默 kwarg 丢弃是有文档的失败模式。 |
+| cognee 的三存储同步 | 正确性 bug 集中在图/向量/关系接缝。 |
+| MemPalace 的 Chroma/HNSW 面 | 并发写入者损坏与原生绑定失败。 |
+| 逐字存一切且无衰减 | 导致膨胀与后来的破坏性清理压力。 |
+| 破坏性修复工具 | 任何修复/重建必须坟场先行或仅限派生索引。 |
 
-## Documentation Status Audit
+## 文档状态审计
 
-These items previously drifted from the code. Their current status is:
+这些条目此前与代码漂移过。当前状态：
 
-| Area | Current status |
+| 领域 | 当前状态 |
 |---|---|
-| MCP tool count/list | Fixed: architecture and design docs list the current 17-tool surface. |
-| Lint scope | Fixed: lint covers stale episodic pages, duplicate titles, rule suggestions, broken cross-project links, and optional LLM contradictions. |
-| sqlite-vec status | Fixed: the vector policy documents packed vectors in SQLite with brute-force cosine as the current backend. |
-| raw archive status | Fixed: docs distinguish reserved `raw/` files from implemented observation-FTS fallback. |
-| scheduled maintenance | Fixed: docs describe default scheduled lint/sweep, opt-in embedding backfill, and the independent hollow-project cleanup. |
-| procedural tier | Fixed: consolidation can classify procedural memory, auto-improvement can create or patch bounded `procedures/` pages, and retention preserves semantic/procedural tiers. |
-| SessionEnd consolidation | Fixed: substantive SessionEnd processing writes a deterministic page and handoff; lifecycle-only sessions close without generated artifacts or LLM work and release their session-bound startup handoff. Opt-in LLM work uses a durable retry queue, while PreCompact/manual consolidation remain available. |
-| batch embeddings | Fixed: code comments and status diagnostics now describe batch vector completeness as backfill-owned. |
+| MCP 工具数/清单 | 已修：架构与设计文档列出当前 17 工具面。 |
+| lint 范围 | 已修：lint 覆盖过期情节页、重复标题、规则建议、断的跨项目链接、可选 LLM 矛盾。 |
+| sqlite-vec 状态 | 已修：向量策略文档记录 SQLite 打包向量配暴力余弦为当前后端。 |
+| 裸归档状态 | 已修：文档区分保留的 `raw/` 文件与已实现的观察 FTS 回退。 |
+| 计划性维护 | 已修：文档描述默认计划的 lint/清扫、选择启用的嵌入回填、独立的空项目清理。 |
+| 程序层级 | 已修：整编可分类程序记忆、自动改进可创建或修补有界 `procedures/` 页、留存保留语义/程序层级。 |
+| SessionEnd 整编 | 已修：有实质内容的 SessionEnd 处理写确定性页面与交接；仅生命周期的会话不带生成工件或 LLM 工作即关闭并释放其会话绑定的启动交接。选择启用的 LLM 工作用持久重试队列，PreCompact/手工整编仍可用。 |
+| 批量嵌入 | 已修：代码注释与 status 诊断现已把批量向量完整性描述为回填所有。 |
 
-## Implemented Roadmap Slice
+## 已实现的路线图切片
 
-1. **Tighten docs and vector status first.** Missing embeddings are now
-   visible in status diagnostics.
-2. **Add scheduled jobs.** Periodic lint and forget sweep run by default;
-   embedding backfill is available but opt-in.
-3. **Add slots.** `_slots/` pages are pinned and surfaced through briefing.
-4. **Add link extraction and graph RRF.** The existing SQLite `links`
-   table powers graph-neighbor expansion.
-5. **Add bounded raw fallback recall.** Observation FTS handles exact-detail
-   fallback when compiled pages miss.
-6. **Make retrieval claims test-backed.** The recall harness covers the new
-   graph and raw fallback paths.
-7. **Add procedural learning.** Consolidation and auto-improvement can produce
-   bounded durable procedure pages without weakening retention safeguards.
-8. **Add bounded lexical entities.** Canonical frontmatter rebuilds a
-   project-scoped noun index that participates as a fourth RRF stream.
-9. **Queue optional SessionEnd consolidation.** Provider work is durable,
-   retryable, and independent of the deterministic summary/handoff path.
+1. **先收紧文档与向量状态。** 缺失嵌入现在在 status 诊断里可见。
+2. **加计划任务。** 周期 lint 与遗忘清扫默认运行；嵌入回填可用但选择启用。
+3. **加槽位。** `_slots/` 页面置顶并经简报露出。
+4. **加链接提取与图 RRF。** 既有 SQLite `links` 表支撑图邻居扩展。
+5. **加有界裸回退召回。** 编译页面落空时观察 FTS 处理精确细节回退。
+6. **让检索宣称有测试背书。** 召回框架覆盖新的图与裸回退路径。
+7. **加程序性学习。** 整编与自动改进可产出有界持久流程页面而不削弱留存保障。
+8. **加有界词法实体。** 规范 frontmatter 重建项目限定名词索引，作为第四条 RRF 流参与。
+9. **排队可选 SessionEnd 整编。** 提供方工作持久、可重试、独立于确定性摘要/交接路径。
 
-## Bottom Line
+## 结论
 
-ai-memory followed agentmemory most closely at the idea level and made
-the right substrate choices to avoid agentmemory's worst operational
-costs. The implemented follow-up kept that discipline: slots, scheduled
-decay/lint, entity- and graph-aware retrieval, raw fallback, and diagnostics
-landed without adding a sidecar, broad MCP surface, or multi-store sync layer.
+ai-memory 在想法层面最贴近 agentmemory，并做出了避开 agentmemory 最坏运维成本的基底选择。已实现的后续保持了那份纪律：槽位、计划衰减/lint、实体与图感知检索、裸回退与诊断落地，没有加伴生进程、宽 MCP 面或多存储同步层。
