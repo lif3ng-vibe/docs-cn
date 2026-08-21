@@ -1,96 +1,67 @@
 ---
-title: "Optional companion crates and projects"
-description: "This page records the boundary for feature ideas that are useful around ai-memory, but should not become core ai-memory surface area. PR #118 and PR too much import, chat, UI, and "
+title: "可选伴随 crate 与项目"
+description: "本页记录功能想法的边界：它们在 ai-memory 周边有用，但不应该成为核心 ai-memory 的表面积。PR #118 与 PR #123 是历史动因。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/companion-crates.md"
 ---
 
-# Optional companion crates and projects
+# 可选伴随 crate 与项目
 
-This page records the boundary for feature ideas that are useful around
-ai-memory, but should not become core ai-memory surface area. PR #118 and PR
-#123 are the historical motivation: both are valid product ideas, but both patch
-too much import, chat, UI, and mutation behavior into the core server. The better
-shape is optional companion software that orchestrates ai-memory through public
-APIs.
+本页记录功能想法的边界：它们在 ai-memory 周边有用，但不应该成为核心 ai-memory 的表面积（surface area）。PR #118 与 PR #123 是历史动因：两者都是正当的产品想法，但都把太多导入、聊天、UI 与变更行为补进了核心服务器。更好的形态是可选的伴随软件，经公共 API 编排 ai-memory。
 
-ai-memory stays a memory substrate:
+ai-memory 保持为记忆基底：
 
-- one server binary owns hooks, MCP, the markdown wiki, SQLite indexes, auth,
-  admission webhooks, and the built-in read-only browser;
-- the wiki remains markdown-in-git as source of truth;
-- SQLite remains a derived index;
-- writes go through the existing wiki mutation path, admin endpoints, or MCP
-  tools;
-- the built-in `/web` and `/api/v1` surfaces stay read-oriented.
+- 一个服务器二进制拥有钩子、MCP、markdown wiki、SQLite 索引、认证、准入 webhook 与内置只读浏览器；
+- wiki 保持 markdown-in-git 的事实源地位；
+- SQLite 保持派生索引；
+- 写入经既有的 wiki 变更路径、admin 端点或 MCP 工具；
+- 内置的 `/web` 与 `/api/v1` 面保持面向读取。
 
-Companion crates can be richer products. They should integrate through public
-HTTP/MCP surfaces instead of patching handlers, routes, or command surfaces into
-the core workspace.
+伴随 crate 可以是更重的产品。它们应经公共 HTTP/MCP 面集成，而不是把处理器、路由或命令面补进核心 workspace。
 
-## Integration rules for companions
+## 伴随项目的集成规则
 
-Companion projects may:
+伴随项目可以：
 
-- call the read-only `/api/v1` endpoints for workspaces, projects, pages,
-  search, graph, recent pages, and briefing/overview snapshots;
-- call existing MCP tools such as `memory_write_page`, `memory_delete_page`,
-  `memory_read_page`, and `memory_query` when running as an agent/client;
-- call existing admin endpoints such as `/admin/write-page` and
-  `/admin/delete-page` when running as an operator-side server process with an
-  appropriate bearer token;
-- use `--web-ui-dir` to let ai-memory serve an alternate static SPA, as long as
-  the SPA still uses public HTTP APIs and does not require in-process plugins;
-- run their own LLM prompts, import transforms, queues, confirmation flows,
-  UI state, and project-specific policies;
-- ship their own CLI binary, web server, Docker image, tests, release cadence,
-  and docs.
+- 调用只读的 `/api/v1` 端点获取 workspaces、projects、pages、search、graph、最近页面与简报/总览快照；
+- 以智能体/客户端身份运行时调用既有 MCP 工具，如 `memory_write_page`、`memory_delete_page`、`memory_read_page`、`memory_query`；
+- 以操作者侧服务器进程身份运行并持有合适 bearer token 时，调用既有 admin 端点如 `/admin/write-page` 与 `/admin/delete-page`；
+- 用 `--web-ui-dir` 让 ai-memory 托管一个替代静态 SPA——前提是 SPA 仍用公共 HTTP API、不需要进程内插件；
+- 运行自己的 LLM 提示词、导入变换、队列、确认流、UI 状态与项目专属策略；
+- 发布自己的 CLI 二进制、Web 服务器、Docker 镜像、测试、发布节奏与文档。
 
-Companion projects should not:
+伴随项目不应该：
 
-- become Cargo workspace members of core ai-memory by default;
-- add core MCP tools, admin endpoints, or CLI subcommands unless a missing seam
-  is independently useful to ai-memory itself;
-- write wiki files or SQLite rows directly;
-- bypass `AuthLevel::authorize`, admission webhooks, actor attribution, scope
-  resolution, or the single-writer store boundary;
-- require ai-memory to host arbitrary plugin code in-process.
+- 默认成为核心 ai-memory 的 Cargo workspace 成员；
+- 增加核心 MCP 工具、admin 端点或 CLI 子命令——除非缺失的接缝（seam）对 ai-memory 自身独立有用；
+- 直接写 wiki 文件或 SQLite 行；
+- 绕过 `AuthLevel::authorize`、准入 webhook、行为者归因、作用域解析或单写入器存储边界；
+- 要求 ai-memory 在进程内托管任意插件代码。
 
-Companion features should be treated as separate products, not rejected ideas.
-They can move faster than core, have their own UX, and carry source-specific or
-workflow-specific behavior without widening ai-memory's default install.
+伴随功能应被当作独立产品对待，而不是被否决的想法。它们可以比核心跑得快、有自己的 UX、承载来源专属或工作流专属的行为，而不拓宽 ai-memory 的默认安装。
 
-If a companion exposes browser writes, it must implement its own server-side
-mutation broker. Browsers should talk to the companion; the companion should talk
-to ai-memory with an operator token. That keeps CSRF, confirmation, audit, rate
-limits, and UI-specific policy outside the core server.
+伴随项目若暴露浏览器写入，必须实现自己的服务端变更代理（mutation broker）。浏览器对话伴随项目；伴随项目带操作者 token 对话 ai-memory。这样 CSRF、确认、审计、限流与 UI 专属策略都留在核心服务器之外。
 
-## `ai-memory-importer`: migration and ingestion companion
+## `ai-memory-importer`：迁移与摄取伴随项目
 
-This is the companion shape for PR #118. The first implemented companion lives
-at [`companions/ai-memory-importer`](../companions/ai-memory-importer) as a
-standalone Cargo package with its own `[workspace]`; it is not a member of the
-root workspace and is not covered by root `cargo test --workspace`.
+这是 PR #118 的伴随形态。第一个实现的伴随项目位于 [`companions/ai-memory-importer`](https://github.com/akitaonrails/ai-memory/tree/main/companions/ai-memory-importer)，是带自己 `[workspace]` 的独立 Cargo 包；它不是根 workspace 成员、不被根 `cargo test --workspace` 覆盖。
 
-### Goal
+### 目标
 
-Import or normalize existing memory corpora without making ai-memory core own
-every source format and migration workflow.
+导入或归一化既有记忆语料，而不让 ai-memory 核心包揽每种来源格式与迁移工作流。
 
-Initial source support is intentionally narrow:
+初始来源支持刻意收窄：
 
-- oh-my-claudecode / OMC flat markdown wiki directories.
+- oh-my-claudecode / OMC 的扁平 markdown wiki 目录。
 
-Future sources can include:
+未来来源可以包括：
 
-- Claude Code memory graph exports such as `memory.jsonl` from
-  `@modelcontextprotocol/server-memory`;
-- Qdrant-backed memory collections, when a user supplies a collection URL and
-  schema mapping;
-- future one-off importers maintained on the companion's release cadence.
+- Claude Code 记忆图导出，如 `@modelcontextprotocol/server-memory` 的 `memory.jsonl`；
+- Qdrant 支撑的记忆集合（用户提供集合 URL 与 schema 映射时）；
+- 未来按伴随项目自己的发布节奏维护的一次性导入器。
 
-### Validation
+### 验证
 
-Run companion checks explicitly from the repository root:
+从仓库根显式运行伴随项目检查：
 
 ```bash
 cargo fmt --check --manifest-path companions/ai-memory-importer/Cargo.toml
@@ -98,16 +69,16 @@ cargo test --manifest-path companions/ai-memory-importer/Cargo.toml
 cargo clippy --manifest-path companions/ai-memory-importer/Cargo.toml --all-targets -- -D warnings
 ```
 
-Root hygiene checks remain separate:
+根卫生检查保持独立：
 
 ```bash
 cargo fmt --check
 git diff --check
 ```
 
-### Product shape
+### 产品形态
 
-Prefer a separate repository and binary crate, for example:
+优先独立仓库加二进制 crate，例如：
 
 ```text
 companions/ai-memory-importer/
@@ -116,183 +87,136 @@ companions/ai-memory-importer/
 └── README.md
 ```
 
-It can share Rust libraries later only if those libraries are published with a
-stable API and are useful outside ai-memory. It should not need to be a member of
-this workspace.
+以后只有当共享的 Rust 库以稳定 API 发布且在 ai-memory 之外有用时才共享。它不需要成为本 workspace 的成员。
 
-### How it talks to ai-memory
+### 它怎么对话 ai-memory
 
-Read and plan:
+读取与规划：
 
-- use `/api/v1/workspaces`, `/api/v1/projects`, `/api/v1/pages`,
-  `/api/v1/search`, and `/api/v1/graph` to inspect the destination;
-- default to dry-run, printing planned page writes without mutating ai-memory.
+- 用 `/api/v1/workspaces`、`/api/v1/projects`、`/api/v1/pages`、`/api/v1/search`、`/api/v1/graph` 检视目标；
+- 默认 dry-run，打印计划中的页面写入而不改动 ai-memory。
 
-Write:
+写入：
 
-- write imported or normalized pages through `/admin/write-page` or MCP
-  `memory_write_page`;
-- do not delete in v1;
-- use `memory_query` / `memory_read_page` or `/api/v1/search` / page reads for
-  duplicate detection and context checks;
-- optionally call `memory_consolidate` or `memory_auto_improve` after import for
-  post-import refinement, rather than building that refinement into core;
-- for bulk operations, loop over the public single-page operation unless ai-memory
-  later adds a generic bulk-mutation seam for its own reasons.
+- 导入或归一化的页面经 `/admin/write-page` 或 MCP `memory_write_page` 写入；
+- v1 不做删除；
+- 用 `memory_query` / `memory_read_page` 或 `/api/v1/search` / 页面读取做重复检测与上下文检查；
+- 可选地在导入后调 `memory_consolidate` 或 `memory_auto_improve` 做导入后精修，而不是把精修建进核心；
+- 批量操作循环走公共的单页操作——除非 ai-memory 日后出于自身原因增加通用批量变更接缝。
 
-Re-home by kind:
+按类别归位（re-home）：
 
-- compute the move/link-rewrite plan in the companion;
-- apply moves as normal writes to the new path plus deletes of the old path;
-- preserve frontmatter that ai-memory returns through page reads;
-- fail closed on collisions, missing pages, or changed source hashes.
+- 在伴随项目里计算移动/链接重写计划；
+- 移动实现为对新路径的正常写入加对旧路径的删除；
+- 保留 ai-memory 页面读取返回的 frontmatter；
+- 碰撞、缺页或源哈希变化时失败关闭。
 
-### Safety requirements
+### 安全要求
 
-- Never open ai-memory's SQLite database or wiki directory directly.
-- Require an explicit destination workspace/project.
-- Preserve only metadata supported by the public write surface (`title`, `kind`,
-  `tier`, `tags`, `pinned`, and body) unless a future generic core seam adds
-  broader frontmatter support. Do not claim arbitrary frontmatter or author
-  preservation in companion imports.
-- Carry idempotency keys or source fingerprints in companion-side state so failed
-  imports can be resumed safely.
-- Surface all destructive actions in dry-run output before live mode.
-- Treat non-overwrite checks as best-effort unless/until core exposes a generic
-  compare-and-write seam; companion v1 re-checks before each write but cannot make
-  `/admin/write-page` atomic with that read.
-- Keep LLM normalization optional; deterministic import should work with no LLM.
-- Keep provider-specific performance tweaks, such as model parameter changes, out
-  of importer PRs. If ai-memory core needs a provider bugfix or optimization,
-  land it as a small standalone core change.
+- 绝不直接打开 ai-memory 的 SQLite 数据库或 wiki 目录。
+- 要求显式的目标 workspace/project。
+- 只保留公共写入面支持的元数据（`title`、`kind`、`tier`、`tags`、`pinned` 与正文）——除非未来某个通用核心接缝加宽 frontmatter 支持。不要在伴随导入里声称任意 frontmatter 或作者保留。
+- 在伴随侧状态里携带幂等键或源指纹，让失败的导入可安全续跑。
+- live 模式之前，所有破坏性动作在 dry-run 输出里可见。
+- 非覆盖检查按尽力而为对待——除非/直到核心暴露通用的比较并写入接缝；伴随 v1 在每次写入前重查，但无法让那次读取与 `/admin/write-page` 原子。
+- LLM 归一化保持可选；确定性导入应无 LLM 也能工作。
+- 提供方专属的性能微调（如模型参数改动）不要放进导入器 PR。ai-memory 核心需要提供方修复或优化时，作为小的独立核心变更落地。
 
-### Implementation plan
+### 实施计划
 
-1. Build a read-only planner for one source format and snapshot fixtures.
-2. Add dry-run output and collision detection.
-3. Add live writes through existing ai-memory public write/delete surfaces.
-4. Add optional LLM normalization as a companion-side pass.
-5. Add re-home/link-rewrite as a separate subcommand after import is stable.
-6. Only after repeated usage, consider whether ai-memory core lacks a small,
-   generic API seam; do not start by patching core endpoints.
+1. 为一种来源格式构建只读规划器与快照夹具。
+2. 加 dry-run 输出与碰撞检测。
+3. 经既有 ai-memory 公共写入/删除面加 live 写入。
+4. 加可选的 LLM 归一化作为伴随侧的一道工序。
+5. 导入稳定后，把归位/链接重写做成单独子命令。
+6. 只有在反复使用之后，才考虑 ai-memory 核心是否缺少一个小的通用 API 接缝；不要从给核心端点打补丁开始。
 
-## `ai-memory-web-editor`: browser chat/editor companion
+## `ai-memory-web-editor`：浏览器聊天/编辑器伴随项目
 
-This is the companion shape for PR #123.
+这是 PR #123 的伴随形态。
 
-Status: **undecided**. Do not implement this companion yet without a fresh design
-review. The useful writable version is larger than it first appears: it needs a
-safe core compare-and-write seam, a companion mutation broker, browser auth/CSRF,
-confirmation state, diffing, conflict handling, audit, and later LLM proposal
-policy. It is not clear that this complexity brings enough benefit for
-ai-memory's main goal. The system is meant to auto-improve its own memory through
-capture, consolidation, review, pending writes, and eval gates; manual memory
-editing may be less valuable than it seems, and could distract from improving the
-automatic loop.
+状态：**未定**。没有一次新的设计评审之前不要实现这个伴随项目。有用的可写版本比初看起来大：它需要安全的核心比较并写入接缝、伴随变更代理、浏览器认证/CSRF、确认状态、diff、冲突处理、审计与后续的 LLM 提案策略。不清楚这些复杂度是否给 ai-memory 的主目标带来足够收益。系统的意义在于经捕获、整编、评审、待写入与评审门自动改进自己的记忆；手工记忆编辑可能不如看起来有价值，还可能分散对自动循环的改进。
 
-### Goal
+### 目标
 
-Offer a richer browser product for chat, editing, and curation without turning
-the built-in `/web` browser into a write-capable application.
+提供更丰富的浏览器产品做聊天、编辑与策展，而不把内置 `/web` 浏览器变成可写的应用。
 
-The core built-in browser remains intentionally small: project list, tree view,
-markdown rendering, search, and other read-oriented inspection. A separate web
-editor can move faster and make stronger product decisions.
+核心内置浏览器刻意保持小巧：项目列表、树视图、markdown 渲染、检索与其他面向读取的检视。独立的 Web 编辑器可以跑得更快、做更强的产品决策。
 
-### Product shape
+### 产品形态
 
-Prefer a separate repository with a backend plus frontend, for example:
+优先独立仓库加后端与前端，例如：
 
 ```text
 ai-memory-web-editor/
-├── crates/server/        # auth, CSRF, mutation broker, LLM orchestration
-├── crates/client/        # UI or generated assets
-├── src/                  # if kept as a single binary crate initially
+├── crates/server/        # 认证、CSRF、变更代理、LLM 编排
+├── crates/client/        # UI 或生成的资产
+├── src/                  # 初期保持单一二进制 crate 时
 └── tests/e2e/
 ```
 
-The companion can be deployed next to ai-memory and reverse-proxied under a
-separate path or host, for example `https://memory.example.com/editor`, while
-ai-memory remains at `/api/v1`, `/mcp`, `/admin`, `/hook`, and `/web`.
+伴随项目可以部署在 ai-memory 旁边，经反向代理挂在独立路径或主机下（例如 `https://memory.example.com/editor`），而 ai-memory 保持在 `/api/v1`、`/mcp`、`/admin`、`/hook`、`/web`。
 
-### How it talks to ai-memory
+### 它怎么对话 ai-memory
 
-Read:
+读取：
 
-- use `/api/v1` for project lists, pages, recent pages, search, graph, briefing,
-  and overview data;
-- use the companion's own LLM provider for chat orchestration if it needs more
-  than raw page/search context.
+- 用 `/api/v1` 获取项目列表、页面、最近页面、检索、图、简报与总览数据；
+- 聊天编排需要超出裸页面/检索上下文的东西时，用伴随项目自己的 LLM 提供方。
 
-Write:
+写入：
 
-- browser requests go to the companion backend, not directly to ai-memory admin
-  routes;
-- the companion backend performs CSRF checks, user/session policy, rate limiting,
-  and confirmation state;
-- after approval, it calls ai-memory's existing write/delete surfaces with a
-  server-side token.
+- 浏览器请求发给伴随后端，不直接发给 ai-memory 的 admin 路由；
+- 伴随后端做 CSRF 检查、用户/会话策略、限流与确认状态；
+- 批准之后，它带服务端 token 调用 ai-memory 既有的写入/删除面。
 
-Mutation flow:
+变更流程：
 
-1. The LLM proposes a patch, create, or delete as a pending action.
-2. The UI shows an explicit diff and the target workspace/project/path.
-3. The user confirms or rejects the pending action.
-4. The companion re-reads the current page and verifies the expected base hash.
-5. The companion applies the write/delete through ai-memory's public mutation
-   path and records its own audit trail.
+1. LLM 把补丁、创建或删除提议为待处理动作。
+2. UI 展示显式 diff 与目标 workspace/project/path。
+3. 用户确认或拒绝待处理动作。
+4. 伴随项目重读当前页面并校验预期的基础哈希。
+5. 伴随项目经 ai-memory 公共变更路径应用写入/删除，并记录自己的审计轨迹。
 
-### Safety requirements
+### 安全要求
 
-- No auto-applied browser writes from an LLM response.
-- Deletes always require explicit confirmation.
-- Edits preserve existing metadata unless the user deliberately changes it.
-- Folder or search scope is a context limit, not a mutation boundary; the backend
-  must independently authorize the target page before applying a change.
-- If the UI advertises folder-scoped editing, the companion must enforce that
-  target paths stay inside the allowed folder or project on the server side.
-- The companion must not rely on cookie/basic auth to perform non-GET ai-memory
-  mutations from the browser. Use a server-side token and companion CSRF/session
-  protection.
-- In multi-user mode, `/admin/*` is root-only. A companion must either run with an
-  operator token or use MCP/tooling flows appropriate to the actor; it must not
-  assume normal user tokens can admin-write.
-- Propagate actor/author context where the public write surface supports it so
-  admission webhooks and audit stay meaningful.
-- Keep `/api/v1` read-only; do not ask core ai-memory to expose writable CORS
-  browser endpoints for this product.
+- 不自动应用来自 LLM 响应的浏览器写入。
+- 删除永远要求显式确认。
+- 编辑保留既有元数据，除非用户刻意更改。
+- 文件夹或检索作用域是上下文限制，不是变更边界；后端必须在应用变更前独立授权目标页面。
+- UI 若宣传文件夹作用域的编辑，伴随项目必须在服务端强制目标路径留在允许的文件夹或项目内。
+- 伴随项目不得依赖 cookie/basic 认证从浏览器执行非 GET 的 ai-memory 变更。用服务端 token 加伴随项目的 CSRF/会话保护。
+- 多用户模式下 `/admin/*` 仅 root。伴随项目要么带操作者 token 运行，要么用适合该行为者的 MCP/工具流；不得假设普通用户 token 能做 admin 写入。
+- 公共写入面支持时传播行为者/作者上下文，让准入 webhook 与审计保持有意义。
+- 保持 `/api/v1` 只读；不要要求核心 ai-memory 为这个产品暴露可写 CORS 浏览器端点。
 
-### Implementation plan
+### 实施计划
 
-This plan is intentionally parked until the benefit is clearer.
+这个计划刻意停放着，直到收益更清楚。
 
-1. Build a read-only editor shell against `/api/v1` first.
-2. Add chat over selected page/search context, still read-only.
-3. Add pending edit proposals with diff preview, but no apply button.
-4. Add confirmed writes through the companion backend and ai-memory public write
-   endpoints.
-5. Add confirmed deletes last.
-6. Keep the built-in `/web` UI unchanged unless core ai-memory independently
-   needs a small read-only API enhancement.
+1. 先对着 `/api/v1` 构建只读编辑器外壳。
+2. 加选中页面/检索上下文之上的聊天，仍只读。
+3. 加带 diff 预览的待处理编辑提案，但没有应用按钮。
+4. 经伴随后端与 ai-memory 公共写入端点加确认写入。
+5. 最后加确认删除。
+6. 保持内置 `/web` UI 不变——除非核心 ai-memory 出于自身需要一次小的只读 API 增强。
 
-## When to move a seam into core
+## 何时把接缝挪进核心
 
-A companion may reveal a missing primitive that belongs in ai-memory. Move only
-small, generic seams into core, and only after the companion proves the need.
+伴随项目可能揭示一个属于 ai-memory 的缺失原语。只把小的通用接缝挪进核心，且只在伴随项目证明需要之后。
 
-Good core candidates:
+好的核心候选：
 
-- a read-only API field needed by several clients;
-- a narrowly-scoped mutation endpoint that is equivalent to an existing MCP tool;
-- a capability check or scope-resolution helper that prevents duplicated security
-  logic.
+- 多个客户端都需要的只读 API 字段；
+- 等价于既有 MCP 工具的窄作用域变更端点；
+- 防止安全逻辑重复的能力检查或作用域解析辅助。
 
-Poor core candidates:
+差的核心候选：
 
-- source-specific import parsers;
-- UI workflows;
-- LLM chat prompts for editing;
-- project-specific scoring, pruning, or normalization policies;
-- companion-only admin commands.
+- 来源专属的导入解析器；
+- UI 工作流；
+- 编辑用的 LLM 聊天提示词；
+- 项目专属的打分、修剪或归一化策略；
+- 伴随项目专属的 admin 命令。
 
-This keeps ai-memory stable while still allowing richer tools to grow around it.
+这让 ai-memory 保持稳定，同时仍允许更丰富的工具在它周围生长。
