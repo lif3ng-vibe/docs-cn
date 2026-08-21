@@ -1,80 +1,51 @@
 ---
-title: "Vector Backend Policy"
-description: "ai-memory currently stores embeddings as packed vectors in SQLite and does brute-force cosine over latest pages at query time. sqlite-vec is deferred intentionally, not rejected."
+title: "向量后端策略"
+description: "ai-memory 当前把嵌入以打包向量存在 SQLite 里，查询时对最新页面做暴力余弦。sqlite-vec 是有意推迟，不是否决。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/vector-backend-policy.md"
 ---
 
-# Vector Backend Policy
+# 向量后端策略
 
-ai-memory currently stores embeddings as packed vectors in SQLite and
-does brute-force cosine over latest pages at query time. `sqlite-vec` is
-deferred intentionally, not rejected.
+ai-memory 当前把嵌入（embedding）以打包向量存在 SQLite 里，查询时对最新页面做暴力余弦。`sqlite-vec` 是有意推迟，不是否决。
 
-## Why Not `sqlite-vec` Yet?
+## 为什么现在不用 `sqlite-vec`？
 
-The expected corpus is usually hundreds to low-thousands of latest wiki
-pages per project. At that size, brute-force cosine is simple,
-inspectable, and fast enough, especially because vector retrieval is only
-one signal in the query path. `memory_query` already combines FTS5, lexical
-entity matching, graph-neighbor expansion, optional vector RRF, and raw
-observation fallback. Each stream contributes through the same bounded candidate window,
-then a page-authority adjustment runs after fusion, so semantic similarity
-cannot by itself declare a session page more canonical than a maintained
-decision.
+预期语料通常是每项目数百到低数千的最新 wiki 页。这个规模下暴力余弦简单、可检视、也够快——尤其向量检索只是查询路径里的一个信号。`memory_query` 已经组合了 FTS5、词法实体匹配、图邻居扩展、可选向量 RRF 与裸观察回退。每条流经同一个有界候选窗口做贡献，融合之后再跑页面权威度调整，所以语义相似度不能单方面把一页会话页宣布为比受维护的决策页更权威。
 
-Adding `sqlite-vec` would add operational surface before it has proven
-value:
+现在加 `sqlite-vec` 会在价值得到证明之前先增加运维面：
 
-- Extension loading must work consistently on every SQLite connection.
-- Docker/static-link packaging must stay reliable across target hosts.
-- Startup diagnostics need to distinguish extension-load failures from
-  embedding provider/model/dim drift.
-- Derived vector tables need safe rebuild/backfill paths.
-- Prior-art projects hit real bugs around native vector dependencies,
-  extension loading, and silent embedding skips.
+- 扩展加载必须在每个 SQLite 连接上一致可用。
+- Docker/静态链接打包必须在各目标宿主上保持可靠。
+- 启动诊断需要区分扩展加载失败与嵌入提供方/模型/维度漂移。
+- 派生向量表需要安全的重建/回填路径。
+- 先前技术项目在原生向量依赖、扩展加载与静默嵌入跳过上栽过真实的跟头。
 
-For now, regular SQLite rows keep the vector contract simple: markdown is
-source of truth, `page_embeddings` is durable derived data, and status can
-report missing embeddings or provider/model/dim heterogeneity without a
-second index format.
+目前，普通 SQLite 行保持向量契约简单：markdown 是事实源，`page_embeddings` 是持久的派生数据，status 能报告缺失嵌入或提供方/模型/维度异构，无需第二种索引格式。
 
-## When To Add `sqlite-vec`
+## 何时加 `sqlite-vec`
 
-Add `sqlite-vec` when measurements show brute-force vector scoring is the
-bottleneck and vectors materially improve retrieval quality.
+当测量表明暴力向量打分成为瓶颈、且向量实质性地改善检索质量时再加。
 
-Concrete trigger criteria:
+具体的触发标准：
 
-- Latest embedded pages per project regularly exceed roughly `5k-10k`.
-- `memory_query` p95 exceeds roughly `150-250ms` locally because of
-  vector scoring, after FTS/graph paths are already optimized.
-- Profiling shows query-time dot products consume meaningful CPU,
-  especially under concurrent MCP calls.
-- Real retrieval evals show vector results improve recall over FTS5 + entity +
-  graph by a meaningful margin, for example `+5-10% recall@5`.
-- A migration can create and backfill the vec table from existing
-  `page_embeddings` without resetting user data.
-- The derived vector index can be dropped and rebuilt from markdown +
-  `page_embeddings`; repair must never delete source wiki files.
-- Docker packaging and startup checks fail clearly when the extension is
-  unavailable.
+- 每项目已嵌入的最新页面经常超过约 `5k-10k`。
+- FTS/图路径已优化之后，`memory_query` 的 p95 因向量打分在本地超过约 `150-250ms`。
+- 性能剖析显示查询时点积消耗可观的 CPU，尤其在并发 MCP 调用下。
+- 真实检索评测显示向量结果相对 FTS5 + 实体 + 图有实质的召回提升，例如 `+5-10% recall@5`。
+- 存在能从既有 `page_embeddings` 创建并回填 vec 表而不重置用户数据的迁移。
+- 派生向量索引可以删除并从 markdown + `page_embeddings` 重建；修复绝不删除源 wiki 文件。
+- 扩展不可用时 Docker 打包与启动检查会清晰失败。
 
-## Non-Criteria
+## 非标准
 
-Do not add `sqlite-vec` just because vector databases are conventional,
-or because it feels architecturally cleaner. Without measured latency or
-recall pressure, the extra dependency and repair surface are not worth it.
+不要因为向量数据库是主流、或因为架构上感觉更干净就加 `sqlite-vec`。没有实测的延迟或召回压力，额外的依赖与修复面不值得。
 
-## Intended Shape When It Lands
+## 落地时的预期形态
 
-`sqlite-vec` should remain a derived index behind the existing embedding
-contract. It should not become the source of truth and should not change
-the MCP tool surface. The migration path should be additive:
+`sqlite-vec` 应保持为既有嵌入契约背后的派生索引。它不应成为事实源，也不应改变 MCP 工具面。迁移路径应该是增量的：
 
-1. Keep `page_embeddings` as durable metadata and vector storage.
-2. Add a vec virtual table populated from `page_embeddings`.
-3. Teach diagnostics to report vec-table row counts and stale rows.
-4. Add a safe rebuild command/path for the derived vec table.
-5. Switch vector candidate generation from brute-force scan to
-   `sqlite-vec`, while preserving FTS5 + entity + graph + vector RRF semantics.
-   The existing post-fusion authority adjustment remains unchanged.
+1. 保留 `page_embeddings` 作为持久元数据与向量存储。
+2. 增加一个从 `page_embeddings` 填充的 vec 虚拟表。
+3. 让诊断学会报告 vec 表行数与过期行。
+4. 为派生 vec 表增加安全的重建命令/路径。
+5. 把向量候选生成从暴力扫描切到 `sqlite-vec`，同时保留 FTS5 + 实体 + 图 + 向量 RRF 语义。融合后的权威度调整保持不变。

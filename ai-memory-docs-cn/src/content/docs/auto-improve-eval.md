@@ -1,18 +1,14 @@
 ---
-title: "Auto-Improve Eval Example Scorers"
-description: "These examples are intentionally small, deterministic, and dependency-free. They read one proposal JSON object from stdin and print one eval response JSON object to stdout."
+title: "自动改进示例评分器"
+description: "这些示例刻意做得小、确定性、零依赖。它们从 stdin 读一个提案 JSON 对象，向 stdout 打印一个 eval 响应 JSON 对象。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/examples/auto-improve-eval/README.md"
 ---
 
-# Auto-Improve Eval Example Scorers
+# 自动改进示例评分器
 
-These examples are intentionally small, deterministic, and dependency-free.
-They read one proposal JSON object from stdin and print one eval response JSON
-object to stdout.
+这些示例刻意做得小、确定性、零依赖。它们从 stdin 读一个提案 JSON 对象，向 stdout 打印一个 eval 响应 JSON 对象。
 
-Use them as templates, not as universal quality gates. Real projects should
-replace the checks with project-specific invariants that are safe to run before
-an auto-improvement proposal is staged.
+把它们当模板，不要当通用质量门。真实项目应该把其中的检查替换为项目专属的、适合在自动改进提案暂存之前安全运行的不变量。
 
 ```toml
 [auto_improve.eval]
@@ -23,7 +19,7 @@ targets = ["_rules", "procedures"]
 min_delta = 0.0
 ```
 
-Smoke test:
+冒烟测试：
 
 ```bash
 python3 docs/examples/auto-improve-eval/score_proposal.py < \

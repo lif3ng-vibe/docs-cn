@@ -1,90 +1,67 @@
 ---
-title: "macOS Support"
-description: "macOS is a supported platform: the workspace test suite runs on macOS CI and tagged releases publish native ai-memory-macos-aarch64.tar.gz (Apple Silicon) and ai-memory-macos-x8664"
+title: "macOS 支持"
+description: "macOS 是受支持的平台：workspace 测试套件在 macOS CI 上运行，带标签的发布提供原生 ai-memory-macos-aarch64.tar.gz（Apple Silicon）与 ai-memory-macos-x86_64.tar.gz（Intel）二进制。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/macos.md"
 ---
 
-# macOS Support
+# macOS 支持
 
-macOS is a supported platform: the workspace test suite runs on macOS CI and
-tagged releases publish native `ai-memory-macos-aarch64.tar.gz` (Apple Silicon)
-and `ai-memory-macos-x86_64.tar.gz` (Intel) binaries.
+macOS 是受支持的平台：workspace 测试套件在 macOS CI 上运行，带标签的发布提供原生 `ai-memory-macos-aarch64.tar.gz`（Apple Silicon）与 `ai-memory-macos-x86_64.tar.gz`（Intel）二进制。
 
-On macOS the **native binary** (a prebuilt release or a source build) is the
-recommended way to run ai-memory. It binds the server on `127.0.0.1:49374`, and
-both the MCP endpoint and the lifecycle hooks talk to that loopback address —
-which the native agent can reach and which is already in the default Host-header
-allowlist. The Docker wrapper is also supported when you prefer a containerised
-server.
+macOS 上运行 ai-memory 推荐用**原生二进制**（预构建发布版或源码构建）。它把服务器绑在 `127.0.0.1:49374`，MCP 端点与生命周期钩子都对接这个环回地址——原生智能体够得到，且它已在默认 Host 头允许列表里。偏好容器化服务器时 Docker 包装器同样受支持。
 
-Unlike Windows there is only one "path world" on macOS: POSIX paths and POSIX
-`.sh` hooks throughout. There is no WSL-vs-native split to get wrong.
+与 Windows 不同，macOS 只有一个「路径世界」：全程 POSIX 路径与 POSIX `.sh` 钩子。没有 WSL 与原生之分可供搞错。
 
-## Rule Of Thumb
+## 经验法则
 
-Run `install-mcp` / `install-hooks` from the same shell that launches Claude
-Code, Codex, Cursor, Gemini CLI, or another agent — on macOS that is just your
-normal Terminal.
+从启动 Claude Code、Codex、Cursor、Gemini CLI 或其他智能体的同一个 shell 里运行 `install-mcp` / `install-hooks`——macOS 上那就是你平常的终端。
 
-- The agent runs as a native macOS process, so its config must point at a
-  **host-reachable** server URL. Native installs and Docker-wrapper
-  `install-mcp` / `install-hooks` commands render `http://127.0.0.1:49374`,
-  which works from the host agent.
-- Hooks are rendered for one of two platforms:
-  - `posix-native` — a direct `ai-memory hook --event …` call. The default for
-    native macOS/Linux Claude Code installs (cargo / release binary); it uses
-    the local event spool + OIDC-token fallback.
-  - `posix` — `sh` runs the bundled `.sh` script. The Docker wrapper's default.
+- 智能体以原生 macOS 进程运行，所以其配置必须指向**宿主可达**的服务器 URL。原生安装与 Docker 包装器的 `install-mcp` / `install-hooks` 命令渲染 `http://127.0.0.1:49374`，宿主智能体可达。
+- 钩子按两种平台之一渲染：
+  - `posix-native`——直接调 `ai-memory hook --event …`。原生 macOS/Linux Claude Code 安装（cargo / 发布二进制）的默认；用本地事件暂存（spool）+ OIDC 令牌回退。
+  - `posix`——`sh` 运行随附的 `.sh` 脚本。Docker 包装器的默认。
 
-  Set `AI_MEMORY_HOOK_PLATFORM` before wiring hooks to override the default.
+  接钩子之前设 `AI_MEMORY_HOOK_PLATFORM` 可覆盖默认。
 
-## Scenario A: Prebuilt Release Binary (Recommended, No Toolchain)
+## 场景 A：预构建发布二进制（推荐，无需工具链）
 
-Use this when you want a local server plus native hooks without a Rust toolchain
-or Docker. Each tagged release publishes a macOS tarball per architecture.
+想要本地服务器加原生钩子、又不想装 Rust 工具链或 Docker 时用这条。每个带标签的发布按架构各出一个 macOS 压缩包。
 
 ```bash
-# 1. Download the archive for your chip and extract it to a stable location.
-#    aarch64 = Apple Silicon (M-series); x86_64 = Intel.
+# 1. 按你的芯片下载压缩包，解压到固定位置。
+#    aarch64 = Apple Silicon（M 系列）；x86_64 = Intel。
 mkdir -p ~/Applications/ai-memory && cd ~/Applications/ai-memory
 curl -fsSL -O https://github.com/akitaonrails/ai-memory/releases/latest/download/ai-memory-macos-aarch64.tar.gz
 tar -xzf ai-memory-macos-aarch64.tar.gz
-# `curl` downloads are not Gatekeeper-quarantined, so the binary runs as-is.
-# If you downloaded via a browser instead, clear the quarantine flag once:
+# `curl` 下载不会触发 Gatekeeper 隔离，二进制可以直接跑。
+# 若是经浏览器下载的，清一次隔离标志：
 #   xattr -d com.apple.quarantine ./ai-memory
 
-# 2. Initialise the data dir (defaults to
-#    ~/Library/Application Support/ai-memory; override with AI_MEMORY_DATA_DIR).
+# 2. 初始化数据目录（默认 ~/Library/Application Support/ai-memory；
+#    用 AI_MEMORY_DATA_DIR 覆盖）。
 ./ai-memory init
 
-# 3. Start the server (loopback only).
+# 3. 启动服务器（仅环回）。
 ./ai-memory serve --transport http --bind 127.0.0.1:49374
 ```
 
-In a second terminal, wire the agent:
+在第二个终端里接好智能体：
 
 ```bash
 cd ~/Applications/ai-memory
-# `install-hooks` auto-discovers the bundled hooks/ directory beside the binary.
+# `install-hooks` 自动探测二进制旁随附的 hooks/ 目录。
 ./ai-memory install-hooks --agent claude-code --apply
 ./ai-memory install-mcp --client claude-code --apply
 ```
 
-Notes:
+注意：
 
-- The MCP endpoint, capture hooks, and `ai-memory status` work without a token
-  in this single-user loopback setup. If you explicitly configure
-  `AI_MEMORY_AUTH_TOKEN` for the server, pass the same token with `--auth-token`
-  or export it for CLI commands.
-- Keep the extracted `ai-memory` at a stable path; the hook commands reference
-  it. Re-run `install-hooks` if you move it.
+- 这个单用户环回配置下，MCP 端点、捕获钩子与 `ai-memory status` 无需 token 即可工作。若你为服务器显式配置了 `AI_MEMORY_AUTH_TOKEN`，CLI 命令用 `--auth-token` 传同一 token 或导出它。
+- 解压出的 `ai-memory` 保持固定路径；钩子命令引用它。移动后重跑 `install-hooks`。
 
-## Scenario B: Source Build
+## 场景 B：源码构建
 
-Use this when developing ai-memory itself. Requires Rust 1.95
-(`rust-toolchain.toml`) plus the Xcode Command Line Tools
-(`xcode-select --install`); SQLite is bundled and libgit2 is vendored, so no
-extra system libraries are needed.
+开发 ai-memory 本身时用这条。要求 Rust 1.95（`rust-toolchain.toml`）加 Xcode Command Line Tools（`xcode-select --install`）；SQLite 已捆绑、libgit2 已 vendored，无需额外系统库。
 
 ```bash
 git clone https://github.com/akitaonrails/ai-memory
@@ -94,79 +71,50 @@ cargo build --release --workspace
 ./target/release/ai-memory serve --transport http --bind 127.0.0.1:49374
 ```
 
-From another shell in the repo, `install-hooks` finds the bundled `hooks/`
-automatically (no `--source` needed from the repo root):
+在仓库的另一个 shell 里，`install-hooks` 自动找到随附的 `hooks/`（仓库根下不需要 `--source`）：
 
 ```bash
 ./target/release/ai-memory install-hooks --agent claude-code --apply
 ./target/release/ai-memory install-mcp   --client claude-code --apply
 ```
 
-## Scenario C: Docker Wrapper
+## 场景 C：Docker 包装器
 
-Use this when you want the server data in a Docker volume while the agent still
-runs as a native macOS process. The wrapper renders host-side agent config with
-`http://127.0.0.1:49374`, but its own thin-client commands reach the server from
-inside a helper container via Docker Desktop's `host.docker.internal` alias.
+想要服务器数据放 Docker 卷、而智能体仍作为原生 macOS 进程运行时用这条。包装器为宿主侧智能体配置渲染 `http://127.0.0.1:49374`，但它自己的瘦客户端命令经 Docker Desktop 的 `host.docker.internal` 别名从辅助容器内访问服务器。
 
 ```bash
-# Start the server. The image default allowlist includes host.docker.internal so
-# wrapper thin-client commands (status, search, …) are not rejected with 403.
+# 起服务器。镜像默认允许列表含 host.docker.internal，
+# 包装器瘦客户端命令（status、search……）不会被 403 拒绝。
 docker run -d --name ai-memory --restart unless-stopped \
     -p 127.0.0.1:49374:49374 -v ai-memory-data:/data \
     akitaonrails/ai-memory:latest
 
-# Wire the native host agent. The wrapper keeps these rendered URLs on loopback.
+# 接原生宿主智能体。包装器让这些渲染出的 URL 保持在环回。
 ai-memory install-mcp   --client claude-code --apply
 ai-memory install-hooks --agent  claude-code --apply
 ```
 
-The published Docker image includes both `linux/amd64` and `linux/arm64`, so
-Apple Silicon pulls the native arm64 image without `--platform linux/amd64`.
+发布的 Docker 镜像含 `linux/amd64` 与 `linux/arm64` 两架构，Apple Silicon 无需 `--platform linux/amd64` 即可拉到原生 arm64 镜像。
 
-## Hook Platform on macOS
+## macOS 上的钩子平台
 
-`AI_MEMORY_HOOK_PLATFORM` selects how hook commands are rendered. On macOS the
-two relevant values are `posix-native` (direct binary call; the native default)
-and `posix` (the bundled `.sh` scripts; the Docker-wrapper default). Set it
-before running `install-hooks` so the choice is baked into the rendered
-commands. The native hook spools events locally, does short session-start
-cleanup, and starts a detached session-end `hook-drain` helper; the whole-minute
-spool-timing overrides are shared with Windows and documented in
-[`docs/windows.md`](windows.md#tuning-the-spool-timings-high-latency-instances).
+`AI_MEMORY_HOOK_PLATFORM` 选择钩子命令的渲染方式。macOS 上相关的两个值是 `posix-native`（直接调二进制；原生默认）与 `posix`（随附 `.sh` 脚本；Docker 包装器默认）。运行 `install-hooks` 之前设置它，让选择固化进渲染出的命令。原生钩子在本地暂存事件、做短的会话启动清理、并启动分离的会话结束 `hook-drain` 辅助进程；整分钟级的暂存时序覆盖与 Windows 共享，见 [Windows 支持的「调整暂存时序」一节](/windows/#调整暂存时序高延迟实例)。
 
-Native `posix-native` `ai-memory hook` commands enforce the nearest-marker
-`[capture] ignore_paths` policy before spool or network delivery. The Docker
-wrapper's `posix` shell-script path does not. Re-run `install-hooks --agent
-<agent> --apply` after upgrading to refresh an existing native install; see
-[Capture exclusions](marker-file.md#capture-exclusions).
+原生 `posix-native` 的 `ai-memory hook` 命令在暂存或网络投递之前强制执行就近标记的 `[capture] ignore_paths` 策略。Docker 包装器的 `posix` shell 脚本路径不执行。升级后重跑 `install-hooks --agent <agent> --apply` 刷新既有原生安装；见[捕获排除](/marker-file/#捕获排除capture-exclusions)。
 
-## Troubleshooting on macOS
+## macOS 故障排查
 
-- **`403 forbidden host` from Docker-wrapper CLI commands:** update the Docker
-  image and wrapper script. Current images allowlist `host.docker.internal` for
-  loopback-published Docker Desktop servers.
-- **Agent config points at `host.docker.internal`:** re-run `ai-memory
-  install-mcp --client <client> --apply` and `ai-memory install-hooks --agent
-  <agent> --apply` with the current wrapper. Host-side agent config should use
-  `http://127.0.0.1:49374`.
-- **Hooks bundle not found from a release archive:** ensure you extracted the
-  whole tarball, not just the binary. Current `install-hooks` probes the sibling
-  `hooks/` directory automatically.
-- **Platform-mismatch warning on Apple Silicon:** update to a current Docker
-  tag. Tagged releases publish a multi-arch manifest with `linux/arm64`.
+- **Docker 包装器 CLI 命令报 `403 forbidden host`：** 更新 Docker 镜像与包装器脚本。当前镜像已把 `host.docker.internal` 加进环回发布的 Docker Desktop 服务器允许列表。
+- **智能体配置指向 `host.docker.internal`：** 用当前包装器重跑 `ai-memory install-mcp --client <client> --apply` 与 `ai-memory install-hooks --agent <agent> --apply`。宿主侧智能体配置应该用 `http://127.0.0.1:49374`。
+- **从发布压缩包找不到钩子包：** 确认解压了整个 tarball 而不只是二进制。当前 `install-hooks` 自动探测同级的 `hooks/` 目录。
+- **Apple Silicon 上的平台不匹配警告：** 更新到当前的 Docker tag。带标签的发布提供含 `linux/arm64` 的多架构 manifest。
 
-## Suggested Test Checklist
+## 建议的测试清单
 
-1. `ai-memory serve --bind 127.0.0.1:49374` starts and logs `bind=127.0.0.1:49374`.
-2. `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:49374/mcp` returns
-   `405` (reachable; GET not allowed), confirming the loopback server is up.
-3. `install-hooks --agent claude-code --apply` writes hook commands that
-   reference `http://127.0.0.1:49374` and host-side paths.
-4. `install-mcp --client claude-code` renders `http://127.0.0.1:49374/mcp`.
-5. Launch the agent, call `memory_status`, send a prompt, then confirm capture
-   (`ai-memory status` shows non-zero observations, or query the SQLite
-   `observations` table).
+1. `ai-memory serve --bind 127.0.0.1:49374` 启动并打出 `bind=127.0.0.1:49374` 日志。
+2. `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:49374/mcp` 返回 `405`（可达；GET 不允许），确认环回服务器在线。
+3. `install-hooks --agent claude-code --apply` 写出的钩子命令引用 `http://127.0.0.1:49374` 与宿主侧路径。
+4. `install-mcp --client claude-code` 渲染 `http://127.0.0.1:49374/mcp`。
+5. 启动智能体，调 `memory_status`，发一条提示词，然后确认捕获（`ai-memory status` 显示非零观察数，或查 SQLite 的 `observations` 表）。
 
-Report which scenario you used, your chip (Apple Silicon / Intel), the agent and
-version, and whether hooks executed or failed with a connect/resolve error.
+反馈时说明你用的是哪个场景、芯片（Apple Silicon / Intel）、智能体及版本，以及钩子是执行成功还是以连接/解析错误失败。
