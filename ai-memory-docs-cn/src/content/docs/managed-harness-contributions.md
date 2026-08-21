@@ -1,174 +1,101 @@
 ---
-title: "Adding a managed harness"
-description: "Managed-workstream support is narrower than MCP or lifecycle-hook support. This release can manage Claude Code, Codex, OpenCode, Pi, Crush, Kimi Code, Command Code, Kiro CLI v2/v3,"
+title: "新增托管外壳"
+description: "托管工作流的支持面比 MCP 或生命周期钩子窄。本版本可托管 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/managed-harness-contributions.md"
 ---
 
-# Adding a managed harness
+# 新增托管外壳（harness）
 
-Managed-workstream support is narrower than MCP or lifecycle-hook support. This
-release can manage Claude Code, Codex, OpenCode, Pi, Crush, Kimi Code, Command
-Code, Kiro CLI v2/v3, OMP, Grok Build CLI, and Antigravity CLI. Gemini CLI,
-Devin CLI, Cursor, and the other integrations in the README support matrix do
-not become managed merely because ai-memory can capture their hooks.
+托管工作流的支持面比 MCP 或生命周期钩子窄。本版本可托管 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI。Gemini CLI、Devin CLI、Cursor 及 README 支持矩阵里的其他集成，不会因为 ai-memory 能捕获它们的钩子就自动变成托管的。
 
-A managed adapter must preserve a harness's real native session, deliver the
-portable workstream delta exactly once, and import only visible history without
-writing the harness's private store. Contributors adding another harness should
-follow this protocol.
+一个托管适配器必须：保留外壳真实的原生会话、恰好一次地投递可移植工作流增量（delta）、且只导入可见历史而不写外壳的私有存储。要新增另一个外壳的贡献者请遵循本协议。
 
-## 1. Establish the native contract
+## 1. 确立原生契约
 
-Start with current upstream documentation and repeatable fixtures. The
-companion `ai-babel` research project is useful prior work, but it is not a
-substitute for verifying the installed CLI version.
+从当前上游文档与可复现的夹具（fixture）出发。伴随的 `ai-babel` 研究项目是有用的先前工作，但不能替代对已安装 CLI 版本的验证。
 
-Document and test:
+记录并测试：
 
-- the default executable and supported host platforms;
-- fresh-session and resume syntax, including selector placement;
-- explicit selectors supplied by the user;
-- print/noninteractive modes and utility subcommands that must pass through;
-- session-store roots, environment overrides, and path options;
-- the stored checkout identifier and timestamp units;
-- complete versus in-progress records, tool-pairing rules, compaction records,
-  and records containing hidden reasoning or credentials;
-- a supported way to inject startup context before the first model turn; and
-- the native dangerous/approval-bypass option, if the harness has one.
+- 默认可执行文件与受支持的宿主平台；
+- 全新会话与恢复语法，包括选择器位置；
+- 用户显式提供的选择器；
+- print/非交互模式与必须透传的工具子命令；
+- 会话存储根、环境覆盖与路径选项；
+- 存储的检出标识符与时间戳单位；
+- 完整与进行中记录的区分、工具配对规则、压缩记录、以及含隐藏推理或凭据的记录；
+- 在第一个模型回合之前注入启动上下文的受支持方式；
+- 外壳原生的危险/绕过审批选项（如果有）。
 
-If exact session identity, read-only extraction, or pre-turn context delivery
-cannot be demonstrated, document the limitation instead of adding a partial
-managed adapter.
+若无法演示确切的会话身份、只读提取或回合前上下文投递，就记录这个限制，而不是加一个残缺的托管适配器。
 
-## 2. Register the harness deliberately
+## 2. 审慎注册外壳
 
-Add or reuse the harness's `AgentKind`. A new kind must also be added to
-`AgentKind::ALL` and to a forward SQLite migration that rebuilds the sessions
-constraint and pairing triggers without losing existing rows. Never edit an
-already-released migration.
+新增或复用外壳的 `AgentKind`。新的 kind 必须同时加进 `AgentKind::ALL` 与一个前向 SQLite 迁移——该迁移在不丢既有行的前提下重建 sessions 约束与配对触发器。绝不编辑已发布的迁移。
 
-Then wire the explicit managed surface:
+然后接好显式的托管面：
 
-- `RunHarnessChoice` in `ai-memory-cli`;
-- `ManagedHarness`, its executable, and its `AgentKind` mapping in
-  `ai-memory-workstream`;
-- the server's managed-harness validation list; and
-- README, install, architecture, design-decision, and changelog references.
+- `ai-memory-cli` 里的 `RunHarnessChoice`；
+- `ai-memory-workstream` 里的 `ManagedHarness`、其可执行文件及其 `AgentKind` 映射；
+- 服务器的托管外壳校验清单；以及
+- README、install、architecture、design-decision 与 changelog 里的引用。
 
-Explicit support comes first. Add a harness to bare `ai-memory run` automatic
-selection only after checkout-local candidate discovery is reliable. A local
-file timestamp is a bootstrap hint; the server's current linked harness remains
-authoritative for an established workstream.
+先有显式支持。只有当检出本地的候选发现可靠之后，才把外壳加进裸 `ai-memory run` 的自动选择。本地文件时间戳只是引导提示；对已建立的工作流，服务器当前关联的外壳保持权威。
 
-## 3. Preserve native argv and session ownership
+## 3. 保留原生 argv 与会话所有权
 
-Implement fresh, resume, and explicit-selector behavior in
-`crates/ai-memory-workstream/src/harness.rs`. Preserve every user argument and
-its order except the exact wrapper-owned `--yolo` and `--fresh` tokens. An
-explicit native selector always wins over ai-memory's linked session. Help,
-version, login, doctor, export, and similar utility commands must not receive
-session flags.
+在 `crates/ai-memory-workstream/src/harness.rs` 里实现全新、恢复与显式选择器行为。保留每个用户参数及其顺序，仅包装器持有的 `--yolo` 与 `--fresh` 确切 token 除外。显式原生选择器永远优先于 ai-memory 的关联会话。help、version、login、doctor、export 及类似工具命令不得收到会话标志。
 
-Generate a session id only when the native CLI officially accepts a caller
-provided id. Otherwise let the harness create the session, then discover it by
-exact checkout and launch time. Do not infer a session from "newest globally."
+只有原生 CLI 官方接受调用方提供的 id 时才生成会话 id。否则让外壳创建会话，再按确切检出与启动时间发现它。不要从「全局最新」推断会话。
 
-Map `--yolo` only to a verified native option and avoid duplicates. If the
-harness has no equivalent, add no flag and document that fact.
+`--yolo` 只映射到已验证的原生选项并避免重复。外壳没有等价项就不加标志，并记录这个事实。
 
-Support wrapper `--fresh` by checking the exact linked id in the native store
-before injecting a resume selector. A confirmed missing id starts fresh; an
-unreadable or malformed store remains an error rather than being treated as
-absence. Reject `--fresh` when the user also supplied a native resume, session,
-continue, or fork selector.
+支持包装器 `--fresh`：注入恢复选择器之前，在原生存储里检查确切关联的 id。确认缺失的 id 全新开始；不可读或畸形的存储仍是错误而非按缺失处理。用户同时给了原生 resume、session、continue 或 fork 选择器时拒绝 `--fresh`。
 
-## 4. Discover and export read-only
+## 4. 只读发现与导出
 
-Implement candidate discovery in `crates/ai-memory-workstream/src/transcript.rs`.
-Implement incremental export only when a documented or repeatably observed
-native format exposes visible conversation records without private state.
+在 `crates/ai-memory-workstream/src/transcript.rs` 里实现候选发现。只有当有文档记载或可重复观察到的原生格式在不暴露私有状态的情况下给出可见对话记录时，才实现增量导出。
 
-The adapter must:
+适配器必须：
 
-- restrict candidates to the exact current checkout;
-- honor documented store-root environment and command-line overrides;
-- open SQLite stores read-only and never create, migrate, vacuum, or repair
-  them;
-- when export is supported, tolerate an incomplete final record or in-progress
-  tool call without advancing past it;
-- when export is supported, emit deterministic source record and event ids and
-  resume from a persisted source cursor without duplicates;
-- normalize only visible user/assistant messages, completed tool calls/results,
-  and compaction summaries; and
-- exclude system/developer prompts, hidden reasoning, binary payloads,
-  credentials, provider metadata, and unsupported records.
+- 把候选限定在确切的当前检出；
+- 尊重有文档记载的存储根环境与命令行覆盖；
+- 以只读方式打开 SQLite 存储，绝不创建、迁移、vacuum 或修复它们；
+- 支持导出时，容忍不完整的末条记录或进行中的工具调用而不越过它；
+- 支持导出时，产出确定性的源记录/事件 id，并从持久化的源游标恢复而不重复；
+- 只归一化可见的用户/助手消息、已完成的工具调用/结果与压缩摘要；以及
+- 排除 system/developer 提示词、隐藏推理、二进制 payload、凭据、提供方元数据与不支持的记录。
 
-Extraction gaps should become bounded loss annotations. If the conversation
-payload is opaque or undocumented, return such an annotation and rely on
-sanitized lifecycle-hook capture instead of guessing. Never copy a private
-record "just in case."
+提取缺口应变成有界的损失标注。对话 payload 不透明或无文档时，返回这样的标注并依赖净化后的生命周期钩子捕获，而不是瞎猜。绝不「以防万一」地复制私有记录。
 
-## 5. Deliver context before acknowledging it
+## 5. 先投递上下文再确认
 
-The preferred path is a native SessionStart hook. The managed child inherits
-`AI_MEMORY_RUN_ID`; the hook links the actual native session, renders the unseen
-bounded workstream range, makes it model-visible, and only then accepts the
-delivery cursor.
+首选路径是原生 SessionStart 钩子。托管子进程继承 `AI_MEMORY_RUN_ID`；钩子关联真实的原生会话，渲染未见过的有界工作流区间，使其对模型可见，然后才接受投递游标。
 
-If the harness has no suitable hook, use a documented native context mechanism.
-Crush is the reference: the launcher fetches without accepting, writes a private
-temporary copy of the supported config plus an ephemeral context file, starts
-the child, and acknowledges only after spawn succeeds. The original config and
-session store are never written by ai-memory, the harness retains its normal
-native writes, and the temporary directory is removed after exit.
+外壳没有合适钩子时，用有文档记载的原生上下文机制。Crush 是参考实现：启动器先取不确认，写入受支持配置的私有临时副本加一个短命上下文文件，启动子进程，只在 spawn 成功之后确认。原始配置与会话存储从不被 ai-memory 写入，外壳保持其正常原生写入，临时目录在退出后删除。
 
-Fetching must be repeatable until acceptance. A failed spawn, hook, or network
-ack may redeliver context; it must never silently lose it. Historical tool calls
-must be labelled completed evidence so another harness cannot interpret them as
-pending work.
+取数在确认之前必须可重复。spawn、钩子或网络确认失败可以重投上下文；绝不能静默丢失。历史工具调用必须标注为已完成的证据，让另一个外壳不能把它们解读为待办工作。
 
-## 6. Keep workstream invariants intact
+## 6. 保持工作流不变量
 
-One logical workstream has at most one current native session per harness. A
-new harness joining an established workstream starts a clean native session and
-receives portable history; it must not adopt an unrelated older local session.
-First-use adoption is allowed only while authoritative server state has no
-linked native session or substantive portable event.
+一个逻辑工作流每个外壳至多一个当前原生会话。加入既有工作流的新外壳开启一个干净的原生会话并接收可移植历史；它不得认领无关的旧本地会话。首次使用认领只在权威服务器状态尚无关联原生会话或实质性可移植事件时允许。
 
-Keep leases, delivery cursors, source cursors, immutable sanitized segments,
-batch limits, and idempotent imports on the existing shared path. Do not add a
-harness-specific synchronization database or mutate private stores to resolve
-precedence, directory renames, or conflicts.
+把租约、投递游标、源游标、不可变的净化片段、批量限额与幂等导入保持在既有共享路径上。不要加外壳专属的同步数据库，也不要为解决优先级、目录重命名或冲突而改写私有存储。
 
-## 7. Required tests
+## 7. 必需的测试
 
-A managed-harness PR should include focused coverage for:
+托管外壳 PR 应包含聚焦覆盖：
 
-- fresh launch, linked resume, missing-linked-session recovery,
-  explicit-selector precedence, argv order, utility passthrough, path
-  overrides, `--yolo` mapping, and wrapper `--fresh`;
-- candidate ordering, exact-checkout isolation, timestamp handling, read-only
-  access, incremental cursors, stable ids, incomplete records, visible record
-  inclusion, and private record exclusion;
-- first-use adoption and the established-workstream obsolete-session guard;
-- startup context fetch/injection/accept ordering and spawn-failure redelivery;
-- the `AgentKind::ALL` schema invariant when a kind is added;
-- deterministic fake-process acceptance in
-  `scripts/managed-workstream-acceptance.sh`; and
-- a manual real-harness pass that switches into the new harness, records
-  successful delivery of its assigned context delta, and resumes its original
-  native session when revisited. Require a new assistant event when the adapter
-  has a readable transcript. A deliberately hook-only adapter must instead
-  prove that a correlated lifecycle observation was persisted and document the
-  bounded transcript-loss annotation. Do not make pass/fail depend on the model
-  quoting packet text: some harnesses externalize large hook results to a file,
-  making recall depend on a model tool-use choice.
+- 全新启动、关联恢复、缺失关联会话的恢复、显式选择器优先级、argv 顺序、工具透传、路径覆盖、`--yolo` 映射与包装器 `--fresh`；
+- 候选排序、确切检出隔离、时间戳处理、只读访问、增量游标、稳定 id、不完整记录、可见记录纳入与私有记录排除；
+- 首次使用认领与既有工作流的过期会话防护；
+- 启动上下文的取数/注入/确认顺序与 spawn 失败重投；
+- 新增 kind 时 `AgentKind::ALL` 的 schema 不变量；
+- `scripts/managed-workstream-acceptance.sh` 里确定性假进程验收；以及
+- 一次真实外壳的手工通过：切换进新外壳、记录其分派上下文增量的成功投递、再次访问时恢复其原原生会话。适配器有可读转录时要求一条新的助手事件。刻意只做钩子的适配器则必须证明已持久化一条相关的生命周期观察，并记录有界的转录损失标注。不要让通过与否取决于模型复述数据包文本：有些外壳把大块钩子结果外置到文件，复述就取决于模型的工具使用选择。
 
-The deterministic phase remains credential-free and suitable for frequent
-local runs. Real model calls stay opt-in and outside CI. Record the tested CLI
-version and any platform limitation in the PR description.
+确定性阶段保持免凭据、适合频繁本地运行。真实模型调用保持选择启用且在 CI 之外。在 PR 描述里记录测试过的 CLI 版本与任何平台限制。
 
-Run the repository's complete Rust gate before requesting review:
+请求评审前先跑完仓库的完整 Rust 门：
 
 ```bash
 cargo fmt --check
