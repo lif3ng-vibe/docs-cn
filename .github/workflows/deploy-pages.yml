@@ -31,6 +31,7 @@ jobs:
             orca-docs-cn/package-lock.json
             mattpocock-skills-docs-cn/package-lock.json
             ai-coding-dictionary-docs-cn/package-lock.json
+            ai-memory-docs-cn/package-lock.json
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -70,6 +71,15 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build ai-memory-docs-cn
+        working-directory: ai-memory-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/ai-memory/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/ai-memory/|g' {} +
+          npm ci
+          npm run build
+
       - name: Assemble Pages artifact
         run: |
           mkdir -p _site
@@ -81,6 +91,7 @@ jobs:
           mv orca-docs-cn/dist _site/orca
           mv mattpocock-skills-docs-cn/dist _site/mattpocock-skills
           mv ai-coding-dictionary-docs-cn/dist _site/ai-coding-dictionary
+          mv ai-memory-docs-cn/dist _site/ai-memory
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

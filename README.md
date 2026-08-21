@@ -10,6 +10,7 @@
 | Orca | `orca-docs-cn/` | https://www.onorca.dev/docs | https://github.com/stablyai/orca | 2026-08-19 |
 | Matt Pocock Skills | `mattpocock-skills-docs-cn/` | https://www.aihero.dev/skills | https://github.com/mattpocock/skills | 2026-08-20 |
 | AI 编码词典 | `ai-coding-dictionary-docs-cn/` | https://www.aihero.dev/ai-coding-dictionary | https://github.com/mattpocock/dictionary-of-ai-coding | 2026-08-20 |
+| ai-memory | `ai-memory-docs-cn/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-21 |
 
 ## 运行任意子项目
 
@@ -44,6 +45,7 @@ docs-cn/
 ├── orca-docs-cn/          # Orca 中文文档（Starlight）
 ├── mattpocock-skills-docs-cn/          # Matt Pocock Skills 中文文档（Starlight）
 ├── ai-coding-dictionary-docs-cn/       # AI 编码词典中文版（Starlight）
+├── ai-memory-docs-cn/                  # ai-memory 中文文档（Starlight，36 篇）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -73,7 +75,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 1. 用 `sites.json` 生成入口页 `index.html`。
 2. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
 3. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
-4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`。
+4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`、`ai-memory/`。
 5. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
 
 部署后访问地址：
@@ -82,6 +84,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Orca：https://lif3ng-vibe.github.io/docs-cn/orca/
 - Matt Pocock Skills：https://lif3ng-vibe.github.io/docs-cn/mattpocock-skills/
 - AI 编码词典：https://lif3ng-vibe.github.io/docs-cn/ai-coding-dictionary/
+- ai-memory：https://lif3ng-vibe.github.io/docs-cn/ai-memory/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
