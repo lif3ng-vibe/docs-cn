@@ -1,118 +1,77 @@
 ---
-title: "LLM provider comparison - local Ollama vs hosted OpenRouter"
-description: "When the homelab deploy switched ai-memory off the billed OpenAI / OpenRouter providers and onto the locally-hosted Ollama server, we needed empirical evidence - not a vibes-based "
+title: "LLM 提供方对比：本地 Ollama vs 托管 OpenRouter"
+description: "家庭实验室部署把 ai-memory 从计费的 OpenAI / OpenRouter 提供方切到本地托管的 Ollama 服务器时，我们需要实证——不是凭感觉的宣称。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/llm-provider-comparison.md"
 ---
 
-# LLM provider comparison - local Ollama vs hosted OpenRouter
+# LLM 提供方对比：本地 Ollama vs 托管 OpenRouter
 
-> **TL;DR.** ai-memory's consolidation prompt had a latent
-> schema-vs-prompt bug that made every provider fail JSON validation.
-> After two rounds of fixes (schema + tightened anti-hallucination
-> prompt), six providers were benchmarked on the same 5 fixtures:
+> **TL;DR。** ai-memory 的整编提示词有一个潜伏的 schema vs 提示词 bug，让每个提供方都过不了 JSON 校验。两轮修复（schema + 收紧的反幻觉提示词）之后，六个提供方在同样的 5 个夹具上做了基准：
 >
-> | Provider | Parse | Avg latency | Faithfulness | $/M out tokens† | Notes |
+> | 提供方 | 解析 | 平均延迟 | 忠实度 | $/M 输出 token† | 说明 |
 > |---|---|---|---|---|---|
-> | qwen3:32b (Ollama local) | 5/5 | 92 s | high | **$0** | production default |
-> | **GPT-5.4-mini** (OpenRouter) | 5/5 | **4.3 s** | high‡ | ~$1 | fastest + cheapest hosted |
-> | Haiku 4.5 (OpenRouter) | 5/5 | 7.3 s | high | ~$5 | most disciplined hosted on restraint |
-> | DeepSeek V4 Flash (OpenRouter) | 5/5 | 21.7 s | high | ~$0.40 | slower than GPT-mini, comparable price |
-> | Sonnet 4.5 (OpenRouter) | 5/5 | 10.8 s | high (after prompt fix) | ~$15 | displaced by Haiku for this task |
-> | Kimi-K2.6 (OpenRouter) | hangs | n/a | n/a | n/a | reasoning model — ineligible |
+> | qwen3:32b（Ollama 本地） | 5/5 | 92 s | 高 | **$0** | 生产默认 |
+> | **GPT-5.4-mini**（OpenRouter） | 5/5 | **4.3 s** | 高‡ | ~$1 | 最快 + 最便宜的托管 |
+> | Haiku 4.5（OpenRouter） | 5/5 | 7.3 s | 高 | ~$5 | 托管里克制度最佳 |
+> | DeepSeek V4 Flash（OpenRouter） | 5/5 | 21.7 s | 高 | ~$0.40 | 比 GPT-mini 慢、价格相当 |
+> | Sonnet 4.5（OpenRouter） | 5/5 | 10.8 s | 高（提示词修复后） | ~$15 | 此任务被 Haiku 取代 |
+> | Kimi-K2.6（OpenRouter） | 挂起 | 无 | 无 | 无 | 推理模型——不合格 |
 >
-> † order-of-magnitude pricing per million output tokens. Actual
-> per-consolidation cost depends on input + output token count.
-> ‡ One slip: GPT-5.4-mini manufactured a `decisions/` page for a
-> typo-fix session (mild over-classification), where Haiku
-> correctly emitted only the session log.
+> † 每百万输出 token 的量级定价。实际每次整编成本取决于输入 + 输出 token 数。
+> ‡ 一次失误：GPT-5.4-mini 为一个修错字会话造了一页 `decisions/`（轻度过度分类），而 Haiku 正确地只发了会话日志。
 >
-> **Recommended default for most users: Claude Haiku 4.5.**
-> Hosted (always available), fast (~7 s), cheap enough that
-> per-session cost doesn't matter for personal use, and the
-> most disciplined hosted model on restraint + classification.
-> **Cheaper alternative**: GPT-5.4-mini (~5× cheaper than
-> Haiku, ~2× faster, mild over-classification on trivial
-> sessions). **Free alternative if you have a local LLM
-> server** (Ollama / vLLM / llama-swap with a 30B-class
-> model): qwen3:32b on Ollama — $0 per consolidation,
-> background latency invisible to users. See
-> [Installation cookbook - LLM provider tiers](install.md#llm-provider-tiers)
-> for setup. Reproduce the comparison in [`evals/`](../evals/).
+> **多数用户的推荐默认：Claude Haiku 4.5。**托管（总是可用）、快（约 7 s）、便宜到个人使用的每会话成本无所谓、且是托管模型里克制 + 分类上最有纪律的。**更便宜的替代**：GPT-5.4-mini（比 Haiku 便宜约 5 倍、快约 2 倍、对琐碎会话轻度过度分类）。**有本地 LLM 服务器（Ollama / vLLM / llama-swap 带 30B 级模型）时的免费替代**：Ollama 上的 qwen3:32b——每次整编 $0、后台延迟用户不可见。设置见[安装指南的 LLM 提供方层级](/install/#llm-提供方层级)。对比可在 [`evals/`](https://github.com/akitaonrails/ai-memory/tree/main/evals) 复现。
 
-## Why this document exists
+## 这份文档为什么存在
 
-When the homelab deploy switched ai-memory off the billed
-OpenAI / OpenRouter providers and onto the locally-hosted Ollama
-server, we needed empirical evidence - not a vibes-based claim -
-that *consolidation quality didn't degrade*. ai-memory's
-consolidator turns a session's raw observations into 1–5 wiki
-pages classified as `concept`, `decision`, `gotcha`, or `rule`;
-small drops in quality compound fast across hundreds of sessions.
+家庭实验室部署把 ai-memory 从计费的 OpenAI / OpenRouter 提供方切到本地托管的 Ollama 服务器时，我们需要实证——不是凭感觉的宣称——*整编质量没有退化*。ai-memory 的整编器把一个会话的原始观察变成 1-5 页分类为 `concept`、`decision`、`gotcha` 或 `rule` 的 wiki 页面；质量的小幅下滑在数百个会话上快速复利。
 
-This doc captures:
+本文档记录：
 
-- The **methodology** (what we compared, how we compared, the
-  exact prompt + schema both providers saw).
-- The **root cause** of why early runs looked terrible.
-- The **fix** that landed in the consolidator's types + prompt.
-- The **final per-provider numbers** (parse rate, latency,
-  manual quality assessment).
-- A **how-to-reproduce** section so anyone can re-run the
-  comparison against their own model + provider choices.
+- **方法论**（对比什么、怎么对比、两个提供方看到的精确提示词 + schema）。
+- 早期运行看起来糟糕的**根因**。
+- 落进整编器类型 + 提示词的**修复**。
+- **逐提供方的最终数字**（解析率、延迟、人工质量评估）。
+- **复现方法**一节，任何人都能对着自己的模型 + 提供方选择重跑对比。
 
-## What was tested
+## 测了什么
 
-### The five fixtures
+### 五个夹具
 
-[`evals/fixtures/`](../evals/fixtures/) holds five short synthetic
-session logs, each crafted to surface a *different* failure mode
-in consolidation:
+[`evals/fixtures/`](https://github.com/akitaonrails/ai-memory/tree/main/evals/fixtures) 持有五份短的合成会话日志，每份专门暴露整编的一种*不同*失败模式：
 
-| Fixture | What it stresses |
+| 夹具 | 考验什么 |
 |---|---|
-| `01-rust-bug-fix` | Did the model split a multi-page session into the right slices (session log + concept + decision + gotcha)? |
-| `02-architecture-decision` | Can the model produce an ADR-style page distinct from the running session log? |
-| `03-gotcha-with-rule` | Did the model correctly classify a durable project rule with `kind: rule` so the consolidator can auto-route it to `_rules/`? |
-| `04-low-signal-session` | Does the model *resist* manufacturing concept pages when there's nothing durable to capture? |
-| `05-multi-topic-session` | Does the model emit *separate* pages per topic instead of mashing two unrelated topics together? |
+| `01-rust-bug-fix` | 模型是否把多页会话切成了正确的片（会话日志 + 概念 + 决策 + 坑点）？ |
+| `02-architecture-decision` | 模型能否产出区别于运行中会话日志的 ADR 式页面？ |
+| `03-gotcha-with-rule` | 模型是否正确把一条持久项目规则分类为 `kind: rule`，让整编器能自动路由到 `_rules/`？ |
+| `04-low-signal-session` | 没有可捕获的持久内容时，模型是否*抵得住*制造概念页？ |
+| `05-multi-topic-session` | 模型是否按主题发*独立*页面而不是把两个无关主题揉在一起？ |
 
-Fixtures use real-shape `ObservationKind` values (`session-start`,
-`user-prompt`, `pre-tool-use`, `post-tool-use`, `session-end`)
-exactly as the production hook ingress emits them.
+夹具用生产钩子入口发出的、真实形状的 `ObservationKind` 值（`session-start`、`user-prompt`、`pre-tool-use`、`post-tool-use`、`session-end`）。
 
-### The exact request
+### 精确的请求
 
-Per fixture, the runner calls
-[`ai_memory_consolidate::build_batch_request(session_id, &observations)`](../crates/ai-memory-consolidate/src/consolidator.rs)
-- the **same** function the live consolidator uses on every
-`memory_consolidate` invocation. That request is then sent
-through [`ai_memory_llm::complete_structured`](../crates/ai-memory-llm/src/lib.rs)
-(also the live path). Apples-to-apples by construction.
+逐夹具，运行器调 [`ai_memory_consolidate::build_batch_request(session_id, &observations)`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-consolidate/src/consolidator.rs)——与活跃整编器每次 `memory_consolidate` 调用用的**同一**函数。该请求再经 [`ai_memory_llm::complete_structured`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-llm/src/lib.rs)（同样是活跃路径）发出。构造上苹果对苹果。
 
-### The six providers
+### 六个提供方
 
-| Tag | Provider | Model | Endpoint |
+| 标签 | 提供方 | 模型 | 端点 |
 |---|---|---|---|
-| **Kimi** | OpenRouter (openai-compat) | `moonshotai/kimi-k2.6` | `https://openrouter.ai/api/v1` |
-| **Sonnet** | OpenRouter (openai-compat) | `anthropic/claude-sonnet-4.5` | `https://openrouter.ai/api/v1` |
-| **Haiku** | OpenRouter (openai-compat) | `anthropic/claude-haiku-4.5` | `https://openrouter.ai/api/v1` |
-| **GPT-mini** | OpenRouter (openai-compat) | `openai/gpt-5.4-mini` | `https://openrouter.ai/api/v1` |
-| **DeepSeek** | OpenRouter (openai-compat) | `deepseek/deepseek-v4-flash` | `https://openrouter.ai/api/v1` |
-| **qwen3** | Ollama (openai-compat) | `qwen3:32b` (Q4_K_M, ~20 GB) | `http://192.168.0.90:11434/v1` |
+| **Kimi** | OpenRouter（openai-compat） | `moonshotai/kimi-k2.6` | `https://openrouter.ai/api/v1` |
+| **Sonnet** | OpenRouter（openai-compat） | `anthropic/claude-sonnet-4.5` | `https://openrouter.ai/api/v1` |
+| **Haiku** | OpenRouter（openai-compat） | `anthropic/claude-haiku-4.5` | `https://openrouter.ai/api/v1` |
+| **GPT-mini** | OpenRouter（openai-compat） | `openai/gpt-5.4-mini` | `https://openrouter.ai/api/v1` |
+| **DeepSeek** | OpenRouter（openai-compat） | `deepseek/deepseek-v4-flash` | `https://openrouter.ai/api/v1` |
+| **qwen3** | Ollama（openai-compat） | `qwen3:32b`（Q4_K_M，约 20 GB） | `http://192.168.0.90:11434/v1` |
 
-The home server (`192.168.0.90`) is a Ryzen AI MAX+ 395
-(Strix Halo / gfx1151), 96 GB unified memory, ROCm-backed
-Ollama with `OLLAMA_KEEP_ALIVE=20m` + `OLLAMA_FLASH_ATTENTION=1`
-+ `OLLAMA_KV_CACHE_TYPE=q8_0`. Once a model is loaded into
-unified memory it stays warm for 20 min - so the first
-request pays a 30–60 s cold-load tax and subsequent ones are
-sub-3 s.
+家用服务器（`192.168.0.90`）是 Ryzen AI MAX+ 395（Strix Halo / gfx1151）、96 GB 统一内存、ROCm 背书的 Ollama，带 `OLLAMA_KEEP_ALIVE=20m` + `OLLAMA_FLASH_ATTENTION=1` + `OLLAMA_KV_CACHE_TYPE=q8_0`。模型一旦载入统一内存就保温 20 分钟——第一个请求付 30-60 s 冷加载税、后续低于 3 s。
 
-## Run 1 - broken prompts + schema (pre-fix baseline)
+## 第 1 轮——坏提示词 + schema（修复前基线）
 
-Every provider failed schema validation on every fixture:
+每个提供方在每个夹具上都没过 schema 校验：
 
-| Fixture | Kimi | qwen3:32b |
+| 夹具 | Kimi | qwen3:32b |
 |---|---|---|
 | 01-rust-bug-fix | ❌ *response is not valid JSON* | ❌ *integer 1, expected string* |
 | 02-architecture-decision | ❌ *response is not valid JSON* | ❌ *integer 2, expected string* |
@@ -120,125 +79,89 @@ Every provider failed schema validation on every fixture:
 | 04-low-signal-session | ❌ *response is not valid JSON* | ❌ *integer 1, expected string* |
 | 05-multi-topic-session | ❌ *response is not valid JSON* | ❌ *integer 2, expected string* |
 
-But the *raw responses* told a very different story: both
-models did **excellent** consolidation work content-wise. They
-correctly identified multiple distinct pages per fixture,
-extracted faithful summaries, and respected the path
-conventions. The failures were **format only**:
+但*原始响应*讲的是很不同的故事：两个模型在内容上都做了**出色**的整编工作。它们正确识别了每个夹具的多张独立页面、提取了忠实的摘要、遵守了路径约定。失败**仅在格式**：
 
-- **Kimi** was emitting beautifully formatted markdown
-  (`### Update 1` / `**path:**` / `**body:**`) - completely
-  ignoring the request for JSON.
-- **qwen3** was emitting clean JSON in code fences, but with
-  `tier: 1` / `tier: 2` / `tier: 3` (integers) instead of the
-  documented string values, and occasionally with invented
-  `kind` values like `"session"` (which isn't in the
-  `PageKind` enum).
+- **Kimi** 输出排版精美的 markdown（`### Update 1` / `**path:**` / `**body:**`）——完全无视 JSON 请求。
+- **qwen3** 在代码围栏里输出干净 JSON，但 `tier: 1` / `tier: 2` / `tier: 3`（整数）而非文档化的字符串值，偶尔还有发明的 `kind` 值如 `"session"`（不在 `PageKind` 枚举里）。
 
-## The root cause
+## 根因
 
-Two separate problems, both **on our side**:
+两个独立问题，都在**我们这边**：
 
-### Bug A - `Tier` had no `JsonSchema` derive
+### Bug A——`Tier` 没有 `JsonSchema` derive
 
-In `crates/ai-memory-consolidate/src/types.rs`:
+在 `crates/ai-memory-consolidate/src/types.rs`：
 
 ```rust
 pub struct ConsolidatedPageUpdate {
     pub path: String,
-    pub tier: String,   // ← bug: typed as String
-    pub kind: PageKind, // ← already an enum with JsonSchema
+    pub tier: String,   // ← bug：类型是 String
+    pub kind: PageKind, // ← 已是带 JsonSchema 的枚举
     ...
 }
 ```
 
-`schemars` couldn't produce an enum constraint for `tier`
-because `Tier` (the actual enum in `ai-memory-core`) didn't
-have the `JsonSchema` derive. The generated schema field was
-just `{ "type": "string" }` - no `enum` constraint - so models
-were free to guess. Both Kimi and qwen3 guessed numeric indices.
+`schemars` 无法为 `tier` 产出枚举约束，因为 `Tier`（`ai-memory-core` 里的真正枚举）没有 `JsonSchema` derive。生成的 schema 字段只是 `{ "type": "string" }`——没有 `enum` 约束——所以模型可以随便猜。Kimi 和 qwen3 都猜了数字索引。
 
-### Bug B - prompt described values, didn't enforce them
+### Bug B——提示词描述了取值、没有强制
 
-The system prompt in
-[`build_batch_request`](../crates/ai-memory-consolidate/src/consolidator.rs)
-listed the valid `tier` and `kind` values in prose but never
-said "use these EXACT string values, never an integer, never a
-synonym, never code fences". Local instruction-tuned models -
-especially when there's no `response_format: json_schema`
-support to enforce - will drift to whatever feels natural.
+[`build_batch_request`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-consolidate/src/consolidator.rs) 里的系统提示词用散文列出合法的 `tier` 与 `kind` 值，但从没说「用这些精确字符串值、绝不整数、绝不同义词、绝不代码围栏」。本地指令微调模型——尤其在没有 `response_format: json_schema` 支持可强制时——会漂到顺手的形式。
 
-Compounding this at the time of the run: openai-compat providers
-(Ollama, OpenRouter passthrough) were using ai-memory's tolerant
-parser path, so the schema was descriptive, not coercive. The
-provider opt-in for coercive structured output is documented below.
+运行时加剧这一点：openai-compat 提供方（Ollama、OpenRouter 透传）当时用 ai-memory 的宽容解析器路径，所以 schema 是描述性的、不是强制性的。提供方对强制结构化输出的选择启用记录如下。
 
-#### Strict structured output for openai-compat
+#### openai-compat 的严格结构化输出
 
-`openai-compat` sends
-`response_format={ type: "json_schema", strict: true }` by default. On a
-parse-shape failure (the upstream returned a response but it wasn't a
-valid JSON object), or an explicit 400/422 rejection naming
-`response_format`, `json_schema`, or structured output, ai-memory falls back to
-the tolerant parser. Other HTTP / auth / transport errors propagate without
-retry. Set `AI_MEMORY_LLM_COMPAT_STRICT=false` to opt out.
+`openai-compat` 默认发送 `response_format={ type: "json_schema", strict: true }`。解析形状失败（上游返回了响应但不是有效 JSON 对象）、或显式点名 `response_format`/`json_schema`/结构化输出的 400/422 拒绝时，ai-memory 回退宽容解析器。其他 HTTP / 认证 / 传输错误不重试直接传播。设 `AI_MEMORY_LLM_COMPAT_STRICT=false` 退出。
 
-**Cost.** Strict mode is one HTTP call when the upstream honours
-`response_format`. When it doesn't, you pay a second call for the
-tolerant fallback. Pick by engine:
+**成本。**上游尊重 `response_format` 时严格模式是一次 HTTP 调用。不尊重时，你为宽容回退付第二次调用。按引擎选：
 
-| Engine class | Setting |
+| 引擎类别 | 设置 |
 |---|---|
-| Modern Ollama / vLLM / LM Studio honouring `response_format=json_schema` | Keep the default (one call, schema-constrained) |
-| Reasoning models with `<think>…</think>` inside `content` (DeepSeek-R1, Qwen3-Thinking, MiniMax M2) | Set `AI_MEMORY_LLM_COMPAT_STRICT=false` if the strict-then-fallback double call is frequent |
-| Older engines / proxies that reject `response_format` explicitly | Keep the default; ai-memory retries without it |
-| Older engines / proxies that mishandle the field without a recognizable rejection | Set `AI_MEMORY_LLM_COMPAT_STRICT=false` |
+| 尊重 `response_format=json_schema` 的现代 Ollama / vLLM / LM Studio | 保持默认（一次调用、schema 约束） |
+| `content` 里带 `<think>…</think>` 的推理模型（DeepSeek-R1、Qwen3-Thinking、MiniMax M2） | 严格后回退的双调用频繁时设 `AI_MEMORY_LLM_COMPAT_STRICT=false` |
+| 显式拒绝 `response_format` 的老引擎/代理 | 保持默认；ai-memory 不带它重试 |
+| 无可识别拒绝却错误处理该字段的老引擎/代理 | 设 `AI_MEMORY_LLM_COMPAT_STRICT=false` |
 
-The prompt still has to do the load-bearing work when strict mode is
-off or the strict call falls back.
+严格模式关闭或严格调用回退时，承重的活仍得提示词来干。
 
-## The fix
+## 修复
 
-Three small changes landed together:
+三个小改动一起落地：
 
-### 1. Derive `JsonSchema` on `Tier`
+### 1. 给 `Tier` 加 `JsonSchema` derive
 
-`crates/ai-memory-core/src/page.rs`:
+`crates/ai-memory-core/src/page.rs`：
 
 ```rust
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash,
     Serialize, Deserialize,
-    schemars::JsonSchema, // ← new
+    schemars::JsonSchema, // ← 新增
 )]
 #[serde(rename_all = "snake_case")]
 pub enum Tier { Working, Episodic, Semantic, Procedural }
 ```
 
-Adds `schemars` as a dep on `ai-memory-core` (acceptable -
-schemars is already a workspace dep used by every type that
-crosses the LLM boundary).
+给 `ai-memory-core` 加 `schemars` 依赖（可接受——schemars 已是 workspace 依赖、被每个跨 LLM 边界的类型使用）。
 
-### 2. Type the field as `Tier`, not `String`
+### 2. 字段类型改为 `Tier` 而非 `String`
 
-`crates/ai-memory-consolidate/src/types.rs`:
+`crates/ai-memory-consolidate/src/types.rs`：
 
 ```rust
 pub struct ConsolidatedPageUpdate {
     pub path: String,
-    pub tier: Tier,        // ← was String
+    pub tier: Tier,        // ← 原为 String
     pub kind: PageKind,
     ...
 }
 ```
 
-The generated schema now contains
-`{ "enum": ["working", "episodic", "semantic", "procedural"] }`
-for `tier`. `serde_json::from_value` rejects anything else.
+生成的 schema 现在为 `tier` 含 `{ "enum": ["working", "episodic", "semantic", "procedural"] }`。`serde_json::from_value` 拒绝其他任何东西。
 
-### 3. Tighten the prompt
+### 3. 收紧提示词
 
-`build_batch_request` now spells out:
+`build_batch_request` 现在明确写：
 
 ```
 Set `tier` to EXACTLY ONE of these four strings — never an integer, never a synonym:
@@ -258,86 +181,59 @@ very last `}`. Strings must be JSON strings (with double quotes), not numbers
 and not bare identifiers.
 ```
 
-Belt-and-suspenders: the schema now *rejects* the bad values,
-and the prompt makes it actively hard for the model to produce
-them in the first place.
+双保险：schema 现在*拒绝*坏值，提示词也让模型一开始就难以产出它们。
 
-## Run 2 - schema + first prompt fix
+## 第 2 轮——schema + 第一版提示词修复
 
-After the schema fix + first prompt iteration, the same five
-fixtures produced:
+schema 修复 + 第一版提示词迭代之后，同样五个夹具产出：
 
-### Sonnet 4.5 (OpenRouter) vs qwen3:32b (Ollama)
+### Sonnet 4.5（OpenRouter）vs qwen3:32b（Ollama）
 
-| Fixture | Sonnet parse | Sonnet ms | Sonnet updates | qwen3 parse | qwen3 ms | qwen3 updates |
+| 夹具 | Sonnet 解析 | Sonnet ms | Sonnet 更新数 | qwen3 解析 | qwen3 ms | qwen3 更新数 |
 |---|---|---|---|---|---|---|
 | 01 rust-bug-fix | ✓ | 27,613 | 4 | ✓ | 110,227 | 4 |
 | 02 architecture-decision | ✓ | 31,039 | 4 | ✓ | 122,200 | 5 |
 | 03 gotcha-with-rule | ✓ | 19,173 | 4 | ✓ | 98,025 | 4 |
 | 04 low-signal-session | ✓ | 6,106 | **1** | ✓ | 51,694 | **1** |
 | 05 multi-topic-session | ✓ | 47,249 | 4 | ✗* | 133,178 | - |
-| **Aggregate** | **5/5** | **avg 26 s** | - | **4/5** | **avg 103 s** | - |
+| **合计** | **5/5** | **平均 26 s** | - | **4/5** | **平均 103 s** | - |
 
-*qwen3's only failure: invented `kind: "concept"` (not in the
-`PageKind` enum - valid values are `decision`/`gotcha`/`rule`/
-`fact`). Despite the prompt mentioning the valid set, the
-model drifted. **This gets fixed in Run 3 below.**
+*qwen3 唯一的失败：发明 `kind: "concept"`（不在 `PageKind` 枚举——合法值是 `decision`/`gotcha`/`rule`/`fact`）。尽管提示词提到合法集合，模型还是漂了。**第 3 轮修复。**
 
-Both models **correctly restrained themselves** on fixture
-04 (low-signal-session) and produced a single update - a
-non-trivial test the original schema-broken Run 1 couldn't
-even reach.
+两个模型都在夹具 04（低信号会话）上**正确克制**、只产出一条更新——这是 schema 坏掉的第 1 轮根本够不到的非平凡测试。
 
-### Haiku 4.5 (OpenRouter) vs Sonnet 4.5 (OpenRouter)
+### Haiku 4.5（OpenRouter）vs Sonnet 4.5（OpenRouter）
 
-Same prompt, both Anthropic models side-by-side:
+同一提示词、两个 Anthropic 模型并排：
 
-| Fixture | Sonnet parse | Sonnet ms | Sonnet updates | Haiku parse | Haiku ms | Haiku updates |
+| 夹具 | Sonnet 解析 | Sonnet ms | Sonnet 更新数 | Haiku 解析 | Haiku ms | Haiku 更新数 |
 |---|---|---|---|---|---|---|
 | 01 rust-bug-fix | ✓ | 34,920 | 4 | ✓ | 16,505 | 5 |
 | 02 architecture-decision | ✓ | 31,043 | 4 | ✓ | 13,731 | 4 |
 | 03 gotcha-with-rule | ✓ | 24,810 | 4 | ✓ | 14,304 | 4 |
 | 04 low-signal-session | ✓ | 5,673 | **1** | ✓ | 4,044 | **1** |
 | 05 multi-topic-session | ✓ | 39,189 | 4 | ✓ | 16,026 | 4 |
-| **Aggregate** | **5/5** | **avg 27 s** | - | **5/5** | **avg 13 s** | - |
+| **合计** | **5/5** | **平均 27 s** | - | **5/5** | **平均 13 s** | - |
 
-**Haiku is ~2× faster than Sonnet on every fixture**, hits the
-same 5/5 parse rate, and on the gotcha-with-rule fixture
-correctly classified the `audit-ignore-with-revisit-date`
-convention as `kind: rule` - which **Sonnet missed**, calling
-it a generic `gotcha`. The auto-routing to `_rules/<slug>.md`
-that the consolidator depends on therefore *only fires under
-Haiku* for that fixture, not Sonnet.
+**Haiku 在每个夹具上都比 Sonnet 快约 2 倍**、同样 5/5 解析率，且在 gotcha-with-rule 夹具上正确把 `audit-ignore-with-revisit-date` 约定分类为 `kind: rule`——**Sonnet 漏了**，把它叫成泛化的 `gotcha`。整编器依赖的到 `_rules/<slug>.md` 的自动路由因此在该夹具上*只在 Haiku 下触发*、Sonnet 不触发。
 
-Quality-wise, Haiku is also more disciplined about
-faithfulness than Sonnet even with the loose prompt:
+质量上，即便提示词宽松，Haiku 在忠实度上也比 Sonnet 更有纪律：
 
-- **Sonnet** invented `Date: 2025-01-23` twice in fixture 5
-  (no date in the source observations); fabricated an entire
-  `## Alternatives considered` section listing Alpine/Scratch/
-  Debian-slim - none mentioned in the session; added "Better
-  long-term solutions" / "When NOT to ignore" filler.
-- **Haiku** had a couple of invented "Options considered"
-  entries (Alpine, aggressive optimization flags) but
-  otherwise stayed close to the observations.
+- **Sonnet** 在夹具 5 两次发明 `Date: 2025-01-23`（源观察里没有日期）；捏造了整段列出 Alpine/Scratch/Debian-slim 的 `## Alternatives considered`——会话里一个都没提；加 "Better long-term solutions" / "When NOT to ignore" 填充。
+- **Haiku** 有几条发明的 "Options considered" 条目（Alpine、激进优化标志）但其余贴近观察。
 
-For consolidation, the headroom Sonnet has over Haiku
-expressed itself as *more hallucination*, not better
-fidelity.
+对整编，Sonnet 相对 Haiku 的余量表现为*更多幻觉*、不是更好保真。
 
-### Kimi-K2.6 (OpenRouter) - INELIGIBLE for this task
+### Kimi-K2.6（OpenRouter）——此任务不合格
 
-After the prompt + schema fixes, the Kimi rerun **hung for
-16+ minutes on the first fixture** and never returned a parseable
-response. Direct probing of the OpenRouter endpoint showed
-why:
+提示词 + schema 修复后，Kimi 重跑**在第一个夹具上挂了 16 分钟以上**、从未返回可解析响应。直接探测 OpenRouter 端点说明了原因：
 
 ```
 $ curl … -d '{"model":"moonshotai/kimi-k2.6", "max_tokens": 50, ...}'
 {
   "choices": [{
     "message": {
-      "content": null,          ← no actual content
+      "content": null,          ← 无实际内容
       "reasoning": "...208 chars..."
     }
   }],
@@ -345,42 +241,19 @@ $ curl … -d '{"model":"moonshotai/kimi-k2.6", "max_tokens": 50, ...}'
 }
 ```
 
-Kimi-K2.6 is a **reasoning model**: it consumes the
-`max_tokens` budget internally as "thinking" before emitting
-visible `content`. For a short probe with `max_tokens: 50`,
-all 50 tokens went to reasoning and content stayed `null`.
+Kimi-K2.6 是**推理模型**：它在发出可见 `content` 之前把 `max_tokens` 预算内部消耗为「思考」。`max_tokens: 50` 的短探测里，全部 50 个 token 进了推理、content 保持 `null`。
 
-For the consolidation prompt with `max_tokens: 4000`, Kimi
-would happily reason for many minutes against the strict-JSON
-instructions before *either* emitting JSON or running out of
-budget with no content. The eval observed 16 minutes of no
-progress on fixture 1 before being killed.
+`max_tokens: 4000` 的整编提示词下，Kimi 会对着严格 JSON 指令愉快地推理很多分钟，*要么*最终发出 JSON、*要么*预算耗尽无内容。评测在夹具 1 上观察到 16 分钟无进展后被杀。
 
-This is **not a fixable prompt or schema issue** - it's a
-property of the model's response style. Run 1 only "worked"
-on Kimi (in the sense of producing *something*) because the
-loose prompt let Kimi emit prose markdown, which used `content`
-naturally. The post-fix strict-JSON prompt provokes Kimi's
-reasoning mode and starves the visible response.
+这**不是可修复的提示词或 schema 问题**——是模型响应风格的属性。第 1 轮在 Kimi 上「工作」（产出*某种东西*的意义上）只因宽松提示词让 Kimi 发散文 markdown、自然地用了 `content`。修复后的严格 JSON 提示词激发 Kimi 的推理模式并饿死可见响应。
 
-**Kimi-K2.6 is not a suitable provider for ai-memory's
-consolidation workload.** It would work for the broader
-"summarise this for me" use case where formatted prose is
-fine - just not for our JSON-schema-validated path.
+**Kimi-K2.6 不适合 ai-memory 的整编工作负载。**它适合更宽的「帮我总结这个」场景——格式化散文无妨——只是不适合我们 JSON-schema 校验的路径。
 
-Other reasoning-mode models (Claude with extended thinking,
-GPT-o3, Gemini "thinking" variants) would need the same
-caveat: turn off reasoning mode, or budget tokens with
-reasoning consumption in mind.
+其他推理模式模型（开 extended thinking 的 Claude、GPT-o3、Gemini "thinking" 变体）需要同样的告诫：关掉推理模式，或把推理消耗算进 token 预算。
 
-## Run 3 - tightened anti-hallucination system prompt
+## 第 3 轮——收紧的反幻觉系统提示词
 
-The Run 2 evidence above showed that Sonnet was hallucinating
-dates, fabricating "Alternatives considered" tables, and
-inventing tutorial sections - content that wasn't in the
-observations. Even Haiku slipped occasionally. The fix wasn't
-a model swap; it was tightening the **system prompt** to
-demand faithfulness explicitly:
+上面第 2 轮的证据表明 Sonnet 在幻觉日期、捏造 "Alternatives considered" 表、发明教程小节——观察里没有的内容。连 Haiku 也偶尔失手。修复不是换模型；是收紧**系统提示词**、显式要求忠实：
 
 ```text
 ## FAITHFULNESS — the most important rule
@@ -392,8 +265,8 @@ MUST be grounded in the observations.
 Do NOT:
 - Invent dates, timestamps, version numbers, commit hashes,
   author names, file paths, function names, line numbers,
-  error codes, or any other concrete detail not present in
-  the observations.
+  error codes, or any other concrete detail not present in the
+  observations.
 - Add 'When to use' / 'When NOT to use' / 'Gotchas' / 'Best
   practices' / 'Alternative approaches' / 'See also' sections
   that weren't grounded in the session.
@@ -412,322 +285,186 @@ Do:
   words of dense fact, not 1500 words of tutorial.
 ```
 
-This change is in
-[`crates/ai-memory-consolidate/src/consolidator.rs`](../crates/ai-memory-consolidate/src/consolidator.rs)
-under `pub const BATCH_SYSTEM_PROMPT`.
+该改动在 [`crates/ai-memory-consolidate/src/consolidator.rs`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-consolidate/src/consolidator.rs) 的 `pub const BATCH_SYSTEM_PROMPT` 下。
 
-### Same fixtures, tightened prompt - Haiku vs Sonnet
+### 同样夹具、收紧提示词——Haiku vs Sonnet
 
-| Metric | Sonnet (old prompt) | Sonnet (tightened) | Δ |
+| 指标 | Sonnet（旧提示词） | Sonnet（收紧） | Δ |
 |---|---|---|---|
-| Parse rate | 5/5 | 5/5 | unchanged |
-| Avg latency | 27.1 s | **10.8 s** | **−60%** |
-| Bytes (fixture 5 raw) | 7,642 | 2,640 | **−65%** |
-| Updates per fixture | 4-4-4-1-4 | 3-3-3-1-3 | fewer manufactured pages |
-| Invented `Date: 2025-01-23` | **2 occurrences** | 0 | ✓ gone |
+| 解析率 | 5/5 | 5/5 | 不变 |
+| 平均延迟 | 27.1 s | **10.8 s** | **−60%** |
+| 字节（夹具 5 原始） | 7,642 | 2,640 | **−65%** |
+| 逐夹具更新数 | 4-4-4-1-4 | 3-3-3-1-3 | 更少制造的页面 |
+| 发明 `Date: 2025-01-23` | **2 次** | 0 | ✓ 消失 |
 
-| Metric | Haiku (old prompt) | Haiku (tightened) | Δ |
+| 指标 | Haiku（旧提示词） | Haiku（收紧） | Δ |
 |---|---|---|---|
-| Parse rate | 5/5 | 5/5 | unchanged |
-| Avg latency | 12.9 s | **7.3 s** | **−43%** |
-| Bytes (fixture 5 raw) | 5,888 | 2,191 | **−63%** |
-| Updates per fixture | 5-4-4-1-4 | 4-2-4-1-3 | fewer manufactured pages |
-| Invented "Options considered" filler | a few | 0 | ✓ gone |
+| 解析率 | 5/5 | 5/5 | 不变 |
+| 平均延迟 | 12.9 s | **7.3 s** | **−43%** |
+| 字节（夹具 5 原始） | 5,888 | 2,191 | **−63%** |
+| 逐夹具更新数 | 5-4-4-1-4 | 4-2-4-1-3 | 更少制造的页面 |
+| 发明 "Options considered" 填充 | 少许 | 0 | ✓ 消失 |
 
-### Same prompt against the local model - Haiku vs qwen3:32b
+### 同一提示词对本地模型——Haiku vs qwen3:32b
 
-| Fixture | Haiku parse | Haiku ms | Haiku updates | qwen3 parse | qwen3 ms | qwen3 updates |
+| 夹具 | Haiku 解析 | Haiku ms | Haiku 更新数 | qwen3 解析 | qwen3 ms | qwen3 更新数 |
 |---|---|---|---|---|---|---|
 | 01 rust-bug-fix | ✓ | 11,151 | 3 | ✓ | 110,817 | 4 |
 | 02 architecture-decision | ✓ | 8,793 | 3 | ✓ | 90,890 | 3 |
 | 03 gotcha-with-rule | ✓ | 7,610 | 3 | ✓ | 91,307 | 3 |
 | 04 low-signal-session | ✓ | 2,922 | **1** | ✓ | 44,502 | **1** |
 | 05 multi-topic-session | ✓ | 9,681 | 3 | ✓ | 122,220 | 5 |
-| **Aggregate** | **5/5** | **avg 8 s** | - | **5/5** | **avg 92 s** | - |
+| **合计** | **5/5** | **平均 8 s** | - | **5/5** | **平均 92 s** | - |
 
-**qwen3 went from 4/5 → 5/5** with the tightened prompt - the
-explicit field-by-field enumeration of legal `kind` values
-eliminated the "concept" drift that broke Run 2.
+**qwen3 从 4/5 → 5/5**——合法 `kind` 值的逐字段显式列举消除了破坏第 2 轮的 "concept" 漂移。
 
-The tightened-prompt change is the highest-use diff in
-the whole investigation. Same models, no infra changes, ~60%
-latency reduction, complete elimination of date hallucination
-on Sonnet, parse rate parity restored for qwen3.
+收紧提示词的改动是整个调查里最有用的 diff。同样模型、零基础设施变更、约 60% 延迟降低、Sonnet 日期幻觉完全消除、qwen3 解析率恢复持平。
 
-## Run 4 - budget-tier hosted comparison
+## 第 4 轮——预算档托管对比
 
-After establishing that Haiku 4.5 dominates Sonnet 4.5 on this
-task, the question became "is there an even cheaper hosted
-option that still works?" Tested two:
+确立 Haiku 4.5 在此任务上胜过 Sonnet 4.5 之后，问题变成「有没有更便宜但仍可用的托管选项？」测了两个：
 
-### GPT-5.4-mini (OpenRouter) vs Haiku 4.5
+### GPT-5.4-mini（OpenRouter）vs Haiku 4.5
 
-| Fixture | GPT-mini parse | GPT-mini ms | GPT-mini updates | Haiku parse | Haiku ms | Haiku updates |
+| 夹具 | GPT-mini 解析 | GPT-mini ms | GPT-mini 更新数 | Haiku 解析 | Haiku ms | Haiku 更新数 |
 |---|---|---|---|---|---|---|
 | 01 rust-bug-fix | ✓ | 4,048 | 4 | ✓ | 9,673 | 4 |
 | 02 architecture-decision | ✓ | 4,851 | 4 | ✓ | 8,322 | 3 |
 | 03 gotcha-with-rule | ✓ | 4,212 | 4 | ✓ | 8,211 | 3 |
 | 04 low-signal-session | ✓ | 4,636 | **2*** | ✓ | 3,258 | **1** |
 | 05 multi-topic-session | ✓ | 3,997 | 3 | ✓ | 10,583 | 4 |
-| **Aggregate** | **5/5** | **avg 4.3 s** | - | **5/5** | **avg 8.0 s** | - |
+| **合计** | **5/5** | **平均 4.3 s** | - | **5/5** | **平均 8.0 s** | - |
 
-*GPT-5.4-mini failed the restraint test on the low-signal
-session: it manufactured an extra `decisions/docs-spelling.md`
-page for a typo fix. The content was faithful (just restated
-the typo correction), but classifying "we fixed a typo" as a
-durable architectural decision is over-extraction. Haiku
-correctly emitted just the episodic session log with
-rationale "Session was trivial; only the episodic record is
-warranted."
+*GPT-5.4-mini 在低信号会话上没过克制测试：它为一个修错字造了一页多余的 `decisions/docs-spelling.md`。内容是忠实的（只是复述了错字更正），但把「我们修了个错字」分类为持久架构决策是过度提取。Haiku 正确地只发了情节会话日志，理由是 "Session was trivial; only the episodic record is warranted."。
 
-Otherwise GPT-5.4-mini is **the fastest hosted model tested**
-(4.3 s avg, ~2× Haiku) and produces the shortest output
-(~2.3 KB on fixture 5 vs ~3.5 KB Haiku, ~2.6 KB Sonnet). No
-invented dates, no fabricated tutorial sections.
+其余方面 GPT-5.4-mini 是**测过的最快托管模型**（平均 4.3 s、约 2 倍于 Haiku）且输出最短（夹具 5 约 2.3 KB，对 Haiku 约 3.5 KB、Sonnet 约 2.6 KB）。无发明日期、无捏造教程小节。
 
-### DeepSeek V4 Flash (OpenRouter) vs Haiku 4.5
+### DeepSeek V4 Flash（OpenRouter）vs Haiku 4.5
 
-| Fixture | DeepSeek parse | DeepSeek ms | DeepSeek updates | Haiku parse | Haiku ms | Haiku updates |
+| 夹具 | DeepSeek 解析 | DeepSeek ms | DeepSeek 更新数 | Haiku 解析 | Haiku ms | Haiku 更新数 |
 |---|---|---|---|---|---|---|
 | 01 rust-bug-fix | ✓ | 13,921 | 3 | ✓ | 8,817 | 4 |
 | 02 architecture-decision | ✓ | 20,835 | 4 | ✓ | 9,196 | 3 |
 | 03 gotcha-with-rule | ✓ | 54,203 | 4 | ✓ | 8,376 | 3 |
 | 04 low-signal-session | ✓ | 4,049 | **1** | ✓ | 2,837 | **1** |
 | 05 multi-topic-session | ✓ | 15,543 | 5 | ✓ | 7,616 | 3 |
-| **Aggregate** | **5/5** | **avg 21.7 s** | - | **5/5** | **avg 7.4 s** | - |
+| **合计** | **5/5** | **平均 21.7 s** | - | **5/5** | **平均 7.4 s** | - |
 
-DeepSeek V4 Flash passes every reliability bar - 5/5 parse,
-correct restraint on low-signal, no hallucinated dates (the
-"2026-08" that appeared in its output was *legitimately in the
-source observations*), correct `kind: rule` classification.
-Notable: fixture 3 took 54 s, suggesting variance under load
-or extended reasoning. On multi-topic it produced 5 updates
-vs the 3 the other models settled on - slightly more
-exuberant than Haiku.
+DeepSeek V4 Flash 过了每条可靠性线——5/5 解析、低信号正确克制、无幻觉日期（其输出里的 "2026-08"*确实*在源观察里）、正确的 `kind: rule` 分类。注：夹具 3 花了 54 s，暗示负载下方差或扩展推理。多主题上它产出 5 条更新、多于其他模型收敛的 3 条——比 Haiku 略奔放。
 
-## Comprehensive ranking - all six providers
+## 综合排名——全部六个提供方
 
-Ranking on a 0–5 scale per axis, then aggregated.
-**Higher is better** in every column except Cost (where
-lower-cost gets a higher score). Bold = best in that column.
-Rows sorted by overall fitness for ai-memory.
+逐轴 0-5 打分再聚合。除成本（低成本得高分）外**每列越高越好**。粗体 = 该列最佳。按对 ai-memory 的整体适配排序。
 
-| # | Provider | Parse | Speed | Cost† | Faithfulness | Restraint | Classification | Fitness |
+| # | 提供方 | 解析 | 速度 | 成本† | 忠实度 | 克制 | 分类 | 适配 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **Haiku 4.5** | 5 | 4 | 3 | 5 | **5** | **5** | **5** - recommended default |
-| 2 | **GPT-5.4-mini** | 5 | **5** | **5** | 5 | 3 | 4 | 4 - cheaper alternative |
-| 3 | **qwen3:32b (Ollama)** | 5 | 1 | **5** ($0) | 5 | **5** | 4 | 4 - free if you have a local server |
-| 4 | DeepSeek V4 Flash | 5 | 2 | 4 | 5 | **5** | **5** | 4 - no edge over GPT-mini or Haiku |
-| 5 | Sonnet 4.5 | 5 | 4 | 1 | 4‡ | 4 | 3 | 3 - displaced by Haiku |
-| 6 | Kimi-K2.6 | 0 | 0 | n/a | n/a | n/a | n/a | **0** - ineligible (reasoning model) |
+| 1 | **Haiku 4.5** | 5 | 4 | 3 | 5 | **5** | **5** | **5**——推荐默认 |
+| 2 | **GPT-5.4-mini** | 5 | **5** | **5** | 5 | 3 | 4 | 4——更便宜替代 |
+| 3 | **qwen3:32b（Ollama）** | 5 | 1 | **5**（$0） | 5 | **5** | 4 | 4——有本地服务器则免费 |
+| 4 | DeepSeek V4 Flash | 5 | 2 | 4 | 5 | **5** | **5** | 4——对 GPT-mini 或 Haiku 无优势 |
+| 5 | Sonnet 4.5 | 5 | 4 | 1 | 4‡ | 4 | 3 | 3——被 Haiku 取代 |
+| 6 | Kimi-K2.6 | 0 | 0 | 无 | 无 | 无 | 无 | **0**——不合格（推理模型） |
 
-† Cost score derived from order-of-magnitude $/M output tokens:
-$0 (qwen3) = 5; ~$0.40 (DeepSeek) = 4; ~$1 (GPT-mini) = 5 by
-amortised cost-per-task; ~$5 (Haiku) = 3; ~$15 (Sonnet) = 1.
+† 成本分从 $/M 输出 token 量级派生：$0（qwen3）= 5；~$0.40（DeepSeek）= 4；~$1（GPT-mini）= 按摊销的每任务成本算 5；~$5（Haiku）= 3；~$15（Sonnet）= 1。
 
-‡ Sonnet's faithfulness was 2/5 with the loose prompt (invented
-dates, fabricated alternatives sections). It recovers to 4
-after the tightened prompt - but Haiku achieved that same level
-without needing the prompt change as much, suggesting Haiku has
-better defaults for this task.
+‡ Sonnet 宽松提示词下忠实度 2/5（发明日期、捏造备选小节）。收紧提示词后恢复到 4——但 Haiku 不那么依赖提示词改动就达到同一水平，说明 Haiku 在此任务上有更好的默认。
 
-### Why each column matters
+### 每列为什么重要
 
-- **Parse**: structural reliability. Anything less than 5/5
-  means production consolidation can fail silently and lose
-  observations.
-- **Speed**: matters less for consolidation (it's a background
-  job) but compounds for lint sweeps over many pages and
-  affects developer iteration on the prompt itself.
-- **Cost**: integrates over N sessions/day × 365 days.
-  Inexpensive options change the cost from monthly-recurring
-  to negligible.
-- **Faithfulness**: does the model only write what's in the
-  observations? Critical for a *memory* wiki - fabrication
-  corrupts the long-term record.
-- **Restraint**: does the model resist manufacturing pages
-  when the session is low-signal? Lack of restraint pollutes
-  the wiki with thin, manufactured "decision" pages that
-  outweigh real content.
-- **Classification**: does the model correctly mark rules as
-  `kind: rule`, decisions as `kind: decision`, etc.? Wrong
-  classification breaks the consolidator's auto-routing to
-  `_rules/<slug>.md`.
-- **Fitness for ai-memory**: holistic verdict per provider for
-  this specific consolidation workload. Not a generic LLM
-  benchmark.
+- **解析**：结构可靠性。低于 5/5 意味着生产整编可能静默失败并丢观察。
+- **速度**：对整编不那么要紧（后台任务），但在多页 lint 清扫上复利、且影响对提示词本身的开发迭代。
+- **成本**：对每天 N 会话 × 365 天积分。便宜选项把成本从月度经常性变成可忽略。
+- **忠实度**：模型是否只写观察里有的东西？对*记忆* wiki 至关重要——捏造腐蚀长期记录。
+- **克制**：会话低信号时模型是否抵得住制造页面？缺克制用稀薄的、制造的「决策」页污染 wiki、盖过真实内容。
+- **分类**：模型是否正确把规则标 `kind: rule`、决策标 `kind: decision` 等？错误分类破坏整编器到 `_rules/<slug>.md` 的自动路由。
+- **对 ai-memory 的适配**：每个提供方对这个具体整编工作负载的整体裁决。不是通用 LLM 基准。
 
-### Final ordering
+### 最终排序
 
-For ai-memory's consolidation task specifically:
+专就 ai-memory 的整编任务：
 
-1. **Haiku 4.5** - **recommended default for most users.**
-   Hosted (always available), 7 s avg latency, restraint +
-   classification top of the field, ~$0.02/run is negligible
-   for personal use. The benchmark every other option is
-   measured against.
-2. **GPT-5.4-mini** - **cheaper hosted alternative.** ~5×
-   cheaper than Haiku, 2× faster (4 s avg). Only weakness is
-   mild over-classification on trivial sessions
-   (manufactures one extra "decisions/" page on a typo-fix
-   session). If budget matters more than restraint, pick
-   this.
-3. **qwen3:32b on Ollama** - **free alternative for those
-   with a local server.** $0 per consolidation. ~92 s
-   latency is invisible because consolidation is a background
-   job. Restraint + faithfulness match the top hosted models.
-   Requires Ollama (or compatible OpenAI-compat server) with
-   `qwen3:32b` pulled and enough RAM/VRAM (~20 GB) to keep
-   it warm.
-4. **DeepSeek V4 Flash** - **solid but no clear edge.** All
-   reliability bars met, faithful, restrained, correctly
-   classifies rules. But GPT-mini matches it on quality and
-   beats it on speed; Haiku matches it on quality and beats
-   it on classification consistency. Pick only if your
-   workflow is already DeepSeek-leaning.
-5. **Sonnet 4.5** - **strictly dominated by Haiku** for
-   plain consolidation. 3× the cost for the same parse rate
-   and only marginally different latency. Reserve for tasks
-   that *specifically* need extended reasoning (cross-page
-   lint sweeps that compare contradictory claims across many
-   pages, or for sparse-observation sessions where you want
-   the model to infer more aggressively).
-6. **Kimi-K2.6** - **ineligible.** Reasoning model burns
-   `max_tokens` budget on internal thinking before emitting
-   visible content. Hangs indefinitely on strict-JSON
-   prompts. Same caveat applies to any other reasoning-mode
-   model (Claude with extended thinking, GPT-o3, Gemini
-   "thinking" variants) - turn reasoning off or budget
-   tokens with consumption in mind before using them here.
+1. **Haiku 4.5**——**多数用户的推荐默认。**托管（总是可用）、平均 7 s 延迟、克制 + 分类全场最佳、个人使用下 ~$0.02/次可忽略。其他一切选项的丈量基准。
+2. **GPT-5.4-mini**——**更便宜的托管替代。**比 Haiku 便宜约 5 倍、快 2 倍（平均 4 s）。唯一弱点是琐碎会话上轻度过度分类（为修错字会话多造一页 "decisions/"）。预算比克制要紧就选它。
+3. **Ollama 上的 qwen3:32b**——**有本地服务器者的免费替代。**每次整编 $0。约 92 s 延迟不可见，因为整编是后台任务。克制 + 忠实度匹敌顶级托管模型。要求 Ollama（或兼容的 OpenAI-compat 服务器）已拉取 `qwen3:32b` 且有足够 RAM/VRAM（约 20 GB）保温。
+4. **DeepSeek V4 Flash**——**扎实但无明确优势。**全部可靠性线达标、忠实、克制、正确分类规则。但 GPT-mini 质量持平、速度更胜；Haiku 质量持平、分类一致性更胜。只在你的工作流已偏向 DeepSeek 时选。
+5. **Sonnet 4.5**——纯整编上**被 Haiku 严格支配**。3 倍价格、同样解析率、延迟仅略不同。留给*专门*需要扩展推理的任务（跨页比较矛盾论断的 lint 清扫，或观察稀少、希望模型更激进推断的会话）。
+6. **Kimi-K2.6**——**不合格。**推理模型在发出可见内容前把 `max_tokens` 预算烧在内部思考上。严格 JSON 提示词上无限挂起。同样的告诫适用于其他推理模式模型（开 extended thinking 的 Claude、GPT-o3、Gemini "thinking" 变体）——先关推理或把消耗算进预算再用到这里。
 
-## Qualitative read (Run 2)
+## 定性读法（第 2 轮）
 
-Reading the raw `.md` outputs side-by-side reveals a
-substantive style difference that the parse-rate numbers
-don't capture:
+并排读原始 `.md` 输出揭示解析率数字捕捉不到的实质风格差异：
 
-- **Sonnet writes long, comprehensive entries.** A concept
-  page on Docker multi-stage builds will get 3 KB of well-
-  organised prose including "When to use" / "When NOT to use"
-  / "Gotchas" sections - content that *wasn't in the
-  observations*. The model is generating useful tutorial-style
-  content, not strictly consolidating what happened.
-  Sonnet's fixture 05 page invented a `Date: 2025-01-23`
-  field that has no source in the observations.
+- **Sonnet 写长而全面的条目。**一个 Docker 多阶段构建的概念页会有 3 KB 组织良好的散文，含 "When to use" / "When NOT to use" / "Gotchas" 小节——*观察里没有的*内容。模型在生成有用的教程式内容、不是严格整编发生过的事。Sonnet 的夹具 05 页发明了观察里无来源的 `Date: 2025-01-23` 字段。
 
-- **qwen3 writes terse, faithful entries.** Each page captures
-  what the session actually contained, in ~500–800 chars.
-  No invented metadata, no generic tutorial filler. The same
-  Docker page from qwen3 stays close to "we changed the
-  Dockerfile to two-stage, image went 380→67 MB" without
-  diverging into broader best-practices discussion.
+- **qwen3 写简短、忠实的条目。**每页约 500-800 字符捕捉会话实际包含的东西。无发明元数据、无泛型教程填充。同一 Docker 页 qwen3 保持贴近「我们把 Dockerfile 改成两段、镜像从 380→67 MB」而不发散到更宽的最佳实践讨论。
 
-For **wiki consolidation** (faithful long-term memory of
-*this project*, not a knowledge graph of general best
-practices), **qwen3's restraint is arguably preferable** to
-Sonnet's exuberance. The point of the wiki is to record what
-happened in the project, not to host re-generated tutorial
-content the model already knows.
+对 **wiki 整编**（*本项目*的忠实长期记忆、不是通用最佳实践的知识图谱），**qwen3 的克制可以说优于** Sonnet 的奔放。wiki 的意义是记录项目里发生过的事，不是托管模型已经知道的再生成教程内容。
 
-That said, when the project memory is genuinely sparse and
-the model is asked to surface durable knowledge, Sonnet's
-"fill in the obvious" tendency could pay off. Different
-tasks → different preferences.
+不过，项目记忆真的稀疏、且模型被要求浮出持久知识时，Sonnet 的「补上显然的」倾向可能有用。任务不同 → 偏好不同。
 
-## Verdict
+## 裁决
 
-After three iterations of fixes (schema → first prompt → tightened
-prompt), the picture is clear:
+三轮修复（schema → 第一版提示词 → 收紧提示词）之后，图景清晰：
 
-### Production default: Ollama qwen3:32b
+### 生产默认：Ollama qwen3:32b
 
-- **Parse**: 5/5 (tightened prompt)
-- **Latency**: ~92 s avg end-to-end. Acceptable because
-  consolidation is a background job, not interactive.
-- **Cost**: **$0 per consolidation** (electricity not modeled).
-- **Fidelity**: comparable to or better than the hosted models
- - qwen3 was the most faithful provider in Run 2's old-prompt
-  comparisons.
+- **解析**：5/5（收紧提示词）。
+- **延迟**：端到端平均约 92 s。可接受，因为整编是后台任务、非交互。
+- **成本**：**每次整编 $0**（电费未计）。
+- **保真**：匹敌或优于托管模型——qwen3 在第 2 轮旧提示词对比里是最忠实的提供方。
 
-### Best hosted fallback: Claude Haiku 4.5
+### 最佳托管回退：Claude Haiku 4.5
 
-If the homelab is unreachable, or for one-off complex
-consolidations, **Haiku 4.5 is the right hosted choice - not
-Sonnet 4.5**:
+家庭实验室够不到、或一次性复杂整编时，**Haiku 4.5 是正确的托管选择——不是 Sonnet 4.5**：
 
-- **2× faster** than Sonnet at every fixture.
-- **~3× cheaper** per token (Anthropic published pricing:
-  Haiku 4.5 ≈ $1/$5 per M input/output tokens vs Sonnet 4.5
-  ≈ $3/$15).
-- **Less hallucination-prone** even on the loose prompt.
-- **Better classification** on at least one fixture (correctly
-  identified the rule that Sonnet flattened to a gotcha).
-- Same 5/5 parse reliability.
+- 每个夹具上都比 Sonnet **快 2 倍**。
+- 每 token **便宜约 3 倍**（Anthropic 公布价：Haiku 4.5 ≈ $1/$5 每百万输入/输出 token，Sonnet 4.5 ≈ $3/$15）。
+- 即便宽松提示词也**更少幻觉倾向**。
+- 至少一个夹具上**分类更好**（正确识别了 Sonnet 压扁成 gotcha 的规则）。
+- 同样 5/5 解析可靠性。
 
-### Sonnet 4.5 - displaced by Haiku for this task
+### Sonnet 4.5——此任务被 Haiku 取代
 
-Sonnet's reasoning headroom doesn't help consolidation. With
-the loose prompt it expressed itself as *more hallucination*
-(invented dates, fabricated alternative-considered tables,
-tutorial-style filler). The tightened prompt brings Sonnet in
-line, but Haiku gives identical reliability faster and
-cheaper. Reserve Sonnet for tasks where the extra reasoning
-matters (e.g. cross-page lint sweeps that compare contradictory
-claims).
+Sonnet 的推理余量帮不了整编。宽松提示词下它表现为*更多幻觉*（发明日期、捏造备选表、教程式填充）。收紧提示词让 Sonnet 归队，但 Haiku 更快更便宜地给出同等可靠性。把 Sonnet 留给额外推理要紧的任务（如比较矛盾论断的跨页 lint 清扫）。
 
-### Kimi-K2.6 - ineligible
+### Kimi-K2.6——不合格
 
-Reasoning model - burns `max_tokens` budget internally before
-emitting visible content. Run hung for 16+ minutes on fixture 1
-under the strict-JSON prompt. Direct probe confirmed: `content:
-null` with the entire token budget consumed by `reasoning`.
-Not a prompt problem; the model is structurally wrong for
-strict-JSON output. Same caveat applies to other reasoning-
-mode models if used in this pipeline.
+推理模型——发出可见内容前内部烧 `max_tokens` 预算。严格 JSON 提示词下运行在夹具 1 挂了 16 分钟以上。直接探测证实：`content: null`、整个 token 预算被 `reasoning` 消耗。不是提示词问题；该模型在结构上就不适合严格 JSON 输出。同样的告诫适用于其他推理模式模型用在这条管线上时。
 
-### Cost / latency snapshot
+### 成本 / 延迟快照
 
-| Provider | $/run* | latency | notes |
+| 提供方 | $/次* | 延迟 | 说明 |
 |---|---|---|---|
-| Ollama qwen3:32b (local) | **$0** | ~92 s | electricity not modeled |
-| GPT-5.4-mini (OpenRouter) | ~$0.005 | **~4 s** | fastest + cheapest hosted |
-| DeepSeek V4 Flash (OpenRouter) | ~$0.005 | ~22 s | cheap but slower than GPT-mini |
-| Haiku 4.5 (OpenRouter) | ~$0.02 | ~7 s | best restraint/classification |
-| Sonnet 4.5 (OpenRouter) | ~$0.06 | ~11 s | 3× cost of Haiku for same task |
-| Kimi-K2.6 (OpenRouter) | n/a | ✗ hangs | reasoning model - ineligible |
+| Ollama qwen3:32b（本地） | **$0** | ~92 s | 电费未计 |
+| GPT-5.4-mini（OpenRouter） | ~$0.005 | **~4 s** | 最快 + 最便宜托管 |
+| DeepSeek V4 Flash（OpenRouter） | ~$0.005 | ~22 s | 便宜但比 GPT-mini 慢 |
+| Haiku 4.5（OpenRouter） | ~$0.02 | ~7 s | 克制/分类最佳 |
+| Sonnet 4.5（OpenRouter） | ~$0.06 | ~11 s | 同样任务 3 倍于 Haiku 的价格 |
+| Kimi-K2.6（OpenRouter） | 无 | ✗ 挂起 | 推理模型——不合格 |
 
-\* Rough order of magnitude; ai-memory consolidations land
-around 2–3 KB of output with the tightened prompt. Per-run $
-multiplies $/M-tokens by the input+output token budget.
+\* 量级估计；收紧提示词下 ai-memory 整编产出约 2-3 KB。每次的 $ 是 $/M-token 乘以输入 + 输出 token 预算。
 
-### When to revisit
+### 何时重评
 
-Re-run this harness when any of the following changes:
+以下任一变化时重跑本框架：
 
-- The consolidation prompt itself is re-engineered
-- A new Ollama model is pulled (e.g. when Qwen 3.5 stable
-  drops for Ollama)
-- A new fixture is added to `evals/fixtures/`
-- The home server hardware changes
-- A local engine changes its `response_format=json_schema` implementation,
-  making a fresh default-vs-`AI_MEMORY_LLM_COMPAT_STRICT=false` comparison
-  worthwhile
+- 整编提示词本身被重新设计
+- 拉取了新的 Ollama 模型（如 Qwen 3.5 stable 登陆 Ollama 时）
+- `evals/fixtures/` 加了新夹具
+- 家用服务器硬件变化
+- 某本地引擎改了 `response_format=json_schema` 实现，让默认 vs `AI_MEMORY_LLM_COMPAT_STRICT=false` 的新对比值得做
 
-## How to reproduce
+## 如何复现
 
-### Pre-requisites
+### 前提
 
-- Repo checkout + `cargo` toolchain (Rust 1.95+, as pinned in
-  `rust-toolchain.toml`).
-- An OpenRouter API key, exported as `OPENROUTER_API_KEY` -
-  pays the Kimi + Sonnet legs.
-- A reachable Ollama with `qwen3:32b` pulled. The default URL
-  in the docs assumes the homelab; substitute your own.
+- 仓库检出 + `cargo` 工具链（Rust 1.95+，按 `rust-toolchain.toml` 钉住）。
+- OpenRouter API key，export 为 `OPENROUTER_API_KEY`——支付 Kimi + Sonnet 腿。
+- 可达的 Ollama 且已拉取 `qwen3:32b`。文档里的默认 URL 假设家庭实验室；换成你自己的。
 
-### Run the harness
+### 跑框架
 
-The canonical 2-side invocation (the harness compares two
-providers per run):
+规范的双方调用（框架每次对比两个提供方）：
 
 ```bash
 cargo run -p ai-memory-eval --release -- \
@@ -741,39 +478,32 @@ cargo run -p ai-memory-eval --release -- \
     --candidate-api-key  ollama-local
 ```
 
-For a 3-way comparison, run the harness three times pairing the
-candidate (the model you're considering switching to) against
-each baseline you want to compare against. Output dirs are
-timestamped, so they don't collide.
+三方对比时，把候选方（你考虑切换到的模型）对每个想比的基线各跑一次框架。输出目录带时间戳、不冲突。
 
-### Read the output
+### 读输出
 
 ```
 evals/runs/<timestamp>/
 ├── baseline/
-│   ├── 01-rust-bug-fix.json          ← parsed structured output (if any)
-│   ├── 01-rust-bug-fix.md            ← flat-rendered for eyeballing
-│   ├── 01-rust-bug-fix.raw.txt       ← exact model output, always present
+│   ├── 01-rust-bug-fix.json          ← 解析出的结构化输出（若有）
+│   ├── 01-rust-bug-fix.md            ← 平铺渲染供目检
+│   ├── 01-rust-bug-fix.raw.txt       ← 模型精确输出，总有
 │   └── 01-rust-bug-fix.meta.json     ← {elapsed_ms, parsed_ok, update_count, error}
 └── candidate/
     └── ...
 ```
 
-The `.raw.txt` files are the most informative artifact when a
-parse fails - they show *exactly* what the model said, so you
-can tell whether the failure was format (model emitted prose),
-schema (model used integer enums), or substance (model
-produced nothing useful).
+解析失败时 `.raw.txt` 文件信息量最大——它们展示模型说的*精确内容*，让你分清失败是格式（模型发了散文）、schema（模型用了整数枚举）、还是实质（模型没产出有用的东西）。
 
-For side-by-side reading the runner prints a hint:
+并排阅读时运行器打印提示：
 
 ```
 compare with: diff -ru <run>/baseline <run>/candidate
 ```
 
-### Adding new fixtures
+### 加新夹具
 
-Each fixture is a JSON file under `evals/fixtures/`:
+每个夹具是 `evals/fixtures/` 下的 JSON 文件：
 
 ```json
 {
@@ -787,52 +517,26 @@ Each fixture is a JSON file under `evals/fixtures/`:
 }
 ```
 
-`kind` accepts any string the
-[`ObservationKind`](../crates/ai-memory-core/src/observation.rs)
-enum's `FromStr` understands. Anything unknown silently falls
-back to `Other`.
+`kind` 接受 [`ObservationKind`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-core/src/observation.rs) 枚举 `FromStr` 认识的任何字符串。未知值静默回退 `Other`。
 
-Try to hit one of the four hard cases:
+争取命中四个硬情形之一：
 
-1. **Multi-page extraction** - does the model split a session
-   into the right slices?
-2. **Restraint** - does it avoid manufacturing pages when
-   there's nothing durable?
-3. **Classification** - does it correctly choose `kind: rule`
-   for project rules?
-4. **Topic separation** - does it produce separate pages per
-   unrelated topic instead of mashing them?
+1. **多页提取**——模型是否把会话切成正确的片？
+2. **克制**——没有持久内容时是否抵得住制造页面？
+3. **分类**——项目规则是否正确选 `kind: rule`？
+4. **主题分离**——是否按无关主题产出独立页面而不是揉在一起？
 
-## What's NOT in this harness (yet)
+## 本框架还没有的（暂时）
 
-- **Automated quality scoring.** The runner only reports
-  objective deltas (latency, parse rate, update count).
-  Anything subtler (faithfulness, hallucination, scoping)
-  needs a human reader.
-- **Embedding A/B.** This document is LLM-only. The embedding
-  provider switch (OpenAI text-embedding-3-small → Ollama
-  nomic-embed-text) gets its own writeup when there's enough
-  page-side data to measure retrieval quality.
-- **LLM-as-judge scoring.** Adding a third "judge" model to
-  score the candidate outputs against a rubric would
-  automate quality measurement. Not built; the next layer up
-  if this harness gets used regularly.
+- **自动化质量打分。**运行器只报告客观增量（延迟、解析率、更新数）。更细微的（忠实度、幻觉、范围）需要人读。
+- **嵌入 A/B。**本文档仅限 LLM。嵌入提供方切换（OpenAI text-embedding-3-small → Ollama nomic-embed-text）等页面侧数据够度量检索质量时单独成文。
+- **LLM 当裁判。**加第三个「裁判」模型按 rubric 给候选输出打分可以自动化质量度量。未建；本框架被常态化使用后的下一层。
 
-## Future work
+## 未来工作
 
-If we end up running this harness routinely:
+如果最终常态化跑本框架：
 
-1. Add a third position (`--judge-*`) so a separate "judge"
-   model can score baseline vs candidate per fixture against a
-   rubric, producing a numeric quality delta.
-2. Extend fixtures with a `must_mention` / `must_not_mention`
-   keyword list so we can compute simple keyword recall
-   automatically (catches obvious hallucinations / missing
-   facts).
-3. Parallel embedding-retrieval eval: a probe set of queries
-   each tagged with the expected target wiki page; compute
-   recall@5 + MRR for two embedding models against the same
-   indexed corpus.
-4. Persist a leaderboard somewhere durable (a wiki page,
-   ironically) so we don't lose track of which model performed
-   best on which fixture across runs.
+1. 加第三个位置（`--judge-*`），让独立的「裁判」模型逐夹具按 rubric 给基线 vs 候选打分，产出数值质量差。
+2. 给夹具扩展 `must_mention` / `must_not_mention` 关键词表，自动计算简单关键词召回（抓住明显幻觉 / 缺失事实）。
+3. 并行嵌入检索评测：一组带预期目标 wiki 页的探测查询；对两个嵌入模型在同一已索引语料上算 recall@5 + MRR。
+4. 把排行榜持久化到某处（讽刺的是、一页 wiki），免得跨运行丢失哪个模型在哪个夹具上表现最好的记录。
