@@ -1,113 +1,112 @@
 ---
-title: "Karpathy's \"LLM Wiki\" - Research Report"
-description: "The canonical primary source is Karpathy's April 2026 gist llm-wiki.md, which he calls an \"idea file\" - explicitly not a library or app, but a pattern designed to be copy-pasted in"
+title: "Karpathy 的「LLM wiki」调研报告"
+description: "权威一手来源是 Karpathy 2026 年 4 月的 gist llm-wiki.md——他称之为「点子文件」：明确不是库也不是应用，而是一个设计成拷贝进智能体里的模式。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-karpathy-llm-wiki.md"
 ---
 
-# Karpathy's "LLM Wiki" - Research Report
+# Karpathy 的「LLM wiki」调研报告
 
-> The pattern this project is trying to implement faithfully. Primary source
-> below; related/competing ideas listed for honest contrast.
+> 本项目试图忠实实现的模式。一手来源如下；相关/竞争想法列出以供诚实对比。
 
-## 1. What Karpathy Actually Said
+## 1. Karpathy 实际说了什么
 
-The canonical primary source is Karpathy's April 2026 gist [`llm-wiki.md`](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), which he calls an **"idea file"** - explicitly *not* a library or app, but a pattern designed to be copy-pasted into an agent (Claude Code, Codex, OpenCode) so the agent can instantiate it for the user's domain.
+权威一手来源是 Karpathy 2026 年 4 月的 gist [`llm-wiki.md`](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)，他称之为**「点子文件（idea file）」**——明确*不是*库也不是应用，而是一个设计成拷贝进智能体（Claude Code、Codex、OpenCode）里的模式，让智能体为用户的领域把它实例化。
 
-The original framing came from an X thread on April 2, 2026, paraphrased as: *"using LLMs to build personal knowledge bases for various topics of research interest"*. He followed up two days later with the gist. He then [boosted "Farzapedia"](https://x.com/karpathy/status/2040572272944324650) as a good example of the pattern in the wild.
+最初的表述来自 2026 年 4 月 2 日的一条 X 线程，转述为：*「用 LLM 为各种研究兴趣主题构建个人知识库」*。两天后他跟进了这份 gist。之后他[推荐了「Farzapedia」](https://x.com/karpathy/status/2040572272944324650)作为该模式在野外的好例子。
 
-### The core argument (verbatim from the gist)
+### 核心论点（gist 原文）
 
-> "Most people's experience with LLMs and documents looks like RAG: you upload a collection of files, the LLM retrieves relevant chunks at query time, and generates an answer. This works, but the LLM is rediscovering knowledge from scratch on every question. There's no accumulation."
+> 「大多数人与 LLM 和文档打交道的体验像 RAG：你上传一组文件，LLM 在查询时检索相关片段并生成答案。这可行，但 LLM 在每个问题上都从零重新发现知识。没有累积。」
 
-> "Instead of just retrieving from raw documents at query time, the LLM **incrementally builds and maintains a persistent wiki** — a structured, interlinked collection of markdown files that sits between you and the raw sources. When you add a new source, the LLM doesn't just index it for later retrieval. It reads it, extracts the key information, and integrates it into the existing wiki — updating entity pages, revising topic summaries, noting where new data contradicts old claims, strengthening or challenging the evolving synthesis. The knowledge is compiled once and then *kept current*, not re-derived on every query."
+> 「LLM 不只是查询时从原始文档里检索，而是**增量地构建并维护一个持久 wiki**——一组结构化、相互链接的 markdown 文件，坐在你和原始来源之间。你加入新来源时，LLM 不只是为日后检索做索引。它阅读、提取关键信息、并整合进既有 wiki——更新实体页、修订主题摘要、标注新数据与旧论断矛盾之处、强化或挑战演进中的综合。知识编译一次然后*保持最新*，而不是每个查询重新推导。」
 
-> "The wiki is a persistent, compounding artifact. The cross-references are already there. The contradictions have already been flagged."
+> 「wiki 是一个持久的、复利的产物。交叉引用已经就位。矛盾已经被标出。」
 
-> "The tedious part of maintaining a knowledge base is not the reading or the thinking — it's the bookkeeping... LLMs don't get bored, don't forget to update a cross-reference, and can touch 15 files in one pass."
+> 「维护知识库的乏味部分不是阅读或思考——是簿记……LLM 不会无聊、不会忘了更新交叉引用、能一次触碰 15 个文件。」
 
-He explicitly links the idea to Vannevar Bush's 1945 Memex - "a personal, curated knowledge store with associative trails between documents" - arguing the part Bush couldn't solve was *who does the maintenance*; LLMs solve that.
+他明确把这个想法连到 Vannevar Bush 1945 年的 Memex——「一个带文档间联想路径的、个人化的、策展的知识存储」——并论证 Bush 没解决的*谁来维护*那一环由 LLM 补上。
 
-## 2. The Core Principles
+## 2. 核心原则
 
-From the gist itself (Karpathy's, not paraphrased):
+来自 gist 本身（Karpathy 的原文，非转述）：
 
-1. **Compilation, not retrieval.** Knowledge is compiled at ingest time, not re-synthesized at query time. The wiki is the artifact; raw sources are the source of truth.
-2. **Three-layer architecture.**
-  - **Raw sources** - immutable; LLM reads only.
-  - **Wiki** - markdown files; LLM owns and maintains entirely.
-  - **Schema** (CLAUDE.md / AGENTS.md) - conventions that turn "a generic chatbot into a disciplined wiki maintainer."
-3. **Three operations: Ingest / Query / Lint.**
-  - *Ingest*: one source typically touches **10–15 wiki pages**.
-  - *Query*: "good answers can be filed back into the wiki as new pages... explorations compound in the knowledge base just like ingested sources do."
-  - *Lint*: periodic health check for contradictions, stale claims, orphan pages, missing cross-references, data gaps.
-4. **Cross-linking is the synthesis.** The wiki is interlinked like Wikipedia or a fan wiki (he cites [Tolkien Gateway](https://tolkiengateway.net/wiki/Main_Page)); the graph *is* the consolidated knowledge.
-5. **Two navigation files: `index.md` (content catalog) and `log.md` (chronological append-only ledger).** The log uses a fixed prefix so unix tools (`grep "^## \["`) can parse it.
-6. **Division of labor.** Human curates sources and asks good questions; the LLM does "the summarizing, cross-referencing, filing, and bookkeeping." Or in his metaphor: *"Obsidian is the IDE; the LLM is the programmer; the wiki is the codebase."*
+1. **编译，不是检索。** 知识在摄取时编译，不在查询时重新合成。wiki 是产物；原始来源是事实源。
+2. **三层架构。**
+  - **原始来源**——不可变；LLM 只读。
+  - **wiki**——markdown 文件；LLM 完全拥有并维护。
+  - **schema**（CLAUDE.md / AGENTS.md）——把「一个泛用聊天机器人」变成「一个有纪律的 wiki 维护者」的约定。
+3. **三个操作：摄取 / 查询 / Lint。**
+  - *摄取*：一个来源典型地触碰 **10–15 个 wiki 页面**。
+  - *查询*：「好答案可以归档回 wiki 成为新页面……探索像摄取的来源一样在知识库里复利。」
+  - *Lint*：周期性健康检查——矛盾、过期论断、孤儿页、缺失交叉引用、数据空洞。
+4. **交叉链接即综合。** wiki 像 Wikipedia 或粉丝 wiki 那样互联（他引用 [Tolkien Gateway](https://tolkiengateway.net/wiki/Main_Page)）；图*就是*浓缩后的知识。
+5. **两个导航文件：`index.md`（内容目录）与 `log.md`（按时间只追加的台账）。** 日志用固定前缀让 unix 工具（`grep "^## \["`）能解析。
+6. **分工。** 人类策展来源、提出好问题；LLM 做「摘要、交叉引用、归档与簿记」。或者用他的比喻：*「Obsidian 是 IDE；LLM 是程序员；wiki 是代码库。」*
 
-### What Karpathy did *not* explicitly say (honest caveats)
+### Karpathy 没有明确说的（诚实告示）
 
-The community frequently attributes a few additional ideas to him that are **paraphrase / extension**, not in his gist:
+社区经常把几个额外想法归于他，那些是**转述/扩展**，不在他的 gist 里：
 
-- **Episodic vs. semantic memory tiers** - neuroscience framing. Not in the gist. This comes from extensions like [LLM Wiki v2](https://gist.github.com/rohitg00/2067ab416f7bbe447c1977edaaa681e2) and the broader memory-research literature.
-- **"Sleep-like" consolidation passes** - also extension framing, not Karpathy's. His closest analog is the *Lint* operation (periodic health-check), which is rule-based rather than dream-like.
-- **Confidence scoring, Ebbinghaus decay, supersession semantics** - these are LLM Wiki v2's additions, not the original.
-- **The numbered "1. Explicit. 2. ..." Farzapedia points** - community summaries say Karpathy listed several advantages of *explicit memory artifacts* over the "AI that allegedly gets better the more you use it" status quo. Flagged as **community paraphrase**.
+- **情节 vs 语义记忆层级**——神经科学框架。不在 gist 里。来自 [LLM Wiki v2](https://gist.github.com/rohitg00/2067ab416f7bbe447c1977edaaa681e2) 这类扩展与更广的记忆研究文献。
+- **「类睡眠」整编**——同样是扩展框架，不是 Karpathy 的。他最接近的类比是 *Lint* 操作（周期性健康检查），基于规则而非梦境。
+- **置信度打分、艾宾浩斯衰减、取代语义**——这些是 LLM Wiki v2 的添加，不是原作。
+- **编号的「1. Explicit. 2. ……」Farzapedia 要点**——社区总结说 Karpathy 列了显式记忆产物优于「 allegedly 越用越好的 AI」现状的若干优势。标记为**社区转述**。
 
-## 3. Implementation Hints from the Gist
+## 3. gist 里的实现提示
 
-- **Trigger**: human-in-the-loop on ingest ("I prefer to ingest sources one at a time and stay involved"), though batch ingestion is allowed.
-- **Format**: plain markdown in a git repo. Optional YAML frontmatter for Dataview queries.
-- **Retrieval at small scale**: `index.md` is "surprisingly good... at ~100 sources, ~hundreds of pages" - no embeddings needed.
-- **Retrieval at larger scale**: shell out to a local hybrid search tool (he names [`qmd`](https://github.com/tobi/qmd), BM25 + vector + LLM re-rank, available as CLI and MCP).
-- **Tooling**: Obsidian as the viewer (graph view to spot orphan/hub pages), Web Clipper to capture sources, version-controlled in git.
+- **触发**：摄取时人在环上（「我偏好一次摄取一个来源并保持参与」），但批量摄取也允许。
+- **格式**：git 仓库里的纯 markdown。可选 YAML frontmatter 供 Dataview 查询。
+- **小规模检索**：`index.md`「好得出奇……约 100 个来源、数百个页面时」——不需要嵌入。
+- **更大规模检索**：shell 出去调本地混合检索工具（他点名 [`qmd`](https://github.com/tobi/qmd)，BM25 + 向量 + LLM 重排，有 CLI 与 MCP 形态）。
+- **工具**：Obsidian 作查看器（图视图找孤儿/枢纽页）、Web Clipper 抓来源、git 做版本控制。
 
-## 4. Related / Competing Ideas
+## 4. 相关 / 竞争想法
 
-- **MemGPT / Letta** ([letta.com](https://www.letta.com/blog/benchmarking-ai-agent-memory)): treats the context window as virtual memory; the *agent itself* decides what to page in/out across core, recall, and archival tiers. Stronger on long-horizon episodic coherence; higher lock-in (owns the agent loop).
-- **Mem0** ([tokenmix.ai comparison](https://tokenmix.ai/blog/ai-agent-memory-mem0-vs-letta-vs-memgpt-2026)): lightweight memory layer with `extract / store / retrieve`. Extracts memories *passively* from conversations rather than letting the agent self-edit. Low lock-in.
-- **A-MEM** ([arXiv 2502.12110](https://arxiv.org/abs/2502.12110), NeurIPS 2025): explicitly Zettelkasten-inspired. Each memory is an atomic note with structured attributes, keywords, tags; new memories trigger *evolution* of existing notes' representations. This is the closest published research analog to Karpathy's wiki - atomic notes + automatic linking + revision propagation.
-- **ReadAgent** (Google DeepMind, 2024): "gist memory" - compresses long contexts into a tree of summaries with pointers back to detail. Different angle (long-document reading), but shares the "compile, don't re-retrieve" instinct.
-- **LLM Wiki v2** (Rohit Ghumare): explicit extension with confidence scores, supersession, Ebbinghaus decay, four consolidation tiers (working → episodic → semantic → procedural), event-driven hooks, audit trails. This is basically the agentmemory model.
-- **Rowboat / knowledge-graph extension** ([dailydoseofds.com](https://blog.dailydoseofds.com/p/the-next-step-after-karpathys-wiki)): argues the wiki of summaries breaks down for evolving work contexts (deadlines, commitments) and proposes a *typed-entity knowledge graph* (decisions, people, projects as nodes).
+- **MemGPT / Letta**（[letta.com](https://www.letta.com/blog/benchmarking-ai-agent-memory)）：把上下文窗口当虚拟内存；*智能体自己*决定什么在 core、recall、archival 层间换入换出。长时程情节连贯性更强；锁定更深（拥有智能体循环）。
+- **Mem0**（[tokenmix.ai 对比](https://tokenmix.ai/blog/ai-agent-memory-mem0-vs-letta-vs-memgpt-2026)）：带 `extract / store / retrieve` 的轻量记忆层。从对话*被动*提取记忆而不是让智能体自编辑。锁定低。
+- **A-MEM**（[arXiv 2502.12110](https://arxiv.org/abs/2502.12110)，NeurIPS 2025）：明确受卡片盒（Zettelkasten）启发。每条记忆是一个带结构化属性、关键词、标签的原子笔记；新记忆触发既有笔记表示的*演化*。这是已发表研究里最接近 Karpathy wiki 的类比——原子笔记 + 自动链接 + 修订传播。
+- **ReadAgent**（Google DeepMind，2024）：「要点记忆」——把长上下文压缩成一棵摘要树、带指回细节的指针。角度不同（长文档阅读），但共享「编译、不重复检索」的直觉。
+- **LLM Wiki v2**（Rohit Ghumare）：带置信度分数、取代、艾宾浩斯衰减、四层整编（工作 → 情节 → 语义 → 程序）、事件驱动钩子、审计轨迹的显式扩展。基本就是 agentmemory 的模型。
+- **Rowboat / 知识图谱扩展**（[dailydoseofds.com](https://blog.dailydoseofds.com/p/the-next-step-after-karpathys-wiki)）：论证摘要式 wiki 在演化的工作语境（期限、承诺）下失效，并提出*类型化实体知识图谱*（决策、人、项目作节点）。
 
-## 5. Design Implications for a Rust MCP Server for Coding Agents
+## 5. 对面向编码智能体的 Rust MCP 服务器的设计启示
 
-Translating Karpathy faithfully - a "Karpathy-style" backend looks very different from naive vector RAG:
+忠实翻译 Karpathy——一个「Karpathy 式」后端与朴素向量 RAG 长得非常不一样：
 
-**What it is, concretely:**
+**它具体是什么：**
 
-- **Storage = markdown files in a git repo**, not opaque vector blobs. The wiki must be human-inspectable and grep-able. Embeddings can index it but never replace it.
-- **Three directories enforced by the MCP server**: `raw/` (append-only, immutable), `wiki/` (LLM-writable, structured), and a schema doc (`AGENTS.md`-style) the server injects into every session.
-- **MCP tools mirror the three operations**: `memory_ingest`, `memory_query`, `memory_lint` - plus low-level primitives (`wiki_read`, `wiki_write`, `wiki_link`, `wiki_supersede`). Not `vector_search` as the headline tool.
-- **Ingest must be a *write fan-out*, an insert.** A new observation should *touch ~10–15 existing pages* - updating an entity page, a concept page, a decisions log, a gotchas page. This is the single biggest deviation from vector RAG, which only ever appends.
-- **`index.md` and `log.md` as first-class files.** The log is the audit trail and the consolidation trigger source. Use the prefix convention (`## [YYYY-MM-DD] action | title`) so it's grep-able.
-- **Retrieval is hierarchical, nearest-neighbor.** Read `index.md` → narrow to candidate pages → read them → optionally fall back to hybrid search (BM25 + vector, RRF-fused) for novel queries. The index *is* the synthesis; the embeddings are a backstop.
-- **Consolidation is an explicit, scheduled MCP operation**, not a side-effect. `memory_consolidate` is invoked on true session-end hooks where the client exposes them, on the manual `ai-memory finalize-session` flow for clients such as Codex and Antigravity CLI, on compaction events, or on a timer. It is LLM-driven (needs a provider key); if absent, it runs no-op as agentmemory does.
-- **Cross-agent shared state.** Because the wiki is plain text, Claude Code, Codex, and OpenCode all read/write the *same* artifact. The MCP server is the gatekeeper; the markdown is the contract. No vendor lock.
-- **Coding-specific page types**: library gotchas, architectural decisions (ADR-style), failed approaches, repo conventions, environment quirks. Karpathy's example domains were personal/research; for coding agents the high-value pages are *failure modes* and *decisions*, because those are exactly what gets dropped on context compaction.
+- **存储 = git 仓库里的 markdown 文件**，不是不透明的向量 blob。wiki 必须人类可检视、可 grep。嵌入可以索引它但绝不取代它。
+- **MCP 服务器强制三个目录**：`raw/`（只追加、不可变）、`wiki/`（LLM 可写、结构化）、以及服务器注入每个会话的 schema 文档（`AGENTS.md` 式）。
+- **MCP 工具镜像三个操作**：`memory_ingest`、`memory_query`、`memory_lint`——加底层原语（`wiki_read`、`wiki_write`、`wiki_link`、`wiki_supersede`）。招牌工具不是 `vector_search`。
+- **摄取必须是写扇出、一次插入。** 一条新观察应该*触碰约 10–15 个既有页面*——更新一个实体页、一个概念页、决策日志、坑点页。这是与向量 RAG 最大的单一偏差——后者只会追加。
+- **`index.md` 与 `log.md` 是一等公民文件。** 日志是审计轨迹与整编触发源。用前缀约定（`## [YYYY-MM-DD] action | title`）让它可 grep。
+- **检索是层级式的、最近邻的。** 读 `index.md` → 收窄到候选页 → 读它们 → 对新颖查询可选回退到混合检索（BM25 + 向量，RRF 融合）。索引*就是*综合；嵌入是兜底。
+- **整编是显式的、计划性的 MCP 操作**，不是副作用。`memory_consolidate` 在客户端暴露真会话结束钩子的地方被真会话结束钩子触发，在 Codex、Antigravity CLI 这类客户端用手工 `ai-memory finalize-session` 流程，在压缩事件上，或按定时器。它由 LLM 驱动（需要提供方 key）；没有就照 agentmemory 那样空转。
+- **跨智能体共享状态。** 因为 wiki 是纯文本，Claude Code、Codex、OpenCode 读写*同一个*产物。MCP 服务器是守门人；markdown 是契约。无厂商锁定。
+- **编码专属页面类型**：库的坑点、架构决策（ADR 式）、失败的尝试、仓库约定、环境怪癖。Karpathy 的示例领域是个人/研究；对编码智能体，高价值页面是*失败模式*与*决策*，因为那正是上下文压缩时被丢掉的东西。
 
-**What it deliberately is *not*:**
+**它刻意*不是*什么：**
 
-- Not a vector database with a chat wrapper. Vectors are a retrieval *aid* over markdown, not the source of truth.
-- Not a chronological transcript. The log exists, but it's metadata. The semantic content lives in synthesized pages.
-- Not opaque. Every memory the agent has must be openable in Obsidian, diff-able in git, and explainable in prose.
+- 不是套了聊天外壳的向量数据库。向量是 markdown 之上的检索*辅助*，不是事实源。
+- 不是按时间的转录。日志存在，但它是元数据。语义内容住在合成页面里。
+- 不 opaque。智能体拥有的每条记忆都必须能在 Obsidian 里打开、在 git 里 diff、用散文解释。
 
-**Honest tension** worth resolving in design: Karpathy's gist is optimized for *human-curated research wikis* ingested one source at a time with the user watching. A coding agent ingests *continuously and unsupervised* from tool calls. This project inherits Karpathy's structure but needs the lifecycle layer (decay, supersession, confidence) that LLM Wiki v2 proposes - otherwise the wiki will fill with stale, low-signal observations from autonomous runs.
+**值得在设计里解决的诚实张力**：Karpathy 的 gist 为*人工策展的研究 wiki* 优化——一次摄取一个来源、用户盯着。编码智能体则从工具调用*持续、无监督*地摄取。本项目继承 Karpathy 的结构，但需要 LLM Wiki v2 提议的生命周期层（衰减、取代、置信度）——否则 wiki 会被自主运行的过期、低信号观察填满。
 
-## Sources
+## 来源
 
-- [Karpathy - `llm-wiki.md` gist (primary source)](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
-- [Karpathy - Farzapedia tweet](https://x.com/karpathy/status/2040572272944324650)
-- [Yuchen Jin's summary tweet quoting Karpathy](https://x.com/Yuchenj_UW/status/2040482771576197377)
+- [Karpathy - `llm-wiki.md` gist（一手来源）](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+- [Karpathy - Farzapedia 推文](https://x.com/karpathy/status/2040572272944324650)
+- [Yuchen Jin 引用 Karpathy 的总结推文](https://x.com/Yuchenj_UW/status/2040482771576197377)
 - [AkitaOnRails - AI Agent Memory: Karpathy LLM Wiki and agentmemory in Practice](https://akitaonrails.com/en/2026/05/18/ai-agent-memory-karpathy-llm-wiki-agentmemory/)
-- [Rohit Ghumare - LLM Wiki v2 (gist)](https://gist.github.com/rohitg00/2067ab416f7bbe447c1977edaaa681e2)
-- [A-MEM: Agentic Memory for LLM Agents (NeurIPS 2025)](https://arxiv.org/abs/2502.12110)
-- [Mem0 vs Letta vs MemGPT comparison (TokenMix, 2026)](https://tokenmix.ai/blog/ai-agent-memory-mem0-vs-letta-vs-memgpt-2026)
-- [Benchmarking AI Agent Memory: Is a Filesystem All You Need? (Letta)](https://www.letta.com/blog/benchmarking-ai-agent-memory)
+- [Rohit Ghumare - LLM Wiki v2（gist）](https://gist.github.com/rohitg00/2067ab416f7bbe447c1977edaaa681e2)
+- [A-MEM: Agentic Memory for LLM Agents（NeurIPS 2025）](https://arxiv.org/abs/2502.12110)
+- [Mem0 vs Letta vs MemGPT 对比（TokenMix, 2026）](https://tokenmix.ai/blog/ai-agent-memory-mem0-vs-letta-vs-memgpt-2026)
+- [Benchmarking AI Agent Memory: Is a Filesystem All You Need?（Letta）](https://www.letta.com/blog/benchmarking-ai-agent-memory)
 - [The Next Step After Karpathy's Wiki Idea - Avi Chawla](https://blog.dailydoseofds.com/p/the-next-step-after-karpathys-wiki)
 - [Gamgee: Why the Future of AI Memory Isn't RAG](https://gamgee.ai/blogs/karpathy-llm-wiki-memory-pattern/)
-- [Beyond RAG: How Karpathy's LLM Wiki Pattern Builds Knowledge That Compounds (Plaban Nayak, Level Up Coding)](https://levelup.gitconnected.com/beyond-rag-how-andrej-karpathys-llm-wiki-pattern-builds-knowledge-that-actually-compounds-31a08528665e)
+- [Beyond RAG: How Karpathy's LLM Wiki Pattern Builds Knowledge That Compounds（Plaban Nayak, Level Up Coding）](https://levelup.gitconnected.com/beyond-rag-how-andrej-karpathys-llm-wiki-pattern-builds-knowledge-that-actually-compounds-31a08528665e)
 - [Analytics Vidhya - LLM Wiki Revolution](https://www.analyticsvidhya.com/blog/2026/04/llm-wiki-by-andrej-karpathy/)
 - [Agentpedia - Karpathy's LLM Wiki: Complete Guide to His Idea File](https://agentpedia.codes/blog/karpathy-llm-wiki-idea-file)
-- [Tolkien Gateway (the fan-wiki Karpathy cites)](https://tolkiengateway.net/wiki/Main_Page)
-- [qmd - local hybrid markdown search (referenced in the gist)](https://github.com/tobi/qmd)
+- [Tolkien Gateway（Karpathy 引用的粉丝 wiki）](https://tolkiengateway.net/wiki/Main_Page)
+- [qmd - 本地混合 markdown 检索（gist 里引用）](https://github.com/tobi/qmd)

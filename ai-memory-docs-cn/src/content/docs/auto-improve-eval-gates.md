@@ -1,16 +1,14 @@
 ---
-title: "Auto-Improve Eval Gates"
-description: "[autoimprove.eval] lets operators guard high-impact auto-improvement proposals with a small executable scorer. The scorer runs after LLM validation and before staging or auto-appro"
+title: "自动改进评审门（Eval Gates）"
+description: "[auto_improve.eval] 让操作者用一个小型可执行评分器守卫高影响的自动改进提案。评分器在 LLM 验证之后、暂存或自动批准之前运行。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-improve-eval-gates.md"
 ---
 
-# Auto-Improve Eval Gates
+# 自动改进评审门（Eval Gates）
 
-`[auto_improve.eval]` lets operators guard high-impact auto-improvement
-proposals with a small executable scorer. The scorer runs after LLM validation
-and before staging or auto-approval. Hooks never run eval commands.
+`[auto_improve.eval]` 让操作者用一个小型可执行评分器守卫高影响的自动改进提案。评分器在 LLM 验证之后、暂存或自动批准之前运行。钩子绝不运行 eval 命令。
 
-## Configuration
+## 配置
 
 ```toml
 [auto_improve.eval]
@@ -21,13 +19,11 @@ targets = ["_rules", "procedures"]
 min_delta = 0.0
 ```
 
-The command is split on whitespace and executed directly, not through a shell.
-Use a wrapper script if you need quoting, environment setup, or multiple
-commands.
+命令按空白切分并直接执行，不经过 shell。需要引号、环境设置或多个命令时用包装脚本。
 
-## Request contract
+## 请求契约
 
-The scorer receives one JSON object on stdin:
+评分器从 stdin 收一个 JSON 对象：
 
 ```json
 {
@@ -44,49 +40,40 @@ The scorer receives one JSON object on stdin:
 }
 ```
 
-`before_body` is empty for create proposals. `expected_base_body_sha256` is
-present only for patch proposals that were materialized against a known base.
+创建提案的 `before_body` 为空。`expected_base_body_sha256` 只在提案是对照已知基础物化的补丁时出现。
 
-## Response contract
+## 响应契约
 
-The scorer must print one JSON object to stdout:
+评分器必须向 stdout 打一个 JSON 对象：
 
 ```json
 { "score_before": 0.72, "score_after": 0.76, "passed": true }
 ```
 
-Fields:
+字段：
 
-- `passed` is required. `false` rejects the targeted proposal.
-- `score_before` and `score_after` are optional. When both are present,
-  `score_after - score_before` must be at least `min_delta`.
-- `reason` is optional and should explain a rejection in one short sentence.
+- `passed` 必需。`false` 拒绝被门控的提案。
+- `score_before` 与 `score_after` 可选。两者都在时，`score_after - score_before` 必须 ≥ `min_delta`。
+- `reason` 可选，应用一句话解释拒绝。
 
-Command errors, timeouts, invalid JSON, missing `passed`, `passed = false`, and
-insufficient score delta all fail closed for the targeted proposal. Other
-proposals in the same run can still proceed.
+命令错误、超时、无效 JSON、缺 `passed`、`passed = false`、分数增量不足，全部对被门控的提案失败关闭。同一运行里的其他提案仍可继续。
 
-## Scorer design rules
+## 评分器设计规则
 
-- Keep scorers deterministic, fast, and side-effect-free.
-- Read only stdin and local project files that are safe to inspect.
-- Do not call LLMs, mutate files, run deploys, or depend on network services.
-- Return bounded reasons; ai-memory caps captured eval evidence.
-- Prefer simple checks that match the target path: heading structure for
-  procedures, forbidden placeholders for `_rules`, or project-specific smoke
-  assertions for critical docs.
+- 评分器保持确定性、快速、无副作用。
+- 只读 stdin 与检视安全的本地项目文件。
+- 不调 LLM、不改文件、不跑部署、不依赖网络服务。
+- 返回有界的 reason；ai-memory 钳制捕获的 eval 证据。
+- 优先用与目标路径匹配的简单检查：流程页的标题结构、`_rules` 的禁用占位符、关键文档的项目专属冒烟断言。
 
-## Examples
+## 示例
 
-This repository includes two dependency-free templates:
+本仓库带两个零依赖模板：
 
-- [`docs/examples/auto-improve-eval/score_proposal.py`](examples/auto-improve-eval/score_proposal.py)
-  — Python scorer that checks basic structure and placeholders.
-- [`docs/examples/auto-improve-eval/score_proposal.sh`](examples/auto-improve-eval/score_proposal.sh)
-  — POSIX shell wrapper around an embedded Python scorer for hosts that prefer a
-  script entrypoint.
+- [`docs/examples/auto-improve-eval/score_proposal.py`](https://github.com/akitaonrails/ai-memory/blob/main/docs/examples/auto-improve-eval/score_proposal.py)——检查基本结构与占位符的 Python 评分器。
+- [`docs/examples/auto-improve-eval/score_proposal.sh`](https://github.com/akitaonrails/ai-memory/blob/main/docs/examples/auto-improve-eval/score_proposal.sh)——内嵌 Python 评分器的 POSIX shell 包装，供偏好脚本入口的宿主。
 
-Try them with the sample payload:
+用示例 payload 试试：
 
 ```bash
 python3 docs/examples/auto-improve-eval/score_proposal.py \
@@ -96,4 +83,4 @@ sh docs/examples/auto-improve-eval/score_proposal.sh \
   < docs/examples/auto-improve-eval/sample-proposal.json
 ```
 
-Both print compact JSON suitable for ai-memory's eval gate.
+两者都打印适合 ai-memory eval 门的紧凑 JSON。
