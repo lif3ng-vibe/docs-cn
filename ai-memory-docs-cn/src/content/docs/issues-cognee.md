@@ -1,169 +1,171 @@
 ---
-title: "cognee - Issue & PR Pain-Point Synthesis"
-description: "Every provider has had a wire-level bug in 2026."
+title: "cognee 问题与 PR 痛点综合"
+description: "2026 年每个提供方都出过线上协议级 bug。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-cognee.md"
 ---
 
-# cognee - Issue & PR Pain-Point Synthesis
+# cognee 问题与 PR 痛点综合
 
-> Source: GitHub `topoteretes/cognee`. Captured 2026-05-21.
-> Tracker character: ~40% feature requests (high comment counts), ~40% bugs
-> closed fast by next release, ~20% truly hard still-open bugs at architectural seams.
+> 来源：GitHub `topoteretes/cognee`。2026-05-21 抓取。
+> 跟踪器画像：约 40% 功能请求（高评论数）、约 40% 下一版即关的 bug、约 20% 卡在架构接缝上真正难的仍开放 bug。
 
-## Top recurring pain points (ranked)
+## 高频痛点（按排名）
 
-### A. LLM-adapter brittleness (highest volume, highest churn)
+### A. LLM 适配器脆弱（量最大、翻新最快）
 
-Every provider has had a wire-level bug in 2026.
-- Anthropic adapter dropped `max_tokens`, every call HTTP-422 (#2749, #2782 - **two consecutive releases shipped broken Anthropic**).
-- Ollama / LlamaCpp adapters missing `@observe` decorator (#2820).
-- vLLM hangs because system message sent after user message (#2537).
-- vLLM "custom" provider doesn't forward `LLM_ENDPOINT` to LiteLLM (#2412, #2430, #2842).
-- LiteLLM `model_cost` lookup overrides user's `LLM_MAX_COMPLETION_TOKENS` (#2608, fixed by #2613, #2582).
-- HTTP/2 stream stalls cause 60s timeouts on sequential Anthropic calls (#2607).
-- Preflight LLM connection test hangs forever for non-OpenAI providers (#2752, #2123, #2380).
-- Local OpenAI-compatible LM Studio / Ollama hangs on macOS (#2119, #1743, #1742).
-- **OPEN, unsolved**: "Severe Performance Degradation Due to Thinking Tokens + Instructor Incompatibility" (#2840). User patch shows the root cause: when `response_model=str`, instructor wraps `str` in a JSON/tool schema that llama.cpp doesn't honor; the LLM returns plain text, instructor fails to parse it, then **tenacity retries sleep 8-128s per attempt**. LiteLLM silently drops non-standard top-level kwargs like `chat_template_kwargs` and `reasoning_effort`, requiring an `extra_body` shim.
+2026 年每个提供方都出过线上协议级 bug。
 
-**Root design choice causing this**: LiteLLM + Instructor as the universal LLM gateway. Both churn fast; both silently drop kwargs they don't recognize; both have OpenAI-specific assumptions baked into the structured-output path.
+- Anthropic 适配器丢 `max_tokens`，每次调用 HTTP-422（#2749、#2782——**连续两个发布都带着坏掉的 Anthropic 出货**）。
+- Ollama / LlamaCpp 适配器缺 `@observe` 装饰器（#2820）。
+- vLLM 挂起，因为 system 消息发在 user 消息之后（#2537）。
+- vLLM「custom」提供方不把 `LLM_ENDPOINT` 转发给 LiteLLM（#2412、#2430、#2842）。
+- LiteLLM 的 `model_cost` 查表覆盖用户的 `LLM_MAX_COMPLETION_TOKENS`（#2608，#2613、#2582 修复）。
+- HTTP/2 流停顿导致顺序 Anthropic 调用 60s 超时（#2607）。
+- 非 OpenAI 提供方的预检 LLM 连接测试永久挂起（#2752、#2123、#2380）。
+- 本地 OpenAI 兼容的 LM Studio / Ollama 在 macOS 上挂起（#2119、#1743、#1742）。
+- **开放未解**：「思考 token + Instructor 不兼容导致的严重性能退化」（#2840）。用户补丁给出根因：`response_model=str` 时，instructor 把 `str` 包进 llama.cpp 不认的 JSON/工具 schema；LLM 返回纯文本、instructor 解析失败，然后 **tenacity 每次尝试睡 8-128s**。LiteLLM 静默丢弃 `chat_template_kwargs`、`reasoning_effort` 这类非标准顶层 kwarg，需要一个 `extra_body` 垫片。
 
-### B. Multi-store coordination & data integrity bugs
+**造成这一切的根源设计选择**：LiteLLM + Instructor 作为通用 LLM 网关。两者翻新都快；都静默丢弃不认识的 kwarg；都把 OpenAI 专属假设烤进结构化输出路径。
 
-The "graph + vector + relational" tripartite store is the cognee architectural commitment, and it is the source of consistent, high-severity bugs.
-- `EntityAlreadyExistsError` - `Entity("institution")` and `EntityType("institution")` collide on UUID (#2510). Second `cognify` blew up.
-- `add_data_points` parallel DB ops cause SQLite `database is locked` deadlock; **still reproducible in 1.0.2**: `multiple PipelineRunErrored ... elapsed 561s before crash` (#2717, OPEN).
-- `cognify` exceeds asyncpg bind-argument limit during `upsert_edges` for large batches (~4356 edges) (#2829, fixed via batching in #2798, #2586).
-- `add_data_points` crashes with `asyncpg.CharacterNotInRepertoireError` on null bytes (0x00) (#2612, OPEN).
-- `index_data_points`: shallow copy of metadata dict - only the first `index_field` is embedded (#2529, OPEN).
-- `get_graph_from_model + copy_model` drops user-defined DataPoint id (#2633, OPEN).
-- Edge deduplication in `retrieve_existing_edges` is non-functional (#2557).
-- `delete_dataset` fails in non-"public" Postgres schema (#2291).
-- **Shared data: deleting from one dataset wipes the same data from other datasets that share it** (#2732, OPEN).
-- N+1 query pattern in `/api/v1/cognify` (#2532, OPEN).
-- KuzuAdapter writes visible in-memory but not persisted to disk on 0.5.1 (#1981).
-- Per-collection distance normalization in `brute_force_triplet_search` produces incorrect ranking (#2030, fix #2451 removed normalization, **then #2720 surfaced downstream**).
+### B. 多存储协调与数据完整性 bug
 
-### C. Recall quality regressions - the bug a memory server cannot afford
+「图 + 向量 + 关系」三件套存储是 cognee 的架构承诺，也是持续高严重度 bug 的来源。
 
-- **#2720 (OPEN)**: "Graph-completion retrieval returns identical subgraph regardless of query". User-built reproducer shows direct LanceDB queries return different top-K for different queries, but cognee's `/api/v1/search` returns ~identical answers - LanceDB IDs are not propagating into the graph projection. User attributes to fallout from #2451: downstream thresholds in `brute_force_triplet_search.py` still expect pre-#2451 [0,1] scale and silently fall back to an unfiltered graph.
-- `SearchType.CHUNKS` silently ignores `node_name` filtering (#2815).
-- `CHUNKS/SUMMARIES/GRAPH_COMPLETION` ignores `datasets=` filter when `ENABLE_BACKEND_ACCESS_CONTROL=false` (#2867 - maintainer answer is essentially "datasets only work with access control on").
-- Cognee-mcp GRAPH_COMPLETION discarded all but first dataset (#2617).
-- `TemporalRetriever` is event-only, blocks ontology-wide temporal filtering (#2429, closed as superseded by an internal Q2 redesign - not shipped).
-- GRAPH_COMPLETION does not search custom DataPoint vector collections (#2495).
+- `EntityAlreadyExistsError`——`Entity("institution")` 与 `EntityType("institution")` 在 UUID 上碰撞（#2510）。第二次 `cognify` 炸了。
+- `add_data_points` 的并行 DB 操作造成 SQLite `database is locked` 死锁；**1.0.2 仍可复现**：`multiple PipelineRunErrored ... elapsed 561s before crash`（#2717，OPEN）。
+- 大批次（约 4356 条边）`upsert_edges` 时 `cognify` 超出 asyncpg 绑定参数上限（#2829，#2798、#2586 分批修复）。
+- `add_data_points` 遇 null 字节（0x00）崩 `asyncpg.CharacterNotInRepertoireError`（#2612，OPEN）。
+- `index_data_points`：metadata 字典浅拷贝——只嵌第一个 `index_field`（#2529，OPEN）。
+- `get_graph_from_model + copy_model` 丢用户定义的 DataPoint id（#2633，OPEN）。
+- `retrieve_existing_edges` 的边去重无效（#2557）。
+- `delete_dataset` 在非 "public" Postgres schema 里失败（#2291）。
+- **共享数据：从一个数据集删除会把共享它的其他数据集里的同样数据一起抹掉**（#2732，OPEN）。
+- `/api/v1/cognify` 的 N+1 查询模式（#2532，OPEN）。
+- KuzuAdapter 在 0.5.1 上写入只见于内存、不持久化到磁盘（#1981）。
+- `brute_force_triplet_search` 的逐集合距离归一化产出错误排序（#2030，修复 #2451 移除归一化，**随后 #2720 冒出下游问题**）。
 
-### D. Dependency-installation hell
+### C. 召回质量回归——记忆服务器输不起的 bug
 
-- macOS arm64 + Python 3.14: `kuzu` wheel does not exist; quick-start fails (#2753).
-- `ModuleNotFoundError: No module named 'kuzu' in Docker since v1.0.4` (#2775) - kuzu removed but image not rebuilt.
-- `fastembed` removed from the Docker image entirely because one of its transitive deps was not Apache/MIT (#2807).
-- LiteLLMEmbeddingEngine truncated `BAAI/bge-m3` to `bge-m3` (#1915).
-- `embedding_dimensions` defaulted to 3072 regardless of model - every non-3072-dim embedder broke (#2751, fix #2757).
-- LanceDB lance-file writer schema drift / "contained null values" RuntimeError bypassed auto-migration (#2702, #2768).
-- Pydantic v1/v2 friction: upper bound conflicts with openai-agents (#2019); `.json()` deprecated (#2042); generic validation issues (#1198).
-- Mistral client import error (#2481).
-- `lru_cache` hash invalidation bugs for Vector and Graph configs (#2357), and **`lru_cache` was eventually disabled outright** in PR #2853 - "refactor: reduce lru cache".
+- **#2720（OPEN）**：「图补全检索无论查询什么都返回相同子图」。用户搭建的复现器显示直接查 LanceDB 时不同查询返回不同 top-K，但 cognee 的 `/api/v1/search` 返回约相同的答案——LanceDB 的 ID 没有传播进图投影。用户归因于 #2451 的余波：`brute_force_triplet_search.py` 里下游阈值仍预期 #2451 之前的 [0,1] 尺度，静默回退到未过滤的图。
+- `SearchType.CHUNKS` 静默忽略 `node_name` 过滤（#2815）。
+- `ENABLE_BACKEND_ACCESS_CONTROL=false` 时 `CHUNKS/SUMMARIES/GRAPH_COMPLETION` 忽略 `datasets=` 过滤器（#2867——维护者的回答基本是「数据集只在开访问控制时可用」）。
+- cognee-mcp 的 GRAPH_COMPLETION 丢弃第一个以外的所有数据集（#2617）。
+- `TemporalRetriever` 只支持事件，阻塞本体级的时间过滤（#2429，以被内部 Q2 重设计取代关闭——未发布）。
+- GRAPH_COMPLETION 不检索自定义 DataPoint 向量集合（#2495）。
 
-### E. MCP server bugs vs FastAPI
+### D. 依赖安装地狱
 
-The MCP wrapper consistently lags the core API.
-- MCP `cognify` with valid local file path returns success but creates no Data item (#2250, OPEN).
-- cognee-mcp Quick Start fails on macOS arm64 + Py 3.14 (#2753).
-- cognee-mcp `cognify(data=str)` silently dropped all writes after first due to hardcoded `data.txt` filename (#2747).
-- MCP recall in default config fails: `'NoneType' object has no attribute 'id'` - wrapper does not pass user to cognee.recall (#2855).
-- cognee-cli `--api-url` doesn't support remember/recall/improve/forget (#2809, OPEN).
-- Frontend Docker build broken (#2832), Turbopack import case mismatch (#2605), `cognee-cli -ui` v0.5.5 missing 3 npm deps (#2413), UI compile errors (#2709).
+- macOS arm64 + Python 3.14：`kuzu` wheel 不存在；快速开始失败（#2753）。
+- `ModuleNotFoundError: No module named 'kuzu' in Docker since v1.0.4`（#2775）——kuzu 移除了但镜像没重建。
+- `fastembed` 整个从 Docker 镜像移除，因为它的一个传递依赖不是 Apache/MIT（#2807）。
+- LiteLLMEmbeddingEngine 把 `BAAI/bge-m3` 截断成 `bge-m3`（#1915）。
+- `embedding_dimensions` 无论什么模型都默认 3072——每个非 3072 维嵌入器都坏（#2751，修复 #2757）。
+- LanceDB lance-file 写入器 schema 漂移 / "contained null values" RuntimeError 绕过自动迁移（#2702、#2768）。
+- Pydantic v1/v2 摩擦：上界与 openai-agents 冲突（#2019）；`.json()` 弃用（#2042）；泛型校验问题（#1198）。
+- Mistral 客户端导入错误（#2481）。
+- Vector 与 Graph 配置的 `lru_cache` 哈希失效 bug（#2357），且 **`lru_cache` 最终在 PR #2853 里被干脆禁用**——「refactor: reduce lru cache」。
 
-### F. Auth / multi-tenancy regressions
+### E. MCP 服务器相对 FastAPI 的 bug
 
-- Token refresh mechanism literally not implemented; maintainer admits *"we had to reimplement it for our cloud deployment. At this point, we can't allocate resources"* (#2065).
-- Request-scoped LLM config impossible because `get_llm_config()` and `get_embedding_config()` use `@lru_cache` - singletons (#2228).
-- Auth disable needs *two* flags: `ENABLE_BACKEND_ACCESS_CONTROL=false` AND `REQUIRE_AUTHENTICATION=False` (#2808, fix #2836).
-- `cognee.search` ignored ACL when resolving dataset by name for non-owners (#2845); `cognee.add` silently created a new owner-scoped dataset when a non-owner reused a name (#2846); `cognify` silently skipped data added by non-owners (#2847).
-- Agent display name leaked user ID (#2811).
-- `GRAPH_DATASET_TO_DATABASE_HANDLER` (user typo of `GRAPH_DATASET_DATABASE_HANDLER`) was silently ignored and defaulted to kuzu (#2697). No validation on env-var names.
+MCP 包装持续落后核心 API。
 
-## Design choices that caused the most issues
+- MCP `cognify` 带合法本地文件路径返回成功但不创建任何 Data 条目（#2250，OPEN）。
+- cognee-mcp 快速开始在 macOS arm64 + Py 3.14 上失败（#2753）。
+- cognee-mcp 的 `cognify(data=str)` 因硬编码 `data.txt` 文件名，第一次之后静默丢弃所有写入（#2747）。
+- 默认配置下 MCP recall 失败：`'NoneType' object has no attribute 'id'`——包装器没把 user 传给 cognee.recall（#2855）。
+- cognee-cli 的 `--api-url` 不支持 remember/recall/improve/forget（#2809，OPEN）。
+- 前端 Docker 构建损坏（#2832）、Turbopack 导入大小写不匹配（#2605）、`cognee-cli -ui` v0.5.5 缺 3 个 npm 依赖（#2413）、UI 编译错误（#2709）。
 
-1. **Singleton config via `@lru_cache`.** Breaks multi-tenancy (#2228), invalidation bugs (#2357), eventually reverted (#2853).
-2. **LiteLLM + Instructor as the universal LLM/structured-output layer.** Source of #2412, #2430, #2537, #2608, #2613, #2749, #2782, #2820, #2840, #2842.
-3. **SQLite as the default relational backend with greenlet parallelism.** #2717: `OperationalError: database is locked` under parallel cognify, OPEN. Maintainer hedges: *"sqlite is not there for production use-cases"*.
-4. **Kuzu as the default embedded graph DB.** Kuzu was archived upstream (#2098), maintainers chose to replace with **Ladybug** (PR #2755) - a *fork* of Kuzu. Immediate post-replacement bugs: #2768, #2775, WAL corruption (PR #2838). **The forked-DB risk has played out.**
-5. **LanceDB as the default vector store** with schema migration assumed to auto-handle drift. Reality: #2702 null-values bypasses migration, #2720 retrieval pipeline drops filter on the path from vector hits to graph subgraph.
-6. **Tripartite store with implicit sync (graph + vector + relational + optional ontology).** Source of the entire integrity-bug class in section B. Orchestration is handled inside cognee, not by any transactional layer.
-7. **`@lru_cache` + ContextVar mixed model** for tenant isolation. #2228 explains: db config uses ContextVar pattern, but LLM and embedding configs do not.
-8. **Per-collection distance normalization in `brute_force_triplet_search`** (#2030) - fix #2451 removed normalization, breaking downstream threshold assumptions, surfacing as #2720.
-9. **Backend access control is the orchestration plane.** When `ENABLE_BACKEND_ACCESS_CONTROL=false`, *all* dataset-scoped retrieval silently degrades. (#2867, #2845, #2846, #2847, #2808.)
-10. **Default-LLM cost coupling**: `embedding_dimensions` defaults to 3072 (text-embedding-3-large), and litellm's `model_cost` table silently overrode user `max_completion_tokens`. Two bugs from "assume OpenAI defaults" (#2751, #2608).
+### F. 认证 / 多租户回归
 
-## What the maintainers' fixes reveal
+- 令牌刷新机制字面上没实现；维护者承认*「我们不得不为自己的云部署重写它。现在我们拨不出资源」*（#2065）。
+- 请求级 LLM 配置不可能，因为 `get_llm_config()` 与 `get_embedding_config()` 用 `@lru_cache`——单例（#2228）。
+- 禁用认证需要*两个*标志：`ENABLE_BACKEND_ACCESS_CONTROL=false` 加 `REQUIRE_AUTHENTICATION=False`（#2808，修复 #2836）。
+- 非所有者按名解析数据集时 `cognee.search` 忽略 ACL（#2845）；非所有者复用名字时 `cognee.add` 静默创建一个新的所有者限定的数据集（#2846）；`cognify` 静默跳过非所有者添加的数据（#2847）。
+- 智能体显示名泄漏用户 ID（#2811）。
+- `GRAPH_DATASET_TO_DATABASE_HANDLER`（用户把 `GRAPH_DATASET_DATABASE_HANDLER` 打错）被静默忽略并默认到 kuzu（#2697）。环境变量名无校验。
 
-- **LRU cache for configs has been quietly retreated from** (#2853, #2851).
-- **Subprocess mode + Redis** was added explicitly to escape the SQLite-greenlet trap (#2803, #2812).
-- **Ladybug is a Kuzu fork** they own. Already shipped "fix: resolve issue with WAL file corruption for ladybug" (#2838).
-- **Auto-migrate LanceDB on schema drift** had to be added (#2703) after lance-file writer crashed workers.
-- **Anthropic adapter broken for a full version cycle** - #2749 then re-broken in 1.0.5 as #2782.
-- **Defaults flipped**: `fastembed` removed from core (#2807), result-cache logging disabled by default (#2851), embedding dimensions auto-derived not defaulted (#2757), auth gated by single switch (#2836).
-- **Feature deprecated, not fixed**: `TemporalRetriever` (#2429).
+## 制造了最多问题的设计选择
 
-## Open issues maintainers haven't solved
+1. **经 `@lru_cache` 的单例配置。** 破坏多租户（#2228）、失效 bug（#2357）、最终回退（#2853）。
+2. **LiteLLM + Instructor 作为通用 LLM/结构化输出层。** #2412、#2430、#2537、#2608、#2613、#2749、#2782、#2820、#2840、#2842 的源头。
+3. **SQLite 作默认关系后端配 greenlet 并行。** #2717：并行 cognify 下 `OperationalError: database is locked`，OPEN。维护者含糊其辞：*「sqlite 不是为生产用例准备的」*。
+4. **Kuzu 作默认内嵌图数据库。** Kuzu 上游归档（#2098），维护者选择换成 **Ladybug**（PR #2755）——Kuzu 的一个 *fork*。替换后立刻出 bug：#2768、#2775、WAL 损坏（PR #2838）。**fork 数据库的风险已经兑现。**
+5. **LanceDB 作默认向量存储**、schema 迁移假设自动处理漂移。现实：#2702 null 值绕过迁移、#2720 检索管线在向量命中到图子图的路上丢过滤器。
+6. **隐式同步的三件套存储（图 + 向量 + 关系 + 可选本体）。** B 节整个完整性 bug 类的源头。编排由 cognee 内部处理，没有任何事务层。
+7. **`@lru_cache` + ContextVar 混合模型**做租户隔离。#2228 解释：db 配置用 ContextVar 模式，但 LLM 与嵌入配置不用。
+8. **`brute_force_triplet_search` 的逐集合距离归一化**（#2030）——修复 #2451 移除归一化，破坏下游阈值假设，以 #2720 浮出。
+9. **后端访问控制即编排平面。** `ENABLE_BACKEND_ACCESS_CONTROL=false` 时，*所有*数据集限定的检索静默降级。（#2867、#2845、#2846、#2847、#2808。）
+10. **默认 LLM 成本耦合**：`embedding_dimensions` 默认 3072（text-embedding-3-large），且 litellm 的 `model_cost` 表静默覆盖用户的 `max_completion_tokens`。「假设 OpenAI 默认」产出的两个 bug（#2751、#2608）。
 
-- **#2717 SQLite deadlock under parallel cognify** - Reproducible across versions.
-- **#2720 LanceDB filter not propagating to graph projection** - *Correctness* bug in core retrieval path. No assignee.
-- **#2840 Thinking-token + Instructor incompatibility.**
-- **#2532 N+1 query in `/api/v1/cognify`.**
-- **#2612 null-byte crash in asyncpg.**
-- **#2529 shallow-copy bug in `index_data_points`.**
-- **#2228 request-scoped LLM/embedding config.** Architectural.
-- **#2065 token refresh.** Punted to community.
+## 维护者的修复暴露了什么
 
-**What's hard about these**: they all sit at architectural seams (config plane, retrieval pipeline, async orchestration). Not one-PR fixes.
+- **配置的 LRU 缓存已被悄悄撤退**（#2853、#2851）。
+- **子进程模式 + Redis** 被显式加入以逃离 SQLite-greenlet 陷阱（#2803、#2812）。
+- **Ladybug 是他们自己拥有的 Kuzu fork**。已经发布了「fix: resolve issue with WAL file corruption for ladybug」（#2838）。
+- **schema 漂移时自动迁移 LanceDB** 不得不加（#2703），在 lance-file 写入器搞崩 worker 之后。
+- **Anthropic 适配器坏了整整一个版本周期**——#2749 之后在 1.0.5 又以 #2782 坏了一次。
+- **默认值翻转**：`fastembed` 移出核心（#2807）、结果缓存日志默认禁用（#2851）、嵌入维度自动推导而非默认（#2757）、认证单开关（#2836）。
+- **功能弃用而非修复**：`TemporalRetriever`（#2429）。
 
-## Specific dependency culprits (Rust must bet differently)
+## 维护者没解决的开放 issue
 
-| Lib | Bug | Issue |
+- **#2717 并行 cognify 下的 SQLite 死锁**——跨版本可复现。
+- **#2720 LanceDB 过滤器不传播到图投影**——核心检索路径的*正确性* bug。无负责人。
+- **#2840 思考 token + Instructor 不兼容。**
+- **#2532 `/api/v1/cognify` 的 N+1 查询。**
+- **#2612 asyncpg 的 null 字节崩溃。**
+- **#2529 `index_data_points` 的浅拷贝 bug。**
+- **#2228 请求级 LLM/嵌入配置。** 架构级。
+- **#2065 令牌刷新。** 踢给社区。
+
+**这些为什么难**：它们全坐在架构接缝上（配置平面、检索管线、异步编排）。不是一个 PR 能修的。
+
+## 具体的依赖元凶（Rust 必须换个赌法）
+
+| 库 | bug | issue |
 |---|---|---|
-| litellm | drops `extra_body` kwargs silently; `model_cost` overrides user setting | #2608, #2613, #2840 |
-| instructor | wraps `response_model=str` in JSON schema local LLMs don't honor | #2840 |
-| tenacity | 8-128s backoff multiplies instructor's parse failures | #2840 |
-| asyncpg | bind-arg limit; `CharacterNotInRepertoireError` on `\0` | #2829, #2612 |
-| lancedb / lance-file | null-values RuntimeError bypasses migration | #2702 |
-| pyarrow (under lance) | upstream of #2720 / #2702 schema drift | #2702 |
-| kuzu | upstream archived, wheel gap on Py 3.14 / arm64 | #2098, #2753 |
-| ladybug (fork of kuzu) | version-mapping crashes on every fresh DB; WAL corruption | #2768, PR#2838 |
-| sqlite/sqlalchemy/greenlet | database-is-locked under parallel cognify | #2717 |
-| anthropic SDK | `max_tokens` required, two consecutive releases broken | #2749, #2782 |
-| fastembed | transitive dep not Apache/MIT; removed from core | #2807 |
-| pydantic | v1/v2 friction, deprecated `.json()`, upper bound conflicts | #1198, #2019, #2042 |
-| mistralai | client import error | #2481 |
-| openai-agents | pin conflict with pydantic | #2019 |
-| HF tokenizers | every word triggered HF request in chunking | #729 |
-| Turbopack / npm | frontend builds repeatedly broken | #2605, #2413, #2709, #2832 |
+| litellm | 静默丢 `extra_body` kwarg；`model_cost` 覆盖用户设置 | #2608、#2613、#2840 |
+| instructor | 把 `response_model=str` 包进本地 LLM 不认的 JSON schema | #2840 |
+| tenacity | 8-128s 退避放大 instructor 的解析失败 | #2840 |
+| asyncpg | 绑定参数上限；`\0` 上 `CharacterNotInRepertoireError` | #2829、#2612 |
+| lancedb / lance-file | null 值 RuntimeError 绕过迁移 | #2702 |
+| pyarrow（lance 底下） | #2720 / #2702 schema 漂移的上游 | #2702 |
+| kuzu | 上游归档、Py 3.14 / arm64 的 wheel 空缺 | #2098、#2753 |
+| ladybug（kuzu fork） | 每个全新 DB 上版本映射崩溃；WAL 损坏 | #2768、PR#2838 |
+| sqlite/sqlalchemy/greenlet | 并行 cognify 下 database-is-locked | #2717 |
+| anthropic SDK | `max_tokens` 必需、连续两个发布损坏 | #2749、#2782 |
+| fastembed | 传递依赖非 Apache/MIT；移出核心 | #2807 |
+| pydantic | v1/v2 摩擦、弃用 `.json()`、上界冲突 | #1198、#2019、#2042 |
+| mistralai | 客户端导入错误 | #2481 |
+| openai-agents | 与 pydantic 的钉版本冲突 | #2019 |
+| HF tokenizers | 分块时每个词触发一次 HF 请求 | #729 |
+| Turbopack / npm | 前端构建反复损坏 | #2605、#2413、#2709、#2832 |
 
-## Do-not-repeat lessons for the Rust rewrite
+## 给 Rust 重写的勿重蹈教训
 
-1. **Do not put the LLM call behind a generic Python-style gateway that silently drops kwargs.** Each provider gets a typed Rust client that errors on unknown fields rather than dropping them. (#2840, #2608, #2782.)
+1. **不要把 LLM 调用放在静默丢 kwarg 的 Python 式通用网关后面。** 每个提供方一个类型化 Rust 客户端，未知字段报错而不是丢弃。（#2840、#2608、#2782。）
 
-2. **Don't use SQLite for write-parallel pipeline state.** Use Postgres or - for embedded - a single-writer actor in front of an LMDB/Sled/SQLite-with-WAL serialized via a queue. (#2717.)
+2. **不要用 SQLite 存写并行的管线状态。** 用 Postgres，或内嵌方案——LMDB/Sled/带 WAL 的 SQLite 前面经队列串行化的单写入器 actor。（#2717。）
 
-3. **Don't pin a forked embedded graph DB as the default.** Either commit to a battle-tested external store (Postgres + AGE, Neo4j) or build the graph primitives directly on the relational store. The Kuzu→Ladybug pivot cost real users (#2098, #2768, #2775, #2753, PR#2838).
+3. **不要把 fork 的内嵌图数据库钉成默认。** 要么押身经百战的外部存储（Postgres + AGE、Neo4j），要么直接在关系存储上建图原语。Kuzu→Ladybug 转换让真实用户付了代价（#2098、#2768、#2775、#2753、PR#2838）。
 
-4. **Treat retrieval filter propagation as a first-class invariant with property tests.** Show test cases like `assert different_queries_yield_different_subgraphs`. The exact bug in #2720 is what kills a memory product.
+4. **把检索过滤器传播当一等不变量配属性测试。** 给出 `assert different_queries_yield_different_subgraphs` 这样的测试用例。#2720 里那个 bug 正是杀死记忆产品的那种。
 
-5. **Configuration must be per-request from day one.** No global singletons, no `lru_cache` over config. Use a request-scoped context type passed explicitly. (#2228, #2357, PR#2853.)
+5. **配置从第一天起就必须是请求级的。** 无全局单例、无配置上的 `lru_cache`。用显式传递的请求级上下文类型。（#2228、#2357、PR#2853。）
 
-6. **Never default `embedding_dimensions` to a constant.** Derive from `(provider, model)` at startup; refuse to start if collection-dim and model-dim mismatch. (#2751, #2757.)
+6. **绝不把 `embedding_dimensions` 默认成常量。** 启动时从 `(provider, model)` 派生；集合维度与模型维度不匹配时拒绝启动。（#2751、#2757。）
 
-7. **Idempotent ingestion with explicit id derivation.** Node IDs must be a function of `(category, name, dataset)` `name`. Property tests on cross-run determinism. (#2510, #2557, #2633.)
+7. **幂等摄取配显式 id 派生。** 节点 id 必须是 `(category, name, dataset)` 的函数。跨运行确定性的属性测试。（#2510、#2557、#2633。）
 
-8. **Re-ingestion / pipeline-run status must be a state machine, not a flag.** "PipelineRunAlreadyCompleted" prevented re-ingest of deleted files (#2097).
+8. **重摄取 / 管线运行状态必须是状态机，不是标志。** "PipelineRunAlreadyCompleted" 阻止了已删文件的重摄取（#2097）。
 
-9. **Dataset isolation must work whether or not "access control" is on.** Dataset is a hard query-time filter on every retriever. (#2867, #2845, #2846, #2847.)
+9. **数据集隔离必须在「访问控制」开关与否两种情况下都工作。** 数据集是每个检索器上硬的查询时过滤器。（#2867、#2845、#2846、#2847。）
 
-10. **Batch every cross-store mutation.** asyncpg bind-arg limit, SQLite locks, lance writer flushes - all rooted in unbounded fan-out (#2829, #2717, #2702).
+10. **每个跨存储变更都分批。** asyncpg 绑定参数上限、SQLite 锁、lance 写入器冲刷——全都根植于无界扇出（#2829、#2717、#2702）。
 
-11. **Single transactional boundary or a documented eventual-consistency contract.** Cognee's silent skips between graph/vector/relational are the deepest class of bug. Pick one.
+11. **单一事务边界，或有文档的最终一致性契约。** cognee 图/向量/关系之间的静默跳过是最深的一类 bug。选一个。
 
-12. **Audit logs and result caches with retention from day one.** Cognee's relational DB grew unbounded - 42k cached results in 9 days (#2548). They eventually disabled by default; do it before the first user hits it.
+12. **审计日志与结果缓存从第一天带保留期。** cognee 的关系库无界增长——9 天 4.2 万条缓存结果（#2548）。他们最终默认禁用；在第一个用户撞上之前就做。
 
-**Calibration**: the single most repeated lesson, weighted by both severity and recurrence: **the LLM/structured-output layer (LiteLLM + Instructor) is fragile, and the multi-store sync (graph + vector + relational) is the deepest source of correctness bugs.** A Rust rewrite that gets either of those wrong inherits cognee's tracker.
+**校准**：按严重度与复发率加权，重复最多的单一教训是：**LLM/结构化输出层（LiteLLM + Instructor）脆弱，多存储同步（图 + 向量 + 关系）是正确性 bug 最深的来源。** 这两样里任何一个做错的 Rust 重写，就会继承 cognee 的跟踪器。
