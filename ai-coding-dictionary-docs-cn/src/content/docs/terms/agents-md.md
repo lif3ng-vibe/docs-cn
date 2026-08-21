@@ -1,6 +1,6 @@
 ---
 title: "AGENTS.md（智能体说明文件）"
-source: "https://www.aihero.dev/ai-coding-dictionary/agents.md"
+source: "https://www.aihero.dev/ai-coding-dictionary/agents-md"
 ---
 
 [环境](/terms/environment)里的一个文件，[harness](/terms/harness)在[会话](/terms/session)开始时加载进[上下文窗口](/terms/context-window)——项目给[agent](/terms/agent)的常驻简报。跨 harness 的通用约定；有些 harness 还有自己的变体（Claude Code 的是 CLAUDE.md）。
