@@ -1,78 +1,63 @@
 ---
-title: "Lifecycle operations"
-description: "Reference for the destructive / state-touching ai-memory commands. Read this before running anything that mutates wiki + db, especially on a homelab box where mistakes are harder t"
+title: "生命周期操作"
+description: "破坏性/触碰状态的 ai-memory 命令参考。运行任何改动 wiki + db 的东西之前先读本文，尤其是在家庭实验室机器上——那里的错误更难撤销。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/lifecycle-ops.md"
 ---
 
-# Lifecycle operations
+# 生命周期操作
 
-Reference for the destructive / state-touching ai-memory commands.
-Read this before running anything that mutates wiki + db, especially
-on a homelab box where mistakes are harder to undo.
+破坏性/触碰状态的 ai-memory 命令参考。
+运行任何改动 wiki + db 的东西之前先读本文，尤其是在家庭实验室机器上——那里的错误更难撤销。
 
-## TL;DR - safety matrix
+## TL;DR——安全矩阵
 
-| Command | Safe with server **running**? | Wipes data? | Reversible? | Notes |
+| 命令 | 服务器**运行中**安全？ | 抹数据？ | 可逆？ | 说明 |
 |---|---|---|---|---|
-| `purge-project --confirm` | ✅ yes | the one project's data | no | Deletes the UUID-namespaced wiki root and raw workstream segments; sibling projects remain untouched. Refuses with `409` while a managed workstream under the project holds a live run lease — `--force` overrides. |
-| `rename-project --from --to` | ✅ yes | no | yes (rename back) | Column-only update on `projects.name`. The on-disk dir is keyed by `project_id` (UUID), so the rename never moves a file. |
-| `/admin/rename-workspace` | ✅ yes | no | yes (rename back) | Column-only update on `workspaces.name`; refreshes `_meta.md` scope manifests and checkpoints the wiki tree. |
-| `/admin/delete-workspace` | ✅ yes | the workspace and every child project | no | Runs `purge_workspace` admission first, deletes SQLite rows in one cascade, removes the UUID-keyed workspace directory and managed-workstream raw segments, reports filesystem partial failures, and dispatches mirror notification after durable work. |
-| `move-project --confirm` | ✅ yes | source only in the merge case (a `Reject`-policy `purge_project` webhook can still abort the source teardown leaving everything intact) | no | Fresh destination → lossless **true move** (re-stamp `workspace_id`, keep `project_id`, rename the dir): sessions/observations/handoffs + history all survive. Destination with a same-named project → **copy+purge merge**: only latest pages migrate. |
-| `move-session <id> --to --confirm` | ✅ yes | no | yes (move it back) | Re-stamps one session (or every session touching `--from-project`) into another project: `sessions`, `observations`, its `handoffs`, consolidation jobs, auto-improve runs/claims and its `sessions/<id>.md` page, one transaction per session; the page file moves with it (`--pages move`, default) or is retired for regeneration. Without `--confirm` it is a real dry run (rolled back). Refuses with `409` an open session or a pending consolidation job unless `--force`. |
-| `backup --output-path` | ✅ yes | no | n/a | Streams a gzipped tarball from the server's online `sqlite3 .backup` plus the wiki tree. Safe alongside the live writer. |
-| `checkpoints` | ✅ yes | no | n/a | Lists recent wiki git checkpoints. Read-only. |
-| `restore-page --path --from` | ✅ yes | overwrites one markdown page version | yes (restore another checkpoint) | Restores one page from wiki git history, reindexes it into SQLite, and writes a post-restore checkpoint. Does not restore DB-only state. |
-| `restore --from <tarball>` | ❌ **stop the server first** | overwrites the data dir | no (without prior backup) | Refuses if any sibling `ai-memory` process is alive (sysinfo guard). |
-| `reset --confirm` | ❌ **stop the server first** | yes, all data | no | Refuses if any sibling `ai-memory` process is alive (sysinfo guard). |
-| `reindex` | ❌ **stop the server first** | no wiki wipe; requires a clean DB | only with prior DB backup | Rebuilds pages/links/FTS from `wiki/` using `_meta.md` manifests. Refuses if SQLite already has rows so stale DB-only state cannot survive silently. |
+| `purge-project --confirm` | ✅ 是 | 该一个项目的数据 | 否 | 删除 UUID 命名空间化的 wiki 根与裸工作流片段；兄弟项目不受影响。项目下有托管工作流持有活跃运行租约时以 `409` 拒绝——`--force` 覆盖。 |
+| `rename-project --from --to` | ✅ 是 | 否 | 是（改回） | 仅 `projects.name` 列更新。磁盘目录以 `project_id`（UUID）为键，改名绝不移动文件。 |
+| `/admin/rename-workspace` | ✅ 是 | 否 | 是（改回） | 仅 `workspaces.name` 列更新；刷新 `_meta.md` 作用域 manifest 并给 wiki 树打检查点。 |
+| `/admin/delete-workspace` | ✅ 是 | 该 workspace 及每个子项目 | 否 | 先跑 `purge_workspace` 准入，一个级联删 SQLite 行，移除 UUID 键的 workspace 目录与托管工作流裸片段，报告文件系统部分失败，持久工作完成后派发镜像通知。 |
+| `move-project --confirm` | ✅ 是 | 仅合并情形的源（`Reject` 策略的 `purge_project` webhook 仍可中止源拆除、让一切完好） | 否 | 全新目的地 → 无损**真移动**（重盖 `workspace_id` 戳、保留 `project_id`、重命名目录）：会话/观察/交接 + 历史全部幸存。目的地有同名项目 → **复制+清除合并**：只有最新页面迁移。 |
+| `move-session <id> --to --confirm` | ✅ 是 | 否 | 是（移回） | 把一个会话（或触碰 `--from-project` 的每个会话）重盖戳进另一项目：`sessions`、`observations`、其 `handoffs`、整编任务、auto-improve 运行/认领及其 `sessions/<id>.md` 页面，每会话一事务；页面文件随之移动（`--pages move`，默认）或退役待重生成。不带 `--confirm` 是真 dry run（回滚）。开放会话或待处理整编任务时以 `409` 拒绝，除非 `--force`。 |
+| `backup --output-path` | ✅ 是 | 否 | 不适用 | 从服务器在线 `sqlite3 .backup` 加 wiki 树流出 gzip tarball。与活跃写入器并行安全。 |
+| `checkpoints` | ✅ 是 | 否 | 不适用 | 列出近期 wiki git 检查点。只读。 |
+| `restore-page --path --from` | ✅ 是 | 覆盖一页 markdown 版本 | 是（恢复另一检查点） | 从 wiki git 历史恢复一页、重建索引进 SQLite、写恢复后检查点。不恢复仅 DB 状态。 |
+| `restore --from <tarball>` | ❌ **先停服务器** | 覆盖数据目录 | 否（无事先备份） | 有兄弟 `ai-memory` 进程存活即拒绝（sysinfo 守卫）。 |
+| `reset --confirm` | ❌ **先停服务器** | 是，全部数据 | 否 | 有兄弟 `ai-memory` 进程存活即拒绝（sysinfo 守卫）。 |
+| `reindex` | ❌ **先停服务器** | 不清 wiki；要求干净 DB | 仅凭事先 DB 备份 | 用 `_meta.md` manifest 从 `wiki/` 重建页面/链接/FTS。SQLite 已有行即拒绝，让过期的仅 DB 状态不能静默幸存。 |
 
-State-touching commands route through the HTTP admin API except `reset`,
-`restore`, and `reindex`, which are direct-disk lifecycle operations that
-fundamentally cannot run while another process holds the SQLite WAL writer. See
-[CLAUDE.md §16](../CLAUDE.md) for the invariant.
+触碰状态的命令经 HTTP admin API 路由，`reset`、`restore`、`reindex` 除外——它们是直接磁盘的生命周期操作，在另一进程持有 SQLite WAL 写入器时根本无法运行。不变量见 [CLAUDE.md §16](https://github.com/akitaonrails/ai-memory/blob/main/CLAUDE.md)。
 
-## What "project isolation" means here
+## 「项目隔离」在这里是什么意思
 
-Every project's data lives under an isolated, UUID-keyed root on disk:
+每个项目的数据住在磁盘上隔离的、UUID 键的根之下：
 
 ```
 <wiki_root>/
 ├── .git/
 ├── <workspace_id>/
-│   ├── _meta.md                 # workspace name for rebuilds
+│   ├── _meta.md                 # 供重建用的 workspace 名
 │   └── <project_id>/
 │       ├── concepts/
 │       ├── decisions/
 │       ├── gotchas/
 │       ├── sessions/
 │       ├── _rules/
-│       ├── _meta.md             # project name + repo_path for rebuilds
-│       ├── log-YYYY-MM.md      # rolling event log, one file per month
+│       ├── _meta.md             # 供重建用的项目名 + repo_path
+│       ├── log-YYYY-MM.md      # 滚动事件日志，每月一文件
 │       └── bootstrap.md
 └── <other_workspace_id>/
     └── <other_project_id>/
         └── ...
 ```
 
-The mutable **project name** (the human-readable `distrobox-gaming`
-or `.config` you see in `/web/`) never appears in any disk path; the
-stable **project_id UUID** does. SQLite's `projects.name` column maps
-name → id. Two projects can have the exact same `pages.path` (e.g.
-both have `decisions/0001.md`) without colliding on disk - the
-namespaced layout guarantees structural isolation.
+可变的**项目名**（你在 `/web/` 里看到的人类可读 `distrobox-gaming` 或 `.config`）从不出现在任何磁盘路径；稳定的 **project_id UUID** 才出现。SQLite 的 `projects.name` 列映射名 → id。两个项目可以有完全相同的 `pages.path`（如都有 `decisions/0001.md`）而不在磁盘冲突——命名空间化布局保证结构隔离。
 
-The git history is rooted at `<wiki_root>` (one repo, all projects
-as subtrees). A `git log` from inside the wiki dir shows changes
-across every project; per-project diffs are also possible via
-`git log -- <workspace_id>/<project_id>/`.
+git 历史根在 `<wiki_root>`（一个仓库、所有项目作子树）。从 wiki 目录里的 `git log` 展示每个项目的变更；逐项目 diff 也可经 `git log -- <workspace_id>/<project_id>/`。
 
-Each workspace directory also carries `<workspace_id>/_meta.md`, and each
-project directory carries `<workspace_id>/<project_id>/_meta.md`. Those small
-frontmatter-only manifests store human names (plus `repo_path` for projects),
-so a clean SQLite DB can be rebuilt from the UUID-keyed wiki tree alone.
+每个 workspace 目录还带 `<workspace_id>/_meta.md`，每个项目目录带 `<workspace_id>/<project_id>/_meta.md`。那些只有 frontmatter 的小 manifest 存人类名（项目另加 `repo_path`），让干净的 SQLite DB 可以只从 UUID 键的 wiki 树重建。
 
-## Command-by-command
+## 逐命令
 
 ### `purge-project`
 
@@ -80,58 +65,28 @@ so a clean SQLite DB can be rebuilt from the UUID-keyed wiki tree alone.
 ai-memory purge-project --workspace default --project my-project --confirm
 ```
 
-What happens, in order:
+按序发生什么：
 
-1. Server looks up `(workspace_id, project_id)` by name. Returns 404
-   if either is missing.
-2. Refuses with 409 when a managed workstream under the project still
-   holds a **live** run lease (`managed_runs.state = 'active'` AND
-   `lease_expires_at` in the future). `workstreams` cascades out of
-   `projects` and `managed_runs` cascades out of `workstreams`, so
-   purging would delete a running agent's lease row: its heartbeat
-   would then fail with `409 managed run lease is not active` for the
-   rest of the session and the transcript would never reach the ledger.
-   A lapsed lease (crashed wrapper) does **not** block the purge.
-   `--force` purges anyway.
-3. Counts rows that will cascade (`pages`, `sessions`,
-   `observations`, `handoffs`, `page_embeddings`, plus `workstreams`
-   and `managed_runs`).
-4. Single `DELETE FROM projects WHERE id = ?` - the V01 + V05
-   `ON DELETE CASCADE` foreign keys propagate to every dependent
-   table in one transaction.
-5. Best-effort filesystem cleanup removes both the UUID-namespaced wiki root
-   and every `<data_dir>/raw/workstreams/<workstream_id>/` segment directory.
-6. Returns a summary: `{label, pages_deleted, sessions_deleted, …,
-   workstreams_deleted, managed_runs_deleted, workstream_ids,
-   files_deleted: [<project_root>, <raw_workstream_dir>, ...],
-   files_failed: [...]}`.
+1. 服务器按名查 `(workspace_id, project_id)`。任一缺失返回 404。
+2. 项目下有托管工作流仍持有**活跃**运行租约（`managed_runs.state = 'active'` 且 `lease_expires_at` 在未来）时以 409 拒绝。`workstreams` 从 `projects` 级联、`managed_runs` 从 `workstreams` 级联，所以清除会删掉运行中智能体的租约行：其心跳之后整个会话都以 `409 managed run lease is not active` 失败、转录永远到不了台账。过期租约（崩溃的包装器）**不**阻塞清除。`--force` 照样清除。
+3. 计数将级联的行（`pages`、`sessions`、`observations`、`handoffs`、`page_embeddings`，加 `workstreams` 与 `managed_runs`）。
+4. 单条 `DELETE FROM projects WHERE id = ?`——V01 + V05 的 `ON DELETE CASCADE` 外键在一个事务里传播到每张依赖表。
+5. 尽力而为的文件系统清理移除 UUID 命名空间化的 wiki 根与每个 `<data_dir>/raw/workstreams/<workstream_id>/` 片段目录。
+6. 返回摘要：`{label, pages_deleted, sessions_deleted, …, workstreams_deleted, managed_runs_deleted, workstream_ids, files_deleted: [<project_root>, <raw_workstream_dir>, ...], files_failed: [...]}`。
 
-`workstream_ids` remains in the report for auditability. Each corresponding
-raw segment directory is removed on the server and appears in
-`files_deleted`; a failed removal appears in `files_failed` alongside wiki
-cleanup failures.
+`workstream_ids` 留在报告里供审计。每个对应的裸片段目录在服务器上移除并出现在 `files_deleted`；移除失败与 wiki 清理失败一起出现在 `files_failed`。
 
-Failure modes:
+失败模式：
 
-- **Workspace or project name not found** → 404, no mutation.
-- **Confirmation flag omitted** → 400, no mutation.
-- **Live managed run, no `--force`** → 409 naming the workstreams, no
-   mutation. Finish or cancel the session, or re-run with `--force`
-   (the running agent then stops being able to save its history).
-- **`remove_dir_all` partial failure** (e.g. permissions) → DB
-   rows are already gone but `files_failed` is populated. Re-run
-   the command with the same args is idempotent; the second call
-   returns 404 (project already deleted).
+- **workspace 或项目名未找到** → 404，无变更。
+- **缺确认标志** → 400，无变更。
+- **活跃托管运行且无 `--force`** → 409 点名工作流，无变更。结束或取消该会话，或带 `--force` 重跑（运行中的智能体随后无法再保存其历史）。
+- **`remove_dir_all` 部分失败**（如权限）→ DB 行已消失但 `files_failed` 有内容。用相同参数重跑幂等；第二次调用返回 404（项目已删）。
 
-Why this is safe with the server running:
+为什么服务器运行中安全：
 
-- The DB cascade is one transaction; the writer actor serialises
-  it against any other writes.
-- The on-disk delete touches only the project's UUID-keyed subdir,
-  which no other project shares files with. No race with the
-  watcher even mid-write - at worst the watcher emits delete
-  events for files we just removed, which it ignores (no DB row
-  to reindex).
+- DB 级联是一个事务；写入器 actor 让它与任何其他写入串行。
+- 磁盘删除只碰该项目的 UUID 键子目录，没有其他项目与它共享文件。即使写到一半也与监视器无竞态——最坏监视器对刚删的文件发出删除事件，它忽略（无 DB 行可重建索引）。
 
 ### `rename-project`
 
@@ -139,84 +94,51 @@ Why this is safe with the server running:
 ai-memory rename-project --workspace default --from old-name --to new-name
 ```
 
-What happens:
+发生什么：
 
-1. Look up `(workspace_id, project_id)` by current name. 404 on
-   miss.
-2. Validate the new name: non-empty, no `/`, no leading/trailing
-   whitespace. 422 on bad input.
-3. `UPDATE projects SET name = ? WHERE id = ?`. UNIQUE-violation on
-   the `(workspace_id, name)` index → 422 with "name taken".
-4. Return `{workspace, from, to, pages}`.
+1. 按当前名查 `(workspace_id, project_id)`。未中 404。
+2. 校验新名：非空、无 `/`、无首尾空白。坏输入 422。
+3. `UPDATE projects SET name = ? WHERE id = ?`。`(workspace_id, name)` 索引上的 UNIQUE 违规 → 422 带 "name taken"。
+4. 返回 `{workspace, from, to, pages}`。
 
-Zero files move on disk because the disk path is keyed by
-`project_id`, not name. The web UI URL `/web/w/<ws>/<proj-name>/…`
-just resolves to the same `project_id` after the column update.
-This command also does not rename a source checkout or rewrite any native agent
-session locator. See [managed workstream rename
-behavior](managed-workstreams.md#project-and-directory-renames) before
-physically renaming a checkout that has native sessions.
-After a successful CLI rename, the client also rekeys its local `show` checkout
-link. A direct `/admin/rename-project` request cannot update other machines'
-client registries; the next successful managed `run` from a checkout refreshes
-its link.
+磁盘零文件移动，因为磁盘路径以 `project_id` 而非名为键。Web UI URL `/web/w/<ws>/<proj-name>/…` 在列更新后只是解析到同一 `project_id`。该命令也不重命名源检出、不改写任何原生智能体会话定位器。在物理重命名带原生会话的检出之前，见[托管工作流的重命名行为](/managed-workstreams/#项目与目录重命名)。CLI 重命名成功后，客户端还重键其本地 `show` 检出链接。直接 `/admin/rename-project` 请求无法更新其他机器的客户端注册表；之后从检出的一次成功托管 `run` 修复其链接。
 
-Failure modes:
+失败模式：
 
-- **`to` name already exists in this workspace** → 422.
-- **`to` invalid (empty, slash, whitespace)** → 422.
-- **Source `from` not found** → 404.
+- **`to` 名在本 workspace 已存在** → 422。
+- **`to` 无效（空、斜杠、空白）** → 422。
+- **源 `from` 未找到** → 404。
 
 ### `/admin/rename-workspace`
 
-Renames a workspace by updating `workspaces.name`; on-disk paths remain keyed by
-`workspace_id`, so no page files move. After the SQLite rename, the handler
-refreshes `_meta.md` scope manifests with `Wiki::backfill_scope_manifests()` and
-returns `manifests_refreshed` plus a post-rename checkpoint when the wiki tree
-changed.
+更新 `workspaces.name` 重命名 workspace；磁盘路径保持以 `workspace_id` 为键，所以无页面文件移动。SQLite 重命名之后，处理器用 `Wiki::backfill_scope_manifests()` 刷新 `_meta.md` 作用域 manifest，并在 wiki 树有变化时返回 `manifests_refreshed` 加重命名后检查点。
 
-If manifest refresh fails after the SQLite rename has committed, the rename
-still returns `200 OK` with `manifests_refreshed: 0` and a `manifest_warning`
-string instead of reporting a misleading 500. The DB rename is authoritative at
-that point; operators can rerun a manifest refresh or restore from the emitted
-checkpoint if they need to repair `_meta.md` drift.
+SQLite 重命名已提交后 manifest 刷新失败时，重命名仍返回 `200 OK` 带 `manifests_refreshed: 0` 与 `manifest_warning` 字符串，而不是误导性的 500。那时 DB 重命名是权威的；操作者可以重跑 manifest 刷新，或需要修复 `_meta.md` 漂移时从发出的检查点恢复。
 
-Failure modes:
+失败模式：
 
-- **Source `from` not found** → 404.
-- **`to` name already exists or is invalid** → 422.
-- **Manifest refresh failed after commit** → 200 with `manifest_warning` and
-  committed DB rename.
+- **源 `from` 未找到** → 404。
+- **`to` 名已存在或无效** → 422。
+- **提交后 manifest 刷新失败** → 200 带 `manifest_warning` 与已提交的 DB 重命名。
 
 ### `/admin/delete-workspace`
 
-Deletes a workspace row and all child projects/pages/sessions/managed
-workstreams through the `workspace_id` cascade. The route is guarded by
-`force: true` for non-empty workspaces and follows the destructive-operation
-ordering used by project purges:
+经 `workspace_id` 级联删除一行 workspace 及全部子项目/页面/会话/托管工作流。该路由对非空 workspace 有 `force: true` 守卫，并遵循项目清除用的破坏性操作顺序：
 
-1. Look up the workspace without creating missing scopes.
-2. Run blocking `op=purge_workspace` admission. A reject-policy webhook aborts
-   before DB rows or files are removed.
-3. Take a pre-delete checkpoint if the wiki tree is dirty.
-4. Delete the workspace in one writer-actor transaction.
-5. Remove `<wiki_root>/<workspace_id>` and every affected
-   `<data_dir>/raw/workstreams/<workstream_id>` directory from disk. The
-   response reports `workstreams_deleted`, `managed_runs_deleted`, and the
-   cleaned `workstream_ids` alongside the filesystem results.
-6. Dispatch non-blocking `purge_workspace` mirror notifications after durable
-   work. If the DB delete committed but disk removal failed, the response
-   includes `files_failed` and webhook `ctx.partial_failure: true`.
-7. Take a post-delete checkpoint if the wiki tree changed.
+1. 查 workspace 而不创建缺失作用域。
+2. 跑阻塞的 `op=purge_workspace` 准入。reject 策略 webhook 在 DB 行或文件移除之前中止。
+3. wiki 树脏时打删除前检查点。
+4. 一个写入器 actor 事务里删除 workspace。
+5. 从磁盘移除 `<wiki_root>/<workspace_id>` 与每个受影响的 `<data_dir>/raw/workstreams/<workstream_id>` 目录。响应在文件系统结果之外报告 `workstreams_deleted`、`managed_runs_deleted` 与清理的 `workstream_ids`。
+6. 持久工作完成后派发非阻塞的 `purge_workspace` 镜像通知。DB 删除已提交而磁盘移除失败时，响应含 `files_failed` 且 webhook `ctx.partial_failure: true`。
+7. wiki 树变化时打删除后检查点。
 
-Failure modes:
+失败模式：
 
-- **Workspace not found** → 404, no mutation.
-- **Non-empty workspace without `force: true`** → 409, no mutation.
-- **Reject-policy `purge_workspace` webhook fails** → 500, no DB/disk mutation.
-- **Filesystem removal fails after SQL commit** → 200 with `files_failed`
-  populated and `partial_failure: true` on async mirror notifications; manual
-  cleanup of the reported path is required.
+- **workspace 未找到** → 404，无变更。
+- **非空 workspace 无 `force: true`** → 409，无变更。
+- **reject 策略 `purge_workspace` webhook 失败** → 500，无 DB/磁盘变更。
+- **SQL 提交后文件系统移除失败** → 200 带 `files_failed` 与异步镜像通知上的 `partial_failure: true`；需手工清理报告的路径。
 
 ### `move-project`
 
@@ -225,281 +147,97 @@ ai-memory move-project --from-workspace default --project my-project \
   --to-workspace other-workspace --confirm
 ```
 
-Moves a project into a **different** workspace. Unlike `rename-project`
-(a same-workspace column update), this crosses the workspace boundary.
-The destination decides which of two strategies runs — reported as
-`moved_via` in the response:
+把项目移进**不同**的 workspace。与 `rename-project`（同 workspace 列更新）不同，这跨越 workspace 边界。目的地决定跑哪种策略——响应里以 `moved_via` 报告：
 
-**1. Fresh destination → `"true-move"` (lossless, the common case).**
-When the destination workspace has **no** same-named project, the move is
-a low-level re-stamp:
+**1. 全新目的地 → `"true-move"`（无损，常见情形）。** 目的地 workspace **无**同名项目时，移动是低层重盖戳：
 
-1. Resolve the source `(from_workspace, project)`. 404 on miss.
-2. Reject `from_workspace == to_workspace` (use `rename-project`) → 422.
-3. Get-or-create the destination **workspace** row (not a new project).
-4. Take the wiki's exclusive mutation gate and run `op=move_project` admission
-   webhooks with source names in `ctx.workspace` / `ctx.project` and
-   destination names in `ctx.destination_workspace` /
-   `ctx.destination_project`. A reject-policy webhook aborts before files or DB
-   rows move.
-5. While still holding that gate, check that the destination dir is still
-   absent, then `fs::rename` the project dir
-   `<wiki>/<from_ws>/<proj>` → `<wiki>/<to_ws>/<proj>` (atomic within one
-   wiki root).
-6. Re-stamp `workspace_id` across every domain table for the project in
-   **one transaction**, keeping the same `project_id`
-   (`projects`, `pages`, `sessions`, `observations`, `handoffs`, `audit_log`,
-   auto-improvement state, SessionEnd consolidation jobs, and managed
-   `workstreams`). Native workstream sessions, runs, and events remain attached
-   through `workstream_id`; `page_embeddings` and `links` remain attached
-   through `page_id`, so none of those rows need a direct re-stamp.
+1. 解析源 `(from_workspace, project)`。未中 404。
+2. 拒绝 `from_workspace == to_workspace`（用 `rename-project`）→ 422。
+3. 取或建目的地 **workspace** 行（不是新项目）。
+4. 拿 wiki 的独占变更门并跑 `op=move_project` 准入 webhook，`ctx.workspace` / `ctx.project` 带源名、`ctx.destination_workspace` / `ctx.destination_project` 带目的地名。reject 策略 webhook 在文件或 DB 行移动之前中止。
+5. 仍持有该门时，检查目的地目录仍缺席，然后 `fs::rename` 项目目录 `<wiki>/<from_ws>/<proj>` → `<wiki>/<to_ws>/<proj>`（单个 wiki 根内原子）。
+6. 在**一个事务**里给项目的每张领域表重盖 `workspace_id` 戳，保留同一 `project_id`（`projects`、`pages`、`sessions`、`observations`、`handoffs`、`audit_log`、自动改进状态、SessionEnd 整编任务与托管 `workstreams`）。原生工作流会话、运行与事件经 `workstream_id` 保持挂接；`page_embeddings` 与 `links` 经 `page_id` 保持挂接，所以那些行无需直接重盖戳。
 
-After a successful CLI true move, or a completed copy-purge move, the client
-rekeys its local `show` checkout link. Existing destination links win during a
-merge. Direct admin API callers leave client-local registries untouched; a
-later successful managed `run` repairs the relevant link.
+CLI 真移动成功或复制-清除移动完成后，客户端重键其本地 `show` 检出链接。合并时既有目的地链接优先。直接 admin API 调用者不动客户端本地注册表；之后一次成功托管 `run` 修复相关链接。
 
-Ordering is **rename-FIRST, SQL-commit-LAST**, so the **DB is never ahead of
-disk**: a rename failure touches nothing; a crash between the two steps leaves
-at most an orphan dir at the destination with the DB still wholly at the source
-(recoverable), never a DB row pointing at a missing file. A SQL failure renames
-the dir back, so the move is all-or-nothing unless the filesystem also refuses
-the rollback, in which case the error names the manual repair. In-process page
-writes/reindexes take the shared side of the same mutation gate and validate the
-`(workspace_id, project_id)` pair before touching disk, so stale source writes
-fail without creating orphan files after the move.
+顺序是**先重命名、SQL 最后提交**，所以 **DB 绝不超前磁盘**：重命名失败什么都没碰；两步之间崩溃至多在目的地留一个孤儿目录、DB 完整留在源（可恢复），绝无 DB 行指向缺失文件。SQL 失败把目录改回名，所以移动是要么全有要么全无——除非文件系统连回滚也拒绝，那时错误点名手工修复。进程内页面写入/重建索引取同一变更门的共享侧，并在碰磁盘前校验 `(workspace_id, project_id)` 对，所以过期的源写入在移动后失败而不创建孤儿文件。
 
-This is O(1) (one transaction + one rename), re-embeds nothing, and
-**preserves everything** — sessions, observations, handoffs and the full
-supersession history all travel with the project.
+这是 O(1)（一个事务 + 一次改名）、不重新嵌入、且**保留一切**——会话、观察、交接与完整取代历史都随项目迁移。
 
-**Live-session guard.** The server refuses (409) to move the project the
-hook router has published as the *active* project (a live session's next
-observation would carry a now-stale `workspace_id`). Pass `--force` /
-`force: true` to override — still safe: the move republishes the active
-pointer, and the wiki pair validator plus `(workspace_id, project_id)` insert
-trigger (V18) reject stale writes cleanly, so the router re-resolves instead of
-corrupting or creating old-workspace files.
+**活跃会话守卫。** 服务器拒绝（409）移动钩子路由器已发布为*活跃*项目的项目（活跃会话的下一条观察会带着过期 `workspace_id`）。传 `--force` / `force: true` 覆盖——仍然安全：移动会重新发布活跃指针，且 wiki 对校验器加 `(workspace_id, project_id)` 插入触发器（V18）干净拒绝过期写入，所以路由器重新解析而不是损坏或在旧 workspace 造文件。
 
-**2. Destination already has a same-named project → `"copy-purge"`
-(merge).** Two distinct `project_id`s can't be re-stamped into one (it
-would collide on `UNIQUE (workspace_id, name)`), so the source's latest
-pages are copied into the existing destination project via
-`Wiki::write_page` (sanitization, link re-resolution, FTS, and — on
-deploy — the admission/git-mirror webhooks all fire), source embeddings
-are carried over verbatim, and only then is the source purged
-(`merged_into_existing: true`, `source_purged: true`).
+**2. 目的地已有同名项目 → `"copy-purge"`（合并）。** 两个不同 `project_id` 不能重盖戳成一个（会在 `UNIQUE (workspace_id, name)` 上碰撞），所以源的最新页面经 `Wiki::write_page` 拷进既有目的地项目（净化、链接重解析、FTS、部署时准入/git-mirror webhook 都触发），源嵌入逐字搬运，然后才清除源（`merged_into_existing: true`、`source_purged: true`）。
 
-`--force` overrides only the hook router's active-project guard. It never
-deletes a live managed-workstream lease during this destructive path; finish
-or cancel that run before retrying. A true move keeps the same project and
-lease ids, so it does not need this additional guard.
+`--force` 只覆盖钩子路由器的活跃项目守卫。它绝不在该破坏性路径上删除活跃托管工作流租约；重试前先结束或取消该运行。真移动保持同一项目与租约 id，所以不需要这个额外守卫。
 
-Copy-before-purge means any copy failure aborts **before** the purge,
-leaving the source intact. An unreadable source file is skipped and also
-blocks the purge (`source_purged: false`) so a fixed re-run is safe
-(re-running is idempotent — copied pages just supersede). A **live managed
-run** under the source blocks the purge leg the same way: the move returns
-409 saying how many pages were already copied, and the source stays intact
-until the session ends and the move is re-run.
+先复制后清除意味着任何复制失败都在清除**之前**中止、源完好。不可读的源文件被跳过且也阻塞清除（`source_purged: false`），修复后重跑安全（重跑幂等——拷过的页面直接取代）。源下的**活跃托管运行**同样阻塞清除腿：移动返回 409 说明已拷了几页，源保持完整直到会话结束、移动重跑。
 
-**Same-path conflicts (`on_conflict`).** When a source page's path already
-exists in the destination with a different body, frontmatter, title, tier, or
-pinned bit, the policy decides (identical pages are always a no-op supersession
-at the same path):
+**同路径冲突（`on_conflict`）。** 源页面路径在目的地已存在且正文、frontmatter、标题、层级或置顶位不同时，策略决定（相同页面总是同路径的无操作取代）：
 
-- **`block`** (default) — abort the whole move with 409, listing the
-  conflicting paths; the source is left intact. The safe default for a
-  destructive op: nothing is overwritten or split silently. The operator
-  resolves the conflicts or re-runs with an explicit policy.
-- **`overwrite`** — the source page supersedes the destination page at the
-  same path (the destination's prior version becomes history).
-- **`duplicate`** — keep both: the source page lands at
-  `<stem>-from-<src_workspace_slug>.md`, then `-2`, `-3`, … on
-  further collisions. The `-from-` literal is the `DEDUP_FROM_TOKEN`
-  constant in `crates/ai-memory-mcp/src/admin.rs`; if you ever
-  change one, change the other. Wikilinks pointing at the original
-  path are not rewritten, so the lossless `true-move` path remains
-  the way to preserve paths and links.
+- **`block`**（默认）——整个移动以 409 中止、列出冲突路径；源完好。破坏性操作的安全默认：没有任何东西被静默覆盖或拆分。操作者解决冲突或带显式策略重跑。
+- **`overwrite`**——源页面取代同路径的目的地页面（目的地先前版本成为历史）。
+- **`duplicate`**——两个都留：源页面落在 `<stem>-from-<src_workspace_slug>.md`，再冲突则 `-2`、`-3`……`-from-` 字面量是 `crates/ai-memory-mcp/src/admin.rs` 里的 `DEDUP_FROM_TOKEN` 常量；改一个就改另一个。指向原路径的 wikilink 不改写，所以无损的 `true-move` 路径仍是保留路径与链接的办法。
 
-Every conflict (overwrite/duplicate) is listed in the response `conflicts`
-array (`path` → `moved_to`). Set the policy via `--on-conflict` on the CLI
-or `"on_conflict": "block" | "overwrite" | "duplicate"` in the JSON body
-for direct `/admin/move-project` callers.
+每个冲突（overwrite/duplicate）列在响应 `conflicts` 数组里（`path` → `moved_to`）。CLI 用 `--on-conflict` 设策略；直接 `/admin/move-project` 调用者在 JSON 体里用 `"on_conflict": "block" | "overwrite" | "duplicate"`。
 
-**What does NOT migrate (merge case only):** in the `copy-purge` path the
-source's `sessions`, `observations`, and `handoffs` (the raw episodic
-capture log) are dropped by the purge, and the moved pages start a fresh
-supersession chain (the real page history lives in the wiki's git
-mirror). The `true-move` path has no such loss.
+**不迁移的（仅合并情形）：** `copy-purge` 路径下源的 `sessions`、`observations`、`handoffs`（裸情节捕获日志）被清除丢弃，且移动的页面开始新的取代链（真正的页面历史在 wiki 的 git 镜像里）。`true-move` 路径无此损失。
 
-> **Operational caveat — moving the project the current session writes
-> to.** Lifecycle hooks stamp a bounded observation on every supported tool-lifecycle event into the
-> session's project. If you move that very project mid-session, the next
-> hook re-creates the source (`scratch`-style) under the old workspace.
-> Before moving a live project, point the repo's `.ai-memory.toml` at the
-> **destination** workspace first, so new hook events already land there
-> and the move is a clean no-contention operation.
+> **运维告诫——移动当前会话写入的项目。** 生命周期钩子为每个受支持的工具生命周期事件在会话的项目里盖一条有界观察。会话中途移动那个项目，下一条钩子会在旧 workspace 下重新创建源（`scratch` 式）。移动活跃项目之前，先把仓库的 `.ai-memory.toml` 指向**目的地** workspace，让新钩子事件已经落在那里、移动成为无竞争的干净操作。
 
-Failure modes:
+失败模式：
 
-- **Missing `--confirm`** → 400.
-- **`from_workspace == to_workspace`** → 422 (use `rename-project`).
-- **Source project not found** → 404.
-- **Destination workspace directory already exists** (true-move only)
-  → 409 with `WikiError::DestinationExists` body — the destination
-  has on-disk content for the same `(workspace, project)` UUID pair
-  without a corresponding DB row; refuse and let the operator
-  reconcile manually.
-- **Block-policy same-path conflict** (copy-purge merge only) → 409
-  with `{"error": "...", "conflicts": [paths...]}` listing every
-  conflicting path. Re-run with `on_conflict=overwrite` or
-  `on_conflict=duplicate` to proceed.
-- **True-move admission or SQL re-stamp failure** → 500 and no
-  committed move. If a rare rollback double-fault happens after the
-  directory moved but before SQL committed, the error includes the
-  exact manual repair.
+- **缺 `--confirm`** → 400。
+- **`from_workspace == to_workspace`** → 422（用 `rename-project`）。
+- **源项目未找到** → 404。
+- **目的地 workspace 目录已存在**（仅 true-move）→ 409 带 `WikiError::DestinationExists` 体——目的地有同一 `(workspace, project)` UUID 对的磁盘内容而无对应 DB 行；拒绝并让操作者手工对账。
+- **block 策略同路径冲突**（仅 copy-purge 合并）→ 409 带 `{"error": "...", "conflicts": [paths...]}` 列出每个冲突路径。带 `on_conflict=overwrite` 或 `on_conflict=duplicate` 重跑以继续。
+- **true-move 准入或 SQL 重盖戳失败** → 500 且无已提交移动。目录已移动而 SQL 未提交的罕见回滚双错发生时，错误包含确切的手工修复。
 
 ### `move-session`
 
 ```bash
-# One session, page and history included (dry run: no --confirm)
+# 一个会话，含页面与历史（dry run：无 --confirm）
 ai-memory move-session 0192b6a1-4c2e-7d3f-8a5b-1234567890ab --to NAS_general
-# Apply
+# 应用
 ai-memory move-session 0192b6a1-4c2e-7d3f-8a5b-1234567890ab --to NAS_general --confirm
-# Every session of a stray project, into another workspace, page regenerated later
+# 杂散项目的每个会话，进另一 workspace，页面稍后重生成
 ai-memory move-session --from-project tmp --to NAS_general --to-workspace home \
   --pages regenerate --confirm
 ```
 
-Moves one session, or every session touching `--from-project`, into another
-project, in the same or another workspace. Use it when a session was
-captured under the wrong project (a `cd` into `/tmp` before sticky routing,
-a subagent started in a scratch directory, a repo cloned under a temporary
-name) and its observations should live with the project they are about.
-Unlike `reorg`, which re-derives every session's project from its `cwd`,
-this names the destination explicitly and leaves the rest of the store
-alone. Sessions already rooted in the destination only get their stray rows
-re-homed: the `sessions` row stays, every row of theirs still lying in
-another scope is gathered into the destination, and the report says
-`session_moved: false` with the counts. The batch form therefore sees a
-session through a `sessions` row in the source OR observations stamped into
-it, which is what empties a phantom bucket that holds only observations of
-sessions rooted elsewhere (mid-session routing before sticky).
+把一个会话、或触碰 `--from-project` 的每个会话，移进同一或另一 workspace 的另一项目。会话捕获在错误项目下时用它（粘性路由之前 `cd` 进 `/tmp`、子智能体在临时目录启动、仓库克隆在临时名下），其观察应与它们所属的项目住在一起。与从每个会话 `cwd` 重新推导项目的 `reorg` 不同，这里显式点名目的地、不动存储其余部分。已扎根在目的地的会话只做杂散行归位：`sessions` 行不动，它们散落在另一作用域的每行被收进目的地，报告给 `session_moved: false` 加计数。批量形式因此通过源里的 `sessions` 行**或**盖进它的观察看到会话——这正是清空只持有他处扎根会话之观察的幽灵桶的办法（粘性之前的会话中途路由）。
 
-**Request.** `POST /admin/move-session` takes either
-`{"session_id": "<uuid>", "workspace"?, "project", "pages"?, "confirm"?,
-"force"?, "create"?}` or the batch form `{"from_workspace"?, "from_project",
-"workspace"?, "project", "pages"?, "confirm"?, "force"?, "create"?}`.
-`workspace` (the destination) defaults to the source workspace;
-`from_workspace` defaults to `default`. The CLI resolves `--from-project`
-like every other scope argument (marker, else literal); `--to` and
-`--to-workspace` stay literal.
+**请求。** `POST /admin/move-session` 取 `{"session_id": "<uuid>", "workspace"?, "project", "pages"?, "confirm"?, "force"?, "create"?}` 或批量形式 `{"from_workspace"?, "from_project", "workspace"?, "project", "pages"?, "confirm"?, "force"?, "create"?}`。`workspace`（目的地）默认源 workspace；`from_workspace` 默认 `default`。CLI 像其他作用域参数一样解析 `--from-project`（标记、否则字面）；`--to` 与 `--to-workspace` 保持字面。
 
-**What moves, per session, in ONE transaction:** the `sessions` row, every
-`observations` row of the session (including any that landed in another
-scope), the `handoffs` it produced (`from_session_id`), its
-`session_consolidation_jobs`, `auto_improve_runs` and
-`auto_improve_scheduler_claims`, and its `sessions/<id>.md` page:
+**每会话一个事务移动什么：** `sessions` 行、该会话的每行 `observations`（含落在另一作用域的）、它产出的 `handoffs`（`from_session_id`）、其 `session_consolidation_jobs`、`auto_improve_runs` 与 `auto_improve_scheduler_claims`、及其 `sessions/<id>.md` 页面：
 
-- `--pages move` (default): every version of the page is re-stamped into the
-  destination and the file is renamed into the destination project
-  directory, so the curated page and its supersession history follow the
-  session. Refused with `409` when the destination already has a latest page
-  (or a page file) at that path; retry with `--pages regenerate` or resolve
-  the destination page first.
-- `--pages regenerate`: the source versions are retired (`is_latest = 0`),
-  the session's `summary_page_id` is cleared when it pointed at them, and the
-  file is removed, so the next consolidation of the session writes a fresh
-  page in the destination. The file has to go: a page file left on
-  disk with no latest row is re-indexed as a new latest page by the next
-  reconciliation pass.
+- `--pages move`（默认）：页面的每个版本被重盖戳进目的地、文件改名的进目的地项目目录，策展页面及其取代历史跟随会话。目的地已有最新页面（或页面文件）在该路径时以 `409` 拒绝；带 `--pages regenerate` 重试或先解决目的地页面。
+- `--pages regenerate`：源版本退役（`is_latest = 0`）、会话指向它们的 `summary_page_id` 被清空、文件移除，让该会话的下一次整编在目的地写全新页面。文件必须走：留在磁盘而无最新行的页面文件会被下一次对账环节重索引为新的最新页面。
 
-The audit row (`op = move_session`) carries the operator when the request
-was attributed. What does NOT move: `sessions.cwd` (historical truth; the
-response carries `cwd_warning` when its basename is not the destination
-project, since new sessions started there still resolve by basename unless a
-`.ai-memory.toml` marker pins the project), other pages written during the
-session (decisions, gotchas: pages are not tracked per session), handoffs the
-session *accepted*, and `auto_improve_proposals` (they have no `session_id`;
-they target pages in the scope they were staged in). `entities` and
-`page_feedback` are not re-stamped either, the same gap `move-project` has.
+请求带归因时审计行（`op = move_session`）携带操作者。不移动的：`sessions.cwd`（历史真相；其 basename 不是目的地项目时响应带 `cwd_warning`，因为在那里开的新会话仍按 basename 解析——除非 `.ai-memory.toml` 标记钉住项目）、会话期间写的其他页面（决策、坑点：页面不逐会话跟踪）、该会话*接受*的交接、以及 `auto_improve_proposals`（它们没有 `session_id`；它们面向被暂空的作用域里的页面）。`entities` 与 `page_feedback` 也不重盖戳——与 `move-project` 相同的缺口。
 
-**Order of operations (per session):** validate the destination (404 unless
-`create`), reject a batch whose source is the destination (422; the single
-form with the session's own project is a re-home), run the guards (the
-open-session guard does not apply to a re-home, whose row does not move),
-then, under the
-wiki's exclusive mutation gate, fire `op=move_session` admission webhooks
-(source names in `ctx.workspace`/`ctx.project`, destination names in
-`ctx.destination_*`), move the file, and re-stamp SQLite. Disk goes first
-and SQL last, as in `move-project`: a store failure renames the file back,
-so the move is all-or-nothing unless the filesystem also refuses the
-rollback, in which case the error names the manual repair. A `--confirm`
-run takes a wiki checkpoint before and after; a batch takes one pair for
-the whole run.
+**操作顺序（逐会话）：** 校验目的地（无 `create` 则 404）、拒绝源即目的地的批量（422；与会话自己项目的单形式是归位）、跑守卫（开放会话守卫不适用于行不动的归位），然后在 wiki 的独占变更门下触发 `op=move_session` 准入 webhook（`ctx.workspace`/`ctx.project` 带源名、`ctx.destination_*` 带目的地名）、移动文件、重盖 SQLite 戳。磁盘先行 SQL 殿后，与 `move-project` 相同：存储失败把文件改回名，所以移动要么全有要么全无——除非文件系统连回滚也拒绝，那时错误点名手工修复。`--confirm` 运行前后各打一个 wiki 检查点；批量对整次运行打一对。
 
-**Dry run by default.** Without `--confirm` the server runs the same
-transaction and rolls it back, so the counts in the response are exact
-(`dry_run: true`), and the CLI prints the exact command to apply. Nothing
-is written and no audit row is left; with `--create` against a destination
-that does not exist yet the dry run does not create it either: it reports
-`would_create_project: true` with the counts of what would move (the CLI
-says "would create project"), and only the `--confirm` run creates it.
+**默认 dry run。** 不带 `--confirm` 服务器跑同一事务并回滚，所以响应里的计数是精确的（`dry_run: true`），CLI 打印应用的确切命令。什么都不写、不留审计行；带 `--create` 对尚不存在的目的地，dry run 也不创建它：报告 `would_create_project: true` 加会移动什么的计数（CLI 说 "would create project"），只有 `--confirm` 运行才创建。
 
-**Guards (409 unless `--force`).** A session that is still open (no session
-end recorded) may still receive events; a `pending`/`running` consolidation
-job would write the page under the old scope; the batch form also refuses
-the project the hook router has published as active, like `move-project`.
-`--force` proceeds. A re-home (the session row already sits in the
-destination) skips the open-session guard: the row does not move, so an
-open session only has its stray rows gathered; the job guard still applies. Note that forcing an open session leaves the hook
-router's per-session active pointer on the old scope until it expires;
-sticky routing then keeps following the session row, which is now the
-destination.
+**守卫（无 `--force` 则 409）。** 仍开放的会话（无会话结束记录）可能还会收到事件；`pending`/`running` 整编任务会在旧作用域下写页面；批量形式还拒绝钩子路由器发布为活跃的项目，与 `move-project` 一样。`--force` 继续。归位（会话行已在目的地）跳过开放会话守卫：行不动，所以开放会话只是收集杂散行；任务守卫仍适用。注意强制开放会话会让钩子路由器的逐会话活跃指针留在旧作用域直到过期；粘性路由随后跟随的会话行已是目的地。
 
-**Batch form.** Every session of the source scope moves one at a time, each
-in its own transaction. The batch stops at the first refusal and the error
-body reports `moved`/`total` and the sessions already moved (they stay
-moved). A dry run of the batch shows the whole plan first.
+**批量形式。** 源作用域的每个会话逐个移动、各自一事务。批量在第一个拒绝处停止，错误体报告 `moved`/`total` 与已移动的会话（它们保持已移动）。批量的 dry run 先展示整个计划。
 
-Response (`MoveSessionReport`): `session_id`, `dry_run`, `session_moved`
-(`false` for a re-home), `from`/`to`
-(`{workspace, project}`), `summary` (`observations`, `handoffs`,
-`consolidation_jobs`, `auto_improve_runs`, `auto_improve_claims`,
-`page_versions_moved`, `pages_regenerated`), `page` (`moved` |
-`regenerated` | `already in destination` for a re-home whose page rows all
-sit in the destination | `none` when the session has no page anywhere),
-`cwd`, `cwd_warning`, `would_create_project` (dry run with `create` only),
-`pre_checkpoint` (only when the wiki tree had uncommitted changes before the
-move), `checkpoint` (only when the move changed the tree). The batch wraps
-them in `{dry_run, would_create_project?, from, to, total, moved, sessions:
-[...]}`.
+响应（`MoveSessionReport`）：`session_id`、`dry_run`、`session_moved`（归位为 `false`）、`from`/`to`（`{workspace, project}`）、`summary`（`observations`、`handoffs`、`consolidation_jobs`、`auto_improve_runs`、`auto_improve_claims`、`page_versions_moved`、`pages_regenerated`）、`page`（`moved` | `regenerated` | 归位且页面行全在目的地的 `already in destination` | 会话到处无页面的 `none`）、`cwd`、`cwd_warning`、`would_create_project`（仅带 `create` 的 dry run）、`pre_checkpoint`（仅移动前 wiki 树有未提交变更时）、`checkpoint`（仅移动改了树时）。批量把它们包进 `{dry_run, would_create_project?, from, to, total, moved, sessions: [...]}`。
 
-Failure modes:
+失败模式：
 
-- **Neither `session_id` nor `from_project`, or both** → 400.
-- **Session or destination not found** → 404 (pass `create` / `--create`
-  to create the destination).
-- **Batch source equals the destination** → 422 (the single form with the
-  session's own project is a re-home, 200 with `session_moved: false`).
-- **Open session (unless the row already sits in the destination), pending
-  consolidation job, or active source project (batch)** → 409 without
-  `force`.
-- **Latest page or page file already at `sessions/<id>.md` in the
-  destination** (`--pages move`) → 409; nothing moved.
-- **Store failure after the file moved** → 500, file renamed back; the
-  error names the manual repair if that rollback also fails.
+- **`session_id` 与 `from_project` 都没有、或都有** → 400。
+- **会话或目的地未找到** → 404（传 `create` / `--create` 创建目的地）。
+- **批量源即目的地** → 422（与会话自己项目的单形式是归位，200 带 `session_moved: false`）。
+- **开放会话（行已在目的地除外）、待处理整编任务、或活跃源项目（批量）** → 无 `force` 时 409。
+- **目的地 `sessions/<id>.md` 已有最新页面或页面文件**（`--pages move`）→ 409；什么都没动。
+- **文件移动后存储失败** → 500、文件改回名；回滚也失败时错误点名手工修复。
 
-**It drains every scope, not just the one you named.** Dependent rows are
-matched by session id alone, so a session whose observations were scattered
-across projects (pre-`sticky` mid-session routing, for instance) is gathered
-whole. That is the point of the command — but it means a move can empty a
-project you did not mention, and it is **not cleanly reversible**: moving the
-session back later returns every row to a single project, and the original
-per-row split is gone.
+**它排干每个作用域，不只是你点名的那个。** 依赖行只按会话 id 匹配，所以观察散在多个项目的会话（比如粘性前的会话中途路由）被完整收集。这正是该命令的意义——但也意味着一次移动可能清空你没提到的项目，且**不可干净逆转**：之后把会话移回去把每行归到单一项目，原本的逐行拆分没了。
 
-The dry run therefore names each scope it would drain, with counts:
+因此 dry run 点名它会排干的每个作用域及计数：
 
 ```text
   gathering observations out of 2 scopes into default/acme-api:
@@ -510,8 +248,7 @@ The dry run therefore names each scope it would drain, with counts:
   the split shown here is not restored.
 ```
 
-`POST /admin/move-session` reports the same list as `source_scopes`. Read it
-before confirming.
+`POST /admin/move-session` 把同一列表报告为 `source_scopes`。确认前读它。
 
 ### `checkpoints`
 
@@ -519,22 +256,18 @@ before confirming.
 ai-memory checkpoints
 ```
 
-Lists recent wiki git commits, newest first. The short OID is enough for
-`restore-page`, but the JSON output includes the full OID:
+列出近期 wiki git 提交、最新在前。短 OID 足够 `restore-page` 用，但 JSON 输出含完整 OID：
 
 ```bash
 ai-memory checkpoints --json
 ```
 
-What it is for:
+用途：
 
-- Finding the checkpoint just before a bad page write, delete, purge, move, or
-  restore.
-- Inspecting wiki history without shelling into the server's `wiki/.git` repo.
+- 找到坏页面写入、删除、清除、移动或恢复之前的那个检查点。
+- 不 shell 进服务器的 `wiki/.git` 仓库就能检视 wiki 历史。
 
-Startup creates a one-time `upgrade baseline: existing wiki tree before recovery
-checkpoints` commit for existing data dirs whose wiki repo has zero commits.
-Fresh empty installs still have no commit until there is content to save.
+启动为 wiki 仓库零提交的既有数据目录创建一次性的 `upgrade baseline: existing wiki tree before recovery checkpoints` 提交。全新空安装在有待存内容前仍无提交。
 
 ### `restore-page`
 
@@ -543,32 +276,24 @@ ai-memory restore-page --workspace default --project my-project \
   --path notes/foo.md --from <checkpoint>
 ```
 
-What happens:
+发生什么：
 
-1. Server resolves `(workspace, project)` without auto-creating anything.
-2. Server validates the page path.
-3. Server checkpoints the current wiki tree first (`pre-restore-page ...`) when
-   there are uncommitted changes.
-4. Server reads the exact markdown blob for that project/page from git at
-   `--from`, parses it, writes it back to the live wiki tree, and upserts a new
-   latest page row in SQLite so search, links, and `/web` agree with disk.
-5. Server writes a post-restore checkpoint (`restore-page ...`) when the live
-   tree changed.
+1. 服务器解析 `(workspace, project)` 而不自动创建任何东西。
+2. 服务器校验页面路径。
+3. 有未提交变更时，服务器先给当前 wiki 树打检查点（`pre-restore-page ...`）。
+4. 服务器从 `--from` 的 git 读取该项目/页面的确切 markdown blob、解析、写回活跃 wiki 树、并在 SQLite upsert 一行新的最新页面，让检索、链接与 `/web` 与磁盘一致。
+5. 活跃树变化时服务器写恢复后检查点（`restore-page ...`）。
 
-Failure modes:
+失败模式：
 
-- **Workspace or project name not found** → 404, no mutation.
-- **Invalid page path** → 422, no mutation.
-- **Checkpoint or file not found** → 500 with the git/libgit2 error; any
-  pre-restore checkpoint remains as an audit breadcrumb.
-- **Historical markdown is malformed or non-UTF-8** → 500, live file is not
-  replaced.
+- **workspace 或项目名未找到** → 404，无变更。
+- **无效页面路径** → 422，无变更。
+- **检查点或文件未找到** → 500 带 git/libgit2 错误；任何恢复前检查点留作审计面包屑。
+- **历史 markdown 畸形或非 UTF-8** → 500，活跃文件不被替换。
 
-What it does not recover:
+它不恢复什么：
 
-- Sessions, observations, handoffs, users, audit rows, access counters, and
-  embeddings. Those live only in SQLite and require a full `backup` / `restore`
-  if you need to roll them back.
+- 会话、观察、交接、用户、审计行、访问计数器与嵌入。那些只活在 SQLite 里，需要回滚就要完整 `backup` / `restore`。
 
 ### `backup`
 
@@ -576,32 +301,26 @@ What it does not recover:
 ai-memory backup --output-path /tmp/ai-memory-backup.tar.gz
 ```
 
-What happens on the server:
+服务器上发生什么：
 
-1. SQLite online-backup API copies the live WAL DB to a temp file -
-   guaranteed consistent snapshot without stopping the writer.
-2. Server tar-gzips the snapshot + the wiki tree + `config.toml`.
-3. Response body IS the gzipped tarball
-   (`Content-Type: application/gzip`).
+1. SQLite 在线备份 API 把活跃 WAL DB 拷到临时文件——不停写入器的保证一致快照。
+2. 服务器把快照 + wiki 树 + `config.toml` 打成 tar.gz。
+3. 响应体就是 gzip tarball（`Content-Type: application/gzip`）。
 
-CLI writes the response body to `--output-path`. For a homelab user
-this is the standard "snapshot before doing something dangerous"
-move - `ai-memory backup` first, then proceed.
+CLI 把响应体写到 `--output-path`。对家庭实验室用户，这是标准的「做危险的事之前先快照」动作——先 `ai-memory backup`，再继续。
 
-Restoring a backup follows the inverse:
+恢复备份走逆过程：
 
 ```bash
-# Stop the server first.
+# 先停服务器。
 docker compose -f ~/deploy/ai-memory/docker-compose.yml down
-# Restore (sysinfo refuses if the container is still running).
+# 恢复（容器还在跑时 sysinfo 拒绝）。
 ai-memory restore --from /tmp/ai-memory-backup.tar.gz --data-dir /var/opt/docker/utils/ai-memory/data --confirm
-# Start back up.
+# 再启动。
 docker compose -f ~/deploy/ai-memory/docker-compose.yml up -d
 ```
 
-The `--data-dir` flag points the CLI at the host-side path of the
-docker volume (since `restore` runs directly on disk, not via the
-HTTP admin API).
+`--data-dir` 标志把 CLI 指向 docker 卷的宿主侧路径（因为 `restore` 直接在磁盘上跑、不经 HTTP admin API）。
 
 ### `restore`
 
@@ -609,23 +328,20 @@ HTTP admin API).
 ai-memory restore --from <tarball> --data-dir <path> --confirm
 ```
 
-Direct-disk operation. Refuses if any other `ai-memory` process is
-alive (uses `sysinfo` to scan the process table).
+直接磁盘操作。有其他 `ai-memory` 进程存活即拒绝（用 `sysinfo` 扫进程表）。
 
-Order of operations:
+操作顺序：
 
-1. Check the data dir is empty (or the user passed `--force`).
-2. Extract the tarball into the data dir.
-3. Restore the SQLite snapshot in place.
-4. Print a one-line summary.
+1. 检查数据目录为空（或用户传了 `--force`）。
+2. 把 tarball 解进数据目录。
+3. 就地恢复 SQLite 快照。
+4. 打一行摘要。
 
-Failure modes:
+失败模式：
 
-- **Server still running** → exits with "another ai-memory process is
-  alive (pid X); stop it before restoring" - same wording as `reset`.
-- **`--confirm` omitted** → exits with usage hint.
-- **Data dir not empty + no `--force`** → exits with "data dir not
-  empty; pass `--force` to overwrite".
+- **服务器还在跑** → 以 "another ai-memory process is alive (pid X); stop it before restoring" 退出——与 `reset` 相同措辞。
+- **缺 `--confirm`** → 以用法提示退出。
+- **数据目录非空且无 `--force`** → 以 "data dir not empty; pass `--force` to overwrite" 退出。
 
 ### `reset`
 
@@ -633,20 +349,11 @@ Failure modes:
 ai-memory reset --confirm
 ```
 
-Direct-disk operation. Refuses if any sibling `ai-memory` process is
-alive. Removes the contents of `wiki/`, `db/`, and `raw/` under the
-configured data dir. `config.toml` is preserved.
+直接磁盘操作。有兄弟 `ai-memory` 进程存活即拒绝。移除配置数据目录下 `wiki/`、`db/`、`raw/` 的内容。保留 `config.toml`。
 
-Identical sysinfo guard to `restore`. The use case is "wipe and start
-over" - typically when changing major version with a breaking
-migration, or when bootstrapping a new install on top of an old
-data dir.
+与 `restore` 相同的 sysinfo 守卫。用例是「擦掉重来」——典型是跨带破坏性迁移的大版本切换，或在旧数据目录上引导新安装。
 
-For a docker deploy where the data lives in a host-path bind mount,
-you can also just `rm -rf <host-path>/*` after stopping the
-container - but `ai-memory reset` is the cross-platform path that
-works whether the data dir is local, bind-mounted, or in a named
-volume.
+对数据在宿主路径绑定挂载的 docker 部署，停容器后直接 `rm -rf <host-path>/*` 也行——但 `ai-memory reset` 是跨平台的路径，无论数据目录是本地的、绑定挂载的还是具名卷里的都工作。
 
 ### `reindex`
 
@@ -654,35 +361,30 @@ volume.
 ai-memory reindex --data-dir <path>
 ```
 
-Direct-disk lifecycle operation. Refuses if any sibling `ai-memory` process is
-alive, and also refuses if SQLite already contains rows. `reindex` is a
-rebuild-from-files path, not an in-place dirty-index repair.
+直接磁盘生命周期操作。有兄弟 `ai-memory` 进程存活即拒绝，SQLite 已含行也拒绝。`reindex` 是从文件重建的路径，不是就地脏索引修复。
 
-Use it when the markdown wiki is intact but you intentionally want a fresh
-SQLite migration lineage:
+markdown wiki 完好而你有意想要全新 SQLite 迁移谱系时用它：
 
-1. Stop the server or container.
-2. Take a backup of the current data directory.
-3. Move or remove `<data-dir>/db/memory.sqlite` and its WAL/SHM siblings.
-4. Run `ai-memory reindex --data-dir <data-dir>`.
-5. Run `ai-memory embed` after restart if you need embeddings rebuilt.
+1. 停服务器或容器。
+2. 备份当前数据目录。
+3. 移动或删除 `<data-dir>/db/memory.sqlite` 及其 WAL/SHM 同伴。
+4. 跑 `ai-memory reindex --data-dir <data-dir>`。
+5. 重启后需要重建嵌入就跑 `ai-memory embed`。
 
-What is rebuilt:
+重建什么：
 
-- Workspaces and projects from `_meta.md`, preserving the UUIDs encoded in the
-  wiki directory names.
-- Latest page rows, page links, and FTS from markdown files.
+- 从 `_meta.md` 重建 workspace 与项目，保留 wiki 目录名里编码的 UUID。
+- 从 markdown 文件重建最新页面行、页面链接与 FTS。
 
-What is not rebuilt:
+不重建什么：
 
-- Sessions, observations, handoffs, users/tokens, audit rows, access counters,
-  and embeddings. Those are DB-only state; keep a backup if you need them.
+- 会话、观察、交接、用户/token、审计行、访问计数器与嵌入。那些是仅 DB 状态；需要的话保留备份。
 
-## Operator workflows
+## 操作者工作流
 
-### "Fresh start" (wipe everything)
+### 「全新开始」（全部擦掉）
 
-For a docker / bind-mount deploy where data lives on the host:
+数据在宿主上的 docker / 绑定挂载部署：
 
 ```bash
 ssh homelab
@@ -692,68 +394,55 @@ sudo rm -rf /var/opt/docker/utils/ai-memory/data/*
 docker compose up -d
 ```
 
-Or via the CLI from any machine (slower but portable):
+或从任何机器经 CLI（慢但可移植）：
 
 ```bash
-docker stop ai-memory   # so sysinfo guard passes
-ai-memory reset --confirm   # against the same data dir
+docker stop ai-memory   # 让 sysinfo 守卫通过
+ai-memory reset --confirm   # 对同一数据目录
 docker start ai-memory
 ```
 
-### "Snapshot before risky op"
+### 「高风险操作前快照」
 
 ```bash
 ai-memory backup --output-path "/tmp/ai-memory-$(date +%Y%m%d-%H%M).tar.gz"
-# … do the risky thing …
-# … oh no something broke …
+# ……做危险的事……
+# ……糟了坏了……
 docker compose down
 ai-memory restore --from /tmp/ai-memory-2026-05-23-1530.tar.gz --confirm
 docker compose up -d
 ```
 
-### "Drop one experimental project, keep everything else"
+### 「扔掉一个实验项目，其余全留」
 
 ```bash
 ai-memory purge-project --project experimental --confirm
-# Sibling projects (ai-memory, distrobox-gaming, …) untouched.
+# 兄弟项目（ai-memory、distrobox-gaming……）不受影响。
 ```
 
-### "Rename a project after moving its directory"
+### 「移动目录后重命名项目」
 
 ```bash
 ai-memory rename-project --from old --to new
-# Future sessions in /path/to/new will append to the same project
-# (the hook router stamps by basename(cwd) = "new"); past
-# observations stay under that project too because the project_id
-# is stable.
+# /path/to/new 里的未来会话会追加进同一项目
+# （钩子路由器按 basename(cwd) = "new" 盖戳）；过去观察
+# 也留在该项目下，因为 project_id 稳定。
 ```
 
-### "Reattach a session captured under the wrong project"
+### 「把捕获在错误项目下的会话接回去」
 
 ```bash
 ai-memory move-session <session-id> --to my-project          # dry run
 ai-memory move-session <session-id> --to my-project --confirm
-# Or empty a stray project into the right one, then drop the husk:
+# 或把杂散项目清空进正确项目、再扔掉空壳：
 ai-memory move-session --from-project tmp --to my-project --confirm
 ai-memory purge-project --project tmp --confirm
 ```
 
-## Why this matters: the flat-wiki incident
+## 这为什么重要：扁平 wiki 事件
 
-Before the per-project disk layout (commits up to `e7b9a17`), the
-wiki was flat: `wiki/<page-path>` regardless of project. Two
-projects with the same `pages.path` shared one file on disk. The
-`purge-project` handler then iterated and deleted those files,
-clobbering pages owned by the sibling project. The DB rows for the
-sibling survived (FK is scoped by `project_id`), but every `/web/`
-click returned 404 because the on-disk file was gone.
+逐项目磁盘布局（提交至 `e7b9a17`）之前，wiki 是扁平的：`wiki/<page-path>` 不分项目。两个 `pages.path` 相同的项目在磁盘共享一个文件。`purge-project` 处理器随后迭代删除那些文件，砸掉了兄弟项目拥有的页面。兄弟的 DB 行幸存（外键按 `project_id` 划界），但每次 `/web/` 点击都 404，因为磁盘文件没了。
 
-The shipped band-aid was a `path_still_referenced` check before each
-delete. The proper fix landed in `e7b9a17`: per-project disk roots
-make path-collision structurally impossible. Both the band-aid and
-the underlying class of bug are gone. Lifecycle ops are now safe
-by construction.
+发布的创可贴是每次删除前的 `path_still_referenced` 检查。正确的修复落在 `e7b9a17`：逐项目磁盘根让路径碰撞结构上不可能。创可贴与底层的 bug 类都消失了。生命周期操作现在是构造上安全的。
 
-This is also why `rename-project` is free: the disk path is keyed
-by surrogate `project_id`, not the mutable name. Rename touches one
-column; nothing moves.
+这也是 `rename-project` 免费的原因：磁盘路径以代理键 `project_id` 而非可变名为键。重命名碰一列；什么也不动。
