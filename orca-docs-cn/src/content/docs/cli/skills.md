@@ -65,6 +65,19 @@ orca skills update --skill orca-cli --dry-run
 
 当 Orca 提供应用内更新器时优先用它，这样应用扫描过的那些全局安装位置会被统一改写。标记为 **Skipped** 的行会说明该技能为何无法自动更新（例如缺少来源注册）——先修复安装位置，再重新检查。
 
+## 在主机间分享私有技能
+
+用 **Skills → Share skills** 发布一个技能或一束技能，得到一个未列出、可撤销的链接。发布需要 Orca 账户。发布前审查将包含的文件、脚本、可执行文件、摘要与可选的发行说明；每个已发布版本不可变，之后的本地编辑不会悄悄改变接收方安装到的内容。任何拿到有效链接的人无需登录即可查看并安装分享的技能——把链接当作凭证对待。接收方审阅确切版本、选择全部或其中一部分技能，再选择作用域：本机的全局或工作区、一台配对的 Orca 运行时、WSL 或 SSH 主机。已被修改的现有技能默认选择 **Keep local**。用 **Skills → Manage installs** 更新、回滚或移除 Orca 装上的副本；**Settings → Share Skills** 复制或撤销你的有效链接。撤销链接会阻止后续访问，但不会移除已经装好的副本。
+
+智能体可以在你启用独立的、默认关闭的 **Settings → Share Skills → Allow agents and the Orca CLI to publish skill links** 权限后，从 CLI 发布一组显式指名的技能：
+
+```
+orca skills installed --json
+orca skills share --skill frontend --skill testing --bundle-name "Team Toolkit" --json
+```
+
+`skills installed` 返回安全的 selectors，不暴露本地路径。`skills share` 只接受精确的发现 ID 或无歧义的名字；不接受任意路径或 `--all`。
+
 ## orca-cli
 
 ```
