@@ -425,7 +425,7 @@ ai-memory 无 LLM 也能跑：钩子照常捕获会话，检索用 FTS5 + 声明
 
 对两个 Anthropic 提供方，ai-memory 对 Claude 4.7 及之后的模型与 Claude Mythos Preview 省略 `temperature`，因为这些模型拒绝非默认采样参数。`llm-test` 在提供方应用该兼容规则之前，发送与正常管线相同的代表性 0.2 值。
 
-**⚠️ 非官方且违背 Anthropic 使用政策——风险自负；可能导致账号被限流或封禁。见[安装指南中的警告](/install/#经-claude-订阅-oauth-接入-anthropic)。**
+**⚠️ 非官方且违背 Anthropic 使用政策——风险自负；可能导致账号被限流或封禁。见[安装指南中的警告](/install/#经-claude-订阅接入-anthropicoauth)。**
 
 `copilot` 把 GitHub 用户令牌存在同一 auth 文件里，经 GitHub 的 `/copilot_internal/v2/token` 换取短期 Copilot API 令牌，并带 `vscode-chat` 集成头使用 Copilot Chat 端点。也可以在服务器上设 `COPILOT_GITHUB_TOKEN`、`GH_TOKEN` 或 `GITHUB_TOKEN`。
 

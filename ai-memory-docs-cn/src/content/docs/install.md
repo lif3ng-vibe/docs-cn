@@ -1,58 +1,49 @@
 ---
-title: "Installation cookbook"
-description: "The README quick-start covers the happy path (docker + Claude Code). This page covers everything else:"
+title: "安装指南"
+description: "README 快速开始覆盖快乐路径（docker + Claude Code）。本页覆盖其余一切。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/install.md"
 ---
 
-# Installation cookbook
+# 安装指南（cookbook）
 
-The [README quick-start](../README.md#quick-start) covers the happy
-path (docker + Claude Code). This page covers everything else:
+[README 快速开始](/#快速开始)覆盖快乐路径（docker + Claude Code）。本页覆盖其余一切：
 
-- [Server on a different machine](#server-on-a-different-machine)
-  (homelab, LAN box, remote server)
-- [Configuring the CLI URL and auth](#configuring-the-cli-url-and-auth)
-- [Arch Linux native packages (AUR)](#arch-linux-native-packages-aur)
-  (systemd system service or user service)
-- [Configuring other agent CLIs](#configuring-other-agent-clis)
-  (Codex, Command Code, Devin CLI, OpenCode, OMP, Pi, Cursor, Claude Desktop, Gemini CLI, Antigravity CLI, Grok Build CLI, Zero, Kimi Code, Kiro CLI, OpenClaw, VS Code Copilot, Zed)
-- [Installing hooks without docker](#installing-hooks-without-docker)
-  (curl-based installer)
-- [Running ai-memory without docker](#running-ai-memory-without-docker)
-  (cargo install, building from source)
-- [Managed cross-harness workstreams](managed-workstreams.md)
-  (`ai-memory run`, transparent native resume, and argument forwarding)
-- [LLM provider tiers + self-hosted Ollama](#llm-provider-tiers)
-- [Common subcommands](#common-subcommands)
-- [Managed routing snippets and Agent Skills](#managed-routing-snippets-and-agent-skills)
-- [Operating without auth](#operating-without-auth) (local-only)
-- [Keeping ai-memory up to date](#keeping-ai-memory-up-to-date)
+- [另一台机器上的服务器](#另一台机器上的服务器)
+  （家庭实验室、局域网机器、远程服务器）
+- [配置 CLI URL 与认证](#配置-cli-url-与认证)
+- [Arch Linux 原生包（AUR）](#arch-linux-原生包aur)
+  （systemd 系统服务或用户服务）
+- [配置其他智能体 CLI](#配置其他智能体-clis)
+  （Codex、Command Code、Devin CLI、OpenCode、OMP、Pi、Cursor、Claude Desktop、Gemini CLI、Antigravity CLI、Grok Build CLI、Zero、Kimi Code、Kiro CLI、OpenClaw、VS Code Copilot、Zed）
+- [不用 docker 安装钩子](#不用-docker-安装钩子)
+  （基于 curl 的安装器）
+- [不用 docker 运行 ai-memory](#不用-docker-运行-ai-memory)
+  （cargo install、源码构建）
+- [托管跨外壳工作流](/managed-workstreams/)
+  （`ai-memory run`、透明原生恢复与参数转发）
+- [LLM 提供方层级 + 自托管 Ollama](#llm-提供方层级)
+- [常用子命令](#常用子命令)
+- [托管路由片段与智能体技能](#托管路由片段与智能体技能)
+- [无认证运行](#无认证运行)（仅本地）
+- [保持 ai-memory 最新](#保持-ai-memory-最新)
 
-> **Shorthand.** Most snippets use `$TOKEN` and `homelab:49374`. If
-> you're following along verbatim:
+> **速记。**多数片段用 `$TOKEN` 与 `homelab:49374`。逐字照做的话：
 > ```bash
 > export TOKEN=$(docker run --rm akitaonrails/ai-memory:latest generate-auth-token)
 > ```
-> and replace `homelab` with `localhost` if the server runs on the
-> same machine as the agent CLI.
+> 且服务器与智能体 CLI 同机时把 `homelab` 换成 `localhost`。
 
-The Docker image is published for `linux/amd64` and `linux/arm64`; Apple
-Silicon Macs and ARM64 Linux hosts should not need `--platform linux/amd64`.
+Docker 镜像发布 `linux/amd64` 与 `linux/arm64`；Apple Silicon Mac 与 ARM64 Linux 宿主不需要 `--platform linux/amd64`。
 
-> **Podman.** The `bin/ai-memory` wrapper works with rootless podman, either
-> through the `podman-docker` `docker` shim or by pointing it at podman
-> directly with `AI_MEMORY_DOCKER=podman`. See
-> [SELinux-enforcing hosts](#selinux-enforcing-hosts) for how it detects the
-> engine's rootless and SELinux state.
+> **Podman。**`bin/ai-memory` 包装器可配合 rootless podman 工作——经 `podman-docker` 的 `docker` 垫片，或用 `AI_MEMORY_DOCKER=podman` 直接指向 podman。它如何探测引擎的 rootless 与 SELinux 状态见 [SELinux enforcing 宿主](#selinux-enforcing-宿主)。
 
 ---
 
-## Server on a different machine
+## 另一台机器上的服务器
 
-When the ai-memory server runs on a LAN box (homelab, headless server)
-and you use Claude Code / Codex / etc. on a laptop:
+ai-memory 服务器跑在局域网机器（家庭实验室、无头服务器）上、而你在笔记本上用 Claude Code / Codex / 等时：
 
-### Server side (the homelab host)
+### 服务器侧（家庭实验室宿主）
 
 ```bash
 docker run -d --name ai-memory \
@@ -66,18 +57,9 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-See [Security](../README.md#security) in the README for why
-`AI_MEMORY_AUTH_TOKEN` and `AI_MEMORY_ALLOWED_HOSTS` are both required for
-normal non-loopback binds. Bearer auth does not encrypt traffic: use the ready
-[Caddy](../docker/compose.tls.caddy.yml) or
-[Cloudflare Tunnel](../docker/compose.tls.cloudflared.yml) templates from the
-[HTTPS reverse-proxy guide](https-via-proxy.md) for LAN or remote access.
-When the proxy serves `/web` over HTTPS, also set
-`AI_MEMORY_AUTH__SECURE_COOKIE=true` in the server environment and close or
-redirect direct HTTP access to that hostname. Do not set it for direct HTTP:
-browsers then correctly withhold the session cookie.
+为什么正常非环回绑定同时需要 `AI_MEMORY_AUTH_TOKEN` 与 `AI_MEMORY_ALLOWED_HOSTS`，见 README 的[安全](/#安全)。bearer 认证不加密流量：局域网或远程访问请用 [HTTPS 反向代理指南](/https-via-proxy/)里现成的 [Caddy](https://github.com/akitaonrails/ai-memory/blob/main/docker/compose.tls.caddy.yml) 或 [Cloudflare Tunnel](https://github.com/akitaonrails/ai-memory/blob/main/docker/compose.tls.cloudflared.yml) 模板。代理经 HTTPS 服务 `/web` 时，还要在服务器环境设 `AI_MEMORY_AUTH__SECURE_COOKIE=true` 并关闭或重定向到该主机名的直接 HTTP 访问。直接 HTTP 下不要设它：浏览器那时会正确地扣住会话 cookie。
 
-### Client side (the laptop)
+### 客户端侧（笔记本）
 
 ```bash
 export AI_MEMORY_SERVER_URL="http://<server-ip>:49374"
@@ -87,153 +69,96 @@ ai-memory install-mcp   --client claude-code --apply
 ai-memory install-hooks --agent  claude-code --apply
 ```
 
-`--session-aware` is an optional Claude Code MCP mode:
+`--session-aware` 是可选的 Claude Code MCP 模式：
 
 ```bash
 ai-memory install-mcp --client claude-code --session-aware --apply
 ```
 
-It replaces the static HTTP MCP entry with a local ai-memory stdio bridge that
-still connects to the configured remote server and bearer token, while
-forwarding Claude's lifecycle session id. Pair it with
-`[auto_scope] mode = "per_session"` when the same operator runs concurrent
-Claude Code sessions in different projects. The default static HTTP
-registration remains appropriate for one active project at a time.
+它把静态 HTTP MCP 条目替换为本地 ai-memory stdio 桥——桥仍连接配置的远程服务器与 bearer token，同时转发 Claude 的生命周期会话 id。同一操作者在不同项目跑并发 Claude Code 会话时，配合 `[auto_scope] mode = "per_session"`。一次一个活跃项目时默认静态 HTTP 注册仍然合适。
 
-If `CLAUDE_CONFIG_DIR` is set, the claude-code installers match Claude Code's
-own config resolution: `install-mcp` writes the MCP registration to
-`$CLAUDE_CONFIG_DIR/.claude.json` (instead of `~/.claude.json`),
-`install-hooks` / `setup-agent` target `$CLAUDE_CONFIG_DIR/settings.json`
-(instead of `~/.claude/settings.json`), and `install-skills --scope global`
-uses `$CLAUDE_CONFIG_DIR/skills` (instead of `~/.claude/skills`). `uninstall`
-sweeps the active relocated paths alongside the home defaults. It cannot
-discover an older arbitrary `CLAUDE_CONFIG_DIR` that is no longer set. The
-Docker wrapper forwards the variable for config roots under its existing
-`$HOME` bind mount; use the native binary when the relocated root is outside
-`$HOME`.
+设了 `CLAUDE_CONFIG_DIR` 时，claude-code 安装器匹配 Claude Code 自己的配置解析：`install-mcp` 把 MCP 注册写进 `$CLAUDE_CONFIG_DIR/.claude.json`（而非 `~/.claude.json`），`install-hooks` / `setup-agent` 定位 `$CLAUDE_CONFIG_DIR/settings.json`（而非 `~/.claude/settings.json`），`install-skills --scope global` 用 `$CLAUDE_CONFIG_DIR/skills`（而非 `~/.claude/skills`）。`uninstall` 同时扫家默认值与活跃的迁移路径。它发现不了不再设置的旧任意 `CLAUDE_CONFIG_DIR`。Docker 包装器为其既有 `$HOME` 绑定挂载之下的配置根转发该变量；迁移根在 `$HOME` 之外时用原生二进制。
 
-The CLI commands (`bootstrap`, `status`, `search`, `lint`, `auto-improve`,
-`curator`, `pending-writes`, etc.) inherit the two env vars automatically. So do
-`install-mcp`, `install-hooks`, and
-`setup-agent`: with `AI_MEMORY_SERVER_URL` set, `install-mcp` derives the
-`/mcp` endpoint and `install-hooks` uses the bare server origin.
+CLI 命令（`bootstrap`、`status`、`search`、`lint`、`auto-improve`、`curator`、`pending-writes` 等）自动继承这两个环境变量。`install-mcp`、`install-hooks`、`setup-agent` 也是：设了 `AI_MEMORY_SERVER_URL` 时，`install-mcp` 派生 `/mcp` 端点、`install-hooks` 用裸服务器源。
 
-After upgrading ai-memory, refresh the managed routing package in existing
-projects so Claude Code/OpenCode/Codex/Gemini pick up new tool guidance and
-proactive retrieval rules. From an agent, ask "refresh the ai-memory routing in
-this project"; from the terminal, run `ai-memory install-instructions` (or pass
-`--target AGENTS.md` for non-Claude prompt files). The update is idempotent:
-legacy long snippets between `<!-- ai-memory:start -->` /
-`<!-- ai-memory:end -->` are replaced in place with the slim snippet, and
-managed Agent Skills are installed or updated alongside it.
+升级 ai-memory 之后，刷新既有项目里的托管路由包，让 Claude Code/OpenCode/Codex/Gemini 拿到新的工具指引与主动检索规则。从智能体里说 "refresh the ai-memory routing in this project"；从终端跑 `ai-memory install-instructions`（或非 Claude 提示词文件传 `--target AGENTS.md`）。更新幂等：`<!-- ai-memory:start -->` / `<!-- ai-memory:end -->` 之间的遗留长片段被就地替换为轻量片段，托管智能体技能随之安装或更新。
 
 ---
 
-## Configuring the CLI URL and auth
+## 配置 CLI URL 与认证
 
-The `ai-memory` binary is a thin HTTP client. It never opens the wiki
-or SQLite directly; state-touching commands go through the running
-server, which is the sole writer.
+`ai-memory` 二进制是瘦 HTTP 客户端。它从不直接打开 wiki 或 SQLite；触碰状态的命令经运行中的服务器——唯一写入者。
 
-Configuration is two optional environment variables:
+配置是两个可选环境变量：
 
-| Variable | Default | When to set it |
+| 变量 | 默认 | 何时设置 |
 |---|---|---|
-| `AI_MEMORY_SERVER_URL` | `http://127.0.0.1:49374` | When the server runs somewhere other than the same machine, such as `http://192.168.0.90:49374`. |
-| `AI_MEMORY_AUTH_TOKEN` | unset | When the server has bearer auth enabled. |
+| `AI_MEMORY_SERVER_URL` | `http://127.0.0.1:49374` | 服务器不在同一台机器上时，如 `http://192.168.0.90:49374`。 |
+| `AI_MEMORY_AUTH_TOKEN` | 未设 | 服务器启用 bearer 认证时。 |
 
-For a single-laptop loopback server, set neither variable. For a
-remote or homelab server, put both in your shell rc or direnv file:
+单笔记本环回服务器两者都不设。远程或家庭实验室服务器把两个都放进 shell rc 或 direnv 文件：
 
 ```bash
 export AI_MEMORY_SERVER_URL="http://192.168.0.90:49374"
 export AI_MEMORY_AUTH_TOKEN="<token>"
 ```
 
-Explicit `--server-url` and `--auth-token` flags on `install-mcp`,
-`install-hooks`, and `setup-agent` override the environment. That is
-useful when you are generating config for a client that talks to a
-different server than your default CLI target.
+`install-mcp`、`install-hooks`、`setup-agent` 上的显式 `--server-url` 与 `--auth-token` 标志覆盖环境。为与你默认 CLI 目标不同的服务器生成配置时有用。
 
-If you run `install-mcp --apply` first and later run `install-hooks --apply`
-without env vars or flags, hooks reuse the existing ai-memory MCP entry for
-that agent when possible. This keeps remote MCP config and lifecycle capture
-pointed at the same server instead of falling back to loopback.
+先跑了 `install-mcp --apply`、之后不带环境变量或标志跑 `install-hooks --apply` 时，钩子尽可能复用该智能体既有的 ai-memory MCP 条目。这让远程 MCP 配置与生命周期捕获指向同一服务器、而不是回退环回。
 
-All installer `--apply` modes preserve symlinked configuration files: the
-atomic update is written to the symlink target, including a missing final
-target, while the timestamped backup stays next to the user-facing config
-path. This keeps stow, chezmoi, and similar dotfile-managed installs linked.
+所有安装器的 `--apply` 模式保留符号链接的配置文件：原子更新写到符号链接目标（含缺失的最终目标），带时间戳的备份留在面向用户的配置路径旁。这保持 stow、chezmoi 等点文件管理安装的链接。
 
-`init`, `serve`, and `generate-auth-token` do not need these env vars because
-they either create local files or start the server itself.
+`init`、`serve`、`generate-auth-token` 不需要这些环境变量——它们要么创建本地文件、要么启动服务器本身。
 
-### Default project resolution (`--project-strategy`)
+### 默认项目解析（`--project-strategy`）
 
-By default each session files memory under `basename(cwd)`. Because an agent
-shell keeps its working directory between tool calls, a single
-`mkdir sub && cd sub` reparents the rest of the session into a phantom project
-named `sub`. To make every session for an install resolve its project from the
-git repo root instead — collapsing subdirectories and worktrees — bake the
-strategy into the hooks:
+默认每个会话把记忆归档在 `basename(cwd)` 下。因为智能体外壳在工具调用之间保持工作目录，一次 `mkdir sub && cd sub` 就把会话剩余部分重新挂父到一个叫 `sub` 的幽灵项目。想让安装的每个会话都从 git 仓库根解析项目——收拢子目录与 worktree——把策略固化进钩子：
 
 ```bash
 ai-memory install-hooks --apply --agent claude-code --project-strategy repo-root
 ```
 
-`--project-strategy` accepts `basename` (the new-install default; bakes nothing)
-or `repo-root`. Omitting it during a later `--apply` preserves the strategy
-already baked into that agent's ai-memory hooks, including during the wrapper's
-automatic post-upgrade refresh. Pass `basename` explicitly to remove an
-existing `repo-root` default. This works for every agent and delivery path. A
-per-repo `.ai-memory.toml` marker's own `project_strategy` / `project` still
-take precedence — see
-[the marker-file reference](marker-file.md#install-wide-default-no-marker).
+`--project-strategy` 接受 `basename`（新安装默认；不固化任何东西）或 `repo-root`。之后的 `--apply` 省略它时保留已固化进该智能体 ai-memory 钩子的策略——包括包装器升级后的自动刷新。显式传 `basename` 移除既有的 `repo-root` 默认。这对每个智能体与投递路径都有效。逐仓库 `.ai-memory.toml` 标记自己的 `project_strategy` / `project` 仍然优先——见[标记文件参考](/marker-file/#安装级默认无标记)。
 
 ---
 
-## Arch Linux native packages (AUR)
+## Arch Linux 原生包（AUR）
 
-Use the native packages when you want `/usr/bin/ai-memory` plus systemd units
-instead of the Docker wrapper. The package installs the binary and hook sources
-once; each user still stages their agent hook scripts into their own home dir
-with `install-hooks --apply`.
+想要 `/usr/bin/ai-memory` 加 systemd 单元而非 Docker 包装器时用原生包。包安装一次二进制与钩子源；每个用户仍用自己的 `install-hooks --apply` 把智能体钩子脚本暂存进自己的家目录。
 
-### Package choice
+### 包选择
 
 ```bash
-yay -S ai-memory-bin    # prebuilt Linux x86_64/aarch64 binary, fastest install
-yay -S ai-memory        # builds from source, works on x86_64 and aarch64
+yay -S ai-memory-bin    # 预构建 Linux x86_64/aarch64 二进制，安装最快
+yay -S ai-memory        # 从源码构建，x86_64 与 aarch64 都行
 ```
 
-Both packages install the same runtime layout:
+两个包安装相同的运行时布局：
 
-| Path | Purpose |
+| 路径 | 用途 |
 |---|---|
-| `/usr/bin/ai-memory` | Native CLI/server binary. |
-| `/usr/share/ai-memory/hooks/` | Packaged hook source bundle used by `install-hooks`. |
-| `/usr/lib/systemd/system/ai-memory.service` | System-wide service unit. |
-| `/usr/lib/systemd/user/ai-memory.service` | Per-user service unit. |
-| `/usr/lib/sysusers.d/ai-memory.conf` | Creates the `ai-memory` system user. |
-| `/usr/lib/tmpfiles.d/ai-memory.conf` | Creates `/var/lib/ai-memory` for the system service. |
-| `/etc/ai-memory/config.toml` | System-service config file, tracked as a pacman backup file. |
-| `/etc/ai-memory/env` | System-service environment/secrets file, tracked as a pacman backup file. |
+| `/usr/bin/ai-memory` | 原生 CLI/服务器二进制。 |
+| `/usr/share/ai-memory/hooks/` | `install-hooks` 用的打包钩子源包。 |
+| `/usr/lib/systemd/system/ai-memory.service` | 系统级服务单元。 |
+| `/usr/lib/systemd/user/ai-memory.service` | 逐用户服务单元。 |
+| `/usr/lib/sysusers.d/ai-memory.conf` | 创建 `ai-memory` 系统用户。 |
+| `/usr/lib/tmpfiles.d/ai-memory.conf` | 为系统服务创建 `/var/lib/ai-memory`。 |
+| `/etc/ai-memory/config.toml` | 系统服务配置文件，作为 pacman 备份文件跟踪。 |
+| `/etc/ai-memory/env` | 系统服务环境/秘密文件，作为 pacman 备份文件跟踪。 |
 
-The binary itself does not guess between system and user mode. The unit file
-chooses explicitly:
+二进制本身不在系统与用户模式间猜。单元文件显式选择：
 
-| Mode | Data dir | Config | Env/secrets | Requires sudo? |
+| 模式 | 数据目录 | 配置 | 环境/秘密 | 需要 sudo？ |
 |---|---|---|---|---|
-| User service | `~/.local/share/ai-memory` | `~/.config/ai-memory/config.toml` | `~/.config/ai-memory/env` | No |
-| System service | `/var/lib/ai-memory` | `/etc/ai-memory/config.toml` | `/etc/ai-memory/env` | Yes |
+| 用户服务 | `~/.local/share/ai-memory` | `~/.config/ai-memory/config.toml` | `~/.config/ai-memory/env` | 否 |
+| 系统服务 | `/var/lib/ai-memory` | `/etc/ai-memory/config.toml` | `/etc/ai-memory/env` | 是 |
 
-Do not run both services on the same bind address. They can coexist on disk, but
-only one can listen on `127.0.0.1:49374` unless you change `bind` in one config.
+不要在同一绑定地址上跑两个服务。它们可在磁盘上共存，但除非改一个配置里的 `bind`，只有一个能听 `127.0.0.1:49374`。
 
-### User-level service
+### 用户级服务
 
-Use this on a single-user workstation. It needs no sudo after package install and
-keeps all state in your home directory.
+单用户工作站上用它。包装安装后无需 sudo、全部状态留在你的家目录。
 
 ```bash
 mkdir -p ~/.config/ai-memory ~/.local/share/ai-memory
@@ -243,21 +168,21 @@ ai-memory \
   init
 ```
 
-Edit provider/auth settings if you want LLM consolidation or bearer auth:
+想要 LLM 整编或 bearer 认证就编辑提供方/认证设置：
 
 ```bash
 $EDITOR ~/.config/ai-memory/config.toml
 $EDITOR ~/.config/ai-memory/env
 ```
 
-For a loopback-only local service, bearer auth is optional. If you want one:
+仅环回的本地服务 bearer 认证可选。想要一个的话：
 
 ```bash
 TOKEN=$(ai-memory generate-auth-token)
 printf 'AI_MEMORY_AUTH_TOKEN=%s\n' "$TOKEN" >> ~/.config/ai-memory/env
 ```
 
-Start and inspect the service:
+启动并检查服务：
 
 ```bash
 systemctl --user daemon-reload
@@ -266,26 +191,24 @@ systemctl --user status ai-memory.service
 journalctl --user -u ai-memory.service -f
 ```
 
-If the service should keep running after you log out:
+想让服务在你登出后继续跑：
 
 ```bash
 loginctl enable-linger "$USER"
 ```
 
-Verify the HTTP server:
+验证 HTTP 服务器：
 
 ```bash
 curl http://127.0.0.1:49374/mcp
-# Expect a JSON-RPC error, which means the server is reachable.
+# 预期一个 JSON-RPC 错误，说明服务器可达。
 ```
 
-### System-level service
+### 系统级服务
 
-Use this for a shared workstation, LAN box, or homelab-style host where the
-server should run independently of any logged-in user.
+共享工作站、局域网机器、或服务器应独立于任何登录用户运行的家庭实验室式宿主上用它。
 
-Make sure the package-created user and state directory exist, then initialize
-the data layout as that service user:
+确保包创建的用户与状态目录存在，然后以该服务用户初始化数据布局：
 
 ```bash
 sudo systemd-sysusers /usr/lib/sysusers.d/ai-memory.conf
@@ -296,18 +219,16 @@ sudo -u ai-memory ai-memory \
   init
 ```
 
-Edit system config and secrets:
+编辑系统配置与秘密：
 
 ```bash
 sudoedit /etc/ai-memory/config.toml
 sudoedit /etc/ai-memory/env
 ```
 
-The package installs `/etc/ai-memory/env` as root-readable only because it may
-hold API keys. Keep that file out of backups or logs that other users can read.
+包把 `/etc/ai-memory/env` 装成仅 root 可读，因为它可能持 API key。让其他用户能读的备份或日志别碰它。
 
-For LAN exposure, set a non-loopback bind and allowed hosts in
-`/etc/ai-memory/config.toml`, and set a bearer token in `/etc/ai-memory/env`:
+局域网暴露时，在 `/etc/ai-memory/config.toml` 设非环回绑定与允许主机，并在 `/etc/ai-memory/env` 设 bearer token：
 
 ```toml
 bind = "0.0.0.0:49374"
@@ -319,7 +240,7 @@ TOKEN=$(ai-memory generate-auth-token)
 printf 'AI_MEMORY_AUTH_TOKEN=%s\n' "$TOKEN" | sudo tee -a /etc/ai-memory/env
 ```
 
-Start and inspect the service:
+启动并检查服务：
 
 ```bash
 sudo systemctl daemon-reload
@@ -328,47 +249,44 @@ sudo systemctl status ai-memory.service
 journalctl -u ai-memory.service -f
 ```
 
-Verify from the host:
+从宿主验证：
 
 ```bash
 curl -sI http://127.0.0.1:49374/handoff
-# 401 Unauthorized when AI_MEMORY_AUTH_TOKEN is set.
+# 设了 AI_MEMORY_AUTH_TOKEN 时 401 Unauthorized。
 ```
 
-### LLM provider login with native services
+### 原生服务的 LLM 提供方登录
 
-API-key providers go in the relevant env file:
+API-key 提供方放进相应的 env 文件：
 
 ```bash
-# User service
+# 用户服务
 printf 'AI_MEMORY_LLM_PROVIDER=anthropic\nANTHROPIC_API_KEY=sk-ant-...\n' >> ~/.config/ai-memory/env
 systemctl --user restart ai-memory.service
 
-# System service
+# 系统服务
 sudoedit /etc/ai-memory/env
 sudo systemctl restart ai-memory.service
 ```
 
-OAuth-style providers write tokens into the selected data dir. Run the login
-with the same `--data-dir` and `--config` pair as the service:
+OAuth 式提供方把 token 写进所选数据目录。用与服务相同的 `--data-dir` 与 `--config` 对跑登录：
 
 ```bash
-# User service
+# 用户服务
 ai-memory \
   --data-dir ~/.local/share/ai-memory \
   --config ~/.config/ai-memory/config.toml \
   auth login openai-oauth
 
-# System service
+# 系统服务
 sudo -u ai-memory ai-memory \
   --data-dir /var/lib/ai-memory \
   --config /etc/ai-memory/config.toml \
   auth login openai-oauth
 ```
 
-Use `auth login copilot` the same way for GitHub Copilot. For per-developer
-native hook auth against an OIDC issuer, run `auth login oidc-device` in the
-developer's selected data dir instead:
+GitHub Copilot 同样用 `auth login copilot`。对 OIDC issuer 做逐开发者原生钩子认证时，改在开发者选定的数据目录跑 `auth login oidc-device`：
 
 ```bash
 ai-memory auth login oidc-device \
@@ -376,43 +294,29 @@ ai-memory auth login oidc-device \
   --client-id "ai-memory-cli"
 ```
 
-The stored OIDC access token is also used by thin-client HTTP commands
-(`status`, `search`, `read-page`, `write-page`, `backup`, `embed`, and
-similar) when no static `AI_MEMORY_AUTH_TOKEN` / `[auth].bearer_token` is
-configured. Static bearer auth still has precedence. This is for external
-OIDC-aware gateways/bridges; native ai-memory server auth still uses static root
-bearer / DB-user tokens, and `/admin/*` remains root-only unless a gateway
-translates accepted OIDC auth into upstream auth that ai-memory accepts.
+存储的 OIDC access token 也被瘦客户端 HTTP 命令（`status`、`search`、`read-page`、`write-page`、`backup`、`embed` 等）在未配置静态 `AI_MEMORY_AUTH_TOKEN` / `[auth].bearer_token` 时使用。静态 bearer 认证仍优先。这面向外部 OIDC 感知的网关/桥；原生 ai-memory 服务器认证仍用静态 root bearer / DB 用户 token，且除非网关把接受的 OIDC 认证翻译成 ai-memory 接受的上游认证，`/admin/*` 保持仅 root。
 
-OIDC/Keycloak `sid` claims describe the login provider's session, not the
-coding-agent session ai-memory uses for `[auto_scope]` isolation. Gateways may
-propagate the authenticated user/client/agent headers, but
-`X-Memory-Actor-Session-Id` should only contain a real lifecycle-hook session id
-from a session-aware bridge.
+OIDC/Keycloak 的 `sid` 声明描述登录提供方的会话，不是 ai-memory 用于 `[auto_scope]` 隔离的编码智能体会话。网关可以传播已认证的 user/client/agent 头，但 `X-Memory-Actor-Session-Id` 应只含来自会话感知桥的真实生命周期钩子会话 id。
 
-Restart the service after changing provider settings:
+改提供方设置后重启服务：
 
 ```bash
-systemctl --user restart ai-memory.service      # user mode
-sudo systemctl restart ai-memory.service        # system mode
+systemctl --user restart ai-memory.service      # 用户模式
+sudo systemctl restart ai-memory.service        # 系统模式
 ```
 
-### Wire agent CLIs after native install
+### 原生安装后接智能体 CLI
 
-For a local loopback server with no bearer token:
+无 bearer token 的本地环回服务器：
 
 ```bash
 ai-memory install-mcp   --client claude-code --apply
 ai-memory install-hooks --agent  claude-code --apply
 ```
 
-For concurrent Claude Code sessions, set `[auto_scope] mode = "per_session"` in
-the server config and add `--session-aware` to the `install-mcp` command. This
-works for local and LAN servers; the generated stdio bridge keeps using
-`AI_MEMORY_SERVER_URL` / `--server-url` and `AI_MEMORY_AUTH_TOKEN`.
+并发 Claude Code 会话：在服务器配置设 `[auto_scope] mode = "per_session"` 并给 `install-mcp` 命令加 `--session-aware`。本地与局域网服务器都适用；生成的 stdio 桥继续用 `AI_MEMORY_SERVER_URL` / `--server-url` 与 `AI_MEMORY_AUTH_TOKEN`。
 
-For a bearer-protected local or LAN server, export the endpoint first. The MCP
-URL includes `/mcp`; the hook URL is the bare origin.
+bearer 保护的本地或局域网服务器：先导出端点。MCP URL 含 `/mcp`；钩子 URL 是裸源。
 
 ```bash
 export AI_MEMORY_SERVER_URL="http://127.0.0.1:49374"
@@ -422,177 +326,93 @@ ai-memory install-mcp   --client claude-code --apply
 ai-memory install-hooks --agent  claude-code --apply
 ```
 
-`install-hooks` finds packaged hook sources under `/usr/share/ai-memory/hooks`,
-then stages runnable copies under `~/.local/share/ai-memory/hooks/<agent>/` so
-the agent can execute files owned by your user. Re-run `install-hooks --apply`
-after package upgrades to refresh those staged copies.
+`install-hooks` 在 `/usr/share/ai-memory/hooks` 下找打包的钩子源，然后把可运行副本暂存到 `~/.local/share/ai-memory/hooks/<agent>/` 下，让智能体能执行你用户拥有的文件。包升级后重跑 `install-hooks --apply` 刷新那些暂存副本。
 
-### Capture-policy capability and refresh
+### 捕获策略能力与刷新
 
-`[capture] ignore_paths` is enforced only by native `ai-memory hook` commands
-and generated OpenCode/OMP/Pi/OpenClaw integrations. Local installers select
-native commands where supported; legacy `.sh`/`.ps1` hooks and remote-only or
-Docker script bundles do not enforce it. Re-run `install-hooks --agent <agent>
---apply` or refresh/reinstall generated plugins after upgrading; installer
-capability output reflects the selected integration. See the canonical
-[capture exclusions reference](marker-file.md#capture-exclusions).
+`[capture] ignore_paths` 只由原生 `ai-memory hook` 命令与生成的 OpenCode/OMP/Pi/OpenClaw 集成强制。本地安装器在受支持处选原生命令；遗留 `.sh`/`.ps1` 钩子与纯远程或 Docker 脚本包不强制。升级后重跑 `install-hooks --agent <agent> --apply` 或刷新/重装生成的插件；安装器能力输出反映所选集成。权威参考见[捕获排除](/marker-file/#捕获排除capture-exclusions)。
 
-Lifecycle observation bodies are bounded separately from the 10 MiB HTTP
-request limit. User prompts and post-compaction summaries retain up to 16 KiB;
-notifications and tool excerpts retain up to 2 KB. Native `ai-memory hook`
-commands truncate those fields UTF-8-safely before they enter the local spool
-or wire. The server repeats the event-specific caps for every integration,
-including script and generated clients, then applies a 16 KiB backstop after
-sanitization before any observation reaches SQLite or FTS. Native hook commands
-invoke the installed binary directly, so upgrading that binary is enough to
-receive the client-side cap.
+生命周期观察体的限额独立于 10 MiB 的 HTTP 请求限制。用户提示词与压缩后摘要保留至多 16 KiB；通知与工具摘录保留至多 2 KB。原生 `ai-memory hook` 命令在那些字段进入本地暂存或链路之前 UTF-8 安全地截断。服务器对每个集成（含脚本与生成的客户端）重复事件专属上限，然后在任何观察到达 SQLite 或 FTS 之前、净化之后施加 16 KiB 兜底。原生钩子命令直接调已安装的二进制，所以升级那个二进制就足以拿到客户端侧上限。
 
-Some agent harnesses attach the assistant's final turn to their `Stop` event —
-Claude Code sends it as a raw `last_assistant_message`. By default that text is
-never persisted: the native hook binary strips the raw field before it can reach
-the local spool or the wire, and the server strips it defensively on arrival.
+有些智能体外壳把助手最后一轮附在其 `Stop` 事件上——Claude Code 以原始 `last_assistant_message` 发送。默认该文本从不持久化：原生钩子二进制在它到达本地暂存或链路之前剥掉原始字段，服务器到达时防御性地再剥。
 
-**Opt-in capture (#196).** You can opt in to storing a sanitized, 2 KB-capped
-excerpt of the assistant's final turn as the Stop body. It is a **double
-opt-in** — enable the server first, then the client:
+**选择启用捕获（#196）。**可以选择启用存储助手最后一轮的净化、2 KB 钳制摘录作为 Stop 体。这是**双重选择启用**——先开服务器、再开客户端：
 
-1. **Server:** set `capture_assistant = true` in the live
-   `<data_dir>/config.toml` (or the service's configured TOML file), or set
-   `AI_MEMORY_CAPTURE_ASSISTANT=true`, then restart `ai-memory serve`.
-2. **Client:** re-install the Claude Code hooks with the flag:
+1. **服务器：**在生效的 `<data_dir>/config.toml`（或服务配置的 TOML 文件）设 `capture_assistant = true`，或设 `AI_MEMORY_CAPTURE_ASSISTANT=true`，然后重启 `ai-memory serve`。
+2. **客户端：**带标志重装 Claude Code 钩子：
 
    ```bash
    ai-memory install-hooks --agent claude-code --capture-assistant --apply
    ```
 
-The client sanitizes (built-in patterns) and truncates the excerpt before it
-touches the spool or wire; the server re-scrubs with its `[sanitize]` patterns
-before storing. If either side is off — or the marker is malformed — the Stop
-stays empty. Re-running `install-hooks` without `--capture-assistant` removes
-the flag (idempotent). `--capture-assistant` is Claude Code + native-platform
-only; on any other agent or the script fallback the installer refuses it rather
-than enabling something that cannot take effect. Assistant text is
-privacy-sensitive — read the `SECURITY.md` notes on what it can contain and where
-it flows (consolidation/reviewer prompts, and out to a cloud LLM provider if one
-is configured) before enabling it.
+客户端在摘录碰暂存或链路之前净化（内建模式）并截断；服务器存储前用自己的 `[sanitize]` 模式重洗。任一侧关闭——或标记畸形——Stop 保持为空。不带 `--capture-assistant` 重跑 `install-hooks` 移除该标志（幂等）。`--capture-assistant` 仅限 Claude Code + 原生平台；其他智能体或脚本回退上安装器拒绝它、而不是启用一个无法生效的东西。助手文本隐私敏感——启用前读 `SECURITY.md` 里关于它能含什么、流向哪里（整编/评审者提示词、以及配置了云 LLM 提供方时发出去）的笔记。
 
-Upgrading the binary is sufficient for native Claude Code installs, and pending
-spooled events drain with the raw field stripped as well. Installs that run the
-`.sh`/`.ps1` script fallback (the Docker script bundle or an explicit
-`AI_MEMORY_HOOK_PLATFORM=posix`) cannot sanitize the assistant text, so a `Stop`
-payload still carrying the raw field is dropped whole by the script rather than
-POSTed verbatim. The Docker wrapper deliberately keeps script commands because a
-binary path inside its helper container is not valid on the host; running
-`install-hooks` through that wrapper refreshes the scripts but does not convert
-them. To capture assistant text safely, install a native ai-memory client on the
-agent host, then use that native executable to run
-`install-hooks --agent claude-code --apply`. Even if the script fallback is
-retained, the server still strips any raw field on receipt before persistence.
+升级二进制对原生 Claude Code 安装足够，暂存中待排的事件排放时同样剥掉原始字段。跑 `.sh`/`.ps1` 脚本回退的安装（Docker 脚本包或显式 `AI_MEMORY_HOOK_PLATFORM=posix`）无法净化助手文本，所以仍带原始字段的 `Stop` payload 被脚本整体丢弃而不是逐字 POST。Docker 包装器刻意保留脚本命令，因为其辅助容器内的二进制路径在宿主上无效；经该包装器跑 `install-hooks` 刷新脚本但不转换它们。要安全捕获助手文本，在智能体宿主装原生 ai-memory 客户端，然后用那个原生可执行文件跑 `install-hooks --agent claude-code --apply`。即便保留脚本回退，服务器收到时仍会在持久化前剥掉任何原始字段。
 
-Native `ai-memory hook --event ...` commands spool events locally. Session start
-does a short bounded cleanup drain before fetching a handoff; cancellation-prone
-boundary events (`stop`, `pre-compact`, and `session-end`) start a detached
-`hook-drain` helper so delivery does not depend on one shutdown hook surviving.
-Each spooled entry keeps one idempotency key across retries. A server that
-processed an event but lost the batch response will not duplicate its
-observation or completed session-end effects; if processing stopped after the
-observation commit, the retry re-runs downstream work. SessionEnd atomically
-commits its end watermark with its automatic handoff; a retry that finds that
-transaction complete finishes any interrupted wiki commit, durable provider
-enqueue, and ingest-key completion without adding a second handoff. Those
-incomplete effects remain at-least-once until the server marks the event
-complete.
-On Unix, the helper uses a trusted `setsid` launcher when available and falls
-back to a separate process group otherwise; Windows uses detached/breakaway
-process flags. The spool is capped, so a permanently undrained backlog is
-eventually pruned rather than unbounded, but old undelivered events can be lost.
-The built-in timings stay short on agent-facing paths, but high-latency or
-large-backlog instances can raise them with whole-minute runtime env vars in the
-agent's environment; no `install-hooks` rerun is needed:
+原生 `ai-memory hook --event ...` 命令在本地暂存事件。会话启动在取交接前做短的有界清理排放；易取消的边界事件（`stop`、`pre-compact`、`session-end`）启动分离的 `hook-drain` 辅助进程，让投递不依赖单个关机钩子活下来。每条暂存条目跨重试保持一个幂等键。处理了事件但丢了批次响应的服务器不会重复其观察或已完成的会话结束效果；观察提交后处理停止的话，重试重跑下游工作。SessionEnd 原子地提交其结束水位线与自动交接；发现该事务已完整的重试完成任何被中断的 wiki 提交、持久提供方入队与摄取键完成，而不加第二条交接。那些不完整的效果在服务器标记事件完成前保持至少一次。Unix 上，辅助进程可用时用受信 `setsid` 启动器、否则回退独立进程组；Windows 用 detached/breakaway 进程标志。暂存有上限，所以永久不排的积压最终被修剪而非无界，但旧的未投递事件可能丢失。内置时序在面向智能体的路径上保持短，但高延迟或大积压实例可在智能体环境用整分钟运行时环境变量调高；无需重跑 `install-hooks`：
 
-| Env var | Built-in default | Max override | What it caps |
+| 环境变量 | 内置默认 | 最大覆盖 | 钳制什么 |
 |---|---:|---:|---|
-| `AI_MEMORY_HOOK_DRAIN_TIMEOUT_MINUTES` | 3 seconds | 60 minutes | each event POST during a drain |
-| `AI_MEMORY_HOOK_HANDOFF_TIMEOUT_MINUTES` | 3 seconds | 60 minutes | the synchronous `session-start` handoff GET |
-| `AI_MEMORY_HOOK_START_BUDGET_MINUTES` | 3 seconds | 60 minutes | total time `session-start` may spend waiting for the drain lock and cleanup draining |
-| `AI_MEMORY_HOOK_BACKGROUND_DRAIN_BUDGET_MINUTES` | 5 minutes | 60 minutes | total time the detached `hook-drain` helper may spend after a background-drain boundary |
-| `AI_MEMORY_HOOK_INCREMENTAL_THRESHOLD` | 32 events | positive integer | spool backlog size that triggers a 250 ms `post-tool-use` catch-up drain |
+| `AI_MEMORY_HOOK_DRAIN_TIMEOUT_MINUTES` | 3 秒 | 60 分钟 | 排放期间每个事件 POST |
+| `AI_MEMORY_HOOK_HANDOFF_TIMEOUT_MINUTES` | 3 秒 | 60 分钟 | 同步的 `session-start` 交接 GET |
+| `AI_MEMORY_HOOK_START_BUDGET_MINUTES` | 3 秒 | 60 分钟 | `session-start` 等待排放锁与清理排放的总时长 |
+| `AI_MEMORY_HOOK_BACKGROUND_DRAIN_BUDGET_MINUTES` | 5 分钟 | 60 分钟 | 分离的 `hook-drain` 辅助在后台排放边界之后可花的总时长 |
+| `AI_MEMORY_HOOK_INCREMENTAL_THRESHOLD` | 32 条事件 | 正整数 | 触发一次 250 ms `post-tool-use` 追赶排放的暂存积压量 |
 
-Timing values must be positive whole minutes. Missing, empty, non-numeric, or
-zero values fall back to the built-in defaults; values above 60 are clamped. The
-incremental threshold is a positive event count; invalid values fall back to 32.
+时序值必须是正整分钟。缺失、空、非数字或零值回退内置默认；超过 60 被钳制。增量阈值是正的事件计数；无效值回退 32。
 
-Server-side hook ingest also has an optional per-source limiter for shared or
-remote installs that need protection from one runaway agent session. Set
-`AI_MEMORY_HOOK_RATE_PER_SEC` on the server to the token refill rate per
-actor/session source; `0` or unset disables the limiter. Set
-`AI_MEMORY_HOOK_RATE_BURST` to override the burst size (defaults to the refill
-rate, minimum one token when enabled). The limiter is bounded in both key count
-and key bytes, and `/hook/batch` drains can skip over-budget sources while still
-accepting later unrelated sources.
+服务器侧钩子摄取还有可选的逐来源限流器，供需要防护单个失控智能体会话的共享或远程安装。在服务器上把 `AI_MEMORY_HOOK_RATE_PER_SEC` 设为每行为者/会话来源的令牌补充率；`0` 或未设禁用限流器。设 `AI_MEMORY_HOOK_RATE_BURST` 覆盖突发大小（默认等于补充率，启用时最少一令牌）。限流器在键数与键字节数上都有界，`/hook/batch` 排放可跳过超预算来源、仍接受之后无关来源。
 
-### Native service operations
+### 原生服务操作
 
 ```bash
-# User service
+# 用户服务
 systemctl --user restart ai-memory.service
 systemctl --user stop ai-memory.service
 journalctl --user -u ai-memory.service -n 100
 
-# System service
+# 系统服务
 sudo systemctl restart ai-memory.service
 sudo systemctl stop ai-memory.service
 journalctl -u ai-memory.service -n 100
 ```
 
-Backups still use the same CLI, just point it at the service data dir:
+备份仍用同一 CLI，只要指向服务数据目录：
 
 ```bash
-# User service
+# 用户服务
 ai-memory --data-dir ~/.local/share/ai-memory backup --to ~/ai-memory-backup.tar.gz
 
-# System service
+# 系统服务
 sudo -u ai-memory ai-memory --data-dir /var/lib/ai-memory backup --to /var/lib/ai-memory/backup.tar.gz
 ```
 
-Package removal does not delete data. Stop the service and remove state only
-when you intentionally want to erase memory:
+包移除不删数据。只有刻意想抹掉记忆时才停服务并移除状态：
 
 ```bash
 systemctl --user disable --now ai-memory.service
 sudo systemctl disable --now ai-memory.service
 
-# Optional destructive cleanup:
+# 可选破坏性清理：
 rm -rf ~/.local/share/ai-memory ~/.config/ai-memory
 sudo rm -rf /var/lib/ai-memory /etc/ai-memory
 ```
 
-### Maintainer integration test
+### 维护者集成测试
 
-The normal CI runs `scripts/check-native-packaging.sh`, a host-safe regression
-check that uses a temporary alternate root for `systemd-analyze`,
-`systemd-sysusers`, and `systemd-tmpfiles`. It verifies unit syntax, expected
-paths, sysusers output, tmpfiles rules, env-file mode, and AUR shell syntax
-without writing to host `/usr`, `/etc`, `/var`, or touching real services.
+正常 CI 跑 `scripts/check-native-packaging.sh`——一个宿主安全的回归检查，用临时备用根给 `systemd-analyze`、`systemd-sysusers`、`systemd-tmpfiles`。它验证单元语法、预期路径、sysusers 输出、tmpfiles 规则、env 文件模式与 AUR shell 语法，而不写宿主 `/usr`、`/etc`、`/var` 或碰真实服务。
 
-The repo also includes a manual Arch integration harness that is intentionally
-kept out of routine CI because it creates a disposable distrobox, installs
-packages, starts real systemd services, and can take several minutes:
+仓库还有一个手工 Arch 集成框架，刻意不进日常 CI——它创建一次性 distrobox、安装包、启动真实 systemd 服务、可能要几分钟：
 
 ```bash
 scripts/test-native-arch-systemd-distrobox.sh
 ```
 
-It verifies the AUR metadata shape, builds the current working tree, installs
-the native layout into the disposable Arch container, starts the system service
-with `systemctl`, starts the user-profile command under transient systemd
-supervision, and checks that packaged hook sources under
-`/usr/share/ai-memory/hooks` can be staged by `install-hooks`.
+它验证 AUR 元数据形状、构建当前工作树、把原生布局装进一次性 Arch 容器、用 `systemctl` 启动系统服务、在临时 systemd 监管下启动用户档命令、并检查 `/usr/share/ai-memory/hooks` 下打包的钩子源能被 `install-hooks` 暂存。
 
-The destructive part of that script refuses to run unless it detects a
-container/distrobox environment.
+该脚本的破坏性部分检测不到容器/distrobox 环境时拒绝运行。
 
-Useful knobs:
+有用的旋钮：
 
 ```bash
 AI_MEMORY_NATIVE_TEST_BOX=ai-memory-native-test scripts/test-native-arch-systemd-distrobox.sh
@@ -602,48 +422,31 @@ AI_MEMORY_NATIVE_TEST_IMAGE=quay.io/toolbx/arch-toolbox:latest scripts/test-nati
 
 ---
 
-## Configuring other agent CLIs
+## 配置其他智能体 CLI
 
-> `install-mcp --server-url` accepts either the bare server origin or the full
-> MCP endpoint and appends a missing `/mcp` exactly once.
-> `install-hooks --server-url` takes the bare server **origin**
-> (e.g. `http://homelab:49374`) — hook scripts append `/hook`, `/handoff`,
-> etc. themselves.
+> `install-mcp --server-url` 接受裸服务器源或完整 MCP 端点，缺失的 `/mcp` 恰好补一次。
+> `install-hooks --server-url` 取裸服务器**源**（如 `http://homelab:49374`）——钩子脚本自己追加 `/hook`、`/handoff` 等。
 
-Each agent CLI needs two things:
+每个智能体 CLI 需要两样东西：
 
-1. **MCP registration** - so the agent can call `memory_query`,
-   `memory_recent`, `memory_handoff_accept`.
-2. **Lifecycle hooks** - so the server auto-captures session events.
-   Without this, the agent can still query memory but capture
-   becomes manual.
+1. **MCP 注册**——让智能体能调 `memory_query`、`memory_recent`、`memory_handoff_accept`。
+2. **生命周期钩子**——让服务器自动捕获会话事件。
+   没有它，智能体仍能查记忆，但捕获变手工。
 
-Claude Desktop, VS Code Copilot, and Zed are MCP-only today. The
-hook-capable clients in the [README Support Matrix](../README.md#support-matrix),
-including Pi and Zero, have lifecycle capture paths through `install-hooks`.
+Claude Desktop、VS Code Copilot、Zed 今天仅 MCP。[README 支持矩阵](/#支持矩阵)里带钩子能力的客户端（含 Pi 与 Zero）都有经 `install-hooks` 的生命周期捕获路径。
 
-> **Hook install pattern.** Local supported profiles default to host-native
-> commands. Claude Code may use its supported Windows exec form (`command` =
-> real `ai-memory.exe`, `args` = argv tokens for `hook --event ...`); other
-> agents use native single command strings according to their hook schema.
-> PowerShell/Git Bash script bundles are compatibility fallbacks and do not
-> enforce capture-policy v1. Remote-only/Docker script installs still use the
-> two-step path: (1) `docker cp` bundled scripts to your home dir, (2)
-> `docker run --rm install-hooks` renders the config snippet.
-> OpenClaw, OpenCode, OMP, and Pi are different: they use generated
-> TypeScript plugin/extension files, so no shell-script extraction is
-> needed for those clients.
+> **钩子安装模式。**本地受支持的配置默认宿主原生命令。Claude Code 可用其受支持的 Windows exec 形式（`command` = 真实 `ai-memory.exe`、`args` = `hook --event ...` 的 argv token）；其他智能体按各自钩子 schema 用原生单命令字符串。PowerShell/Git Bash 脚本包是兼容性回退、不强制 capture-policy v1。纯远程/Docker 脚本安装仍走两步路径：(1) `docker cp` 捆绑脚本到你的家目录，(2) `docker run --rm install-hooks` 渲染配置片段。OpenClaw、OpenCode、OMP、Pi 不同：它们用生成的 TypeScript 插件/扩展文件，所以那些客户端不需要 shell 脚本提取。
 
 ### OpenAI Codex
 
 ```bash
-# MCP snippet (merge into ~/.codex/config.toml):
+# MCP 片段（合并进 ~/.codex/config.toml）：
 docker run --rm akitaonrails/ai-memory:latest \
     install-mcp --client codex \
     --server-url "http://homelab:49374/mcp" \
     --auth-token "$TOKEN"
 
-# Hooks — extract scripts + render config:
+# 钩子——提取脚本 + 渲染配置：
 docker cp ai-memory:/usr/local/share/ai-memory/hooks ~/.ai-memory/
 docker run --rm akitaonrails/ai-memory:latest \
     install-hooks --agent codex \
@@ -652,40 +455,26 @@ docker run --rm akitaonrails/ai-memory:latest \
         --auth-token "$TOKEN"
 ```
 
-Codex still does not expose a reliable true session-end hook. Its `Stop` hook is
-captured as a turn/stop observation only; ai-memory does **not** treat it as
-SessionEnd. When you need the final session summary, handoff, and
-auto-improvement eligibility for the current project, run:
+Codex 仍不暴露可靠的真实会话结束钩子。其 `Stop` 钩子只被捕获为回合/停止观察；ai-memory **不**把它当 SessionEnd。需要当前项目的最终会话摘要、交接与自动改进资格时，运行：
 
 ```bash
 ai-memory finalize-session
-# add --all to close every matching open Codex session in this workspace/project
-# or target one exact concurrent session (mutually exclusive with --all)
+# 加 --all 关闭此 workspace/project 下每个匹配的开放 Codex 会话
+# 或精确定位一个并发会话（与 --all 互斥）
 ai-memory finalize-session --session-id <uuid>
 ```
 
-Antigravity CLI also lacks a true session-end event. Its `Stop` hook marks the
-end of one execution loop, so ai-memory intentionally records it without
-closing the conversation. Its `PreInvocation` hook likewise runs before every
-model call; ai-memory treats only the documented `invocationNum = 0` call as
-SessionStart. Later invocations return an empty hook result without capturing
-another start or fetching the single-use handoff, so a handoff created while
-the current conversation winds down remains available to the next session.
-After the final turn, finalize the latest matching Antigravity session
-explicitly:
+Antigravity CLI 同样缺真会话结束事件。其 `Stop` 钩子标记一个执行循环的结束，所以 ai-memory 刻意记录它而不关闭对话。其 `PreInvocation` 钩子也在每次模型调用前跑；ai-memory 只把有文档的 `invocationNum = 0` 调用当 SessionStart。后续调用返回空钩子结果、不再捕获一次 start 或取走单次交接，所以当前对话收尾期间创建的交接仍留给下一会话。最后一轮之后，显式收尾最新的匹配 Antigravity 会话：
 
 ```bash
 ai-memory finalize-session --agent antigravity-cli
-# add --all only to close every matching open Antigravity session in this scope
-# or add --session-id <uuid> to close one exact concurrent session
+# 加 --all 只为关闭此作用域下每个匹配的开放 Antigravity 会话
+# 或加 --session-id <uuid> 关闭一个确切的并发会话
 ```
 
 ### Devin CLI
 
-Devin uses `~/.devin/config.json` for MCP servers and `~/.devin/hooks.v1.json`
-for lifecycle hooks by default. If you prefer one combined Devin config file,
-pass `--config-file ~/.devin/config.json` to `install-hooks`; ai-memory then
-merges the hook entries under that file's `hooks` key.
+Devin 默认用 `~/.devin/config.json` 放 MCP 服务器、`~/.devin/hooks.v1.json` 放生命周期钩子。偏好单一合并 Devin 配置文件时，给 `install-hooks` 传 `--config-file ~/.devin/config.json`；ai-memory 随后把钩子条目合并进该文件的 `hooks` 键下。
 
 ```bash
 ai-memory install-mcp --client devin --apply \
@@ -699,30 +488,16 @@ ai-memory install-hooks --agent devin --apply \
 ai-memory install-skills --agent devin
 ```
 
-Devin's hook vocabulary is close to Claude Code's, with two important
-differences:
+Devin 的钩子词汇表接近 Claude Code，有两个重要差异：
 
-- Devin emits `PostCompaction` after compaction and includes a `summary` field;
-  ai-memory records it as `post-compaction`.
-- Devin does not expose subagent start/stop hooks, so ai-memory cannot capture
-  nested subagent boundaries for Devin.
+- Devin 在压缩后发 `PostCompaction` 并带 `summary` 字段；ai-memory 记录为 `post-compaction`。
+- Devin 不暴露子智能体 start/stop 钩子，所以 ai-memory 无法为 Devin 捕获嵌套子智能体边界。
 
-The `SessionStart` hook injects pending handoffs through Devin's
-`hookSpecificOutput.additionalContext`. Real Devin `SessionStart` and
-`PostToolUse` payloads may omit `session_id` and `cwd`; ai-memory now infers cwd
-from `DEVIN_PROJECT_DIR` or the hook process working directory when the payload
-omits it, and mints/reuses a per-host session id from hook state when necessary,
-so those events are still captured. A payload-provided value always wins.
+`SessionStart` 钩子经 Devin 的 `hookSpecificOutput.additionalContext` 注入待处理交接。真实 Devin 的 `SessionStart` 与 `PostToolUse` payload 可能缺 `session_id` 与 `cwd`；ai-memory 现在在 payload 省略时从 `DEVIN_PROJECT_DIR` 或钩子进程工作目录推断 cwd、必要时从钩子状态铸造/复用逐宿主会话 id，所以那些事件仍被捕获。payload 提供的值永远优先。
 
 ### Kimi Code
 
-Kimi Code keeps MCP servers in `~/.kimi-code/mcp.json` and lifecycle hooks in
-`~/.kimi-code/config.toml`; both move together when `$KIMI_CODE_HOME` is set.
-The CLI also accepts `--agent kimi` as an alias. `install-mcp` writes the
-server URL with a `?flavor=moonshot` query because the Moonshot API rejects
-root-level `anyOf`/`oneOf`/`allOf` in tool parameter schemas ("moonshot
-flavored json schema") — the ai-memory server answers flavored requests with
-flat schemas, and all other clients keep the upstream shape.
+Kimi Code 把 MCP 服务器放 `~/.kimi-code/mcp.json`、生命周期钩子放 `~/.kimi-code/config.toml`；设 `$KIMI_CODE_HOME` 时两者一起移动。CLI 也接受 `--agent kimi` 别名。`install-mcp` 写服务器 URL 时带 `?flavor=moonshot` 查询，因为 Moonshot API 拒绝工具参数 schema 里根级 `anyOf`/`oneOf`/`allOf`（「moonshot 风味 json schema」）——ai-memory 服务器以平铺 schema 应答风味请求，其他客户端保持上游形状。
 
 ```bash
 ai-memory install-mcp --client kimi-code --apply \
@@ -734,33 +509,13 @@ ai-memory install-hooks --agent kimi-code --apply \
     --auth-token "$TOKEN"
 ```
 
-`install-hooks` merges `[[hooks]]` entries into `config.toml`, preserving the
-provider/model settings the same file holds. Entries cover 10 events —
-`SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`,
-`PostToolUseFailure` (Kimi Code reports tool failures separately from
-successful calls; it reuses the post-tool-use handler), `Stop`,
-`SubagentStart`, `SubagentStop`, and `PreCompact` — and default to
-native `ai-memory hook --event … --agent kimi-code` commands on local installs
-(local spool plus batched delivery, capture-policy v1 enforced); the staged
-script bundle under `~/.local/share/ai-memory/hooks/kimi-code/` is the
-compatibility fallback (fire-and-forget POSTs to `/hook`). A pending handoff
-is injected at `UserPromptSubmit` through the hook's stdout, which Kimi Code
-appends to the model context as a user message before the turn; Kimi Code
-fires `SessionStart` but discards that hook's stdout, so hooks installed by
-an older release consumed handoffs without delivering them. Existing native
-hook commands invoke the current `ai-memory` binary and pick up the corrected
-delivery behavior on upgrade. Re-run
-`ai-memory install-hooks --agent kimi-code --apply` only for a
-script-fallback installation so its staged scripts are refreshed.
+`install-hooks` 把 `[[hooks]]` 条目合并进 `config.toml`，保留同一文件持有的提供方/模型设置。条目覆盖 10 个事件——`SessionStart`、`SessionEnd`、`UserPromptSubmit`、`PreToolUse`、`PostToolUse`、`PostToolUseFailure`（Kimi Code 把工具失败与成功调用分开报告；它复用 post-tool-use 处理器）、`Stop`、`SubagentStart`、`SubagentStop`、`PreCompact`——且本地安装默认用原生 `ai-memory hook --event … --agent kimi-code` 命令（本地暂存加批量投递、强制 capture-policy v1）；`~/.local/share/ai-memory/hooks/kimi-code/` 下暂存的脚本包是兼容性回退（即发即忘 POST 到 `/hook`）。待处理交接经钩子 stdout 在 `UserPromptSubmit` 注入，Kimi Code 把它作为用户消息附加到回合前的模型上下文；Kimi Code 触发 `SessionStart` 但丢弃该钩子的 stdout，所以旧版本装的钩子消费了交接却没投递。既有原生钩子命令调当前 `ai-memory` 二进制、升级即拿到修正的投递行为。只为脚本回退安装重跑 `ai-memory install-hooks --agent kimi-code --apply` 刷新其暂存脚本。
 
-Kimi Code hook entries accept only `event`, `matcher`, `command`, and
-`timeout`; extra fields make the whole `config.toml` fail to load, so prefer
-`install-hooks --apply` over hand edits.
+Kimi Code 钩子条目只接受 `event`、`matcher`、`command`、`timeout`；多余字段让整个 `config.toml` 加载失败，所以偏好 `install-hooks --apply` 而非手编。
 
 ### Command Code
 
-Command Code keeps user-scope MCP and hook configuration in separate JSON
-files under `~/.commandcode/`. Install both integrations with:
+Command Code 把用户作用域 MCP 与钩子配置放在 `~/.commandcode/` 下独立 JSON 文件里。两样都装：
 
 ```bash
 ai-memory install-mcp --client command-code --apply \
@@ -772,58 +527,31 @@ ai-memory install-hooks --agent command-code --apply \
     --auth-token "$TOKEN"
 ```
 
-The aliases `commandcode`, `cmdc`, and `cmd` are accepted. `install-mcp`
-merges a native HTTP entry into `~/.commandcode/mcp.json`; `install-hooks`
-merges only Command Code's four stable events (`SessionStart`, `PreToolUse`,
-`PostToolUse`, and `Stop`) into `~/.commandcode/settings.json`, preserving
-other settings and hook handlers. The hook definitions deliberately omit
-`matcher`: Command Code documents omission as "all tools", while any matcher
-on `SessionStart` or `Stop` prevents that lifecycle hook from firing.
+接受别名 `commandcode`、`cmdc`、`cmd`。`install-mcp` 把原生 HTTP 条目合并进 `~/.commandcode/mcp.json`；`install-hooks` 只把 Command Code 的四个稳定事件（`SessionStart`、`PreToolUse`、`PostToolUse`、`Stop`）合并进 `~/.commandcode/settings.json`，保留其他设置与钩子处理器。钩子定义刻意省略 `matcher`：Command Code 文档把省略解释为「所有工具」，而 `SessionStart` 或 `Stop` 上任何 matcher 都会阻止该生命周期钩子触发。
 
-Local installs use the native `ai-memory hook` command, so Command Code's
-native `session_id` and `cwd` are attributed directly;
-recognized `shell_command`, `read_file`, `write_file`, and `edit_file`
-payloads pass through the same bounded capture-exclusion policy as other
-native integrations. A pending handoff is injected through
-`hookSpecificOutput.additionalContext` at `SessionStart`.
+本地安装用原生 `ai-memory hook` 命令，所以 Command Code 原生的 `session_id` 与 `cwd` 直接归因；识别的 `shell_command`、`read_file`、`write_file`、`edit_file` payload 与其他原生集成走同一有界捕获排除策略。待处理交接经 `hookSpecificOutput.additionalContext` 在 `SessionStart` 注入。
 
-Command Code's stable `Stop` event ends a turn, not a session. Finalize the
-open session after the last turn when you need immediate consolidation and a
-handoff:
+Command Code 稳定的 `Stop` 事件结束一个回合、不是会话。需要立即整编与交接时，最后一轮之后收尾开放会话：
 
 ```bash
 ai-memory finalize-session --agent command-code
 ai-memory finalize-session --agent command-code --session-id <uuid>
 ```
 
-ai-memory does not install Command Code Mods. Mods run arbitrary unsandboxed
-code and are not needed for the stable hook or managed-session paths.
+ai-memory 不安装 Command Code Mods。Mods 跑任意非沙箱代码、稳定钩子或托管会话路径不需要它们。
 
-Managed sessions are opt-in:
+托管会话选择启用：
 
 ```bash
 ai-memory run command-code
 ai-memory run command-code --yolo --model <model-id>
 ```
 
-The aliases `commandcode`, `cmdc`, and `cmd` select the same adapter. The
-default executable is `command-code` on Unix and `cmdc` on native Windows.
-Fresh sessions keep Command Code's native UUID; returning sessions use exact
-`--session <uuid>`. The read-only adapter accepts only the observed v3 header,
-requires its UUID filename and canonical `cwd` to match the checkout, excludes
-checkpoint/prompt sidecars, hidden reasoning, images, and provider metadata,
-and preserves `parentId` on visible events for branch provenance. An unknown
-future transcript version fails closed until its schema is audited. Direct
-`cmd`, `cmdc`, or `command-code` launches remain unchanged.
+别名 `commandcode`、`cmdc`、`cmd` 选同一适配器。默认可执行文件在 Unix 上是 `command-code`、原生 Windows 上是 `cmdc`。全新会话保留 Command Code 原生 UUID；回来的会话用精确 `--session <uuid>`。只读适配器只接受观察到的 v3 头、要求其 UUID 文件名与规范 `cwd` 匹配检出、排除 checkpoint/prompt sidecar、隐藏推理、图像与提供方元数据，并在可见事件上保留 `parentId` 作分支出处。未知的未来转录版本在 schema 审计前失败关闭。直接 `cmd`、`cmdc`、`command-code` 启动保持不变。
 
 ### Kiro CLI
 
-Kiro CLI has one MCP surface and two incompatible lifecycle-hook formats.
-ai-memory supports both through explicit installer targets: `kiro-cli` remains
-the v2 target, while `kiro-cli-v3` selects the standalone v3 registration. The
-global MCP file is `$KIRO_HOME/settings/mcp.json`, defaulting to
-`~/.kiro/settings/mcp.json`; pass `--config-file .kiro/settings/mcp.json` for a
-project-scoped entry.
+Kiro CLI 有一个 MCP 面与两个互不兼容的生命周期钩子格式。ai-memory 经显式安装器目标支持两者：`kiro-cli` 保持 v2 目标、`kiro-cli-v3` 选独立 v3 注册。全局 MCP 文件是 `$KIRO_HOME/settings/mcp.json`、默认 `~/.kiro/settings/mcp.json`；项目作用域条目传 `--config-file .kiro/settings/mcp.json`。
 
 ```bash
 ai-memory install-mcp --client kiro-cli --apply \
@@ -831,85 +559,45 @@ ai-memory install-mcp --client kiro-cli --apply \
     --auth-token "$TOKEN"
 ```
 
-The `kiro` alias is equivalent. The installed URL includes
-`?flavor=bedrock` so Kiro's Bedrock backend receives schemas without
-root-level `anyOf`, `oneOf`, or `allOf`; nested schemas and runtime validation
-remain intact. Kiro requires HTTPS for non-loopback remote servers, so the CLI
-rejects a plain-HTTP homelab URL before changing the file. Configure a reverse
-proxy as described in [HTTPS via reverse proxy](https-via-proxy.md).
+`kiro` 别名等价。安装的 URL 含 `?flavor=bedrock`，让 Kiro 的 Bedrock 后端拿到无根级 `anyOf`、`oneOf`、`allOf` 的 schema；嵌套 schema 与运行时校验保持完整。Kiro 对非环回远程服务器要求 HTTPS，所以 CLI 在改文件之前拒绝明文 HTTP 的家庭实验室 URL。按[HTTPS 反向代理](/https-via-proxy/)配置反向代理。
 
-Install v2 hooks with the `kiro-cli` agent value. When `--server-url` is omitted,
-`install-hooks` can infer the hook origin and bearer token from the managed MCP
-entry above.
+用 `kiro-cli` 智能体值装 v2 钩子。省略 `--server-url` 时，`install-hooks` 可从上面的托管 MCP 条目推断钩子源与 bearer token。
 
 ```bash
-# Default v2 engine: merge hooks into every existing global agent config.
+# 默认 v2 引擎：把钩子合并进每个既有全局智能体配置。
 ai-memory install-hooks --agent kiro-cli --apply
 
-# A project-local v2 agent overrides a same-named global agent. Update the
-# selected local config explicitly instead of assuming the global copy runs.
+# 项目本地的 v2 智能体覆盖同名全局智能体。显式更新所选
+# 本地配置，而不是假设全局副本在跑。
 ai-memory install-hooks --agent kiro-cli --apply \
     --config-file .kiro/agents/<agent-name>.json
 ```
 
-The v2 engine stores camelCase hooks inside agent JSON files. ai-memory updates
-existing `$KIRO_HOME/agents/*.json` files only; it will not fabricate an agent
-that Kiro never selects. Create and select an agent first when that directory
-is empty. Kiro gives [project-local agents precedence over global agents](https://kiro.dev/docs/cli/custom-agents/configuration-reference/),
-so use `--config-file` when the active definition lives under
-`.kiro/agents/`. All target files are parsed before any one is changed, and
-unrelated agent fields, third-party hooks, and each agent's existing
-`--project-strategy` remain intact.
+v2 引擎把 camelCase 钩子存在智能体 JSON 文件里。ai-memory 只更新既有 `$KIRO_HOME/agents/*.json` 文件；它不会捏造 Kiro 从不选择的智能体。那个目录为空时先创建并选择一个智能体。Kiro 给[项目本地智能体优先于全局](https://kiro.dev/docs/cli/custom-agents/configuration-reference/)，所以活跃定义在 `.kiro/agents/` 下时用 `--config-file`。任何文件被改之前先全部解析，无关智能体字段、第三方钩子、以及每个智能体既有的 `--project-strategy` 保持完好。
 
-The install registers spawn, user-prompt, pre-tool, post-tool, and stop capture,
-remains fail-open when ai-memory is unavailable, and delivers a pending handoff
-through successful `agentSpawn` stdout. Verified v2 tool payloads enforce
-`[capture] ignore_paths`; an unrecognized payload shape is stored as bounded
-metadata rather than exposing file content.
+安装注册 spawn、user-prompt、pre-tool、post-tool 与 stop 捕获，ai-memory 不可用时保持失败开放，并经成功的 `agentSpawn` stdout 投递待处理交接。已验证的 v2 工具 payload 强制 `[capture] ignore_paths`；未识别的 payload 形状存为有界元数据而不暴露文件内容。
 
-Install v3 hooks with the explicit `kiro-cli-v3` target. This distinction is
-intentional: `kiro` and `kiro-cli` continue to mean v2 so an upgrade cannot
-silently rewrite an existing installation into an incompatible format. The
-standalone registration was acceptance-tested with an interactive Kiro CLI
-2.16.2 `--v3` session.
+用显式 `kiro-cli-v3` 目标装 v3 钩子。这个区分是刻意的：`kiro` 与 `kiro-cli` 继续指 v2，升级就不能静默把既有安装改写成不兼容格式。独立注册经交互式 Kiro CLI 2.16.2 `--v3` 会话做过验收测试。
 
 ```bash
-# Global v3 registration under $KIRO_HOME/hooks (default ~/.kiro/hooks).
+# $KIRO_HOME/hooks（默认 ~/.kiro/hooks）下的全局 v3 注册。
 ai-memory install-hooks --agent kiro-cli-v3 --apply
 
-# Project-local v3 registration.
+# 项目本地 v3 注册。
 ai-memory install-hooks --agent kiro-cli-v3 --apply \
     --config-file .kiro/hooks/ai-memory.json
 ```
 
-The v3 installer writes the documented standalone `version: "v1"` schema with
-PascalCase triggers. It preserves third-party entries in a shared file,
-refuses an unsupported schema version or a third-party collision with an
-ai-memory-reserved hook name, and bounds capture-only commands to one second.
-SessionStart gets five seconds so ai-memory's bounded handoff fetch can finish.
-Both engines use the same sanitized hook-ingress boundary: documented and live
-`tool_name`/`tool_input` file operations honor `[capture] ignore_paths`, while
-unknown file-tool payload shapes degrade to metadata-only capture.
+v3 安装器写有文档的独立 `version: "v1"` schema、PascalCase 触发器。它保留共享文件里的第三方条目、拒绝不支持的 schema 版本或与 ai-memory 保留钩子名冲突的第三方条目、并把仅捕获命令限定在一秒。SessionStart 得五秒，让 ai-memory 有界的交接取数能完成。两个引擎用同一净化钩子入口边界：有文档与实时的 `tool_name`/`tool_input` 文件操作遵守 `[capture] ignore_paths`，未知文件工具 payload 形状退化为仅元数据捕获。
 
-Kiro v2's `stop` event ends a turn, not the session. After the final turn, close
-the matching session explicitly; use the exact id when several Kiro sessions
-are open in the same project:
+Kiro v2 的 `stop` 事件结束一个回合、不是会话。最后一轮之后显式关闭匹配的会话；同项目开着多个 Kiro 会话时用确切 id：
 
 ```bash
 ai-memory finalize-session --agent kiro-cli
 ai-memory finalize-session --agent kiro-cli --session-id <uuid>
 ```
 
-`ai-memory uninstall --only hooks --apply --yes` removes only exact ai-memory
-entries from global v2 agents, the current project's `.kiro/agents` directory,
-and ai-memory's global/current-project v3 registration. A purely generated v3
-file is deleted; third-party entries in a shared file remain. `ai-memory run
-kiro` (alias `kiro-cli`) manages the default v2 engine and honors `$KIRO_HOME`;
-add `--v3`, `--mode`, or `--agent-engine v3` for version-safe v3 resume. Once
-linked, a later plain Kiro launch recovers the stored engine transparently, and
-bare `ai-memory run` considers checkout-local sessions from both incompatible
-stores. See
-[managed workstreams](managed-workstreams.md#native-adapter-behavior).
+`ai-memory uninstall --only hooks --apply --yes` 只从全局 v2 智能体、当前项目的 `.kiro/agents` 目录、以及 ai-memory 的全局/当前项目 v3 注册中移除精确的 ai-memory 条目。纯生成的 v3 文件被删除；共享文件里的第三方条目留下。`ai-memory run kiro`（别名 `kiro-cli`）管理默认 v2 引擎并尊重 `$KIRO_HOME`；加 `--v3`、`--mode`、或 `--agent-engine v3` 做版本安全的 v3 恢复。一旦关联，之后裸的 Kiro 启动透明恢复存储的引擎，且裸 `ai-memory run` 会考虑两个互不兼容存储的检出本地会话。见[托管工作流](/managed-workstreams/#原生适配器行为)。
 
 ### OpenCode
 
@@ -919,21 +607,20 @@ docker run --rm akitaonrails/ai-memory:latest \
     --server-url "http://homelab:49374/mcp" \
     --auth-token "$TOKEN"
 
-# Plugin — write to ~/.config/opencode/plugins/ai-memory.ts.
-# If you have the local wrapper installed, prefer `--apply`:
+# 插件——写到 ~/.config/opencode/plugins/ai-memory.ts。
+# 装了本地包装器的话，偏好 `--apply`：
 ai-memory install-hooks --agent opencode --apply \
     --server-url "http://homelab:49374" \
     --auth-token "$TOKEN"
 
-# Docker-only preview path; redirect only if you want to write the file yourself:
+# 仅 Docker 预览路径；只在想自己写文件时重定向：
 docker run --rm akitaonrails/ai-memory:latest \
     install-hooks --agent opencode \
     --server-url "http://homelab:49374" \
     --auth-token "$TOKEN"
 ```
 
-Restart OpenCode after installing or changing the plugin; plugins are
-loaded at startup.
+安装或更改插件后重启 OpenCode；插件在启动时加载。
 
 ### Oh My Pi / OMP
 
@@ -943,64 +630,47 @@ docker run --rm akitaonrails/ai-memory:latest \
     --server-url "http://homelab:49374/mcp" \
     --auth-token "$TOKEN"
 
-# Extension — write to ~/.omp/agent/extensions/ai-memory-omp.ts.
-# If you have the local wrapper installed, prefer `--apply`:
+# 扩展——写到 ~/.omp/agent/extensions/ai-memory-omp.ts。
+# 装了本地包装器的话，偏好 `--apply`：
 ai-memory install-hooks --agent omp --apply \
     --server-url "http://homelab:49374" \
     --auth-token "$TOKEN"
 ```
 
-Restart OMP after installing or changing the extension; extensions are
-loaded at startup. The ai-memory CLI accepts `--client omp` (or
-`--client oh-my-pi`) for MCP and `--agent omp` (or `--agent oh-my-pi`)
-for hooks; both target OMP's native `.omp` integration surface.
+安装或更改扩展后重启 OMP；扩展在启动时加载。ai-memory CLI 接受 `--client omp`（或 `--client oh-my-pi`）配 MCP、`--agent omp`（或 `--agent oh-my-pi`）配钩子；两者都定位 OMP 原生 `.omp` 集成面。
 
 ### Pi
 
-Pi does not read a native `mcp.json`. ai-memory supports Pi through one
-generated TypeScript extension at `~/.pi/agent/extensions/ai-memory-pi.ts`; the
-same file captures lifecycle events and bridges ai-memory's HTTP MCP tools into
-Pi with `pi.registerTool`. When `PI_CODING_AGENT_DIR` is set (it relocates
-Pi's whole `~/.pi/agent` home), the extension is written to
-`$PI_CODING_AGENT_DIR/extensions/ai-memory-pi.ts` instead.
+Pi 不读原生 `mcp.json`。ai-memory 经一个生成的 TypeScript 扩展支持 Pi——`~/.pi/agent/extensions/ai-memory-pi.ts`；同一文件捕获生命周期事件并用 `pi.registerTool` 把 ai-memory 的 HTTP MCP 工具桥接进 Pi。设了 `PI_CODING_AGENT_DIR`（它迁移 Pi 整个 `~/.pi/agent` 家）时，扩展写到 `$PI_CODING_AGENT_DIR/extensions/ai-memory-pi.ts`。
 
-The Pi and OMP extensions use distinct filenames (`ai-memory-pi.ts` and
-`ai-memory-omp.ts`) so installing one never overwrites the other. They are
-not interchangeable — only Pi's bridges MCP tools.
+Pi 与 OMP 的扩展用不同文件名（`ai-memory-pi.ts` 与 `ai-memory-omp.ts`），装一个绝不覆盖另一个。它们不可互换——只有 Pi 的桥接 MCP 工具。
 
 #### OMP profiles
 
-`omp --profile <name>` relocates OMP's agent home to
-`~/.omp/profiles/<name>/agent`. Point the installer at the same profile so
-the extension lands where that profile loads it:
+`omp --profile <name>` 把 OMP 的智能体家迁到 `~/.omp/profiles/<name>/agent`。把安装器指向同一 profile，扩展才会落到该 profile 加载它的地方：
 
 ```bash
 ai-memory install-hooks --agent omp --profile work --apply
-# or set it once for the shell:
+# 或为 shell 设一次：
 OMP_PROFILE=work ai-memory install-hooks --agent omp --apply
 ```
 
-`--profile` takes precedence over `OMP_PROFILE`, and `uninstall --profile
-<name>` removes the same file. `PI_CODING_AGENT_DIR` overrides **both** —
-when it is set it names the agent directory outright, so no profile
-subdirectory is derived from it.
+`--profile` 优先于 `OMP_PROFILE`，`uninstall --profile <name>` 移除同一文件。`PI_CODING_AGENT_DIR` 覆盖**两者**——设置时它直接点名智能体目录，不从它派生任何 profile 子目录。
 
 ```bash
 ai-memory install-hooks --agent pi --apply \
     --server-url "http://homelab:49374" \
     --auth-token "$TOKEN"
 
-# `install-mcp --client pi` prints this guidance instead of writing mcp.json:
+# `install-mcp --client pi` 打印该指引而不是写 mcp.json：
 ai-memory install-mcp --client pi --server-url "http://homelab:49374/mcp"
 ```
 
-Restart Pi after installing or changing the extension. OMP / Oh My Pi remains
-separate and continues to use `.omp` paths.
+安装或更改扩展后重启 Pi。OMP / Oh My Pi 保持独立、继续用 `.omp` 路径。
 
-### Bind mounts vs docker cp
+### 绑定挂载 vs docker cp
 
-The `setup-agent` subcommand does the extract + render in one shot
-using a bind mount:
+`setup-agent` 子命令用绑定挂载一步完成提取 + 渲染：
 
 ```bash
 docker run --rm -v "$HOME/.ai-memory:/host" \
@@ -1010,22 +680,13 @@ docker run --rm -v "$HOME/.ai-memory:/host" \
         --server-url "http://homelab:49374" --auth-token "$TOKEN"
 ```
 
-This works cleanly when the container user's UID matches the host
-user's UID (e.g. the homelab where both are 1000). It **fails on
-rootless Docker** and on hosts with `userns-remap` enabled - the
-container can't write to a host directory that belongs to a UID
-outside the user-namespace mapping.
+容器用户 UID 与宿主用户 UID 一致时（如两者都是 1000 的家庭实验室）干净工作。它在 rootless Docker 与启用 `userns-remap` 的宿主上**失败**——容器写不了属于用户命名空间映射之外 UID 的宿主目录。
 
-The `docker cp` pattern recommended above sidesteps all of that
-because `docker cp` is mediated by the docker daemon and outputs
-files owned by the user running the command. Prefer it as the
-default; reach for `setup-agent` only when your docker setup is
-known not to remap UIDs.
+上面推荐的 `docker cp` 模式绕开这一切，因为 `docker cp` 由 docker 守护进程中介、产出的文件归运行命令的用户。作为默认偏好它；只在你的 docker 设置已知不重映射 UID 时用 `setup-agent`。
 
-### Other MCP clients
+### 其他 MCP 客户端
 
-See [**`docs/mcp-install.md`**](mcp-install.md) for the per-client MCP
-config file path and snippet, or one-shot it via:
+逐客户端的 MCP 配置文件路径与片段见 [**MCP 安装指南**](/mcp-install/)，或经下面一次搞定：
 
 ```bash
 docker run --rm akitaonrails/ai-memory:latest \
@@ -1097,26 +758,15 @@ docker run --rm akitaonrails/ai-memory:latest \
     --server-url "http://homelab:49374/mcp"
 ```
 
-Cursor, Gemini CLI, Antigravity CLI, Grok Build CLI, Kiro CLI, Command Code, and OpenClaw support both
-`install-mcp` and `install-hooks`. Grok's `install-mcp --client grok` writes
-`$GROK_HOME/config.toml` (default `~/.grok/config.toml`); its hooks live under
-`$GROK_HOME/hooks` (default `~/.grok/hooks`). `install-hooks --agent grok`
-captures lifecycle events.
-Grok ignores `SessionStart` stdout, so handoffs must be accepted through MCP with
-`memory_handoff_accept` when resuming. Claude Desktop, VS Code Copilot, and Zed
-are MCP-only here, so you'll need to nudge the model to call
-`memory_query` / `memory_handoff_accept` itself.
-For clients with `install-hooks` support, the capture path handles
-handoff injection at session start or the client's closest equivalent, except
-for Grok's (and Zero's) no-stdout SessionStart behavior (Antigravity CLI uses `PreInvocation`).
+Cursor、Gemini CLI、Antigravity CLI、Grok Build CLI、Kiro CLI、Command Code、OpenClaw 同时支持 `install-mcp` 与 `install-hooks`。Grok 的 `install-mcp --client grok` 写 `$GROK_HOME/config.toml`（默认 `~/.grok/config.toml`）；其钩子住在 `$GROK_HOME/hooks`（默认 `~/.grok/hooks`）。`install-hooks --agent grok` 捕获生命周期事件。
+Grok 忽略 `SessionStart` stdout，所以恢复时交接必须经 MCP 用 `memory_handoff_accept` 接受。Claude Desktop、VS Code Copilot、Zed 在这里仅 MCP，所以你得轻推模型自己调 `memory_query` / `memory_handoff_accept`。
+对支持 `install-hooks` 的客户端，捕获路径在会话启动或客户端最接近的等价物处处理交接注入——除了 Grok（与 Zero）的无 stdout SessionStart 行为（Antigravity CLI 用 `PreInvocation`）。
 
 ---
 
-## Installing hooks without docker
+## 不用 docker 安装钩子
 
-If you only need to use ai-memory *from* a machine (i.e. that machine doesn't
-run the server), download and verify the release installer. The installer then
-downloads and verifies the release's hook archive before writing any scripts:
+只需要从某台机器*使用* ai-memory（即那台机器不跑服务器）时，下载并校验发布安装器。安装器随后在写任何脚本之前下载并校验发布的钩子归档：
 
 ```bash
 installer_base=https://github.com/akitaonrails/ai-memory/releases/latest/download/ai-memory-install-hooks
@@ -1136,8 +786,8 @@ chmod +x "$installer_tmp/ai-memory-install-hooks"
 rm -rf "$installer_tmp"
 trap - EXIT
 
-# Then render the JSON config (still wants `ai-memory` somewhere —
-# either via docker as a one-shot, or installed locally):
+# 然后渲染 JSON 配置（仍需要某处有 `ai-memory`——
+# 要么 docker 一次性，要么本地安装）：
 docker run --rm akitaonrails/ai-memory:latest \
     install-hooks --agent claude-code \
         --hooks-dir "$HOME/.ai-memory/hooks" \
@@ -1145,162 +795,116 @@ docker run --rm akitaonrails/ai-memory:latest \
         --auth-token "$TOKEN"
 ```
 
-The curl script installer supports
+curl 脚本安装器支持
 `--agent claude-code|codex|cursor|gemini-cli|antigravity-cli|grok|opencode|openclaw|omp|oh-my-pi|pi`
-and `--to <dir>`; `--help` prints the full flag list. OpenCode,
-OpenClaw, OMP / Oh My Pi, and Pi do not need script extraction because
-`install-hooks` generates TypeScript plugin/extension files for them
-instead. For Pi, the generated extension also provides the MCP bridge.
+与 `--to <dir>`；`--help` 打印完整标志表。OpenCode、OpenClaw、OMP / Oh My Pi、Pi 不需要脚本提取，因为 `install-hooks` 为它们生成 TypeScript 插件/扩展文件。Pi 的生成扩展还提供 MCP 桥。
 
-This path is friction-free when:
-- You have curl + bash but not docker
-- You don't need to run a local ai-memory server (you're a client of
-  a homelab/remote ai-memory)
+以下情形这条路零摩擦：
+- 有 curl + bash 但没有 docker
+- 不需要跑本地 ai-memory 服务器（你是家庭实验室/远程 ai-memory 的客户端）
 
-### Hook command paths across a container boundary
+### 跨容器边界的钩子命令路径
 
-`install-hooks --apply` stages the hook scripts into the data dir and
-writes their absolute paths into the agent's config. When the CLI runs
-inside a container but the agent runs on the host, those staged paths
-would be container paths the host can't see. Set
-`AI_MEMORY_HOOKS_HOST_ROOT` to the *host* directory that the staged
-`hooks/` tree is mounted from and the rendered config uses
-`<host-root>/<agent>/…` command paths instead. The bundled docker
-wrappers (`bin/ai-memory`, `bin/ai-memory.ps1`) forward this variable
-automatically; you only set it by hand for custom container setups.
+`install-hooks --apply` 把钩子脚本暂存进数据目录并把其绝对路径写进智能体配置。CLI 跑在容器里而智能体跑在宿主上时，那些暂存路径会是宿主看不见的容器路径。把 `AI_MEMORY_HOOKS_HOST_ROOT` 设为暂存 `hooks/` 树挂载自的*宿主*目录，渲染的配置就用 `<host-root>/<agent>/…` 命令路径。捆绑的 docker 包装器（`bin/ai-memory`、`bin/ai-memory.ps1`）自动转发该变量；只有自定义容器设置才需要手工设。
 
 ---
 
-## Running ai-memory without docker
+## 不用 docker 运行 ai-memory
 
-Most users should stick to the docker wrapper from the Quick start. On macOS,
-tagged releases also publish native `ai-memory-macos-aarch64.tar.gz` and
-`ai-memory-macos-x86_64.tar.gz` archives when you only need the client CLI.
-Build from source only when hacking on ai-memory itself or running on a platform
-docker doesn't support.
+多数用户应坚持快速开始的 docker 包装器。macOS 上只需客户端 CLI 时，带标签的发布还提供原生 `ai-memory-macos-aarch64.tar.gz` 与 `ai-memory-macos-x86_64.tar.gz` 归档。只在魔改 ai-memory 本身或跑 docker 不支持的平台时从源码构建。
 
 ```bash
 git clone https://github.com/akitaonrails/ai-memory ~/.ai-memory
 cd ~/.ai-memory
 cargo build --release --workspace
-./target/release/ai-memory init                       # one-time
+./target/release/ai-memory init                       # 一次性
 ./target/release/ai-memory serve --transport http \
-    --bind 127.0.0.1:49374                            # MCP + hook HTTP server
+    --bind 127.0.0.1:49374                            # MCP + 钩子 HTTP 服务器
 ```
 
-Data dir defaults to `~/.local/share/ai-memory` on Linux,
-`~/Library/Application Support/ai-memory` on macOS, and the platform
-local-data directory on Windows, typically
-`%LOCALAPPDATA%\ai-memory`. Override with `AI_MEMORY_DATA_DIR=/path`.
-To require bearer-token auth, set `AI_MEMORY_AUTH_TOKEN` in the
-server's environment.
+数据目录默认 Linux `~/.local/share/ai-memory`、macOS `~/Library/Application Support/ai-memory`、Windows 平台本地数据目录（通常 `%LOCALAPPDATA%\ai-memory`）。用 `AI_MEMORY_DATA_DIR=/path` 覆盖。要求 bearer token 认证时在服务器环境设 `AI_MEMORY_AUTH_TOKEN`。
 
-#### Optional serve flags
+#### 可选 serve 标志
 
-The `serve` subcommand also accepts:
+`serve` 子命令还接受：
 
-| Flag | Env var | What it does |
+| 标志 | 环境变量 | 作用 |
 |---|---|---|
-| `--enable-web` | `AI_MEMORY_ENABLE_WEB=true` | Mount the read-only web browser + `/api/v1` JSON API. |
-| `--base-path /wiki` | `AI_MEMORY_BASE_PATH` | Host the entire HTTP surface (`/mcp`, `/hook`, `/admin/*`, `/api/v1`, `/web`) under a configurable subpath — useful behind a reverse proxy sharing a hostname. `.` and `..` segments are rejected; unsafe chars cause a fallback to root with a warning. See [`docs/https-via-proxy.md`](https-via-proxy.md#hosting-under-a-subpath). |
-| `--web-slug /web` | `AI_MEMORY_WEB_SLUG` | Where the web UI mounts within the base-path. Default `/web`; set to `/` to mount the UI at the base-path root. |
-| `--web-ui-dir <path>` | `AI_MEMORY_WEB_UI_DIR` | Serve a custom SPA from `<path>` instead of the built-in browser. ai-memory injects `<base href>` and `<meta name="ai-memory-base-path">` so the SPA can build relative URLs and API calls under the configured prefix. |
-| `--cors-allow-origin <origin>` | `AI_MEMORY_CORS_ALLOW_ORIGINS` (CSV) | Allow listed origins to call `/api/v1`. Layer is scoped only to that route — `/mcp`, `/hook`, `/admin`, and `/web` remain origin-locked. |
-| _(config only)_ | `AI_MEMORY_HOOK_RATE_PER_SEC`, `AI_MEMORY_HOOK_RATE_BURST` | Optional per-actor/session hook ingest token bucket. Unset/`0` rate disables it; burst defaults to the rate (minimum one token when enabled). |
+| `--enable-web` | `AI_MEMORY_ENABLE_WEB=true` | 挂载只读 Web 浏览器 + `/api/v1` JSON API。 |
+| `--base-path /wiki` | `AI_MEMORY_BASE_PATH` | 把整个 HTTP 面（`/mcp`、`/hook`、`/admin/*`、`/api/v1`、`/web`）挂在可配置子路径下——适合共享主机名的反向代理后面。拒绝 `.` 与 `..` 段；不安全字符导致带警告回退根。见 [`docs/https-via-proxy.md`](/https-via-proxy/#挂在子路径下)。 |
+| `--web-slug /web` | `AI_MEMORY_WEB_SLUG` | Web UI 在 base-path 内挂载的位置。默认 `/web`；设为 `/` 把 UI 挂在 base-path 根。 |
+| `--web-ui-dir <path>` | `AI_MEMORY_WEB_UI_DIR` | 从 `<path>` 服务自定义 SPA 替代内置浏览器。ai-memory 注入 `<base href>` 与 `<meta name="ai-memory-base-path">`，让 SPA 能在配置前缀下构建相对 URL 与 API 调用。 |
+| `--cors-allow-origin <origin>` | `AI_MEMORY_CORS_ALLOW_ORIGINS`（CSV） | 允许列出的源调用 `/api/v1`。层只作用于该路由——`/mcp`、`/hook`、`/admin`、`/web` 保持源锁定。 |
+| _（仅配置）_ | `AI_MEMORY_HOOK_RATE_PER_SEC`、`AI_MEMORY_HOOK_RATE_BURST` | 可选的逐行为者/会话钩子摄取令牌桶。未设/`0` 率禁用；突发默认等于率（启用时最少一令牌）。 |
 
-On macOS, see [`docs/macos.md`](macos.md); use the archive matching your
-architecture: `aarch64` for Apple Silicon, `x86_64` for Intel. On Windows, see
-[`docs/windows.md`](windows.md).
-The short version: run the install commands from the same environment that
-launches the agent. WSL2-launched agents need WSL paths and POSIX `.sh` hooks.
-Native Windows agents can use the tagged `ai-memory-windows-x86_64.zip`, the
-Docker Desktop wrapper, or a source build. Native Claude Code uses Claude exec
-form with a real `ai-memory.exe` by default; the Windows Docker wrapper renders
-other native Windows script-hook agents through encoded PowerShell `.ps1`
-fallback commands.
+macOS 见 [macOS 支持](/macos/)；用匹配你架构的归档：Apple Silicon 用 `aarch64`、Intel 用 `x86_64`。Windows 见 [Windows 支持](/windows/)。
+短版：从启动智能体的同一环境跑安装命令。WSL2 启动的智能体需要 WSL 路径与 POSIX `.sh` 钩子。原生 Windows 智能体可用带标签的 `ai-memory-windows-x86_64.zip`、Docker Desktop 包装器、或源码构建。原生 Claude Code 默认用带真实 `ai-memory.exe` 的 Claude exec 形式；Windows Docker 包装器经编码的 PowerShell `.ps1` 回退命令渲染其他原生 Windows 脚本钩子智能体。
 
-When run from source, `install-hooks` finds the bundled scripts in
-the repo's `hooks/` automatically. Extracted release archives also
-auto-discover the sibling `hooks/` bundle beside the `ai-memory` binary:
+从源码运行时，`install-hooks` 自动在仓库的 `hooks/` 里找捆绑脚本。解压的发布归档也自动发现 `ai-memory` 二进制旁的同级 `hooks/` 包：
 
 ```bash
 ./target/release/ai-memory install-hooks --agent claude-code --auth-token "$TOKEN"
 ```
 
-(No need for `setup-agent` in this case - the scripts already live
-at the right host path.)
+（这种情况下不需要 `setup-agent`——脚本已在正确的宿主路径上。）
 
 ---
 
-## LLM provider tiers
+## LLM 提供方层级
 
-ai-memory works in three intensity tiers:
+ai-memory 以三档强度工作：
 
-| Tier | What you get | Env vars | Cost |
+| 档 | 得到什么 | 环境变量 | 成本 |
 |---|---|---|---|
-| **Zero-LLM** (default) | FTS5 + manually declared entity + graph search, rule-based session summaries, auto-handoffs from prompt + tool-call history | (none) | $0 |
-| **+ LLM consolidation** | LLM rewrites session pages as coherent narratives; PreCompact checkpoints; LLM-driven contradiction lint | `AI_MEMORY_LLM_PROVIDER=anthropic` + `ANTHROPIC_API_KEY` | ~$0.01–0.05 / session |
-| **+ Anthropic via subscription** | Same LLM features using a Claude Pro/Max subscription instead of an API key | `AI_MEMORY_LLM_PROVIDER=anthropic-oauth` + `ANTHROPIC_OAUTH_TOKEN` | Uses your Claude subscription |
-| **+ ChatGPT/Codex OAuth** | Same LLM features using a ChatGPT Pro/Plus login instead of an OpenAI Platform key | `AI_MEMORY_LLM_PROVIDER=openai-oauth` + `ai-memory auth login openai-oauth` | Uses your ChatGPT subscription |
-| **+ GitHub Copilot** | Same LLM features using a GitHub Copilot subscription | `AI_MEMORY_LLM_PROVIDER=copilot` + `ai-memory auth login copilot` or `COPILOT_GITHUB_TOKEN` | Uses your Copilot subscription |
-| **+ LLM reranking** | At most one relevance pass over up to 30 bounded project/scopes search candidates; normal order is preserved on invalid, failed, timed-out, or concurrency-saturated responses | `AI_MEMORY_RERANKER=llm` + any configured LLM provider | One LLM call per eligible query, at most four concurrently |
-| **+ Hybrid retrieval** | Adds vector cosine similarity to FTS5 + entity + graph RRF. Better recall on paraphrased queries | `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `OPENAI_API_KEY` | ~$0.0001 / page on backfill |
+| **零 LLM**（默认） | FTS5 + 手动声明实体 + 图检索、基于规则的会话摘要、从提示词 + 工具调用历史来的自动交接 | （无） | $0 |
+| **+ LLM 整编** | LLM 把会话页重写为连贯叙事；PreCompact 检查点；LLM 驱动的矛盾 lint | `AI_MEMORY_LLM_PROVIDER=anthropic` + `ANTHROPIC_API_KEY` | ~$0.01–0.05 / 会话 |
+| **+ 订阅式 Anthropic** | 同样的 LLM 功能，用 Claude Pro/Max 订阅而非 API key | `AI_MEMORY_LLM_PROVIDER=anthropic-oauth` + `ANTHROPIC_OAUTH_TOKEN` | 用你的 Claude 订阅 |
+| **+ ChatGPT/Codex OAuth** | 同样的 LLM 功能，用 ChatGPT Pro/Plus 登录而非 OpenAI Platform key | `AI_MEMORY_LLM_PROVIDER=openai-oauth` + `ai-memory auth login openai-oauth` | 用你的 ChatGPT 订阅 |
+| **+ GitHub Copilot** | 同样的 LLM 功能，用 GitHub Copilot 订阅 | `AI_MEMORY_LLM_PROVIDER=copilot` + `ai-memory auth login copilot` 或 `COPILOT_GITHUB_TOKEN` | 用你的 Copilot 订阅 |
+| **+ LLM 重排** | 对至多 30 个有界项目/scopes 检索候选至多一次相关度重排；无效、失败、超时或并发饱和的响应保持正常顺序 | `AI_MEMORY_RERANKER=llm` + 任意已配置 LLM 提供方 | 每个合格查询一次 LLM 调用，并发至多四 |
+| **+ 混合检索** | 在 FTS5 + 实体 + 图 RRF 之外加向量余弦相似度。改述查询召回更好 | `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `OPENAI_API_KEY` | 回填 ~$0.0001 / 页 |
 
-### Recommended models (chosen as defaults)
+### 推荐模型（作为默认选择）
 
-If you set only the provider, ai-memory picks a sensible default:
+只设提供方时，ai-memory 选一个合理默认：
 
-| Setting | Default | Why |
+| 设置 | 默认 | 为什么 |
 |---|---|---|
-| `AI_MEMORY_LLM_PROVIDER=anthropic` | `claude-haiku-4-5` | **Recommended default.** Best balance of speed, restraint, and classification quality. Not a reasoning model. Consistently classifies durable project rules as `kind: rule`. |
-| `AI_MEMORY_LLM_PROVIDER=anthropic-oauth` | `claude-sonnet-4-6` | Anthropic via Claude subscription. Run `claude setup-token` once; set `ANTHROPIC_OAUTH_TOKEN` (or `CLAUDE_CODE_OAUTH_TOKEN`). No `ANTHROPIC_API_KEY` needed. Same `/v1/messages` endpoint, Bearer token auth. |
-| `AI_MEMORY_LLM_PROVIDER=openai` | `gpt-5.4-mini` | Cheaper + faster alternative. Same parse reliability; mild over-classification on thin sessions. |
-| `AI_MEMORY_LLM_PROVIDER=openai-oauth` | `gpt-5.5` | ChatGPT/Codex backend. Run `ai-memory auth login openai-oauth` once; ai-memory stores the refresh token in `<data_dir>/auth.json` and refreshes access tokens automatically. |
-| `AI_MEMORY_LLM_PROVIDER=copilot` | `gpt-5.5` | GitHub Copilot Chat backend. ai-memory stores a GitHub user token in `<data_dir>/auth.json`, exchanges it for a short-lived Copilot API token, and refreshes before expiry. |
-| `AI_MEMORY_LLM_PROVIDER=gemini` | `gemini-3.5-flash` | Google's hosted option with a generous free tier. ai-memory disables Gemini 3.5 Flash's default dynamic thinking so hidden thought tokens do not truncate strict JSON. Set `GEMINI_API_KEY` (or `GOOGLE_API_KEY`). |
-| `AI_MEMORY_LLM_PROVIDER=opencode` | `claude-sonnet-4-6` | [OpenCode Zen/Go](https://opencode.ai) cloud API — OpenAI-compatible endpoint at `opencode.ai/zen/go/v1`. Set `OPENCODE_API_KEY` (key from `opencode.ai/auth`). Alias: `opencode-zen`. |
-| `AI_MEMORY_EMBEDDING_PROVIDER=openai` | `text-embedding-3-small` (1536-dim) | 5× cheaper than `-3-large` with marginal recall loss. |
-| `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `AI_MEMORY_EMBEDDING_BASE_URL=https://openrouter.ai/api/v1` | `openai/text-embedding-3-small` via [OpenRouter](https://openrouter.ai) | Reuses `LLM_API_KEY` or `OPENAI_API_KEY` with the OpenAI-compatible embedding client. |
-| `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `AI_MEMORY_EMBEDDING_BASE_URL=https://api.orcarouter.ai/v1` | `openai/text-embedding-3-small` via [OrcaRouter](https://www.orcarouter.ai) | Reuses `LLM_API_KEY` with the OpenAI-compatible embedding client. |
-| `AI_MEMORY_EMBEDDING_PROVIDER=voyage` | `voyage-3` (1024-dim) | Voyage's current general-purpose recommendation. |
-| `AI_MEMORY_EMBEDDING_PROVIDER=google` / `gemini` | `gemini-embedding-001` (768-dim) | Google-hosted embeddings via `embedContent`. Set `GEMINI_API_KEY` (or `GOOGLE_API_KEY`). |
-| `AI_MEMORY_EMBEDDING_PROVIDER=openai-compat` | no default — set model, dim, and base URL explicitly | Self-hosted engines (Ollama, LM Studio, vLLM). Keyless by default; `LLM_API_KEY` is sent as a bearer token when present (gateways). Example: `AI_MEMORY_EMBEDDING_BASE_URL=http://localhost:11434/v1`, `AI_MEMORY_EMBEDDING_MODEL=nomic-embed-text`, `AI_MEMORY_EMBEDDING_DIM=768`. Switching an existing `openai`+base-URL setup to `openai-compat` changes the stored `{provider, model, dim}` triple — run `ai-memory embed --force` to re-embed. |
+| `AI_MEMORY_LLM_PROVIDER=anthropic` | `claude-haiku-4-5` | **推荐默认。**速度、克制与分类质量的最佳平衡。不是推理模型。稳定把持久项目规则分类为 `kind: rule`。 |
+| `AI_MEMORY_LLM_PROVIDER=anthropic-oauth` | `claude-sonnet-4-6` | 经 Claude 订阅的 Anthropic。跑一次 `claude setup-token`；设 `ANTHROPIC_OAUTH_TOKEN`（或 `CLAUDE_CODE_OAUTH_TOKEN`）。不需要 `ANTHROPIC_API_KEY`。同一 `/v1/messages` 端点、Bearer token 认证。 |
+| `AI_MEMORY_LLM_PROVIDER=openai` | `gpt-5.4-mini` | 更便宜 + 更快的替代。同样解析可靠性；薄会话上轻度过度分类。 |
+| `AI_MEMORY_LLM_PROVIDER=openai-oauth` | `gpt-5.5` | ChatGPT/Codex 后端。跑一次 `ai-memory auth login openai-oauth`；ai-memory 把 refresh token 存进 `<data_dir>/auth.json` 并自动刷新 access token。 |
+| `AI_MEMORY_LLM_PROVIDER=copilot` | `gpt-5.5` | GitHub Copilot Chat 后端。ai-memory 在 `<data_dir>/auth.json` 存 GitHub 用户令牌、换成短期 Copilot API 令牌、到期前刷新。 |
+| `AI_MEMORY_LLM_PROVIDER=gemini` | `gemini-3.5-flash` | Google 托管、免费额度大方的选项。ai-memory 关掉 Gemini 3.5 Flash 默认的动态思考，让隐藏思考 token 不截断严格 JSON。设 `GEMINI_API_KEY`（或 `GOOGLE_API_KEY`）。 |
+| `AI_MEMORY_LLM_PROVIDER=opencode` | `claude-sonnet-4-6` | [OpenCode Zen/Go](https://opencode.ai) 云 API——OpenAI 兼容端点 `opencode.ai/zen/go/v1`。设 `OPENCODE_API_KEY`（key 来自 `opencode.ai/auth`）。别名：`opencode-zen`。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=openai` | `text-embedding-3-small`（1536 维） | 比 `-3-large` 便宜 5 倍、召回损失边际。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `AI_MEMORY_EMBEDDING_BASE_URL=https://openrouter.ai/api/v1` | 经 [OpenRouter](https://openrouter.ai) 的 `openai/text-embedding-3-small` | 复用 `LLM_API_KEY` 或 `OPENAI_API_KEY` 配 OpenAI 兼容嵌入客户端。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=openai` + `AI_MEMORY_EMBEDDING_BASE_URL=https://api.orcarouter.ai/v1` | 经 [OrcaRouter](https://www.orcarouter.ai) 的 `openai/text-embedding-3-small` | 复用 `LLM_API_KEY` 配 OpenAI 兼容嵌入客户端。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=voyage` | `voyage-3`（1024 维） | Voyage 当前的通用推荐。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=google` / `gemini` | `gemini-embedding-001`（768 维） | 经 `embedContent` 的 Google 托管嵌入。设 `GEMINI_API_KEY`（或 `GOOGLE_API_KEY`）。 |
+| `AI_MEMORY_EMBEDDING_PROVIDER=openai-compat` | 无默认——显式设模型、维度与 base URL | 自托管引擎（Ollama、LM Studio、vLLM）。默认免密钥；`LLM_API_KEY` 存在时作为 bearer token 发送（网关）。例：`AI_MEMORY_EMBEDDING_BASE_URL=http://localhost:11434/v1`、`AI_MEMORY_EMBEDDING_MODEL=nomic-embed-text`、`AI_MEMORY_EMBEDDING_DIM=768`。把既有 `openai`+base-URL 设置切到 `openai-compat` 会改存储的 `{provider, model, dim}` 三元组——跑 `ai-memory embed --force` 重嵌。 |
 
-> **What we don't recommend:** reasoning-mode models (Claude with extended
-> thinking, GPT-o3, Gemini "thinking" variants) — they burn token budget on
-> internal reasoning and hang or emit empty responses with the strict-JSON
-> consolidation prompt. Turn reasoning off if you must use one.
+> **不推荐：**推理模式模型（开 extended thinking 的 Claude、GPT-o3、Gemini "thinking" 变体）——它们把 token 预算烧在内部推理上，遇到严格 JSON 的整编提示词会挂起或输出空响应。非用不可就关推理。
 
-### Anthropic via Claude subscription (OAuth)
+### 经 Claude 订阅接入 Anthropic（OAuth）
 
 > [!WARNING]
-> **Unofficial and against Anthropic's usage policies — use at your own risk.**
-> Anthropic provides no public OAuth API for the Claude Pro/Max subscription;
-> this reuses the `claude setup-token` credential against `/v1/messages`, which
-> is **not a supported or sanctioned integration**. Anthropic's terms reserve
-> subscription (Claude Code) access for interactive use, and using it as an
-> automated API backend may breach those terms and **could get your account
-> rate-limited, flagged, or banned**. The header recipe is also undocumented
-> and can change without notice. If you want a supported path, use the
-> `anthropic` provider with a real Platform API key. We ship this purely as an
-> opt-in convenience and make no guarantees about it.
+> **非官方且违背 Anthropic 使用政策——风险自负。**
+> Anthropic 不为 Claude Pro/Max 订阅提供公开 OAuth API；这里复用 `claude setup-token` 凭据对接 `/v1/messages`，这**不是受支持或认可的集成**。Anthropic 的条款把订阅（Claude Code）访问保留给交互使用，把它当自动化 API 后端可能违反条款并**可能导致账号被限流、标记或封禁**。头部配方也无文档、可能随时变化。想要受支持的路径，用带真正 Platform API key 的 `anthropic` 提供方。我们发布它纯粹是作为选择启用的便利、对其不作任何保证。
 
-`anthropic-oauth` is for Claude Pro/Max subscribers who want to use their
-existing subscription instead of an Anthropic Platform API key. It hits the
-**same** `/v1/messages` endpoint as the `anthropic` provider — only the auth
-headers differ (Bearer token + `anthropic-beta: oauth-2025-04-20`).
+`anthropic-oauth` 面向想用既有订阅而非 Anthropic Platform API key 的 Claude Pro/Max 订阅者。它打与 `anthropic` 提供方**同一**的 `/v1/messages` 端点——只有认证头不同（Bearer token + `anthropic-beta: oauth-2025-04-20`）。
 
 ```bash
-# Obtain a token once using the Claude Code CLI:
+# 用 Claude Code CLI 一次性获取 token：
 claude setup-token
 
-# Then export it (the CLI may also write CLAUDE_CODE_OAUTH_TOKEN automatically):
+# 然后导出（CLI 也可能自动写 CLAUDE_CODE_OAUTH_TOKEN）：
 export ANTHROPIC_OAUTH_TOKEN=<paste token here>
 export AI_MEMORY_LLM_PROVIDER=anthropic-oauth
 ai-memory serve
 ```
 
-For Docker, pass the token as an env var:
+Docker 用环境变量传 token：
 
 ```bash
 docker run -d --name ai-memory \
@@ -1311,36 +915,18 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-Both `ANTHROPIC_OAUTH_TOKEN` and `CLAUDE_CODE_OAUTH_TOKEN` are accepted;
-ai-memory checks `ANTHROPIC_OAUTH_TOKEN` first. When either variable is exported
-on the host, the POSIX and PowerShell Docker wrappers forward its name to
-short-lived helper commands such as `llm-test`; the token value is inherited by
-Docker rather than placed in the wrapper's command line. The long-lived server
-container still needs the provider and token variables in its own environment,
-as in the example above.
+接受 `ANTHROPIC_OAUTH_TOKEN` 与 `CLAUDE_CODE_OAUTH_TOKEN`；ai-memory 先查 `ANTHROPIC_OAUTH_TOKEN`。任一变量在宿主上导出时，POSIX 与 PowerShell Docker 包装器按名字把它转发给 `llm-test` 这类短命辅助命令；token 值由 Docker 继承而非放进包装器命令行。长驻服务器容器仍需要自己的环境里有提供方与 token 变量，如上例。
 
-For both Anthropic providers, ai-memory omits `temperature` for Claude
-4.7 and later models and Claude Mythos Preview because those models reject
-non-default sampling parameters. `llm-test` deliberately starts with the same
-representative 0.2 value as bootstrap and consolidation, then exercises the
-provider's compatibility normalization before sending the request.
+两个 Anthropic 提供方，ai-memory 对 Claude 4.7 及之后的模型与 Claude Mythos Preview 省略 `temperature`，因为那些模型拒绝非默认采样参数。`llm-test` 刻意以与 bootstrap 和整编相同的代表性 0.2 值起步，然后在发请求之前走一遍提供方的兼容归一化。
 
 > [!TIP]
-> **Pick a small, fast model.** ai-memory's LLM work — session
-> consolidation, lint, and explore — is summarisation/extraction, not hard
-> reasoning, so a Haiku-class model is plenty: faster, cheaper, and far easier
-> on subscription rate limits than Sonnet/Opus. Set e.g.
-> `AI_MEMORY_LLM_MODEL=claude-haiku-4-5`. Save the high-effort thinking models
-> for your actual coding agent.
+> **选小而快的模型。** ai-memory 的 LLM 工作——会话整编、lint、explore——是摘要/提取、不是硬推理，Haiku 级模型绰绰有余：更快、更便宜、对订阅限速远比 Sonnet/Opus 友好。设如 `AI_MEMORY_LLM_MODEL=claude-haiku-4-5`。把高投入思考模型留给你的编码智能体。
 
 ### OpenAI OAuth / Codex
 
-`openai-oauth` is for ChatGPT Pro/Plus/Codex accounts. It does **not** use
-`OPENAI_API_KEY` and it does **not** call `api.openai.com`; requests go to the
-ChatGPT/Codex Responses backend with a refreshable OAuth token.
+`openai-oauth` 面向 ChatGPT Pro/Plus/Codex 账号。它**不**用 `OPENAI_API_KEY`、**不**调 `api.openai.com`；请求带可刷新 OAuth token 去往 ChatGPT/Codex Responses 后端。
 
-For the Docker quick start wrapper, this writes into the same named volume the
-server mounts at `/data`:
+Docker 快速开始包装器下，它写进服务器挂在 `/data` 的同一具名卷：
 
 ```bash
 ai-memory auth login openai-oauth
@@ -1351,31 +937,22 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-For a remote Docker host, run the login on that host against the same container
-or data volume:
+远程 Docker 宿主上，在该宿主上对同一容器或数据卷跑登录：
 
 ```bash
 docker exec -it ai-memory ai-memory auth login openai-oauth
 ```
 
-Use `ai-memory auth status` to check whether a token is present and
-`ai-memory auth logout openai-oauth` to remove it.
+用 `ai-memory auth status` 查 token 是否存在、`ai-memory auth logout openai-oauth` 移除它。
 
 > [!TIP]
-> **Pick a small, fast model.** Consolidation / lint / explore are
-> summarisation tasks, not hard reasoning — a mini-class model is plenty and
-> is much easier on subscription rate limits. Set e.g.
-> `AI_MEMORY_LLM_MODEL=gpt-5-mini` (the `gpt-5.5` default works but is
-> overkill for this workload). Reserve the high-effort reasoning models for
-> your coding agent.
+> **选小而快的模型。**整编 / lint / explore 是摘要任务、不是硬推理——mini 级模型绰绰有余且对订阅限速友好得多。设如 `AI_MEMORY_LLM_MODEL=gpt-5-mini`（默认 `gpt-5.5` 可用但对此工作负载过重）。把高投入推理模型留给你的编码智能体。
 
 ### GitHub Copilot
 
-`copilot` uses a GitHub user token, then exchanges it for a short-lived Copilot
-API token through `https://api.github.com/copilot_internal/v2/token`. The raw
-GitHub token is never sent to `api.githubcopilot.com`.
+`copilot` 用一个 GitHub 用户令牌，然后经 `https://api.github.com/copilot_internal/v2/token` 换短期 Copilot API 令牌。原始 GitHub 令牌绝不发给 `api.githubcopilot.com`。
 
-For the Docker quick start wrapper:
+Docker 快速开始包装器：
 
 ```bash
 ai-memory auth login copilot
@@ -1386,23 +963,17 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-For a remote Docker host, run the login against the same data volume:
+远程 Docker 宿主上，对同一数据卷跑登录：
 
 ```bash
 docker exec -it ai-memory ai-memory auth login copilot
 ```
 
-Non-interactive deploys can set `COPILOT_GITHUB_TOKEN` instead. ai-memory also
-accepts `GH_TOKEN` and `GITHUB_TOKEN` when running natively; prefer the explicit
-`COPILOT_GITHUB_TOKEN` in Docker so you do not pass a broad token by accident.
-Advanced users with a pre-minted Copilot API token can set
-`GITHUB_COPILOT_API_TOKEN` and optionally `COPILOT_API_URL`.
+非交互部署可改设 `COPILOT_GITHUB_TOKEN`。原生运行时 ai-memory 还接受 `GH_TOKEN` 与 `GITHUB_TOKEN`；Docker 里偏好显式 `COPILOT_GITHUB_TOKEN`，免得意外传宽令牌。有预铸造 Copilot API 令牌的高级用户可设 `GITHUB_COPILOT_API_TOKEN` 与可选 `COPILOT_API_URL`。
 
-`auth login copilot` defaults to GitHub Copilot's public device-flow client id.
-Pass `--client-id` or set `AI_MEMORY_COPILOT_CLIENT_ID` if you operate your own
-OAuth app.
+`auth login copilot` 默认用 GitHub Copilot 的公共设备流 client id。运营自己的 OAuth 应用时传 `--client-id` 或设 `AI_MEMORY_COPILOT_CLIENT_ID`。
 
-### OpenAI-compatible providers (Ollama / vLLM / LM Studio / hosted APIs)
+### OpenAI 兼容提供方（Ollama / vLLM / LM Studio / 托管 API）
 
 ```bash
 docker run -d --name ai-memory \
@@ -1415,8 +986,7 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-There is no safe default model for `openai-compat`; the env var is
-required. For OpenRouter (Kimi, DeepSeek, etc.):
+`openai-compat` 没有安全的默认模型；该环境变量必需。OpenRouter（Kimi、DeepSeek 等）：
 
 ```bash
 -e AI_MEMORY_LLM_PROVIDER=openai-compat
@@ -1425,9 +995,7 @@ required. For OpenRouter (Kimi, DeepSeek, etc.):
 -e LLM_API_KEY=sk-or-v1-...
 ```
 
-[Atlas Cloud](https://www.atlascloud.ai/models/qwen/qwen3.5-flash) uses the
-same provider; no Atlas-specific ai-memory provider is needed. Pass its API key
-through the generic compatibility credential:
+[Atlas Cloud](https://www.atlascloud.ai/models/qwen/qwen3.5-flash) 用同一提供方；不需要 Atlas 专属的 ai-memory 提供方。其 API key 经通用兼容凭据传：
 
 ```bash
 -e AI_MEMORY_LLM_PROVIDER=openai-compat
@@ -1436,12 +1004,9 @@ through the generic compatibility credential:
 -e LLM_API_KEY="$ATLASCLOUD_API_KEY"
 ```
 
-Replace the model with another current Atlas model id when needed. ai-memory
-does not select a default for hosted compatibility endpoints.
+需要时把模型换成其他当前 Atlas 模型 id。ai-memory 不为托管兼容端点选默认。
 
-[OrcaRouter](https://www.orcarouter.ai) uses the same provider; no
-OrcaRouter-specific ai-memory provider is needed. Pass its API key through the
-generic compatibility credential:
+[OrcaRouter](https://www.orcarouter.ai) 用同一提供方；不需要 OrcaRouter 专属的 ai-memory 提供方。其 API key 经通用兼容凭据传：
 
 ```bash
 -e AI_MEMORY_LLM_PROVIDER=openai-compat
@@ -1450,149 +1015,115 @@ generic compatibility credential:
 -e LLM_API_KEY=sk-orca-...
 ```
 
-Replace the model with another current OrcaRouter model id (same
-`provider/model` format as OpenRouter, e.g. `anthropic/claude-sonnet-4.6` or
-`deepseek/deepseek-v4-flash`) when needed.
+需要时把模型换成其他当前 OrcaRouter 模型 id（与 OpenRouter 相同的 `provider/model` 格式，如 `anthropic/claude-sonnet-4.6` 或 `deepseek/deepseek-v4-flash`）。
 
-OpenAI-compatible structured calls use the operation's JSON Schema by default:
+OpenAI 兼容结构化调用默认用操作的 JSON Schema：
 
 ```bash
 -e AI_MEMORY_LLM_COMPAT_STRICT=true
 ```
 
-Modern Ollama, vLLM, LM Studio, llama.cpp, and gateway endpoints honour this
-OpenAI-style `response_format=json_schema` request. ai-memory retries with its
-tolerant parser when an endpoint explicitly rejects the structured-output field
-or returns a malformed response shape. For an incompatible endpoint, opt out:
+现代 Ollama、vLLM、LM Studio、llama.cpp 与网关端点尊重这个 OpenAI 式 `response_format=json_schema` 请求。端点显式拒绝结构化输出字段或返回畸形响应形状时，ai-memory 用宽容解析器重试。不兼容端点退出：
 
 ```bash
 -e AI_MEMORY_LLM_COMPAT_STRICT=false
 ```
 
-Hosted gateways that stream long completions past the default 300-second
-per-request ceiling fail with `http: error sending request`; raise the
-ceiling to match the gateway's worst-case generation time:
+把长补全流过默认 300 秒逐请求上限的托管网关以 `http: error sending request` 失败；调高上限匹配网关最坏生成时间：
 
 ```bash
 -e AI_MEMORY_LLM_TIMEOUT_SECS=900
 ```
 
-#### Match the consolidation budget to a local model's context window
+#### 让整编预算匹配本地模型的上下文窗口
 
-Consolidation defaults to an approximate 100k-token input target plus a 32k
-output limit, sized for a 200k-context provider. A local model with a smaller
-window can reject the whole request (`exceed_context_size_error` from
-llama.cpp, HTTP 400 from most gateways). Lower both limits so their sum fits
-the real context window, with additional headroom for tokenizer variance:
+整编默认约 100k token 输入目标加 32k 输出上限，为 200k 上下文的提供方定尺。窗口较小的本地模型可能拒绝整个请求（llama.cpp 的 `exceed_context_size_error`、多数网关的 HTTP 400）。调低两个限额让它们的和塞进真实上下文窗口、并给分词器差异留余量：
 
 ```bash
-# e.g. a model loaded with an 8k context window
+# 例如以 8k 上下文窗口加载的模型
 -e AI_MEMORY_CONSOLIDATION__MAX_INPUT_TOKENS=6500
 -e AI_MEMORY_CONSOLIDATION__MAX_OUTPUT_TOKENS=1000
 ```
 
-The double underscore separates the `[consolidation]` section from each key.
-The input target accounts for the rendered observations, current page body,
-system prompt, page conventions, bounded slot snapshots, structured-output
-schema, and provider-envelope reserve. Tokenizers differ, so this is a
-conservative estimate rather than an exact provider token count. An automatic
-checkpoint provider failure degrades to a rule-based page rather than losing
-the checkpoint, but right-sized limits are what allow LLM consolidation to
-succeed. Startup rejects input targets below 6,000 and output limits below
-1,000 because the batch schema and a useful response cannot fit reliably below
-those floors.
+双下划线分隔 `[consolidation]` 节与各键。输入目标计入渲染观察、当前页正文、系统提示词、页面约定、有界槽位快照、结构化输出 schema 与提供方信封预留。分词器各异，所以这是保守估计而非精确提供方 token 计数。自动检查点提供方失败降级为规则页而不丢检查点，但尺寸合适的限额才让 LLM 整编成功。启动拒绝低于 6,000 的输入目标与低于 1,000 的输出上限——批量 schema 与有用响应在那些地板之下放不下。
 
 ---
 
-## Common subcommands
+## 常用子命令
 
-This is the operational shortlist. Run `ai-memory --help` for the authoritative
-full command tree.
+这是操作短清单。权威完整命令树跑 `ai-memory --help`。
 
-Two ways to invoke a subcommand against the docker deploy:
+对 docker 部署调用子命令的两种方式：
 
 ```bash
-# A) Against the running container (stateful: status, search, backup,
-#    checkpoints, restore-page, audit-contamination, forget-sweep, lint, embed).
+# A) 对运行中容器（有状态：status、search、backup、
+#    checkpoints、restore-page、audit-contamination、forget-sweep、lint、embed）。
 docker exec ai-memory ai-memory status --json
 docker exec ai-memory ai-memory search "karpathy"
 docker exec ai-memory ai-memory backup --to /data/snapshot.tar.gz
 
-# B) One-shot, no running container needed for pure-stdout helpers
-#    (generate-auth-token, completions, install-mcp, install-hooks, setup-agent,
-#    llm-test).
-#    Auth login is stateful: use docker exec against the running container or
-#    the wrapper so it writes into the same data volume as the server.
+# B) 一次性，纯 stdout 辅助命令无需运行中容器
+#    （generate-auth-token、completions、install-mcp、install-hooks、setup-agent、
+#    llm-test）。
+#    auth login 有状态：用 docker exec 对运行中容器或包装器，
+#    让它写进服务器同一数据卷。
 docker run --rm akitaonrails/ai-memory:latest generate-auth-token
 docker run --rm akitaonrails/ai-memory:latest completions zsh
 docker run --rm akitaonrails/ai-memory:latest install-mcp --client cursor
-docker run --rm akitaonrails/ai-memory:latest --help     # full subcommand tree
+docker run --rm akitaonrails/ai-memory:latest --help     # 完整子命令树
 ```
 
-| Subcommand | Pattern | What it does |
+| 子命令 | 模式 | 作用 |
 |---|---|---|
-| `serve` | `docker compose up -d` (already done) | Run the HTTP MCP server |
-| `run [harness] [args...]` | host wrapper or native binary | Opt into one managed cross-harness workstream; omit the harness to resume the newest usable local session, or name Claude Code, Codex, OpenCode, Pi, Crush, Kimi Code, Command Code, Kiro CLI v2/v3, OMP, Grok Build CLI, or Antigravity CLI explicitly; exact `--yolo` and `--fresh` flags are wrapper-owned and other native arguments pass through |
-| `show [--json]` | host wrapper or native binary | Choose a client-local checkout and installed managed harness, or return structured discovery data without launching; remote servers never provide checkout paths |
-| `continue [--workspace NAME]` | host wrapper or native binary | From any directory, revalidate and resume the newest client-local managed checkout; accepts `--yolo` and `--fresh` but no harness-native arguments |
-| `workstream-search [query]` | managed child or thin HTTP client | Search the complete visible managed-workstream ledger; the managed child receives its workstream id automatically |
-| `status` | `docker exec` | Counts, paths, derived-index diagnostics, and passive LLM/embedding provider health |
-| `search "<query>"` | `docker exec` | Wiki FTS5 search + bounded source authority; use MCP `memory_query` for entity/graph/vector RRF |
-| `write-page` | `docker exec` | Manual page write (atomic + indexed) |
-| `backup --to` / `restore --from` | `docker exec` | Snapshot or restore the data dir |
-| `checkpoints` / `restore-page` | `docker exec` | List wiki git checkpoints or restore one markdown page and reindex it |
-| `audit-contamination` | `docker exec` | Read-only structural audit for likely cross-project contamination |
-| `forget-sweep` / `lint` / `embed` | `docker exec` | Manual maintenance; sweep + lint also run on the server schedule by default |
-| `commit -m "…"` | `docker exec` | Stage + commit the wiki tree |
-| `reset --confirm` | `docker exec` | Wipe data (refuses while siblings alive) |
-| `generate-auth-token` | `docker run --rm` | Print a random hex bearer token |
-| `auth login openai-oauth` | same data volume as the server | Store a ChatGPT/Codex OAuth refresh token for the optional `openai-oauth` LLM provider |
-| `auth login copilot` | same data volume as the server | Store a GitHub token for the optional `copilot` LLM provider |
-| `auth login oidc-device` | same developer data dir as native hooks and thin-client CLI commands | Store a per-developer OIDC device token for native hook authentication and HTTP CLI fallback auth |
-| `install-mcp --client` | `docker run --rm` | MCP-config snippet per client |
-| `install-hooks --agent` | `docker run --rm` | Hook-config snippet for an existing hooks dir |
-| `setup-agent --agent --to --host-prefix` | `docker run --rm -v` | Extract bundled scripts + print config (one-shot) |
-| `install-instructions [--target] [--print] [--no-skills]` | same host environment used for the agent prompt files | Install or update the slim CLAUDE.md / AGENTS.md routing block and, by default, the managed ai-memory Agent Skills |
-| `install-skills [--scope] [--agent]` | same host environment used for the agent skill dirs | Install or update only the managed ai-memory Agent Skills |
-| `uninstall --apply` | same host environment used for install | Remove only ai-memory-owned hooks, MCP entries, instruction blocks, managed skill files, and generated plugin files after content/marker validation. Use `--mcp-url` for custom MCP endpoints and `--mcp-name` only to narrow removal. |
-| `llm-test --provider …` | `docker run --rm -e …` | Smoke-test an LLM provider |
-| `completions <shell>` | `docker run --rm` or native binary | Print a bash/zsh/fish/PowerShell/elvish completion script; see [`shell-completions.md`](shell-completions.md) |
+| `serve` | `docker compose up -d`（已完成） | 跑 HTTP MCP 服务器 |
+| `run [harness] [args...]` | 宿主包装器或原生二进制 | 选择启用一条托管跨外壳工作流；省略外壳恢复最新可用本地会话，或显式点名 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI、Antigravity CLI；确切的 `--yolo` 与 `--fresh` 归包装器所有、其余原生参数透传 |
+| `show [--json]` | 宿主包装器或原生二进制 | 选一个客户端本地检出与已安装托管外壳，或不启动地返回结构化发现数据；远程服务器绝不提供检出路径 |
+| `continue [--workspace NAME]` | 宿主包装器或原生二进制 | 从任意目录重新校验并恢复最新的客户端本地托管检出；接受 `--yolo` 与 `--fresh` 但不接受外壳原生参数 |
+| `workstream-search [query]` | 托管子进程或瘦 HTTP 客户端 | 检索完整可见的托管工作流台账；托管子进程自动收到其工作流 id |
+| `status` | `docker exec` | 计数、路径、派生索引诊断与被动 LLM/嵌入提供方健康 |
+| `search "<query>"` | `docker exec` | wiki FTS5 检索 + 有界来源权威度；实体/图/向量 RRF 用 MCP `memory_query` |
+| `write-page` | `docker exec` | 手工页面写入（原子 + 索引） |
+| `backup --to` / `restore --from` | `docker exec` | 快照或恢复数据目录 |
+| `checkpoints` / `restore-page` | `docker exec` | 列 wiki git 检查点或恢复一页 markdown 并重建索引 |
+| `audit-contamination` | `docker exec` | 只读结构审计，找可能的跨项目污染 |
+| `forget-sweep` / `lint` / `embed` | `docker exec` | 手工维护；清扫 + lint 默认也在服务器计划上跑 |
+| `commit -m "…"` | `docker exec` | 暂存 + 提交 wiki 树 |
+| `reset --confirm` | `docker exec` | 擦数据（兄弟进程活着时拒绝） |
+| `generate-auth-token` | `docker run --rm` | 打印随机十六进制 bearer token |
+| `auth login openai-oauth` | 与服务器同一数据卷 | 为可选 `openai-oauth` LLM 提供方存 ChatGPT/Codex OAuth refresh token |
+| `auth login copilot` | 与服务器同一数据卷 | 为可选 `copilot` LLM 提供方存 GitHub 令牌 |
+| `auth login oidc-device` | 与原生钩子及瘦客户端 CLI 同一开发者数据目录 | 为原生钩子认证与 HTTP CLI 回退认证存逐开发者 OIDC 设备令牌 |
+| `install-mcp --client` | `docker run --rm` | 逐客户端 MCP 配置片段 |
+| `install-hooks --agent` | `docker run --rm` | 面向既有钩子目录的钩子配置片段 |
+| `setup-agent --agent --to --host-prefix` | `docker run --rm -v` | 提取捆绑脚本 + 打印配置（一次性） |
+| `install-instructions [--target] [--print] [--no-skills]` | 智能体提示词文件所在的宿主环境 | 安装或更新轻量 CLAUDE.md / AGENTS.md 路由块，默认连带托管 ai-memory 智能体技能 |
+| `install-skills [--scope] [--agent]` | 智能体技能目录所在的宿主环境 | 只安装或更新托管 ai-memory 智能体技能 |
+| `uninstall --apply` | 与安装相同的宿主环境 | 内容/标记校验后只移除 ai-memory 拥有的钩子、MCP 条目、指令块、托管技能文件与生成的插件文件。自定义 MCP 端点用 `--mcp-url`；只需收窄移除时用 `--mcp-name`。 |
+| `llm-test --provider …` | `docker run --rm -e …` | 冒烟测试 LLM 提供方 |
+| `completions <shell>` | `docker run --rm` 或原生二进制 | 打印 bash/zsh/fish/PowerShell/elvish 补全脚本；见 [Shell 补全](/shell-completions/) |
 
-### Managed routing snippets and Agent Skills
+### 托管路由片段与智能体技能
 
-ai-memory's routing install is agent-facing prompt packaging. It does not add a
-runtime skill router, and `SKILL.md` files are not durable memory pages. The
-wiki remains the durable source of truth.
+ai-memory 的路由安装是面向智能体的提示词包装。它不加运行时技能路由器，`SKILL.md` 文件不是持久记忆页。wiki 保持为持久事实源。
 
-`ai-memory install-instructions` now writes two managed prompt artifacts by
-default:
+`ai-memory install-instructions` 现在默认写两个托管提示词工件：
 
-1. A slim instruction block in `CLAUDE.md`, `AGENTS.md`, or the file passed with
-   `--target`. The block is bounded by `<!-- ai-memory:start -->` and
-   `<!-- ai-memory:end -->` delimiters that appear alone on their own lines.
-2. Managed ai-memory Agent Skills containing the detailed tool-routing guidance.
+1. `CLAUDE.md`、`AGENTS.md`、或 `--target` 传入文件里的轻量指令块。块由独占一行的 `<!-- ai-memory:start -->` 与 `<!-- ai-memory:end -->` 分隔符界定。
+2. 含详细工具路由指引的托管 ai-memory 智能体技能。
 
-Re-running the command is safe. If a project still has the old long ai-memory
-block between line-anchored markers, the refresh replaces that block in place
-with the slim snippet, leaves unrelated instructions before and after it alone,
-and writes a timestamped `.bak-*` backup before changing an existing file.
-Managed skill files contain an ai-memory ownership marker; same-name user skills
-without that marker are preserved unless you explicitly force replacement.
-`install-instructions --print` previews only the instruction snippet; run
-`install-skills --print` when you want to preview the managed skill payloads.
+重跑安全。项目仍有行锚定标记之间的旧长 ai-memory 块时，刷新就地替换该块为轻量片段、前后无关指令不动、并在改既有文件前写带时间戳的 `.bak-*` 备份。托管技能文件含 ai-memory 所有权标记；无标记的同名用户技能保留——除非你显式强制替换。`install-instructions --print` 只预览指令片段；想预览托管技能 payload 跑 `install-skills --print`。
 
-`install-instructions` flags for skills:
+`install-instructions` 的技能标志：
 
-| Flag | Meaning |
+| 标志 | 含义 |
 |---|---|
-| `--no-skills` | Refresh only the markered instruction block. |
-| `--skills-scope <scope>` | Choose project-local or user-global skill roots. Values: `project`, `global`. Defaults to `project`. |
-| `--skills-agent <agent>` | Choose `.claude/skills`, `.agents/skills`, `.devin/skills`, `.grok/skills`, or both Claude/Agents roots. Values: `claude-code`, `agents`, `devin`, `grok`, `both`. By default, `CLAUDE.md` targets imply `claude-code`, `AGENTS.md` targets imply `agents`, and both instruction files imply `both`. |
-| `--skills-target-dir <dir>` | Write managed skill directories below an explicit root instead of inferring from scope and agent. |
-| `--skills-force` | Replace unmanaged same-name skills during `install-instructions`; without it, they are left untouched and the command exits with an actionable error. |
+| `--no-skills` | 只刷新带标记的指令块。 |
+| `--skills-scope <scope>` | 选项目本地或用户全局技能根。值：`project`、`global`。默认 `project`。 |
+| `--skills-agent <agent>` | 选 `.claude/skills`、`.agents/skills`、`.devin/skills`、`.grok/skills`、或 Claude/Agents 双根。值：`claude-code`、`agents`、`devin`、`grok`、`both`。默认：`CLAUDE.md` 目标隐含 `claude-code`、`AGENTS.md` 目标隐含 `agents`、两个指令文件都在时隐含 `both`。 |
+| `--skills-target-dir <dir>` | 把托管技能目录写在显式根之下，而非从作用域与智能体推断。 |
+| `--skills-force` | `install-instructions` 期间替换未托管同名技能；不带它时那些不动、命令以可操作的错误退出。 |
 
-Use `install-skills` when the instruction block is already right and only the
-Agent Skill files need a refresh:
+指令块已正确、只需刷新智能体技能文件时用 `install-skills`：
 
 ```bash
 ai-memory install-skills
@@ -1603,114 +1134,86 @@ ai-memory install-skills --agent both --print
 ai-memory install-skills --target-dir .custom/skills --force
 ```
 
-`install-skills` flags:
+`install-skills` 标志：
 
-| Flag | Meaning |
+| 标志 | 含义 |
 |---|---|
-| `--scope <scope>` | Install into this project or the current user's global skill roots. Values: `project`, `global`. Defaults to `project`. |
-| `--agent <agent>` | Install into Claude Code's skill root, the cross-agent skill root, Devin's skill root, Grok's skill root, or both Claude/Agents roots. Values: `claude-code`, `agents`, `devin`, `grok`, `both`. Defaults to `claude-code`. |
-| `--target-dir <dir>` | Write managed skill directories below an explicit root; `--scope` and `--agent` are ignored. |
-| `--print` | Print target paths and `SKILL.md` contents without writing files. |
-| `--force` | Replace unmanaged same-name skills; without it, user-authored same-name skills are preserved. |
+| `--scope <scope>` | 装进此项目或当前用户的全局技能根。值：`project`、`global`。默认 `project`。 |
+| `--agent <agent>` | 装进 Claude Code、跨智能体、Devin、Grok 的技能根或 Claude/Agents 双根。值：`claude-code`、`agents`、`devin`、`grok`、`both`。默认 `claude-code`。 |
+| `--target-dir <dir>` | 把托管技能目录写在显式根之下；忽略 `--scope` 与 `--agent`。 |
+| `--print` | 打印目标路径与 `SKILL.md` 内容而不写文件。 |
+| `--force` | 替换未托管同名技能；不带它时保留用户自写同名技能。 |
 
-Default skill target roots:
+默认技能目标根：
 
-| Scope | `--agent claude-code` | `--agent agents` | `--agent devin` | `--agent grok` |
+| 作用域 | `--agent claude-code` | `--agent agents` | `--agent devin` | `--agent grok` |
 |---|---|---|---|---|
 | `project` | `.claude/skills` | `.agents/skills` | `.devin/skills` | `.grok/skills` |
-| `global` | `~/.claude/skills` | `~/.agents/skills` | Windows: `%APPDATA%\devin\skills`; non-Windows: `~/.devin/skills` | `$GROK_HOME/skills` (default `~/.grok/skills`) |
+| `global` | `~/.claude/skills` | `~/.agents/skills` | Windows：`%APPDATA%\devin\skills`；非 Windows：`~/.devin/skills` | `$GROK_HOME/skills`（默认 `~/.grok/skills`） |
 
-Each managed skill is written as `<root>/<skill-name>/SKILL.md`.
+每个托管技能写成 `<root>/<skill-name>/SKILL.md`。
 
-`ai-memory uninstall --only skills --apply` removes managed skill files only
-from the default project/global roots shown above, after validating the
-ai-memory ownership marker. If you installed with `--target-dir` or
-`--skills-target-dir`, clean up that custom root manually.
+`ai-memory uninstall --only skills --apply` 在校验 ai-memory 所有权标记后，只从上面默认项目/全局根移除托管技能文件。用 `--target-dir` 或 `--skills-target-dir` 安装的自定义根手工清理。
 
-Data dir inside the container is `/data` (mounted via the compose
-volume). Outside docker, override with `AI_MEMORY_DATA_DIR=/path`.
+容器内数据目录是 `/data`（经 compose 卷挂载）。docker 外用 `AI_MEMORY_DATA_DIR=/path` 覆盖。
 
-Scheduled maintenance is configured in `[maintenance]` in `config.toml`.
-By default, rule-based lint and forget sweep run daily outside hook
-latency across every existing workspace/project. Embedding backfill is
-supported but defaults to off because it can call a paid provider; if you
-enable `embedding_backfill_interval_secs` after configuring an embedder,
-each scheduled tick backfills every existing workspace/project and may
-increase provider usage accordingly.
+计划性维护在 `config.toml` 的 `[maintenance]` 配置。默认基于规则的 lint 与遗忘清扫每日在钩子延迟之外跨每个既有 workspace/项目运行。嵌入回填受支持但默认关闭，因为它可能调用付费提供方；配置嵌入器后启用 `embedding_backfill_interval_secs` 的话，每个计划节拍回填每个既有 workspace/项目、提供方用量相应增加。
 
-Forget sweep and rule-based lint persist their last successful completion. On
-restart, a job that is not due waits only its remaining interval; a never-run
-or overdue job runs once after a bounded startup delay. Failed runs are not
-recorded as successful and retry after that bounded delay. Embedding backfill
-remains opt-in and keeps its interval-only behavior (no startup catch-up).
+遗忘清扫与基于规则的 lint 持久化其最后成功完成。重启时，未到期的任务只等剩余间隔；从未跑或过期的任务在有界启动延迟后跑一次。失败运行不记为成功、在有界延迟后重试。嵌入回填保持选择启用、保持仅间隔行为（无启动补跑）。
 
 ---
 
-## Bootstrap mid-project
+## 项目中途 bootstrap
 
-When you adopt ai-memory in a project that's already been around for
-a while, the wiki starts empty. `ai-memory bootstrap` ingests the
-project's existing history into seed pages so the first session has
-warm context.
+把 ai-memory 采用进一个已有历史的项目时，wiki 从空开始。`ai-memory bootstrap` 摄取项目既有历史成种子页，让第一个会话有温热上下文。
 
 ```bash
 cd /path/to/project
 ai-memory bootstrap
 ```
 
-If you installed the Docker wrapper from the quick start and started the
-server on `127.0.0.1:49374`, the wrapper automatically reaches that host
-loopback server from its short-lived helper container. Set
-`AI_MEMORY_SERVER_URL=http://<server>:49374` only when the server is
-remote or uses a custom host/port.
+装了快速开始的 Docker 包装器且服务器在 `127.0.0.1:49374` 上时，包装器自动从其短命辅助容器够到宿主环回服务器。只在服务器远程或用自定义主机/端口时设 `AI_MEMORY_SERVER_URL=http://<server>:49374`。
 
-**What gets ingested by default:**
+**默认摄取什么：**
 
-| Source | Priority (dropped first when over budget) |
+| 来源 | 优先级（超预算时先丢） |
 |---|---|
-| `CLAUDE.md` / `AGENTS.md` (project rules) | never dropped |
-| `README.md` at the repo root | very-late |
-| `docs/**/*.md` | late |
-| Substantive git commits (body >120 chars OR conventional-commit prefix) | mid |
-| Module-level `//!` doc-comments in `**/*.rs` | first to drop |
+| `CLAUDE.md` / `AGENTS.md`（项目规则） | 永不丢 |
+| 仓库根的 `README.md` | 非常晚 |
+| `docs/**/*.md` | 晚 |
+| 有实质内容的 git 提交（正文 >120 字符或有约定式提交前缀） | 中 |
+| `**/*.rs` 里的模块级 `//!` 文档注释 | 最先丢 |
 
-**Flags:**
+**标志：**
 
 ```
---repo-path <PATH>         (default: git rev-parse --show-toplevel)
---workspace <NAME>         (default: the nearest `.ai-memory.toml` marker's
-                            `workspace`, else "default")
---project <NAME>           (default: the marker's `project` when pinned,
-                            else derived from cwd — main repo root's
-                            basename via `git rev-parse --show-toplevel`,
-                            or basename(cwd) when no repo is found.
-                            "scratch" only as a defensive fallback for
-                            hook events with no usable cwd.)
---max-input-tokens N       (default: 150000; total source budget after prune)
---chunk-input-tokens N     (default: 24000; per LLM call; 0 = single call)
---since "30 days ago"      (git log filter; supports "N days/months/years ago" + YYYY-MM-DD)
---exclude-git              (skip commit history)
---exclude-readme           (skip README)
---exclude-docs             (skip docs/**/*.md)
---exclude-code             (skip Rust module headers)
---dry-run                  (collect + estimate but don't call LLM or write)
---force                    (re-bootstrap, overwrites the prior manifest)
+--repo-path <PATH>         （默认：git rev-parse --show-toplevel）
+--workspace <NAME>         （默认：最近的 .ai-memory.toml 标记的
+                            workspace，否则 "default"）
+--project <NAME>           （默认：标记钉住时的 project，否则从 cwd 派生——
+                            经 git rev-parse --show-toplevel 取主仓库根的
+                            basename，无仓库时 basename(cwd)。
+                            "scratch" 只是钩子事件无可用 cwd 时的
+                            防御性回退。）
+--max-input-tokens N       （默认：150000；修剪后的总源预算）
+--chunk-input-tokens N     （默认：24000；每次 LLM 调用；0 = 单次调用）
+--since "30 days ago"      （git log 过滤；支持 "N days/months/years ago" + YYYY-MM-DD）
+--exclude-git              （跳过提交历史）
+--exclude-readme           （跳过 README）
+--exclude-docs             （跳过 docs/**/*.md）
+--exclude-code             （跳过 Rust 模块头）
+--dry-run                  （收集 + 估计但不调 LLM 不写）
+--force                    （重新 bootstrap，覆盖先前 manifest）
 ```
 
-**Cost.** With Kimi 2.6 via OpenRouter ($0.73/$3.49 per M):
-- 50k input tokens cap → ~$0.04 worst case input
-- 1-2k generated tokens → ~$0.007 output
-- Total: well under $0.20 per run.
+**成本。**经 OpenRouter 用 Kimi 2.6（$0.73/$3.49 每百万）：
+- 5 万输入 token 上限 → 输入最坏约 $0.04
+- 1-2k 生成 token → 输出约 $0.007
+- 合计：每次远低于 $0.20。
 
-**Idempotency.** The first run produces a per-project `bootstrap.md`
-manifest (at `<wiki>/<workspace>/<project>/bootstrap.md`) listing every
-page generated + a one-paragraph rationale. Re-running without `--force`
-errors out. Delete the manifest (and the generated pages) if you want a
-clean re-bootstrap.
+**幂等性。**首次运行产出逐项目的 `bootstrap.md` manifest（在 `<wiki>/<workspace>/<project>/bootstrap.md`），列出每个生成的页面 + 一段理由。不带 `--force` 重跑报错。想要干净的重新 bootstrap 就删 manifest（及生成的页面）。
 
-**Dry-run first.** Always worth doing before the real call to see
-which sources would actually be sent + how many tokens that
-represents. Output is JSON to stdout.
+**先 dry-run。**真实调用之前总值得做——看哪些源真的会发 + 代表多少 token。输出为 stdout 的 JSON。
 
 ```bash
 ai-memory bootstrap --dry-run
@@ -1726,33 +1229,17 @@ ai-memory bootstrap --dry-run
 }
 ```
 
-Large repos (e.g. years of git history) are pruned client-side before
-POST, then processed in sequential LLM chunks so provider context limits
-are not exceeded. The CLI logs `llm_chunks` in dry-run and the final
-outcome.
+大仓库（如数年 git 历史）在 POST 之前客户端修剪，然后按顺序 LLM 分块处理，不超提供方上下文限制。CLI 在 dry-run 与最终结果里记录 `llm_chunks`。
 
-**Caveat: LLM-fabricated detail.** A bootstrap run can produce
-plausible-but-wrong pages (the LLM doesn't know your project, it's
-inferring from git history). The wiki is git-versioned precisely so
-this is recoverable: review what landed, `docker exec ai-memory git
--C /data/wiki diff HEAD~1`, and revert if it's off.
+**告诫：LLM 编造细节。**bootstrap 运行可能产出貌似合理却错误的页面（LLM 不了解你的项目，它在从 git 历史推断）。wiki 正是为此做了 git 版本化、可恢复：审阅落了什么，`docker exec ai-memory git -C /data/wiki diff HEAD~1`，不对就回退。
 
-## Logs and read-only sandboxes
+## 日志与只读沙箱
 
-The CLI and server write daily-rolling logs to `<data_dir>/logs/`
-(`~/.local/share/ai-memory/logs/` by default). When that location is not
-writable — sandboxes like [ai-jail](https://github.com/akitaonrails/ai-jail)
-mount `$HOME` read-only or as throwaway tmpfs — ai-memory degrades instead
-of failing: it falls back to the OS temp dir, then to stderr-only logging,
-printing the exact path that failed at each step. Commands keep working
-either way. To keep durable file logs (and durable hook spooling) inside a
-sandbox, map the data dir read-write, e.g. `ai-jail --rw-map
-~/.local/share/ai-memory …`.
+CLI 与服务器把按日滚动的日志写进 `<data_dir>/logs/`（默认 `~/.local/share/ai-memory/logs/`）。该位置不可写时——像 [ai-jail](https://github.com/akitaonrails/ai-jail) 这类沙箱把 `$HOME` 挂只读或当一次性 tmpfs——ai-memory 降级而非失败：先回退 OS 临时目录、再回退仅 stderr 日志，每步打印失败的确切路径。命令无论如何继续工作。想在沙箱里保留持久文件日志（与持久钩子暂存），把数据目录读写映射进来，如 `ai-jail --rw-map ~/.local/share/ai-memory …`。
 
-## Operating without auth
+## 无认证运行
 
-For local-only / single-machine deploys you can skip the bearer
-token:
+仅本地/单机部署可以跳过 bearer token：
 
 ```bash
 docker run -d --name ai-memory \
@@ -1761,136 +1248,67 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-Notice the bind: `127.0.0.1:49374`, not `0.0.0.0:49374`. This is the
-critical pairing - **no bearer token AND loopback only** is the only
-safe combination. The server refuses an unauthenticated LAN bind before it
-accepts requests. `--allow-insecure-no-auth` can override that refusal only
-for an intentional dangerous plain-HTTP deployment; prefer
-`AI_MEMORY_AUTH_TOKEN` or loopback instead.
+注意绑定：`127.0.0.1:49374`、不是 `0.0.0.0:49374`。这是关键的配对——**无 bearer token 且仅环回**是唯一安全的组合。服务器在接受请求之前拒绝无认证的局域网绑定。`--allow-insecure-no-auth` 只为刻意的危险明文 HTTP 部署覆盖那个拒绝；偏好 `AI_MEMORY_AUTH_TOKEN` 或环回。
 
-In a *container* that refusal becomes a warning, because the container must
-bind `0.0.0.0` internally for `-p` to work at all and cannot see which host
-address you published to. The `-p` above is therefore doing the real work: it
-is what keeps this container loopback-only. If you change it to publish on a
-LAN address, set `AI_MEMORY_AUTH_TOKEN` as well.
+在*容器*里那个拒绝变成警告，因为容器为了 `-p` 生效必须在内部绑 `0.0.0.0`、也看不见你发布到了宿主的哪个地址。上面的 `-p` 因此在做真正的工作：它保持该容器仅环回。改成发布到局域网地址的话，同时设 `AI_MEMORY_AUTH_TOKEN`。
 
-Then wire up the agent CLI. Both commands default to no auth and
-`http://127.0.0.1:49374` - no extra flags needed for the local case:
+然后接智能体 CLI。两条命令默认无认证、`http://127.0.0.1:49374`——本地场景无需额外标志：
 
 ```bash
 ai-memory install-mcp   --client claude-code --apply
 ai-memory install-hooks --agent  claude-code --apply
 ```
 
-The installed Docker wrapper runs CLI commands inside a short-lived
-helper container. For local loopback servers, it automatically bridges
-that helper back to the host's `127.0.0.1:49374`, so `ai-memory status`,
-`ai-memory search`, and `ai-memory bootstrap` work with the same default
-URL as the generated agent config.
+安装的 Docker 包装器在短命辅助容器里跑 CLI 命令。本地环回服务器下，它自动把那个辅助容器桥接回宿主的 `127.0.0.1:49374`，所以 `ai-memory status`、`ai-memory search`、`ai-memory bootstrap` 用与生成的智能体配置相同的默认 URL 工作。
 
-#### SELinux-enforcing hosts
+#### SELinux enforcing 宿主
 
-On SELinux-enforcing Linux systems such as Fedora, RHEL, and openSUSE, normal
-home-directory labels can prevent the helper container from reaching agent
-config even when its UID and GID match the host user. The wrapper checks both
-the host enforcement mode and the engine's advertised security options. For the
-short-lived helper commands that touch host files (`install-*`, `setup-agent`,
-`uninstall`, `backup`, `restore`, and `bootstrap`), it adds `--security-opt
-label=disable`; thin-client commands remain confined when they use the named
-data volume and implicit configuration. An explicit `--config` path or a valid
-host-backed `AI_MEMORY_DATA_DIR` also activates the host-file treatment. This
-relaxes SELinux label confinement only for that trusted helper invocation. It
-does not modify the long-lived ai-memory server, which uses an engine-managed
-named volume.
+Fedora、RHEL、openSUSE 这类 SELinux enforcing 的 Linux 系统上，正常的家目录标签可能在 UID 与 GID 都匹配宿主用户时仍阻止辅助容器够到智能体配置。包装器同时检查宿主 enforcing 模式与引擎宣传的安全选项。对触碰宿主文件的短命辅助命令（`install-*`、`setup-agent`、`uninstall`、`backup`、`restore`、`bootstrap`），它加 `--security-opt label=disable`；用具名数据卷与隐式配置的瘦客户端命令保持受限。显式 `--config` 路径或有效的宿主背书 `AI_MEMORY_DATA_DIR` 也激活宿主文件待遇。这只为那次受信辅助调用放宽 SELinux 标签限制。它不改用引擎管理的具名卷的长驻 ai-memory 服务器。
 
-`bootstrap` is in that list even though it only *reads* host files: an
-unmapped UID and a confined label block reads just as hard, and the failure is
-misleading — it degrades silently to `no .git found at /work; bootstrapping
-from README/docs/rules only` before dying with `Permission denied (os error
-13)`.
+`bootstrap` 在那个清单里，即便它只*读*宿主文件：未映射的 UID 与受限标签同样堵死读，而且失败有误导性——它静默降级到 `no .git found at /work; bootstrapping from README/docs/rules only` 再以 `Permission denied (os error 13)` 死掉。
 
-The two engines report these facts under different keys. Docker answers
-`docker info --format '{{.SecurityOptions}}'`; podman has no such field and
-fails that template, so the wrapper falls back to podman's
-`{{.Host.Security.Rootless}}` and `{{.Host.Security.SELinuxEnabled}}` when the
-Docker probe comes back empty. Rootless engines additionally need `-u 0:0`,
-because only container UID 0 maps back to the invoking host user — on rootless
-podman with SELinux enforcing, both adjustments are required and neither alone
-lets the write land.
+两个引擎在不同键下报告这些事实。Docker 答 `docker info --format '{{.SecurityOptions}}'`；podman 没有该字段、模板失败，所以 Docker 探测为空时包装器回退 podman 的 `{{.Host.Security.Rootless}}` 与 `{{.Host.Security.SELinuxEnabled}}`。Rootless 引擎额外需要 `-u 0:0`，因为只有容器 UID 0 映射回调用的宿主用户——rootless podman 加 SELinux enforcing 下两个调整都需要、单独任何一个都不够写落。
 
-Do not add `:z` or `:Z` to the wrapper's whole `$HOME` bind. Docker's
-[bind-mount documentation](https://docs.docker.com/engine/storage/bind-mounts/#configure-the-selinux-label)
-warns that relabeling system directories such as `/home` can make the host
-inoperable. Docker documents `label=disable` in the
-[`docker run` security options](https://docs.docker.com/reference/cli/docker/container/run/#security-opt).
+不要给包装器的整个 `$HOME` 绑定加 `:z` 或 `:Z`。Docker 的[绑定挂载文档](https://docs.docker.com/engine/storage/bind-mounts/#configure-the-selinux-label)警告重打 `/home` 这类系统目录的标签可能让宿主不可用。Docker 在 [`docker run` 安全选项](https://docs.docker.com/reference/cli/docker/container/run/#security-opt)里文档化了 `label=disable`。
 
-`ai-memory run`, `ai-memory show`, and `ai-memory continue` are the exceptions:
-the current wrapper intercepts them and starts a cached checksum-verified native
-client on the host, where local checkouts, harness executables, and session
-stores exist. It preserves an explicit remote `AI_MEMORY_SERVER_URL`. If one of
-these commands logs
-`data_dir=/data`, cannot find a checkout, or cannot find `codex`, `claude`, or
-another host executable, refresh the stale wrapper with `ai-memory upgrade` on
-that client machine.
+`ai-memory run`、`ai-memory show`、`ai-memory continue` 是例外：当前包装器拦截它们并在宿主上启动缓存的校验和验证过的原生客户端——本地检出、外壳可执行文件与会话存储都在那里。它保留显式远程 `AI_MEMORY_SERVER_URL`。这些命令中若日志出现 `data_dir=/data`、找不到检出、或找不到 `codex`、`claude` 等宿主可执行文件，就在那台客户机上跑 `ai-memory upgrade` 刷新过期包装器。
 
-### Docker compose alternative
+### Docker compose 替代
 
-If you prefer compose, clone the repo and run:
+偏好 compose 的话，克隆仓库并跑：
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-The bundled compose file already has `restart: unless-stopped`, a
-healthcheck, and the named volume wired up. Agent setup is the same as
-the regular Docker path.
+捆绑的 compose 文件已有 `restart: unless-stopped`、健康检查与接好的具名卷。智能体设置与常规 Docker 路径相同。
 
 ---
 
-## Keeping ai-memory up to date
+## 保持 ai-memory 最新
 
-The wrapper checks Docker Hub at most once every 24 hours and prints a
-one-line warning when a newer image is available. Upgrade with:
+包装器至多每 24 小时查一次 Docker Hub、有更新镜像时打一行警告。升级用：
 
 ```bash
 ai-memory upgrade
 ```
 
-The command downloads the wrapper and its SHA-256 checksum from the latest
-GitHub Release, refuses an unverified update, pulls the latest Docker
-image, re-stages hook scripts under
-`~/.local/share/ai-memory/hooks/<agent>/` for configured agents, and
-prints how to restart the server container so the new binary is used.
-Re-running `install-hooks --apply` remains idempotent: ai-memory
-replaces only the hook entries it owns and leaves unrelated hooks alone.
+该命令从最新 GitHub Release 下载包装器及其 SHA-256 校验和、拒绝未验证的更新、拉最新 Docker 镜像、为已配置智能体重暂存 `~/.local/share/ai-memory/hooks/<agent>/` 下的钩子脚本、并打印如何重启服务器容器以使用新二进制。重跑 `install-hooks --apply` 保持幂等：ai-memory 只替换它拥有的钩子条目、不动无关钩子。
 
-Set `AI_MEMORY_NO_VERSION_CHECK=1` to silence the daily check. To pin wrapper
-self-upgrades to a fork or tagged release, set `AI_MEMORY_WRAPPER_URL=<url>`;
-the wrapper requires `<url>.sha256` unless
-`AI_MEMORY_WRAPPER_SHA256_URL=<checksum-url>` is also set.
+设 `AI_MEMORY_NO_VERSION_CHECK=1` 静音每日检查。想把包装器自升级钉到 fork 或带标签发布，设 `AI_MEMORY_WRAPPER_URL=<url>`；除非同时设了 `AI_MEMORY_WRAPPER_SHA256_URL=<checksum-url>`，包装器要求 `<url>.sha256`。
 
-When the upgraded server starts, it applies SQLite schema migrations and
-pending wiki-structure migrations automatically. No manual database
-reset or wiki rewrite is required for normal upgrades.
+升级后的服务器启动时自动应用 SQLite schema 迁移与待处理的 wiki 结构迁移。正常升级无需手工数据库重置或 wiki 重写。
 
-If the server runs on another host, `ai-memory upgrade` refreshes only
-the local wrapper, local image, and local hook scripts. Redeploy the
-remote server separately with `bin/deploy` or `docker compose pull &&
-docker compose up -d` in that deploy directory.
+服务器跑在另一台宿主上时，`ai-memory upgrade` 只刷新本地包装器、本地镜像与本地钩子脚本。在那台部署目录用 `bin/deploy` 或 `docker compose pull && docker compose up -d` 单独重新部署远程服务器。
 
-Inside ai-jail or another bwrap sandbox, the wrapper is usable from the
-sandbox, but run `install-*` commands outside the sandbox because they
-write to `~/.local/share/ai-memory/hooks/`.
+在 ai-jail 或其他 bwrap 沙箱内，包装器可从沙箱使用，但 `install-*` 命令在沙箱外跑——它们写 `~/.local/share/ai-memory/hooks/`。
 
 ---
 
-## See also
+## 另见
 
-- [`docs/deploy.md`](deploy.md) - homelab deploy walkthrough
-  (`bin/deploy`, cloudflared TLS, env-file management)
-- [`docs/usage.md`](usage.md) - handoffs, proactive querying, web UI, slim
-  routing snippet + managed Agent Skills, migration from other memory tools, and raw-wiki inspection
-- [`docs/mcp-install.md`](mcp-install.md) - per-client MCP config reference for
-  every client in the [README Support Matrix](../README.md#support-matrix)
-- [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) - what's actually
-  running inside ai-memory
+- [部署到家庭实验室](/deploy/)——家庭实验室部署走查
+  （`bin/deploy`、cloudflared TLS、env 文件管理）
+- [日常使用](/usage/)——交接、主动查询、Web UI、轻量路由片段 + 托管智能体技能、从其他记忆工具迁移、裸 wiki 检视
+- [MCP 安装](/mcp-install/)——[README 支持矩阵](/#支持矩阵)里每个客户端的逐客户端 MCP 配置参考
+- [架构](/architecture/)——ai-memory 里面实际在跑什么
