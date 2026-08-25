@@ -122,36 +122,43 @@ function firstParagraph(text) {
 }
 
 // 站内相对链接重写：](docs/foo.md) / ](../foo.md) / ](README.md#anchor) → ](/foo/)
-// 以链接所在文件的目录为基准解析 ./ ../ 段后查映射表；映射不到的保留原样并进 warnings。
-function rewriteLinks(md, fromUpstreamPath, filesByUpstreamPath, warnings, fileLabel) {
-	return md.replace(/\]\(([^)]+)\)/g, (whole, target) => {
-		if (/^(https?:|mailto:|#)/.test(target)) return whole; // 外部/锚点
-		if (target.startsWith('/')) return whole; // 上游仓库根绝对路径，下面统一处理
-		const linkPath = target.split('#')[0];
-		if (!linkPath || !/\.(md|svg|png|jpe?g|gif)$/i.test(linkPath)) return whole; // 目录链接/其他交给后续处理
-		const anchor = target.includes('#') ? target.slice(target.indexOf('#')) : '';
-		const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(fromUpstreamPath), linkPath));
-		const mapped = filesByUpstreamPath.get(resolved);
-		if (mapped && mapped.endsWith('.md')) return `](/${mapped.replace(/\.md$/, '')}/${anchor})`;
-		if (mapped) return `](/${mapped})`; // 图片等资源 → public/ 根（copyAssets 负责落位）
-		warnings.push(`${fileLabel}: unmapped link ](${target}) kept as-is`);
-		return whole;
-	}).replace(/\]\((\/[^)#]*?)\)/g, (whole, target) => {
-		// 上游仓库根绝对路径 ](/docs/foo.md) / ](/README.md) 也按映射重写为站内路径
-		if (target === '/') return whole;
-		const anchor = '';
-		const mapped = filesByUpstreamPath.get(target.replace(/^\//, ''));
-		if (mapped && mapped.endsWith('.md')) return `](/${mapped.replace(/\.md$/, '')}/${anchor})`;
-		if (mapped) return `](/${mapped})`;
-		return whole;
-	});
+// 以链接所在文件的目录为基准解析 ./ ../ 段后查映射表；映射不到的（如 ../CLAUDE.md、仓库外文件）
+// 回退为上游 blob 绝对链接（与中文站处理方式一致）；](docs/) 目录链接回退为上游 tree 链接。
+function rewriteLinks(md, fromUpstreamPath, filesByUpstreamPath, config, headSha, warnings, fileLabel, imageAssets) {
+	const blobOf = (p) => `${config.repo}/blob/${headSha}/${p}`;
+	return md
+		.replace(/\]\(([^)#]+?)(#[^)]+)?\)/g, (whole, rawPath, anchor = '') => {
+			if (!rawPath || /^(https?:|mailto:|#)/.test(rawPath)) return whole;
+			const anchorText = anchor || '';
+			// 仓库根绝对路径 ](/docs/foo.md) → 去掉开头 / 按仓库相对处理
+			const fromRoot = rawPath.startsWith('/') ? rawPath.slice(1) : rawPath;
+			// 目录链接（无扩展名）：](docs/) / ](.) → 指上游 tree
+			if (!/\.[a-z0-9]+$/i.test(fromRoot)) {
+				const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(fromUpstreamPath), fromRoot));
+				if (resolved === 'docs' || resolved === '.') return `](${config.repo}/tree/${headSha}/docs)`;
+				return whole; // 其他目录链接保持原样（极少）
+			}
+			if (!/\.(md|svg|png|jpe?g|gif)$/i.test(fromRoot)) return whole; // 非文档/图片资源不重写
+			const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(fromUpstreamPath), fromRoot));
+			const mapped = filesByUpstreamPath.get(resolved);
+			if (mapped && mapped.endsWith('.md')) return `](/${mapped.replace(/\.md$/, '')}/${anchorText})`;
+			if (mapped) return `](/${mapped})`; // 图片等资源 → public/ 根（copyAssets 负责落位）
+			// 图片：不在显式映射表也能自动处理——copyAssets 会拷进 public/，这里直接指 /<basename>
+			if (/\.(svg|png|jpe?g|gif)$/i.test(resolved)) {
+				imageAssets.add(resolved);
+				return `](/${path.posix.basename(resolved)})`;
+			}
+			// 映射不到：仓库内但不在镜像范围（如 ../CLAUDE.md、crates/…）→ 指上游 blob
+			warnings.push(`${fileLabel}: ](${rawPath}) not in mirror scope → upstream blob link`);
+			return `](${blobOf(resolved)}${anchorText})`;
+		});
 }
 
-function buildPage({ upstreamPath, raw, config, headSha, filesByUpstreamPath, warnings }) {
+function buildPage({ upstreamPath, raw, config, headSha, filesByUpstreamPath, warnings, imageAssets }) {
 	const title = firstHeading(raw) || path.basename(upstreamPath, path.extname(upstreamPath));
 	const desc = firstParagraph(raw);
 	const blob = `${config.repo}/blob/${headSha}/${upstreamPath}`;
-	const body = rewriteLinks(raw, upstreamPath, filesByUpstreamPath, warnings, upstreamPath);
+	const body = rewriteLinks(raw, upstreamPath, filesByUpstreamPath, config, headSha, warnings, upstreamPath, imageAssets);
 	const fm = [
 		'---',
 		`title: "${title.replace(/"/g, '\\"')}"`,
@@ -169,7 +176,108 @@ function buildPage({ upstreamPath, raw, config, headSha, filesByUpstreamPath, wa
 	return fm + banner + body;
 }
 
-// ---------- 主流程（本任务到打印为止） ----------
+// ---------- 图片资产 ----------
+// 从上游拷图片到 public/：rewriteLinks 自动发现的 md 引用（imageAssets，已改写为 /<basename>）
+// + HTML 属性形式的引用（<img src=…> / srcset=…，这里改写为 /<basename>）。
+function copyAssets(config, workdir, siteDir, mdTexts, warnings) {
+	const publicDir = path.join(siteDir, 'public');
+	fs.mkdirSync(publicDir, { recursive: true });
+	const referenced = new Map(); // upstreamRelPath -> siteBasename
+	for (const { file, md } of mdTexts) {
+		for (const m of md.matchAll(/!\[[^\]]*\]\(([^)\s]+)[^)]*\)|srcset="([^"]+)"|src="([^"]+)"/g)) {
+			const target = (m[1] || m[2] || m[3] || '').trim().split(/\s+/)[0];
+			if (!target || /^(https?:|data:|\/)/.test(target)) continue;
+			const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), target));
+			if (!/\.(svg|png|jpe?g|gif)$/i.test(resolved)) continue;
+			const src = path.join(workdir, resolved);
+			if (!fs.existsSync(src)) { warnings.push(`${file}: referenced image missing upstream: ${target}`); continue; }
+			referenced.set(resolved, path.basename(resolved));
+		}
+	}
+	// HTML 属性里的相对引用改为 /<basename>
+	const rewritten = mdTexts.map(({ file, md }) => {
+		let out = md;
+		for (const [up, base] of referenced) {
+			const relFromFile = path.posix.relative(path.posix.dirname(file), up);
+			out = out.split(`(${relFromFile}`).join(`(/${base}`);
+			out = out.split(`="${relFromFile}`).join(`="/${base}`);
+			out = out.split(`(./${relFromFile.replace(/^\.\//, '')}`).join(`(/${base}`);
+		}
+	return { file, md: out, siteFile: mdTexts.find((t) => t.md === md || t.file === file).siteFile };
+	});
+	for (const [up, base] of referenced) fs.copyFileSync(path.join(workdir, up), path.join(publicDir, base));
+	return { rewritten, copied: [...referenced.keys()] };
+}
+
+function sha256(p) {
+	return require('crypto').createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+}
+
+// ---------- 内容全量写入 + snapshot + SYNC ----------
+function writeContent(config, workdir, siteDir, head, base, warnings) {
+	const files = collectUpstreamFiles(config, workdir);
+	const filesByUpstreamPath = new Map();
+	for (const f of files) {
+		filesByUpstreamPath.set(f.upstreamPath, f.siteFile);
+		// README 链到仓库根路径形式 ](/README.md) 的场景
+		if (f.upstreamPath === 'README.md') filesByUpstreamPath.set('', 'index.md');
+	}
+	const docsDir = path.join(siteDir, 'src', 'content', 'docs');
+	fs.rmSync(docsDir, { recursive: true, force: true });
+	fs.mkdirSync(docsDir, { recursive: true });
+	const imageAssets = new Set();
+	const mdTexts = files.map((f) => ({
+		file: f.upstreamPath,
+		siteFile: f.siteFile,
+		md: buildPage({ upstreamPath: f.upstreamPath, raw: fs.readFileSync(path.join(workdir, f.upstreamPath), 'utf8'), config, headSha: head, filesByUpstreamPath, warnings, imageAssets }),
+	}));
+	const { rewritten } = copyAssets(config, workdir, siteDir, mdTexts, warnings, imageAssets);
+	for (const { siteFile, md } of rewritten) fs.writeFileSync(path.join(docsDir, siteFile), md, 'utf8');
+	// snapshot.json（基线：HEAD + 每文件 sha256）
+	const snapFiles = {};
+	for (const f of files) snapFiles[f.upstreamPath] = sha256(path.join(workdir, f.upstreamPath));
+	fs.writeFileSync(
+		path.join(siteDir, 'snapshot.json'),
+		JSON.stringify({ commit: head, date: new Date().toISOString().slice(0, 10), files: snapFiles }, null, '\t') + '\n',
+		'utf8'
+	);
+	console.log(`wrote ${rewritten.length} pages to ${path.relative(REPO_ROOT, docsDir)}`);
+	// 变化检测 → SYNC.md
+	if (base !== head) writeSyncReport(config, workdir, siteDir, base, head, files);
+	else console.log('no upstream change since baseline — SYNC.md not written');
+	return files;
+}
+
+function writeSyncReport(config, workdir, siteDir, base, head, files) {
+	const diffs = git(`diff --name-status ${base}..${head} -- README.md docs/`, workdir).split('\n').filter(Boolean);
+	const zhDir = path.join(REPO_ROOT, config.dir.replace(/-en$/, '-cn'), 'src', 'content', 'docs');
+	const zhFiles = fs.existsSync(zhDir) ? new Set(fs.readdirSync(zhDir)) : null;
+	const lines = [
+		`# SYNC — ${config.title}`,
+		'',
+		'上游自基线以来的变化：',
+		`- baseline: ${base}`,
+		`- current:  ${head}`,
+		`- compare:  ${config.repo}/compare/${base.slice(0, 10)}…${head.slice(0, 10)}`,
+		'',
+		'| 状态 | 上游文件 | 中文对应页 | GitHub diff |',
+		'|---|---|---|---|',
+	];
+	for (const d of diffs) {
+		const parts = d.split('\t');
+		const status = parts[0];
+		const up = parts[parts.length - 1];
+		const siteFile = files.find((f) => f.upstreamPath === up)?.siteFile;
+		const zhPage = siteFile ? `\`${siteFile}\`${zhFiles && !zhFiles.has(siteFile) ? '（中文站缺此页）' : ''}` : '—';
+		lines.push(`| ${status} | \`${up}\` | ${zhPage} | [diff](${config.repo}/compare/${base.slice(0, 10)}…${head.slice(0, 10)}#diff) |`);
+	}
+	if (!diffs.length) lines.push('（无文件级变化）');
+	lines.push('', '---', '', '补译流程：逐行对照上表 diff 链接更新中文站对应页（口径见 GLOSSARY.md），完成后重跑本脚本刷新基线。', '上游删除的文件不自动删中文页——人工决定去留。');
+	fs.writeFileSync(path.join(siteDir, 'SYNC.md'), lines.join('\n') + '\n', 'utf8');
+	console.log(`SYNC.md written: ${diffs.length} changed file(s) since baseline`);
+}
+
+// ---------- 主流程 ----------
 function main() {
 	const { config: configArg } = parseArgs(process.argv.slice(2));
 	const config = loadConfig(configArg);
@@ -177,10 +285,26 @@ function main() {
 	const workdir = cloneUpstream(config);
 	const branch = git('rev-parse --abbrev-ref HEAD', workdir);
 	const head = git('rev-parse HEAD', workdir);
-	const { commit: base, source, prev } = baselineCommit(config, workdir, siteDir);
+	const { commit: base } = baselineCommit(config, workdir, siteDir);
 	console.log(`upstream branch=${branch} HEAD=${head}`);
-	console.log(`baseline commit=${base} (from ${source})`);
+	console.log(`baseline commit=${base}`);
 	console.log(`site dir=${siteDir}${fs.existsSync(siteDir) ? ' (exists)' : ' (new)'}`);
+	const warnings = [];
+	const files = writeContent(config, workdir, siteDir, head, base, warnings);
+	// 与中文站文件名对齐报告
+	const zhDir = path.join(REPO_ROOT, config.dir.replace(/-en$/, '-cn'), 'src', 'content', 'docs');
+	if (fs.existsSync(zhDir)) {
+		const zhSet = new Set(fs.readdirSync(zhDir));
+		const missing = files.map((f) => f.siteFile).filter((f) => !zhSet.has(f));
+		const extra = [...zhSet].filter((f) => !files.some((x) => x.siteFile === f));
+		console.log(missing.length || extra.length ? 'align report vs CN site: MISMATCH' : 'align report vs CN site: EXACT MATCH');
+		missing.forEach((f) => console.log('  EN-only:', f));
+		extra.forEach((f) => console.log('  CN-only:', f));
+	}
+	if (warnings.length) {
+		console.log(`\nwarnings (${warnings.length}):`);
+		warnings.forEach((w) => console.log(' ', w));
+	}
 	fs.rmSync(workdir, { recursive: true });
 }
 main();

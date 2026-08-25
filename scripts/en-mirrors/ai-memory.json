@@ -7,6 +7,7 @@
 	"since": "2026-08-21",
 	"mappings": {
 		"README.md": "index.md",
+		"docs/ARCHITECTURE.md": "architecture.md",
 		"docs/examples/auto-improve-eval/README.md": "auto-improve-eval.md"
 	}
 }
