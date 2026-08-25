@@ -28,5 +28,12 @@
     "slug": "ai-memory",
     "desc": "给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。",
     "orig": "https://github.com/akitaonrails/ai-memory"
+  },
+  {
+    "name": "ai-memory (English)",
+    "slug": "ai-memory-en",
+    "desc": "Unofficial English mirror — upstream ships markdown only, rendered with Starlight.",
+    "orig": "https://github.com/akitaonrails/ai-memory",
+    "lang": "en"
   }
 ]

@@ -15,7 +15,7 @@ const cards = sites
 		(s) => `
 			<div class="item">
 				<a class="row" href="${s.slug}/" target="_blank" rel="noopener">
-					<p class="name">${s.name}</p>
+					<p class="name">${s.name}${s.lang === 'en' ? ' <span class="lang">EN</span>' : ''}</p>
 					<p class="desc">${s.desc}</p>
 				</a>
 				<a class="orig" href="${s.orig}" target="_blank" rel="noopener">原文档</a>
@@ -87,6 +87,16 @@ const html = `<!doctype html>
 				font-size: 1.1rem;
 				font-weight: 600;
 				margin: 0 0 0.2rem;
+			}
+			.lang {
+				font-size: 0.7rem;
+				color: #0969da;
+				border: 1px solid #0969da;
+				border-radius: 4px;
+				padding: 0.05rem 0.35rem;
+				vertical-align: middle;
+				margin-left: 0.3rem;
+				font-weight: 500;
 			}
 			.desc {
 				color: #636c76;
