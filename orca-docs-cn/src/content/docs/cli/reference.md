@@ -38,6 +38,16 @@ orca worktree show --worktree issue:123 --json
 
 `active` 和 `current` 会根据 shell 的当前目录或终端上下文解析出所在的 Orca 托管 worktree。可能运行在目标 worktree 之外的脚本请使用显式选择器。对于远程运行时，优先使用完整的服务器端选择器，例如 `id:<repoId>::<absolute-worktree-path>` 或 `path:<absolute-server-path>`，因为本地 shell 的当前目录在运行时主机上未必存在。
 
+## 选择主机
+
+列出当前 Orca 主机可以指向的每一台机器及各自的选择器：
+
+```
+orca host list --json
+```
+
+结果包含本机、已注册的 [SSH 目标](/ssh)以及已配对的[远程 Orca 服务器](/remote-servers)。本机用 `--host local`，SSH 目标用 `--host ssh:<target-id>`，已配对的服务器用 `--environment <server-name>`。SSH 标签和已配对服务器的名称在唯一时也能直接解析；名称冲突时，请使用 `host list` 输出的 ID。如果你把机器名用在了错误的选择器上，Orca 会报告匹配到的机器以及应该使用的标志，而不是返回空结果。
+
 ## 运行时命令
 
 ```
