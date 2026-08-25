@@ -57,7 +57,7 @@ ai-memory install-hooks --agent claude-code --apply
 
 ## 场景 B：带 Docker Desktop 的原生 Windows
 
-智能体 CLI 作为原生 Windows 进程运行、且你想让 ai-memory 服务器跑在 Docker 镜像里时用它。
+智能体 CLI 作为原生 Windows 进程运行、且你想让 ai-memory 服务器跑在 Docker 镜像里时用它。包装器给宿主侧的智能体配置渲染 `http://127.0.0.1:49374`，但它自己的瘦客户端命令是从一个辅助容器里经 Docker Desktop 的 `host.docker.internal` 别名连到服务器的，因为 Docker Desktop 在 Windows 上不给 Linux 容器宿主网络。只有当服务器住在别处（家庭实验室或远程主机）时才设 `AI_MEMORY_SERVER_URL`；包装器会尊重它并跳过该别名。
 
 ```powershell
 # 安装 Windows Docker 包装器。
@@ -94,7 +94,8 @@ if (($UserPath -split ';') -notcontains $UserBin) {
     $env:Path = "$env:Path;$UserBin"
 }
 
-# 用 Docker Desktop 起服务器。
+# 用 Docker Desktop 起服务器。镜像默认允许清单含 host.docker.internal，
+# 这样包装器的瘦客户端命令（status、search……）不会被 403 拒绝。
 docker run -d --name ai-memory `
     --restart unless-stopped `
     -p 127.0.0.1:49374:49374 `

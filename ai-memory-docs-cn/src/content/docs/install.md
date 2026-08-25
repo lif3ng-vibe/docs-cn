@@ -14,11 +14,11 @@ source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/install.md"
 - [Arch Linux 原生包（AUR）](#arch-linux-原生包aur)
   （systemd 系统服务或用户服务）
 - [配置其他智能体 CLI](#配置其他智能体-clis)
-  （Codex、Command Code、Devin CLI、OpenCode、OMP、Pi、Cursor、Claude Desktop、Gemini CLI、Antigravity CLI、Grok Build CLI、Zero、Kimi Code、Kiro CLI、OpenClaw、VS Code Copilot、Zed）
+  （Codex、Command Code、Devin CLI、OpenCode、OMP、Pi、Cursor、Claude Desktop、Gemini CLI、Antigravity CLI、Grok Build CLI、Zero、Kimi Code、Kiro CLI、Pool、OpenClaw、VS Code Copilot、Zed）
 - [不用 docker 安装钩子](#不用-docker-安装钩子)
   （基于 curl 的安装器）
 - [不用 docker 运行 ai-memory](#不用-docker-运行-ai-memory)
-  （cargo install、源码构建）
+  （mise、源码构建）
 - [托管跨外壳工作流](/managed-workstreams/)
   （`ai-memory run`、透明原生恢复与参数转发）
 - [LLM 提供方层级 + 自托管 Ollama](#llm-提供方层级)
@@ -328,11 +328,42 @@ ai-memory install-hooks --agent  claude-code --apply
 
 `install-hooks` 在 `/usr/share/ai-memory/hooks` 下找打包的钩子源，然后把可运行副本暂存到 `~/.local/share/ai-memory/hooks/<agent>/` 下，让智能体能执行你用户拥有的文件。包升级后重跑 `install-hooks --apply` 刷新那些暂存副本。
 
+### 钩子延迟预期
+
+有钩子能力的智能体为每个生命周期事件起一个短命钩子进程。一次成功的工具调用通常同时触发 pre-tool 与 post-tool 事件，所以每次调用的开销付两遍。作为量级参考，原生 macOS aarch64 上一次独立的 v1.29.0 评测测得每次 `posix-native` 调用约 145 ms（每次完成的工具调用约 290 ms）、每次遗留 `.sh` 调用约 172 ms。
+
+那些数字是一台主机的测量，不是基准也不是性能保证。进程启动、文件系统与安全软件、所选数据目录、认证与宿主负载都会改变结果。原生钩子快路径跳过完整配置加载与追踪，通常本地暂存而不是等服务器，所以在受支持处保持安装器的原生默认。延迟敏感的部署在选择启用额外捕获事件或选脚本回退之前，应该先测自己的智能体宿主。
+
 ### 捕获策略能力与刷新
 
 `[capture] ignore_paths` 只由原生 `ai-memory hook` 命令与生成的 OpenCode/OMP/Pi/OpenClaw 集成强制。本地安装器在受支持处选原生命令；遗留 `.sh`/`.ps1` 钩子与纯远程或 Docker 脚本包不强制。升级后重跑 `install-hooks --agent <agent> --apply` 或刷新/重装生成的插件；安装器能力输出反映所选集成。权威参考见[捕获排除](/marker-file/#捕获排除capture-exclusions)。
 
 生命周期观察体的限额独立于 10 MiB 的 HTTP 请求限制。用户提示词与压缩后摘要保留至多 16 KiB；通知与工具摘录保留至多 2 KB。原生 `ai-memory hook` 命令在那些字段进入本地暂存或链路之前 UTF-8 安全地截断。服务器对每个集成（含脚本与生成的客户端）重复事件专属上限，然后在任何观察到达 SQLite 或 FTS 之前、净化之后施加 16 KiB 兜底。原生钩子命令直接调已安装的二进制，所以升级那个二进制就足以拿到客户端侧上限。
+
+**只捕获选择启用的仓库。**上面的控制收窄捕获*什么*；这个收窄*哪里*。默认下没有 `.ai-memory.toml` 标记的仓库仍被捕获，所以一台跨很多检出工作的机器自动捕获每一个新检出——忘掉标记意味着捕获更多而不是更少。允许清单模式反转这一点：
+
+```bash
+ai-memory install-hooks --apply --capture-mode allowlist
+```
+
+没有标记的仓库于是**完全不发出生命周期事件**——不是裁剪过的事件。事件在钩子进程里被丢弃，到不了本地暂存也到不了链路，所以从未选择启用的仓库不会有任何东西写盘。让一个仓库选择启用只需在其中放一个 `.ai-memory.toml` 标记——正是那个已经配置路由与 `ignore_paths` 的文件。
+
+**它只由原生 `ai-memory hook` 命令强制执行**——与 `[capture] ignore_paths` 已适用的同一边界、同样的原因：门跑在钩子二进制内部、就在它暂存之前。
+
+那是普通 `install-hooks --apply` 在 Linux、macOS 与 Windows 上写入的东西，所以常规安装被覆盖。不被覆盖的是*脚本*安装：打包的 shell/PowerShell 钩子直接 POST 到服务器、从不执行二进制，所以没有任何东西读取该模式。实践中即遗留 `posix`/`windows` 平台覆盖（`AI_MEMORY_HOOK_PLATFORM`）、Docker 宿主包装器与 `setup-agent` 片段——它们按设计发出脚本命令。`install-hooks --apply` 打印生效的模式，并在它写入的安装无法强制执行时警告。
+
+在该边界内模式不按智能体分：它一次存进数据目录、每个原生钩子命令都读它，无论哪个智能体调用。这也意味着之后的裸 `install-hooks --apply`——包括 `ai-memory upgrade` 里的自动刷新——按构造不打扰它而不是重新探测它。每次 `--apply` 都打印生效模式。用 `--capture-mode denylist` 回到默认。
+
+在任何仓库上验证而不改变任何东西：
+
+```bash
+printf '{"cwd":"%s"}' "$PWD" | ai-memory hook --event user-prompt-submit \
+    --agent claude-code --server-url "$AI_MEMORY_SERVER_URL" --check-capture
+```
+
+`--check-capture` 只检查策略、不暂存、不排放、不联系服务器，需要一个命名待测目录的 JSON payload。输出里 `"admits_capture": false` 意味着该仓库什么都不捕获；`"marker_present"` 显示向上查找是否发现了标记。
+
+注意代价：每个你没标记的仓库失去召回，而你*本打算*捕获的仓库在你补上它的标记之前保持沉默。
 
 有些智能体外壳把助手最后一轮附在其 `Stop` 事件上——Claude Code 以原始 `last_assistant_message` 发送。默认该文本从不持久化：原生钩子二进制在它到达本地暂存或链路之前剥掉原始字段，服务器到达时防御性地再剥。
 
@@ -599,6 +630,29 @@ ai-memory finalize-session --agent kiro-cli --session-id <uuid>
 
 `ai-memory uninstall --only hooks --apply --yes` 只从全局 v2 智能体、当前项目的 `.kiro/agents` 目录、以及 ai-memory 的全局/当前项目 v3 注册中移除精确的 ai-memory 条目。纯生成的 v3 文件被删除；共享文件里的第三方条目留下。`ai-memory run kiro`（别名 `kiro-cli`）管理默认 v2 引擎并尊重 `$KIRO_HOME`；加 `--v3`、`--mode`、或 `--agent-engine v3` 做版本安全的 v3 恢复。一旦关联，之后裸的 Kiro 启动透明恢复存储的引擎，且裸 `ai-memory run` 会考虑两个互不兼容存储的检出本地会话。见[托管工作流](/managed-workstreams/#原生适配器行为)。
 
+### Pool（Poolside Agent CLI）
+
+Pool 从其运行的每个仓库根的项目作用域 `.poolside/settings.yaml` 读生命周期钩子——没有用户全局钩子文件供 ai-memory 合并。`install-hooks --agent pool`（别名 `poolside`）因此把钩子脚本暂存到稳定的用户全局位置，并打印可直接粘贴的 `hooks:` 片段；ai-memory 刻意不写你仓库内部的文件。
+
+```bash
+# 暂存脚本并打印待粘贴进
+# <repo>/.poolside/settings.yaml 的片段：
+ai-memory install-hooks --agent pool --apply \
+    --server-url "http://homelab:49374" \
+    --auth-token "$TOKEN"
+```
+
+该片段接上 Pool 的五个有文档事件——`SessionStart`、`UserPromptSubmit`、`PreToolUse`、`PostToolUse` 与 `Stop`（Claude 形状名，stdin 上 snake_case JSON payload，对照 Poolside CLI v1.0.16 验证）。本地安装用原生 `ai-memory hook` 命令，所以 Pool 有文档的 `tool_name`/`tool_input` 文件操作遵守 `[capture] ignore_paths`，未知文件工具 payload 形状退化为仅元数据捕获。
+
+Pool 没有真正的会话结束事件；`Stop` 是轮次边界。最后一轮之后显式关闭会话；同项目开着多个 Pool 会话时用确切 id：
+
+```bash
+ai-memory finalize-session --agent pool
+ai-memory finalize-session --agent pool --session-id <uuid>
+```
+
+Pool 容忍钩子 stdout，但来自 `SessionStart` stdout 的模型可见上下文注入未被证实，所以会话启动钩子只捕获、从不取（单次使用的）交接——前一会话的交接经 MCP `memory_handoff_accept` 工具恢复。不声称有第一方 `install-mcp` 客户端与托管工作流（`ai-memory run pool`）：Pool 的原生存储契约未被证实，见[托管外壳贡献](/managed-harness-contributions/)。
+
 ### OpenCode
 
 ```bash
@@ -811,7 +865,17 @@ curl 脚本安装器支持
 
 ## 不用 docker 运行 ai-memory
 
-多数用户应坚持快速开始的 docker 包装器。macOS 上只需客户端 CLI 时，带标签的发布还提供原生 `ai-memory-macos-aarch64.tar.gz` 与 `ai-memory-macos-x86_64.tar.gz` 归档。只在魔改 ai-memory 本身或跑 docker 不支持的平台时从源码构建。
+多数用户应坚持快速开始的 docker 包装器。Arch Linux 用户有 [AUR 包](#arch-linux-原生包aur)。任何其他宿主上，`mise` 直接从 GitHub 安装带标签的发布二进制——不需要 Rust 工具链：
+
+```bash
+mise use -g github:akitaonrails/ai-memory
+```
+
+这用 [mise 的 GitHub 后端](https://mise.jdx.dev/dev-tools/backends/github.html)：下载匹配你 OS/架构的发布归档（`ai-memory-linux-x86_64.tar.gz`、`ai-memory-macos-aarch64.tar.gz` 等）、对照发布的 `.sha256` 边车校验和验证、然后解压并把 `ai-memory` 放上 `PATH`。（mise 还能在项目发布处检查 GitHub 工件证明与 SLSA 出处；ai-memory 的发布工作流今天不产出这两者，所以只有校验和适用。）不需要专门的 mise 插件或注册表条目——该后端对任何发布资产遵循此命名惯例的仓库都有效。默认下 mise 还会把最新的发布短暂扣住一段安全窗口（[`minimum_release_age`](https://mise.jdx.dev/dev-tools/github-backend.html)），所以新打的标签可能一两天内解析到上一个版本；用 `mise use -g github:akitaonrails/ai-memory@1.30.0` 钉住确切标签绕过它。
+
+`cargo install ai-memory` 不可用：crate 名已被 crates.io 上一个无关项目占用，`ai-memory-core`（工作区的基础内部 crate）也一样。发布至少需要给那个 crate 换注册表名——项目还没做的命名决定。
+
+只在魔改 ai-memory 本身或跑上述都不覆盖的平台时从源码构建。macOS 上只需客户端 CLI 时，带标签的发布还提供原生 `ai-memory-macos-aarch64.tar.gz` 与 `ai-memory-macos-x86_64.tar.gz` 归档。
 
 ```bash
 git clone https://github.com/akitaonrails/ai-memory ~/.ai-memory
@@ -1293,7 +1357,7 @@ docker compose -f docker/docker-compose.yml up -d
 ai-memory upgrade
 ```
 
-该命令从最新 GitHub Release 下载包装器及其 SHA-256 校验和、拒绝未验证的更新、拉最新 Docker 镜像、为已配置智能体重暂存 `~/.local/share/ai-memory/hooks/<agent>/` 下的钩子脚本、并打印如何重启服务器容器以使用新二进制。重跑 `install-hooks --apply` 保持幂等：ai-memory 只替换它拥有的钩子条目、不动无关钩子。
+该命令从最新 GitHub Release 下载包装器及其 SHA-256 校验和、拒绝未验证的更新、拉最新 Docker 镜像、为已配置智能体重暂存 `~/.local/share/ai-memory/hooks/<agent>/` 下的钩子脚本、并打印如何重启服务器容器以使用新二进制。重跑 `install-hooks --apply` 保持幂等：ai-memory 只替换它拥有的钩子条目、不动无关钩子。发现 Compose 文件时，包装器先验证其项目确实拥有在跑的 `ai-memory` 容器。独立容器不会只因其文件占了惯例路径就被移交给无关的 Compose 项目；包装器转而写出检视过的独立重建脚本供审查，保留既有 `/data` 挂载与其他运行时选项。
 
 设 `AI_MEMORY_NO_VERSION_CHECK=1` 静音每日检查。想把包装器自升级钉到 fork 或带标签发布，设 `AI_MEMORY_WRAPPER_URL=<url>`；除非同时设了 `AI_MEMORY_WRAPPER_SHA256_URL=<checksum-url>`，包装器要求 `<url>.sha256`。
 
