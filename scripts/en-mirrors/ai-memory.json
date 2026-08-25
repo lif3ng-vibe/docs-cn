@@ -1,0 +1,12 @@
+{
+	"repo": "https://github.com/akitaonrails/ai-memory",
+	"dir": "ai-memory-docs-en",
+	"slug": "ai-memory-en",
+	"title": "ai-memory Docs (English)",
+	"description": "Unofficial English mirror of the ai-memory docs. Long-term memory for AI coding agents.",
+	"since": "2026-08-21",
+	"mappings": {
+		"README.md": "index.md",
+		"docs/examples/auto-improve-eval/README.md": "auto-improve-eval.md"
+	}
+}
