@@ -746,6 +746,59 @@ OMP / Oh My Pi 保持独立：`.omp` 路径用 `--client omp` / `--agent omp`（
 
 ---
 
+## 严格上游的 schema 方言
+
+有些模型 API 按 JSON Schema 的一个更窄方言校验 MCP 工具参数 schema，会让整个 `tools/list` 以 400 被拒。ai-memory 可以按请求应答一个放宽的方言：在 MCP URL 上加 `?flavor=` 查询，或对带不动查询的客户端经配置全服务器生效。运行时参数校验在所有方言下完全一致——变的只是宣告的 schema。
+
+| 标记 | 配置键 | 改变什么 | 谁需要 |
+| --- | --- | --- | --- |
+| `?flavor=moonshot` | `strip_root_combinators` | 去掉根级 `anyOf`/`oneOf`/`allOf` | Kimi Code（Moonshot）；由 `install-mcp` 追加 |
+| `?flavor=bedrock` | `strip_root_combinators` | 同上 | Kiro CLI（Bedrock）；由 `install-mcp` 追加 |
+| `?flavor=gemini`（别名 `vertex`） | `gemini_safe_schemas` | 上述之外，再把可空联合塌缩成单一 `type` + `nullable: true` | 把 schema 原样转发给 Gemini/Vertex 的客户端，如 Vertex 模型上的 OpenCode |
+
+Gemini 方言存在的原因是 `schemars` 把每个可选工具参数渲染成可空联合：
+
+```json
+"max_proposals": {
+  "description": "Override the maximum validated proposal count for this run.",
+  "type": ["integer", "null"], "format": "uint", "minimum": 0
+}
+```
+
+Google 的 `Schema`（Vertex/Gemini 的 `functionDeclaration.parameters`）只接受一个 `type`，且把 `any_of` 视为与其余同级键互斥，所以原样转发的转换器会产出旁边还挂着 `description` 的 `any_of`，Vertex 拒绝该请求：
+
+```
+Unable to submit request because `ai-memory_memory_auto_improve` functionDeclaration
+`parameters.max_proposals` schema specified other fields alongside any_of.
+When using any_of, it must be the only field set.
+```
+
+该方言把它塌缩为 `"type": "integer"` 加 `nullable: true`——与 Gemini CLI 在客户端侧做的同一套归一化，这也正是 Gemini CLI 和 Antigravity CLI 在 Vertex 上无需任何标记就能工作、不需要它的原因。当直通客户端在 `tools/list` 以该错误失败时用它。
+
+`install-mcp` 不为任何客户端追加 `?flavor=gemini`：OpenCode 与提供商无关，那里正确的杠杆是服务器端配置键。
+
+```bash
+# 全服务器生效，面向带不动查询标记的客户端
+AI_MEMORY_GEMINI_SAFE_SCHEMAS=true ai-memory serve
+# 或 config.toml 里的 `gemini_safe_schemas = true`
+
+# 或按客户端，在其 MCP 配置里手写
+#   "url": "http://homelab:49374/mcp?flavor=gemini"
+```
+
+直接检查 `tools/list` 可确认请求拿到的是哪个方言：
+
+```bash
+curl -s 'http://127.0.0.1:49374/mcp?flavor=gemini' \
+    -H 'Accept: application/json, text/event-stream' \
+    -H 'Content-Type: application/json' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  | jq '.result.tools[] | select(.name=="memory_auto_improve")
+        | .inputSchema.properties.max_proposals'
+```
+
+---
+
 ## 注册 MCP 之后——验证它能用
 
 无论用哪个客户端，第一道健全性检查相同：让模型列出它能调的 MCP 工具，或显式调 `memory_status`。

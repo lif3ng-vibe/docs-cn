@@ -101,7 +101,7 @@ export default defineConfig({
 				{
 					label: '项目',
 					items: [
-						// 注意：Astro 生成 slug 时去掉文件名中的点，v0.3-roadmap.md → v03-roadmap
+						// 文件名与 slug 保持 v03-roadmap（Astro slug 会剥点，v0.3-roadmap.md 曾导致文件名与线上 URL 不一致）
 						{ label: 'v0.3 路线图', slug: 'v03-roadmap' },
 					],
 				},

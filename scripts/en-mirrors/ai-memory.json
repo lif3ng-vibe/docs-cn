@@ -8,6 +8,7 @@
 	"mappings": {
 		"README.md": "index.md",
 		"docs/ARCHITECTURE.md": "architecture.md",
-		"docs/examples/auto-improve-eval/README.md": "auto-improve-eval.md"
+		"docs/examples/auto-improve-eval/README.md": "auto-improve-eval.md",
+		"docs/v0.3-roadmap.md": "v03-roadmap.md"
 	}
 }
