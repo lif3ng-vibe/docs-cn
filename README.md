@@ -11,6 +11,7 @@
 | Matt Pocock Skills | `mattpocock-skills-docs-cn/` | https://www.aihero.dev/skills | https://github.com/mattpocock/skills | 2026-08-20 |
 | AI 编码词典 | `ai-coding-dictionary-docs-cn/` | https://www.aihero.dev/ai-coding-dictionary | https://github.com/mattpocock/dictionary-of-ai-coding | 2026-08-20 |
 | ai-memory | `ai-memory-docs-cn/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-21 |
+| ai-memory (EN) | `ai-memory-docs-en/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-25 |
 
 ## 运行任意子项目
 
@@ -46,6 +47,7 @@ docs-cn/
 ├── mattpocock-skills-docs-cn/          # Matt Pocock Skills 中文文档（Starlight）
 ├── ai-coding-dictionary-docs-cn/       # AI 编码词典中文版（Starlight）
 ├── ai-memory-docs-cn/                  # ai-memory 中文文档（Starlight，36 篇）
+├── ai-memory-docs-en/                  # ai-memory 英文镜像（Starlight，脚本生成，36 篇）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -55,6 +57,19 @@ docs-cn/
 2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL" }`。
 3. 在 `.github/workflows/deploy-pages.yml` 加一段构建步骤（以 `DOCS_BASE=/docs-cn/foo/` 构建，构建前 `sed` 给正文内链加前缀），并在 Assemble 步骤里 `mv foo-docs-cn/dist _site/foo`。
 4. 本地跑 `node scripts/gen-index.cjs` 刷新 `index.html`，提交。
+
+## 新增一个英文镜像站（上游无站点、只有 markdown 时）
+
+上游仓库只有 markdown（README + `docs/`）而无文档网站时，用镜像脚本一键生成英文 Starlight 站（每页 frontmatter `source`、页首横幅、顶栏 GitHub 图标均指向上游仓库，站内路径与对应中文站完全一致）：
+
+```bash
+node scripts/new-en-mirror.cjs --config scripts/en-mirrors/<site>.json
+```
+
+- 配置见 `scripts/en-mirrors/`（repo/dir/slug/title/since/mappings），新项目照抄一份即可。
+- 内容目录是上游的镜子：重跑脚本全量覆盖，勿手改；脚手架（astro.config.mjs 等）仅首次生成，可手调。
+- 上游有变化时重跑会产出 `<dir>/SYNC.md`（中文站补译工单：变更文件 + GitHub compare 链接），补译完成后重跑即刷新基线。
+- 部署与中文站同流程：`sites.json` 加条目（可带 `"lang": "en"` 显示 EN 标签）+ `deploy-pages.yml` 加构建段。
 
 ## 本地开发 vs GitHub Pages 部署
 
@@ -85,6 +100,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Matt Pocock Skills：https://lif3ng-vibe.github.io/docs-cn/mattpocock-skills/
 - AI 编码词典：https://lif3ng-vibe.github.io/docs-cn/ai-coding-dictionary/
 - ai-memory：https://lif3ng-vibe.github.io/docs-cn/ai-memory/
+- ai-memory（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/ai-memory-en/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
