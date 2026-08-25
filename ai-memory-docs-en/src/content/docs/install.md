@@ -8,7 +8,7 @@ This is an unofficial documentation mirror. [View the source on GitHub](https://
 :::
 # Installation cookbook
 
-The [README quick-start](/index/#quick-start) covers the happy
+The [README quick-start](/#quick-start) covers the happy
 path (docker + Claude Code). This page covers everything else:
 
 - [Server on a different machine](#server-on-a-different-machine)
@@ -68,7 +68,7 @@ docker run -d --name ai-memory \
     akitaonrails/ai-memory:latest
 ```
 
-See [Security](/index/#security) in the README for why
+See [Security](/#security) in the README for why
 `AI_MEMORY_AUTH_TOKEN` and `AI_MEMORY_ALLOWED_HOSTS` are both required for
 normal non-loopback binds. Bearer auth does not encrypt traffic: use the ready
 [Caddy](../docker/compose.tls.caddy.yml) or
@@ -709,7 +709,7 @@ Each agent CLI needs two things:
    becomes manual.
 
 Claude Desktop, VS Code Copilot, and Zed are MCP-only today. The
-hook-capable clients in the [README Support Matrix](/index/#support-matrix),
+hook-capable clients in the [README Support Matrix](/#support-matrix),
 including Pi and Zero, have lifecycle capture paths through `install-hooks`.
 
 > **Hook install pattern.** Local supported profiles default to host-native
@@ -2078,6 +2078,6 @@ write to `~/.local/share/ai-memory/hooks/`.
 - [`docs/usage.md`](/usage/) - handoffs, proactive querying, web UI, slim
   routing snippet + managed Agent Skills, migration from other memory tools, and raw-wiki inspection
 - [`docs/mcp-install.md`](/mcp-install/) - per-client MCP config reference for
-  every client in the [README Support Matrix](/index/#support-matrix)
+  every client in the [README Support Matrix](/#support-matrix)
 - [`docs/ARCHITECTURE.md`](/architecture/) - what's actually
   running inside ai-memory

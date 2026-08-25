@@ -15,7 +15,7 @@ This is an unofficial documentation mirror. [View the source on GitHub](https://
 ## Purpose
 
 ai-memory is a single Rust binary that gives the coding agents in the
-[README Support Matrix](/index/#support-matrix), plus other MCP-capable
+[README Support Matrix](/#support-matrix), plus other MCP-capable
 clients, long-term memory shared across CLIs.
 Quit one mid-task; open another in the same directory; continue. No
 manual `write_note` ceremony, no copy-pasting summaries between

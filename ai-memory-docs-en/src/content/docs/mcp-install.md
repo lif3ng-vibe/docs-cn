@@ -27,7 +27,7 @@ This is an unofficial documentation mirror. [View the source on GitHub](https://
 This page documents how to register ai-memory as an MCP server with
 agent CLIs beyond the README quick start.
 
-The hook-capable clients in the [README Support Matrix](/index/#support-matrix)
+The hook-capable clients in the [README Support Matrix](/#support-matrix)
 have automatic capture integrations (host-native commands for supported local
 profiles, plus generated TypeScript plugin/extension files for OpenClaw,
 OpenCode, OMP, and Pi).

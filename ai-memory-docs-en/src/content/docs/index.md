@@ -1,6 +1,6 @@
 ---
-title: "1. Install the ai-memory CLI wrapper (a small shell script that"
-description: "<p align=\"center\">"
+title: "ai-memory Docs"
+description: "Unofficial English mirror of the ai-memory docs. Long-term memory for AI coding agents."
 source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/README.md"
 ---
 :::note[Unofficial mirror]

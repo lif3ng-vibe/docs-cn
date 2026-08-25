@@ -11,7 +11,7 @@ This is an unofficial documentation mirror. [View the source on GitHub](https://
 > Historical rationale distilled from the original research and issue-tracker
 > reports. For the current operational map, read
 > [`ARCHITECTURE.md`](/architecture/); for current client support, use the
-> [README Support Matrix](/index/#support-matrix). The research files are
+> [README Support Matrix](/#support-matrix). The research files are
 > the historical receipts.
 
 ## 1. Product shape
