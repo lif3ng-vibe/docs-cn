@@ -1,10 +1,10 @@
 ---
 title: "cognee - Research Report"
 description: "Cognee bills itself as \"the brain behind your agents\" - a memory control plane (README.md:40,67). It ingests heterogeneous data (text, PDF, CSV, code, web pages), then continuously"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-cognee.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-cognee.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-cognee.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-cognee.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # cognee - Research Report
 

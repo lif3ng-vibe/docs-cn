@@ -1,10 +1,10 @@
 ---
 title: "`[auto_scope]` isolation modes"
 description: "ai-memory serve publishes a process-shared \"currently active project\" pointer that MCP read tools consult when the caller omits workspace / project. The pointer is fed by foregroun"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-scope.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-scope.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-scope.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-scope.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # `[auto_scope]` isolation modes
 

@@ -1,10 +1,10 @@
 ---
 title: "Optional Auto-Improvement Loop Research"
 description: "An ai-memory equivalent of Hermes Agent's self-improvement loop is worth shipping as a default-available, review-gated staging path. The current wiki already captures useful durabl"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-improvement-loop.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improvement-loop.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-improvement-loop.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improvement-loop.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Optional Auto-Improvement Loop Research
 

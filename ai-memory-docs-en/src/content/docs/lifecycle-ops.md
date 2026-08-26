@@ -1,10 +1,10 @@
 ---
 title: "Lifecycle operations"
 description: "Reference for the destructive / state-touching ai-memory commands. Read this before running anything that mutates wiki + db, especially on a homelab box where mistakes are harder t"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/lifecycle-ops.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/lifecycle-ops.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/lifecycle-ops.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/lifecycle-ops.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Lifecycle operations
 
@@ -32,7 +32,7 @@ on a homelab box where mistakes are harder to undo.
 State-touching commands route through the HTTP admin API except `reset`,
 `restore`, and `reindex`, which are direct-disk lifecycle operations that
 fundamentally cannot run while another process holds the SQLite WAL writer. See
-[CLAUDE.md §16](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/CLAUDE.md) for the invariant.
+[CLAUDE.md §16](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/CLAUDE.md) for the invariant.
 
 ## What "project isolation" means here
 

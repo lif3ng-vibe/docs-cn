@@ -1,10 +1,10 @@
 ---
 title: "agentmemory - Issue & PR Pain-Point Synthesis"
 description: "1. Embedding the search indexes in the Node process while persisting through a remote KV with a 30s timeout. Drives #204, #309, the rebuild-on-boot cost, and 5-second window of dat"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/issues-agentmemory.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-agentmemory.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/issues-agentmemory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-agentmemory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # agentmemory - Issue & PR Pain-Point Synthesis
 

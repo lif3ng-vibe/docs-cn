@@ -1,10 +1,10 @@
 ---
 title: "basic-memory - Research Report"
 description: "Basic Memory is a local-first, MCP-native, Markdown-based personal knowledge graph. Its tagline is \"Your AI never forgets again\": notes live as plain Markdown files on disk, both h"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-basic-memory.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-basic-memory.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-basic-memory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-basic-memory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # basic-memory - Research Report
 

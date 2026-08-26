@@ -1,10 +1,10 @@
 ---
 title: "Frontend integration: `/api/v1`"
 description: "Every /api/v1/ request goes through the same bearer + host-allowlist middleware as /mcp, /hook, and /admin/ — they're all nested before the auth layers are applied (crates/ai-memor"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/frontend-api.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/frontend-api.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/frontend-api.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/frontend-api.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Frontend integration: `/api/v1`
 
@@ -716,12 +716,23 @@ accepting wildcard. The layer allows `GET / POST / OPTIONS`,
 `Authorization` + `Content-Type` headers, and credentials, with a
 10-minute preflight cache.
 
-## 10. Known gaps (planned iterations, not blockers)
+## 10. Known gaps and deliberate non-goals
 
-- **Write surface.** Browsers can't mutate today (notes, consolidate,
-  lint, purge — all live under `/admin/*` for the CLI or under MCP
-  tools for agents). A thin authenticated write surface ("edit this
-  page" from the browser) is a deliberate v2 conversation.
+- **No write surface, by design — not a pending iteration.** Browsers
+  can't mutate, and won't. The wiki is a record of what a project
+  produced, authored by automated summarisation over captured
+  observations; retrieval, provenance and the audit trail all rest on
+  nobody having gone back and adjusted it. Hand-editing a page stops it
+  answering "what did this project produce" and starts it answering
+  "what did someone want it to say", with no way to tell the two apart
+  afterwards.
+
+  This is not a ban on human input. `memory_write_page` exists for
+  durable human annotations and lands them in the same lineage as
+  everything else (pages supersede on body change). The line is between
+  adding to the record through the normal path and editing it from
+  outside. A human-editable wiki is a reasonable thing to want and a
+  separate product — see #482.
 - **Rate limiting** is shared with `/mcp` + `/admin` (only the body
   cap is enforced today). A future global limiter would tighten the
   authenticated-misbehaviour case.

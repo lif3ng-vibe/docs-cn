@@ -1,10 +1,10 @@
 ---
 title: "basic-memory - Issue & PR Pain-Point Synthesis"
 description: "A wave of nearly identical bugs in April–May 2026: #782, #783, #788, #793, #799, #800, #802, #803, #804, #805, #810, #820, #834. Every one of them is the same shape: an MCP tool ig"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/issues-basic-memory.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-basic-memory.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/issues-basic-memory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-basic-memory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # basic-memory - Issue & PR Pain-Point Synthesis
 

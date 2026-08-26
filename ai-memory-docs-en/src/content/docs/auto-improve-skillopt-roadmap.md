@@ -1,10 +1,10 @@
 ---
 title: "Auto-Improve SkillOpt-Inspired Roadmap"
 description: "This is the ongoing implementation plan for borrowing the best safety ideas from SkillOpt without turning ai-memory into a workflow manager, benchmark harness, or agent orchestrati"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-improve-skillopt-roadmap.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improve-skillopt-roadmap.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/auto-improve-skillopt-roadmap.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improve-skillopt-roadmap.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Auto-Improve SkillOpt-Inspired Roadmap
 

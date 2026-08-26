@@ -1,10 +1,10 @@
 ---
 title: "agentmemory - Research Report"
 description: "agentmemory is persistent memory infrastructure for AI coding agents. The core pitch: an agent silently captures what you do during a coding session (tool calls, prompts, decisions"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-agentmemory.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-agentmemory.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-agentmemory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-agentmemory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # agentmemory - Research Report
 

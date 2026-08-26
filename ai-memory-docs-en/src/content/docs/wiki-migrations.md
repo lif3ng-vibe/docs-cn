@@ -1,10 +1,10 @@
 ---
 title: "Wiki-structure migrations"
 description: "SQL schema migrations are handled automatically by refinery at server startup. This document covers the parallel mechanism for filesystem-level changes to the wiki directory."
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/wiki-migrations.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/wiki-migrations.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/wiki-migrations.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/wiki-migrations.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Wiki-structure migrations
 

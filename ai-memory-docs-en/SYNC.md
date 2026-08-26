@@ -1,18 +1,16 @@
 # SYNC — ai-memory Docs (English)
 
 上游自基线以来的变化：
-- baseline: 77e890740d3e0f34bf6665dea530372e341b6024
-- current:  c304ff6ecba54b05c488345e2c4b0bba81cb9574
-- compare:  https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb
+- baseline: c304ff6ecba54b05c488345e2c4b0bba81cb9574
+- current:  0b32a81fde0ff263cea952b076f6a43f951330e4
+- compare:  https://github.com/akitaonrails/ai-memory/compare/c304ff6ecb…0b32a81fde
 
 | 状态 | 上游文件 | 中文对应页 | GitHub diff |
 |---|---|---|---|
-| M | `README.md` | `index.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
-| M | `docs/auto-improve-skillopt-roadmap.md` | `auto-improve-skillopt-roadmap.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
-| M | `docs/install.md` | `install.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
-| M | `docs/marker-file.md` | `marker-file.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
-| M | `docs/v0.3-roadmap.md` | `v0.3-roadmap.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
-| M | `docs/windows.md` | `windows.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/77e890740d…c304ff6ecb#diff) |
+| M | `docs/ARCHITECTURE.md` | `architecture.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/c304ff6ecb…0b32a81fde#diff) |
+| M | `docs/frontend-api.md` | `frontend-api.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/c304ff6ecb…0b32a81fde#diff) |
+| M | `docs/mcp-install.md` | `mcp-install.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/c304ff6ecb…0b32a81fde#diff) |
+| M | `docs/windows.md` | `windows.md` | [diff](https://github.com/akitaonrails/ai-memory/compare/c304ff6ecb…0b32a81fde#diff) |
 
 ---
 

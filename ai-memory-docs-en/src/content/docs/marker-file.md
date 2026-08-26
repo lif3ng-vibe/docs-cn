@@ -1,10 +1,10 @@
 ---
 title: "Marker file: `.ai-memory.toml`"
 description: "Declare which workspace (and optionally which project) an agent's cwd belongs to, without depending on the directory's basename."
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/marker-file.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/marker-file.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/marker-file.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/marker-file.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Marker file: `.ai-memory.toml`
 

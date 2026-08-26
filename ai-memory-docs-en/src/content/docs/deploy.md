@@ -1,10 +1,10 @@
 ---
 title: "Deploying ai-memory to a homelab"
 description: "This walks through the pattern documented in bin/deploy. The end state is: a long-lived ai-memory container on your homelab host, reachable on your LAN at http://<host>:49374/mcp, "
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/deploy.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/deploy.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/deploy.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/deploy.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Deploying ai-memory to a homelab
 

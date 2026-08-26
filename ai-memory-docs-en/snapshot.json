@@ -1,10 +1,11 @@
 {
-	"commit": "c304ff6ecba54b05c488345e2c4b0bba81cb9574",
-	"date": "2026-08-25",
+	"commit": "0b32a81fde0ff263cea952b076f6a43f951330e4",
+	"date": "2026-08-26",
 	"files": {
 		"README.md": "4d76576ac95db6bcc2cf3131939de59800a233364bc58900b091e655d70aa259",
-		"docs/ARCHITECTURE.md": "2f1a0be9044eba45a792e15c1f7b9e3395df82b3fe8ea0cc333142b3afb16d86",
+		"docs/ARCHITECTURE.md": "cf15259fab724c8742df39a748ca1d93802d47cde6a337afeb57445f1dd3313a",
 		"docs/examples/auto-improve-eval/README.md": "7a732eae8dd775787bf70dd333d20abe139e1f44076c7fa7e4b7ed619416661d",
+		"docs/v0.3-roadmap.md": "8a32e06470fc37b50ca2fe91a4baf0ab2b0fea5664176e83ebbe843d4249fad2",
 		"docs/admission-webhooks.md": "9774868f04643fea87aeedf61890a9e7538619655fb8169421403cc22d44681b",
 		"docs/auto-improve-eval-gates.md": "e24c879afafaa37a780af2c1b661fb506103ecb07e3a3c5f0f0083e6a8233e25",
 		"docs/auto-improve-skillopt-roadmap.md": "1ce6ff58b5caaf54ada530d508e1aff5da02072ce28f4debbe4b234e15c2f9e6",
@@ -13,7 +14,7 @@
 		"docs/companion-crates.md": "c58601d43f45c6489226d941982ff4b24b2ece4ff2197c607a7907e6979527bd",
 		"docs/deploy.md": "9549a28d2993c6a8bc931cbc2294d276281c72c771a25af4359acaca9f7a3467",
 		"docs/design-decisions.md": "c52c30145c402190729b2b2949544c1e1c39c0f5a571797a58b7dac0533a0142",
-		"docs/frontend-api.md": "01ae55e5c773cc3f2fbc6bfc55847af7f3604f0b03d24791edb9dc68c7f54519",
+		"docs/frontend-api.md": "ef4d7518b88a0a5bb59ac790388da5df814e4b14e0eef64d036a4162f0b626f6",
 		"docs/https-via-proxy.md": "b68c20c59961f7bb5eb6089a38b8053c988eb42087140cb75e7b2e55d91fc8f2",
 		"docs/install.md": "616546b234ad107a5fafafe86f1e5b33e08d58f76b04a1f4ddcb432185f0e660",
 		"docs/issues-agentmemory.md": "ee46035d837d2061ba5e3ccec2df0952017f8292b9eb85bbd2ef2590a321584b",
@@ -26,7 +27,7 @@
 		"docs/managed-harness-contributions.md": "708ad967b8542fae99e2875c8472f9fda3b0f819a2517baa7c0bfb387d7e2aa8",
 		"docs/managed-workstreams.md": "90d2b1da35dd30ed164fe14c022b22a45ec1bec676edabab477739c50159ba7b",
 		"docs/marker-file.md": "200e6a306cbbf98f5e7d0607176959195b1d345dc9401b4c026988a4251c94e6",
-		"docs/mcp-install.md": "f278d125c9c2273d99bc6e68ca60b9ff0d48074e80b81cf2cf4012f7ae0365a9",
+		"docs/mcp-install.md": "64e4308a42d29c02fd2ffc25fbf31925211f18cc49ec747786cd07f8e4af6f3a",
 		"docs/prior-art-implementation-findings.md": "a02b49895f9bf83a4481860d7b98703fd722e563179e02b2cbe2c5aba6ac1ca9",
 		"docs/research-agentmemory.md": "7e0acbd8145a7a6abf2ae38b367112a6178f46fd879207054d185fab159824ad",
 		"docs/research-basic-memory.md": "95adbefb2880da6bb7f50261f9af354f5cd63b0331504614145739d08fcd1fb9",
@@ -35,9 +36,8 @@
 		"docs/shell-completions.md": "d25c7fb9fa6cac117675b714711367396070ff562827070af4f839eab938294a",
 		"docs/usage.md": "56fa31a8f892e6d003a156e6de5729c307a0d4a5125d0c9cce72df0df45769e1",
 		"docs/users.md": "6a7c47e1fadd47ed733c2605b6425bd2e9d7495ccf422bbdd3833e889c5f21b5",
-		"docs/v0.3-roadmap.md": "8a32e06470fc37b50ca2fe91a4baf0ab2b0fea5664176e83ebbe843d4249fad2",
 		"docs/vector-backend-policy.md": "71b200edc4ef4a5e274028f5f7683ea34ba9f0aa163a60ec641cef1ab035e204",
 		"docs/wiki-migrations.md": "c36b694fda511150478d49db7ee0c1cd466340cd417f139866d9cb7f2c59e214",
-		"docs/windows.md": "3916d12651cbeee8b66e6df57d3955dc5a7388e3ae9ad8f585ea274a6db44ec6"
+		"docs/windows.md": "e419ceac0c3a394eabb15fe69f24fa8ce5603de9ad6e6af455549897f2a07036"
 	}
 }

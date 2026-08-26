@@ -1,10 +1,10 @@
 ---
 title: "Admission webhooks: pre-persistence HTTP hooks"
 description: "If your idea doesn't fit \"mutate the page or observe the write\", it's probably a different extension point (/hook ingress, /admin/ admin surface, or out-of-band scheduled job)."
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/admission-webhooks.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/admission-webhooks.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/admission-webhooks.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/admission-webhooks.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Admission webhooks: pre-persistence HTTP hooks
 

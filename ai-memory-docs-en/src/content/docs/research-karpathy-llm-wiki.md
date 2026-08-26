@@ -1,10 +1,10 @@
 ---
 title: "Karpathy's \"LLM Wiki\" - Research Report"
 description: "The canonical primary source is Karpathy's April 2026 gist llm-wiki.md, which he calls an \"idea file\" - explicitly not a library or app, but a pattern designed to be copy-pasted in"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-karpathy-llm-wiki.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-karpathy-llm-wiki.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/research-karpathy-llm-wiki.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/research-karpathy-llm-wiki.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # Karpathy's "LLM Wiki" - Research Report
 

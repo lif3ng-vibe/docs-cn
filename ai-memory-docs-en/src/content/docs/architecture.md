@@ -1,15 +1,15 @@
 ---
 title: "ai-memory - Architecture"
 description: "ai-memory is a single Rust binary that gives the coding agents in the README Support Matrix, plus other MCP-capable clients, long-term memory shared across CLIs. Quit one mid-task;"
-source: "https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/ARCHITECTURE.md"
+source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/ARCHITECTURE.md"
 ---
 :::note[Unofficial mirror]
-This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs/ARCHITECTURE.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
+This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/ARCHITECTURE.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
 # ai-memory - Architecture
 
 > One canonical doc for "what is this thing and how is it shaped".
-> Long-form research lives next to this file under [`docs/`](https://github.com/akitaonrails/ai-memory/tree/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs); this
+> Long-form research lives next to this file under [`docs/`](https://github.com/akitaonrails/ai-memory/tree/0b32a81fde0ff263cea952b076f6a43f951330e4/docs); this
 > page is the operational summary for someone reading the code.
 
 ## Purpose
@@ -605,8 +605,13 @@ when `LLM_API_KEY` is absent and stores vectors under the distinct
 * **Richer curator actions.** The shipped curator stages only one report page;
   future work can add individual merge/supersession/link-fix proposals while
   keeping deletes and semantic rewrites review-gated.
-* **Multi-workspace UI / web dashboard.** Out of scope for v1; revisit
-  once the headless server has been load-tested.
+* **Richer read surfaces for the web UI.** The multi-workspace read-only
+  wiki browser shipped in `ai-memory-web` (`/web` — project list, page
+  tree, page view, search). It stays read-only by design: the wiki is a
+  machine-authored record, and a browser edit surface would break the
+  invariant the whole store rests on (#482). Better *reading* — richer
+  navigation, diff/history views, graph exploration — is open. See
+  [`docs/frontend-api.md`](/frontend-api/#10-known-gaps-and-deliberate-non-goals).
 * **Real LongMemEval-S harness.** The recall-eval framework exists
   ([`crates/ai-memory-consolidate/tests/recall_eval.rs`](../crates/ai-memory-consolidate/tests/recall_eval.rs));
   porting LongMemEval-S itself requires the dataset.
@@ -622,7 +627,7 @@ when `LLM_API_KEY` is absent and stores vectors under the distinct
   [`research-cognee.md`](/research-cognee/) - prior art studied.
 * [`docs/auto-improvement-loop.md`](/auto-improvement-loop/) -
   Hermes Agent-inspired learning-loop research and safety boundaries.
-* [`docs/issues-*.md`](https://github.com/akitaonrails/ai-memory/tree/c304ff6ecba54b05c488345e2c4b0bba81cb9574/docs) - concrete failure modes we've designed to
+* [`docs/issues-*.md`](https://github.com/akitaonrails/ai-memory/tree/0b32a81fde0ff263cea952b076f6a43f951330e4/docs) - concrete failure modes we've designed to
   avoid.
-* [`CLAUDE.md`](https://github.com/akitaonrails/ai-memory/blob/c304ff6ecba54b05c488345e2c4b0bba81cb9574/CLAUDE.md) - per-session operating rules pinned
+* [`CLAUDE.md`](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/CLAUDE.md) - per-session operating rules pinned
   into Claude Code conversations.
