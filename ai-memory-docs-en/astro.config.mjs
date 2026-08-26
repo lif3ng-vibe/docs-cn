@@ -15,7 +15,6 @@ export default defineConfig({
 			locales: { root: { label: 'English', lang: 'en' } },
 			social: [{ icon: 'github', label: 'GitHub', href: "https://github.com/akitaonrails/ai-memory" }],
 			favicon: '/logo-light.png',
-			sidebar: [{ label: 'Docs', items: [{ autogenerate: { directory: '' } }] }],
 		}),
 	],
 });

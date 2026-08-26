@@ -320,7 +320,8 @@ export default defineConfig({
 			locales: { root: { label: 'English', lang: 'en' } },
 			social: [{ icon: 'github', label: 'GitHub', href: ${JSON.stringify(config.repo)} }],
 			favicon: '/logo-light.png',
-			sidebar: [{ label: 'Docs', items: [{ autogenerate: { directory: '' } }] }],
+			// 不配 sidebar：Starlight 默认按文件字母序自动生成全部条目。
+			// autogenerate 只支持具名子目录，指向根目录（''/'.'）会静默生成空 sidebar。
 		}),
 	],
 });
