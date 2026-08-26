@@ -554,6 +554,24 @@ ai-memory install-mcp --client kimi-code --apply \
 
 `install-mcp` 自己追加 `?flavor=moonshot` 查询（幂等，重跑不重复）。Moonshot API 按受限方言（「moonshot 风味 json schema」）校验工具参数 schema，拒绝根级 `anyOf`/`oneOf`/`allOf` 组合子——包括 `memory_read_page` 上的 `anyOf`——并在 `tools/list` 以 400 让整个会话失败。ai-memory 服务器对带此风味的请求应答平铺 schema；其他客户端继续原样收到上游 schema。
 
+> **别用 Kimi 自己的 `mcp add` 注册 ai-memory。**Kimi Code 有文档的命令——
+>
+> ```bash
+> kimi mcp add --transport http ai-memory http://127.0.0.1:49374/mcp
+> ```
+>
+> 写入的是裸 URL、没有 `?flavor=moonshot`。服务器于是应答上游 schema，Moonshot 拒绝 `memory_read_page` 的根级 `anyOf`，**每个模型回合都以 400 失败**——包括完全不用工具的回合，因为工具 schema 随每个请求发送。改用 `ai-memory install-mcp --client kimi-code --apply`，它替你写入带风味的 URL。
+>
+> 该失败格外难归因：`kimi mcp test ai-memory` **通过**，因为它只列出工具、从不发往上游。服务器看着健康，而每个真实回合都在死。
+>
+> 已经那样注册了？要么按上述重跑 `install-mcp`，要么设服务器侧地板、留着客户端条目不动：
+>
+> ```bash
+> AI_MEMORY_STRIP_ROOT_COMBINATORS=true   # 或 `strip_root_combinators = true`
+> ```
+>
+> 这让每个 `tools/list` 无论有无 `?flavor=` 标记都应答受限方言，所以任何跳过标记的严格客户端都被覆盖——不止 Kimi。请求的标记只能把方言进一步抬高、绝不能压低。#474 报告。
+
 **配置文件（钩子）：**`~/.kimi-code/config.toml`（同一 `$KIMI_CODE_HOME` 基）。Kimi Code 把钩子存为同一份持有其提供方/模型设置的 TOML 文件里的 `[[hooks]]` 数组条目；`install-hooks` 合并 ai-memory 条目、保留其余一切：
 
 ```bash

@@ -302,7 +302,7 @@ LLM_API_KEY                    自定义 base URL 的 openai 接受；也可作 
 * **`sqlite-vec` 集成。** 到几千页之前暴力余弦够用；超过后 `sqlite-vec` 扩展是下一步。判定标准见[向量后端策略](/vector-backend-policy/)。
 * **计划整编队列。** 遗忘清扫、lint 与自动改进已按服务器侧计划运行；未来的队列可以在钩子延迟之外编译会话摘要。
 * **更丰富的 curator 动作。** 发布的 curator 只暂存一页报告；未来可加单独的合并/取代/修链提案，同时保持删除与语义重写评审门控。
-* **多 workspace UI / Web 仪表盘。** v1 范围外；无头服务器负载测试后再议。
+* **Web UI 更丰富的读取面。**多 workspace 只读 wiki 浏览器已在 `ai-memory-web` 发布（`/web`——项目列表、页面树、页面视图、搜索）。它按设计保持只读：wiki 是机器撰写的记录，浏览器编辑面会砸掉整个存储所依赖的不变量（#482）。更好的*读取*——更丰富的导航、diff/历史视图、图谱探索——是开放的。见 [`frontend-api.md`](/frontend-api/#10-已知缺口与刻意的非目标)。
 * **真正的 LongMemEval-S 框架。** 召回评测框架已存在（[`crates/ai-memory-consolidate/tests/recall_eval.rs`](https://github.com/akitaonrails/ai-memory/blob/main/crates/ai-memory-consolidate/tests/recall_eval.rs)）；移植 LongMemEval-S 本身需要数据集。
 
 ## 阅读顺序

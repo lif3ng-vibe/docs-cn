@@ -169,6 +169,19 @@ target\debug\ai-memory.exe init
 target\debug\ai-memory.exe serve --transport http --bind 127.0.0.1:49374
 ```
 
+### 构建报 `os error 4551` 时
+
+在强制 **Smart App Control** 或 **App Control for Business** 的机器上，`cargo build` 可能在编译我们的任何东西之前就失败：
+
+```
+error: failed to run custom build command for `proc-macro2`
+  An Application Control policy has blocked this file. (os error 4551)
+```
+
+这不是工具链问题，重装 Rust 修不了它。Cargo 把每个 crate 的 `build.rs` 编译成 `target\debug\build\` 下的未签名可执行文件，而那些策略阻止未签名二进制从用户可写目录运行。`proc-macro2` 与 `icu_properties_data` 通常最先撞上，因为它们构建得早。
+
+给检出的 `target` 目录加路径排除（或在你策略已信任的位置构建）。由 @CaioCoelhoChaves 在跑 #478 的测量时报告。
+
 在原生 Windows 上从 Git Bash 做发布验证时，用同一检出并激活 Rust MSVC 工具链：
 
 ```bash
