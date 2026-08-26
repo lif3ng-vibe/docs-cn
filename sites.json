@@ -3,37 +3,36 @@
     "name": "codegraph",
     "slug": "codegraph",
     "desc": "把代码库解析成可供 AI 智能体查询的知识图谱。",
-    "orig": "https://colbymchenry.github.io/codegraph/"
+    "orig": "https://colbymchenry.github.io/codegraph/",
+    "repo": "https://github.com/colbymchenry/codegraph"
   },
   {
     "name": "Orca",
     "slug": "orca",
     "desc": "跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。",
-    "orig": "https://www.onorca.dev/docs"
+    "orig": "https://www.onorca.dev/docs",
+    "repo": "https://github.com/stablyai/orca"
   },
   {
     "name": "Matt Pocock Skills",
     "slug": "mattpocock-skills",
     "desc": "Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。",
-    "orig": "https://www.aihero.dev/skills"
+    "orig": "https://www.aihero.dev/skills",
+    "repo": "https://github.com/mattpocock/skills"
   },
   {
     "name": "AI 编码词典",
     "slug": "ai-coding-dictionary",
     "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
-    "orig": "https://www.aihero.dev/ai-coding-dictionary"
+    "orig": "https://www.aihero.dev/ai-coding-dictionary",
+    "repo": "https://github.com/mattpocock/dictionary-of-ai-coding"
   },
   {
     "name": "ai-memory",
     "slug": "ai-memory",
     "desc": "给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。",
-    "orig": "https://github.com/akitaonrails/ai-memory"
-  },
-  {
-    "name": "ai-memory (English)",
-    "slug": "ai-memory-en",
-    "desc": "Unofficial English mirror — upstream ships markdown only, rendered with Starlight.",
     "orig": "https://github.com/akitaonrails/ai-memory",
-    "lang": "en"
+    "repo": "https://github.com/akitaonrails/ai-memory",
+    "en": "ai-memory-en"
   }
 ]

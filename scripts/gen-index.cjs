@@ -2,7 +2,10 @@
 /**
  * gen-index.cjs — 读 sites.json 生成入口页 index.html。
  * CI 和本地都用它：加新站点只需改 sites.json，重跑此脚本。
- * 中文文档链接用相对路径（slug/），CI 下从 /docs-cn/ 解析为 /docs-cn/<slug>/，本地根路径也正确。
+ * 卡片：整卡点击进中文站（相对路径 slug/，CI 下从 /docs-cn/ 解析）；右侧按钮组：
+ *   en   → 「英文文档」（本仓库构建的英文镜像，仅中英双建的站有）
+ *   orig → 「官方文档」（上游原站；orig 与 repo 相同即上游无站点，不显示）
+ *   repo → 「仓库」（上游 GitHub 仓库）
  */
 'use strict';
 const fs = require('fs');
@@ -10,15 +13,25 @@ const path = require('path');
 
 const sites = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sites.json'), 'utf8'));
 
+function cardButtons(s) {
+	const btn = (href, label) =>
+		`<a class="btn" href="${href}" target="_blank" rel="noopener">${label}</a>`;
+	const out = [];
+	if (s.en) out.push(btn(`${s.en}/`, '英文文档'));
+	if (s.orig && s.orig !== s.repo) out.push(btn(s.orig, '官方文档'));
+	if (s.repo) out.push(btn(s.repo, '仓库'));
+	return out.join('');
+}
+
 const cards = sites
 	.map(
 		(s) => `
 			<div class="item">
 				<a class="row" href="${s.slug}/" target="_blank" rel="noopener">
-					<p class="name">${s.name}${s.lang === 'en' ? ' <span class="lang">EN</span>' : ''}</p>
+					<p class="name">${s.name}</p>
 					<p class="desc">${s.desc}</p>
 				</a>
-				<a class="orig" href="${s.orig}" target="_blank" rel="noopener">原文档</a>
+				<div class="btns">${cardButtons(s)}</div>
 			</div>`
 	)
 	.join('');
@@ -88,27 +101,20 @@ const html = `<!doctype html>
 				font-weight: 600;
 				margin: 0 0 0.2rem;
 			}
-			.lang {
-				font-size: 0.7rem;
-				color: #0969da;
-				border: 1px solid #0969da;
-				border-radius: 4px;
-				padding: 0.05rem 0.35rem;
-				vertical-align: middle;
-				margin-left: 0.3rem;
-				font-weight: 500;
-			}
 			.desc {
 				color: #636c76;
 				font-size: 0.9rem;
 				margin: 0;
-				padding-right: 5.5rem;
 			}
-			.orig {
+			.btns {
 				position: absolute;
 				right: 1rem;
 				top: 50%;
 				transform: translateY(-50%);
+				display: flex;
+				gap: 0.4rem;
+			}
+			.btn {
 				font-size: 0.85rem;
 				color: #636c76;
 				text-decoration: none;
@@ -119,7 +125,7 @@ const html = `<!doctype html>
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 				white-space: nowrap;
 			}
-			.orig:hover {
+			.btn:hover {
 				color: #0969da;
 				border-color: #0969da;
 				background: #fff;
@@ -137,14 +143,10 @@ const html = `<!doctype html>
 				text-decoration: underline;
 			}
 			@media (max-width: 560px) {
-				.desc {
-					padding-right: 0;
-				}
-				.orig {
+				.btns {
 					position: static;
 					transform: none;
-					display: inline-block;
-					margin-top: 0.6rem;
+					padding: 0 1.25rem 1.1rem;
 				}
 			}
 		</style>

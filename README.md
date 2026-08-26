@@ -54,7 +54,7 @@ docs-cn/
 ## 新增一个翻译站点
 
 1. 新建子目录（如 `foo-docs-cn/`），完成翻译站点。
-2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL" }`。
+2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL", "repo": "https://上游仓库" }`；若同仓库还构建了英文镜像，再加 `"en": "<英文站 slug>"`（入口页整卡点击进中文站，按钮显示「官方文档」「仓库」「英文文档」；上游无站点即 orig 与 repo 相同时不显示「官方文档」）。
 3. 在 `.github/workflows/deploy-pages.yml` 加一段构建步骤（以 `DOCS_BASE=/docs-cn/foo/` 构建，构建前 `sed` 给正文内链加前缀），并在 Assemble 步骤里 `mv foo-docs-cn/dist _site/foo`。
 4. 本地跑 `node scripts/gen-index.cjs` 刷新 `index.html`，提交。
 

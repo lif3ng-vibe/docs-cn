@@ -63,27 +63,20 @@
 				font-weight: 600;
 				margin: 0 0 0.2rem;
 			}
-			.lang {
-				font-size: 0.7rem;
-				color: #0969da;
-				border: 1px solid #0969da;
-				border-radius: 4px;
-				padding: 0.05rem 0.35rem;
-				vertical-align: middle;
-				margin-left: 0.3rem;
-				font-weight: 500;
-			}
 			.desc {
 				color: #636c76;
 				font-size: 0.9rem;
 				margin: 0;
-				padding-right: 5.5rem;
 			}
-			.orig {
+			.btns {
 				position: absolute;
 				right: 1rem;
 				top: 50%;
 				transform: translateY(-50%);
+				display: flex;
+				gap: 0.4rem;
+			}
+			.btn {
 				font-size: 0.85rem;
 				color: #636c76;
 				text-decoration: none;
@@ -94,7 +87,7 @@
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 				white-space: nowrap;
 			}
-			.orig:hover {
+			.btn:hover {
 				color: #0969da;
 				border-color: #0969da;
 				background: #fff;
@@ -112,14 +105,10 @@
 				text-decoration: underline;
 			}
 			@media (max-width: 560px) {
-				.desc {
-					padding-right: 0;
-				}
-				.orig {
+				.btns {
 					position: static;
 					transform: none;
-					display: inline-block;
-					margin-top: 0.6rem;
+					padding: 0 1.25rem 1.1rem;
 				}
 			}
 		</style>
@@ -134,42 +123,35 @@
 					<p class="name">codegraph</p>
 					<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
 				</a>
-				<a class="orig" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">原文档</a>
+				<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
 			</div>
 			<div class="item">
 				<a class="row" href="orca/" target="_blank" rel="noopener">
 					<p class="name">Orca</p>
 					<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
 				</a>
-				<a class="orig" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">原文档</a>
+				<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
 			</div>
 			<div class="item">
 				<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
 					<p class="name">Matt Pocock Skills</p>
 					<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
 				</a>
-				<a class="orig" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">原文档</a>
+				<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
 			</div>
 			<div class="item">
 				<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
 					<p class="name">AI 编码词典</p>
 					<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
 				</a>
-				<a class="orig" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">原文档</a>
+				<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
 			</div>
 			<div class="item">
 				<a class="row" href="ai-memory/" target="_blank" rel="noopener">
 					<p class="name">ai-memory</p>
 					<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
 				</a>
-				<a class="orig" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">原文档</a>
-			</div>
-			<div class="item">
-				<a class="row" href="ai-memory-en/" target="_blank" rel="noopener">
-					<p class="name">ai-memory (English) <span class="lang">EN</span></p>
-					<p class="desc">Unofficial English mirror — upstream ships markdown only, rendered with Starlight.</p>
-				</a>
-				<a class="orig" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">原文档</a>
+				<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
 			</div>
 			</div>
 			<footer>
