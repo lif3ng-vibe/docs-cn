@@ -4,7 +4,6 @@ description: "家庭实验室部署把 ai-memory 从计费的 OpenAI / OpenRoute
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/llm-provider-comparison.md"
 ---
 
-# LLM 提供方对比：本地 Ollama vs 托管 OpenRouter
 
 > **TL;DR。** ai-memory 的整编提示词有一个潜伏的 schema vs 提示词 bug，让每个提供方都过不了 JSON 校验。两轮修复（schema + 收紧的反幻觉提示词）之后，六个提供方在同样的 5 个夹具上做了基准：
 >

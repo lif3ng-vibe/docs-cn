@@ -4,7 +4,6 @@ description: "agentmemory 是面向 AI 编码智能体的持久记忆基础设�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-agentmemory.md"
 ---
 
-# agentmemory 调研报告
 
 > 源项目：`rohitg00/agentmemory`（TypeScript，构建在 `iii-engine` 上的 MCP 服务器）。
 > 本仓库在那个更早的 TypeScript 项目之上构建：保留*想法*，替换*基底*。

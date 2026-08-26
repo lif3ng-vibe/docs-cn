@@ -1,10 +1,9 @@
 ---
-title: "新增托管外壳"
+title: "新增托管外壳（harness）"
 description: "托管工作流的支持面比 MCP 或生命周期钩子窄。本版本可托管 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/managed-harness-contributions.md"
 ---
 
-# 新增托管外壳（harness）
 
 托管工作流的支持面比 MCP 或生命周期钩子窄。本版本可托管 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI。Gemini CLI、Devin CLI、Cursor 及 README 支持矩阵里的其他集成，不会因为 ai-memory 能捕获它们的钩子就自动变成托管的。
 

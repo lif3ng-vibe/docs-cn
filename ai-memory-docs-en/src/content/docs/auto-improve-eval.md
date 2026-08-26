@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/examples/auto-improve-eval/README.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# Auto-Improve Eval Example Scorers
 
 These examples are intentionally small, deterministic, and dependency-free.
 They read one proposal JSON object from stdin and print one eval response JSON

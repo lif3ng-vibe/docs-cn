@@ -4,7 +4,6 @@ description: "ai-memory completions <shell> 为 bash、zsh、fish、powershell �
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/shell-completions.md"
 ---
 
-# Shell 补全
 
 `ai-memory completions <shell>` 为 `bash`、`zsh`、`fish`、`powershell` 或 `elvish` 向 stdout 打印补全脚本。脚本由二进制自身的命令树生成，所以覆盖产出它的那个版本的每个子命令与标志——包括 `user rotate-token` 与 `auth login` 这类嵌套命令。
 

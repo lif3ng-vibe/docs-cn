@@ -4,7 +4,6 @@ description: "与 ai-memory 哲学相反的本地优先 AI 记忆：逐字存储
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-mempalace.md"
 ---
 
-# MemPalace 问题与架构综合
 
 > 来源：GitHub `MemPalace/mempalace`。
 > 2026-05-24 抓取。仓库：52.7k star、MIT、Python、2026-04-05 创建、v3.3.5、241 个开放 issue、约 7 周 1600 个 PR。维护者发布异常坦诚的历史笔记（见 `docs/HISTORY.md`——他们公开撤回过度宣称）。主导主题：**ChromaDB/HNSW/FTS5 在并发写入下的损坏**、**静默持久化失败**、**毁数据的修复工具**、**嵌入模型漂移**。

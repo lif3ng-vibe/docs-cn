@@ -4,7 +4,6 @@ description: "从 v0.2 顺延的条目与 M10 之后浮现的想法。这里没�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/v0.3-roadmap.md"
 ---
 
-# v0.3 路线图
 
 从 v0.2 顺延的条目与 M10 之后浮现的想法。
 这里没有任何东西已承诺到某个里程碑；这是一片停车场（parking lot，暂存待办清单）。

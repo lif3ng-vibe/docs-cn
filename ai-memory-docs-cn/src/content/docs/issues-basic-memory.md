@@ -4,7 +4,6 @@ description: "2026 年 4-5 月一波几乎相同的 bug：#782、#783、#788、#
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-basic-memory.md"
 ---
 
-# basic-memory 问题与 PR 痛点综合
 
 > 来源：GitHub `basicmachines-co/basic-memory`。2026-05-21 抓取。
 > 跟踪器信噪比异常高——小团队、深技术回复。

@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/llm-provider-comparison.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# LLM provider comparison - local Ollama vs hosted OpenRouter
 
 > **TL;DR.** ai-memory's consolidation prompt had a latent
 > schema-vs-prompt bug that made every provider fail JSON validation.

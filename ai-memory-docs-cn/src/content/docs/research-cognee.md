@@ -4,7 +4,6 @@ description: "Cognee 自称「智能体背后的脑」——一个记忆控制�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-cognee.md"
 ---
 
-# cognee 调研报告
 
 > 源项目：`topoteretes/cognee`（Python，知识图谱 + 向量 + 关系，MCP 服务器）。
 

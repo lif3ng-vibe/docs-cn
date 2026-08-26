@@ -1,10 +1,9 @@
 ---
-title: "标记文件：.ai-memory.toml"
+title: "标记文件（marker file）：`.ai-memory.toml`"
 description: "声明智能体的 cwd 属于哪个 workspace（以及可选的哪个 project），不依赖目录的 basename。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/marker-file.md"
 ---
 
-# 标记文件（marker file）：`.ai-memory.toml`
 
 声明智能体的 `cwd` 属于哪个 workspace（以及可选的哪个 project），不依赖目录的 basename。
 

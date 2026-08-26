@@ -4,7 +4,6 @@ description: "Basic Memory 是本地优先、MCP 原生、基于 Markdown 的个
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-basic-memory.md"
 ---
 
-# basic-memory 调研报告
 
 > 源项目：`basicmachines-co/basic-memory`（Python，MCP 原生，markdown 落盘）。
 > 既作为灵感研究，也作为我们明确背离的手工 write_note 模型的样本。

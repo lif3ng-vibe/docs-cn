@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improvement-loop.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# Optional Auto-Improvement Loop Research
 
 > Status: research plus implemented production notes. The server schedules
 > auto-improvement for newly completed sessions in every project when an LLM provider is

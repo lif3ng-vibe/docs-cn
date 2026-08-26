@@ -4,7 +4,6 @@ description: "权威一手来源是 Karpathy 2026 年 4 月的 gist llm-wiki.md�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/research-karpathy-llm-wiki.md"
 ---
 
-# Karpathy 的「LLM wiki」调研报告
 
 > 本项目试图忠实实现的模式。一手来源如下；相关/竞争想法列出以供诚实对比。
 

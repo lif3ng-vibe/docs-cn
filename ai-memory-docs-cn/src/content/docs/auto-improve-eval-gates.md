@@ -4,7 +4,6 @@ description: "[auto_improve.eval] 让操作者用一个小型可执行评分器�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-improve-eval-gates.md"
 ---
 
-# 自动改进评审门（Eval Gates）
 
 `[auto_improve.eval]` 让操作者用一个小型可执行评分器守卫高影响的自动改进提案。评分器在 LLM 验证之后、暂存或自动批准之前运行。钩子绝不运行 eval 命令。
 

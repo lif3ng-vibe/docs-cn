@@ -4,7 +4,6 @@ description: "破坏性/触碰状态的 ai-memory 命令参考。运行任何改
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/lifecycle-ops.md"
 ---
 
-# 生命周期操作
 
 破坏性/触碰状态的 ai-memory 命令参考。
 运行任何改动 wiki + db 的东西之前先读本文，尤其是在家庭实验室机器上——那里的错误更难撤销。

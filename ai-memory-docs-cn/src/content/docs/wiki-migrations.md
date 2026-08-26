@@ -4,7 +4,6 @@ description: "SQL schema 迁移由 refinery 在服务器启动时自动处理。
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/wiki-migrations.md"
 ---
 
-# Wiki 结构迁移
 
 SQL schema 迁移由 `refinery` 在服务器启动时自动处理。本文档讲的是 wiki 目录*文件系统级*变更的平行机制。
 

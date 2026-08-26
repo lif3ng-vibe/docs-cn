@@ -1,10 +1,9 @@
 ---
-title: "托管跨外壳工作流"
+title: "托管跨外壳（harness）工作流"
 description: "ai-memory run 是一个选择启用的启动器，让一个逻辑编码会话在 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI 之间移动。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/managed-workstreams.md"
 ---
 
-# 托管跨外壳（harness）工作流
 
 `ai-memory run` 是一个选择启用的启动器，让一个逻辑编码会话在 Claude Code、Codex、OpenCode、Pi、Crush、Kimi Code、Command Code、Kiro CLI v2/v3、OMP、Grok Build CLI 与 Antigravity CLI 之间移动。直接启动智能体保持其既有 ai-memory 行为。没有全局模式开关、没有 `switch` 命令：用 `run` 就选择了当前工作流（workstream），并透明地为所请求的外壳创建或恢复正确的原生会话。
 

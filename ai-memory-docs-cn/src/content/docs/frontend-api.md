@@ -1,10 +1,9 @@
 ---
-title: "前端集成：/api/v1"
+title: "前端集成：`/api/v1`"
 description: "每个 /api/v1/ 请求都经过与 /mcp、/hook、/admin/ 相同的 bearer + 主机允许列表中间件——它们都在认证层应用之前嵌套。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/frontend-api.md"
 ---
 
-# 前端集成：`/api/v1`
 
 > 针对 `ai-memory` 服务器构建第三方前端的只读 JSON API 与自定义 UI 托管模型。**v0.6.0** 加入（PR #7）。
 > 下面一切都取自 `crates/ai-memory-web/src/routes/api.rs` 的实际路由处理器与 `crates/ai-memory-store/src/reader.rs` 的响应结构——本文有漂移时以它们为准。

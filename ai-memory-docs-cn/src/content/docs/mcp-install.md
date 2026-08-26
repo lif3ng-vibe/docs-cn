@@ -4,7 +4,6 @@ description: "本页记录如何把 ai-memory 注册为 README 快速开始之�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/mcp-install.md"
 ---
 
-# MCP 安装指南：更多客户端
 
 > 下面所有片段默认 `http://127.0.0.1:49374`（本地服务器）。远程服务器（家庭实验室、局域网机器）替换相应 URL，并在启用 bearer 认证时给 `headers` 块加 `Authorization: Bearer <token>` 头。MCP 线上协议期望 URL 带 `/mcp` 路径后缀。
 

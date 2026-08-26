@@ -1,10 +1,9 @@
 ---
-title: "[auto_scope] 隔离模式"
+title: "`[auto_scope]` 隔离模式"
 description: "ai-memory serve 发布一个进程共享的「当前活跃项目」指针，调用方省略 workspace / project 时 MCP 读工具会查它。指针由前台生命周期钩子喂入。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-scope.md"
 ---
 
-# `[auto_scope]` 隔离模式
 
 `ai-memory serve` 发布一个进程共享的「当前活跃项目」指针，调用方省略 `workspace` / `project` 时 MCP 读工具会查它。指针由前台生命周期钩子喂入：把 `cwd` 解析到真实项目的会话启动、用户提示词与工具前事件会更新指针，让读工具回答智能体实际所在的项目，而不是服务器静态的 `--project` 默认。完成与关停事件仍落进其解析出的项目，但不推进共享回退槽位：来自旧进程的延迟 post-tool、stop 或会话结束尾巴，绝不能重定向一个新会话的无作用域读取。
 

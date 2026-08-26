@@ -4,7 +4,6 @@ description: "这些示例刻意做得小、确定性、零依赖。它们从 st
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/examples/auto-improve-eval/README.md"
 ---
 
-# 自动改进示例评分器
 
 这些示例刻意做得小、确定性、零依赖。它们从 stdin 读一个提案 JSON 对象，向 stdout 打印一个 eval 响应 JSON 对象。
 

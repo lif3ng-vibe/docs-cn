@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/ARCHITECTURE.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# ai-memory - Architecture
 
 > One canonical doc for "what is this thing and how is it shaped".
 > Long-form research lives next to this file under [`docs/`](https://github.com/akitaonrails/ai-memory/tree/0b32a81fde0ff263cea952b076f6a43f951330e4/docs); this

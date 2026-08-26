@@ -4,7 +4,6 @@ description: "本页讲 ai-memory 装好之后发生的事：交接、压缩恢�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/usage.md"
 ---
 
-# 日常使用
 
 本页讲 ai-memory 装好之后发生的事：交接、压缩恢复、主动记忆查询、Web UI，以及托管路由片段 + 智能体技能（Agent Skills）包。
 

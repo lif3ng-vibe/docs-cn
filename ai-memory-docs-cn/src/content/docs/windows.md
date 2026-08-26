@@ -4,7 +4,6 @@ description: "Windows 支持有两种模式。选与你智能体 CLI 实际运�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/windows.md"
 ---
 
-# Windows 支持
 
 Windows 支持有两种模式。选与你智能体 CLI 实际运行位置匹配的那种。
 

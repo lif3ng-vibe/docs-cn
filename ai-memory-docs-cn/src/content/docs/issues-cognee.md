@@ -4,7 +4,6 @@ description: "2026 年每个提供方都出过线上协议级 bug。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-cognee.md"
 ---
 
-# cognee 问题与 PR 痛点综合
 
 > 来源：GitHub `topoteretes/cognee`。2026-05-21 抓取。
 > 跟踪器画像：约 40% 功能请求（高评论数）、约 40% 下一版即关的 bug、约 20% 卡在架构接缝上真正难的仍开放 bug。

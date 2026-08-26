@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/managed-harness-contributions.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# Adding a managed harness
 
 Managed-workstream support is narrower than MCP or lifecycle-hook support. This
 release can manage Claude Code, Codex, OpenCode, Pi, Crush, Kimi Code, Command

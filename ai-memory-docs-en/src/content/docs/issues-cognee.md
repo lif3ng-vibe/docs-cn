@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-cognee.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# cognee - Issue & PR Pain-Point Synthesis
 
 > Source: GitHub `topoteretes/cognee`. Captured 2026-05-21.
 > Tracker character: ~40% feature requests (high comment counts), ~40% bugs

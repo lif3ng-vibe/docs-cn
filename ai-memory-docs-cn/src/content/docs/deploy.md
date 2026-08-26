@@ -1,10 +1,9 @@
 ---
-title: "部署 ai-memory 到家庭实验室"
+title: "部署 ai-memory 到家庭实验室（homelab）"
 description: "本文走一遍 bin/deploy 记录的模式。最终状态：家庭实验室宿主上一个长驻的 ai-memory 容器，局域网经 http://<host>:49374/mcp 可达。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/deploy.md"
 ---
 
-# 部署 ai-memory 到家庭实验室（homelab）
 
 本文走一遍 `bin/deploy` 记录的模式。最终状态：家庭实验室宿主上一个长驻的 ai-memory 容器，局域网经 `http://<host>:49374/mcp` 可达，配好你的 LLM/嵌入 API key，备份交给你在 `/var/opt/docker/...` 上已经在用的那套。
 

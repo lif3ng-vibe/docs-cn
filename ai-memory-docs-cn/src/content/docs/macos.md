@@ -4,7 +4,6 @@ description: "macOS 是受支持的平台：workspace 测试套件在 macOS CI �
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/macos.md"
 ---
 
-# macOS 支持
 
 macOS 是受支持的平台：workspace 测试套件在 macOS CI 上运行，带标签的发布提供原生 `ai-memory-macos-aarch64.tar.gz`（Apple Silicon）与 `ai-memory-macos-x86_64.tar.gz`（Intel）二进制。
 

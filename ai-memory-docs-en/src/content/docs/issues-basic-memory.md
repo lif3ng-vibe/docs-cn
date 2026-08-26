@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/issues-basic-memory.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# basic-memory - Issue & PR Pain-Point Synthesis
 
 > Source: GitHub `basicmachines-co/basic-memory`. Captured 2026-05-21.
 > Tracker is unusually high-signal — small team, deep technical replies.

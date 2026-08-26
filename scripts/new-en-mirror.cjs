@@ -165,7 +165,13 @@ function buildPage({ upstreamPath, raw, config, headSha, filesByUpstreamPath, wa
 	const title = upstreamPath === 'README.md' ? fallbackTitle : (firstHeading(raw) || path.basename(upstreamPath, path.extname(upstreamPath)));
 	const desc = upstreamPath === 'README.md' ? (config.description || '') : firstParagraph(raw);
 	const blob = `${config.repo}/blob/${headSha}/${upstreamPath}`;
-	const body = rewriteLinks(raw, upstreamPath, filesByUpstreamPath, config, headSha, warnings, upstreamPath, imageAssets);
+	let body = rewriteLinks(raw, upstreamPath, filesByUpstreamPath, config, headSha, warnings, upstreamPath, imageAssets);
+	// Starlight 会把 frontmatter title 渲染成页面大标题——正文自带的同文首个 # H1 会被渲染第二遍，
+	// 这里剥掉（README 落地页的 title 是产品名、与其首个 H1 不同，不剥）。
+	const bodyTitle = firstHeading(raw);
+	if (upstreamPath !== 'README.md' && bodyTitle && bodyTitle === title) {
+		body = body.replace(/^#\s+.+\r?\n/, '');
+	}
 	const fm = [
 		'---',
 		`title: "${title.replace(/"/g, '\\"')}"`,

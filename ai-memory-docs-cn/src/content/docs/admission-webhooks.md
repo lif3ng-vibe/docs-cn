@@ -1,10 +1,9 @@
 ---
-title: "准入 webhook：持久化前的 HTTP 钩子"
+title: "准入 webhook（admission webhook）：持久化前的 HTTP 钩子"
 description: "如果你的想法不符合「改页面或观察写入」，那它多半是另一个扩展点（/hook 入口、/admin/ 管理面或带外计划任务）。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/admission-webhooks.md"
 ---
 
-# 准入 webhook（admission webhook）：持久化前的 HTTP 钩子
 
 > 操作者配置的 HTTP 钩子，在引擎写入路径（`Wiki::write_page`、`delete_page`、`purge_project`、`purge_workspace`、`move_project` 与交接生命周期操作）的持久变更提交之前一刻调用。写钩子可以改页面（返回新的 frontmatter / 正文）；删除/清除/移动钩子是可以观察、镜像或拒绝的通知。来源是 `crates/ai-memory-wiki/src/admission.rs` 与 `crates/ai-memory-cli/src/commands/serve.rs` 里的接线——本文有漂移时以两者为准。
 

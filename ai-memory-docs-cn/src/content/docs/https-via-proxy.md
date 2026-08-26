@@ -4,7 +4,6 @@ description: "处于以下形态之一时整个跳过 TLS——安全预算花�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/https-via-proxy.md"
 ---
 
-# 通过反向代理上 HTTPS
 
 > ai-memory 刻意**不**自己做 TLS 终结。本页是操作者指南：用成熟的 TLS 终结者（Caddy、Cloudflare Tunnel、nginx）挡在前面，让 token 与 `/web` cookie 在客户端与服务器之间加密传输。默认安装保持环回上的明文 HTTP——既有用户升级无需任何改动。
 

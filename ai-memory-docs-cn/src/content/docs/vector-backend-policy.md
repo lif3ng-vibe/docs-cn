@@ -4,7 +4,6 @@ description: "ai-memory 当前把嵌入以打包向量存在 SQLite 里，查询
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/vector-backend-policy.md"
 ---
 
-# 向量后端策略
 
 ai-memory 当前把嵌入（embedding）以打包向量存在 SQLite 里，查询时对最新页面做暴力余弦。`sqlite-vec` 是有意推迟，不是否决。
 

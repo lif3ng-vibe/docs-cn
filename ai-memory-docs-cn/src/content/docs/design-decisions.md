@@ -4,7 +4,6 @@ description: "一个自包含的 Rust 二进制：作为编码智能体 CLI 的 
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/design-decisions.md"
 ---
 
-# ai-memory 设计决策（综合）
 
 > 从原始调研与 issue 报告蒸馏出的历史依据。当前的操作地图读[架构](/architecture/)；当前客户端支持看 [README 支持矩阵](/#支持矩阵)。调研文件是历史凭据。
 

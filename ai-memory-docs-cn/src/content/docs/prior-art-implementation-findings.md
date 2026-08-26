@@ -1,10 +1,9 @@
 ---
-title: "先前技术实现发现"
+title: "先前技术（Prior Art）实现发现"
 description: "ai-memory 已经吸收了最重要的先前技术教训：自动捕获、窄 MCP 面、markdown-in-git 作人类事实源、SQLite 作派生索引/状态存储。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/prior-art-implementation-findings.md"
 ---
 
-# 先前技术（Prior Art）实现发现
 
 > 范围：把签入的 agentmemory、basic-memory、cognee 与 MemPalace 先前技术分析对照当前 ai-memory 实现。本文仅是分析文档；不隐含任何代码变更。
 

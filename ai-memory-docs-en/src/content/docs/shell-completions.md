@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/shell-completions.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# Shell completions
 
 `ai-memory completions <shell>` prints a completion script to stdout for
 `bash`, `zsh`, `fish`, `powershell`, or `elvish`. The script is generated from

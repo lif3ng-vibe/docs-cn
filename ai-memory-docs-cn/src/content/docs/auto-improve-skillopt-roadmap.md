@@ -4,7 +4,6 @@ description: "这是借鉴 SkillOpt 最佳安全思想的进行中实施计划�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-improve-skillopt-roadmap.md"
 ---
 
-# 自动改进 SkillOpt 路线图
 
 这是借鉴 SkillOpt 最佳安全思想的进行中实施计划，同时不把 ai-memory 变成工作流管理器、基准框架或智能体编排平台。
 

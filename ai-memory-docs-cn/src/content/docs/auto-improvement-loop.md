@@ -4,7 +4,6 @@ description: "一个 Hermes Agent 自我改进循环的 ai-memory 等价物，�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-improvement-loop.md"
 ---
 
-# 可选自动改进循环调研
 
 > 状态：调研加已实现的生产笔记。配置了 LLM 提供方时，服务器为每个项目新完成的会话排期自动改进。手动 CLI/admin/MCP 自动改进仍可用于定向运行与补跑。两条路径都把验证过的提案记入待写入审计轨迹，默认经正常 wiki 写入路径自动批准。管理员可设 `[auto_improve] require_approval = true` 转人工评审。
 

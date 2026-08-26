@@ -4,7 +4,6 @@ description: "ai-memory 是单租户 wiki 数据加可选的多用户归因。�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/users.md"
 ---
 
-# 多用户归因
 
 > **状态：** v0.8 引入；本页记录当前已发布的契约。
 

@@ -4,7 +4,6 @@ description: "本页记录功能想法的边界：它们在 ai-memory 周边有�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/companion-crates.md"
 ---
 
-# 可选伴随 crate 与项目
 
 本页记录功能想法的边界：它们在 ai-memory 周边有用，但不应该成为核心 ai-memory 的表面积（surface area）。PR #118 与 PR #123 是历史动因：两者都是正当的产品想法，但都把太多导入、聊天、UI 与变更行为补进了核心服务器。更好的形态是可选的伴随软件，经公共 API 编排 ai-memory。
 

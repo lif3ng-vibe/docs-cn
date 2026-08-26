@@ -4,7 +4,6 @@ description: "ai-memory 是单个 Rust 二进制，给 README 支持矩阵里的
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/architecture.md"
 ---
 
-# ai-memory 架构
 
 > 关于「这东西是什么、长什么样」的一份规范文档。
 > 长篇调研在旁边的 [`docs/`](https://github.com/akitaonrails/ai-memory/tree/main/docs) 目录里；本页是给读代码的人看的操作性摘要。

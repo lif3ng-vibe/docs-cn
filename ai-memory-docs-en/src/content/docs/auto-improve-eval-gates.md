@@ -6,7 +6,6 @@ source: "https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b0
 :::note[Unofficial mirror]
 This is an unofficial documentation mirror. [View the source on GitHub](https://github.com/akitaonrails/ai-memory/blob/0b32a81fde0ff263cea952b076f6a43f951330e4/docs/auto-improve-eval-gates.md) · [Upstream repo](https://github.com/akitaonrails/ai-memory)
 :::
-# Auto-Improve Eval Gates
 
 `[auto_improve.eval]` lets operators guard high-impact auto-improvement
 proposals with a small executable scorer. The scorer runs after LLM validation

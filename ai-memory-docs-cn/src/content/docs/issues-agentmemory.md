@@ -4,7 +4,6 @@ description: "在 Node 进程内嵌检索索引、同时经带 30s 超时的远�
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/issues-agentmemory.md"
 ---
 
-# agentmemory 问题与 PR 痛点综合
 
 > 来源：GitHub `rohitg00/agentmemory`，2026-05-21 抓取。
 > 仓库健康度：15.7k star，非常活跃。上周约 50 个合并 PR。

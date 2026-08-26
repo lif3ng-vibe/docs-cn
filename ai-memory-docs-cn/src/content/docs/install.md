@@ -1,10 +1,9 @@
 ---
-title: "安装指南"
+title: "安装指南（cookbook）"
 description: "README 快速开始覆盖快乐路径（docker + Claude Code）。本页覆盖其余一切。"
 source: "https://github.com/akitaonrails/ai-memory/blob/main/docs/install.md"
 ---
 
-# 安装指南（cookbook）
 
 [README 快速开始](/#快速开始)覆盖快乐路径（docker + Claude Code）。本页覆盖其余一切：
 
