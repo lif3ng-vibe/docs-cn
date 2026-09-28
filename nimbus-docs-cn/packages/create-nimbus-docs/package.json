@@ -1,0 +1,58 @@
+{
+  "name": "@cloudflare/create-nimbus-docs",
+  "version": "0.7.7",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "description": "Scaffold a new Nimbus docs site. Used via `npx @cloudflare/create-nimbus-docs@latest`.",
+  "keywords": [
+    "astro",
+    "documentation",
+    "docs",
+    "scaffold",
+    "create",
+    "nimbus"
+  ],
+  "homepage": "https://nimbus-docs.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cloudflare/nimbus.git",
+    "directory": "packages/create-nimbus-docs"
+  },
+  "bugs": {
+    "url": "https://github.com/cloudflare/nimbus/issues"
+  },
+  "license": "MIT",
+  "author": "Mohamed Hassan",
+  "bin": {
+    "create-nimbus-docs": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepack": "tsdown"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "@cloudflare/nimbus-docs": "workspace:*",
+    "giget": "^3.3.0",
+    "mri": "^1.2.0",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/mri": "^1.1.4",
+    "@types/node": "^20.17.0",
+    "tsdown": "^0.20.3",
+    "tsx": "^4.22.3"
+  }
+}

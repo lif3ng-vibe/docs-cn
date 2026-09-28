@@ -1,0 +1,24 @@
+---
+title: PageActions
+tagline: '页面级操作行——提供“复制页面”（Markdown）与“以 Markdown 查看”，外加可选的更新日期。'
+props:
+  - name: markdownUrl
+    type: string
+    description: 页面 `.md` 版本的 URL。启用复制与查看按钮。
+  - name: lastUpdated
+    type: Date
+    description: '设置后，会在同一行渲染“更新于 <日期>”字样。'
+  - name: aiGenerated
+    type: boolean
+    description: 将页面标记为 AI 起草——渲染“AI 生成 · 待审阅”徽章。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { PageActions } from "@/components/ui/page-actions";
+
+## 预览
+
+<Showcase code={`<PageActions markdownUrl="/page.md" />`}>
+  <div class="w-full max-w-md text-left">
+    <PageActions markdownUrl="/components/page-actions/index.md" />
+  </div>
+</Showcase>

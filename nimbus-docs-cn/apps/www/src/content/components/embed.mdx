@@ -1,0 +1,57 @@
+---
+title: Embed
+tagline: "iframe 封装——锁定宽高比，并为视频、地图和嵌入内容提供合理的默认值。"
+props:
+  - name: src
+    type: string
+    required: true
+    description: 嵌入 iframe 的 URL。
+  - name: title
+    type: string
+    required: true
+    description: iframe 的无障碍名称。
+  - name: ratio
+    type: string
+    defaultValue: '"16/9"'
+    description: 'CSS 宽高比（如 "16/9"、"4/3"、"1/1"）。'
+  - name: allow
+    type: string
+    defaultValue: '"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
+    description: 传给 iframe 的权限策略（permissions policy）。
+  - name: allowfullscreen
+    type: boolean
+    defaultValue: "true"
+    description: 允许嵌入内容进入全屏。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Embed } from "@/components/ui/embed";
+
+## 预览
+
+<Showcase code={`<Embed
+  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+  title="Demo video"
+  ratio="16/9"
+  allowfullscreen
+/>`}>
+  <div class="w-[28rem] max-w-full text-left">
+    <Embed src="about:blank" title="演示嵌入" ratio="16/9" />
+  </div>
+</Showcase>
+
+## 示例
+
+### 自定义宽高比
+
+传入任意 CSS aspect-ratio 字符串——方形预览或超宽内容都适用。
+
+<Example code={`<Embed
+  src="https://example.com/preview"
+  title="Square preview"
+  ratio="1/1"
+/>`} contentClass="w-full">
+  <div class="w-full max-w-xs mx-auto">
+    <Embed src="about:blank" title="方形预览" ratio="1/1" />
+  </div>
+</Example>

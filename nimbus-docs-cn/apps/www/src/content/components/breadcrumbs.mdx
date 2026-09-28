@@ -1,0 +1,66 @@
+---
+title: Breadcrumbs
+tagline: "指向当前页面的层级路径——长路径会以省略号折叠。"
+props:
+  - name: items
+    type: "Array<{ label: string; href: string }>"
+    required: true
+    description: 按文档顺序排列的路径项。最后一项渲染为当前页面。
+  - name: maxVisible
+    type: number
+    defaultValue: "4"
+    description: 可见项数量上限，超过后中间的条目会折叠为省略号。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+
+## 预览
+
+<Showcase code={`<Breadcrumbs
+  items={[
+    { label: "Home", href: "/" },
+    { label: "Components", href: "/components" },
+    { label: "Breadcrumbs", href: "/components/breadcrumbs" },
+  ]}
+/>`}>
+  <div class="w-full text-left">
+    <Breadcrumbs
+      items={[
+        { label: "首页", href: "/" },
+        { label: "组件", href: "/components" },
+        { label: "面包屑", href: "/components/breadcrumbs" },
+      ]}
+    />
+  </div>
+</Showcase>
+
+## 示例
+
+### 长路径
+
+超过 `maxVisible` 后，中间的条目会折叠为省略号。
+
+<Example code={`<Breadcrumbs
+  maxVisible={3}
+  items={[
+    { label: "Docs", href: "/" },
+    { label: "Reference", href: "/ref" },
+    { label: "API", href: "/ref/api" },
+    { label: "Payments", href: "/ref/api/payments" },
+    { label: "Webhooks", href: "/ref/api/payments/webhooks" },
+  ]}
+/>`} contentClass="w-full">
+  <div class="w-full">
+    <Breadcrumbs
+      maxVisible={3}
+      items={[
+        { label: "文档", href: "/" },
+        { label: "参考", href: "/ref" },
+        { label: "API", href: "/ref/api" },
+        { label: "Payments", href: "/ref/api/payments" },
+        { label: "Webhooks", href: "/ref/api/payments/webhooks" },
+      ]}
+    />
+  </div>
+</Example>

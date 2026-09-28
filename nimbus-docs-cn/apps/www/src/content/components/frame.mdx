@@ -1,0 +1,71 @@
+---
+title: Frame
+tagline: "带边框和内边距的截图/媒体容器——可选配说明文字。"
+props:
+  - name: caption
+    type: string
+    description: 渲染在媒体下方居中的说明文字。
+  - name: aspect
+    type: string
+    description: '把媒体区域锁定为固定比例（如 "16/9"、"4/3"、"1/1"）。内部媒体会以 `object-fit: cover` 填满。'
+  - name: src
+    type: ImageMetadata | string
+    description: "导入的图片——会经过 Astro 的图片管线（现代格式、响应式 srcset、懒加载、无布局偏移）。字符串路径或 URL 则渲染为普通的懒加载 `<img>`。省略时使用插槽。"
+  - name: alt
+    type: string
+    description: '`src` 的替代文本。装饰性图片请用 `""`。'
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Frame } from "@/components/ui/frame";
+
+## 预览
+
+<Showcase code={`<Frame caption="Nimbus 组件展示页">
+  <img src="/assets/showcase.png" alt="组件展示页截图" />
+</Frame>`}>
+  <div class="w-[28rem] max-w-full text-left">
+    <Frame caption="Nimbus 组件展示页">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" class="w-full h-auto" aria-hidden="true">
+        <rect width="400" height="200" fill="oklch(0.145 0 0)" />
+      </svg>
+    </Frame>
+  </div>
+</Showcase>
+
+## 示例
+
+### 宽高比
+
+把边框锁定为固定比例。常见选择：16/9（视频）、4/3（经典）、1/1（方形）、21/9（超宽）。
+
+<Example code={`<Frame aspect="16/9" caption="16 / 9">
+  <img src="/assets/hero.png" alt="Hero" />
+</Frame>
+
+<Frame aspect="4/3" caption="4 / 3">
+  <img src="/assets/screenshot.png" alt="Screenshot" />
+</Frame>
+
+<Frame aspect="1/1" caption="1 / 1">
+  <img src="/assets/avatar.png" alt="Avatar" />
+</Frame>
+
+<Frame aspect="21/9" caption="21 / 9">
+  <img src="/assets/banner.png" alt="Banner" />
+</Frame>`} contentClass="w-full">
+  <div class="w-full max-w-md mx-auto flex flex-col gap-3">
+    <Frame aspect="16/9" caption="16 / 9">
+      <div class="w-full h-full" style="background-color: oklch(0.145 0 0);"></div>
+    </Frame>
+    <Frame aspect="4/3" caption="4 / 3">
+      <div class="w-full h-full" style="background-color: oklch(0.145 0 0);"></div>
+    </Frame>
+    <Frame aspect="1/1" caption="1 / 1">
+      <div class="w-full h-full" style="background-color: oklch(0.145 0 0);"></div>
+    </Frame>
+    <Frame aspect="21/9" caption="21 / 9">
+      <div class="w-full h-full" style="background-color: oklch(0.145 0 0);"></div>
+    </Frame>
+  </div>
+</Example>

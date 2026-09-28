@@ -1,0 +1,100 @@
+---
+title: Frontmatter
+description: 文档 schema 认识的每一个 frontmatter 字段，附类型与默认值。
+aiGenerated: true
+sidebar:
+  order: 3
+---
+
+Frontmatter 在构建时按 Zod schema 校验，错误信息面向内容作者编写——会点名缺失的字段，并回显出问题的值。只有 `title` 是必填项。
+
+## 字段
+
+| 字段 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `title` | string | — | **必填。** 页面标题，也是侧边栏标签的默认值。 |
+| `description` | string | — | Meta 描述与搜索摘要。 |
+| `mode` | `"doc"` \| `"custom"` | `"doc"` | `custom` 会去掉全部文档界面元素。 |
+| `sidebar` | `false` \| object | — | `false` 移除本页的侧边栏一列；用 `sidebar.hidden` 把页面从侧边栏中隐藏。见下文。 |
+| `hideChildren` | boolean | — | `sidebar.hideChildren` 的顶层别名——把一个栏目折叠成单个链接。 |
+| `head` | array | `[]` | 额外的 `<head>` 元素；与 `config.head` 合并。 |
+| `banner` | object | — | 页面级公告，显示在页眉上方。见下文。 |
+| `draft` | boolean | `false` | 不进入生产构建与 `llms.txt` 索引。 |
+| `noindex` | boolean | `false` | 输出 `<meta name="robots" content="noindex">`。 |
+| `searchable` | boolean | derives from `noindex` | 是否纳入站点搜索索引。 |
+| `tableOfContents` | `false` \| object | — | `{ minHeadingLevel, maxHeadingLevel }`（默认 2–3）。 |
+| `lastUpdated` | date | — | 覆盖由 git 推导出的日期。 |
+| `socialImage` | string | — | 页面级 OG 图片，接受绝对 URL 或不带 base 的逻辑路径。 |
+| `prev` / `next` | string \| object \| `false` | — | 覆盖或禁用分页链接。 |
+| `previousSlug` | string \| string[] | — | 版本化改名的过渡通道——参见[重定向](/navigation/redirects)。 |
+| `external_link` | URL \| `/path` | — | 改写侧边栏链接的目标地址。 |
+
+## `sidebar` 对象
+
+```yaml
+sidebar:
+  order: 2
+  label: Quickstart           # overrides title in the rail
+  badge:
+    text: New
+    variant: tip              # default | info | note | success | tip | warning | caution | danger
+  hidden: false               # keep the page but hide it from the rail
+  hideChildren: false         # collapse a section to a single link
+  group:                      # when this page is a directory index.mdx
+    label: Getting started
+    badge: Beta
+```
+
+## Banner
+
+用 `banner` 发布页面级公告，例如新版本发布、迁移通知或弃用警告：
+
+```yaml
+---
+title: Workers
+banner:
+  content: This API is in beta and may change.
+  type: caution
+---
+```
+
+`content` 是纯文本。`type` 接受 `note`、`tip`、`caution` 或 `danger`。
+
+加上 `dismissible` 可以让读者关闭横幅：
+
+```yaml
+banner:
+  content: v2 is out — see the migration guide.
+  type: tip
+  dismissible:
+    id: v2-release
+    days: 7
+```
+
+`id` 标识一次关闭动作。消息内容变化时请更换 `id`，这样横幅才会重新出现。`days` 控制关闭状态的持续时长；省略则永久记住关闭状态。
+
+站点级公告请改在 `BaseLayout` 中渲染 `Banner` 组件。参见[布局](/styling/layouts)。
+
+## 示例
+
+```yaml
+---
+title: Configuration
+description: Every option defineConfig accepts.
+sidebar:
+  order: 9
+  badge:
+    text: Reference
+    variant: info
+tableOfContents:
+  maxHeadingLevel: 2
+---
+```
+
+## 已移除的键
+
+一些旧键现在会抛出带引导的迁移错误，而不是静默失效：
+
+- `template` → `mode` (`splash` → `custom`)
+- `pagefind` → `searchable`
+- `llms`、`aiDeprioritize`、`hero`——已移除；请改用 `noindex`，或在正文中自行组合实现。

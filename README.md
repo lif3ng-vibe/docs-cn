@@ -12,6 +12,9 @@
 | AI 编码词典 | `ai-coding-dictionary-docs-cn/` | https://www.aihero.dev/ai-coding-dictionary | https://github.com/mattpocock/dictionary-of-ai-coding | 2026-08-20 |
 | ai-memory | `ai-memory-docs-cn/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-21 |
 | ai-memory (EN) | `ai-memory-docs-en/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-25 |
+| Nimbus | `nimbus-docs-cn/` | https://nimbus-docs.com | https://github.com/cloudflare/nimbus | 2026-09-28 |
+
+> Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 
 ## 运行任意子项目
 
@@ -48,6 +51,7 @@ docs-cn/
 ├── ai-coding-dictionary-docs-cn/       # AI 编码词典中文版（Starlight）
 ├── ai-memory-docs-cn/                  # ai-memory 中文文档（Starlight，36 篇）
 ├── ai-memory-docs-en/                  # ai-memory 英文镜像（Starlight，脚本生成，36 篇）
+├── nimbus-docs-cn/                     # Nimbus 中文文档（pnpm monorepo，apps/www 站点，66 篇）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -90,7 +94,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 1. 用 `sites.json` 生成入口页 `index.html`。
 2. 给每个子站点的正文 markdown 内链 `](/path)` 临时加 `/docs-cn/<站>/` 前缀（Astro 对 Starlight 组件链接会自动加 base，但对正文 markdown 内链不会，需 CI 补齐；源码保持不带前缀）。
 3. 以 `DOCS_BASE=/docs-cn/<站>/` 构建。
-4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`、`ai-memory/`。
+4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`、`ai-memory/`、`nimbus/`。
 5. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
 
 部署后访问地址：
@@ -101,6 +105,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - AI 编码词典：https://lif3ng-vibe.github.io/docs-cn/ai-coding-dictionary/
 - ai-memory：https://lif3ng-vibe.github.io/docs-cn/ai-memory/
 - ai-memory（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/ai-memory-en/
+- Nimbus：https://lif3ng-vibe.github.io/docs-cn/nimbus/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

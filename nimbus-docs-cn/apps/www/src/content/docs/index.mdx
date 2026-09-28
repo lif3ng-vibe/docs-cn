@@ -1,0 +1,52 @@
+---
+title: Nimbus
+description: 为智能体网络（agentic web）打造的文档。
+audience: human
+tableOfContents: false
+head:
+  - tag: style
+    content: |
+      #main-content { position: relative; z-index: 0; }
+      #main-content::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(55vw, 46rem);
+        z-index: -1;
+        pointer-events: none;
+        background: url("/cloud-alpha.png") right top / contain no-repeat;
+        opacity: 0.13;
+      }
+      [data-mode="dark"] #main-content::before { filter: invert(1); }
+      @media (max-width: 767px) {
+        #main-content::before { width: 65vw; opacity: 0.22; }
+      }
+      /* At xl the layout reserves an 18rem TOC gutter to the right of
+         #main-content; push the cloud over it so it stays flush to the page. */
+      @media (min-width: 1280px) {
+        #main-content::before { right: calc(-1 * var(--nb-toc-width)); }
+      }
+---
+
+人们和智能体最先看到的，是你的文档，而不是你的产品。Nimbus 就是你在智能体世界中构建文档的方式：一切归你所有。基于 Astro 构建，默认智能体原生（agent-native）。
+
+```sh
+npx @cloudflare/create-nimbus-docs@latest
+```
+
+## 为什么选择 Nimbus
+
+- **每个文件都归你所有。**没有需要 fork 应付的上游主题——而且当没有任何东西被隐藏时，智能体的推理也更顺畅。
+- **人类与智能体皆为一等公民。**为两者同时做好阅读与创作，开箱即用。
+- **把低质内容挡在外面。**正文 linter 让人和智能体都保持诚实；草稿发布时带着标记，而非默认可信。
+
+## 接下来去哪里
+
+<CardGrid>
+  <LinkCard title="快速开始" description="一条命令完成脚手架生成。" href="/get-started" icon="ph:rocket-launch" />
+  <LinkCard title="安装" description="哪些内容会进入你的仓库，以及为什么归你所有。" href="/installation" icon="ph:download-simple" />
+  <LinkCard title="设计哲学" description="Nimbus 为何如此设计。" href="/philosophy" icon="ph:compass" />
+  <LinkCard title="组件" description="各构建区块的实操演示。" href="/components" icon="ph:squares-four" />
+</CardGrid>

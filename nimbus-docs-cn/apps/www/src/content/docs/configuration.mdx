@@ -1,0 +1,201 @@
+---
+title: 配置
+description: defineConfig 与 Nimbus 集成可接受的所有选项。
+aiGenerated: true
+sidebar:
+  order: 9
+  badge:
+    text: 参考
+    variant: info
+---
+
+Nimbus 在 `astro.config.ts` 中配置。`defineConfig`（以 `defineNimbusConfig` 为名重新导出）为站点配置提供类型；`nimbus()` 集成接收这份配置外加构建期选项。
+
+```ts title="astro.config.ts"
+import { defineConfig } from "astro/config";
+import nimbus, {
+  defineConfig as defineNimbusConfig,
+} from "@cloudflare/nimbus-docs";
+
+const config = defineNimbusConfig({
+  site: "https://docs.example.com",
+  title: "Acme",
+  description: "Build with Acme.",
+  github: "https://github.com/acme/docs",
+  editPattern: "https://github.com/acme/docs/edit/main/{path}",
+  sidebar: { items: [/* … */] },
+});
+
+export default defineConfig({
+  integrations: [nimbus(config, {/* options */})],
+});
+```
+
+## 站点配置
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `site` | string | **必填。**站点的规范 URL。桥接到 Astro 的 `site`。 |
+| `title` | string | **必填。**站点标题，也是元数据的兜底值。 |
+| `description` | string | 默认的 meta 描述。 |
+| `locale` | string | 文档语言（如 `"en"`）。 |
+| `homeLabel` | string | "首页"面包屑的显示文字。 |
+| `github` | string \| null | 页头链接的仓库 URL；`null` 表示隐藏。 |
+| `editPattern` | string \| null | 编辑链接的模式；`{path}` 为页面路径。 |
+| `socialImage` / `socialImageAlt` | string | OG 兜底图片及其替代文本。参见[元数据与 SEO](/ai/metadata-and-seo)。 |
+| `head` | array | 全站 `<head>` 元素。 |
+| `sidebar` | object | 侧边栏配置——参见[侧边栏](/navigation/sidebar)。 |
+| `features` | object | `sidebar` / `tableOfContents` 总开关。参见[布局](/styling/layouts)。 |
+| `search` | object \| `false` | 搜索后端。参见[搜索](/navigation/search)。 |
+| `versions` | object | 版本清单——每个版本都是独立的内容集合。 |
+| `rendering` | object | 规范内容集合路由的构建/请求渲染策略。 |
+
+### 渲染策略
+
+`rendering` 控制规范内容集合路由：即 Nimbus 为文档、API 参考和其他注册集合使用的 catch-all 路由。它不会影响 `src/pages/` 下的自定义文件。
+
+| 模式 | 行为 | 部署要求 |
+| --- | --- | --- |
+| `"build"` | 在 `astro build` 期间预渲染路由。这是默认值。 | 任何静态或服务器部署。 |
+| `"request"` | 访问者请求时才渲染路由。 | Astro 服务器输出，配以 Nimbus 支持的适配器。 |
+
+省略 `rendering` 等价于 `rendering: { default: "build" }`。
+
+#### 启用按请求渲染
+
+按请求渲染需要三样东西：Astro 配置中的 `output: "server"`、一个 Nimbus 支持的适配器，以及 Nimbus 配置中至少一个集合设为 `"request"`。各提供商的具体设置见下文。
+
+当大多数或全部规范集合路由都应按请求渲染时，直接设默认值：
+
+```ts
+const nimbusConfig = defineNimbusConfig({
+  // ...
+  rendering: {
+    default: "request",
+  },
+});
+```
+
+更改输出模式或渲染策略后，务必运行生产构建。这是验证所选适配器支持 Nimbus 按请求渲染的权威检查。
+
+#### 混用构建与按请求渲染
+
+`rendering.default` 作用于每条拥有规范 catch-all 路由的注册集合。`rendering.collections` 按 Astro 集合名覆盖该模式——按集合名，而不是按 URL 或版本。
+
+大多数集合按请求渲染，但让某个归档集合保持预渲染：
+
+```ts
+rendering: {
+  default: "request",
+  collections: {
+    archived: "build",
+  },
+},
+```
+
+或者整站保持静态，只放行一个集合：
+
+```ts
+rendering: {
+  default: "build",
+  collections: {
+    api: "request",
+  },
+},
+```
+
+每个覆盖项必须指名一个拥有自己规范 catch-all 路由的注册集合。遇到未知集合名，Nimbus 会让构建失败，而不是默默忽略。
+
+按请求渲染的路由仍会在生产构建期间进入 sitemap 和 Pagefind 搜索索引。Nimbus 利用内容源生成这些构建期可发现性文件；无需额外的 sitemap 或搜索配置。
+
+##### Cloudflare
+
+Cloudflare 是目前支持 Nimbus 集合路由按请求渲染的提供商。新建站点时选 **Server** 和 **Cloudflare**。既有站点则从项目根目录运行适配器安装器：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add adapter-cloudflare" />
+
+安装器接好 `@astrojs/cloudflare` 并把 Astro 设为服务器输出。`wrangler.jsonc` 不存在时创建一个，或替换未被改动的 Nimbus 静态配置。定制过的 Wrangler 文件以及 JSON/TOML 等其他格式配置会保留不动，并给出手工操作指引。
+
+当前生效的 Nimbus 配置没有渲染策略时，安装器会加上 `rendering: { default: "request" }`。已有策略原样保留。若 import 进来或语义含糊的 Nimbus 配置无法安全编辑，安装器会完成适配器安装并打印生成编码智能体配方的指引。用以下命令生成该配方：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add adapter-cloudflare --print" />
+
+把打印出的配方交给你的编码智能体，完成项目专属配置。
+
+最终的 Astro 配置包含渲染策略、服务器输出和适配器：
+
+```ts title="astro.config.ts"
+import cloudflare from "@astrojs/cloudflare";
+import { defineConfig } from "astro/config";
+import nimbus, {
+  defineConfig as defineNimbusConfig,
+} from "@cloudflare/nimbus-docs";
+
+const nimbusConfig = defineNimbusConfig({
+  site: "https://docs.example.com",
+  title: "Acme",
+  rendering: {
+    default: "request",
+  },
+});
+
+export default defineConfig({
+  output: "server",
+  adapter: cloudflare({ prerenderEnvironment: "node" }),
+  integrations: [nimbus(nimbusConfig)],
+});
+```
+
+部署到 Cloudflare 还需要一份兼容服务器输出的 `wrangler.jsonc`。设置完成后运行 `pnpm build`，一并验证适配器与 Wrangler 配置。
+
+安装器行为与安全检查参见[服务器适配器](/cli#服务器适配器)。
+
+## 集成选项
+
+`nimbus()` 的第二个参数控制构建行为：
+
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `validateMdx` | `true` | PascalCase 标签校验。`false` 跳过；传对象可覆盖路径。参见[Markdown 与 MDX](/writing/markdown-and-mdx)。 |
+| `admonitions` | `true` | 原生 Sätteri MDX 指令 → `<Aside>`；传对象可添加 `typeAliases`、`contentDirs` 和 `skip`。使用不兼容的自定义 processor 时设为 `false`。 |
+| `markdown` | Sätteri processor | 配置手写 Markdown 的处理与生成 Markdown 的定制。 |
+| `sitemap` | 设了 `site` 即启用 | `false` 禁用。 |
+| `mdx` | — | 转发给 Astro MDX 集成的选项。其行为仍由 processor 决定。 |
+| `icons` | `true` | 内置图标系统。`true` 自动探测 `@iconify-json/*` 包（Phosphor、Material Icons 等）和本地 `src/icons/*.svg`。`false` 禁用。传对象可显式配置（`iconDir`、`include`、`svgoOptions`）。参见[图标](/components/icon)。 |
+| `rules` | `off`（自行启用） | 创作 lint 的严重级别——每条规则默认关闭，由你启用。参见[lint 检查](/writing/linting)。 |
+| `collections` | — | 按集合覆盖 lint 设置。 |
+
+```ts
+nimbus(config, {
+  validateMdx: true,
+  rules: { "nimbus/single-h1": "error", "nimbus/bare-url": "warn" },
+});
+```
+
+### 定制生成的 Markdown
+
+用 `markdown.componentMap` 定义项目专属 MDX 组件在生成的 Markdown 中如何呈现。当 `<Render>` 属性映射到自定义局部片段（partial）ID 时，用 `markdown.partialResolver`：
+
+```ts title="astro.config.ts"
+nimbus(config, {
+  markdown: {
+    componentMap: {
+      ProductName: {
+        revision: "product-name-v1",
+        render: ({ children }) => children,
+      },
+    },
+    partialResolver: {
+      revision: "product-partials-v1",
+      resolve: ({ file, product }) =>
+        product ? `${product}/${file}` : file,
+    },
+  },
+});
+```
+
+`<ProductName>Acme</ProductName>` 在干净 Markdown 中变成 `Acme`。转换运行前，Nimbus 会先规范化手写的静态 `href` 值，因此可以在转换里直接校验并渲染这些值。转换自身构造目标链接时，还会收到当前生效的 `base`。
+
+每个转换都要求一个非空的 `revision`。只要其输出会变，就递增它，Nimbus 据此使生成的 Markdown 缓存失效。
+
+按请求渲染的 HTML 消费的是预先准备好的条目和标题。生成备用 Markdown/MDX 版本、`llms.txt` 索引、`llms-full.txt`、可复用片段展开和语法高亮仍是构建期工作。相关端点可以预渲染这些负载，也可以按请求提供。更改这些选项后请运行生产构建；开发模式不会校验最终的 Worker bundle。

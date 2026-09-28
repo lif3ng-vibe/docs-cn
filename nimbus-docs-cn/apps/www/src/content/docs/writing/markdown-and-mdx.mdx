@@ -1,0 +1,147 @@
+---
+title: Markdown 与 MDX
+description: 用 Markdown 或 MDX 写内容，无需 import 即可使用组件，并让构建帮你拦住坏标签。
+aiGenerated: true
+sidebar:
+  order: 2
+---
+
+内容用 Markdown（`.md`）或 MDX（`.mdx`）编写。MDX 让你把组件直接写进正文——卡片、标签页、步骤、Aside，以及你自己构建的任何组件。
+
+## 部署 base 下的链接
+
+站内链接写成不带 Astro 部署 base 的逻辑根路径。如果站点以 `base: "/docs"` 部署，应写作 `[Installation](/installation)`，而不是 `[Installation](/docs/installation)`。Nimbus 会在构建时补上 `/docs`。
+
+这条规则适用于 Markdown 链接、引用式链接定义（reference definitions）、原生 `<a href>` 属性，以及组件里静态的 `href` 字符串。相对链接、外部 URL、片段、查询串、代码与动态 JSX 表达式一律保持原样。
+
+如果链接是在组件或路由代码里计算出来的，请从 `@cloudflare/nimbus-docs/runtime` import `withBase` 并应用一次：
+
+```ts
+import { withBase } from "@cloudflare/nimbus-docs/runtime";
+
+const href = withBase("/installation", import.meta.env.BASE_URL);
+```
+
+不要把已经带 base 的路径传给 `withBase`；在 `/docs` base 下，`withBase("/docs/installation", "/docs")` 会（有意地）产出 `/docs/docs/installation`。
+
+## 组件注册表
+
+列在 `src/components.ts` 里的组件，在每个 MDX 文件中都**无需 import** 即可使用：
+
+```ts title="src/components.ts"
+import { Aside } from "./components/ui/aside";
+import { Card } from "./components/ui/card";
+import { CardGrid } from "./components/ui/card-grid";
+
+export const components = {
+  Aside,
+  Card,
+  CardGrid,
+};
+```
+
+```mdx
+<CardGrid>
+  <Card title="Fast">Built on Astro.</Card>
+</CardGrid>
+```
+
+不在注册表里的组件必须在文件顶部 import：
+
+```mdx
+import { FileTree } from "@/components/ui/file-tree";
+
+<FileTree>
+- src/
+</FileTree>
+```
+
+## 构建时校验
+
+构建前的内容遍历会检查 `src/content/**/*.mdx` 中的每个 PascalCase 标签，核对注册表与文件内 import。未知组件、小写写法和缺失的 import 会**让构建失败**，而不是悄悄地以字面文本渲染到线上页面。在集成选项中设置 `validateMdx: false` 可以关闭该校验。
+
+## 提示块
+
+在 `.mdx` 文件中，Sätteri 负责解析围栏式的 `:::` 指令，Nimbus 再用 `<Aside>` 渲染它们：
+
+```mdx
+:::tip
+This becomes an Aside.
+:::
+```
+
+### 渲染效果
+
+以下提示块用指令语法编写，经 Sätteri 渲染。
+
+:::note
+默认的注（note），带**粗体文本**、一个[链接](#提示块)和 `行内代码`。
+:::
+
+:::tip[值得了解]
+用标题概括这条提示块要给出的建议。
+:::
+
+:::warning[说"hello"]
+带引号的标题会保持为普通字符串。`warning` 别名使用 caution 变体。
+:::
+
+:::danger[`Cache-Control` 标头]
+标题中的格式保持字面原样；正文中的格式（比如**这样**）依然生效。
+:::
+
+::::note[嵌套示例]
+外层的注里包含一条 tip 和一个源码示例。
+
+:::tip
+嵌套的提示块使用同一个 Aside 组件。
+:::
+
+```mdx
+:::note
+This fenced example stays code.
+:::
+```
+::::
+
+### 语法与行为
+
+内置类型：`note`、`info`、`tip`、`caution`、`warning`、`important`、`danger`。用 `admonitions: { typeAliases: { heads: "tip" } }` 添加同义类型。`Aside` 必须在你的组件注册表里（默认起步模板已导出）。
+
+标题沿用既有的纯字符串 `title` prop。Sätteri 生成的是字符串属性；引号和看似表达式的内容不会被求值。标题中的标记保持字面文本。指令标题仍必须是合法的 MDX 语法，因为 Sätteri 会在 AST 处理之前先解析文档。对于任意文本（比如未闭合的 `<T>` 或 `{`），请直接使用组件的字符串 prop：
+
+```mdx
+<Aside title="Use <T>">Body content.</Aside>
+```
+
+Aside 组件无需任何更新。
+
+Sätteri 解析指令及其内容；Nimbus 把可识别的指令节点映射到 Aside。正文缩进不会被改写。代码示例、frontmatter、表达式和 JSX 属性依然受保护。既有的"起始行带正文"写法为兼容起见仍会保留。
+
+嵌套与围栏闭合遵循 Sätteri 的原生语法。嵌套提示块时，外层使用更长的围栏：
+
+```mdx
+::::note
+Outer content.
+
+:::tip
+Inner content.
+:::
+::::
+```
+
+未知的指令默认保持字面原样。如果你的 Sätteri 处理器显式启用了原生指令，无法识别的节点仍然可供你自己的 AST 插件处理。包含独立回车符（CR）的文件同样保持字面原样，因为已安装的原生指令解析器对这类行尾的处理不稳定；LF 和 CRLF 均受支持。
+
+该功能依赖 Nimbus 原生的 Sätteri MDX 管线。兼容的显式 Sätteri 处理器同样受支持。若使用 unified 或其他自定义处理器，请设置 `admonitions: false`，并继续沿用该处理器的提示块实现。`.md` 文件、raw import 以及 `admonitions.contentDirs` 之外的文件不受影响。需要按文件跳过时，使用 `admonitions.skip`。
+
+## 扩展 Markdown
+
+用 `markdown.mdastPlugins` 扩展 Markdown AST 转换，用 `markdown.hastPlugins` 扩展 HTML AST 转换。Nimbus 通过 `@cloudflare/nimbus-docs/markdown` 提供原生插件：
+
+```ts title="astro.config.ts"
+import { externalLinks } from "@cloudflare/nimbus-docs/markdown";
+
+nimbus(config, {
+  markdown: { hastPlugins: [externalLinks()] },
+});
+```

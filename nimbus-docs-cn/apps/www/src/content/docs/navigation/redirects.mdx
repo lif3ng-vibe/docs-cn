@@ -1,0 +1,49 @@
+---
+title: 重定向
+description: 把旧 URL 指向新地址——侧边栏改写、页面改名与主机级重定向。
+aiGenerated: true
+sidebar:
+  order: 3
+---
+
+三种机制覆盖常见场景：改写侧边栏链接、跨版本重命名页面，以及主机级 URL 重定向。
+
+## 改写侧边栏链接
+
+`external_link` 改变侧边栏把页面链接到哪里，而不改变页面构建在哪里。可以把已废弃的条目指向它的替代页，或让条目跳转到站外：
+
+```yaml
+---
+title: Old guide
+external_link: /guides/new-guide
+---
+```
+
+它接受绝对 URL（`https://…`）或站点绝对路径（`/foo/bar`）。页面仍在原路径构建，只有侧边栏链接变了。绝对 URL 会以 `target="_blank"` 渲染。
+
+## 跨版本的页面改名
+
+当页面的 slug 在版本之间发生变化时，在新页面上声明旧 slug，两者就会作为同一个逻辑页面关联起来，并生成 canonical URL：
+
+```yaml
+---
+title: Configuration
+previousSlug: config        # was /config in v1, now /configuration
+---
+```
+
+`previousSlug` 接受字符串或数组（适用于跨多个版本的改名）。Nimbus 还会自动生成重定向：把旧版本中 slug 已不存在的 URL 指向当前版本中的对应页面。
+
+## 主机级重定向
+
+对于永久性的 URL 迁移，使用 Astro 内置的 `redirects` 配置——Nimbus 会把自身的版本重定向与你的合并，冲突时以你手写的条目为准：
+
+```ts title="astro.config.ts"
+export default defineConfig({
+  redirects: {
+    "/old-path": "/new-path",
+  },
+});
+```
+
+在静态主机上，它们会编译为重定向文件；在 Cloudflare 及其他适配器上，则成为原生重定向规则。

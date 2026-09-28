@@ -1,0 +1,569 @@
+/**
+ * Tests for `scaffold()` — the destructive filesystem half of
+ * create-nimbus-docs. Covers happy path, target-exists abort, cwd
+ * containment, and mid-copy rollback.
+ *
+ * The interactive prompt flow (ctrl-C mid-prompt) lives in `prompts.ts` and is
+ * a single `p.isCancel(...) → process.exit(0)` guard per prompt; it isn't
+ * exercised here because doing so requires mocking @clack/prompts' stdin.
+ *
+ * Windows path handling (drive-letter absolutes, `\` separators) is not
+ * covered — a cross-OS CI matrix would run this on
+ * windows-latest.
+ */
+
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+
+import {
+  scaffold,
+  ScaffoldError,
+  type ScaffoldOptions,
+} from "../src/scaffold.js";
+
+const BASE_OPTIONS = {
+  output: "static",
+  deploy: "other",
+  content: "starter",
+  packageManager: "npm",
+  git: false,
+  skipInstall: true,
+} satisfies Omit<Extract<ScaffoldOptions, { output: "static" }>, "dir">;
+
+/** A minimal but complete template: enough files that every transformer in
+ * the happy path finds what it reads. `pkgJson` overrides let a test inject a
+ * malformed package.json to trip `updatePackageJson` mid-scaffold. */
+function makeTemplate(pkgJson = `{ "name": "template", "version": "0.0.0" }`): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nimbus-tmpl-"));
+  fs.writeFileSync(path.join(dir, "package.json"), pkgJson);
+  fs.writeFileSync(
+    path.join(dir, "astro.config.ts"),
+    `import { defineConfig } from "astro/config";\nexport default defineConfig({\n  // nimbus:adapter\n});\n`,
+  );
+  fs.writeFileSync(path.join(dir, "gitignore"), "node_modules\ndist\n");
+  // The build-scripts config copy-template.mjs generates, so the workerd append
+  // has the same anchors a real scaffold sees.
+  fs.writeFileSync(
+    path.join(dir, "pnpm-workspace.yaml"),
+    [
+      "packages: []",
+      "supportedArchitectures:",
+      "  cpu:",
+      "    - current",
+      "    - wasm32",
+      "allowBuilds: # pnpm 11",
+      "  esbuild: false",
+      "  sharp: false",
+      "ignoredBuiltDependencies: # pnpm 10",
+      "  - esbuild",
+      "  - sharp",
+      "",
+    ].join("\n"),
+  );
+  return dir;
+}
+
+function makeCwd(): string {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "nimbus-cwd-"));
+}
+
+function makeGeneratedTemplates(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nimbus-generated-"));
+  for (const variant of ["template", "template-empty"]) {
+    const tmpl = makeTemplate();
+    try {
+      fs.cpSync(tmpl, path.join(root, variant), { recursive: true });
+    } finally {
+      cleanup(tmpl);
+    }
+  }
+  return root;
+}
+
+/**
+ * Inject a network-free template source via the `fetchTemplate` seam: copy the
+ * fixture dir into the scaffold target, exactly as the real giget/--template-dir
+ * paths do, so the transform half runs against a known tree.
+ */
+function internals(cwd: string, templateDir: string) {
+  return {
+    cwd,
+    fetchTemplate: async (target: string) => {
+      fs.cpSync(templateDir, target, { recursive: true });
+    },
+  };
+}
+
+function cleanup(...dirs: string[]) {
+  for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+}
+
+test("happy path writes and transforms the project", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    await scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwd, tmpl));
+
+    const target = path.join(cwd, "my-docs");
+    assert.ok(fs.existsSync(target), "target dir created");
+
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(target, "package.json"), "utf8"),
+    );
+    assert.equal(pkg.name, "my-docs");
+    assert.equal(pkg.version, "0.0.1");
+    assert.equal(pkg.private, true);
+
+    // The adapter marker is preserved: `nimbus-docs add adapter-*` anchors its
+    // output flip on it, so stripping it would break the server-output opt-in.
+    const cfg = fs.readFileSync(path.join(target, "astro.config.ts"), "utf8");
+    assert.equal(cfg.includes("// nimbus:adapter"), true);
+
+    // `gitignore` is renamed to `.gitignore`.
+    assert.ok(fs.existsSync(path.join(target, ".gitignore")));
+
+    // A committed nimbus.json provenance + install record is written.
+    const nimbus = JSON.parse(
+      fs.readFileSync(path.join(target, "nimbus.json"), "utf8"),
+    );
+    assert.equal(typeof nimbus.version, "string");
+    assert.equal(nimbus.lastReviewedNimbusVersion, null);
+    assert.equal(nimbus.templatesTag, `templates-v${nimbus.version}`);
+    assert.equal(nimbus.install.root, "src");
+    assert.deepEqual(nimbus.install.aliases, { "@/*": "src/*" });
+    assert.deepEqual(nimbus.components, []);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("records the installed Nimbus version as the fresh upgrade baseline", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate(`{ "name": "template", "version": "0.0.0", "dependencies": { "@cloudflare/nimbus-docs": "^0.13.1" } }`);
+  try {
+    await scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwd, tmpl));
+    const nimbus = JSON.parse(
+      fs.readFileSync(path.join(cwd, "my-docs", "nimbus.json"), "utf8"),
+    );
+    assert.equal(nimbus.lastReviewedNimbusVersion, "0.13.1");
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("non-TTY scaffolds report each completed step without spinner frames", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  const chunks: string[] = [];
+  const write = process.stdout.write;
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    chunks.push(chunk.toString());
+    return true;
+  }) as typeof process.stdout.write;
+
+  try {
+    await scaffold(
+      { ...BASE_OPTIONS, dir: "my-docs" },
+      { ...internals(cwd, tmpl), stdoutIsTTY: false },
+    );
+  } finally {
+    process.stdout.write = write;
+    cleanup(cwd, tmpl);
+  }
+
+  const output = chunks.join("");
+  assert.equal(output.match(/Template ready/g)?.length, 1);
+  assert.equal(output.match(/Project configured/g)?.length, 1);
+  assert.doesNotMatch(output, /\u001B\[\?25[hl]/);
+});
+
+test("strips stale .nimbus build output so it never reaches the project", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    // A tarball synced before the generator learned to strip `.nimbus` can
+    // carry stale lint/route materialization. It must never survive into a
+    // scaffolded project, or `nimbus-docs check` would read another site's
+    // build artifacts. Exercise the real `--template-dir` copy path, and pin
+    // BOTH strip mechanisms: the top-level entry is swept by
+    // `normalizePackageManagerFiles`, but a NESTED `.nimbus` is only excluded
+    // by the copy filter's per-segment `shouldCopyTemplatePath`.
+    fs.mkdirSync(path.join(tmpl, ".nimbus"));
+    fs.writeFileSync(path.join(tmpl, ".nimbus", "lint.json"), `{"rules":{}}`);
+    fs.writeFileSync(path.join(tmpl, ".nimbus", "routes.json"), `{"routes":[]}`);
+    fs.mkdirSync(path.join(tmpl, "src", ".nimbus"), { recursive: true });
+    fs.writeFileSync(path.join(tmpl, "src", ".nimbus", "lint.json"), `{"rules":{}}`);
+
+    await scaffold({ ...BASE_OPTIONS, dir: "my-docs", templateDir: tmpl }, { cwd });
+
+    const target = path.join(cwd, "my-docs");
+    assert.ok(
+      fs.existsSync(path.join(target, "package.json")),
+      "project still scaffolded",
+    );
+    assert.equal(
+      fs.existsSync(path.join(target, ".nimbus")),
+      false,
+      "stale top-level .nimbus stripped from the scaffolded project",
+    );
+    assert.equal(
+      fs.existsSync(path.join(target, "src", ".nimbus")),
+      false,
+      "stale nested .nimbus stripped by the copy filter",
+    );
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("preview mode scaffolds bundled templates and records preview provenance", async () => {
+  const cwd = makeCwd();
+  const templates = makeGeneratedTemplates();
+  try {
+    await scaffold(
+      { ...BASE_OPTIONS, dir: "my-docs" },
+      { cwd, previewMode: true, previewPr: "42", previewTemplatesDir: templates },
+    );
+
+    const nimbus = JSON.parse(
+      fs.readFileSync(path.join(cwd, "my-docs", "nimbus.json"), "utf8"),
+    );
+    assert.equal(nimbus.templatesTag, null);
+    assert.equal(nimbus.lastReviewedNimbusVersion, null);
+    assert.deepEqual(nimbus.preview, { pr: "42", templates: "bundled" });
+  } finally {
+    cleanup(cwd, templates);
+  }
+});
+
+test("preview mode fails loud when bundled templates are missing", async () => {
+  const cwd = makeCwd();
+  const templates = fs.mkdtempSync(path.join(os.tmpdir(), "nimbus-generated-empty-"));
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "my-docs" },
+        { cwd, previewMode: true, previewPr: "42", previewTemplatesDir: templates },
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /missing bundled templates/.test(err.message),
+    );
+    assert.equal(fs.existsSync(path.join(cwd, "my-docs")), false);
+  } finally {
+    cleanup(cwd, templates);
+  }
+});
+
+test("cloudflare target declines workerd's build script alongside wrangler", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    await scaffold(
+      { ...BASE_OPTIONS, deploy: "cloudflare", dir: "my-docs" },
+      internals(cwd, tmpl),
+    );
+    const target = path.join(cwd, "my-docs");
+
+    // wrangler was injected (it pulls workerd, a third build-script package).
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(target, "package.json"), "utf8"),
+    );
+    assert.ok(pkg.devDependencies?.wrangler, "wrangler injected for cloudflare");
+
+    // workerd is declined in BOTH schemes, without a blanket approval.
+    const ws = fs.readFileSync(path.join(target, "pnpm-workspace.yaml"), "utf8");
+    assert.match(ws, /allowBuilds:[\s\S]*\n {2}workerd: false/);
+    assert.match(ws, /ignoredBuiltDependencies:[\s\S]*\n {2}- workerd/);
+    // The base entries stay; nothing is broadened to a wildcard.
+    assert.match(ws, /\n {2}esbuild: false/);
+    assert.match(ws, /\n {2}sharp: false/);
+    assert.equal(/allowAll|dangerously/i.test(ws), false);
+    // Declined exactly once (idempotent, not appended per section twice).
+    assert.equal((ws.match(/workerd: false/g) ?? []).length, 1);
+    assert.equal((ws.match(/- workerd/g) ?? []).length, 1);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("non-cloudflare target leaves the build-scripts config untouched", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    await scaffold(
+      { ...BASE_OPTIONS, deploy: "other", dir: "my-docs" },
+      internals(cwd, tmpl),
+    );
+    const ws = fs.readFileSync(
+      path.join(cwd, "my-docs", "pnpm-workspace.yaml"),
+      "utf8",
+    );
+    // No wrangler → no workerd, and the base esbuild/sharp decline is intact.
+    assert.equal(ws.includes("workerd"), false, "no workerd on non-cf target");
+    assert.match(ws, /\n {2}esbuild: false/);
+    assert.match(ws, /\n {2}- sharp/);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("aborts when the target directory already exists, leaving it untouched", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    const target = path.join(cwd, "my-docs");
+    fs.mkdirSync(target);
+    fs.writeFileSync(path.join(target, "keep.txt"), "precious");
+
+    await assert.rejects(
+      scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwd, tmpl)),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /already exists/.test(err.message),
+    );
+
+    // The pre-existing content must be untouched — no partial overwrite.
+    assert.equal(
+      fs.readFileSync(path.join(target, "keep.txt"), "utf8"),
+      "precious",
+    );
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects a relative path that escapes cwd before writing", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    await assert.rejects(
+      scaffold({ ...BASE_OPTIONS, dir: "../escape" }, internals(cwd, tmpl)),
+      (err: unknown) =>
+        err instanceof ScaffoldError &&
+        /outside the current directory/.test(err.message),
+    );
+    assert.equal(
+      fs.existsSync(path.resolve(cwd, "../escape")),
+      false,
+      "nothing written outside cwd",
+    );
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects an absolute path", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: path.join(os.tmpdir(), "abs-docs") },
+        internals(cwd, tmpl),
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /must be relative/.test(err.message),
+    );
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rolls back the partial directory when a transform fails mid-scaffold", async () => {
+  const cwd = makeCwd();
+  // Malformed package.json → `updatePackageJson`'s JSON.parse throws after
+  // the copy has already written the target dir.
+  const tmpl = makeTemplate(`{ not valid json`);
+  try {
+    await assert.rejects(
+      scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwd, tmpl)),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /Could not scaffold/.test(err.message),
+    );
+
+    // The half-written target is removed so a re-run isn't blocked.
+    assert.equal(
+      fs.existsSync(path.join(cwd, "my-docs")),
+      false,
+      "partial target dir removed on failure",
+    );
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects template symlinks before transformations can escape", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  const sentinel = path.join(cwd, "outside-package.json");
+  fs.writeFileSync(sentinel, "keep me\n");
+  fs.unlinkSync(path.join(tmpl, "package.json"));
+  fs.symlinkSync(sentinel, path.join(tmpl, "package.json"));
+  try {
+    await assert.rejects(
+      scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwd, tmpl)),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /Template contains a symlink/.test(err.message),
+    );
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "keep me\n");
+    assert.equal(fs.existsSync(path.join(cwd, "my-docs")), false);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects dangling template symlinks before creating their targets", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  const outside = path.join(cwd, "outside-nimbus.json");
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "my-docs" },
+        {
+          cwd,
+          fetchTemplate: async (target) => {
+            fs.cpSync(tmpl, target, { recursive: true });
+            fs.symlinkSync(outside, path.join(target, "nimbus.json"));
+          },
+        },
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /Template contains a symlink/.test(err.message),
+    );
+    assert.equal(fs.existsSync(outside), false);
+    assert.equal(fs.existsSync(path.join(cwd, "my-docs")), false);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("allows a target beneath a symlinked parent directory", async () => {
+  const cwd = makeCwd();
+  const cwdLink = `${cwd}-link`;
+  const tmpl = makeTemplate();
+  fs.symlinkSync(cwd, cwdLink, "dir");
+  try {
+    await scaffold({ ...BASE_OPTIONS, dir: "my-docs" }, internals(cwdLink, tmpl));
+    assert.ok(fs.existsSync(path.join(cwd, "my-docs", "package.json")));
+  } finally {
+    fs.unlinkSync(cwdLink);
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("allows a target through a symlink that stays inside cwd", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  const parent = path.join(cwd, "projects");
+  fs.mkdirSync(parent);
+  fs.symlinkSync(parent, path.join(cwd, "safe-link"), "dir");
+  try {
+    await scaffold(
+      { ...BASE_OPTIONS, dir: "safe-link/my-docs" },
+      internals(cwd, tmpl),
+    );
+    assert.ok(fs.existsSync(path.join(parent, "my-docs", "package.json")));
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects a target through a symlink that escapes cwd", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  const outside = `${cwd}-outside`;
+  fs.mkdirSync(outside);
+  fs.symlinkSync(outside, path.join(cwd, "unsafe-link"), "dir");
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "unsafe-link/my-docs" },
+        internals(cwd, tmpl),
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError &&
+        /outside the current directory/.test(err.message),
+    );
+    assert.equal(fs.existsSync(path.join(outside, "my-docs")), false);
+  } finally {
+    cleanup(cwd, tmpl, outside);
+  }
+});
+
+test("rejects a target beneath a dangling symlink before fetching", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  fs.symlinkSync(path.join(cwd, "missing"), path.join(cwd, "dangling"), "dir");
+  let fetched = false;
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "dangling/my-docs" },
+        {
+          cwd,
+          fetchTemplate: async () => {
+            fetched = true;
+          },
+        },
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /dangling symlink/.test(err.message),
+    );
+    assert.equal(fetched, false);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects a dangling symlink target as an existing entry", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  fs.symlinkSync(path.join(cwd, "missing"), path.join(cwd, "my-docs"), "dir");
+  let fetched = false;
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "my-docs" },
+        {
+          cwd,
+          fetchTemplate: async () => {
+            fetched = true;
+          },
+        },
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /already exists/.test(err.message),
+    );
+    assert.equal(fetched, false);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});
+
+test("rejects a target beneath a non-directory path before fetching", async () => {
+  const cwd = makeCwd();
+  const tmpl = makeTemplate();
+  fs.writeFileSync(path.join(cwd, "file"), "not a directory");
+  let fetched = false;
+  try {
+    await assert.rejects(
+      scaffold(
+        { ...BASE_OPTIONS, dir: "file/my-docs" },
+        {
+          cwd,
+          fetchTemplate: async () => {
+            fetched = true;
+          },
+        },
+      ),
+      (err: unknown) =>
+        err instanceof ScaffoldError && /non-directory path/.test(err.message),
+    );
+    assert.equal(fetched, false);
+  } finally {
+    cleanup(cwd, tmpl);
+  }
+});

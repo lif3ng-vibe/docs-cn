@@ -1,0 +1,106 @@
+---
+title: Steps
+tagline: "带编号的顺序说明——圆圈标记自动计数，并带连接线。"
+props:
+  - name: start
+    type: number
+    description: "`Steps` 属性。偏移步骤计数——适合把长流程拆分到页面的不同章节。"
+  - name: title
+    type: string
+    description: "`Step` 属性。渲染在步骤正文上方的半粗引导文字。"
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Steps, Step } from "@/components/ui/steps";
+
+## 预览
+
+<Showcase code={`<Steps>
+  <Step title="安装">
+    运行 \`nimbus-docs add steps\`，把组件复制进你的仓库。
+  </Step>
+  <Step title="组装">
+    包裹一系列 \`<Step>\` 块。编号和连接线都是自动生成的。
+  </Step>
+  <Step title="编写">
+    正文就是 markdown——代码、链接、提示框在步骤内都能用。
+  </Step>
+</Steps>`}>
+  <div class="w-full max-w-md text-left">
+    <Steps>
+      <Step title="安装">
+        运行 <code>nimbus-docs add steps</code>，把组件复制进你的仓库。
+      </Step>
+      <Step title="组装">
+        包裹一系列 <code>&lt;Step&gt;</code> 块。编号和连接线都是自动生成的。
+      </Step>
+      <Step title="编写">
+        正文就是 markdown——代码、链接、提示框在步骤内都能用。
+      </Step>
+    </Steps>
+  </div>
+</Showcase>
+
+## 示例
+
+### 基础用法
+
+三个带纯文本正文的 Steps——计数和连接线都是自动的。
+
+<Example code={`<Steps>
+  <Step>克隆仓库。</Step>
+  <Step>用 \`pnpm install\` 安装依赖。</Step>
+  <Step>用 \`pnpm dev\` 启动开发服务器。</Step>
+</Steps>`} contentClass="w-full">
+  <div class="w-full">
+    <Steps>
+      <Step>克隆仓库。</Step>
+      <Step>用 <code>pnpm install</code> 安装依赖。</Step>
+      <Step>用 <code>pnpm dev</code> 启动开发服务器。</Step>
+    </Steps>
+  </div>
+</Example>
+
+### 带标题
+
+添加 `title` 属性作为加粗引导文字，下方再接正文内容。
+
+<Example code={`<Steps>
+  <Step title="安装">
+    把包添加到你的项目。
+  </Step>
+  <Step title="配置">
+    编辑 \`config.json\` 以匹配你的环境。
+  </Step>
+  <Step title="运行">
+    启动开发服务器，然后打开 localhost。
+  </Step>
+</Steps>`} contentClass="w-full">
+  <div class="w-full">
+    <Steps>
+      <Step title="安装">把包添加到你的项目。</Step>
+      <Step title="配置">编辑 <code>config.json</code> 以匹配你的环境。</Step>
+      <Step title="运行">启动开发服务器，然后打开 localhost。</Step>
+    </Steps>
+  </div>
+</Example>
+
+### 自定义起始编号
+
+用 `start` 让拆分后的流程继续编号。
+
+<Example code={`<Steps start={5}>
+  <Step title="部署">
+    推送到 main，CI 会自动构建并部署。
+  </Step>
+  <Step title="验证">
+    打开部署后的 URL，确认 staging 横幅已显示。
+  </Step>
+</Steps>`} contentClass="w-full">
+  <div class="w-full">
+    <Steps start={5}>
+      <Step title="部署">推送到 main，CI 会自动构建并部署。</Step>
+      <Step title="验证">打开部署后的 URL，确认 staging 横幅已显示。</Step>
+    </Steps>
+  </div>
+</Example>

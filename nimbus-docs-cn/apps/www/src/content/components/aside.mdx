@@ -1,0 +1,94 @@
+---
+title: Aside
+tagline: "带边框的行内强调提示框——内置注、提示、注意、危险四种变体。"
+props:
+  - name: type
+    type: '"note" | "tip" | "caution" | "danger"'
+    defaultValue: '"note"'
+    description: 传达提示意图的视觉样式。
+  - name: title
+    type: string
+    description: 可选的标题覆盖。默认使用类型对应的大写标签。
+---
+
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Aside } from "@/components/ui/aside";
+
+## 预览
+
+<Showcase
+  code={`<Aside type="note">
+  Aside 支持**富文本**、[链接](#)和\`行内代码\`。
+</Aside>`}
+>
+  <div class="w-full max-w-md text-left">
+    <Aside type="note">
+      Aside 支持<strong>富文本</strong>、<a href="#">链接</a>和{" "}
+      <code>行内代码</code>。
+    </Aside>
+  </div>
+</Showcase>
+
+## 示例
+
+### 类型
+
+四种标准变体，覆盖最常见的提示场景。
+
+<Example
+  code={`<Aside type="note">普通说明。</Aside>
+<Aside type="tip">实用建议。</Aside>
+<Aside type="caution">需要当心。</Aside>
+<Aside type="danger">危险操作。</Aside>`}
+  contentClass="w-full"
+>
+  <div class="flex flex-col gap-2">
+    <Aside type="note">普通说明。</Aside>
+    <Aside type="tip">实用建议。</Aside>
+    <Aside type="caution">需要当心。</Aside>
+    <Aside type="danger">危险操作。</Aside>
+  </div>
+</Example>
+
+### 自定义标题
+
+覆盖标题文字，同时保留图标与配色。
+
+<Example
+  code={`<Aside type="tip" title="值得了解">
+  Aside 可以接受任意标题，适合内置提示标签不合语境的场合。
+</Aside>`}
+>
+  <div class="w-full max-w-md">
+    <Aside type="tip" title="值得了解">
+      Aside 可以接受任意标题。当“提示”不符合你的文案风格时很有用。
+    </Aside>
+  </div>
+</Example>
+
+### 实际场景
+
+<Example mdxTag code={`## Versioned docs
+
+Use a collection prefix to add a new version.
+
+<Aside type="tip" title="Stable links">
+  Keep version prefixes explicit when linking to release-specific guidance.
+</Aside>
+
+Each version gets its own sidebar.`}>
+
+  <div class="max-w-md text-left flex flex-col gap-3">
+    <h4 class="text-lg font-semibold text-foreground">版本化文档</h4>
+    <p class="text-sm text-muted-foreground leading-relaxed">
+      使用集合（collection）前缀即可新增一个版本。
+    </p>
+    <Aside type="tip" title="链接保持稳定">
+      链接到特定版本的指南时，请保留明确的版本前缀。
+    </Aside>
+    <p class="text-sm text-muted-foreground leading-relaxed">
+      每个版本都拥有自己的侧边栏。
+    </p>
+  </div>
+</Example>

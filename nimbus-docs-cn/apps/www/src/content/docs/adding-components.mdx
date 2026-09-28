@@ -1,0 +1,46 @@
+---
+title: 添加组件
+description: 用 nimbus-docs add 从注册表安装组件、工具函数和特性。
+aiGenerated: true
+sidebar:
+  order: 11
+---
+
+`nimbus-docs add <slug>` 从[注册表](/registry)安装。按添加对象不同，它以两种模式工作——要么复制文件进来，要么把配方交接给编码智能体。
+
+## 组件与工具函数
+
+对 `registry:ui` 和 `registry:lib` slug，CLI 解析依赖、把文件复制进你的仓库，并安装所需的 npm 包：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add accordion" />
+
+<Steps>
+  <Step title="解析依赖">
+    CLI 递归遍历该 slug 的 `registryDependencies` 和 npm `dependencies`。
+  </Step>
+  <Step title="复制文件">
+    每个文件落在声明好的路径上——`src/components/ui/<slug>/`、`src/lib/` 等。
+  </Step>
+  <Step title="注册全局组件">
+    在 MDX 中不经 import 直接使用的组件必须登记到 `src/components.ts`。CLI 会告诉你哪些需要登记。
+  </Step>
+</Steps>
+
+装好之后，组件就住进你的仓库——随便改。传 `--yes` 可跳过覆盖确认。
+
+## 特性
+
+对 `registry:feature` slug，没有文件可复制。配方是一段 Markdown 提示词，由编码智能体阅读、按你的项目调整后应用：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page" />
+
+环境里检测到编码智能体时，CLI 把配方打印到 stdout 供其读取；否则自己接管道：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page --print | claude" />
+
+## 浏览可用内容
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list --type ui" />
+
+每个已发布的组件在 [/components](/components) 都有展示页——预览、props 和安装命令。全部标志参见 [CLI](/cli) 参考。

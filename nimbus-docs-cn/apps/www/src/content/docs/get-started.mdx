@@ -1,0 +1,51 @@
+---
+title: 快速开始
+description: 在 Astro 上构建文档，人类与智能体皆为一等公民——且每个文件都归你所有。
+audience: human
+sidebar:
+  order: 0
+  badge:
+    text: 从这里开始
+    variant: tip
+---
+
+Nimbus 在 Astro 之上构建文档站点。它把不可见的底层管线作为 npm 包交付，而把可见的部分——布局、组件、样式、内容——以真实文件的形式写入你的仓库，从第一天起就归你所有。
+
+## 它有何不同
+
+- **代码全部归你所有。**脚手架（scaffolder）把布局、组件和样式写一遍就抽身而退。没有需要 fork 应付的上游主题，没有要等的上游 API。想改哪个文件就改哪个。
+- **人类与智能体皆为一等公民。**每个可发现的页面都附带 Markdown 版本，`/llms.txt` 为全站建立索引，每个页面的 head 里都有 JSON-LD——智能体网络（agentic web）能像浏览器一样读你的文档。
+- **与智能体协同构建。**`nimbus-docs add` 以两种模式从注册表（registry）安装：组件以文件形式复制，特性（feature）则交接一份配方（recipe），由编码智能体（coding agent）阅读并应用。
+
+## 快速上手
+
+```sh
+npx @cloudflare/create-nimbus-docs@latest
+```
+
+按提示选择目录名，再选好模板、输出模式和目标平台，然后：
+
+```sh
+cd my-docs
+pnpm install
+pnpm dev
+```
+
+打开终端里输出的 URL，随意编辑 `src/` 下的任何文件——开发服务器会自动热重载。
+
+## 接下来去哪里
+
+<CardGrid>
+  <Card title="安装" icon="ph:download-simple">
+    脚手架生成一个站点，了解哪些文件会进入你的仓库——参见[安装](/installation)。
+  </Card>
+  <Card title="项目结构" icon="ph:tree-structure">
+    归你所有的文件、框架包的边界，以及目录树如何变成站点——参见[项目结构](/project-structure)。
+  </Card>
+  <Card title="浏览组件" icon="ph:squares-four">
+    每个 UI 组件、每种变体（variant），均附可直接复制的示例——见 [/components](/components)。
+  </Card>
+  <Card title="从注册表安装" icon="ph:package">
+    `nimbus-docs add <slug>` 把组件复制进你的仓库——参见[添加组件](/adding-components)。
+  </Card>
+</CardGrid>

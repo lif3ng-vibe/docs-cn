@@ -1,0 +1,107 @@
+---
+title: Button
+tagline: "动作触发器，带变体、尺寸与形状选项。样式与 LinkButton 共用。"
+props:
+  - name: variant
+    type: '"primary" | "secondary" | "ghost" | "destructive" | "secondary-destructive" | "outline"'
+    defaultValue: '"secondary"'
+    description: 视觉样式。
+  - name: size
+    type: '"xs" | "sm" | "base" | "lg"'
+    defaultValue: '"base"'
+    description: 相对尺寸；影响内边距和字号。
+  - name: shape
+    type: '"base" | "square" | "circle"'
+    defaultValue: '"base"'
+    description: '纯图标按钮请用 "square" 或 "circle"（并传入 aria-label）。'
+  - name: icon
+    type: string
+    description: 渲染在文字之前的 Iconify 图标名，如 "ph:plus"。
+  - name: loading
+    type: boolean
+    defaultValue: "false"
+    description: 显示加载动画并禁用交互。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Button } from "@/components/ui/button";
+
+## 预览
+
+<Showcase code={`<Button variant="primary">Save</Button>`}>
+  <div class="w-full text-center">
+    <Button variant="primary">保存</Button>
+  </div>
+</Showcase>
+
+## 示例
+
+### 变体
+
+六种意图，对应不同的强调程度与风险等级。
+
+<Example code={`<Button variant="primary">Primary</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="destructive">Destructive</Button>
+<Button variant="secondary-destructive">Secondary destructive</Button>`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Button variant="primary">主要</Button>
+    <Button variant="secondary">次要</Button>
+    <Button variant="ghost">幽灵</Button>
+    <Button variant="outline">描边</Button>
+    <Button variant="destructive">危险操作</Button>
+    <Button variant="secondary-destructive">次级危险操作</Button>
+  </div>
+</Example>
+
+### 尺寸
+
+四种尺寸，从紧凑的工具栏到醒目的行动号召都能覆盖。
+
+<Example code={`<Button size="xs">Extra small</Button>
+<Button size="sm">Small</Button>
+<Button size="base">Base</Button>
+<Button size="lg">Large</Button>`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Button size="xs">超小</Button>
+    <Button size="sm">小</Button>
+    <Button size="base">标准</Button>
+    <Button size="lg">大</Button>
+  </div>
+</Example>
+
+### 带图标
+
+给 `icon` 传入一个 Iconify 名称，即可在文字前渲染图标。
+
+<Example code={`<Button variant="primary" icon="ph:plus">Create</Button>
+<Button variant="secondary" icon="ph:download-simple">Download</Button>`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Button variant="primary" icon="ph:plus">创建</Button>
+    <Button variant="secondary" icon="ph:download-simple">下载</Button>
+  </div>
+</Example>
+
+### 纯图标
+
+纯图标按钮使用 `shape="square"` 或 `shape="circle"`，并且务必传入 `aria-label`。
+
+<Example code={`<Button shape="square" icon="ph:gear" aria-label="Settings" />
+<Button shape="circle" icon="ph:heart" aria-label="Like" />`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Button shape="square" icon="ph:gear" aria-label="设置" />
+    <Button shape="circle" icon="ph:heart" aria-label="喜欢" />
+  </div>
+</Example>
+
+### 加载中
+
+`loading` 会把图标换成加载动画，并禁用按钮。
+
+<Example code={`<Button variant="primary" loading>Saving…</Button>`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Button variant="primary" loading>保存中…</Button>
+  </div>
+</Example>

@@ -1,0 +1,194 @@
+---
+title: 侧边栏
+description: 自动生成、配置或转换侧边栏树，支持自定义分组、链接、顺序与徽章。
+aiGenerated: true
+sidebar:
+  order: 1
+---
+
+Nimbus 会根据你的内容构建一棵带类型的侧边栏树。可以从文件系统起步，用配置接管结构，或者对最终树进行转换，实现依赖应用数据或当前路由的导航。
+
+## 从文件系统生成
+
+侧边栏默认从 `src/content/docs/` 生成。只有需要覆盖这一结构时，才在 `astro.config.ts` 中设置 `sidebar.items`。在页面 frontmatter（例如 `src/content/docs/get-started.mdx`）中使用 `sidebar.order` 控制排序；未设置时条目按字母序排列。
+
+```yaml title="src/content/docs/get-started.mdx"
+---
+title: Get started
+sidebar:
+  order: 1
+  label: Quickstart
+  badge:
+    text: New
+    variant: tip
+---
+```
+
+frontmatter 还可以隐藏条目、自定义目录分组、重定向链接或收起某个栏目。参见[页面级控制](#页面级控制)。
+
+## 定义结构
+
+当你不希望由文件系统决定整条侧边栏时，在 `astro.config.ts` 中使用 `sidebar.items`。配置项可以嵌套，也可以把手动链接与生成内容混排：
+
+```ts title="astro.config.ts"
+sidebar: {
+  items: [
+    "introduction",
+    { label: "GitHub", link: "https://github.com/you/repo" },
+    {
+      label: "Guides",
+      autogenerate: { directory: "guides" },
+      collapsed: false,
+      badge: "New",
+      icon: "ph:book-open",
+    },
+    {
+      label: "API",
+      autogenerate: { collection: "api", prefix: "/reference" },
+      icon: "ph:code",
+    },
+    {
+      label: "AI",
+      segment: "/ai",
+      landing: "/ai/models",
+      items: [
+        { label: "Models", link: "/ai/models" },
+        { autogenerate: { directory: "ai/guides" } },
+      ],
+    },
+  ],
+}
+```
+
+| 形态 | 用途 |
+|---|---|
+| `"slug"` | 链接主集合中的一页。 |
+| `{ label, link }` | 添加一条带文字的内部或外部链接。 |
+| `{ autogenerate: { directory } }` | 从某个内容目录生成一个分组。 |
+| `{ autogenerate: { collection, prefix? } }` | 挂载另一个已注册的集合，可选用自定义 URL 前缀。 |
+| `{ label, items }` | 构建可递归的手动分组。分组支持 `collapsed`、`badge` 和 `icon`。 |
+| `{ segment, landing }` | 让手动分组拥有一个 URL 段，同时把它的标签和面包屑指向一个真实存在的落地页。 |
+
+数组位置决定手动条目的顺序。Nimbus 不会对配置或转换后的数组重新排序。
+
+## 限定大型侧边栏的范围
+
+大型站点可以逐步收窄侧边栏：
+
+```ts title="astro.config.ts"
+sidebar: {
+  scope: "section",
+  isolate: { boundaries: ["learning-paths/*", "reference/*"] },
+  defaultCollapsed: true,
+}
+```
+
+- `scope: "full"` 是默认值，在每一页渲染完整树。
+- `scope: "section"` 只渲染当前激活的顶级分组。请搭配栏目标签页或其他跨栏目导航界面使用。
+- 当路由匹配某个路径段 glob 时，`isolate.boundaries` 会重新向下展开。`*` 匹配一个路径段；未匹配的路由保持不变。
+- `defaultCollapsed` 默认收起各分组。当前分组仍会展开，且分组显式设置的 `collapsed` 值优先。
+
+基于同一份结构树构建栏目标签页：
+
+```astro
+---
+import { getSidebarSections } from "@cloudflare/nimbus-docs";
+
+const sections = await getSidebarSections(currentSlug, {
+  collection: entry.collection,
+});
+---
+```
+
+## 控制分组落地页
+
+目录下的 `index.mdx` 就是该分组的落地页。在 `astro.config.ts` 中配置这些落地页在全站如何呈现：
+
+```ts title="astro.config.ts"
+sidebar: {
+  indexDisplay: "overview-leaf",
+  overviewLabel: "Overview",
+}
+```
+
+| 选项 | 行为 |
+|---|---|
+| `indexDisplay: "header-link"` | 默认值。分组标题链接到其落地页。 |
+| `indexDisplay: "overview-leaf"` | 分组标题变为可展开项，落地页成为它的第一个子项。 |
+| `overviewLabel: true` | 将落地页链接标记为 `Overview`。传入字符串可自定义标签文字。 |
+| `sidebar.group.hideIndex: true` | 页面照常构建，但分组标题不再可交互。 |
+| `sidebar.hideChildren: true` | 把整个目录收拢为指向其落地页的单个链接。 |
+
+## 转换最终树
+
+配置定义结构树。`getSidebar()` 还接受同步或异步的 `transform` 回调，用于生成动态计算的导航。它在 scope 与 isolate 处理之后运行，早于 `indexDisplay` 重塑落地页。
+
+```astro title="src/pages/[...slug].astro"
+---
+import { getPrevNext, getSidebar } from "@cloudflare/nimbus-docs";
+
+const sidebar = await getSidebar(currentSlug, {
+  collection: entry.collection,
+  transform: ({ tree, sectionSlug }) => {
+    if (sectionSlug !== "api") return tree;
+
+    return tree.map((item) =>
+      item.type === "group" && item.label === "Reference"
+        ? {
+            ...item,
+            collapsed: false,
+            badge: "API",
+            children: [
+              ...item.children,
+              {
+                type: "external",
+                label: "API status",
+                href: "https://status.example.com",
+                order: Number.MAX_SAFE_INTEGER,
+              },
+            ],
+          }
+        : item,
+    );
+  },
+});
+
+const prevNext = await getPrevNext(currentSlug, {
+  sidebarTree: sidebar,
+});
+---
+```
+
+回调会收到：
+
+| 值 | 含义 |
+|---|---|
+| `tree` | 本页专属的 `SidebarItem[]` 副本，已感知激活状态。节点为 `link`、`external` 或可递归的 `group`。 |
+| `currentSlug` | 当前完整的 URL 路径。 |
+| `sectionSlug` | 第一个路径段。 |
+| `module` | 第二个路径段（如存在）。 |
+| `indexEntryId` | 当前栏目分组的落地页条目 ID（如存在）。 |
+
+transform 可以拉取数据、插入或删除节点、改写嵌套分组、附加徽章或重排侧边栏。请返回渲染态的 `SidebarItem` 节点，而不是 `autogenerate` 这类仅存在于配置层的形态。装饰节点时请保留既有属性；如果希望分页跟随转换后的顺序，就把结果传给 `getPrevNext()`。
+
+transform 只影响当前页面的侧边栏。面包屑和 `getSidebarSections()` 仍使用结构树。
+
+## 页面级控制
+
+局部调整请使用 frontmatter：
+
+| 字段 | 行为 |
+|---|---|
+| `sidebar: false` | 从该页面移除侧边栏栏位。 |
+| `sidebar.order` | 调整条目在自动生成分组内的排序。 |
+| `sidebar.label` | 覆盖侧边栏中显示的页面标题。 |
+| `sidebar.badge` | 添加字符串徽章或带样式的徽章。 |
+| `sidebar.hidden` | 页面照常构建，但不出现在侧边栏中。 |
+| `sidebar.group.label` | 在目录的 `index.mdx` 中覆盖该目录分组的标签。 |
+| `sidebar.group.badge` | 为目录分组添加徽章。 |
+| `sidebar.group.icon` | 为目录分组添加 `astro-icon` 图标。 |
+| `sidebar.group.hideIndex` | 阻止目录分组标题链接到其索引页。 |
+| `sidebar.hideChildren` 或 `hideChildren` | 把目录收拢为指向其落地页的链接。 |
+| `external_link` | 把侧边栏指向的目标改写为另一个内部路径或外部 URL。 |
+
+在 `astro.config.ts` 中设置 `features.sidebar: false` 可全站禁用侧边栏。完整的字段结构与徽章变体参见 [Frontmatter](/writing/frontmatter)。

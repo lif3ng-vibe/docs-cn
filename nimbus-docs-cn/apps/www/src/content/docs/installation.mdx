@@ -1,0 +1,74 @@
+---
+title: 安装
+description: 一条命令脚手架生成静态或服务器输出的 Nimbus 站点。
+audience: human
+sidebar:
+  order: 1
+---
+import { FileTree } from "@/components/ui/file-tree";
+
+一条命令即可搭好一个项目，包含布局、组件、内容 schema、搜索、sitemap、OG 图片，以及每个页面的 Markdown 版本。
+
+## 环境要求
+
+- **Node** 22.12 或更高版本
+- **一个包管理器**——npm、pnpm、yarn 或 bun
+- **Git**——用于编辑链接和最近更新时间
+
+## 脚手架生成
+
+```sh
+npx @cloudflare/create-nimbus-docs@latest
+```
+
+选好目录名，然后按自己的偏好选择：
+
+<Steps>
+  <Step title="模板">
+    两种选择——**full**（核心组件、演示内容、已填充的主题令牌）或 **empty**（能跑起来的最小配置，随时放入你自己的内容）。
+  </Step>
+  <Step title="输出模式">
+    **静态**（Static）预渲染每条内容集合（content collection）路由，可部署到任何地方。**服务器**（Server）用 Cloudflare 按请求渲染这些路由。之后可以按集合逐个覆盖。
+  </Step>
+  <Step title="目标平台">
+    静态输出支持 Cloudflare 或其他静态托管。交互式服务器配置目前提供 Cloudflare Workers；显式指定 `--adapter` 标志还可支持 Vercel、Netlify 和 Node。
+  </Step>
+  <Step title="安装依赖">
+    脚手架会自动运行你的包管理器。如果想先改 `package.json`，可以跳过。
+  </Step>
+</Steps>
+
+## 哪些内容会进入你的仓库
+
+<FileTree>
+- my-docs/
+  - src/
+    - components/
+      - ui/
+    - content/
+      - docs/
+    - pages/
+    - styles/
+      - globals.css
+    - components.ts
+  - astro.config.ts
+  - package.json
+</FileTree>
+
+`nimbus-docs` npm 包承载不可见的底层管线（集成、数据辅助函数、schema）。所有可见的部分——`src/components/` 下的组件、`src/content/docs/` 下的 MDX 内容、`src/pages/` 下的路由、`src/styles/globals.css` 中的设计令牌（design token），以及 `src/components.ts` 处的 MDX 全局注册表——都会复制进你的仓库，任你编辑。
+
+## 运行
+
+<PackageManagers pkg="dev" type="run" />
+
+然后打开终端里输出的 URL。
+
+## 构建与部署
+
+<PackageManagers pkg="build" type="run" />
+
+静态脚手架产出 `dist/` 目录，可托管到任何静态主机。Cloudflare 服务器脚手架对规范内容集合路由按请求渲染，并附带对应的 `wrangler.jsonc` 和 `deploy` 脚本。
+
+<Aside type="tip">
+  脚手架生成完成后，运行 `nimbus-docs add <slug>` 从注册表安装组件。工作流程参见[添加组件](/adding-components)。
+</Aside>

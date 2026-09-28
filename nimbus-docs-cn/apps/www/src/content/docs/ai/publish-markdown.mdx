@@ -1,0 +1,101 @@
+---
+title: Markdown 与 llms.txt 端点
+description: 添加 Markdown/MDX 替代版本、llms.txt 索引与 llms-full.txt。
+aiGenerated: true
+sidebar:
+  order: 2
+---
+
+添加五个端点，分别提供 Markdown/MDX 替代版本、站点级与栏目级 `llms.txt` 索引以及 `llms-full.txt`。前提是 `astro.config.ts` 中已接入 Nimbus 集成。
+
+## 1. 添加页面替代版本
+
+创建干净的 Markdown 版本：
+
+```ts title="src/pages/[...slug]/index.md.ts"
+import { markdownRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+export const { GET, getStaticPaths } = markdownRoute();
+```
+
+创建 MDX 源码版本：
+
+```ts title="src/pages/[...slug]/index.mdx.ts"
+import { markdownSourceRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+export const { GET, getStaticPaths } = markdownSourceRoute();
+```
+
+这两个路由服务所有集合，包括文档版本、位于 `/blog` 的博客和 API 参考。API 页面有 `.md` 版本但没有 `.mdx` 源码。隐藏版本中的页面两者皆无。以后新增的集合不需要新建路由文件。想自定义部分或全部页面的输出，参见[覆盖默认行为](/ai/override-markdown)。
+
+两个路由都必须保持预渲染。任何一个改为按请求渲染，构建都会失败。
+
+## 2. 添加站点索引
+
+创建全站发现索引：
+
+```ts title="src/pages/llms.txt.ts"
+import { llmsRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+export const { GET } = llmsRoute();
+```
+
+## 3. 添加 llms-full.txt
+
+创建包含全部可发现文档的文件：
+
+```ts title="src/pages/llms-full.txt.ts"
+import { llmsFullRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+export const { GET } = llmsFullRoute();
+```
+
+## 4. 添加栏目索引
+
+为 `/writing/llms.txt` 这类路径创建路由：
+
+```ts title="src/pages/[section]/llms.txt.ts"
+import { llmsSectionRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+export const { GET, getStaticPaths } = llmsSectionRoute();
+```
+
+遇到未知栏目时，各 `GET` 返回 `404`。若按请求渲染，索引读取失败时会返回不带细节的 `500`，并记录错误日志。想改变路由的输出，参见[覆盖默认行为](/ai/override-markdown#覆盖-llmstxt-索引)。
+
+`llms.txt` 端点请保持预渲染，除非你刻意要让它们按请求渲染。`agent-endpoints` 辅助函数两种模式都支持，且要求已接入 Nimbus Astro 集成。凡是没有任何预渲染路由生成的 Markdown 版本或 `llms.txt` 索引，构建都会发出警告并指出负责该输出的路由；对刻意按请求渲染的路由，忽略该警告即可。
+
+## 验证
+
+运行生产构建，然后启动 Astro 的生产预览：
+
+```sh
+pnpm build
+pnpm preview
+```
+
+另开一个终端，把 `get-started` 和 `writing` 换成项目中实际存在的路由。如果 Astro 配置了部署 base，给每个路径加上该前缀：
+
+```sh
+curl --fail http://localhost:4321/get-started/index.md
+curl --fail http://localhost:4321/get-started/index.mdx
+curl --fail http://localhost:4321/llms.txt
+curl --fail http://localhost:4321/llms-full.txt
+curl --fail http://localhost:4321/writing/llms.txt
+```
+
+每条命令都必须成功返回内容。出现 `404` 说明对应的路由文件缺失。如果构建报告某个集合未准备就绪，按[其他集合](/writing/pages-and-routing#other-collections)所述，用 `withNimbusMarkdown()` 包装其 Markdown 加载器。如果某个栏目索引不存在，确认该栏目拥有可发现的页面，并且出现在 `/llms.txt` 中。
+
+## 直接渲染
+
+对于不含 `<Render>` 的条目正文，`renderEntryAsMarkdown()` 和 `getEntryMarkdown()` 仍然可用。传入包含 `<Render>` 的正文会抛出异常。撰写版的 Markdown 替代版本和 `llms.txt` 索引请使用上文的路由。`getEntryMarkdown()` 还会加载 API 引用（citation）数据，仅适用于预渲染路由。
+
+## 后续步骤
+
+- [了解面向智能体的文档](/ai/docs-for-agents)
+- [自定义生成的 Markdown](/configuration#customize-generated-markdown)
+- [配置自定义内容加载器](/writing/pages-and-routing#other-collections)

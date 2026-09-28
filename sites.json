@@ -34,5 +34,12 @@
     "orig": "https://github.com/akitaonrails/ai-memory",
     "repo": "https://github.com/akitaonrails/ai-memory",
     "en": "ai-memory-en"
+  },
+  {
+    "name": "Nimbus",
+    "slug": "nimbus",
+    "desc": "Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。",
+    "orig": "https://nimbus-docs.com",
+    "repo": "https://github.com/cloudflare/nimbus"
   }
 ]

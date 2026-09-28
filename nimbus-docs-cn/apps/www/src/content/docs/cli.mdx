@@ -1,0 +1,196 @@
+---
+title: CLI
+description: 使用 nimbus-docs CLI 安装注册表特性、迁移包 API、审查复制来的代码并检查内容。
+sidebar:
+  order: 2
+---
+
+`nimbus-docs` CLI 列出注册表里有什么并负责安装，把你拥有的东西记录在 [`nimbus.json`](/project-structure) 里，显示哪些内容落后于上游，还能对你的 MDX 内容跑 lint。
+
+## `nimbus-docs list`
+
+列出所有可安装的组件、工具函数和特性。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list" />
+
+按类型筛选：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list --type ui" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list --type lib" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="list --type feature" />
+
+不带 slug 运行 `nimbus-docs add` 也会显示同样的列表。
+
+## `nimbus-docs add <slug>`
+
+注册表条目按类型使用两种安装模式。特殊的 `adapter-<id>` slug 走第三种流程，会重写项目配置。
+
+### 组件与工具函数
+
+对 `registry:ui` 和 `registry:lib` slug，CLI 解析依赖、把文件复制进你的仓库，并安装所需的 npm 包。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add badge" />
+
+<Steps>
+  <Step title="解析依赖">
+    遍历该 slug 的 `registryDependencies` 以及所需的 npm `dependencies`。
+  </Step>
+  <Step title="复制文件">
+    把每个文件放进正确路径：`src/components/ui/`、`src/lib/`，或条目声明的任意位置。
+  </Step>
+  <Step title="更新 package.json">
+    补装尚不存在的 npm 依赖。
+  </Step>
+</Steps>
+
+如果组件已安装，`add` 会保留你手上的版本——绝不覆盖你拥有的文件。传 `--overwrite` 才会用注册表版本替换（即升级路径）；改动可用 `git diff` 审查：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add badge --overwrite" />
+
+对 `add` 来说，`--yes` 只是同意依赖安装之类的交互提示，仍会保留既有文件。真想"替换我的文件"时，用 `--overwrite`。
+
+安装完成后，组件就住进你的仓库。随便改——不存在会被你改坏的上游 API。每次 `add` 还会向 [`nimbus.json`](/project-structure) 追加一条记录——slug、来源注册表、所出自的注册表发布版本，外加一个内容哈希——让之后的升级能追踪你拥有什么。
+
+### 特性
+
+对 `registry:feature` slug，没有文件可复制。配方是一段 Markdown 提示词，智能体阅读它、按你的项目调整后应用。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page" />
+
+如果 CLI 在环境中检测到编码智能体，就把配方打印到 stdout 供其读取；否则会打印一条管道指令，你可以自己运行：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page --print | claude" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page --print | codex" />
+
+用 `--print` 跳过检测，强制输出 Markdown。
+
+### 服务器适配器
+
+对 `adapter-cloudflare`、`adapter-vercel`、`adapter-netlify` 和 `adapter-node`，CLI 安装对应的 Astro 适配器，并重写 `astro.config` 中被标记的 `output` 块。若现有适配器不同或 `output` 不是字面量，它会拒绝替换。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add adapter-cloudflare" />
+
+当 Nimbus 配置没有显式渲染策略时，`adapter-cloudflare` 会加入按请求渲染。已有策略原样保留；import 进来或语义含糊的配置不会贸然重写，而是转为编码智能体交接。命令在 `wrangler.jsonc` 不存在时创建一个兼容服务器输出的版本，或替换未被改动的 Nimbus 静态配置；自定义 JSONC 以及 JSON/TOML 等其他格式配置一概不动。
+
+适配器装完后，配置大致如下：
+
+```ts
+const nimbusConfig = defineNimbusConfig({
+  rendering: { default: "request" },
+  // ...
+});
+
+export default defineConfig({
+  output: "server",
+  adapter: cloudflare({ prerenderEnvironment: "node" }),
+  integrations: [nimbus(nimbusConfig)],
+});
+```
+
+当命令运行在被识别出的编码智能体内时，它会产出一份带版本号的配方，让智能体安全地调整项目自有或拆分式的配置。在普通终端里，用 `--print` 显式索取该配方：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add adapter-cloudflare --print | claude" />
+
+完成后务必跑一次项目生产构建。按集合覆盖构建/请求渲染的方式参见[渲染策略](/configuration#渲染策略)。
+
+等价的长形式是 `nimbus-docs add server-output --adapter <cloudflare|vercel|netlify|node>`。
+
+## `nimbus-docs init`
+
+为没有 [`nimbus.json`](/project-structure) 的项目补写一份——可能是在这条记录诞生前脚手架生成的仓库、正在接入 Nimbus 的既有 Astro 站点，或者记录被删了。新脚手架的项目自带一份，所以 `init` 服务于其余所有情形。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="init" />
+
+它会扫描已安装的组件，逐个与注册表比对，写出能恢复的信息——只做标记，绝不瞎猜：
+
+- **matched**——与注册表副本逐字节一致。
+- **modified**——你改过它；记录保留来源标识，升级时仍可比对。
+- **hand-authored**——你自己的，不出自任何注册表。
+
+起步模板版本、`templates-v*` 标签和上次已复核的 Nimbus 版本无法仅凭仓库恢复，因此留空（并标记为 `reconstructed`）。用 `migrate --from <version>` 确立升级区间。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="init --root packages/docs" comment="扫描嵌套的包（monorepo）" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="init --force" comment="重建既有记录" />
+
+## 保持最新
+
+包管理器负责更新 Nimbus 本身；Nimbus 负责更新已知的 API 用法并审查复制来的代码：
+
+```sh
+pnpm up @cloudflare/nimbus-docs --latest
+pnpm exec nimbus-docs migrate
+pnpm exec nimbus-docs outdated
+```
+
+### `nimbus-docs migrate`
+
+把项目的 `lastReviewedNimbusVersion` 与已安装 Nimbus 版本之间所有已声明的破坏性变更汇总起来。能静态证明安全的编辑直接给出完整 diff，其余都变成有边界的审查任务。被定制过或语义含糊的代码绝不会被强行改动。
+
+没有已复核基线的既有项目，必须提供上次完整执行迁移时对应的 Nimbus 版本：
+
+```sh
+pnpm exec nimbus-docs migrate --from PREVIOUS_VERSION
+```
+
+`--dry-run` 或 `--diff` 输出只读计划，`--yes --json` 供智能体安全地循环应用，`--print` 产出一份自包含的 Markdown 交接文档。自动推算的 Astro `srcDir` 也可以用 `--src-dir <relative-dir>` 显式指定。
+
+Nimbus 只在认得出源码、且能证明改动安全时才应用编辑。被定制或语义含糊的代码保持原样，以审查任务的形式返回。`migrate --print` 会把任务输出给任何智能体或工作流；Nimbus 自己不会去启动一个智能体。
+
+迁移输出包括所选版本区间、需要复核的项、计划的 diff、阻塞项和错误。报告的扫描边界之外的文件不会被声称为已检查。
+
+标记为可选的升级条目排在 `migrate` 中必做项之后，在 `outdated` 里则以 Package API 参考注记的形式出现。它们描述的改进任何既有站点都可以跳过，不影响构建和输出，因此绝不会卡住构建。准备就绪后运行 `migrate --yes` 把它们登记为已复核。
+
+完成所有报告的工作后，显式确认，并推进提交在案的已复核基线：
+
+```sh
+pnpm exec nimbus-docs migrate --from PREVIOUS_VERSION --yes
+```
+
+只有项目没有在案基线时才需要重复 `--from`。干净的交互式重跑会先询问再记录已复核版本；智能体用 `--yes` 给出该确认。只要还有检测得到的迁移未完成，Nimbus 就绝不会记录完成状态。随后运行 `outdated` 审查用户自有的起步文件与注册表代码，再依次跑 `nimbus-docs check`、`astro check` 和生产构建。`migrate` 的输出本身就是按版本筛选好的升级指南。
+
+### `nimbus-docs outdated`
+
+只读的"我是不是落后了"总览，覆盖包 API、起步文件和注册表组件：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="outdated" />
+
+- **Package APIs**——待处理的源码迁移和按版本筛选的复核项，指向 `migrate`。
+- **注册表组件**——把记录的内容哈希与当前注册表比对，并归类本地留存的文件状态。注册表更新始终保持仅复核模式，因为覆盖也会波及依赖。
+- **起步文件**——把脚手架生成的文件与上游 `templates-v*` 标签比对，包括新增和删除。这些文件来自一个从未进入你 git 历史的标签，普通的 `git diff` 看不到这种差异。内容文件默认隐藏（`--all` 可包含）。
+
+传 `--json` 可获得确定性的、智能体可读的结果。`nimbus.json` 溯源信息不完整的项目仍会得到包 API 结果，外加一个明确的部分覆盖结果。
+
+### `nimbus-docs diff [file]`
+
+起步文件的只读详情——你改了什么，上游改了什么：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="diff" comment="所有有改动的起步文件" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="diff src/components/ui/aside/Aside.astro" comment="单个文件" />
+
+每个文件必属其一：**可干净拉取**（上游改了，你没改）、**上游新增/删除**、**需手工合并**（双方都改了）或**你有本地改动**（你改了，上游没改）。对于干净的更新、新增和删除，可以让 CLI 应用单个已复核的变更：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="diff src/components/ui/aside/Aside.astro --apply" />
+
+`--apply` 是显式且逐文件的操作，拒绝符号链接和路径逃逸，写入前会重新校验文件仍与干净原像一致（或确实不存在）——它从不做合并。事后用 `git diff` 审查。传 `--to <templates-vX.Y.Z>` 指定目标标签，或 `--template-dir <path>` 离线对比本地检出。
+
+## `nimbus-docs lint`
+
+遍历 `src/content/`，运行你启用的每条创作规则，输出诊断信息，只要还有 `error` 级别的发现就以非零码退出。构建永远不会被 lint 拦截——没过 lint 的草稿在 `astro dev` 下照常渲染。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="lint" />
+
+可用标志——与 `lint` 搭配：
+
+| 标志 | 作用 |
+|---|---|
+| `--format=json` | 智能体可读的诊断输出 |
+| `--rule=nimbus/single-h1` | 只运行单条规则 |
+| `--fix` | 原位应用自动修复 |
+| `--quiet` | 只报错误，隐藏警告 |
+
+严重级别覆盖写在集成配置里（`nimbus(config, { rules })`）；文件内禁用（`nimbusDisableRules` frontmatter、行内注释）则无需任何配置即可生效。
+
+## 帮助与版本
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="--help" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="--version" />

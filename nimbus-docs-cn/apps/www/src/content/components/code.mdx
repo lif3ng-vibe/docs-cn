@@ -1,0 +1,146 @@
+---
+title: Code
+tagline: "语法高亮代码块——Shiki transformer 提供文件名框、行高亮、diff、焦点、错误/警告标注与词高亮。"
+props:
+  - name: code
+    type: string
+    required: true
+    description: 要高亮的源码字符串。
+  - name: lang
+    type: string
+    required: true
+    description: '语言标识符（如 "ts"、"tsx"、"bash"）。'
+  - name: meta
+    type: string
+    description: 'Shiki meta——例如 `title="src/foo.ts" {1,3-5}` 表示文件名 + 高亮。'
+  - name: raw
+    type: boolean
+    defaultValue: "false"
+    description: 按字面渲染源码——跳过 `// [!code ++]`、focus 等标注对应的 transformer。
+  - name: lineNumbers
+    type: boolean
+    defaultValue: "false"
+    description: 渲染带行号的边槽。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Code } from "@/components/ui/code";
+
+export const helloSample = `export function hello(name: string) {
+  return \`Hello, \${name}!\`;
+}`;
+
+export const filenameSample = `export function validateToken(token: string) {
+  return token.length > 0 && token.startsWith("sk_");
+}`;
+
+export const highlightSample = `export function Button({ children }) {
+  return (
+    <button className="btn">
+      {children}
+    </button>
+  );
+}`;
+
+export const diffSample = `function sum(a: number, b: number) {
+  return a - b; // [!code --]
+  return a + b; // [!code ++]
+}`;
+
+export const focusSample = `function main() {
+  const config = loadConfig(); // [!code focus]
+  const db = connect(config);
+  return db;
+}`;
+
+export const errorSample = `function divide(a: number, b: number) {
+  if (b === 0) throw new Error("divide by zero"); // [!code warning]
+  return a / b;
+  return null; // [!code error]
+}`;
+
+export const wordSample = `// [!code word:async]
+async function load(id: string) {
+  const res = await fetch(\`/api/\${id}\`);
+  return await res.json();
+}`;
+
+## 预览
+
+<Showcase code={'```ts title="src/lib/hello.ts"\nexport function hello(name: string) {\n  return `Hello, ${name}!`;\n}\n```'}>
+  <div class="w-full max-w-md text-left">
+    <Code code={helloSample} lang="ts" meta='title="src/lib/hello.ts"' />
+  </div>
+</Showcase>
+
+## 示例
+
+### 文件名
+
+在 meta 中传入 `title="path/to/file"`，即可在代码块上方渲染文件名框。
+
+<Example code={'```ts title="src/lib/auth.ts"\nexport function validateToken(token: string) {\n  return token.length > 0 && token.startsWith("sk_");\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={filenameSample} lang="ts" meta='title="src/lib/auth.ts"' />
+  </div>
+</Example>
+
+### 行高亮
+
+在 meta 中使用 `{N}` 或 `{N-M}` 来高亮指定行。
+
+<Example code={'```tsx {3-5}\nexport function Button({ children }) {\n  return (\n    <button className="btn">\n      {children}\n    </button>\n  );\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={highlightSample} lang="tsx" meta="{3-5}" />
+  </div>
+</Example>
+
+### Diff
+
+用 `// [!code ++]` 和 `// [!code --]` 标记新增/删除的行。
+
+<Example code={'```ts\nfunction sum(a: number, b: number) {\n  return a - b; // [!code --]\n  return a + b; // [!code ++]\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={diffSample} lang="ts" />
+  </div>
+</Example>
+
+### 焦点
+
+在关键行上添加 `// [!code focus]`，让周围的代码变暗。
+
+<Example code={'```ts\nfunction main() {\n  const config = loadConfig(); // [!code focus]\n  const db = connect(config);\n  return db;\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={focusSample} lang="ts" />
+  </div>
+</Example>
+
+### 错误与警告
+
+用 `// [!code error]` 或 `// [!code warning]` 标注出问题的行。
+
+<Example code={'```ts\nfunction divide(a: number, b: number) {\n  if (b === 0) throw new Error("divide by zero"); // [!code warning]\n  return a / b;\n  return null; // [!code error]\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={errorSample} lang="ts" />
+  </div>
+</Example>
+
+### 行号
+
+传入 `lineNumbers` 即可渲染行号边槽——行号是 Shiki 每行 span 上的 CSS counter，因此与其他 transformer 叠加使用时依然保持同步。
+
+<Example code={'```tsx lineNumbers\nexport function Button({ children }) {\n  return (\n    <button className="btn">\n      {children}\n    </button>\n  );\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={highlightSample} lang="tsx" lineNumbers />
+  </div>
+</Example>
+
+### 词高亮
+
+用 `// [!code word:term]` 高亮某个特定 token 出现的所有位置。
+
+<Example code={'```ts\n// [!code word:async]\nasync function load(id: string) {\n  const res = await fetch(`/api/${id}`);\n  return await res.json();\n}\n```'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <Code code={wordSample} lang="ts" />
+  </div>
+</Example>

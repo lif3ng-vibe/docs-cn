@@ -1,0 +1,47 @@
+{
+  "name": "nimbus-docs-cn",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm --filter ./packages/nimbus-docs build && pnpm -r typecheck",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "dev": "pnpm --filter nimbus-starter-source dev",
+    "build:templates": "node packages/create-nimbus-docs/scripts/copy-template.mjs",
+    "api-reference:check": "node scripts/api-reference-check.mjs",
+    "workers-feasibility:check": "node scripts/workers-feasibility-check.mjs",
+    "templates:check": "node scripts/templates-check.mjs",
+    "templates:sync": "node scripts/sync-templates-repo.mjs",
+    "upgrades:check": "node scripts/upgrade-manifest.mjs",
+    "test:upgrades": "node --test scripts/upgrade-manifest.test.mjs scripts/sync-reviewed-baselines.test.mjs",
+    "local": "node scripts/local.mjs",
+    "local:auto": "node scripts/local.mjs --auto",
+    "local:reset": "node scripts/local.mjs --auto --reset",
+    "local:add": "node scripts/local-add.mjs",
+    "changeset": "changeset",
+    "changeset:version": "changeset version && node scripts/sync-reviewed-baselines.mjs && pnpm --filter @nimbus/www generate-registry",
+    "changeset:publish": "changeset publish"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=9.6.5",
+    "pnpm": ">=7.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
+    "@eslint/js": "^10.0.1",
+    "cross-spawn": "7.0.6",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "pkg-pr-new": "^0.0.79",
+    "semver": "7.8.5",
+    "typescript-eslint": "^8.66.0",
+    "yaml": "2.9.0"
+  }
+}

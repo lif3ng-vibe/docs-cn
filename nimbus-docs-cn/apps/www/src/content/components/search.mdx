@@ -1,0 +1,18 @@
+---
+title: Search
+tagline: "站内搜索对话框——基于 Pagefind 的全文搜索，带键盘快捷键与零结果提示。"
+props: []
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { SearchTrigger, SearchDialog } from "@/components/ui/search";
+
+## 预览
+
+<Showcase code={`<SearchTrigger />
+
+<SearchDialog />`}>
+  <div class="w-full text-center">
+    <SearchTrigger />
+    <p class="text-xs text-muted-foreground mt-3">点击上方的触发器，或按 <kbd class="font-mono px-1.5 py-0.5 rounded bg-muted">⌘ K</kbd> 打开搜索框。</p>
+  </div>
+</Showcase>

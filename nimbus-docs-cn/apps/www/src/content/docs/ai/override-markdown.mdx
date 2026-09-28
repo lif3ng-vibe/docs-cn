@@ -1,0 +1,176 @@
+---
+title: 覆盖默认行为
+description: 自定义 Markdown 版本、llms.txt 索引与 OG 卡片，同时不必放弃共享路由。
+aiGenerated: true
+sidebar:
+  order: 3
+---
+
+起步模板（starter）中的 `src/pages/[...slug]/index.md.ts` 和 `src/pages/[...slug]/index.mdx.ts` 路由为每个页面提供 Markdown 版本和源码版本。你可以在三个层级上改变它们的输出：
+
+- 包装共享路由，改变所有页面的输出。
+- 用自己的代码替换共享路由。
+- 添加更具体的路由文件，接管某个集合。
+
+示例使用 `.md` 路由。`.mdx` 路由用 `markdownSourceRoute()` 以同样方式工作。`llms.txt` 路由和 OG 卡片路由遵循相同的模式；参见[覆盖 `llms.txt` 索引](#覆盖-llmstxt-索引)和[自定义 OG 卡片](#自定义-og-卡片)。
+
+## 包装共享路由
+
+调用共享路由的 `GET`，再修改它的响应。下例为每个 Markdown 版本追加一行许可声明：
+
+```ts title="src/pages/[...slug]/index.md.ts"
+import type { APIRoute } from "astro";
+import { markdownRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+
+const route = markdownRoute();
+export const getStaticPaths = route.getStaticPaths;
+
+export const GET: APIRoute = async (context) => {
+  const response = await route.GET(context);
+  if (!response.ok) return response;
+  const body = await response.text();
+  return new Response(`${body}\nLicensed under CC BY 4.0.\n`, {
+    headers: response.headers,
+  });
+};
+```
+
+## 替换共享路由
+
+用 `@cloudflare/nimbus-docs/agent-endpoints` 的公开辅助函数编写自己的 `GET`。`getMarkdownPayload()` 以 `body` 返回页面生成的完整 Markdown，以 `content` 返回仅页面内容的部分（不含 frontmatter 和索引前言）。保留共享路由的 `getStaticPaths`：它列出每个集合的页面，跳过由更具体路由接管的页面，并把每页的 `reference` 作为 prop 传入。
+
+下例只返回页面内容：
+
+```ts title="src/pages/[...slug]/index.md.ts"
+import type { APIRoute } from "astro";
+import {
+  getMarkdownPayload,
+  markdownRoute,
+  type MarkdownEndpointReference,
+} from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+
+export const { getStaticPaths } = markdownRoute();
+
+export const GET: APIRoute = async ({ props, request }) => {
+  const { reference } = props as { reference: MarkdownEndpointReference };
+  const payload = await getMarkdownPayload({
+    collection: reference.collection,
+    surface: "markdown",
+    reference,
+    context: { request },
+  });
+  if (!payload) return new Response("Not found", { status: 404 });
+  return new Response(payload.content, {
+    headers: { "Content-Type": payload.mediaType },
+  });
+};
+```
+
+想自己列出页面，`getMarkdownStaticPaths({ collection, surface })` 会返回单个集合的路径。由它构建的路由只服务它列出的集合。
+
+## 接管单个集合
+
+Astro 会让更具体的路由优先。在某个集合的 URL 前缀下添加路由文件，它就会接管该集合的 Markdown 版本。共享路由会跳过更具体路由的模式所能匹配的所有 URL。
+
+`markdownRoute()` 可用于任何路由文件，且只服务其路由匹配到的 URL。包装它即可自定义某个集合：
+
+```ts title="src/pages/blog/[...slug]/index.md.ts"
+import type { APIRoute } from "astro";
+import { markdownRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+
+const route = markdownRoute();
+export const getStaticPaths = route.getStaticPaths;
+
+export const GET: APIRoute = async (context) => {
+  const response = await route.GET(context);
+  if (!response.ok) return response;
+  const body = await response.text();
+  return new Response(`${body}\nSubscribe at https://example.com/blog/rss.xml\n`, {
+    headers: response.headers,
+  });
+};
+```
+
+或者用公开辅助函数自己写路由。更新日志配方（`nimbus-docs add changelog`）会添加 `src/pages/changelog/[...slug]/index.md.ts`，它用每个条目的日期和标签构建自己的 frontmatter：
+
+```ts title="src/pages/changelog/[...slug]/index.md.ts (abridged)"
+export const prerender = true;
+
+export const getStaticPaths = async () =>
+  getMarkdownStaticPaths({ collection: "changelog", surface: "markdown" });
+
+export async function GET({ params, props, request }: SlugContext) {
+  const payload = await getMarkdownPayload({
+    collection: "changelog",
+    surface: "markdown",
+    slug: params.slug,
+    reference: props.reference,
+    context: { request },
+  });
+  if (!payload) return new Response("Not found", { status: 404 });
+  // Build the frontmatter from the entry's data, then append payload.content.
+}
+```
+
+更具体的路由必须生成其模式匹配到的每一个页面。如果有遗漏，这些页面就没有 Markdown 版本，而 `llms.txt` 仍在链接它们。Nimbus 会在构建时以警告形式列出缺失的路径及负责它们的路由。当 Astro 的 `prerenderConflictBehavior` 设为 `"error"` 时，构建则会直接失败。
+
+## 覆盖 `llms.txt` 索引
+
+起步模板的 `llms.txt` 路由调用 `llmsRoute()`、`llmsFullRoute()` 和 `llmsSectionRoute()`。用同样的方式包装返回的 `GET`。下例在 `/llms.txt` 末尾加了一个支持链接：
+
+```ts title="src/pages/llms.txt.ts"
+import type { APIRoute } from "astro";
+import { llmsRoute } from "@cloudflare/nimbus-docs/agent-endpoints";
+
+export const prerender = true;
+
+const route = llmsRoute();
+
+export const GET: APIRoute = async (context) => {
+  const response = await route.GET(context);
+  if (!response.ok) return response;
+  const body = await response.text();
+  return new Response(`${body}\n## Support\n\n- [Contact support](https://example.com/support)\n`, {
+    headers: response.headers,
+  });
+};
+```
+
+栏目索引则保留 `llmsSectionRoute()` 的 `getStaticPaths`（它列出所有栏目），并包装其 `GET`。想从零构建响应体，用形如 `{ scope: "section", surface: "index", section: "writing" }` 的 `reference` 调用 `getLlmsPayload()`；索引不存在时返回 `null`。
+
+## 自定义 OG 卡片
+
+起步模板的 `src/pages/og/[...slug].ts` 把 `getOgImagePages()` 传给 astro-og-canvas。这个映射每个页面对应一个条目：键的设计保证每张卡片写在该页的 `ogImageUrl` 处，值则是该页的 `IndexedEntry`。卡片外观可在 `src/pages/og/_og-card-config.ts` 中调整，也可在 `getImageOptions` 中按页面定制。下例为更新日志卡片加上标识：
+
+```ts title="src/pages/og/[...slug].ts"
+import { getOgImagePages } from "@cloudflare/nimbus-docs/runtime";
+import { OGImageRoute } from "astro-og-canvas";
+import { ogCardConfig } from "./_og-card-config";
+
+export const prerender = true;
+
+export const { getStaticPaths, GET } = await OGImageRoute({
+  pages: await getOgImagePages(),
+  getImageOptions: (_path, page) => ({
+    title: page.collection === "changelog" ? `Changelog: ${page.title}` : page.title,
+    description: page.description ?? "",
+    ...ogCardConfig,
+  }),
+});
+```
+
+路由位置 `src/pages/og/[...slug].ts`、映射的键、默认的 `getSlug` 和 PNG 输出格式都要保留：页面路由链接到 `ogImageUrl`，一旦位置、键、slug 或格式改变，页面就会指向不存在的卡片。frontmatter 设置了 `socialImage` 的页面会改用那张图，因为页面路由传入的是 `entry.data.socialImage ?? ogImageUrl`。
+
+## 覆盖会改变什么
+
+覆盖只改变该路由自身提供的输出。`llms-full.txt` 和托管 MCP 仍使用 Nimbus 生成的 Markdown。
+
+共享路由以及使用 `markdownRoute()` 或 `markdownSourceRoute()` 的路由必须保留 `export const prerender = true`。任何一个改为按请求渲染，构建都会失败。
+
+像上面的示例一样，在路由文件本身内部调用工厂函数。与 Astro 自身的 `prerender` 检测一样，Nimbus 通过读取路由文件来发现它，因此从其他模块重新导出的工厂在构建开始时不会被检查到。构建结束时，Nimbus 会为所有没有预渲染路由生成的 Markdown 版本和 `llms.txt` 索引发出警告，并指出负责它们的路由。

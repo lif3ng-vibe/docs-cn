@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "oldestSupportedVersion": "0.11.0",
+  "entries": [
+    {
+      "id": "compact-coordinate-manifest",
+      "introducedIn": "0.14.0",
+      "mode": "review-required",
+      "changeset": "compact-coordinate-manifest",
+      "summary": "Rebuild API coordinate publishers and consumers for the compact v2 format.",
+      "affected": "Sites publishing or consuming coordinates.json through apiReferences, and custom tools reading CoordinatesManifest.",
+      "instructions": [
+        "No action is needed if the project neither publishes nor consumes API coordinate manifests.",
+        "Coordinate the rollout of publishers and consuming sites onto the same Nimbus release. Old readers cannot consume v2; new readers no longer consume v1. There is no mixed-version compatibility window.",
+        "Keep the existing getCoordinatesManifest import, endpoint path, headers and prerender setting. Rebuild publishers to emit v2, then rebuild consumers against that output. Stage both before switching live sites when uninterrupted citations matter.",
+        "Regenerate any checked-in v1 manifests from the upgraded publisher before building consumers. Do not just change the version number in old JSON.",
+        "Update custom CoordinatesManifest readers to use collection.pages and collection.versions page groups. Each group has a literal url and coordinate-keyed entries: null means no fragment, 0 means the coordinate is the fragment, and a string is the exact fragment.",
+        "A local v1 reference fails the build with guidance; a remote v1 reference warns and is skipped. Treat those warnings as an incomplete migration.",
+        "To roll back, restore the previous Nimbus release and v1 artifacts on both publishers and consumers together."
+      ],
+      "verify": [
+        "Confirm each published and checked-in coordinates.json reports version 2.",
+        "Build publishers and consumers and verify operation, field, response and historical-version citation links with no unsupported-manifest warnings.",
+        "The introducedIn value is the planned next minor release; confirm the actual release version before coordinating deployment."
+      ]
+    },
+    {
+      "id": "remove-gated-config",
+      "introducedIn": "0.12.0",
+      "mode": "review-required",
+      "changeset": "calm-upgrades-plan",
+      "summary": "Remove the withdrawn gated configuration option.",
+      "affected": "Projects using the gated Nimbus config option as an access-control or publication boundary.",
+      "instructions": [
+        "Remove gated from the Nimbus configuration.",
+        "Move content that must not be published out of every routed content collection.",
+        "Do not substitute noindex for access control; noindex affects discovery, not confidentiality."
+      ],
+      "verify": [
+        "Inspect the built route inventory and confirm private content is absent.",
+        "Run nimbus-docs check and the production build."
+      ]
+    },
+    {
+      "id": "partial-resolver-to-markdown",
+      "introducedIn": "0.13.0",
+      "mode": "automatic",
+      "migrationId": "partial-resolver-to-markdown",
+      "summary": "Move route-level partial heading resolution into markdown.partialResolver.",
+      "affected": "Projects passing partialHeadings.resolvePartialId to prose helpers or importing the removed PartialHeadingOptions type.",
+      "instructions": [
+        "Run nimbus-docs migrate to apply the canonical getDocsPageProps transform where available.",
+        "Review every getDocsPageProps, getDocsPage, getCollectionPageProps, and getCollectionPage call that passes partialHeadings.",
+        "Move custom resolver behavior to markdown.partialResolver in the Nimbus integration as { revision: \"partial-resolver-v1\", resolve: ({ file, product }) => product ? `${product}/${file}` : file }, preserving the project's exact resolver behavior, and remove the route-level option.",
+        "Remove PartialHeadingOptions imports and use the markdown.partialResolver callback types inferred from Nimbus config."
+      ],
+      "verify": [
+        "Confirm partial headings still resolve to the same collection IDs.",
+        "Run nimbus-docs check, astro check, and the production build."
+      ]
+    },
+    {
+      "id": "prepared-markdown-artifacts",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "summary": "Move custom Markdown routes that expand Render partials to prepared build artifacts.",
+      "affected": "Custom routes calling renderEntryAsMarkdown or getEntryMarkdown with authored Render partials.",
+      "instructions": [
+        "Review custom Markdown and MDX endpoints for renderEntryAsMarkdown, getEntryMarkdown, and Render partial expansion.",
+        "Use getMarkdownStaticPaths and getMarkdownPayload from @cloudflare/nimbus-docs/agent-endpoints for generated publication routes.",
+        "Read route props from props.reference and call getMarkdownPayload with { collection, surface, slug: params.slug, reference: props.reference, context: { request } }; handle a null payload before constructing the response.",
+        "Move custom component transforms into revisioned markdown.componentMap integration configuration."
+      ],
+      "verify": [
+        "Request every custom Markdown or MDX endpoint and confirm partial content is present.",
+        "Run astro check and the production build."
+      ]
+    },
+    {
+      "id": "llms-full-prepared-artifact",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "summary": "Replace renderCorpusMarkdown with the prepared full-site LLM artifact.",
+      "affected": "Projects with a custom llms-full.txt route using renderCorpusMarkdown.",
+      "instructions": [
+        "Review the project for renderCorpusMarkdown imports and calls.",
+        "Use getLlmsPayload({ scope: \"site\", surface: \"full\" }, { request }) from @cloudflare/nimbus-docs/agent-endpoints and handle a null payload before constructing the response.",
+        "If custom runtime composition is still required and contains no partials, use renderLlmsFullMarkdown."
+      ],
+      "verify": [
+        "Request llms-full.txt and confirm the expected pages and expanded partial content are present.",
+        "Run astro check and the production build."
+      ]
+    },
+    {
+      "id": "index-route-normalization",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "summary": "Review routes for content entries whose IDs end in index.",
+      "affected": "Projects with root or nested index.md/index.mdx entries using Nimbus static-path helpers.",
+      "instructions": [
+        "Review content entries named index.md or index.mdx and links that include a trailing /index segment.",
+        "Update links to the normalized directory route and add redirects for established inbound /index URLs when needed.",
+        "Check for collisions with explicit Astro index routes."
+      ],
+      "verify": [
+        "Request each affected root and nested directory route.",
+        "Run nimbus-docs check and the production build."
+      ]
+    },
+    {
+      "id": "logical-authored-links",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "summary": "Author root-relative links as logical paths without Astro's deployment base.",
+      "affected": "Subpath deployments whose authored links already include the configured Astro base.",
+      "instructions": [
+        "Review authored Markdown, MDX, and static JSX links that begin with the configured Astro base.",
+        "Remove the deployment base from authored root-relative destinations because Nimbus now applies it.",
+        "Remove noncanonical path traversal or encoded path delimiters from authored destinations."
+      ],
+      "verify": [
+        "Build with the production base and check representative authored links.",
+        "Run nimbus-docs check and the production build."
+      ]
+    },
+    {
+      "id": "prepared-publication-api-renames",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "changeset": "calm-upgrades-plan",
+      "summary": "Replace the removed Twin and Corpus publication API names.",
+      "affected": "Projects importing legacy Twin or Corpus APIs, deprecated prepared helpers from @cloudflare/nimbus-docs/build or @cloudflare/nimbus-docs/publication, or renderCorpusMarkdown.",
+      "instructions": [
+        "Import getMarkdownStaticPaths, getMarkdownPayload, getLlmsStaticPaths, getLlmsPayload, and their endpoint types from @cloudflare/nimbus-docs/agent-endpoints.",
+        "Map getPreparedTwinStaticPaths, getPreparedMarkdownStaticPaths, and getPreparedMarkdownRouteStaticPaths to getMarkdownStaticPaths; map getPreparedCorpusStaticPaths, getPreparedLlmsStaticPaths, and getPreparedLlmsRouteStaticPaths to getLlmsStaticPaths; update static-path props from artifact to reference.",
+        "Map getPreparedMarkdownRouteArtifact(options) to getMarkdownPayload(options), and map getPreparedLlmsRouteArtifact(reference, { request }) to getLlmsPayload(reference, { request }).",
+        "Map getPreparedTwinArtifact(reference) and getPreparedMarkdownArtifact(reference) to getMarkdownPayload({ collection: reference.collection, surface: reference.surface, reference, context: { request } }).",
+        "Map getPreparedCorpusArtifact(reference) and getPreparedLlmsArtifact(reference) to getLlmsPayload(reference, { request }).",
+        "For section llms.txt routes, preserve request-rendered fallback resolution with props.reference ?? (params.section ? { scope: \"section\", surface: \"index\", section: params.section } : null); return a 404 response when reference is null before calling getLlmsPayload(reference, { request }).",
+        "Map TwinSurface and PreparedMarkdownSurface to MarkdownEndpointSurface; PreparedTwinReference and PreparedMarkdownReference to MarkdownEndpointReference; PreparedTwinArtifact and PreparedMarkdownArtifact to MarkdownEndpointPayload; PreparedCorpusReference and PreparedLlmsReference to LlmsEndpointReference; and PreparedCorpusArtifact and PreparedLlmsArtifact to LlmsEndpointPayload.",
+        "Handle the nullable result from getMarkdownPayload and getLlmsPayload before constructing a response.",
+        "Use renderLlmsFullMarkdown only when custom runtime composition is still required and contains no partials.",
+        "Review argument and return types at every renamed call rather than applying an unbounded text replacement."
+      ],
+      "verify": [
+        "Run astro check to find remaining removed imports and incompatible calls.",
+        "Request representative Markdown, MDX source, llms.txt, and llms-full.txt outputs."
+      ]
+    },
+    {
+      "id": "twins-config-to-markdown",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "changeset": "calm-upgrades-plan",
+      "summary": "Move twins integration customization under markdown.",
+      "affected": "Projects configuring twins.componentMap or twins.partialResolver in the Nimbus integration.",
+      "instructions": [
+        "Move twins.componentMap to markdown.componentMap.",
+        "Move twins.partialResolver to markdown.partialResolver.",
+        "Preserve each revision and resolver or component mapping implementation while removing the twins object."
+      ],
+      "verify": [
+        "Run astro check and confirm the Nimbus configuration validates.",
+        "Request generated Markdown and a page containing expanded partial content."
+      ]
+    },
+    {
+      "id": "with-base-route-to-with-base",
+      "introducedIn": "0.13.0",
+      "mode": "review-required",
+      "changeset": "calm-upgrades-plan",
+      "summary": "Replace the removed withBaseRoute runtime helper with withBase.",
+      "affected": "Projects importing or calling withBaseRoute from Nimbus runtime APIs.",
+      "instructions": [
+        "Replace withBaseRoute imports and calls with withBase.",
+        "Pass logical site-relative paths that do not already contain Astro's configured deployment base.",
+        "Review custom URL composition for double bases and path traversal."
+      ],
+      "verify": [
+        "Build with the production deployment base and inspect every affected URL.",
+        "Run astro check and the production build."
+      ]
+    },
+    {
+      "id": "explicit-markdown-processor",
+      "introducedIn": "0.14.0",
+      "mode": "review-required",
+      "changeset": "safe-admonition-titles",
+      "summary": "Review Astro, processors, and Markdown files for native admonition compatibility.",
+      "affected": "Projects using Astro earlier than 7.2.6, setting markdown.processor or mdx.processor while Nimbus admonitions are enabled, or containing admonition directives in .md files.",
+      "instructions": [
+        "Upgrade Astro to a supported 7.x version (7.2.6 or newer) before upgrading Nimbus.",
+        "Review explicit markdown.processor and mdx.processor overrides in the Nimbus integration.",
+        "Keep a compatible Sätteri processor, or remove the override to use Nimbus's default Sätteri processor.",
+        "Move Sätteri plugins to markdown.mdastPlugins or markdown.hastPlugins and use Astro's markdown.smartypants option for smart punctuation.",
+        "For unified or another custom processor, set admonitions: false and preserve that processor's existing callout implementation.",
+        "Move admonition directives in .md files to MDX, or keep them literal and provide a separate Markdown callout implementation; native Nimbus admonitions now transform only .mdx files."
+      ],
+      "verify": [
+        "Confirm the installed Astro version is within the supported 7.x range and is 7.2.6 or newer.",
+        "Search .md files for ::: directives and review every Markdown callout.",
+        "Build representative MDX containing an admonition and confirm it renders as Aside, or confirm admonitions are explicitly disabled.",
+        "Run nimbus-docs check, astro check, and the production build."
+      ]
+    },
+    {
+      "id": "api-collections-from-config",
+      "introducedIn": "0.15.0",
+      "mode": "optional",
+      "changeset": "api-collections-from-config",
+      "summary": "Optionally move API specs back into the inline Nimbus config and register them with a zero-argument apiCollection().",
+      "affected": "Sites whose api-reference recipe created nimbus.config.ts and pass an entry to apiCollection(options) in src/content.config.ts.",
+      "instructions": [
+        "No action is needed: nimbus.config.ts with apiCollection(options) keeps building unchanged. Migrate to let nimbus-docs check validate the whole config, let add adapter-cloudflare edit rendering in place, and have astro dev re-index edits to the api entries (the current shape ignores them until a manual restart).",
+        "Move the object passed to defineConfig in nimbus.config.ts back into astro.config.ts as const nimbusConfig = defineNimbusConfig({ ... }), importing defineConfig as defineNimbusConfig from @cloudflare/nimbus-docs, and keep passing it to nimbus(nimbusConfig).",
+        "Delete nimbus.config.ts and its imports. In src/content.config.ts, remove the nimbus.config import and the api entry lookup, and replace each apiCollection(entry) with apiCollection(), under a collection key equal to the entry's collection.",
+        "Keep one api entry per API collection and one apiCollection() line per entry. A key with no entry, or an entry with no apiCollection() under its key, fails the build."
+      ],
+      "verify": [
+        "Run nimbus-docs check and confirm it reports no nimbus/config-not-evaluated note and no nimbus/api-collection-* findings.",
+        "Run the production build and confirm it logs \"Indexed N API pages\" for each API collection with the same page counts as before.",
+        "In astro dev, edit a spec file and an api entry and confirm the API pages update without a manual restart."
+      ]
+    },
+    {
+      "id": "shared-markdown-routes",
+      "introducedIn": "0.15.0",
+      "mode": "optional",
+      "changeset": "shared-markdown-routes",
+      "summary": "Optionally serve every collection's Markdown and source versions from the two shared starter routes.",
+      "affected": "Projects with per-collection Markdown or source routes, such as src/pages/<collection>/[...slug]/index.md.ts or index.mdx.ts, from the starter or the new-version, new-collection, changelog, ai-native, or api-reference recipes.",
+      "instructions": [
+        "Existing routes keep working: a more specific route still serves its collection, and the shared route skips those paths. No change is required.",
+        "If src/pages/[...slug]/index.md.ts or index.mdx.ts is an unmodified starter file, update it with nimbus-docs diff <file> --apply.",
+        "If either root route is customized, keep its behavior: switch it to markdownRoute() or markdownSourceRoute() only if the customization can be expressed by wrapping the returned GET (see the Override a default guide). Otherwise keep the custom route as it is.",
+        "Delete per-collection Markdown and source routes only after the root routes use the shared factories, and only when they are unmodified recipe output. Keep routes that customize their output, such as the changelog recipe's .md route that adds date and tags.",
+        "Deleting the api-reference recipe's src/pages/<api>/[...slug]/index.md.ts drops the Markdown versions of hidden API versions; the shared route skips hidden versions. Keep that route if those pages must stay published.",
+        "Keep the shared routes prerendered. The build fails if a route using markdownRoute() or markdownSourceRoute() is rendered on request."
+      ],
+      "verify": [
+        "Build and compare the list of generated .md and .mdx files before and after the change.",
+        "Confirm the build reports no Markdown paths that a route matches but did not generate.",
+        "Request a representative .md URL from each collection, including an API page, and a .mdx URL from each collection with authored source (API pages have none)."
+      ]
+    },
+    {
+      "id": "page-urls-and-llms-routes",
+      "introducedIn": "0.15.0",
+      "mode": "optional",
+      "changeset": "page-urls-and-llms-routes",
+      "summary": "Optionally take page URLs from the page helpers, build OG cards from getOgImagePages(), and reduce the llms.txt routes to one factory call each.",
+      "affected": "Projects whose page routes build markdownUrl or socialImage by hand (the starter's src/pages/[...slug].astro and pages from the new-version, new-collection, and changelog recipes), whose src/pages/og/[...slug].ts computes its own page keys, or whose llms.txt routes import src/utils/agent-endpoint-response.ts.",
+      "instructions": [
+        "No action is needed: hand-built URLs, the existing OG route, and the existing llms.txt routes keep building with unchanged output.",
+        "Update each route below that is an unmodified starter file with nimbus-docs diff <file> --apply. Edit customized routes by hand.",
+        "In page routes that call getDocsPage or getCollectionPage, add markdownUrl and ogImageUrl to the names read from the returned page, then delete the routeKey, markdownPath, and markdownUrl lines and write const socialImage = entry.data.socialImage ?? ogImageUrl;. Remove the entryRouteKey import if nothing else uses it.",
+        "In src/pages/og/[...slug].ts, replace the entries and pages computation with pages: await getOgImagePages() from @cloudflare/nimbus-docs/runtime, and read page.title and page.description ?? \"\" in getImageOptions. Change it together with the page routes: collection and version root pages, such as /blog/, then link to /og/blog.png, the card that is actually written, instead of /og/blog/index.png. Pages whose ID contains a dot, such as v1.2/guide or an API webhook named payment.succeeded, get their own card instead of sharing a truncated file name. noindex pages linked to /og/<id>.png, but the old route skipped them and never wrote that card; now that card exists.",
+        "Replace the bodies of src/pages/llms.txt.ts, src/pages/llms-full.txt.ts, and src/pages/[section]/llms.txt.ts with export const { GET } = llmsRoute();, export const { GET } = llmsFullRoute();, and export const { GET, getStaticPaths } = llmsSectionRoute(); from @cloudflare/nimbus-docs/agent-endpoints. Keep export const prerender in each file.",
+        "Delete src/utils/agent-endpoint-response.ts once no route imports it."
+      ],
+      "verify": [
+        "Build before and after and compare dist: HTML, .md, .mdx, and llms.txt files are unchanged except the og:image URL of collection and version root pages, and OG files change only for those pages, for IDs containing a dot, and for noindex pages.",
+        "Open a collection root page and a page whose ID contains a dot, and confirm each og:image URL serves a PNG.",
+        "Confirm the build logs no warning about Markdown or llms.txt pages that were not prerendered, unless the site serves them on request.",
+        "Request /llms.txt, /llms-full.txt, one section's llms.txt, and an unknown section's llms.txt, which returns 404."
+      ]
+    }
+  ]
+}

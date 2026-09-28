@@ -1,0 +1,69 @@
+---
+title: 元数据与 SEO
+description: 标题、描述、Open Graph 图片、sitemap 与页面级 head 控制。
+aiGenerated: true
+sidebar:
+  order: 4
+---
+
+Nimbus 会自动处理好元数据基线，并在你需要的地方提供页面级与全站级控制。
+
+## 标题与描述
+
+frontmatter 的 `title` 和 `description` 填充 `<title>` 和 `<meta name="description">`，同时供搜索摘要和 `llms.txt` 索引使用。全站兜底值来自 Nimbus 配置：
+
+```ts title="astro.config.ts"
+nimbus({
+  site: "https://docs.example.com",
+  title: "Acme",
+  description: "Build with Acme.",
+});
+```
+
+## Open Graph 图片
+
+先设置全站兜底的分享卡片和替代文本，再按页面覆盖：
+
+```ts
+nimbus({
+  /* … */
+  socialImage: "/og.png",
+  socialImageAlt: "Acme documentation",
+});
+```
+
+```yaml
+---
+title: Pricing
+socialImage: /og/pricing.png
+---
+```
+
+Nimbus 还内置了一个 OG 图片路由，没有显式指定图片的页面会拿到一张生成的卡片。
+
+图片路径是不含 Astro 部署 base 的逻辑路径。若站点部署在 `/docs` 下，仍保持 `socialImage: "/og.png"`，Nimbus 会产出 `/docs/og.png`。绝对 URL 和协议相对 URL 原样保留。
+
+## Sitemap 与 robots
+
+设置了 `site` 之后，sitemap 集成和 `/robots.txt` 会自动接好。在集成选项中设置 `sitemap: false` 可禁用 sitemap。
+
+## 页面级与全站 head
+
+通过 `config.head` 全站向 `<head>` 添加元素，或通过 frontmatter 逐页添加——两者会合并：
+
+```yaml
+---
+title: Analytics-tracked page
+head:
+  - tag: meta
+    attrs: { name: "robots", content: "noindex" }
+  - tag: link
+    attrs: { rel: "canonical", href: "https://example.com/canonical" }
+---
+```
+
+有效的标签：`meta`、`link`、`script`、`style`、`title`、`noscript`、`base`。不想手写标签就让爬虫跳过某个页面，用 `noindex: true`。
+
+## Canonical URL
+
+在多版本文档站上，Nimbus 会输出 `<link rel="canonical">` 把旧版本指向当前版本，并在同级的各版本之间输出 `<link rel="alternate">`——由 `previousSlug` 驱动。

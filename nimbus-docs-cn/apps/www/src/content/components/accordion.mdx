@@ -1,0 +1,105 @@
+---
+title: Accordion
+tagline: "折叠卡片——带箭头的标题行，展开后显示内容。多张组合可渲染为一张带边框的卡片。"
+props:
+  - name: open
+    type: boolean
+    defaultValue: "false"
+    description: Accordion 属性。默认以展开状态渲染。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import {
+  Accordion,
+  AccordionTrigger,
+  AccordionContent,
+  AccordionGroup,
+} from "@/components/ui/accordion";
+
+## 预览
+
+<Showcase code={`<AccordionGroup>
+  <Accordion>
+    <AccordionTrigger>Nimbus 是什么？</AccordionTrigger>
+    <AccordionContent>
+      一个文档框架——组件直接复制进你的仓库，每个页面还会为智能体附带 markdown 版本。
+    </AccordionContent>
+  </Accordion>
+  <Accordion>
+    <AccordionTrigger>如何安装组件？</AccordionTrigger>
+    <AccordionContent>
+      运行 \`nimbus-docs add <slug>\`——组件及其注册表依赖会被复制到 \`src/components/ui/\`。
+    </AccordionContent>
+  </Accordion>
+  <Accordion>
+    <AccordionTrigger>可以修改组件吗？</AccordionTrigger>
+    <AccordionContent>
+      可以——组件就在你的仓库里。Tailwind 类名、布局、props 想改就改，不用担心改坏上游 API。
+    </AccordionContent>
+  </Accordion>
+</AccordionGroup>`}>
+  <div class="w-[32rem] max-w-full text-left">
+    <AccordionGroup>
+      <Accordion>
+        <AccordionTrigger>Nimbus 是什么？</AccordionTrigger>
+        <AccordionContent>
+          一个文档框架——组件直接复制进你的仓库，每个页面还会为智能体附带 markdown 版本。
+        </AccordionContent>
+      </Accordion>
+      <Accordion>
+        <AccordionTrigger>如何安装组件？</AccordionTrigger>
+        <AccordionContent>
+          运行 <code>nimbus-docs add &lt;slug&gt;</code>——组件及其注册表（registry）依赖会被复制到 <code>src/components/ui/</code>。
+        </AccordionContent>
+      </Accordion>
+      <Accordion>
+        <AccordionTrigger>可以修改组件吗？</AccordionTrigger>
+        <AccordionContent>
+          可以——组件就在你的仓库里。Tailwind 类名、布局、props 想改就改，不用担心改坏上游 API。
+        </AccordionContent>
+      </Accordion>
+    </AccordionGroup>
+  </div>
+</Showcase>
+
+## 示例
+
+### 单独使用
+
+单独一个 Accordion——适合折叠面板不属于列表的场景。
+
+<Example code={`<Accordion>
+  <AccordionTrigger>Nimbus 为什么附带 markdown 版本？</AccordionTrigger>
+  <AccordionContent>
+    智能体可以直接读取 .md 文件，无需解析 HTML 页面外壳。\`src/content/docs/\` 里的每个页面都会自动附带一份。
+  </AccordionContent>
+</Accordion>`} contentClass="w-full">
+  <div class="w-full">
+    <Accordion>
+      <AccordionTrigger>Nimbus 为什么附带 markdown 版本？</AccordionTrigger>
+      <AccordionContent>
+        智能体（agent）可以直接读取 .md 文件，无需解析 HTML 页面外壳。<code>src/content/docs/</code> 里的每个页面都会自动附带一份。
+      </AccordionContent>
+    </Accordion>
+  </div>
+</Example>
+
+### 默认展开
+
+在 Accordion 上传入 `open`，初始即为展开状态。
+
+<Example code={`<Accordion open>
+  <AccordionTrigger>已经展开</AccordionTrigger>
+  <AccordionContent>
+    当第一项承载最重要的答案时最有用。
+  </AccordionContent>
+</Accordion>`} contentClass="w-full">
+  <div class="w-full">
+    <Accordion open>
+      <AccordionTrigger>已经展开</AccordionTrigger>
+      <AccordionContent>
+        当第一项承载最重要的答案时最有用。
+      </AccordionContent>
+    </Accordion>
+  </div>
+</Example>

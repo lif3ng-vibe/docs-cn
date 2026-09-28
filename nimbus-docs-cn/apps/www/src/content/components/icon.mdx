@@ -1,0 +1,138 @@
+---
+title: Icon
+tagline: "渲染来自本地文件或 Iconify 图标集的 SVG 图标。"
+props:
+  - name: name
+    type: string
+    required: true
+    description: "图标名称。不带前缀的名称（如 `workers`）解析为本地 `src/icons/*.svg`；带前缀的名称（如 `ph:rocket`）解析为已安装的 `@iconify-json/*` 图标集。"
+  - name: size
+    type: "number | string"
+    description: "同时设置 `width` 与 `height` 的简写。"
+  - name: width
+    type: "number | string"
+    description: "覆盖 SVG 的宽度。"
+  - name: height
+    type: "number | string"
+    description: "覆盖 SVG 的高度。"
+  - name: is:inline
+    type: "boolean"
+    defaultValue: "false"
+    description: "为兼容 astro-icon 的 API 而保留。SVG 始终内联，此属性对输出没有影响。"
+  - name: title
+    type: string
+    description: "无障碍标题，渲染在 `<title>` 内。"
+  - name: desc
+    type: string
+    description: "无障碍描述，渲染在 `<desc>` 内。"
+---
+
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import Icon from "@cloudflare/nimbus-docs/components/Icon.astro";
+
+## 预览
+
+<Showcase
+  code={`<Icon name="ph:rocket-launch" class="w-6 h-6" />
+<Icon name="ph:github-logo" class="w-6 h-6" />
+<Icon name="ph:book-open" class="w-6 h-6" />`}
+>
+  <div class="flex flex-wrap items-center justify-center gap-6">
+    <Icon name="ph:rocket-launch" class="w-6 h-6 text-foreground" />
+    <Icon name="ph:github-logo" class="w-6 h-6 text-foreground" />
+    <Icon name="ph:book-open" class="w-6 h-6 text-foreground" />
+  </div>
+</Showcase>
+
+## 示例
+
+### 尺寸
+
+用 `size` 同时设置宽和高，或分别用 `width`/`height`。元素上的 Tailwind 工具类同样有效。
+
+<Example
+  code={`<Icon name="ph:star" size={16} />
+<Icon name="ph:star" size={24} />
+<Icon name="ph:star" size={32} />`}
+  minHeight="6rem"
+>
+  <div class="flex flex-wrap items-center justify-center gap-6">
+    <Icon name="ph:star" size={16} class="text-foreground" />
+    <Icon name="ph:star" size={24} class="text-foreground" />
+    <Icon name="ph:star" size={32} class="text-foreground" />
+  </div>
+</Example>
+
+### 无障碍
+
+传入 `title` 与 `desc`，即可在 SVG 内部添加 `<title>` 与 `<desc>` 元素，供屏幕阅读器使用。
+
+<Example
+  code={`<Icon name="ph:warning" title="Warning" desc="This action cannot be undone" class="w-6 h-6" />`}
+  minHeight="6rem"
+>
+  <div class="flex items-center justify-center">
+    <Icon
+      name="ph:warning"
+      title="警告"
+      desc="此操作无法撤销"
+      class="w-6 h-6 text-foreground"
+    />
+  </div>
+</Example>
+
+### 搭配 Tailwind 类
+
+`<svg>` 元素上可以加任意 class——颜色、尺寸、过渡等都可以。
+
+<Example
+  code={`<Icon name="ph:heart" class="w-8 h-8 text-red-500 hover:scale-110 transition-transform" />`}
+  minHeight="6rem"
+>
+  <div class="flex items-center justify-center">
+    <Icon
+      name="ph:heart"
+      class="w-8 h-8 text-red-500 hover:scale-110 transition-transform"
+    />
+  </div>
+</Example>
+
+### Iconify 图标集
+
+安装任意 `@iconify-json/*` 包，然后用其前缀引用图标。图标系统会自动检测已安装的包。
+
+```bash
+npm install @iconify-json/ph         # Phosphor——ph:*
+npm install @iconify-json/mdi        # Material Design Icons——mdi:*
+npm install @iconify-json/fa6-solid  # Font Awesome 6——fa6-solid:*
+npm install @iconify-json/heroicons  # Heroicons——heroicons:*
+```
+
+<Example code={`<Icon name="ph:rocket-launch" class="w-6 h-6" />
+<Icon name="ph:github-logo" class="w-6 h-6" />
+<Icon name="ph:warning" class="w-6 h-6" />
+<Icon name="ph:check-circle" class="w-6 h-6" />`} minHeight="6rem">
+  <div class="flex flex-wrap items-center justify-center gap-6">
+    <Icon name="ph:rocket-launch" class="w-6 h-6 text-foreground" />
+    <Icon name="ph:github-logo" class="w-6 h-6 text-foreground" />
+    <Icon name="ph:warning" class="w-6 h-6 text-foreground" />
+    <Icon name="ph:check-circle" class="w-6 h-6 text-foreground" />
+  </div>
+</Example>
+
+### 本地 SVG
+
+把 SVG 文件放进 `src/icons/`，然后用文件名引用（不带前缀、不带扩展名）。
+
+```
+src/icons/logo.svg
+src/icons/product/workers.svg
+```
+
+```tsx
+<Icon name="logo" class="w-6 h-6" />
+<Icon name="product/workers" class="w-6 h-6" />
+```
+
+单色 SVG 会自动归一化为 `currentColor`，从而通过 CSS 继承文字颜色。

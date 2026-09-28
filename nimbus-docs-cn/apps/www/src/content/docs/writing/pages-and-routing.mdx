@@ -1,0 +1,151 @@
+---
+title: 页面与路由
+description: src/content/docs 下的文件系统如何变成你的路由与侧边栏。
+aiGenerated: true
+sidebar:
+  order: 1
+---
+import { FileTree } from "@/components/ui/file-tree";
+
+一个页面就是 `src/content/docs/` 下的一个 `.md` 或 `.mdx` 文件。它在磁盘上的路径就是它的 URL，也决定了它在[侧边栏](/navigation/sidebar)中的位置——不需要单独的路由或导航配置。
+
+## 文件到 URL
+
+| 文件 | URL |
+|---|---|
+| `src/content/docs/get-started.mdx` | `/get-started` |
+| `src/content/docs/guides/styling.mdx` | `/guides/styling` |
+| `src/content/docs/guides/index.mdx` | `/guides` |
+
+slug 会转为小写，目录里的 `index` 文件折叠为该目录的 URL。目录的 `index.mdx` 就是这个栏目的落地页。
+
+<FileTree>
+- src/content/docs/
+  - introduction.mdx
+  - guides/
+    - index.mdx
+    - styling.mdx
+</FileTree>
+
+## 自定义 Astro 路由
+
+你在 `src/pages/` 下添加的文件使用 Astro 原生的路由与渲染语义。在服务器输出（server output）项目中，页面或端点默认按请求渲染；想让这个选择显式化，就设置 Astro 的 `prerender` 导出：
+
+```astro title="src/pages/status.astro"
+---
+export const prerender = false;
+---
+
+<h1>Service status</h1>
+```
+
+```ts title="src/pages/api/ping.ts"
+export const prerender = false;
+
+export function GET() {
+  return new Response("pong");
+}
+```
+
+用 `export const prerender = true` 可以在构建时把自定义路由生成为静态输出。无需任何 Nimbus 路由注册或白名单。
+
+这条边界不只针对 `prerender`。动态段、端点方法、重定向与响应，以及其他 Astro 原生路由行为，都仍由路由自身掌控。只有当路由占用的模式与已配置的规范内容路由、包注入的基础设施、启用的特性或已发布内容条目的模式完全相同时，Nimbus 才会介入。
+
+Nimbus 的 `rendering` 配置只控制规范的内容集合（content collection）路由，不控制 `src/pages/` 下的其他文件。为 `llms.txt`、Markdown 备选版本、Open Graph 图片和 `robots.txt` 脚手架生成的文件属于你的项目，可以像其他路由一样使用 Astro 原生渲染行为。
+
+## 页面模式
+
+默认情况下，每个页面都渲染在 `DocsLayout` 之内——侧边栏、目录（TOC）、面包屑、上一页/下一页。用 `mode` 可以让页面摆脱全部视觉外壳：
+
+```yaml
+---
+title: Welcome
+mode: custom
+---
+```
+
+`mode: custom` 面向落地页和定制布局。按列开关（`sidebar: false`、`tableOfContents: false`）可以只关闭个别部分而不必完全自定义——参见[布局](/styling/layouts)。
+
+## 草稿
+
+`draft: true` 会让页面不进入生产构建和 `llms.txt` 索引，但在 `astro dev` 下仍然渲染（按 `noindex` 对待）。适合开发中的内容。
+
+```yaml
+---
+title: Experimental feature
+draft: true
+---
+```
+
+## 重定向侧边栏条目
+
+`external_link` 改写侧边栏中页面链接的指向，而不改变它的构建位置——适合把条目指向另一个栏目或站外 URL。参见[重定向](/navigation/redirects)。
+
+## 其他集合
+
+`src/content/docs/` 是主集合，挂载在站点根路径。其他集合（如 `blog`、`api`，或带版本的 `docs-v2`）挂载在各自的 URL 命名空间下。在 `src/content.config.ts` 中用 `nimbus-docs/content` 提供的工厂函数注册它们。
+
+Nimbus 的 `docsCollection()`、`partialsCollection()` 和 `componentsCollection()` 工厂函数会自动为链接、Markdown/MDX 备选版本、`llms-full.txt` 和局部片段（partial）标题准备好内容。如果你注册的 loader 直接存储 Markdown 正文，请用 `withNimbusMarkdown()` 包一层：
+
+```ts title="src/content.config.ts"
+import { defineCollection } from "astro:content";
+import { glob } from "astro/loaders";
+import { withNimbusMarkdown } from "@cloudflare/nimbus-docs/content";
+
+export const collections = {
+  blog: defineCollection({
+    loader: withNimbusMarkdown(
+      glob({ base: "./src/content/blog", pattern: "**/*.{md,mdx}" }),
+    ),
+  }),
+};
+```
+
+这层包装会保留 loader 的方法与生命周期。当 loader 存储的条目带 Markdown `body` 时就应使用它。每个通用的可索引集合都必须为 Markdown/MDX 备选版本和 `llms-full.txt` 提供准备好的 Markdown；只存任意数据的集合不受支持。`apiCollection()` 是专门定制的例外，因为渲染器由 Nimbus 提供。如果某个集合没有做好准备，构建会报出它的名字，并提示你包装它的 loader。
+
+## 自定义路由辅助函数
+
+路由匹配使用不带 base 的逻辑路径；发给浏览器的链接则使用带 base 的路径。Nimbus 从 `@cloudflare/nimbus-docs/runtime` 导出两侧的辅助函数：
+
+```ts
+import {
+  entryRouteKey,
+  stripBase,
+  withBase,
+} from "@cloudflare/nimbus-docs/runtime";
+
+const route = entryRouteKey(entry.id);
+const requestedRoute = stripBase(Astro.url.pathname, import.meta.env.BASE_URL);
+const href = withBase(`/${route}`, import.meta.env.BASE_URL);
+```
+
+- `entryRouteKey()` 保留 Astro 条目 ID，同时把结尾的 `/index` 折叠掉。
+- `stripBase()` 在路由匹配前移除已配置的 base。
+- `withBase()` 在生成浏览器 URL 时加上已配置的 base。
+
+构建期间，Nimbus 会拒绝含义模糊或不安全的生成路由。常见原因包括 `foo` 与 `foo/index` 并存、与保留的 `llms.txt` 路由冲突、经过编码的路径分隔符，以及编码后的 `.` 或 `..` 段。构建错误会点名冲突的条目。
+
+## 页面 URL
+
+`getDocsPage()` 和 `getCollectionPage()` 会在返回 `entry`、`Content`、`headings` 的同时返回每个页面的 URL，页面路由无需手工拼接。`getIndexedEntries()` 则在每个 `IndexedEntry` 上返回同样的值。
+
+| 字段 | 示例 | 说明 |
+| --- | --- | --- |
+| `markdownUrl` | `/blog/welcome/index.md` | 页面的干净 Markdown 版本。站点根为 `/index.md`。 |
+| `sourceUrl` | `/blog/welcome/index.mdx` | 页面的原始创作源文件。没有创作正文的条目为 `undefined`。 |
+| `ogImageUrl` | `/og/blog/welcome.png` | 页面生成的 OG 卡片。站点根为 `/og/index.png`，挂载在 `/blog` 的集合根为 `/og/blog.png`。 |
+
+这些 URL 跟随条目 ID。Astro 的 glob loader 会对文件路径做 slug 化，点号会被去掉：`src/content/docs/1.1.1.1/encryption.mdx` 得到的 ID 是 `1111/encryption`。Astro 不做 slug 化的地方会保留点号：版本前缀（`/v1.2/guide/`）、API 操作（`payment.succeeded`），或者 `slug` frontmatter 字段——Astro 会直接把它用作 ID。要启用 `slug`，用 `schemaFields: { slug: z.string().optional() }` 把它加进 schema。
+
+每个 URL 都是相对站点的，不带 Astro 的部署 base；起步模板的布局在输出链接时会补上 base。起步模板的页面路由直接使用这些 URL：
+
+```astro title="src/pages/[...slug].astro (excerpt)"
+---
+const page = await getDocsPage(Astro);
+if (page instanceof Response) return page;
+const { entry, Content, headings, markdownUrl, ogImageUrl } = page;
+const socialImage = entry.data.socialImage ?? ogImageUrl;
+---
+```
+
+`getOgImagePages()` 返回供 astro-og-canvas 的 `OGImageRoute` 使用的 `pages` 映射：每个已索引页面对应一条，键的取法保证卡片写入该页面的 `ogImageUrl`，值是该页面的 `IndexedEntry`。起步模板的 `src/pages/og/[...slug].ts` 直接把它传了进去；参见[自定义 OG 卡片](/ai/override-markdown#customize-og-cards)。

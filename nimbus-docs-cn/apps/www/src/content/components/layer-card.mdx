@@ -1,0 +1,25 @@
+---
+title: LayerCard
+tagline: "双层卡片——下沉的页头叠在凸起的内容面板之上。由 PackageManagers 内部使用。"
+props: []
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { LayerCard, LayerCardHeader, LayerCardContent } from "@/components/ui/layer-card";
+
+## 预览
+
+<Showcase code={`<LayerCard>
+  <LayerCardHeader>Build status</LayerCardHeader>
+  <LayerCardContent>Passing on 17 / 17 jobs · 2m 14s</LayerCardContent>
+</LayerCard>`}>
+  <div class="w-full max-w-md text-left">
+    <LayerCard>
+      <LayerCardHeader>
+        <span class="text-xs font-mono uppercase tracking-wider text-muted-foreground">构建状态</span>
+      </LayerCardHeader>
+      <LayerCardContent>
+        <span class="text-sm text-foreground">17 / 17 个任务通过 · 用时 2 分 14 秒</span>
+      </LayerCardContent>
+    </LayerCard>
+  </div>
+</Showcase>

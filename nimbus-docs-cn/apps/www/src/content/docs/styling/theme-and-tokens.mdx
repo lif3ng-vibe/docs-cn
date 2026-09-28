@@ -1,0 +1,51 @@
+---
+title: 主题与设计令牌
+description: 通过 globals.css 中的设计令牌自定义颜色、间距与字体。
+aiGenerated: true
+sidebar:
+  order: 1
+---
+
+整套视觉系统都在 `src/styles/globals.css` 里——一组扁平的 CSS 自定义属性（`--nb-*`），暴露给 Tailwind 使用。想给站点换品牌，只需改这一个文件。
+
+## 设计令牌
+
+令牌以自定义属性的形式定义，并通过 `@theme` 块暴露给 Tailwind，因此 `bg-card`、`text-foreground`、`border-border` 等工具类都会解析到这些令牌。颜色使用 `oklch`，保证感知上的均匀一致。
+
+```css title="src/styles/globals.css"
+:root {
+  --nb-background: oklch(0.99 0 0);
+  --nb-foreground: oklch(0.21 0 0);
+  --nb-primary: oklch(0.145 0 0);
+  --nb-border: oklch(0.935 0 0);
+  /* status: --nb-info / --nb-success / --nb-warning / --nb-danger */
+}
+```
+
+每个表面色都配有对应的前景色以保证对比度（`card` / `card-foreground`），命名基于功能——`primary`（操作）、`accent`（悬停表面）、`muted`（弱化）——而非视觉外观。在这里改一个值，所有用到该令牌的地方都会随之更新。
+
+## 深色模式
+
+深色模式由 `<html>` 上的 `[data-mode="dark"]` 属性驱动，主题切换开关控制这个属性。Tailwind 的 `dark:` 变体也接在同一个信号上，所以 `dark:bg-card` 无需重复声明选择器即可生效。在深色块中覆盖任意令牌：
+
+```css
+[data-mode="dark"] {
+  --nb-background: oklch(0.21 0 0);
+  --nb-foreground: oklch(0.97 0 0);
+}
+```
+
+代码块会自动跟随——Shiki 把浅色和深色两套主题都输出为 CSS 变量，由该属性决定使用哪一套（[代码块](/writing/code-blocks)）。
+
+## 布局与排版
+
+同一个文件还保存着布局与排版令牌——侧边栏宽度、正文行宽，以及自托管的字体栈：
+
+```css
+--nb-sidebar-width: 18.75rem;
+--nb-toc-width: 18rem;
+--nb-content-max: 43.5rem;
+--nb-font-sans: "Inter Variable", system-ui, sans-serif;
+```
+
+正文排版样式在同级的 `src/styles/prose.css` 中。两个文件都归你自由编辑。

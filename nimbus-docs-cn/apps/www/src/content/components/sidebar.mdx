@@ -1,0 +1,54 @@
+---
+title: Sidebar
+tagline: "递归的导航树——分组可折叠、展开状态可持久化、支持滚动位置恢复。"
+props:
+  - name: items
+    type: SidebarItem[]
+    required: true
+    description: 链接与分组构成的树。由 `getSidebar()` 根据集合内容构建。
+  - name: persist
+    type: boolean
+    description: 将展开/滚动状态持久化到 sessionStorage，跨页面跳转保留。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { Sidebar } from "@/components/ui/sidebar";
+
+## 预览
+
+<Showcase code={`<Sidebar
+  items={[
+    { type: "link", label: "Overview", href: "/", order: 0 },
+    { type: "group", label: "Components", order: 1, children: [
+      { type: "link", label: "Badge", href: "/components/badge", order: 0 },
+      { type: "link", label: "Steps", href: "/components/steps", order: 1 },
+    ]},
+  ]}
+  persist
+/>`}>
+  <div class="w-full max-w-xs text-left">
+    <Sidebar
+      items={[
+        { type: "link", label: "概览", href: "#", order: 0 },
+        {
+          type: "group",
+          label: "组件",
+          order: 1,
+          children: [
+            { type: "link", label: "Badge", href: "#", order: 0 },
+            { type: "link", label: "Steps", href: "#", order: 1 },
+            { type: "link", label: "Tabs", href: "#", order: 2, isCurrent: true },
+          ],
+        },
+        {
+          type: "group",
+          label: "指南",
+          order: 2,
+          collapsed: true,
+          children: [
+            { type: "link", label: "身份验证", href: "#", order: 0 },
+          ],
+        },
+      ]}
+    />
+  </div>
+</Showcase>

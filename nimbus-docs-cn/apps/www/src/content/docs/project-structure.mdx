@@ -1,0 +1,66 @@
+---
+title: 项目结构
+description: 脚手架会往你的仓库里写什么、你的文件与框架的分界线在哪里，以及目录树如何变成站点。
+audience: human
+aiGenerated: true
+sidebar:
+  order: 2
+---
+import { FileTree } from "@/components/ui/file-tree";
+
+脚手架生成的 Nimbus 项目就是一个普通的 Astro 项目。所有可见的部分都以真实文件的形式住在你的仓库里；框架则作为依赖提供底层管线。
+
+## 哪些内容会进入你的仓库
+
+<FileTree>
+- my-docs/
+  - src/
+    - components/
+      - ui/
+    - content/
+      - docs/
+    - layouts/
+    - pages/
+    - styles/
+      - globals.css
+    - components.ts
+  - astro.config.ts
+  - nimbus.json
+  - package.json
+</FileTree>
+
+- **`src/components/`**——UI 组件，任你编辑或替换。
+- **`src/content/docs/`**——你的 MDX 内容。这里的目录树就是站点（见下文）。
+- **`src/layouts/`**——页面外壳（`BaseLayout`、`DocsLayout`）。
+- **`src/pages/`**——路由，包括文档 catch-all 路由、备用 Markdown/MDX 版本，以及 `llms.txt` 索引。
+- **`src/styles/globals.css`**——设计令牌（design token）和 Tailwind 图层。
+- **`src/components.ts`**——[MDX 全局组件注册表](/writing/markdown-and-mdx)。
+- **`nimbus.json`**——一份随代码提交的记录，说明你的项目由什么构成（见下文）。
+
+## `nimbus.json`——内容溯源记录
+
+脚手架在写入文件的同时，还会写一个由 CLI 管理的小文件 **`nimbus.json`**。它记录 `create-nimbus-docs` 的版本和你起步模板所来自的 `templates-v*` 标签、组件的安装位置（`install.root`），以及你 [`add`](/cli) 过的每个组件的条目——每个条目含来源注册表、所出自的注册表发布版本和一个内容哈希。
+
+它是成对配置中机器的那一半：你的**行为**配置（版本、特性、侧边栏）由人在 `astro.config.ts` 里通过 `nimbus(...)` 编写；**`nimbus.json`** 则是 CLI 读取和重写的界面。[`nimbus-docs add`](/cli) 向它追加条目；[`nimbus-docs init`](/cli) 为早于该记录或正在接入 Nimbus 的项目重建它。**务必提交它**——升级靠它知道你拥有什么（它不是 `.nimbus/`，那是被 gitignore 的构建草稿目录）。
+
+## 框架边界
+
+`nimbus-docs` 包是不可见的那一半——Astro 集成、数据辅助函数（`getSidebar`、`getPrevNext`、`getTOC`）、内容 schema，以及生成备用 Markdown/MDX 版本和 `llms.txt` 索引的辅助函数。你 import 它，而不 fork 它。
+
+其余一切都归你。没有需要覆盖的上游主题，也没有怕改坏的上游 API——重要的东西不再藏在 import 边界之后时，编码智能体对仓库的推理要容易得多。
+
+## 目录树即事实来源
+
+`src/content/docs/` 下的目录结构既是 URL 结构，**也**是侧边栏。移动一个文件，它的路由和侧边栏条目跟着走；删除一个文件，两者一起消失。Frontmatter 负责细粒度控制——排序、徽章、草稿状态——但站点的形状来自文件系统。
+
+<FileTree>
+- src/content/docs/
+  - introduction.mdx
+  - guides/
+    - styling.mdx
+    - deploying.mdx
+  - reference/
+    - api.mdx
+</FileTree>
+
+不需要再同步第二份导航配置。站点不会和它自己的内容脱节，因为内容就是站点。细节参见[页面与路由](/writing/pages-and-routing)。

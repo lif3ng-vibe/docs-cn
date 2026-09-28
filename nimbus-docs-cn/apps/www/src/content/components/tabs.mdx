@@ -1,0 +1,88 @@
+---
+title: Tabs
+tagline: "标签页内容面板，可通过 syncKey 在多个实例之间同步。"
+props:
+  - name: syncKey
+    type: string
+    description: 相同 syncKey 的 Tabs 实例通过 localStorage 在整个页面内镜像选中状态。
+  - name: label
+    type: string
+    required: true
+    description: TabItem 属性。由客户端脚本读取，用于生成对应的触发按钮。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Tabs, TabItem } from "@/components/ui/tabs";
+
+## 预览
+
+<Showcase code={`<Tabs>
+  <TabItem label="概览">
+    Tabs 把相关内容组织在一起，读者一次只看到一个面板。
+  </TabItem>
+  <TabItem label="安装">
+    运行 \`nimbus-docs add tabs\`，把组件复制进你的仓库。
+  </TabItem>
+  <TabItem label="配置">
+    传入 \`syncKey\`，让页面上的多个实例共享标签页状态。
+  </TabItem>
+</Tabs>`}>
+  <div class="w-full max-w-md text-left">
+    <Tabs>
+      <TabItem label="概览">
+        Tabs 把相关内容组织在一起，读者一次只看到一个面板。
+      </TabItem>
+      <TabItem label="安装">
+        运行 <code>nimbus-docs add tabs</code>，把组件复制进你的仓库。
+      </TabItem>
+      <TabItem label="配置">
+        传入 <code>syncKey</code>，让页面上的多个实例共享标签页状态。
+      </TabItem>
+    </Tabs>
+  </div>
+</Showcase>
+
+## 示例
+
+### 基础用法
+
+三个纯文本标签页——触发按钮由各自的 `label` 属性生成。
+
+<Example code={`<Tabs>
+  <TabItem label="One">First panel content.</TabItem>
+  <TabItem label="Two">Second panel content.</TabItem>
+  <TabItem label="Three">Third panel content.</TabItem>
+</Tabs>`} contentClass="w-full">
+  <div class="w-full">
+    <Tabs>
+      <TabItem label="一">第一个面板的内容。</TabItem>
+      <TabItem label="二">第二个面板的内容。</TabItem>
+      <TabItem label="三">第三个面板的内容。</TabItem>
+    </Tabs>
+  </div>
+</Example>
+
+### 同步
+
+两个具有相同 `syncKey` 的 Tabs 实例会互相镜像——选中一次标签页，所有匹配的实例都会跟随切换。
+
+<Example code={`<Tabs syncKey="lang">
+  <TabItem label="TypeScript">type User = { id: string };</TabItem>
+  <TabItem label="JavaScript">// inferred at runtime</TabItem>
+</Tabs>
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">function load(id: string) { ... }</TabItem>
+  <TabItem label="JavaScript">function load(id) { ... }</TabItem>
+</Tabs>`} contentClass="w-full">
+  <div class="w-full flex flex-col gap-4">
+    <Tabs syncKey="lang-demo">
+      <TabItem label="TypeScript"><code>type User = {`{ id: string }`};</code></TabItem>
+      <TabItem label="JavaScript"><code>// inferred at runtime</code></TabItem>
+    </Tabs>
+    <Tabs syncKey="lang-demo">
+      <TabItem label="TypeScript"><code>function load(id: string) {`{ ... }`}</code></TabItem>
+      <TabItem label="JavaScript"><code>function load(id) {`{ ... }`}</code></TabItem>
+    </Tabs>
+  </div>
+</Example>

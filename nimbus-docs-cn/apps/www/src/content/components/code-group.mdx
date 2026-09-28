@@ -1,0 +1,93 @@
+---
+title: CodeGroup
+tagline: "带标签页的代码块——每个片段一个标签页。选中状态会在整个页面内同步；适合展示同一操作在不同语言或运行时下的写法。"
+props:
+  - name: titles
+    type: string[]
+    description: 按顺序排列的标签文字。省略时回退为“Tab 1”、“Tab 2”……
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Code } from "@/components/ui/code";
+import { CodeGroup } from "@/components/ui/code-group";
+
+export const tsLoad = `function load(id: string) {
+  return fetch(\`/api/\${id}\`);
+}`;
+
+export const jsLoad = `function load(id) {
+  return fetch(\`/api/\${id}\`);
+}`;
+
+export const curlSample = `curl -X POST https://api.example.com/charge \\
+  -H "Authorization: Bearer $KEY"`;
+
+export const nodeSample = `await fetch("https://api.example.com/charge", {
+  method: "POST",
+  headers: { Authorization: \`Bearer \${KEY}\` },
+});`;
+
+export const pythonSample = `import requests
+requests.post(
+    "https://api.example.com/charge",
+    headers={"Authorization": f"Bearer {KEY}"},
+)`;
+
+export const serverSample = `export const POST = async ({ request }) => {
+  return new Response("ok");
+};`;
+
+export const clientSample = `await fetch("/api", { method: "POST" });`;
+
+## 预览
+
+<Showcase code={'<CodeGroup titles={["TypeScript", "JavaScript"]}>\n```ts\nfunction load(id: string) {\n  return fetch(`/api/${id}`);\n}\n```\n\n```js\nfunction load(id) {\n  return fetch(`/api/${id}`);\n}\n```\n</CodeGroup>'}>
+  <div class="w-full max-w-md text-left">
+    <CodeGroup titles={["TypeScript", "JavaScript"]}>
+      <Code code={tsLoad} lang="ts" />
+      <Code code={jsLoad} lang="js" />
+    </CodeGroup>
+  </div>
+</Showcase>
+
+## 示例
+
+### 自动标签名
+
+省略 `titles`，标签会回退为通用的 `Tab 1`、`Tab 2`……
+
+<Example code={'<CodeGroup>\n```bash\nnpm install astro\n```\n\n```sh\npnpm add astro\n```\n</CodeGroup>'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <CodeGroup>
+      <Code code={`npm install astro`} lang="bash" />
+      <Code code={`pnpm add astro`} lang="sh" />
+    </CodeGroup>
+  </div>
+</Example>
+
+### 混合语言
+
+适合展示同一操作在不同运行时下的写法——请求示例就是最典型的场景。
+
+<Example code={'<CodeGroup titles={["cURL", "Node", "Python"]}>\n```bash\ncurl -X POST https://api.example.com/charge \\\n  -H "Authorization: Bearer $KEY"\n```\n\n```js\nawait fetch("https://api.example.com/charge", {\n  method: "POST",\n  headers: { Authorization: `Bearer ${KEY}` },\n});\n```\n\n```py\nimport requests\nrequests.post(\n    "https://api.example.com/charge",\n    headers={"Authorization": f"Bearer {KEY}"},\n)\n```\n</CodeGroup>'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <CodeGroup titles={["cURL", "Node", "Python"]}>
+      <Code code={curlSample} lang="bash" />
+      <Code code={nodeSample} lang="js" />
+      <Code code={pythonSample} lang="py" />
+    </CodeGroup>
+  </div>
+</Example>
+
+### 带文件名框
+
+每个标签页都可以通过 `title="…"` meta 携带自己的文件名。
+
+<Example code={'<CodeGroup titles={["Server", "Client"]}>\n```ts title="src/server.ts"\nexport const POST = async ({ request }) => {\n  return new Response("ok");\n};\n```\n\n```tsx title="src/client.tsx"\nawait fetch("/api", { method: "POST" });\n```\n</CodeGroup>'} lang="md" contentClass="w-full">
+  <div class="w-full">
+    <CodeGroup titles={["服务端", "客户端"]}>
+      <Code code={serverSample} lang="ts" meta='title="src/server.ts"' />
+      <Code code={clientSample} lang="tsx" meta='title="src/client.tsx"' />
+    </CodeGroup>
+  </div>
+</Example>

@@ -1,0 +1,31 @@
+---
+title: Popover
+tagline: "锚定式浮动内容——基于原生 Popover API，滚动和窗口缩放时会重新定位。"
+props:
+  - name: placement
+    type: '"bottom-start" | "bottom-end" | "top-start" | "top-end"'
+    defaultValue: '"bottom-start"'
+    description: PopoverContent 属性。浮动面板相对触发器的锚定位置。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+
+## 预览
+
+<Showcase code={`<Popover>
+  <PopoverTrigger>打开气泡</PopoverTrigger>
+  <PopoverContent placement="bottom-start">
+    锚定在触发器旁边的浮动内容。
+  </PopoverContent>
+</Popover>`}>
+  <div class="w-full text-center">
+    <Popover>
+      <PopoverTrigger class="inline-flex items-center px-4 py-2 rounded-md bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer">
+        打开气泡
+      </PopoverTrigger>
+      <PopoverContent placement="bottom-start" class="text-sm text-foreground">
+        锚定在触发器旁边的浮动内容。
+      </PopoverContent>
+    </Popover>
+  </div>
+</Showcase>

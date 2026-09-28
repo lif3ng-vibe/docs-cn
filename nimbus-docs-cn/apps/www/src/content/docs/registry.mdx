@@ -1,0 +1,72 @@
+---
+title: 注册表
+description: nimbus-docs add 从这里找到可安装的组件、工具函数和特性。
+sidebar:
+  order: 3
+---
+
+注册表（registry）是 `nimbus-docs add` 读取的来源。条目共三类——组件和工具函数以文件形式复制；特性把一份配方交接给编码智能体。
+
+## 三种类型
+
+- **`registry:ui`**——UI 组件。复制到 `src/components/ui/<slug>/`。例如 Badge、Card、Steps。
+- **`registry:lib`**——独立工具函数。复制到指定路径。例如 `cn` → `src/lib/cn.ts`。
+- **`registry:feature`**——交接给智能体的配方。什么都不复制；CLI 打印出 Markdown，由智能体阅读、按你的项目调整后应用。例如 404-page。
+
+## 条目的构成
+
+```ts
+badge: {
+  type: "registry:ui",
+  title: "Badge",
+  description: "Small status / category pill.",
+  registryDependencies: ["cn"],
+},
+```
+
+- **`type`**——`registry:ui`、`registry:lib` 或 `registry:feature`。
+- **`registryDependencies`**——CLI 必须先安装的其他 slug。会递归遍历。
+- **`dependencies`**——写入 `package.json` 的 npm 包。
+
+## 安装图
+
+运行 `npx @cloudflare/nimbus-docs add accordion` 时，CLI 会沿该 slug 的依赖图走一遍：
+
+```
+accordion
+├── collapsible
+└── cn
+```
+
+先安装 `collapsible` 和 `cn`，再装 `accordion`。每个都落在 manifest 声明的路径上。重复项自动跳过。
+
+特性没有安装图——配方是自包含的 Markdown，智能体在你现有的布局之内应用它。
+
+## 特性
+
+特性是一份交接给智能体的配方——没有任何文件被复制。用 `npx @cloudflare/nimbus-docs add <slug>` 安装任意一个；CLI 打印一份任务简报，由你的编码智能体按项目调整后应用。
+
+- `pagefind-search`——静态全文搜索和 Nimbus 搜索对话框。
+- `ai-native`——`llms.txt` 索引、备用 Markdown/MDX 版本、`robots.txt`，以及一个 `AgentDirective`。
+- `mermaid`——懒加载、随主题变色的 Mermaid 图表，支持全屏展开。
+- `404-page`——与站点风格一致的文档 404 页面。
+- `lint-prose-textlint`——textlint，带 write-good、alex 和术语规则。
+- `changelog`——按日期排列的 `/changelog` 动态，带标签、RSS 和永久链接。
+- `component-showcase`——`/components` 组件网格和每个组件的详情页，展示你的 UI。
+- `new-collection`——一条非版本用途的内容树：博客、API 或术语表。
+- `api-reference`——把 OpenAPI 规范挂载为自动生成的参考页，附带备用 Markdown 版本，由自有的 `api-layout` / `api-sidebar` / `api-field-row` / `api-code-rail` 组件负责样式。
+- `new-version`——端到端接入一个新文档版本，附带切换器。
+
+## 内容配方
+
+为写某一特定形态的单页准备的模板——智能体搭好结构，你来填内容。命令相同：`npx @cloudflare/nimbus-docs add <slug>`。
+
+- `content-overview`——用一段话让读者定位方向，然后把人引向后续页面。
+- `content-quickstart`——通往一个可用结果的最短诚实路径。
+- `content-tutorial`——分编号的多个部分，共同搭起一个真实项目。
+- `content-how-to`——从目标到已验证结果的编号步骤。
+- `content-concept`——一个东西是什么、为什么，以及它的边界在哪里。
+- `content-reference`——完整、中立、模板化的查阅页。
+- `content-example`——可整段复制的可运行代码，必要处辅以说明文字。
+- `content-troubleshooting`——症状、原因和解法，标题按搜索词拟写。
+- `content-changelog`——按日期和类别记录，明确标出破坏性变更。

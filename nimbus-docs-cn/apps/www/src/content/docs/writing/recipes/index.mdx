@@ -1,0 +1,29 @@
+---
+title: 内容类型
+description: 每种文档内容类型各配一份配方——它服务的需求、何时使用，以及一条用智能体生成该页面的命令。
+sidebar:
+  label: 简介
+  order: 8
+---
+
+每个文档页面都在回答某一类读者疑问。Nimbus 为每种内容类型提供一份**配方（recipe）**：这种类型是做什么的、它*不是*什么、它的标题语法、量化阈值，以及一份自查清单。每份配方都是**指南，而非关卡**——只提供建议，绝不会导致构建失败。
+
+这里的每一页讲解一种内容类型。想用脚手架生成该类型的页面，就安装对应的配方——你的编码智能体会读取完整的骨架和清单，并把它们适配到你的产品上：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add content-how-to" />
+
+所有示例都围绕同一个虚构产品：**Hookline**，一个 webhook 投递服务。
+
+| 内容类型 | 读者的疑问 | 标志性手法 | 安装 |
+|---|---|---|---|
+| [概览](/writing/recipes/overview) | "这是什么？从哪儿开始？" | 一段导语，然后纯路由 | `content-overview` |
+| [快速上手](/writing/recipes/quickstart) | "多快能看到它跑起来？" | 展示输出；零决策 | `content-quickstart` |
+| [教程](/writing/recipes/tutorial) | "教我做出一个真实的东西。" | 每一部分都以可见结果收尾 | `content-tutorial` |
+| [操作指南](/writing/recipes/how-to) | "X 该怎么做？" | 用验证为不可逆步骤把关 | `content-how-to` |
+| [概念](/writing/recipes/concept) | "X 到底是什么？" | 定义先行；以边界收尾 | `content-concept` |
+| [参考](/writing/recipes/reference) | "确切的取值是什么？" | 答案先行的表格；要么完整、要么明确划定范围 | `content-reference` |
+| [示例](/writing/recipes/example) | "给我看 X 的能跑的代码。" | 完整且可直接运行的代码 | `content-example` |
+| [故障排除](/writing/recipes/troubleshooting) | "为什么会报这个错？" | 逐字错误消息作为标题 | `content-troubleshooting` |
+| [更新日志](/writing/recipes/changelog) | "改了什么——会不会影响我？" | 破坏性标记置于条目开头 | `content-changelog` |
+
+要写新页面？按读者的疑问来选型，而不是按你想写什么。更多扩展类型（迁移指南、术语表、错误目录……）先缓一缓，规则只有一条：只有当没有任何既有配方的契约能原样容纳这个需求时，新类型才有存在的资格。

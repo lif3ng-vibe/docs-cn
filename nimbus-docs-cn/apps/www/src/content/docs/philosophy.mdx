@@ -1,0 +1,216 @@
+---
+title: 设计哲学
+description: Nimbus 背后的一部分观点：在人类与智能体同为创作者和消费者的世界里，我们相信文档应当是什么样子。
+audience: human
+sidebar:
+  order: 0
+---
+import { FileTree } from "@/components/ui/file-tree";
+import { Tabs, TabItem } from "@/components/ui/tabs";
+import { PrimitivesDiagram } from "@/components/react/diagram-showcase/PrimitivesDiagram";
+import { PingPongDemo } from "@/components/react/diagram-showcase/PingPongDemo";
+
+## 代码全部归你所有
+
+布局、组件、内容、样式——站点的每个可见部分都住在你的仓库里。脚手架把它们写一遍就抽身而退。从那一刻起，项目就是你的：改任何文件、重组任何目录、换掉任何默认值，都不必请示谁。没有要等的上游 API，没有需要 fork 应付的强观点主题。
+
+编码智能体的工作方式和你一样。当重要的东西不再藏在 import 边界之后，智能体对整个仓库的推理会好得多。
+
+<FileTree>
+- my-docs/
+  - src/
+    - components/
+    - content/docs/
+    - layouts/
+    - pages/
+    - styles/
+      - globals.css
+    - components.ts
+  - astro.config.ts
+  - package.json
+</FileTree>
+
+## 交互式内容，完全属于你
+
+值得读的文档常常需要*演示*机制——请求如何流转、状态如何嵌套、线路接在哪里。过去只有两条路：要么引入一套带样式的组件库并继承它的外观，要么从零自己写交互。Nimbus 把这个问题拆开了。
+
+`nimbus-docs/react` 提供一个无头（headless）的 `<Diagram>` 包装组件和一组可组合的 hook——`usePhase`、`useMeasure`、`useTabIndicator`、`useDiagram`。包装组件负责那些要做好很繁琐的事：离屏暂停、尊重减弱动态效果（reduced motion）偏好、键盘快捷键、错误边界、跨孤岛（island）协调。它本身不渲染任何可见内容。
+
+<PrimitivesDiagram client:visible />
+
+一个最小但完整的示例——`usePhase` 走两步，渲染出的节点依次点亮。`<DiagramControls>` 通过注册表安装；其余都来自 `nimbus-docs/react`。
+
+<Tabs>
+  <TabItem label="预览">
+    <PingPongDemo client:visible />
+  </TabItem>
+  <TabItem label="代码">
+    ```tsx
+    import { Diagram, usePhase } from "@cloudflare/nimbus-docs/react";
+    import { DiagramControls } from "@/components/react/diagram";
+
+    function PingPong() {
+      const { current } = usePhase({
+        steps: [{ id: "left", hold: 1500 }, { id: "right", hold: 1500 }],
+        loop: true,
+      });
+      return (
+        <div className="flex items-center justify-center gap-12 py-12">
+          <Node label="Left" active={current === "left"} />
+          <Node label="Right" active={current === "right"} />
+        </div>
+      );
+    }
+
+    export function Demo() {
+      return (
+        <Diagram label="Ping-pong">
+          <DiagramControls />
+          <PingPong />
+        </Diagram>
+      );
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+操作栏、标签页和播放/暂停控件按需安装到 `src/components/react/diagram/`——随便改、随便换样式、甚至整个替换，hook 照常工作。从不创作交互卡片的站点，无需为此付出任何代价。
+
+## 人类与智能体优先
+
+文档的读者不再只有人类。因此每个 Nimbus 站点在 HTML 之外都默认附带几种机器可读格式：
+
+- 每个页面在 `/<slug>/index.md` 都有 Markdown 版本
+- `/llms.txt` 提供站点级索引，列出每一个页面
+- 每个页面的 head 中都有 JSON-LD，为搜索引擎和智能体工具提供足够的结构化数据，让它们认得出看到的是什么
+
+```text
+# Nimbus
+
+A way to build documentation sites on top of Astro.
+
+## Pages
+- [Getting started](https://nimbus-docs.com/get-started/index.md)
+- [Installation](https://nimbus-docs.com/installation/index.md)
+- [CLI](https://nimbus-docs.com/cli/index.md)
+```
+
+这些格式是默认配置，不是附加项。在智能体网络上沦为机器读不进去的死角，代价真实存在，而且还在增长。
+
+## 智能体化创作
+
+添加 Nimbus 默认组件或特性用 `nimbus-docs add` 完成，具体行为因添加对象而异。组件和工具函数以文件形式复制——`registry:ui` 和 `registry:lib` slug 会解析依赖后落进你的仓库。特性则以提示（prompt）形式交接——`registry:feature` slug 是一份 Markdown 配方，由你环境中的编码智能体阅读、按你的项目调整后应用。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add 404-page" />
+
+两种模式的分界归结为一个问题：哪类改动真的需要编码智能体参与其中，哪类更适合直接复制文件。
+
+## 创作质量是一等公民
+
+内容质量漂移的文档站，会反过来拖垮它所服务的产品。Nimbus 对待创作质量的态度，如同代码 linter 对待源码——一套分层的校验器，各自拦截一类错误。
+
+构建前校验器自动运行，只有当问题真的会让站点挂掉时才拦截构建：
+
+- **配置校验**——检查 `defineConfig` 的结构和必填字段；报错时会把出问题的值原样回显给你
+- **Frontmatter schema 校验**——按集合用 Zod 类型化 schema 捕获缺失或格式错误的字段，报错信息对编辑器友好
+- **MDX 组件校验**——构建前的内容扫描会捕获小写用法、未注册的组件和缺失的 import
+- **注册表校验**——构建时解析 `src/components.ts` 并对照实际 MDX 用法进行检查
+
+lint 引擎在此之上增加一个按需启用的创作质量层。规则有稳定的标识符，如 `nimbus/single-h1` 和 `nimbus/bare-url`，在 `astro.config.ts` 里随 Nimbus 集成的其他选项一起配置。`nimbus-docs lint` 输出人类可读的结果，`--format json` 输出智能体可读的诊断，`--fix` 直接应用自动修复。构建永远不会被 lint 结果拦截——草稿照常渲染，警告足够醒目但不阻塞。
+
+```ts title="astro.config.ts" {6-9}
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  integrations: [
+    nimbus(nimbusConfig, {
+      rules: {
+        "nimbus/single-h1": "error",
+        "nimbus/bare-url": "warn",
+      },
+    }),
+  ],
+});
+```
+
+基于 TypeScript 签名的组件 props 校验将在 v1 之后到来。
+
+## 可读只是底线
+
+每个 Nimbus 站点都已内置智能体阅读的格式——每页的 Markdown 版本、`llms.txt` 索引、head 里的结构化数据。一年前这还算文档工具的卖点，如今只是入场门槛。真正有意思的边界在更远处。
+
+*大家都让智能体读得懂文档。Nimbus 让智能体写得了、维护得住、运维得动文档——端到端，在一个完全归你所有的代码库上。*
+
+前提正是本页的第一条原则。当每个文件都在你的仓库里、重要的东西不再藏在 import 边界之后，智能体能做的不只是读你的文档——它还能安全地修改文档，因为它看得见自己所触碰的全部。厂商的主题化运行时可以被智能体抓取，却无法被智能体重写。
+
+正因如此，特性以配方而非需要你手工接线的代码到来。`nimbus-docs add` 会检测自己是否运行在编码智能体之内，并向其管道输入一份结构化配方——先摸清项目、确认计划、再执行，并且*验证构建仍然通过*、检查特性是否已经装过，然后才动手改文件。安装不再是复制粘贴的苦差事，而成了一场由你的智能体从头主导到尾的对话。
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add new-version" comment="在编码智能体内，配方直接经管道送入" />
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add new-version --print | claude" comment="在人类终端里，转交给你选定的智能体" />
+
+## 内容溯源是内建原语
+
+当智能体开始起草页面，问题就不再是*机器能不能读*，而变成*这是谁写的、有没有人核过*。内容集合归你所有，答案就活在你掌控的 schema 里——内容溯源（provenance）离你只有几个 `schemaFields` 的距离，而不是事后硬拴上去的约定。
+
+起步模板自带一个这样的字段。默认方向是反的：默认视为面向智能体，`audience: "human"` 便是给"以人为先"的页面打的显式标记。你可以用同样的方式扩展 schema——本站就加了 `aiGenerated`，标记由智能体起草但还没有人复核过的页面；在有人签字确认前，页面操作栏会一直显示"待复核"标签：
+
+```ts title="src/content.config.ts"
+import { z } from "astro/zod";
+
+docsCollection({
+  schemaFields: {
+    audience: z.literal("human").optional(),
+    aiGenerated: z.boolean().optional(), // shows "awaiting review" until cleared
+  },
+})
+```
+
+字段一经注册，每个页面的来源与复核状态就随页面本身一起走：
+
+```yaml title="src/content/docs/new-endpoint.mdx"
+---
+title: New endpoint
+aiGenerated: true   # drafted by an agent — shows "awaiting review" until a human clears it
+---
+```
+
+溯源只有在漂移被抓到时才真正兑现价值。lint 引擎输出带版本号的 JSON，其中携带精确到字符的修复建议，`--fix` 可以原位应用；脚手架生成的 `AGENT.md` 自带一份审计配方和固定的诊断格式——智能体于是可以扫全站，并以其他工具能解析的格式汇报：
+
+```text
+- [error] src/content/docs/cli.mdx:42 — broken internal link "/instal" — did you mean "/installation"?
+- [warn]  src/content/docs/registry.mdx:8 — link text "here" isn't meaningful out of context.
+Summary: 1 error, 1 warning.
+```
+
+文档由此变成智能体能长期维持正确的东西——可维护、可运维，而不只是发布出来——依托的是你的仓库，而不是厂商的。
+
+## 目录树即事实来源
+
+不需要在内容之外再维护第二份配置。`src/content/` 下的目录结构就是 URL 结构，也是侧边栏。移动一个文件，它的条目跟着走；删除一个文件，条目随之消失。Frontmatter 负责细粒度的旋钮——排序、徽章、草稿状态——但目录树的形状来自文件系统本身。
+
+<FileTree>
+- src/content/docs/
+  - getting-started.mdx
+  - guides/
+    - styling.mdx
+    - deploying.mdx
+  - reference/
+    - api.mdx
+</FileTree>
+
+结果是：存在哪些页面，有了单一事实来源。站点不会和它自己的内容脱节，因为内容就是站点。
+
+## 版本只是内容集合
+
+多数文档工具把版本支持当特例硬加上去——并行的文件系统、URL 重写、自定义路由。Nimbus 用一个它已有的原语解决：多集合内容。
+
+每个版本都是自己的内容集合，共享同一套 schema。一个 `docs-v2/` 集合就是 v2 站点，一个 `docs-v3/` 集合就是 v3。路由和侧边栏各自独立识别每个版本。版本切换器只是其上薄薄的一层。
+
+<FileTree>
+- src/content/
+  - docs/
+  - docs-v2/
+  - docs-v3/
+</FileTree>
+
+同一个原语还能处理多语言（一个 `docs-fr/` 集合就是一个法语站点）和按产品拆分（一个 `docs-api/` 集合与 `docs-cli/` 比邻而居）。等你真的需要版本时，所需的大部分能力早已就位；当初也没有为它多付一分钱。

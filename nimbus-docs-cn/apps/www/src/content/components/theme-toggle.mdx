@@ -1,0 +1,18 @@
+---
+title: ThemeToggle
+tagline: "浅色/深色切换器——状态持久化到 localStorage、跨标签页同步、无闪烁（FOUC）。"
+props: []
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+## 预览
+
+<Showcase code={`<ThemeToggle />`}>
+  <div class="w-full text-center flex flex-col items-center gap-3">
+    <div class="rounded-md border border-border bg-card">
+      <ThemeToggle />
+    </div>
+    <p class="text-xs text-muted-foreground">点击即可在浅色与深色之间切换，状态在页面跳转后依然保留。</p>
+  </div>
+</Showcase>

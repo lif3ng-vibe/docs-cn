@@ -1,0 +1,56 @@
+---
+title: 代码块
+description: 语法高亮、标题、行标注与包管理器标签页。
+aiGenerated: true
+sidebar:
+  order: 4
+---
+
+围栏代码块在构建时由 Shiki 完成高亮，并为明暗双主题做了配置，代码块会随站点主题一起切换——不会向客户端下发任何高亮器。
+
+## 标题与高亮
+
+在围栏 meta 中加上标题并标注需要高亮的行：
+
+````md
+```ts title="astro.config.ts" {2,4-5}
+import { defineConfig } from "astro/config";
+import nimbus from "@cloudflare/nimbus-docs";
+
+export default defineConfig({
+  integrations: [nimbus(config)],
+});
+```
+````
+
+## 标注
+
+行内注释标注可以标记 diff、高亮、焦点与错误：
+
+```ts
+const ok = true;        // [!code highlight]
+const removed = false;  // [!code --]
+const added = true;     // [!code ++]
+const focused = 1;      // [!code focus]
+const broken = err;     // [!code error]
+```
+
+这些标注来自默认的 Shiki transformer 链。如果你通过 `Code` 组件渲染代码，请通过 `nimbus-docs` 导出的 `defaultCodeTransformers` 传入同一条链。
+
+## 语言别名
+
+常见的简写围栏语言都已做好映射，不会退化为纯文本：`curl` 和 `console` → `bash`，`shellsession` → `shellscript`。可以通过 Astro 的 `markdown.shikiConfig.langAlias` 扩展这份映射。
+
+## 包管理器标签页
+
+`<PackageManagers>` 让同一条命令覆盖 npm、pnpm、yarn 和 bun 四种包管理器。它位于默认注册表（registry）中，无需 import：
+
+```mdx
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add badge" />
+```
+
+- `type="create"` → `npm create …`
+- `type="run"` → `npm run …`
+- `type="dlx"` → `npx` / `pnpm dlx` / 等
+
+想在同一示例中展示多种语言时，请从注册表安装 `code-group` 组件——参见[添加组件](/adding-components)。

@@ -1,0 +1,333 @@
+---
+title: API 参考
+description: 从 OpenAPI 规范生成带路由、带版本的 API 文档。
+aiGenerated: true
+sidebar:
+  order: 10
+---
+
+Nimbus 从机器可读的规范生成 API 参考。每种受支持的格式都有自己的源文件、配置和内容加载器。
+
+## OpenAPI
+
+Nimbus 目前支持 OpenAPI 3.x。它把本地 OpenAPI 文档转换成一个内容集合，为参考页、导航、备用 Markdown 版本、搜索条目、`llms.txt` 索引以及正文文档中的稳定链接提供数据。
+
+OpenAPI 文档始终是单一事实来源。你不需要为每个操作或 schema 单独建 MDX 文件。
+
+### 用配方安装
+
+前提是仓库里已有一份 OpenAPI 3.x 文档。Swagger 2.0 文档请先转换成 OpenAPI 3.x。`src/api/openapi.yaml` 是惯用位置，但 Nimbus 接受任何相对项目的本地路径或内联文档对象。不支持远程规范 URL。
+
+在你的编码智能体内，从项目根目录运行 API 参考配方：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add api-reference" />
+
+Nimbus 会把配方直接传给检测到的编码智能体。在普通终端里，加 `--print` 并把输出转交你的编码智能体。配方在改动文件前会先复核自己的计划。
+
+配方会让智能体先检查你的项目、询问规范路径和集合名，然后：
+
+1. 安装可编辑的 API 布局及其解析器依赖。
+2. 在 `astro.config.ts` 的 Nimbus 配置中声明规范。
+3. 用一行代码注册由加载器驱动的 Astro 内容集合。
+4. 添加 HTML catch-all 路由。起步模板的共享 Markdown 路由会提供每页的 Markdown 版本。
+5. 把该集合接入搜索、备用 Markdown 版本和 `llms.txt` 索引。
+
+### 各部分如何协作
+
+| 文件 | 职责 |
+| --- | --- |
+| `src/api/openapi.yaml` | API 契约与文档来源。 |
+| `astro.config.ts` | 在 Nimbus 配置中声明规范、版本、路由和渲染策略。 |
+| `src/content.config.ts` | 把生成的条目注册为 Astro 内容集合。 |
+| `src/pages/api/[...slug].astro` | 通过用户自有的 API 布局渲染 API HTML。 |
+| `src/pages/[...slug]/index.md.ts` | 起步模板的共享 Markdown 路由，提供每个 API 页面的备用 Markdown 版本。 |
+| `src/components/ui/api-*/` | 掌握参考页的外观与交互设计。 |
+
+#### 为什么规范不放在 `src/content`
+
+`src/content/docs/` 放的是手写的 MDX 条目。OpenAPI 文档则是加载器的输入：Nimbus 把它投影成注册的 `api` 集合中众多操作、schema、标签和 webhook 条目。
+
+把源文件放在 `src/api/` 下能让这条分界线一目了然。路径只是约定；只要配置的 `spec` 指向那里，`src/content/api/openapi.yaml` 也一样可用。
+
+### 配方生成的配置
+
+配方把规范只声明一次，即 Nimbus 配置中的一个 `api` 条目：
+
+```ts title="astro.config.ts"
+import { defineConfig } from "astro/config";
+import nimbus, {
+  defineConfig as defineNimbusConfig,
+} from "@cloudflare/nimbus-docs";
+
+const nimbusConfig = defineNimbusConfig({
+  site: "https://docs.example.com",
+  title: "Acme Docs",
+  api: [
+    {
+      collection: "api",
+      spec: "./src/api/openapi.yaml",
+    },
+  ],
+});
+
+export default defineConfig({
+  integrations: [nimbus(nimbusConfig)],
+});
+```
+
+集合名同时是它的 URL 前缀：集合 `api` 把参考页挂载在 `/api`。
+
+配方接着在同一个键下注册由加载器驱动的集合，保留既有集合和自定义 schema 字段：
+
+```ts title="src/content.config.ts"
+import { defineCollection } from "astro:content";
+import {
+  apiCollection,
+  docsCollection,
+  partialsCollection,
+} from "@cloudflare/nimbus-docs/content";
+
+export const collections = {
+  docs: defineCollection(docsCollection()),
+  partials: defineCollection(partialsCollection()),
+  api: defineCollection(apiCollection()),
+};
+```
+
+`apiCollection()` 读取 `collection` 与自身键名匹配的那个 `api` 条目，因此规范只声明一次。这个键告诉 Astro 用哪个加载器把该条目变成内容条目，也让 Nimbus 在配置和构建校验时能找到该集合。
+
+要挂载多个规范，为每个规范各加一条 `api` 条目和一行 `apiCollection()`。如果某个集合键没有对应的 `api` 条目，或某条 `api` 条目在自己的键下找不到匹配的 `apiCollection()`，构建就会失败。错误信息会点出两个文件名。`nimbus-docs check` 不用构建也能报告同样的不匹配。
+
+在 `astro dev` 中，编辑规范文件会重新索引其页面；编辑 `api` 条目则自动重启开发服务器并重新索引参考页，无需手动重启。
+
+#### 显式传入条目
+
+`apiCollection()` 也直接接受条目对象：`apiCollection({ collection: "api", spec: "./src/api/openapi.yaml" })`。早期版本配方创建的站点用的就是这种形式——Nimbus 配置放在单独的 `nimbus.config.ts` 中，用 `@cloudflare/nimbus-docs/config` 的 `defineConfig` 构建。它们照常构建，不受影响。把配置迁回 `astro.config.ts` 并改用 `apiCollection()` 之后，`nimbus-docs check` 就能静态校验配置，`add adapter-cloudflare` 能就地修改它，`astro dev` 中对 `api` 条目的编辑也会触发重新索引。
+
+### 坐标与路由
+
+Nimbus 把身份与路由分开处理。**坐标（coordinate）**标识一个 API 条目，用于引用、跨版本匹配、锚点和坐标清单。**路由（route）**则是它生成页面的 URL。
+
+操作（operation）用 OpenAPI 的 `operationId` 作为坐标：
+
+```yaml
+paths:
+  /v1/events/{event_id}:
+    get:
+      operationId: retrieveEvent
+      summary: Retrieve an event
+      tags: [Events]
+```
+
+这个操作的坐标就是 `retrieveEvent`。在没有路由策略时，它的第一个标签加操作 ID 生成 `/api/Events/retrieveEvent`。
+
+可选的 `resource-action-v1` 策略改为从 HTTP 方法和路径推导路由：
+
+```ts
+api: [
+  {
+    collection: "api",
+    spec: "./src/api/openapi.yaml",
+    requireOperationId: true,
+    routes: {
+      convention: "resource-action-v1",
+      stripPathPrefixes: ["/v1"],
+    },
+  },
+],
+```
+
+这里 Nimbus 去掉 `/v1`，把操作发布到 `/api/events/retrieve`；其坐标仍是 `retrieveEvent`。
+
+推导逻辑能识别去掉前缀后的 `/<resource>` 和 `/<resource>/{parameter}`。集合级 `GET`/`POST` 映射为 `list`/`create`，成员级 `GET`/`PUT`/`PATCH`/`DELETE` 映射为 `retrieve`/`update`/`update`/`delete`。标签不影响策略路由。其他形态或不受支持的方法/形态组合通常会回退为规范化坐标并给出构建警告；若该坐标得不出非空路由，构建失败。
+
+显式的操作覆盖以确切可用的 `operationId` 为键，优先级最高，可以保住既有 URL，也可以处理无法推导的路径：
+
+```ts
+routes: {
+  convention: "resource-action-v1",
+  operations: {
+    retrieveEvent: "events/get",
+  },
+},
+```
+
+没有可用的 `operationId` 时，Nimbus 从方法和路径推导一个兜底坐标。`requireOperationId: true` 会拒绝该兜底，但改动已有的操作 ID 仍会改变坐标。webhook 一律用其在映射中的键作为坐标，发布在 `webhooks/<key>` 之下；为 webhook 配置操作覆盖会导致构建失败。
+
+重命名坐标需要同步更新引用，并影响跨版本匹配。只改路由则基于坐标的引用不受影响，但指向旧 URL 的直接链接会断。Nimbus 不会自动创建该重定向；请在 Astro 或部署平台上自行添加。
+
+#### 从正文按坐标链接
+
+在 `src/content` 下的 Markdown 或 MDX 中使用 `api.ref:` 目标：
+
+```md
+See how to [retrieve an event](api.ref:api:retrieveEvent).
+```
+
+Nimbus 在构建期间解析该引用：
+
+- `api` 标识 API 集合。
+- `retrieveEvent` 标识该操作，与其路由无关。
+- 不带版本的引用指向该 API 家族的默认版本。
+- 已知集合中的未知坐标会让手写内容的构建失败，并可能给出近似建议。
+- 未知集合会收到警告并把引用重写为 `#`；请对照 `/nimbus-api/coordinates.json` 核实集合名，别让死引用上线。
+
+只有正文专门讨论某个历史版本时才固定版本：
+
+```md
+Review the [v1 operation](api.ref:api@v1:retrieveEvent).
+```
+
+#### 坐标的形态
+
+可寻址的不只是操作。Nimbus 还给页面和页内细节分配坐标：
+
+| API 条目 | 坐标示例 |
+| --- | --- |
+| API 根 | `api` |
+| 标签 | `tags.Events` |
+| 操作 | `retrieveEvent` |
+| 请求体字段 | `retrieveEvent.name` |
+| 参数 | `retrieveEvent.path.event_id` |
+| 响应 | `retrieveEvent.response.200` |
+| 附加媒体类型中的响应字段 | `retrieveEvent.response.200.text-csv.id` |
+| Schema | `Event` |
+| Schema 字段 | `Event.created_at` |
+| Webhook | `delivery.succeeded` |
+
+用 `/nimbus-api/coordinates.json` 查看构建后站点发布的精确坐标和解析出的 URL。
+
+### 带版本的 API 参考
+
+API 版本写在 `api` 条目内部，与用于手写正文文档的顶层 `versions` 选项是两回事。一个条目要么用 `spec` 声明单个版本，要么用 `versions` 声明一个版本家族，二者不可兼得。下例使用默认的操作 ID 路由；路由策略在每个版本上独立设置：
+
+```ts title="astro.config.ts"
+api: [
+  {
+    collection: "api",
+    label: "Acme API",
+    requireOperationId: true,
+    versions: [
+      {
+        version: "v2",
+        spec: "./src/api/openapi-v2.yaml",
+        default: true,
+        status: "ga",
+      },
+      {
+        version: "v1",
+        spec: "./src/api/openapi-v1.yaml",
+        status: "deprecated",
+      },
+    ],
+  },
+],
+```
+
+标记了 `default: true` 的版本占据 `/api`；其他版本挂载在自己的版本号之下，如 `/api/v1`。都不标记时，第一个版本即默认版本。共享坐标的页面之间，Nimbus 会建立跨版本链接。被弃用的版本会在参考 UI 中展示其状态。
+
+路由策略属于版本家族中的各个版本。当两个规范使用不同基路径或需要不同覆盖时，这让 URL 决策一目了然。
+
+### 构建或按请求渲染
+
+API HTML 默认预渲染。按请求渲染首先要装 Cloudflare 适配器配方：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add adapter-cloudflare" />
+
+配置好服务器输出后，以下策略只对 API 集合按请求渲染：
+
+```ts title="astro.config.ts"
+rendering: {
+  default: "build",
+  collections: {
+    api: "request",
+  },
+},
+```
+
+配方的 API catch-all 路由借助 Nimbus 运行时辅助函数兼容两种模式。按请求渲染只改变规范 HTML 页面。备用 Markdown 版本、坐标数据、搜索记录、sitemap 和 `llms.txt` 索引仍是构建产物，请求消费的是预先准备好的内容条目，而不会去解析 OpenAPI 文档。
+
+#### 预处理好的代码示例
+
+`apiCollection()` 在构建内容索引的同时，就完成请求示例、主请求示例与命名请求示例、响应，以及附加请求体/响应媒体类型示例的语法高亮。OpenAPI 的 `requestBody.content.*.examples` 条目以 `ApiOperationPage.requestExamples` 提供，保留每个键、摘要、描述、媒体类型和内联值。仅存在于外部的示例不会被拉取。
+
+用户自有的渲染组件应使用 Astro 的 `set:html` 渲染 `highlightedHtml`，而不是把 Shiki 或 Astro 的 `Code` 组件 import 进按请求渲染的路由：
+
+```astro
+---
+import type { ApiOperationPage } from "@cloudflare/nimbus-docs/api";
+
+interface Props extends Pick<ApiOperationPage, "samples"> {}
+
+const { samples } = Astro.props;
+
+function preparedCode(value: { highlightedHtml?: string }): string {
+  if (!value.highlightedHtml) {
+    throw new Error("Nimbus API code was not prepared during content sync.");
+  }
+  return value.highlightedHtml;
+}
+---
+
+{samples.map((sample) => (
+  <Fragment set:html={preparedCode(sample)} />
+))}
+```
+
+预处理值缺失即意味着 API 索引过期或构建有误。修改规范或 API 渲染类型后请重新构建。
+
+Cloudflare 适配器与 Wrangler 的要求参见[配置](/configuration#渲染策略)。
+
+### 发布产物
+
+对名为 `api` 的集合，只要对应的起步模板路由存在，参考页就会与下列路由打通：
+
+| 路由 | 用途 |
+| --- | --- |
+| `/api` | 默认版本的 API 总览。 |
+| `/api/<page-slug>` | 操作、schema、标签或 webhook 页面。 |
+| `/api/<page-slug>/index.md` | 干净的 Markdown 版本。 |
+| `/api/llms.txt` | 仅含 API 的 `llms.txt` 索引。 |
+| `/llms.txt` 和 `/llms-full.txt` | 全站页面索引与完整 Markdown 文档。 |
+| `/nimbus-api/coordinates.json` | 公开的坐标到 URL 清单。 |
+
+项目启用相应功能时，API 条目也会汇入既有的 Pagefind 搜索、sitemap 和 OG 图片路由。
+
+### 引用托管在别处的 API
+
+文档站可以引用另一个 Nimbus 站点发布的参考，而无需挂载或转发发布：
+
+```ts
+apiReferences: [
+  {
+    collection: "api",
+    manifest: "https://api.example.com/nimbus-api/coordinates.json",
+    origin: "https://api.example.com",
+  },
+],
+```
+
+`collection` 必须与远端清单发布的集合键一致。`origin` 是拼在站点相对清单路径前面的绝对前缀。远端参考部署在某个 base 之下时要包含它，例如 `https://api.example.com/docs`。
+
+此后正文即可使用同样的语法引用远端集合：`api.ref:api:retrieveEvent`。远端引用只提供引用目标；远端页面不会进入本地搜索或智能体输出。
+
+Nimbus 在构建期间抓取 HTTPS 清单。远端清单不可用或格式错误时产生警告，其引用解析为 `#`，但不会中断构建。若构建必须支持离线，可以改为提交一份清单并用项目相对路径。本地清单不可读、JSON 无效或顶层结构非法会让构建失败；清单整体有效但个别条目畸形时，会警告并忽略这些条目。
+
+### 验证参考页
+
+新增或修改规范后，运行生产构建：
+
+```sh
+pnpm build
+```
+
+确认以下几点：
+
+1. 构建报告了已索引的 API 页面数量。
+2. `/api` 和一个操作页面能正常渲染。
+3. 同一操作的 `/index.md` 路由返回 Markdown。
+4. `/api/llms.txt` 列出了参考页。
+5. `/nimbus-api/coordinates.json` 包含已知的操作 ID。
+6. 正文中的 `api.ref:` 链接解析到预期路由。
+
+使用按请求渲染时，请用 Wrangler 在本地测试生产 Worker，不要只依赖 Astro 的开发服务器。

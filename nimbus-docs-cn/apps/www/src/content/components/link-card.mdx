@@ -1,0 +1,70 @@
+---
+title: LinkCard
+tagline: "链接样式的卡片，可选前导图标、标题和描述。悬停时标题与图标变为主色。"
+props:
+  - name: title
+    type: string
+    required: true
+    description: 渲染为卡片标签的标题。
+  - name: description
+    type: string
+    description: 标题下方的可选副标题。
+  - name: href
+    type: string
+    required: true
+    description: 目标 URL——整张卡片都会成为链接。
+  - name: icon
+    type: string
+    description: 可选的 Iconify 图标名（如 `ph:rocket-launch`），渲染在标题之前。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { LinkCard } from "@/components/ui/link-card";
+
+## 预览
+
+<Showcase code={`<LinkCard
+  title="快速开始"
+  description="五分钟了解如何脚手架生成一个文档站点。"
+  href="#"
+  icon="ph:rocket-launch"
+/>`}>
+  <div class="w-full max-w-md text-left">
+    <LinkCard
+      title="快速开始"
+      description="五分钟了解如何脚手架生成一个文档站点。"
+      href="#"
+      icon="ph:rocket-launch"
+    />
+  </div>
+</Showcase>
+
+## 示例
+
+### 仅标题
+
+标题本身足够明确时，可以省略描述。
+
+<Example code={`<LinkCard title="更新日志" href="#" />`} contentClass="w-full">
+  <div class="w-full">
+    <LinkCard title="更新日志" href="#" />
+  </div>
+</Example>
+
+### 带描述
+
+添加描述，说明读者点进链接后能看到什么。
+
+<Example code={`<LinkCard
+  title="API 参考"
+  description="所有端点、参数和响应结构。"
+  href="#"
+/>`} contentClass="w-full">
+  <div class="w-full">
+    <LinkCard
+      title="API 参考"
+      description="所有端点、参数和响应结构。"
+      href="#"
+    />
+  </div>
+</Example>

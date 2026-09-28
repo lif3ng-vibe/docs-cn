@@ -1,0 +1,52 @@
+---
+title: Lint 检查
+description: 用 nimbus-docs lint 捕捉内容质量问题——输出面向人类，JSON 面向智能体，还支持自动修复。
+aiGenerated: true
+sidebar:
+  order: 7
+---
+
+内容质量滑坡的文档站会拖累它自己的产品。Nimbus 对待内容质量的方式，就像代码 linter 对待源代码——一组按需运行的规则。
+
+## 两层机制
+
+构建前的**校验器（validator）**自动运行，只在问题会破坏站点时才拦截构建——配置结构、frontmatter schema、[MDX 组件](/writing/markdown-and-mdx)、重复路由。
+
+**lint 引擎**是按需运行的内容质量层。规则有稳定的 id，例如 `nimbus/single-h1` 和 `nimbus/bare-url`。构建**绝不会**被 lint 结果拦截——草稿照样渲染，警告足够醒目但不会阻塞。
+
+## 运行
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="lint" />
+
+标志（flag）——与 `lint` 搭配使用：
+
+| 标志 | 作用 |
+|---|---|
+| `--format=json` | 智能体可读的诊断输出 |
+| `--rule=nimbus/single-h1` | 只运行一条规则 |
+| `--fix` | 就地应用自动修复 |
+| `--quiet` | 只报错误 |
+
+它会遍历 `src/content/`，运行你启用的每条内容规则，只要有任何 `error` 级别的发现残留，就以非零码退出。
+
+## 配置严重级别
+
+严重级别覆盖写在集成配置里。把规则映射为 `"error"`、`"warn"` 或 `"off"`：
+
+```ts title="astro.config.ts"
+nimbus(config, {
+  rules: {
+    "nimbus/single-h1": "error",
+    "nimbus/bare-url": "warn",
+  },
+  collections: {
+    partials: { rules: { "nimbus/single-h1": "off" } },
+  },
+});
+```
+
+集合级的 `rules` 与顶层配置做浅合并。内容规则**默认全部关闭**——完全省略 `rules` 则一条都不运行；需要按条启用。
+
+## 文件内禁用
+
+用 `nimbusDisableRules` frontmatter 或行内注释即可对单个文件关闭规则——无需任何配置。上面编写的严重级别会落盘为 `.nimbus/lint.json`，因此独立 CLI 与集成读取的是同一份配置。

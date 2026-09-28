@@ -1,0 +1,170 @@
+---
+title: FileTree
+tagline: "以嵌套 markdown 列表书写的可折叠目录树——支持文件夹、文件、高亮和占位行。"
+props: []
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { FileTree } from "@/components/ui/file-tree";
+
+## 预览
+
+<Showcase code={`<FileTree>
+- src/
+  - components/
+    - ui/
+      - **Badge.astro**
+      - Card.astro
+  - content/
+    - docs/
+      - index.mdx
+  - styles/
+    - globals.css
+- package.json
+- astro.config.mjs
+</FileTree>`}>
+  <div class="w-[32rem] max-w-full text-left">
+    <FileTree>
+      <ul>
+        <li>
+          src/
+          <ul>
+            <li>
+              components/
+              <ul>
+                <li>
+                  ui/
+                  <ul>
+                    <li><strong>Badge.astro</strong></li>
+                    <li>Card.astro</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li>
+              content/
+              <ul>
+                <li>
+                  docs/
+                  <ul>
+                    <li>index.mdx</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li>
+              styles/
+              <ul>
+                <li>globals.css</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>package.json</li>
+        <li>astro.config.mjs</li>
+      </ul>
+    </FileTree>
+  </div>
+</Showcase>
+
+## 示例
+
+### 扁平结构
+
+单层列表——只有顶层文件，没有嵌套目录。
+
+<Example code={`<FileTree>
+- README.md
+- package.json
+- astro.config.mjs
+- tsconfig.json
+</FileTree>`} contentClass="w-full">
+  <div class="w-full">
+    <FileTree>
+      <ul>
+        <li>README.md</li>
+        <li>package.json</li>
+        <li>astro.config.mjs</li>
+        <li>tsconfig.json</li>
+      </ul>
+    </FileTree>
+  </div>
+</Example>
+
+### 嵌套结构
+
+以 `/` 结尾表示目录；在行内嵌套一个列表即可添加子级。
+
+<Example code={`<FileTree>
+- src/
+  - components/
+    - Header.astro
+    - Footer.astro
+  - pages/
+    - index.astro
+</FileTree>`} contentClass="w-full">
+  <div class="w-full">
+    <FileTree>
+      <ul>
+        <li>
+          src/
+          <ul>
+            <li>
+              components/
+              <ul>
+                <li>Header.astro</li>
+                <li>Footer.astro</li>
+              </ul>
+            </li>
+            <li>
+              pages/
+              <ul>
+                <li>index.astro</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </FileTree>
+  </div>
+</Example>
+
+### 高亮与占位
+
+用 `**...**` 包裹条目即可高亮。单独占一行的 `...` 表示省略的占位行。
+
+<Example code={`<FileTree>
+- src/
+  - components/
+    - **Header.astro**
+    - Footer.astro
+    - ...
+  - pages/
+    - ...
+</FileTree>`} contentClass="w-full">
+  <div class="w-full">
+    <FileTree>
+      <ul>
+        <li>
+          src/
+          <ul>
+            <li>
+              components/
+              <ul>
+                <li><strong>Header.astro</strong></li>
+                <li>Footer.astro</li>
+                <li>...</li>
+              </ul>
+            </li>
+            <li>
+              pages/
+              <ul>
+                <li>...</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </FileTree>
+  </div>
+</Example>

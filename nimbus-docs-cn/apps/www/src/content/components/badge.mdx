@@ -1,0 +1,86 @@
+---
+title: Badge
+tagline: "紧凑的状态胶囊，用于标记、分类和行内强调。"
+props:
+  - name: text
+    type: string
+    required: true
+    description: 渲染在徽章（badge）内的文字。
+  - name: variant
+    type: '"default" | "info" | "note" | "success" | "tip" | "warning" | "caution" | "danger"'
+    defaultValue: '"default"'
+    description: "传达意图的视觉样式。常见别名会映射到标准变体：note→info、tip→success、caution→warning。"
+  - name: size
+    type: '"small" | "medium" | "large"'
+    defaultValue: '"small"'
+    description: 相对尺寸；影响内边距和字号。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Badge } from "@/components/ui/badge";
+
+## 预览
+
+<Showcase code={`<Badge text="Default" />
+<Badge text="Info" variant="info" />
+<Badge text="Success" variant="success" />
+<Badge text="Warning" variant="warning" />
+<Badge text="Danger" variant="danger" />`}>
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Badge text="默认" size="medium" />
+    <Badge text="信息" variant="info" size="medium" />
+    <Badge text="成功" variant="success" size="medium" />
+    <Badge text="警告" variant="warning" size="medium" />
+    <Badge text="危险" variant="danger" size="medium" />
+  </div>
+</Showcase>
+
+## 示例
+
+### 变体
+
+每种变体传达不同的意图。别名会归并到四种标准变体上。
+
+<Example code={`<Badge text="Stable" variant="success" />
+<Badge text="Beta" variant="info" />
+<Badge text="Deprecated" variant="warning" />
+<Badge text="Breaking" variant="danger" />`} minHeight="6rem">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Badge text="稳定" variant="success" size="medium" />
+    <Badge text="Beta" variant="info" size="medium" />
+    <Badge text="已弃用" variant="warning" size="medium" />
+    <Badge text="破坏性变更" variant="danger" size="medium" />
+  </div>
+</Example>
+
+### 尺寸
+
+三种尺寸，可搭配正文、标题或展示性大字使用。
+
+<Example code={`<Badge text="Small" size="small" />
+<Badge text="Medium" size="medium" />
+<Badge text="Large" size="large" />`} minHeight="6rem">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <Badge text="小" variant="info" size="small" />
+    <Badge text="中" variant="info" size="medium" />
+    <Badge text="大" variant="info" size="large" />
+  </div>
+</Example>
+
+### 实际场景
+
+与文字搭配标注状态，不打断阅读节奏。
+
+<Example mdxTag code={`## Payments API <Badge text="v2.1" variant="info" size="medium" />
+
+The Payments API has reached general availability.`}>
+  <div class="max-w-md text-left">
+    <h4 class="flex items-center gap-2 text-lg font-semibold text-foreground mb-2">
+      Payments API
+      <Badge text="v2.1" variant="info" size="medium" />
+    </h4>
+    <p class="text-sm text-muted-foreground leading-relaxed">
+      Payments API 已正式发布。
+    </p>
+  </div>
+</Example>

@@ -1,0 +1,50 @@
+---
+title: Pagination
+tagline: "文档页底部的上一页/下一页链接——由侧边栏树驱动。"
+props:
+  - name: prevNext
+    type: "{ prev?: { label: string; href: string }; next?: { label: string; href: string } }"
+    required: true
+    description: 相邻页面的引用。任一侧都可以省略（首页/末页）。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Pagination } from "@/components/ui/pagination";
+
+## 预览
+
+<Showcase code={`<Pagination
+  prevNext={{
+    prev: { label: "Getting started", href: "/getting-started" },
+    next: { label: "Configuration", href: "/configuration" },
+  }}
+/>`}>
+  <div class="w-full text-left">
+    <Pagination
+      prevNext={{
+        prev: { label: "快速开始", href: "#" },
+        next: { label: "配置", href: "#" },
+      }}
+    />
+  </div>
+</Showcase>
+
+## 示例
+
+### 起始页
+
+省略 `prev`，表示这是某个章节的开始。
+
+<Example code={`<Pagination
+  prevNext={{
+    next: { label: "Installation", href: "/installation" },
+  }}
+/>`} contentClass="w-full">
+  <div class="w-full">
+    <Pagination
+      prevNext={{
+        next: { label: "安装", href: "#" },
+      }}
+    />
+  </div>
+</Example>

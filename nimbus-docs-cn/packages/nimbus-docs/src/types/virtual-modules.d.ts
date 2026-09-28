@@ -1,0 +1,124 @@
+/**
+ * Ambient declarations for virtual modules referenced from this package.
+ *
+ *   - `virtual:nimbus/config` — emitted by the integration's Vite plugin
+ *     at build time; resolves at runtime in the consuming Astro project.
+ *   - `astro:content` — Astro's content-layer virtual module, generated
+ *     per-project from the user's `content.config.ts`. Stubbed here so
+ *     this package typechecks in isolation. Consuming projects have
+ *     Astro's project-emitted types take precedence via TS declaration
+ *     merging — the shapes below match Astro's public API for the
+ *     subset this package consumes.
+ *
+ * This file has no top-level imports/exports so the declarations are
+ * ambient (resolvable from dynamic `await import("…")` calls, not just
+ * static imports).
+ */
+
+declare module "virtual:nimbus/config" {
+  export const config: import("../types.js").NimbusConfig;
+  export const indexedCollections: readonly string[];
+  export const requestRenderingCollections: readonly string[];
+  export const versionAlternates: import("../_internal/version-alternates.js").VersionAlternatesTable;
+  export const apiCollections: readonly string[];
+  export const headDefaults: {
+    favicon: { file: string; type: string };
+    socialImage: string;
+  };
+}
+
+declare module "virtual:nimbus/headings" {
+  export const generation: number;
+  export const base: string;
+  export const records: import("../_internal/prepared-headings.js").PreparedHeadingRecord[];
+}
+
+declare module "virtual:nimbus/agent-endpoint-assets" {
+  export const projectRoot: string;
+  export const base: string;
+  export const markdownAssets: import("../_internal/agent-endpoint-assets.js").MarkdownEndpointAsset[];
+  export const llmsAssets: import("../_internal/agent-endpoint-assets.js").LlmsEndpointAsset[];
+}
+
+declare module "virtual:nimbus/markdown-routes" {
+  export const routes: import("../_internal/markdown-routes.js").MarkdownRouteRecord[];
+}
+
+declare module "virtual:nimbus/agent-endpoint-asset-loader" {
+  export function fetchAgentEndpointAsset(
+    path: string,
+    request: Request,
+  ): Promise<Response> | null;
+}
+
+declare module "virtual:nimbus/api-build-config" {
+  export const api: import("../types.js").ApiSpec[];
+  export const root: string;
+}
+
+declare module "virtual:nimbus/coordinates" {
+  // The coordinate-citation index, keyed `collection:coordinate` /
+  // `collection@version:coordinate` → site-absolute URL. Its own module (not
+  // `virtual:nimbus/config`) so it stays out of the runtime Worker bundle —
+  // imported only by prerendered agent-surface code. See `load-citation-index.ts`.
+  export const coordinates: Record<string, string>;
+  export const manifest: import("../types.js").CoordinatesManifest;
+}
+
+declare module "virtual:nimbus/icons" {
+  export type Icon = string;
+  export const config: { include: Record<string, string[]> };
+  const icons: Record<string, import("@iconify/types").IconifyJSON>;
+  export default icons;
+}
+
+declare module "astro:content" {
+  // In a real project this is `keyof DataEntryMap` (the union of every
+  // registered collection name). Stubbed loose here so the package
+  // typechecks in isolation; the consumer's project-emitted types take
+  // precedence via declaration merging.
+  export type CollectionKey = string;
+
+  export interface CollectionEntry<C extends string = string> {
+    id: string;
+    collection: C;
+    data: Record<string, unknown>;
+    body?: string;
+    digest?: number | string;
+  }
+
+  export interface SchemaContext {
+    image: () => unknown;
+  }
+
+  export function getCollection<C extends string = string>(
+    collection: C,
+    filter?: (entry: CollectionEntry<C>) => boolean,
+  ): Promise<CollectionEntry<C>[]>;
+
+  export function getEntry<C extends string = string>(
+    collection: C,
+    id: string,
+  ): Promise<CollectionEntry<C> | undefined>;
+
+  export function render(entry: CollectionEntry<string>): Promise<{
+    Content: import("astro/runtime/server/index.js").AstroComponentFactory;
+    headings: { depth: number; text: string; slug: string }[];
+  }>;
+}
+
+// Vite extends `ImportMeta` with `env`. Astro inherits this. Declared here
+// so isolated-package tsc can resolve `import.meta.env.PROD`; consuming
+// projects already have Vite's identical declaration via @types augmentation.
+interface ImportMetaEnv {
+  readonly PROD: boolean;
+  readonly DEV: boolean;
+  readonly MODE: string;
+  readonly SSR: boolean;
+  readonly BASE_URL: string;
+  readonly [key: string]: unknown;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

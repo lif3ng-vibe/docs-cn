@@ -1,0 +1,35 @@
+---
+title: TOC
+tagline: "本页导航——滚动侦测（scroll-spy）、带动画的当前项指示器、按层级缩进。"
+props:
+  - name: headings
+    type: TOCItem[]
+    required: true
+    description: "`{ depth, text, slug }` 的扁平列表——通常来自 `getTOC(entry)`。"
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { TOC } from "@/components/ui/toc";
+
+## 预览
+
+<Showcase code={`<TOC
+  headings={[
+    { depth: 2, text: "Getting started", slug: "getting-started" },
+    { depth: 2, text: "Configuration", slug: "configuration" },
+    { depth: 3, text: "Sidebar", slug: "sidebar" },
+    { depth: 3, text: "Search", slug: "search" },
+    { depth: 2, text: "Deployment", slug: "deployment" },
+  ]}
+/>`}>
+  <div class="w-full max-w-xs text-left">
+    <TOC
+      headings={[
+        { depth: 2, text: "快速开始", slug: "getting-started" },
+        { depth: 2, text: "配置", slug: "configuration" },
+        { depth: 3, text: "侧边栏", slug: "sidebar" },
+        { depth: 3, text: "搜索", slug: "search" },
+        { depth: 2, text: "部署", slug: "deployment" },
+      ]}
+    />
+  </div>
+</Showcase>

@@ -1,0 +1,54 @@
+---
+title: 布局
+description: Nimbus 提供的页面外壳，以及如何按页面或全站关闭各个栏位。
+aiGenerated: true
+sidebar:
+  order: 2
+---
+
+布局是 `src/layouts/` 下归你所有的 `.astro` 文件。由脚手架工具（scaffolder）写入，之后由你自由编辑。
+
+## 页面外壳
+
+- **`BaseLayout`**——最外层外壳：`<html>`、`<head>`、主题初始化、字体预加载、元数据。所有内容都在它里面渲染。
+- **`DocsLayout`**——文档页形态：侧边栏、内容栏、目录（TOC）、面包屑、上一页/下一页。内容页的默认布局。
+- **`ShowcaseLayout`**——组件展示页形态，供 `/components` 集合使用。
+
+这些文件归你所有，想去掉某块界面元素，直接从布局中删掉即可——把 `<Pagination />` 从 `DocsLayout` 中移除，它就在全站消失了。
+
+## 页面级开关
+
+通过 frontmatter 可以逐页关闭某个栏位，无需改动布局：
+
+```yaml
+---
+title: Wide page
+sidebar: false           # hide the sidebar rail
+tableOfContents: false   # hide the TOC column
+---
+```
+
+对于完全不带文档界面的页面——落地页或营销页——使用 `mode: custom`：
+
+```yaml
+---
+title: Welcome
+mode: custom
+---
+```
+
+## 全站开关
+
+Nimbus 配置中的 `features` 块可以在全站范围关闭某个栏位。合并逻辑为 AND——只有全站开关与页面级字段都允许时，栏位才会渲染：
+
+```ts title="astro.config.ts"
+nimbus({
+  /* … */
+  features: {
+    sidebar: true,
+    tableOfContents: false,   // no TOC on any page
+  },
+});
+```
+
+页面级无法通过选择加入来覆盖全站的 `false`：全站关闭的栏位会一直关闭。

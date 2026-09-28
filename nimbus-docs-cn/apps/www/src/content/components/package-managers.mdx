@@ -1,0 +1,52 @@
+---
+title: PackageManagers
+tagline: "带标签页的代码块——每个包管理器（npm、yarn、pnpm、bun）一个标签页。同一页面上的多个实例之间标签页会同步。"
+props:
+  - name: pkg
+    type: string
+    description: 要安装/运行的包名。
+  - name: type
+    type: '"add" | "create" | "dlx" | "exec" | "install" | "remove" | "run"'
+    defaultValue: '"add"'
+    description: 命令形态；会自动生成各包管理器的等价命令。
+  - name: args
+    type: string
+    description: 追加到命令末尾的额外参数。
+  - name: dev
+    type: boolean
+    description: 对 add/install 类命令标记为开发依赖。
+  - name: comment
+    type: string
+    description: 可选的注释行，渲染在命令上方。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { PackageManagers } from "@/components/ui/package-managers";
+
+## 预览
+
+<Showcase code={`<PackageManagers pkg="@cloudflare/nimbus-docs" type="add" />`}>
+  <div class="w-full max-w-md text-left">
+    <PackageManagers pkg="@cloudflare/nimbus-docs" type="add" />
+  </div>
+</Showcase>
+
+## 示例
+
+### 搭配 args 使用 dlx
+
+设置 type="dlx" 可以免安装直接调用 CLI——脚手架（scaffolder）工具的常见用法。
+
+<Example code={`<PackageManagers
+  pkg="create-astro@latest"
+  type="dlx"
+  comment="Scaffold a new project"
+/>`} contentClass="w-full">
+  <div class="w-full">
+    <PackageManagers
+      pkg="create-astro@latest"
+      type="dlx"
+      comment="脚手架生成一个新项目"
+    />
+  </div>
+</Example>

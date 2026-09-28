@@ -1,0 +1,62 @@
+---
+title: Collapsible
+tagline: "单一折叠面板——由触发器控制一段带动画的内容面板展开收起。"
+props:
+  - name: open
+    type: boolean
+    defaultValue: "false"
+    description: 默认以展开状态渲染。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+
+## 预览
+
+<Showcase code={`<Collapsible>
+  <CollapsibleTrigger>里面有什么？</CollapsibleTrigger>
+  <CollapsibleContent>
+    什么都行——文字、代码、组件。容器会以动画展开和收起。
+  </CollapsibleContent>
+</Collapsible>`}>
+  <div class="w-full max-w-md text-left">
+    <Collapsible class="rounded-lg ring ring-border overflow-hidden bg-card">
+      <CollapsibleTrigger class="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium hover:bg-accent transition-colors">
+        里面有什么？
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div class="px-5 pb-5 pt-1 text-sm text-muted-foreground">
+          什么都行——文字、代码、组件。容器会以动画展开和收起。
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  </div>
+</Showcase>
+
+## 示例
+
+### 默认展开
+
+传入 `open`，初始即为展开状态。
+
+<Example code={`<Collapsible open>
+  <CollapsibleTrigger>已经展开</CollapsibleTrigger>
+  <CollapsibleContent>面板在首次渲染时就处于可见状态。</CollapsibleContent>
+</Collapsible>`} contentClass="w-full">
+  <div class="w-full">
+    <Collapsible open class="rounded-lg ring ring-border overflow-hidden bg-card">
+      <CollapsibleTrigger class="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium hover:bg-accent transition-colors">
+        已经展开
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div class="px-5 pb-5 pt-1 text-sm text-muted-foreground">
+          面板在首次渲染时就处于可见状态。
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  </div>
+</Example>

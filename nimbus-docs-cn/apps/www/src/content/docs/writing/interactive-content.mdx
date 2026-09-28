@@ -1,0 +1,72 @@
+---
+title: 交互式内容
+description: 在一个接管繁琐生命周期的无头（headless）React 包装器之上，编写定制的交互式图示。
+aiGenerated: true
+sidebar:
+  order: 6
+---
+import { Tabs, TabItem } from "@/components/ui/tabs";
+import { PrimitivesDiagram } from "@/components/react/diagram-showcase/PrimitivesDiagram";
+import { PingPongDemo } from "@/components/react/diagram-showcase/PingPongDemo";
+
+文档常常需要*展示*机制——请求如何流转、状态如何嵌套、线路接在哪里。Nimbus 把这个问题一拆为二：繁琐的生命周期归框架，渲染归你。
+
+## 无头包装器
+
+`nimbus-docs/react` 提供一个无头（headless）的 `<Diagram>` 包装器和一组可组合的 hook——`usePhase`、`useMeasure`、`useTabIndicator`、`useDiagram`。包装器处理那些不容易做对的繁琐细节：滚出视口即暂停、遵循减弱动态效果、键盘快捷键、错误边界，以及跨孤岛（island）协调。它自身不渲染任何可见内容。
+
+<PrimitivesDiagram client:visible />
+
+最小可用示例——`usePhase` 走过两个步骤，渲染出的节点依次点亮。
+
+<Tabs>
+  <TabItem label="预览">
+    <PingPongDemo client:visible />
+  </TabItem>
+  <TabItem label="代码">
+    ```tsx
+    import { Diagram, usePhase } from "@cloudflare/nimbus-docs/react";
+    import { DiagramControls } from "@/components/react/diagram";
+
+    function PingPong() {
+      const { current } = usePhase({
+        steps: [{ id: "left", hold: 1500 }, { id: "right", hold: 1500 }],
+        loop: true,
+      });
+      return (
+        <div className="flex items-center justify-center gap-12 py-12">
+          <Node label="Left" active={current === "left"} />
+          <Node label="Right" active={current === "right"} />
+        </div>
+      );
+    }
+
+    export function Demo() {
+      return (
+        <Diagram label="Ping-pong">
+          <DiagramControls />
+          <PingPong />
+        </Diagram>
+      );
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## 外壳归你所有
+
+操作栏、标签组和播放/暂停控件都是**归你所有的视觉外壳**。它们通过注册表按需安装到 `src/components/react/diagram/`：
+
+<PackageManagers pkg="@cloudflare/nimbus-docs" type="dlx" args="add diagram" />
+
+随意编辑、重塑样式或替换它们——hook 依然照常工作。从不编写交互卡片的站点不必付出任何代价：`react` 和 `react-dom` 是可选的对等依赖（peer dependencies），只有在你 import `nimbus-docs/react` 时才会加载。
+
+## 边界
+
+| 层 | 归属 | 职责 |
+|---|---|---|
+| `<Diagram>` + hooks | `nimbus-docs/react` | 生命周期、状态、视口外暂停、减弱动态效果、键盘、错误边界。 |
+| 外壳 | 你（注册表） | 操作栏、控件、标签指示器——复制进你的仓库。 |
+| 渲染 | 你 | 几何、布局，以及图示要表达的语义主张。 |
+
+框架管行为，你管外观。用 `client:visible` 指令把成果嵌入 MDX，滚动进入视口时才会水合（hydration）。

@@ -1,0 +1,42 @@
+---
+title: CardGrid
+tagline: "面向 Card 列表的响应式 1–2 列网格——窄视口下退化为单列。"
+props: []
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import { Card } from "@/components/ui/card";
+import { CardGrid } from "@/components/ui/card-grid";
+
+## 预览
+
+<Showcase code={`<CardGrid>
+  <Card title="快速" icon="ph:lightning">
+    静态输出。Pagefind 搜索。没有运行时框架开销。
+  </Card>
+  <Card title="自主掌控" icon="ph:package">
+    组件复制进你的仓库。想改就改。
+  </Card>
+  <Card title="智能体优先" icon="ph:robot">
+    markdown 版本与 llms.txt 开箱即用。
+  </Card>
+  <Card title="自由组合" icon="ph:puzzle-piece">
+    通过 \`nimbus-docs add\` 只安装你需要的部分。
+  </Card>
+</CardGrid>`}>
+  <div class="w-full text-left">
+    <CardGrid>
+      <Card title="快速" icon="ph:lightning">
+        Astro 静态输出。Pagefind 搜索。没有运行时框架开销。
+      </Card>
+      <Card title="自主掌控" icon="ph:package">
+        组件复制进你的仓库。想改就改。
+      </Card>
+      <Card title="智能体优先" icon="ph:robot">
+        markdown 版本与 llms.txt 开箱即用。
+      </Card>
+      <Card title="自由组合" icon="ph:puzzle-piece">
+        只安装你需要的部分。
+      </Card>
+    </CardGrid>
+  </div>
+</Showcase>

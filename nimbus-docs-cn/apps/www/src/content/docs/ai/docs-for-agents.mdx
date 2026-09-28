@@ -1,0 +1,53 @@
+---
+title: 面向智能体的文档
+description: 通过 Markdown/MDX 替代版本、llms.txt 索引与结构化元数据，让 AI 工具读到你的文档。
+aiGenerated: true
+sidebar:
+  order: 1
+---
+
+Nimbus 通过一组端点提供文档，AI 工具无需解析 HTML 站点即可读取。
+
+## 内置内容
+
+- **每个可发现的页面都有 Markdown/MDX 替代版本**——`/<slug>/index.md` 是干净的 Markdown，组件被转换为文字；`/<slug>/index.mdx` 则保留 import、JSX 和指令。Nimbus 会在构建时解析链接和可复用片段。`.md` 版本会链接到对应的 `.mdx` 源文件。API 参考页只有 `.md` 版本。隐藏版本两种文件都不生成。
+- **站点级 `llms.txt` 索引**——列出当前文档的顶级页面与各栏目索引。每个栏目索引会把其中可发现的页面链接到各自的 Markdown 替代版本。旧版文档不会出现在其中；每个版本在 `/<version>/llms.txt` 有自己的索引。
+- **`llms-full.txt`**——把可发现的页面合并成一个 Markdown 文档，不含非当前版本的正文。AI 工具和索引系统一个请求即可取回当前站点的全部内容。Nimbus 在构建期间生成它，因此每次重建的结果逐字节一致。
+- **`/<section>/llms.txt` 的分栏目索引**——每个顶级分组和集合（例如 `blog` 或某个文档版本）都有自己的索引。
+- **版本标签**——在多版本文档站上，每个 Markdown 替代版本的 frontmatter 都带有 `version:` 键（从你的 `versions` 清单解析），智能体据此锁定版本。未分版本的站点不输出该键。
+- **每个页面 head 中的 JSON-LD**——结构化数据，让搜索和智能体工具认得出眼前是什么。
+- **`/robots.txt` 与 sitemap**——设置了 `site` 即自动接好。
+
+```text title="/llms.txt"
+# Nimbus
+
+A way to build documentation sites on top of Astro.
+
+## Pages
+- [Get started](https://nimbus-docs.com/get-started/index.md)
+- [Installation](https://nimbus-docs.com/installation/index.md)
+```
+
+## 页面如何被索引
+
+索引默认覆盖多个集合并容忍 schema 差异——`src/content.config.ts` 中注册的每个已准备好的集合（`partials` 和保留名除外）都会被遍历，有 `title` 和 `description` 就读取。没有页面级的选择加入；所有可发现的页面都会列出。隐藏版本被排除，`/llms-full.txt` 也不含非当前版本的正文。
+
+Markdown/MDX 替代版本和 `llms.txt` 索引属于公开的智能体端点资源。靠请求时鉴权无法让私密内容在这里保持安全。私密内容请放在公开内容集合之外。Nimbus 会略过被排除的条目；无法判断内容是否公开时，会让构建直接失败。
+
+想让某个页面**不**出现在 `llms.txt` 索引中，设置 `draft: true`（完全排除）或 `noindex: true`。永远不该被智能体读取的页面，干脆不要放进内容集合。
+
+### 自定义内容加载器
+
+Nimbus 的集合工厂会自动准备 Markdown。如果自定义加载器想保留 Markdown 正文，以供 Markdown 替代版本或 `llms-full.txt` 使用，用 `@cloudflare/nimbus-docs/content` 导出的 `withNimbusMarkdown()` 包一层。完整示例见[其他集合](/writing/pages-and-routing#other-collections)。
+
+## 路由搭建
+
+新项目已内置这些路由。要在现有项目中添加或更新，参见 [Markdown 与 llms.txt 端点](/ai/publish-markdown)。
+
+## AGENT.md
+
+脚手架工具会在项目根目录写入一个 `AGENT.md`——编码智能体在你的仓库里工作时读到的正是这份上下文。它是你维护的真实文件；请让它与项目的约定保持同步。
+
+## 为什么重要
+
+在智能体网络（agentic web）上成为死胡同，代价真实存在且与日俱增。由于这些文件和元数据都是默认提供的，Nimbus 站点从上线第一天起就能被智能体读懂——面向人类搜索的那一面参见[元数据与 SEO](/ai/metadata-and-seo)。

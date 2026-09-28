@@ -1,0 +1,47 @@
+---
+title: Banner
+tagline: "公告横幅——语义化类型、经净化的 HTML 内容、可选的持久化关闭。"
+props:
+  - name: content
+    type: string
+    required: true
+    description: 渲染为横幅正文的 HTML 字符串（会经过净化处理）。
+  - name: variant
+    type: '"note" | "tip" | "caution" | "danger"'
+    defaultValue: '"note"'
+    description: 传达意图的视觉样式。
+  - name: dismissible
+    type: "{ id: string; days?: number }"
+    description: 显示关闭按钮；关闭状态会以给定 id 持久化保存到 localStorage，并保持给定天数。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Banner } from "@/components/ui/banner";
+
+## 预览
+
+<Showcase code={`<Banner variant="tip" content="We're hiring — say hi at <a href='#'>jobs@nimbus.dev</a>." />`}>
+  <div class="w-full max-w-md text-left">
+    <Banner variant="tip" content="我们正在招聘——欢迎联系 <a href='#'>jobs@nimbus.dev</a>。" />
+  </div>
+</Showcase>
+
+## 示例
+
+### 可关闭
+
+设置 `dismissible` 即可添加关闭按钮。关闭状态在跨页面加载后依然保留。
+
+<Example code={`<Banner
+  variant="caution"
+  content="维护窗口：自 18:00 UTC 起，API 读取为只读。"
+  dismissible={{ id: "maint-2026-06", days: 1 }}
+/>`} contentClass="w-full">
+  <div class="w-full">
+    <Banner
+      variant="caution"
+      content="维护窗口：自 18:00 UTC 起，API 读取为只读。"
+      dismissible={{ id: "demo-banner", days: 1 }}
+    />
+  </div>
+</Example>

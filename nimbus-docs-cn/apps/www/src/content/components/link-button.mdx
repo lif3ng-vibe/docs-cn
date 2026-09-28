@@ -1,0 +1,52 @@
+---
+title: LinkButton
+tagline: "按钮样式的链接——主要、次要、极简三种变体，三种尺寸。"
+props:
+  - name: href
+    type: string
+    required: true
+    description: 目标 URL。
+  - name: variant
+    type: '"primary" | "secondary" | "minimal"'
+    defaultValue: '"primary"'
+    description: 视觉样式。
+  - name: size
+    type: '"sm" | "md" | "lg"'
+    defaultValue: '"md"'
+    description: 相对尺寸；影响内边距和字号。
+  - name: shape
+    type: '"base" | "square" | "circle"'
+    defaultValue: '"base"'
+    description: 纯图标链接请用 "square" 或 "circle"（并传入 aria-label）。
+  - name: icon
+    type: boolean
+    defaultValue: "false"
+    description: 渲染一个尾部的箭头，悬停时会轻轻前移。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { LinkButton } from "@/components/ui/link-button";
+
+## 预览
+
+<Showcase code={`<LinkButton href="#" variant="primary">Get started</LinkButton>`}>
+  <div class="w-full text-center">
+    <LinkButton href="#" variant="primary">快速开始</LinkButton>
+  </div>
+</Showcase>
+
+## 示例
+
+### 变体与尺寸
+
+三种意图 × 三种尺寸——按调用处逐个选择。
+
+<Example code={`<LinkButton href="#" variant="primary">Primary</LinkButton>
+<LinkButton href="#" variant="secondary">Secondary</LinkButton>
+<LinkButton href="#" variant="minimal">Minimal</LinkButton>`} contentClass="w-full">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <LinkButton href="#" variant="primary">主要</LinkButton>
+    <LinkButton href="#" variant="secondary">次要</LinkButton>
+    <LinkButton href="#" variant="minimal">极简</LinkButton>
+  </div>
+</Example>

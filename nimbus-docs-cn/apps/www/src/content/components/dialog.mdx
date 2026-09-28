@@ -1,0 +1,102 @@
+---
+title: Dialog
+tagline: "基于原生 <dialog> 元素的模态遮罩——滚动锁定与点击遮罩关闭都已自动处理。"
+props:
+  - name: id
+    type: string
+    description: Dialog 属性。通过 `document.getElementById(id).showModal()` 定位并打开模态框。
+---
+import Showcase from "@/components/showcase/Showcase.astro";
+import Example from "@/components/showcase/Example.astro";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+
+## 预览
+
+<Showcase code={`<button onclick="document.getElementById('demo').showModal()">打开对话框</button>
+
+<Dialog id="demo">
+  <DialogContent class="max-w-md">
+    <div class="p-6 flex flex-col gap-3">
+      <h3 class="text-base font-semibold">确认部署</h3>
+      <p class="text-sm text-muted-foreground">生产环境将从当前的 main 分支重新构建。</p>
+      <div class="flex justify-end gap-2 mt-2">
+        <DialogClose class="px-3 py-1.5 rounded-md border border-border text-sm">取消</DialogClose>
+        <DialogClose class="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm">部署</DialogClose>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>`}>
+  <div class="w-full text-left flex flex-col items-center gap-3">
+    <button
+      type="button"
+      onclick="document.getElementById('demo-dialog').showModal()"
+      class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+    >
+      打开对话框
+    </button>
+    <p class="text-xs text-muted-foreground">模态框会覆盖在页面之上；点击遮罩或“取消”即可关闭。</p>
+    <Dialog id="demo-dialog">
+      <DialogContent class="max-w-md">
+        <div class="p-6 flex flex-col gap-3">
+          <h3 class="text-base font-semibold text-foreground">确认部署</h3>
+          <p class="text-sm text-muted-foreground">生产环境将从当前的 main 分支重新构建。</p>
+          <div class="flex justify-end gap-2 mt-2">
+            <DialogClose class="px-3 py-1.5 rounded-md border border-border text-sm hover:bg-accent transition-colors cursor-pointer">
+              取消
+            </DialogClose>
+            <DialogClose class="px-3 py-1.5 rounded-md bg-foreground text-background text-sm hover:opacity-90 transition-opacity cursor-pointer">
+              部署
+            </DialogClose>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </div>
+</Showcase>
+
+## 示例
+
+### 确认操作
+
+一个简单的确认/取消对话框，两个 DialogClose 按钮分别充当取消与确认操作。
+
+<Example code={`<button onclick="document.getElementById('confirm').showModal()">删除项目</button>
+
+<Dialog id="confirm">
+  <DialogContent class="max-w-sm">
+    <div class="p-6">
+      <h3 class="text-base font-semibold mb-2">确定要继续吗？</h3>
+      <p class="text-sm text-muted-foreground mb-4">此操作无法撤销。</p>
+      <div class="flex justify-end gap-2">
+        <DialogClose class="px-3 py-1.5 rounded-md border border-border text-sm">取消</DialogClose>
+        <DialogClose class="px-3 py-1.5 rounded-md bg-danger text-white text-sm">删除</DialogClose>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>`} contentClass="w-full">
+  <div class="w-full text-left flex flex-col items-center gap-3">
+    <button
+      type="button"
+      onclick="document.getElementById('demo-confirm').showModal()"
+      class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-danger text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+    >
+      删除项目
+    </button>
+    <Dialog id="demo-confirm">
+      <DialogContent class="max-w-sm">
+        <div class="p-6">
+          <h3 class="text-base font-semibold text-foreground mb-2">确定要继续吗？</h3>
+          <p class="text-sm text-muted-foreground mb-4">此操作无法撤销。</p>
+          <div class="flex justify-end gap-2">
+            <DialogClose class="px-3 py-1.5 rounded-md border border-border text-sm hover:bg-accent transition-colors cursor-pointer">
+              取消
+            </DialogClose>
+            <DialogClose class="px-3 py-1.5 rounded-md bg-danger text-white text-sm hover:opacity-90 transition-opacity cursor-pointer">
+              删除
+            </DialogClose>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </div>
+</Example>
