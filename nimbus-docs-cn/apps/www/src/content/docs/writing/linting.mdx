@@ -10,7 +10,7 @@ sidebar:
 
 ## 两层机制
 
-构建前的**校验器（validator）**自动运行，只在问题会破坏站点时才拦截构建——配置结构、frontmatter schema、[MDX 组件](/writing/markdown-and-mdx)、重复路由。
+构建前的**校验器**（validator）自动运行，只在问题会破坏站点时才拦截构建——配置结构、frontmatter schema、[MDX 组件](/writing/markdown-and-mdx)、重复路由。
 
 **lint 引擎**是按需运行的内容质量层。规则有稳定的 id，例如 `nimbus/single-h1` 和 `nimbus/bare-url`。构建**绝不会**被 lint 结果拦截——草稿照样渲染，警告足够醒目但不会阻塞。
 
