@@ -70,7 +70,7 @@ export default defineConfig({
 					{ label: "OpenRig CLI Reference", slug: 'as-built/cli-reference' },
 					{ label: "OpenRig Codemap — Navigation Index", slug: 'as-built/codemap' },
 					{ label: "As-Built Frontmatter — Pointer + As-Built-Unique Field", slug: 'as-built/frontmatter-schema' },
-					{ label: "OpenRig As-Built Docs", slug: 'as-built/README' },
+					{ label: "OpenRig As-Built Docs", slug: 'as-built' },
 					{ label: "UI Library/Specs Surfaces + Design-System Pointer", slug: 'as-built/ui/library-specs-and-design-system' },
 					{ label: "UI Project Observability, For You, Dashboard", slug: 'as-built/ui/project-and-for-you' },
 					{ label: "UI Shell, Routing, Drawer System", slug: 'as-built/ui/shell-and-routing' },
@@ -81,7 +81,7 @@ export default defineConfig({
 				{
 					label: "Releases",
 					items: [
-					{ label: "Release Notes", slug: 'releases/README' },
+					{ label: "Release Notes", slug: 'releases' },
 					{ label: "OpenRig v0.1.12", slug: 'releases/v0.1.12' },
 					{ label: "OpenRig v0.2.0", slug: 'releases/v0.2.0' },
 					{ label: "OpenRig v0.3.0", slug: 'releases/v0.3.0' },
