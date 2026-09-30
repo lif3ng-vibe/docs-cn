@@ -14,6 +14,7 @@
 | ai-memory (EN) | `ai-memory-docs-en/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-25 |
 | Nimbus | `nimbus-docs-cn/` | https://nimbus-docs.com | https://github.com/cloudflare/nimbus | 2026-09-28 |
 | OpenRig | `openrig-docs-cn/` | https://openrig.dev/ | https://github.com/mvschwarz/openrig | 2026-09-30 |
+| OpenRig (EN) | `openrig-docs-en/` | 无（仓库即源） | https://github.com/mvschwarz/openrig | 2026-09-30 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 
@@ -54,6 +55,7 @@ docs-cn/
 ├── ai-memory-docs-en/                  # ai-memory 英文镜像（Starlight，脚本生成，36 篇）
 ├── nimbus-docs-cn/                     # Nimbus 中文文档（pnpm monorepo，apps/www 站点，66 篇）
 ├── openrig-docs-cn/                    # OpenRig 中文文档（Starlight，仓库 docs/ 全集 90 篇）
+├── openrig-docs-en/                    # OpenRig 英文镜像（Starlight，脚本生成，90 篇）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -109,6 +111,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - ai-memory（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/ai-memory-en/
 - Nimbus：https://lif3ng-vibe.github.io/docs-cn/nimbus/
 - OpenRig：https://lif3ng-vibe.github.io/docs-cn/openrig/
+- OpenRig（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/openrig-en/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

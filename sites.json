@@ -47,6 +47,15 @@
     "slug": "openrig",
     "desc": "多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。",
     "orig": "https://openrig.dev/",
-    "repo": "https://github.com/mvschwarz/openrig"
+    "repo": "https://github.com/mvschwarz/openrig",
+    "en": "openrig-en"
+  },
+  {
+    "name": "OpenRig (EN)",
+    "slug": "openrig-en",
+    "desc": "Unofficial English mirror of the OpenRig repository docs (90 pages).",
+    "orig": "https://github.com/mvschwarz/openrig",
+    "repo": "https://github.com/mvschwarz/openrig",
+    "lang": "en"
   }
 ]

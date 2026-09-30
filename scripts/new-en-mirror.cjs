@@ -245,7 +245,10 @@ function writeContent(config, workdir, siteDir, head, base, warnings) {
 		md: buildPage({ upstreamPath: f.upstreamPath, raw: fs.readFileSync(path.join(workdir, f.upstreamPath), 'utf8'), config, headSha: head, filesByUpstreamPath, warnings, imageAssets }),
 	}));
 	const { rewritten } = copyAssets(config, workdir, siteDir, mdTexts, warnings, imageAssets);
-	for (const { siteFile, md } of rewritten) fs.writeFileSync(path.join(docsDir, siteFile), md, 'utf8');
+	for (const { siteFile, md } of rewritten) {
+		fs.mkdirSync(path.dirname(path.join(docsDir, siteFile)), { recursive: true });
+		fs.writeFileSync(path.join(docsDir, siteFile), md, 'utf8');
+	}
 	// snapshot.json（基线：HEAD + 每文件 sha256）
 	const snapFiles = {};
 	for (const f of files) snapFiles[f.upstreamPath] = sha256(path.join(workdir, f.upstreamPath));
