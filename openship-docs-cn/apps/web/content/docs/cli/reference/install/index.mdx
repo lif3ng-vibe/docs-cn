@@ -1,0 +1,82 @@
+---
+title: install
+description: openship install 的命令、参数与选项。
+cliGroup: openship install
+---
+
+示例请参见 [CLI 总览](/docs/cli)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship install
+
+下载并安装适配当前操作系统的 Openship 桌面应用
+
+```text
+openship install [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`cache`](/docs/cli/reference/install#openship-install-cache) | 管理本地下载缓存（list/verify/clean/path） |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--version <tag>` | 要安装的发布标签（例如 v1.2.3） |
+| `--latest` | 安装最新发布版（默认） |
+| `--force` | 即使缓存中已有已验证的副本也重新下载 |
+| `--no-verify` | 跳过 SHA-256 校验（仅在没有 sidecar 文件时允许） |
+| `--no-launch` | 安装但不启动应用 |
+
+## openship install cache
+
+管理本地下载缓存（list/verify/clean/path）
+
+```text
+openship install cache [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`path`](/docs/cli/reference/install#openship-install-cache-path) | 打印缓存目录路径 |
+| [`list\|ls`](/docs/cli/reference/install#openship-install-cache-list) | 列出已缓存的发布产物 |
+| [`verify [tag]`](/docs/cli/reference/install#openship-install-cache-verify) | 对缓存产物重新计算哈希，并与各自的 .sha256 sidecar 文件比对 |
+| [`clean [tag]`](/docs/cli/reference/install#openship-install-cache-clean) | 删除已缓存的发布产物 |
+
+## openship install cache clean
+
+删除已缓存的发布产物
+
+```text
+openship install cache clean [options] [tag]
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `tag` | 只移除该发布标签（默认全部移除） |
+
+## openship install cache list
+
+列出已缓存的发布产物
+
+```text
+openship install cache list|ls [options]
+```
+
+## openship install cache path
+
+打印缓存目录路径
+
+```text
+openship install cache path [options]
+```
+
+## openship install cache verify
+
+对缓存产物重新计算哈希，并与各自的 .sha256 sidecar 文件比对
+
+```text
+openship install cache verify [options] [tag]
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `tag` | 只校验该发布标签下的产物 |

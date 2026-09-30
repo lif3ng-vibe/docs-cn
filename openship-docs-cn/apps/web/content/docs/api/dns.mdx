@@ -1,0 +1,198 @@
+---
+title: DNS 提供方
+description: 连接 DNS 提供方并检查区域（zone）。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+添加自定义域名时，Openship 的常规做法是告诉你需要创建哪些 DNS 记录，然后等你手动创建。连接一个 DNS 提供方后，Openship 就能替你预览与应用这些记录，无需离开页面。应用 DNS 始终是一个显式动作：创建项目域名或保存服务路由都不会悄悄改动提供方的区域。在控制台里，凭据位于 **Settings → DNS**，每个待处理域名的记录面板中包含应用操作。
+
+目前 Cloudflare 是唯一的提供方。提供方列表由 API 提供服务，而不是硬编码在控制台里，因此"我能连接什么"这个问题，以 `GET /api/dns/providers` 的回答为权威。
+
+## 连接提供方
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.dns.addCredential({
+  provider: "cloudflare",
+  name: "Cloudflare production",
+  apiToken: "cf-...",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/dns/credentials" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"cloudflare","name":"Cloudflare production","apiToken":"cf-..."}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    provider: { type: '"cloudflare"', description: '要连接的提供方。必须是 GET /api/dns/providers 返回的名称之一。', required: true },
+    name: { type: 'string', description: '你给这条凭据的标签，例如 "Cloudflare production"。同一提供方在组织内唯一。', required: true },
+    apiToken: { type: 'string', description: '提供方的 API 令牌。存储之前会先向提供方验证，不能用的令牌会在这里被拒绝，而不是日后悄悄失效。', required: true },
+  }}
+/>
+
+对于 Cloudflare，请在
+[dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) 创建令牌，
+作用范围为 **Zone:Zone:Read** 与 **Zone:DNS:Edit**，并只授予你希望 Openship 托管的区域。
+
+<Callout title="令牌自此之后只写不读" type="warn">
+它在落库时已加密（AES-256-GCM，密钥派生自 `BETTER_AUTH_SECRET`），没有任何端点会返回它——
+既不返回也不返回前缀。`tokenMasked` 固定为 `••••••••`。没有"查看"功能；要更换令牌，请断开这条凭据并重新连接一条新的。
+
+轮换 `BETTER_AUTH_SECRET` 会使已存储的令牌无法解密。之后 Openship 再次尝试使用该凭据时，它会报告
+`status: "invalid"`，届时请重新连接。
+</Callout>
+
+## 检查区域
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.dns.verifyZone({
+  hostname: "app.example.com",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/dns/verify-zone" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"hostname":"app.example.com"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    hostname: { type: 'string', description: '要检查的全限定主机名，例如 app.example.com。', required: true },
+  }}
+/>
+
+响应会区分四种结果，因为它们需要不同的应对措施：
+
+| `status` | `matched` | 含义 |
+|---|---|---|
+| `matched` | `true` | 已连接的提供方托管着此区域；可以在 Openship 中预览并应用该域名的记录。 |
+| `none` | `false` | 我们询问过，没有已连接的提供方托管它。你需要自己添加记录。 |
+| `unauthorized` | `false` | 已存储的令牌被拒绝。请重新连接——`credentialId` 指明是哪条。 |
+| `unavailable` | `false` | 无法访问该提供方（速率限制、故障等）。状态未知，**并非**配置错误的信号。 |
+
+## 添加、预览与应用域名
+
+`POST /api/domains` 会持久化一个待处理域名，并返回它需要的记录。它不会调用
+DNS 提供方。服务层的自定义路由遵循同一契约：保存路由会创建对应的待处理域名行，而这一行提供了共享的计划与应用端点要用的 `:id`。
+
+在写入之前，先预览提供方将发生的确切变更：
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.domains.dnsPlan("dom_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/domains/dom_123/dns/plan" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+```json
+{
+  "data": {
+    "status": "matched",
+    "provider": "cloudflare",
+    "zoneName": "example.com",
+    "records": [
+      { "name": "app.example.com", "type": "A", "action": "create", "desired": "203.0.113.10" }
+    ]
+  }
+}
+```
+
+计划会把每条记录分类为 `create`、`update`、`adopt`、`in-sync` 或 `conflict`。冲突会被报告而不是被覆盖。`status: "none"` 表示没有已连接的凭据托管该区域，此时请使用 `POST /api/domains`（或 `GET /api/domains/:id/records`）返回的记录手动添加。
+
+显式应用预览过的记录：
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.domains.dnsApply("dom_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/domains/dom_123/dns/apply" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+响应会对每条记录报告 `applied`、`skipped` 或 `failed`。只有当匹配的提供方已就位所有需要动手的记录时，`provisioned` 才为 `true`；部分写入成功会返回 `provisioned: false` 并附上原因与逐条记录的失败详情。
+
+应用操作不会触发验证。记录是刚刚写入的，DNS 解析器可能仍在为该名称缓存否定应答，而一次失败的检查会消耗 Let's Encrypt 对该主机名的验证失败额度。域名会保持待处理状态，由 `domains:verify-pending` 巡检任务在十分钟宽限期过后接收它。
+
+## 移除记录
+
+断开一条凭据不会触碰 DNS。移除一个*域名*则会——但只移除 Openship 创建的记录，即它在每条记录上写入 `Managed by Openship` 注释所标识的那些。
+
+<Callout title="为什么所有权要显式跟踪而不是推断" type="info">
+对于根域名（apex domain），记录名称*就是*区域根名，而你的 `MX`、SPF `TXT` 与 `CAA` 记录也恰恰驻留在那里。删除"该名称下的所有记录"会把邮件一起带走，因此 Openship 只删除它能够证明是自己写入的记录。
+
+连接域名确实会把该名称下的既有记录重新指向新值——这正是"连接"的含义——但重新指向不等于收养（adopt）：Opensship 不会改动此类记录的注释，它因此永远不携带
+`Managed by Openship` 标记，之后移除域名时也不会删除它。
+</Callout>
+
+## 错误
+
+| 错误码 | 状态码 | 含义 |
+|---|---|---|
+| `DNS_UNKNOWN_PROVIDER` | 400 | `provider` 不是 `GET /api/dns/providers` 返回的名称。 |
+| `DNS_PROVIDER_NOT_READY` | 400 | 提供方在入库前的检查中拒绝了该令牌。 |
+| `DNS_RECORD_CONFLICT` | 409 | 已有多条记录应答该名称与类型，且没有一条是 Openship 创建的——这是轮询（round-robin）或多主机集合，Openship 不会改写它。 |
+| `DNS_API_ERROR` | 502 | 提供方的 API 失败。上游状态码已包含在消息里。 |
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出支持的 DNS 提供方及其凭据字段。 | `dns.listProviders()` | `GET /api/dns/providers`<br />`settings:read` |
+| 列出组织的 DNS 凭据。 | `dns.listCredentials()` | `GET /api/dns/credentials`<br />`settings:read` |
+| 读取一条掩码后的 DNS 凭据。 | `dns.getCredential(input)` | `GET /api/dns/credentials/:id`<br />`settings:read` |
+| 存储一个 DNS 提供方凭据。 | `dns.addCredential(input)` | `POST /api/dns/credentials`<br />`settings:admin` |
+| 移除一条 DNS 凭据。 | `dns.removeCredential(input)` | `DELETE /api/dns/credentials/:id`<br />`settings:admin` |
+| 检查对所请求 DNS 区域的访问权限。 | `dns.verifyZone(input)` | `POST /api/dns/verify-zone`<br />`settings:read` |
+
+{/* api-operations:end */}

@@ -1,0 +1,76 @@
+---
+title: 用户与组织
+description: 把你应用的用户映射到 OpenShip，并让每个操作都在获得授权的组织内进行。
+---
+
+组织是资源边界。作用域（scope）选择组织，并携带一个经过验证的用户身份。提供组织
+ID 并不会因此获得对该组织的访问权限。
+
+## 远程作用域
+
+```ts title="remote-scopes.mts"
+import type { OpenshipClient } from "openship";
+
+export async function listProjectsFor(client: OpenshipClient, organizationId: string) {
+  return client.scope(organizationId).projects.list();
+}
+```
+
+API 会验证 bearer 凭据，并检查成员身份和授权。客户端在多次请求中保持所选组织固定。
+需要[兼容的服务器支持](/docs/api/sdk/compatibility#固定组织作用域)。
+
+## 原生身份适配器
+
+由宿主提供 `identity.resolve(assertion)`。只有在验证断言通过后才返回
+`VerifiedIdentity`；对无效或已吊销的会话返回 `null`。
+
+SDK 在每次操作时都会重新调用这个适配器，并重新读取持久化的成员身份和授权。移除
+成员身份或吊销宿主会话会使现有作用域失效。
+
+| 取值 | 提供方 |
+| --- | --- |
+| 断言（assertion） | 由你的应用提供，例如会话标识符。 |
+| 已验证的用户与会话 ID | 由你可信的认证适配器提供。 |
+| 组织 ID | 由你的应用从用户可访问的组织中选择。 |
+| 角色与资源授权 | OpenShip 持久化的成员身份与权限模型。 |
+
+对于经过验证的 PAT/OAuth 身份，适配器可以提供 `tokenScope` 和凭据限制。它必须先
+验证凭据后才能这样做。参见[权限](/docs/security/permissions)。
+
+## 开通客户工作区
+
+为可信的宿主代码启用 `administration: true`。命名空间（namespace）是一个映射到
+OpenShip 组织的稳定外部键：
+
+```ts title="customer-workspace.mts"
+import type { OwnedShip } from "openship";
+
+export async function provisionCustomer(
+  ship: OwnedShip<string>,
+  subject: string,
+  email: string,
+) {
+  if (!ship.operator) throw new Error("Host administration is disabled");
+  const person = await ship.operator.ensureIdentity({ issuer: "my-product", subject, email });
+  const workspace = await ship.operator.ensureNamespace({
+    issuer: "my-product",
+    key: subject,
+    name: "Customer workspace",
+    ownerUserId: person.user.id,
+  });
+  return { person, organizationId: workspace.organizationId };
+}
+```
+
+两种映射都会持久化。仅凭邮箱相同不会关联已有账户；显式的账户关联使用 `userId`。
+使用 `operator.setMembership()` 添加或移除成员。最后一位所有者不能被移除。
+
+在你的适配器验证用户会话之后，调用
+`ship.scope({ identity: assertion, organizationId })`，然后通过该作用域创建或部署
+项目。该作用域不包含操作员方法。
+
+## 后台动作
+
+某些已保存的动作会在发起请求之后继续执行。它们使用持久化的权限，且仍必须通过当前
+的成员身份和凭据检查。外部宿主会话在重启后无法重新验证，除非你的集成把吊销情况同步
+到持久化权限中。参见[当前的后台限制](/docs/api/sdk/compatibility#当前限制)。

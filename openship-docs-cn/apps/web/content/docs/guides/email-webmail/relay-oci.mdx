@@ -1,0 +1,81 @@
+---
+title: OCI Email Delivery
+description: 通过 Oracle Cloud（OCI）Email Delivery 路由 Openship 邮件服务器的出站邮件——免费额度、良好的 IP 信誉，还免去 PTR 琐事。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Oracle Cloud 的 **Email Delivery**（邮件投递）服务是做 [SMTP 中继](/docs/guides/email-webmail/relays)的可靠之选：每月前 3000 封邮件免费，而且你的邮件从 Oracle 自家的 IP 地址发出（而不是一个暂时无人信任的全新云 IP），收件箱提供商退信或丢进垃圾箱的概率要低得多。
+
+<Callout title="前置要求">
+- 一个 **OCI 账户**（Oracle 免费套餐即可覆盖）。
+- 一个你掌控、可添加 DNS 记录的**域名**。
+- 一台已设置好的 **Openship 邮件服务器**。还没弄的话，先看[邮件与 Webmail](/docs/guides/email-webmail)——得先让它跑起来才有邮件可中继。
+</Callout>
+
+## 设置流程一览
+
+<Steps>
+
+<Step>
+
+### 创建 Email Domain 并添加 DKIM 记录
+
+在 OCI Email Delivery 中，为你的域名创建一个 **Email Domain**（邮件域）。OCI 会为它生成 DKIM DNS 记录——把它们添加到你域名的 DNS 服务商处。DKIM 是一种加密签名，收件邮件服务器用它确认邮件确实来自你的域名，因此这一步是其余设置取信于人的基础。
+
+</Step>
+
+<Step>
+
+### 添加 SPF 记录
+
+按 [OCI 的 SPF 指南](https://docs.oracle.com/en-us/iaas/Content/Email/Tasks/configurespf.htm)在你域名的 DNS 服务商处添加 SPF 记录。它是一行 TXT 条目，向世界宣告：“Oracle 的中继获准代表本域名发信”——没有它，收件服务器无从知晓 Oracle 是你的合法发件方。
+
+</Step>
+
+<Step>
+
+### 注册你的获批发件人
+
+OCI 拒绝中继来自它不认识的 From 地址的邮件，所以要把你用来发信的地址注册为**获批发件人（approved sender）**——可以是具体地址，也可以用 `@yourdomain.com` 一次覆盖整个域名（仅在 DKIM 激活后可用）。在 OCI 控制台（导航菜单 → **Developer Services** → **Email Delivery** → **Approved Senders** → **Create Approved Sender**）操作，或用 CLI：
+
+```bash
+oci email sender create --email-address you@yourdomain.com ...
+```
+
+</Step>
+
+<Step>
+
+### 创建 SMTP 凭据
+
+为一个 IAM 用户创建 SMTP 凭据：OCI 控制台 → **Identity** → **Users** → **SMTP Credentials**。密码只会原样显示一次，出现的那一刻就抄到安全的地方——此后再也无法查看。
+
+</Step>
+
+<Step>
+
+### 把 Openship 的中继指向 OCI
+
+在 Openship 中，前往 **Emails → Sending → “Relay via Amazon SES (or any SMTP relay)”** 并选择提供商 **Custom**（自定义）。填写：
+
+- **Host**（主机）——`smtp.email.<region>.oci.oraclecloud.com`（换成你的 OCI 区域）
+- **Port**（端口）——`587`
+- **Username / Password**（用户名/密码）——你刚创建的 SMTP 凭据
+
+同样的主机、端口和凭据在 **Settings → Email** 下也可用——如果你想让 Openship 自己的通知邮件也经 OCI 中继的话。
+
+</Step>
+
+</Steps>
+
+<img src="/docs/relay-oci-form.png" alt="Openship 的 Emails → Sending 中继表单，配置为 OCI Email Delivery（提供商 Custom，端口 587）" width="720" />
+
+## 陷阱与须知
+
+- **获批发件人是强制要求，不是可选项**。OCI 官方文档说得直白：“凡通过 Oracle Cloud Infrastructure 发信的每个 From: 地址都必须设置获批发件人，否则邮件被拒”（[OCI
+  文档](https://docs.oracle.com/en-us/iaas/Content/Email/Tasks/managingapprovedsenders.htm)）。逐个地址注册，或——一旦 Email Domain 的 DKIM 激活——用形如 `@yourdomain.com` 的获批发件人一次注册整个域名（[OCI
+  文档](https://docs.oracle.com/en-us/iaas/Content/Email/Reference/gettingstarted_topic-Create_an_approved_sender.htm)），一举覆盖所有邮箱。
+- **SMTP 凭据密码只显示一次**。OCI 控制台只在创建时显示它，此后不再——弄丢了唯一办法就是重新生成一个。
+- **25 端口默认封锁，而这无关紧要**。OCI 对 2021 年 6 月之后创建的租户封锁出站 25 端口。需要的话可以申请服务限制豁免，但走 OCI 的 587 端口 SMTP 中继则完全省掉这个等待——而且还有个额外好处：你的邮件从 Oracle 信誉良好的 IP 发出，而不是收件箱提供商天然存疑的全新云 IP。
+- **PTR 琐事可以跳过**。PTR（反向 DNS）是把服务器 IP 映射回主机名的记录，大型邮件提供商常常把没有 PTR 的 IP 发来的邮件扔进垃圾堆。由于你的出站邮件实际上从 Oracle 中继的 IP 发出——那些 IP 早已有合格的 PTR 记录——你自己实例的 IP 永远不需要配一个。

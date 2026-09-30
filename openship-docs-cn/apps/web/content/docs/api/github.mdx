@@ -1,0 +1,345 @@
+---
+title: GitHub
+description: 连接 GitHub 账号、仓库与 App 源。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+GitHub API 把 Openship 实例连接到 GitHub——通过 Openship GitHub App、OAuth 账号
+或本地 `gh` CLI——然后让你浏览可以从中部署的账号、仓库、分支与文件。它还管理驱动
+[自动部署](/docs/guides/deploy-from-github)的推送 Webhook（网络回调）。在控制台中，它对应
+设置页的 **GitHub** 连接卡片以及部署向导中的仓库选择器。
+
+<Callout title="云端与自托管皆可用" type="info">
+该模块挂载在每个实例上。本地身份路由与所有 `/api/github/sources` 路由仅供自托管使用，
+在 Openship Cloud 上返回 404。源管理还需要当前工作区的 `owner` 角色。
+</Callout>
+
+## 连接状态
+
+`GET /api/github/home` 是控制台的单一入口：它一次往返即返回 `{ state, accounts, repos }`，
+并按你的成员角色可见范围过滤账号与仓库。
+`GET /api/github/status` 更窄——它是设置卡片的数据来源——返回 `{ state, accounts,
+installUrl, cloudUnreachable, customSourcesConfigured }`。最后一个字段告诉客户端：App 生命周期
+控制属于工作区源管理器，而不是旧版 Openship App 连接。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.github.getHome();
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/github/home" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## 连接
+
+启动或推进连接流程。响应刻意做到了模式无关——前端只需根据 `flow` 字段做出反应：
+
+- `{ connected: true }` —— 已连接，无需操作。
+- `{ connected: false, flow: "redirect", url }` —— 打开 `url`（OAuth 跳转或 GitHub App 安装）。
+- `{ connected: false, flow: "installations", state, installations, installUrl }` —— 让用户选择一个已有安装，或打开 `installUrl` 在其他账号上安装。
+- `{ connected: false, flow: "device_code", userCode, verificationUri, ... }` —— 自托管的设备登录。
+- `{ connected: false, flow: "token", message }` —— 按该方法声明的凭据范围收集个人令牌。
+- `{ connected: false, flow: "terminal", command, message }` —— 自行运行 `command`（例如 `gh auth login`）。
+
+可选的请求体字段 `source`（`"oauth"` | `"cli"`）用于在控制台同时显示"连接 Openship App"和
+"使用 gh CLI"两个按钮时强制走特定路径；省略它则由服务器根据实例的认证模式自行选择。
+
+在 Openship Cloud 上，仓库授权与用于登录的 GitHub 身份是分开的。同一个 GitHub 用户可以为
+多个 Openship 账号授权仓库访问。此操作绝不会移动或断开其他账号的登录关联。已有安装通过该用户的
+GitHub 授权发现，并在选中时重新校验。
+
+对于携带 `completion: "attempt"` 的重定向，使用返回的 state 轮询
+`github.pollConnect({ state })`，直到完成或报错。已有一个已连接的安装并不意味着新的尝试成功了。
+`flow: "installations"` 响应在用户选择后通过
+`github.claimInstallation({ state, installationId: String(id) })` 完成。
+云端还支持在**设置 → Git**中填入个人令牌；资料库的 **其他连接方式** 链接会打开该页面。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.github.connect({
+  source: "oauth",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/github/connect" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"oauth"}'
+```
+
+</Tab>
+</Tabs>
+
+## 断开连接
+
+```
+POST /api/github/disconnect
+```
+
+请求体（或 `?source=`）：`source` 可为 `"oauth"`、`"cli"` 或 `"all"`（默认 `"all"`）。这会丢弃
+Openship 为该源存储的凭据；它**并不会**卸载 GitHub App——只有当你在 github.com 上移除它时
+才会卸载（Openship 响应卸载 Webhook）。
+
+在云端，断开 `oauth` 会清除仓库授权并取消其待处理连接尝试。它会保留账号的 GitHub 登录方式
+以及单独保存的个人令牌。
+
+该端点不会删除工作区持有的源。请使用 `DELETE /api/github/sources/:id` 这一显式的仅属主操作。
+
+## 工作区持有的 GitHub App 源
+
+这些端点仅在自托管实例可用。所有读取都经过脱敏：私有密钥、客户端密钥、webhook 密钥及其加密
+信封永远不会被返回。
+
+### 列出源
+
+返回 `{ data, configuration }`。`configuration` 包含 `publicReady`、`publicUrl`、`setupUrl` 和
+`webhookUrl`。`data` 中的每个源包含公开的 App 元数据、健康状态、默认状态以及其占用的安装。
+
+### 一键 manifest
+
+使用以下方式发起 GitHub.com 流程：
+
+响应包含 `{ url, manifest }`。将 `manifest` 作为 JSON 字符串填入名为 `manifest` 的表单字段并提交
+到 `url`；控制台会自动完成这一步。GitHub 会带着 `code` 和 `state` 重定向到配置的安装页，
+这两者必须发送到：
+
+```text
+POST /api/github/sources/manifest/convert
+{ "code": "…", "state": "…" }
+```
+
+转换操作只消费一次绑定用户/工作区的 state，加密 GitHub 生成的凭据，并返回 `{ data, installUrl }`。
+
+### 手动注册与 GitHub Enterprise Server
+
+```text
+POST /api/github/sources/manual
+```
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '面向工作区的源名称。', required: true },
+    appId: { type: 'integer', description: '数字形式的 GitHub App ID。', required: true },
+    clientId: { type: 'string', description: '可选的 App client ID。' },
+    clientSecret: { type: 'string', description: '可选的 App client secret；加密存储。' },
+    privateKeyPem: { type: 'string', description: '完整的 App 私钥 PEM；加密存储。', required: true },
+    webhookSecret: { type: 'string', description: '匹配的 App webhook secret，至少 16 个字符；加密存储。', required: true },
+    webBaseUrl: { type: 'string', description: 'GitHub 网页端源地址。默认为 https://github.com。' },
+    apiBaseUrl: { type: 'string', description: 'REST API 基地址。默认为 https://api.github.com；GHE 通常使用 https://host/api/v3。' },
+    isDefault: { type: 'boolean', description: '当多个源覆盖同一属主时优先使用此 App。' },
+  }}
+/>
+
+API 会签发 App JWT 并校验 `/app` 后才保存源。它返回 `{ data, installUrl }`。
+
+`PATCH /api/github/sources/:id` 接受相同的身份与端点字段，全部可选。省略的密钥字段保留其现有的
+加密值。当源已占用安装时，App ID 或 API 地址不可更改。`POST .../verify` 刷新公开的 App 元数据，
+并将失效凭据标记为需要关注。
+
+将某个源设为默认会原子性地为该源上已安装的每个 GitHub 属主重新绑定现有项目。删除一个源时会在可能
+的情况下提升另一个活跃源并重新绑定受影响的项目；没有替代源的项目会失去安装绑定，自动部署随之禁用。
+在本地删除并不会卸载 GitHub App 本身。
+
+## 创建仓库
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.github.createRepo({
+  name: "my-app",
+  private: true,
+  owner: "acme",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/github/repos" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-app","private":true,"owner":"acme"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '仓库名称。仅限字母、数字、点、下划线与连字符。', required: true },
+    description: { type: 'string', description: '可选的仓库描述。' },
+    private: { type: 'boolean', description: '以私有仓库形式创建。', default: 'false' },
+    owner: { type: 'string', description: '创建到的组织/账号。默认为已连接的用户账号。' },
+  }}
+/>
+
+返回 `201` 与 `{ data }`（创建的仓库）。
+
+## 浏览仓库、分支与文件
+
+列出已连接账号的仓库（`?owner=` 可缩小到单个账号），或通过 `GET /api/github/orgs/:org/repos`
+列出指定组织的仓库。两者都返回 `{ data: [...] }`，并按你的角色可见范围过滤。
+
+文件浏览直接读取 GitHub：
+
+- `GET /api/github/repos/:owner/:repo/files` — 目录列表。查询参数：`path`（默认为仓库根目录）与
+  `branch`。
+- `GET /api/github/repos/:owner/:repo/file` — 单个文件的内容。查询参数：`file`（默认为 `package.json`）
+  与 `branch`。`.json` 文件会被解析并以 JSON 返回。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.github.getFile({
+  owner: "acme",
+  repo: "my-app",
+  file: "package.json",
+  branch: "main",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/github/repos/acme/my-app/file?file=package.json&branch=main" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## Webhooks
+
+`POST /api/github/repos/:owner/:repo/webhooks` 在仓库上注册 Openship 的推送 Webhook（或复用已有的）
+，使推送触发自动部署。它**不需要请求体**——目标仓库来自路径。`GET` 列出仓库的 hooks。要移除一个，
+用 hook id 执行 `DELETE`：
+
+```
+DELETE /api/github/repos/:owner/:repo/webhooks
+```
+
+<TypeTable
+  type={{
+    hookId: { type: 'number', description: '要删除的 GitHub webhook id（来自列表端点）。', required: true },
+  }}
+/>
+
+## 克隆令牌
+
+`GET /api/github/repos/:owner/:repo/clone-token` 签发一个短时（不到一小时）的 GitHub App 安装
+令牌，并返回 `{ token, cloneUrl, command }`——一条可直接运行的 `git clone`。这与构建流水线克隆时
+使用的凭据相同，且仅在属主已安装 Openship GitHub App 时可用。
+
+## 错误
+
+<Callout title="400 — 未连接到 GitHub" type="warn">
+当未配置可用的 GitHub 源（App 安装、OAuth 账号或 `gh` CLI）时，仓库列表路由会返回此错误。
+先用 `POST /api/github/connect` 连接，然后重试。
+</Callout>
+
+<Callout title="409 — 无安装令牌" type="warn">
+`clone-token` 需要属主已安装 GitHub App。在 `gh` CLI 或 PAT 模式下没有安装令牌，因此该路由
+返回 409。在该账号上安装 Openship GitHub App 才能使用克隆令牌。
+</Callout>
+
+<Callout title="503 — cloud_unreachable" type="error">
+对于连接了 Openship Cloud 的自托管实例，GitHub OAuth 与 App 安装地址通过 openship.io 解析。
+如果 SaaS 不可达，`connect` 会返回 503 而不是一个失效的安装链接。检查网络/设置中的云端连接，
+然后重试。
+</Callout>
+
+配置了[自托管 GitHub App](/docs/guides/self-hosted-github-app) 的实例不使用这个云端代理；
+`GITHUB_AUTH_MODE=auto` 会优先选择完整的本地 App 配置。
+
+<Callout title="仓库路由返回 404" type="error">
+`:owner/:repo` 对当前 GitHub 源不可见（私有、未授予你的成员角色，或不存在）。
+先确认该仓库出现在 `GET /api/github/home` 中。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+### 连接
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取 GitHub 连接状态。 | `github.getStatus(input?)` | `GET /api/github/status`<br />`github:read` |
+| 读取当前身份的 GitHub 总览。 | `github.getHome()` | `GET /api/github/home`<br />`github:read` |
+| 发起 GitHub 授权或选择一个可访问的 App 安装。仓库访问与云端登录相互独立。 | `github.connect(input?)` | `POST /api/github/connect`<br />`github:write` |
+| 认领一个已授权的 GitHub App 安装。 | `github.claimInstallation(input)` | `POST /api/github/installations/claim`<br />`github:write` |
+| 读取本地 Git 身份可用性。 | `github.getLocalStatus()` | `GET /api/github/local-status`<br />`github:read` · 自托管 |
+| 轮询返回的 state 以完成一次连接尝试；省略 state 则进入自托管设备流。 | `github.pollConnect(input?)` | `GET /api/github/connect/poll`<br />`github:read` |
+| 配置安装的 GitHub 令牌。 | `github.setInstanceToken(input)` | `POST /api/github/instance-token`<br />`github:admin` · 自托管 |
+| 断开 GitHub 身份或源关联。 | `github.disconnect(input?)` | `POST /api/github/disconnect`<br />`github:admin` |
+
+### 仓库与源
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出可访问的仓库。 | `github.listRepos(input?)` | `GET /api/github/repos`<br />`github:list` |
+| 列出 GitHub 组织中的仓库。 | `github.listOrgRepos(input)` | `GET /api/github/orgs/:org/repos`<br />`github:list` |
+| 读取仓库元数据。 | `github.getRepo(input)` | `GET /api/github/repos/:owner/:repo`<br />`github:read` |
+| 通过已配置的 GitHub 身份创建仓库。 | `github.createRepo(input)` | `POST /api/github/repos`<br />`github:write` |
+| 删除一个已授权的仓库。 | `github.deleteRepo(input)` | `DELETE /api/github/repos/:owner/:repo`<br />`github:admin` |
+| 列出仓库分支。 | `github.listBranches(input)` | `GET /api/github/repos/:owner/:repo/branches`<br />`github:list` |
+| 获取已授权仓库的克隆凭据。 | `github.getCloneToken(input)` | `GET /api/github/repos/:owner/:repo/clone-token`<br />`github:read` |
+| 检测仓库中的构建配置。 | `github.detectStack(input)` | `GET /api/github/repos/:owner/:repo/detect`<br />`github:read` |
+| 列出仓库某路径下的文件。 | `github.listFiles(input)` | `GET /api/github/repos/:owner/:repo/files`<br />`github:list` |
+| 读取仓库目录树。 | `github.listTree(input)` | `GET /api/github/repos/:owner/:repo/tree`<br />`github:list` |
+| 读取仓库文件内容。 | `github.getFile(input)` | `GET /api/github/repos/:owner/:repo/file`<br />`github:read` |
+
+### Webhooks
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出仓库 Webhook。 | `github.listWebhooks(input)` | `GET /api/github/repos/:owner/:repo/webhooks`<br />`github:list` |
+| 为部署事件注册仓库 Webhook。 | `github.registerWebhook(input)` | `POST /api/github/repos/:owner/:repo/webhooks`<br />`github:write` |
+| 删除仓库 Webhook。 | `github.deleteWebhook(input)` | `DELETE /api/github/repos/:owner/:repo/webhooks`<br />`github:admin` |
+
+### GitHub App 源
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出已配置的 GitHub App 源。 | `github.listSources()` | `GET /api/github/sources`<br />`github:admin` · 自托管 |
+| 发起 GitHub App manifest 注册。 | `github.beginManifest(input)` | `POST /api/github/sources/manifest`<br />`github:admin` · 自托管 |
+| 转换已完成的 GitHub App manifest。 | `github.convertManifest(input)` | `POST /api/github/sources/manifest/convert`<br />`github:admin` · 自托管 |
+| 注册一个已有的 GitHub App 源。 | `github.createManualSource(input)` | `POST /api/github/sources/manual`<br />`github:admin` · 自托管 |
+| 修改 GitHub App 源的配置。 | `github.updateSource(id, input)` | `PATCH /api/github/sources/:id`<br />`github:admin` · 自托管 |
+| 向 GitHub 校验源凭据。 | `github.verifySource(id)` | `POST /api/github/sources/:id/verify`<br />`github:admin` · 自托管 |
+| 选择默认的 GitHub App 源。 | `github.setDefaultSource(id)` | `POST /api/github/sources/:id/default`<br />`github:admin` · 自托管 |
+| 为 GitHub App 源生成安装地址。 | `github.createInstallUrl(id)` | `POST /api/github/sources/:id/install`<br />`github:admin` · 自托管 |
+| 移除一个 GitHub App 源。 | `github.deleteSource(id)` | `DELETE /api/github/sources/:id`<br />`github:admin` · 自托管 |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| GitHub OAuth 回调——浏览器跳转到此处，尚无会话。 | 仅 HTTP | `GET /api/github/connect/redirect`<br />`Handler authentication` |
+
+{/* api-operations:end */}

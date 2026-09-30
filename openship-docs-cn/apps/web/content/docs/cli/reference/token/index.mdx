@@ -1,0 +1,60 @@
+---
+title: token
+description: openship token 的命令、参数与选项。
+cliGroup: openship token
+---
+
+示例参见[工作流指南](/docs/cli/access)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship token
+
+管理个人访问令牌（personal access token）
+
+```text
+openship token [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list`](/docs/cli/reference/token#openship-token-list) | 列出你的个人访问令牌 |
+| [`create [options] <name>`](/docs/cli/reference/token#openship-token-create) | 新建一个个人访问令牌（密钥只显示一次） |
+| [`revoke <id>`](/docs/cli/reference/token#openship-token-revoke) | 吊销你的某个令牌 |
+
+## openship token create
+
+新建一个个人访问令牌（密钥只显示一次）
+
+```text
+openship token create [options] <name>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `name` | 便于阅读的令牌名称 |
+
+| 选项 | 说明 |
+| --- | --- |
+| `--read-only` | 拒绝写操作方法（POST/PUT/PATCH/DELETE）（默认：false） |
+| `--expires <days>` | N 天后过期（1–365）；省略则永不过期 |
+| `--grant <type:id:perms>` | 将令牌限定到某资源（可重复），例如 project:abc123:read,write（默认：[]） |
+| `--full-access` | 新建一个以你自身完整权限为准的未限定（UNSCOPED）令牌（未提供 --grant 时必填）（默认：false） |
+
+## openship token list
+
+列出你的个人访问令牌
+
+```text
+openship token list [options]
+```
+
+## openship token revoke
+
+吊销你的某个令牌
+
+```text
+openship token revoke [options] <id>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `id` | 令牌 ID |

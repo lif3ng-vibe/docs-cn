@@ -1,0 +1,88 @@
+---
+title: 定时任务
+description: 按计划运行维护操作——既有 Openship 代你管理的内置系统任务，也有你自己的定时命令。
+---
+
+任务（job）是在你的实例上**按计划**运行的工作：既有 Openship 自动替你完成的维护操作，也有你想自己运行的命令。在控制台（dashboard）的 **Jobs**（任务）版块中可以找到它们。
+
+<Callout title="仅限自托管" type="info">
+任务功能存在于自托管（self-hosted）实例上。在 Openship Cloud 上，平台会替你处理这些维护工作，因此没有 Jobs 标签页。
+</Callout>
+
+每次运行都会被记录——上次运行时间、是否成功、耗时多久，以及输出内容。
+
+## 内置任务
+
+Openship 自带一组系统任务，并替你保持其运行——无需任何设置：
+
+| 任务 | 作用 | 默认计划 |
+|---|---|---|
+| SSL 证书续期 | 在 Let's Encrypt 证书到期前为其续期 | 每天 |
+| 孤立资源清理 | 回收销毁失败后遗留的资源 | 每小时 |
+| 备份保留清理 | 删除超出保留策略期限的备份 | 每天 |
+| 审计日志清理 | 按你的保留设置修剪旧的审计记录 | 每天 |
+| 部署对账 | 收尾因连接中断而搁浅的部署 | 每 10 分钟 |
+
+对其中任何一个任务，你都可以**修改计划**、**启用/停用**、**立即运行**（Run now），并查看其**运行历史**。内置任务无法删除（它是 Openship 的一部分）——改为停用即可。
+
+## 自定义任务
+
+需要每晚转储数据库、预热缓存，或运行清理脚本？创建一个自定义任务即可：
+
+1. 在 **Jobs**（任务）页面点击 **New job**（新建任务）。
+2. 为它取一个**名称**，选择运行所在的**服务器**，填写**命令**和**计划**（cron 表达式）。
+3. 保存。它会按计划自动运行，你随时可以**立即运行**。
+
+任务运行过程中可以实时查看其**输出**，每次运行都会连同结果一起保留在历史记录中。
+
+## 计划（cron 表达式）通俗解释
+
+计划是一个标准的 5 字段 cron 字符串：
+
+```
+┌───────── minute (0–59)
+│ ┌─────── hour (0–23)
+│ │ ┌───── day of month (1–31)
+│ │ │ ┌─── month (1–12)
+│ │ │ │ ┌─ day of week (0–6, Sun=0)
+* * * * *
+```
+
+| Cron 表达式 | 执行时间 |
+|---|---|
+| `0 3 * * *` | 每天 03:00 |
+| `*/15 * * * *` | 每 15 分钟 |
+| `0 * * * *` | 每小时整点 |
+| `0 2 * * 0` | 每周日 02:00 |
+| `30 4 1 * *` | 每月 1 日 04:30 |
+
+保存时 Openship 会校验 cron 表达式，并显示**下次运行时间**。
+
+<Callout title="手动运行同样会被记录">
+通过**立即运行**（Run now）手动触发任务，与计划运行一样会保存到历史中，并标记为手动——因此你始终拥有完整记录。
+</Callout>
+
+## CLI
+
+在自托管的连接上下文中使用 `openship job`（别名 `jobs`）：
+
+```bash
+openship job list
+openship job create --name weekly-sync --server <server-id> \
+  --command 'cd /srv/app && npm run db:sync' --cron '17 4 * * 1'
+openship job get <key>
+openship job update <key> --no-enabled
+openship job update <key> --enabled --cron '0 3 * * *'
+openship job run <key> --follow
+openship job runs <key> --limit 10
+openship job logs <run-id> --follow
+openship job delete <key> --yes
+```
+
+任务同样可以通过原生 SDK 配合 `openship --native-config <file> job ...` 使用。
+
+请使用 `list` 或 `create` 返回的任务 **key**，而不是其数据库 ID。一次性任务传 `--schedule once --at <ISO-timestamp>`；仅手动执行的任务传 `--schedule manual`；周期性任务使用 `--cron`。
+
+`create` 和 `update` 都接受 `--file <path>` 参数，内容为 Jobs API 的 JSON 请求体。可用它指定 `env`、`secrets`、`serverIds`、`retry`、`timeoutMs`、`dependsOn`、`triggerEvents` 或 `notifyConfig`，也可以用它提供完整的任务配置。命令行显式参数优先于文件中的值；更新时只发送已提供的字段。含密钥（secrets）的文件请妥善保管。API 会对静态存储的密钥加密。
+
+`--json` 返回不带信封（envelope）的 API 数据。跟随的运行会以 JSON 事件流式输出。不带 `--follow` 时，`run` 会立即返回一个自定义运行 ID；带 `--follow` 时，CLI 会等待运行结果，失败或输出流中断时以非零状态码退出。内置任务直接返回其摘要。`logs` 不带 `--follow` 时显示已存储的输出，带 `--json` 时显示完整的运行记录。

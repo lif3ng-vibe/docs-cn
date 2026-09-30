@@ -1,0 +1,87 @@
+---
+title: backup run
+description: openship backup run 的命令、参数与选项。
+cliGroup: openship backup run
+---
+
+示例请参见[工作流指南](/docs/cli/self-host)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship backup run
+
+备份执行记录
+
+```text
+openship backup run [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/backup/run#openship-backup-run-list) | 列出项目的备份执行记录 |
+| [`get [options] <runId>`](/docs/cli/reference/backup/run#openship-backup-run-get) | 查看某次执行（可选流式跟随输出） |
+| [`protect [options] <runId>`](/docs/cli/reference/backup/run#openship-backup-run-protect) | 保护某次执行不被保留策略清理（或解除保护） |
+| [`restore [options] <runId>`](/docs/cli/reference/backup/run#openship-backup-run-restore) | 从某次执行准备恢复（先暂存；再单独 apply） |
+
+## openship backup run get
+
+查看某次执行（可选流式跟随输出）
+
+```text
+openship backup run get [options] <runId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `runId` | 备份执行 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--follow` | 流式跟随进度直至完成 |
+
+## openship backup run list
+
+列出项目的备份执行记录
+
+```text
+openship backup run list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 项目 ID |
+| `--service <id>` | 筛选单个服务 |
+| `--limit <n>` | 最大行数（默认 50） |
+
+## openship backup run protect
+
+保护某次执行不被保留策略清理（或解除保护）
+
+```text
+openship backup run protect [options] <runId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `runId` | 备份执行 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--until <iso>` | 保护至该 ISO 时间戳 |
+| `--release` | 清除保护，允许保留策略清理该记录 |
+
+## openship backup run restore
+
+从某次执行准备恢复（先暂存；再单独 apply）
+
+```text
+openship backup run restore [options] <runId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `runId` | 作为恢复来源的备份执行 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--mode <mode>` | in_place（默认）或 to_fork（默认："in_place"） |
+| `--fork-server <id>` | 目标 mail 服务器 ID（--mode to_fork 时必填） |
+| `--follow` | 流式跟随准备阶段输出 |

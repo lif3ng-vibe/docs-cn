@@ -1,0 +1,233 @@
+---
+title: mail
+description: openship mail 的命令、参数与选项。
+cliGroup: openship mail
+---
+
+示例参见[工作流指南](/docs/cli/self-host)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship mail
+
+自托管邮件服务器（iRedMail）的安装与管理 [self-host]
+
+```text
+openship mail [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`steps`](/docs/cli/reference/mail#openship-mail-steps) | 列出邮件安装的各个步骤 |
+| [`status [serverId]`](/docs/cli/reference/mail#openship-mail-status) | 查看某台邮件服务器的安装进度 |
+| [`servers`](/docs/cli/reference/mail#openship-mail-servers) | 列出已安装邮件套件的所有服务器 |
+| [`scan <serverId>`](/docs/cli/reference/mail#openship-mail-scan) | 探测服务器上是否已有邮件安装（只读） |
+| [`adopt <serverId>`](/docs/cli/reference/mail#openship-mail-adopt) | 重新接管一套编排器状态已丢失的既有邮件安装 |
+| [`setup [options] <serverId>`](/docs/cli/reference/mail#openship-mail-setup) | 启动或续跑邮件安装向导（通过 SSE 流式输出） |
+| [`cancel`](/docs/cli/reference/mail#openship-mail-cancel) | 取消当前正在运行的邮件安装 |
+| [`dns-ack <serverId>`](/docs/cli/reference/mail#openship-mail-dns-ack) | 确认 DNS 记录已发布（解除 DKIM 关卡） |
+| [`ptr-ack <serverId>`](/docs/cli/reference/mail#openship-mail-ptr-ack) | 确认反向 DNS（PTR）已配置 |
+| [`reset [options] <serverId>`](/docs/cli/reference/mail#openship-mail-reset) | 清除服务器上的安装状态文件（不会动到已安装的守护进程） |
+| [`forget <serverId>`](/docs/cli/reference/mail#openship-mail-forget) | 停止管理某台邮件服务器（删除数据库记录；套件与状态保持原样） |
+| [`health <serverId>`](/docs/cli/reference/mail#openship-mail-health) | 查看每个邮件守护进程的实时状态，以及邮件能否发出这台机器 |
+| [`logs [options] <serverId> <component>`](/docs/cli/reference/mail#openship-mail-logs) | 查看某邮件组件的 journal 日志（快照） |
+| [`postmaster`](/docs/cli/reference/mail#openship-mail-postmaster) | 管理 postmaster 邮箱 |
+| [`build [options]`](/docs/cli/reference/mail#openship-mail-build) | 从源码检出在本地构建 openship-mail 引擎镜像 [dev] |
+
+## openship mail adopt
+
+重新接管一套编排器状态已丢失的既有邮件安装
+
+```text
+openship mail adopt [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 要接管的服务器 ID |
+
+## openship mail build
+
+从源码检出在本地构建 openship-mail 引擎镜像 [dev]
+
+```text
+openship mail build [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--context <dir>` | 包含 apps/email/Dockerfile 的仓库根目录（默认：源码检出目录或当前工作目录） |
+| `--tag <ref>` | 要打标签的镜像引用（默认：固定的 openship-mail 引用） |
+
+## openship mail cancel
+
+取消当前正在运行的邮件安装
+
+```text
+openship mail cancel [options]
+```
+
+## openship mail dns-ack
+
+确认 DNS 记录已发布（解除 DKIM 关卡）
+
+```text
+openship mail dns-ack [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+## openship mail forget
+
+停止管理某台邮件服务器（删除数据库记录；套件与状态保持原样）
+
+```text
+openship mail forget [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+## openship mail health
+
+查看每个邮件守护进程的实时状态，以及邮件能否发出这台机器
+
+```text
+openship mail health [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+## openship mail logs
+
+查看某邮件组件的 journal 日志（快照）
+
+```text
+openship mail logs [options] <serverId> <component>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+| `component` | 组件 key（postfix\|dovecot\|amavis\|clamav\|iredapd\|postgresql\|…） |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-n, --lines <n>` | 行数（最多 1000）（默认："200"） |
+
+## openship mail postmaster
+
+管理 postmaster 邮箱
+
+```text
+openship mail postmaster [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`set-password [options] <serverId>`](/docs/cli/reference/mail#openship-mail-postmaster-set-password) | 轮换 postmaster 密码 |
+
+## openship mail postmaster set-password
+
+轮换 postmaster 密码
+
+```text
+openship mail postmaster set-password [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `--password <password>` | 新密码（至少 12 个字符）；省略时交互提示输入 |
+
+## openship mail ptr-ack
+
+确认反向 DNS（PTR）已配置
+
+```text
+openship mail ptr-ack [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+## openship mail reset
+
+清除服务器上的安装状态文件（不会动到已安装的守护进程）
+
+```text
+openship mail reset [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-y, --yes` | 跳过确认提示 |
+
+## openship mail scan
+
+探测服务器上是否已有邮件安装（只读）
+
+```text
+openship mail scan [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 要扫描的服务器 ID |
+
+## openship mail servers
+
+列出已安装邮件套件的所有服务器
+
+```text
+openship mail servers [options]
+```
+
+## openship mail setup
+
+启动或续跑邮件安装向导（通过 SSE 流式输出）
+
+```text
+openship mail setup [options] <serverId>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 要在上面安装邮件套件的服务器 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-d, --domain <domain>` | 邮件域名（例如 example.com） |
+| `--start-step <n>` | 从指定步骤续跑（1-13） |
+| `--config <json>` | 以 JSON 对象形式覆盖 iRedMail 配置 |
+
+## openship mail status
+
+查看某台邮件服务器的安装进度
+
+```text
+openship mail status [options] [serverId]
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `serverId` | 邮件服务器 ID（省略时进入空的欢迎界面） |
+
+## openship mail steps
+
+列出邮件安装的各个步骤
+
+```text
+openship mail steps [options]
+```

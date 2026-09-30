@@ -1,0 +1,153 @@
+---
+title: 日志与监控
+description: 看清你的应用在做什么——运行日志、进站的 Web 请求和流量——并在出故障时准确知道该去哪里排查。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+应用上线之后，下一个问题永远相同：*它现在到底在干什么？*日志（log）就是答案所在。可以把日志想象成应用自己记的日记——每次启动、打印一条消息，或接待一位访客，它都会写下一行。出了问题时，这本日记就是首先要翻的地方。
+
+Openship 为你提供两种日记和一个全局视角：
+
+- **运行日志（runtime log）**——应用自己打印的内容（启动消息、报错、`console.log`）。当应用崩溃或行为异常时，你要看的就是它。
+- **请求日志（request log）**——到达应用的每一个 Web 请求对应的一行记录：谁在访问、访问哪个页面、得到了什么响应。当你想问“有人在访问吗？”或“为什么有人会收到报错？”时，看它。
+- **分析（analytics）**——把同样的请求数据汇总成总量统计和流量图表，让你看到的是趋势而非一行行记录。
+
+<Callout title="前置要求">
+- 一个至少部署过一次的项目（在控制台（dashboard）中可以看到它）。
+- **运行日志**：应用必须真的在运行——静态站点没有运行中的进程，因此没有运行日志可看。
+- **请求日志和分析**：需要一些真实流量。全新且没有访客的应用暂时无内容可显示。
+</Callout>
+
+## 打开 Logs 标签页
+
+<Steps>
+
+<Step>
+
+### 前往你的项目
+
+在控制台中打开要检查的项目。项目页面侧面有一排标签页——**Overview**（总览）、**Services**（服务）、**Domains**（域名）、**Deployments**（部署）、**Source**（源）、**Configuration**（配置）、**Logs**（日志）等。
+
+</Step>
+
+<Step>
+
+### 点击 **Logs**
+
+这是观察运行中应用的实时窗口。其顶部有两个子标签页：**Terminal**（终端）和 **Server**（服务器）。接下来两节分别介绍它们。
+
+</Step>
+
+</Steps>
+
+## 运行日志——**Terminal** 子标签页
+
+**Terminal** 子标签页实时展示应用运行时打印的一切——就像应用跑在你自己的机器上时，你在终端里看到的输出。如果你的代码调用了 `console.log`、抛出了错误，或打印了启动横幅，都会显示在这里。
+
+有几点值得了解：
+
+- **会自动流式输出**——打开该标签页时它就开始自动追踪新行。一个小绿点和 **Stop**（停止）按钮表示正在实时输出；按 **Stop** 可冻结画面，按 **Start** 恢复流式输出。
+- **搜索**——顶部有一个搜索框，输入即可高亮匹配项，按 **Enter** / **Shift+Enter** 在匹配项之间跳转。
+- **复制、下载、清空**——右侧按钮可把可见日志复制到剪贴板、另存为 `.txt` 文件，或清空视图。
+
+<Callout title="有多个服务？选择要查看的目标" type="info">
+如果项目运行了多个服务（例如 docker-compose 套栈），终端上方会出现一个 **Runtime log target**（运行日志目标）选择器。选择项目运行时或某个具体服务，即可只看它的输出。
+</Callout>
+
+<Callout title="静态站点没有 Terminal 标签页" type="info">
+静态站点只是一堆文件——没有运行中的进程，自然不会打印任何东西——因此没有运行日志，**Terminal** 子标签页也会隐藏。在 **Openship Cloud** 上，静态站点仍会记录请求日志，显示在标有 **Requests**（请求）的单一子标签页中。**自托管**的静态部署没有可流式输出的运行时，因此 Logs 标签页会直接显示 *"No runtime logs."* 这是预期行为，不是 bug。
+</Callout>
+
+## 请求日志——**Server** 子标签页
+
+**Server** 子标签页（标题为 **HTTP Request Logs**）为每个到达应用的 Web 请求显示一行记录。每一行包含：
+
+- **方法**（GET、POST 等）和所请求的**路径**，
+- 应用返回的**状态码**（2xx 为绿色，3xx 为蓝色，4xx 为琥珀色，5xx 为红色），
+- 耗时（**响应时间**，单位毫秒），
+- 访客的 **IP 地址**与所在国家、出入字节数，以及其浏览器（user agent）。
+
+与 Terminal 一样，该视图也是**实时**的——新请求一发生就会出现在顶部。
+
+<Callout title="读懂状态码" type="info">
+颜色是最直观的信号。**绿色**（2xx）表示成功。**琥珀色**（4xx）表示访客请求的内容不存在或不被允许（比如 404）。**红色**（5xx）表示*你的应用*在处理请求时出错了——这才是要追查的对象，Terminal 标签页里通常能找到对应的错误。
+</Callout>
+
+如果项目在多个域名上提供服务，页眉会出现一个**域名切换器**，方便你逐个查看各域名的请求。
+
+## 更宏观的视角——**Overview** 标签页上的分析
+
+单条请求记录适合回答“刚刚发生了什么”，但要回答“整体运行得怎么样”，就需要汇总数据。打开项目的 **Overview** 标签页即可看到：
+
+- 顶部一排**统计卡片**：**Server Requests**（服务器请求数）、**Unique IPs**（独立 IP 数）、**Avg Response**（平均响应时间）和 **Bandwidth Out**（流出带宽）。
+- 一张 **Traffic**（流量）图表，展示随时间变化的请求量。
+- 一份 **Top Paths**（热门路径）列表——被访问最多的页面和端点。
+
+这与 Server 子标签页是同一份请求数据，只是做了计数汇总。起初是空的——随着流量到来会逐渐填充。
+
+## 出问题时应看哪里
+
+一份速查指南，让你不必瞎猜：
+
+- **应用启动不了，或不断崩溃** → **Logs → Terminal**。读最后几行，错误几乎总在那里。
+- **访客收到报错** → **Logs → Server**。找红色（5xx）的行，记下路径，再去 Terminal 里查对应的堆栈跟踪。
+- **“到底有没有人在用？”** → **Overview** 分析数据。
+- **部署本身失败了**（从未上线） → 在 **Deployments** 标签页中打开那次部署并阅读其构建日志——它与上文的运行日志是相互独立的两股输出。
+
+## CLI
+
+以上所有内容同样可以通过 CLI 获取。先用 `openship project list` 拿到项目 ID，然后：
+
+```bash
+# 运行（容器）日志——应用自己打印的内容
+openship project logs <project-id>              # 最近日志行
+openship project logs <project-id> --tail 200   # 最后 200 行
+openship project logs <project-id> -f           # 跟随 / 实时流式输出
+
+# HTTP 请求日志——每个打到应用的 Web 请求
+openship project server-logs <project-id>                 # 最近记录（JSON）
+openship project server-logs <project-id> --limit 200     # 最多 200 条
+openship project server-logs <project-id> --domain yourapp.com   # 仅限单个域名
+openship project server-logs <project-id> -f              # 实时流式输出
+
+# 特定部署的构建/运行日志（id 可用 openship deployment list 获取）
+openship logs <deployment-id>          # 快照
+openship logs <deployment-id> --tail 100
+openship logs <deployment-id> -f       # 持续输出直到部署结束
+```
+
+<Callout title="实时请求流式输出目前仅限自托管" type="info">
+`openship project server-logs -f` 在自托管项目上可以实时流式输出。对于 Openship Cloud 项目，CLI 只会打印最近的记录，并提示你前往控制台查看实时输出——云端项目的 **Server** 子标签页可以正常实时流式输出云请求。
+</Callout>
+
+<Callout title="管理边缘本身" type="info">
+上述命令读取的是单个项目。若要管理这些请求经过的反向代理——流量总览与按域名的分析数据、路由规则、把域名注册到某个端口，或接管已占用 `:80/:443` 的代理——参见[边缘（The edge）](/docs/guides/the-edge)指南（或 [`openship edge`](/docs/cli/edge) 命令参考）。
+</Callout>
+
+## 故障排查
+
+<Callout title="Terminal 标签页为空，或显示“Press Start”" type="warn">
+可能是应用还没打印任何东西，或者根本没有在运行。确认部署已上线（检查 **Deployments** 标签页），然后按 **Start**。如果项目是**静态站点**，则完全没有 Terminal——在 Openship Cloud 上请使用 **Requests** 子标签页；自托管的静态部署没有运行日志可显示。
+</Callout>
+
+<Callout title="弹出“Container exited with code …”" type="error">
+应用启动后又退出了。非零退出码意味着它崩溃了——阅读 **Terminal** 标签页的最后几行，原因就在其中。常见嫌疑：缺少环境变量、数据库连接失败，或应用监听了错误的端口。修复后重新部署即可。
+</Callout>
+
+<Callout title="请求日志没有出现" type="warn">
+请求日志记录在边缘，因此需要同时满足两个条件：应用必须正在接收**真实流量**（可以在浏览器里打开它的 URL 来产生一些），并且该部署必须已就位请求日志记录功能。如果面板显示了错误，其提示——*"make sure the server has analytics scripts deployed"*——指的就是第二种情况。
+</Callout>
+
+<Callout title="CLI 提示“Failed to connect to terminal logs”" type="error">
+这表示项目没有在运行，因此没有可连接的实时流。确认部署已启动（`openship project list` 会显示其状态），必要时先启动，然后重试 `openship project logs <project-id> -f`。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="回滚或重新部署" href="/docs/guides/rollback-redeploy" description="在日志里发现了有问题的发布？快速回到可用版本。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="大多数启动崩溃都能追溯到缺失的密钥或配置项。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把应用挂到你自己的域名下——并按域名查看其请求。" />
+  <Card title="核心概念" href="/docs/getting-started/core-concepts" description="项目、部署、服务——屏幕背后的那些词。" />
+</Cards>

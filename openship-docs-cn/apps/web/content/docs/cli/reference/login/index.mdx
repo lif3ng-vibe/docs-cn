@@ -1,0 +1,22 @@
+---
+title: login
+description: openship login 的命令、参数与选项。
+cliGroup: openship login
+---
+
+示例请参见[工作流指南](/docs/cli/access)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship login
+
+使用个人访问令牌（Personal Access Token）进行身份验证（可在控制台设置中创建）
+
+```text
+openship login [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--token <token>` | 用于非交互登录的个人访问令牌（opsh_pat_...） |
+| `--api-url <url>` | API 基础 URL（默认取已保存的上下文或本地安装） |
+| `--dashboard-url <url>` | 控制台基础 URL（默认取已保存的上下文或本地安装） |
+| `--context <name>` | 用于存储本次登录的上下文名称（默认："default"） |

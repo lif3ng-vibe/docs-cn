@@ -1,0 +1,92 @@
+---
+title: 公开公告
+description: 读取安装公告，并以运营者权限发布它们。
+---
+
+公告（notice）是安装级（installation-wide）的公告。读取活跃公告是公开的。发布、列出已下线的
+公告或下线一条公告需要单独的[运营者能力](/docs/api/sdk/operator)。组织属主角色不授予该能力。
+
+## 读取活跃公告
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const { advisories } = await ship.notices.list();
+console.log(advisories);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/notices"
+```
+
+</Tab>
+</Tabs>
+
+响应包含活跃的 `advisories`，含标题、消息、严重程度以及可选的动作或目标。计划好的开始与结束
+时间决定一条公告何时显示。
+
+## 发布公告
+
+SDK 示例使用一个已配置的 `operator`，仅受信任的安装代码可用。REST 示例使用安装的内部运营者令牌。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const notice = await operator.notices.create({
+  title: "Planned maintenance",
+  message: "Deployments will pause during maintenance.",
+  severity: "info",
+  startsAt: "2026-10-01T01:00:00Z",
+  endsAt: "2026-10-01T01:30:00Z",
+});
+console.log(notice.id);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/notices" \
+  -H "X-Internal-Token: $OPENSHIP_INTERNAL_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Planned maintenance","message":"Deployments will pause during maintenance.","severity":"info","startsAt":"2026-10-01T01:00:00Z","endsAt":"2026-10-01T01:30:00Z"}'
+```
+
+</Tab>
+</Tabs>
+
+| 字段 | 用途 |
+| --- | --- |
+| `title`、`message` | 必填的公告文本。 |
+| `severity` | `critical`、`recommended` 或 `info`。 |
+| `startsAt`、`endsAt` | 可选的 ISO 时间戳，限定可见时间。 |
+| `actionLabel`、`actionUrl` | 随公告展示的可选链接。 |
+| `targetType`、`targetId` | 可选的平台、应用、项目或邮件目标。 |
+
+`operator.notices.listAll()` 包含已下线的公告。`operator.notices.remove(id)` 会下线一条公告，
+使其不再出现在活跃信息流中。
+
+## 操作
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取活跃的公开安装公告。 | `notices.list()` | `GET /api/notices`<br />`Handler authentication` |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 以运营者权限发布一条安装公告。 | `operator.notices.create(input)` | `POST /api/notices`<br />`Internal operator` |
+| 以运营者权限下线一条安装公告。 | `operator.notices.remove(id)` | `DELETE /api/notices/:id`<br />`Internal operator` |
+| 以运营者权限列出所有安装公告。 | `operator.notices.listAll()` | `GET /api/notices/all`<br />`Internal operator` |
+
+{/* api-operations:end */}

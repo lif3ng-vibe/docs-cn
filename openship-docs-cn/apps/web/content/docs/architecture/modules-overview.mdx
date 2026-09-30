@@ -1,0 +1,88 @@
+---
+title: 模块总览
+description: 逐个走访构成 Openship API 的后端模块——按职能分组，说明各自管辖什么，并附参考页链接。
+---
+
+[架构总览](/docs/architecture/overview)里的 API 并不是一整坨代码。它拆成了一个个**模块**（module）——可以把它们想象成一家公司的各个部门。每个部门管一块地盘（项目、域名、备份……），各自挂载在 `/api` 下的专属地址上。问域名的事？去找 `/api/domains` 的域名部门。问备份？另一个部门，另一个地址。
+
+几乎每个请求都要先过同一道前台：完成鉴权，而且每条路由都带一个**权限标签**（permission tag，如 `domain:write`），标明谁有权做这件事——所以无论敲开哪个模块的门，规则都一模一样。少数几扇门刻意对外开放：[health](/docs/api/health) 健康检查不设门槛，入站的 [webhooks](/docs/api/webhooks) 则靠签名、而非登录来证明身份。
+
+<Callout title="本页是地图，参考页是细节">
+这里每个模块只有一两句话——够你知道该敲哪扇门。每个模块都链接到自己的参考页，那里有确切的端点、字段和示例。共享的鉴权模型，从 [API 总览](/docs/api)开始看。
+</Callout>
+
+## 构建与发布
+
+核心流水线：把你的代码变成跑起来的应用。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [projects](/docs/api/projects) | 一切的核心。**项目**（project）是 Openship 管理的一个应用——包括它的源（GitHub 仓库、上传的文件夹或本地路径）、环境变量、资源限制和各项设置。本模块负责创建和配置项目。 |
+| [deployments](/docs/api/deployments) | 一次**部署**（deployment）就是把项目当前代码构建并运行起来的一次尝试。负责启动构建、流式输出日志，并处理善后：重新部署、回滚、重启和取消。 |
+| [services](/docs/api/services) | 当一个项目不止一个活动部件（Docker Compose 栈或 monorepo）时，每个运行中的部件就是一个**服务**（service）。可以单独管理、启动、停止和配置每一个。挂载在 `/api/projects/:id/services` 下。 |
+| [images](/docs/api/images) | 一个可搜索的现成容器镜像目录（数据库、工具等），可直接放入项目，来源是 Openship Cloud 的镜像目录。 |
+
+## 流量与源
+
+你的应用如何被访问，以及它的代码从哪来。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [domains](/docs/api/domains) | 把网址绑到项目上，预览并验证所需的 DNS 记录，并管理 HTTPS 证书。 |
+| [github](/docs/api/github) | 连接你的 GitHub 账号，列出你的仓库、分支和文件，让 Openship 能从那里部署。 |
+| [webhooks](/docs/api/webhooks) | 来自外部事件的唯一入站之门——GitHub 推送（可触发重新部署）或 Stripe 计费事件都从这儿进。它校验每个事件的签名，而不是要求登录。 |
+
+## 观察与知悉
+
+知道你的应用在干什么，并在有事时收到消息。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [analytics](/docs/api/analytics) | 流量与部署统计——请求数、状态码、热门路径、部署频率与成功率——可看整个组织，也可看单个项目。 |
+| [health](/docs/api/health) | 一个小小的免鉴权端点，报告实例还活着、跑的是哪个版本。负载均衡器和 Docker 健康检查都用它。 |
+| [notifications](/docs/api/notifications) | 告警从哪来、往哪去：事件分类、投递渠道（邮件、Webhook、Slack、应用内），以及你按事件设置的订阅。 |
+
+## 人员、访问与安全
+
+谁能做什么，以及他们做过什么的记录。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [permissions](/docs/api/permissions) | 团队管理与细粒度访问——组织里有哪些人，以及每个成员确切能读或能改哪些资源（称为**授权**（grant））。 |
+| [settings](/docs/api/settings) | 你所在组织的工作区偏好（构建模式、部署默认值），会在你的各台设备间同步。 |
+| [tokens](/docs/api/tokens) | **个人访问令牌**（personal access token）——CLI 和脚本与 API 通信所用的 Bearer 密钥——外加已连接 MCP 客户端的列表。 |
+| [audit](/docs/api/audit) | 一份只读的“谁做了什么”日志：每个有意义的动作都可查，可按操作者、事件类型或资源筛选。 |
+| [mcp](/docs/api/mcp) | 一个**模型上下文协议**（Model Context Protocol）端点（MCP 是 AI 助手调用工具的标准方式）。它把 Openship 的操作开放给智能体（agent）——客户端通过 OAuth 或个人访问令牌连接——而每一次调用都受同一套权限把关。 |
+
+## 云与计费
+
+托管运行这一选项，以及它要花多少钱。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [cloud](/docs/api/cloud) | 把自托管实例连到 Openship Cloud（连接、断开、列出云工作区），在 SaaS 一侧则处理两者之间的登录交接。 |
+| [billing](/docs/api/billing) | 套餐、订阅与用量。公开的套餐列表在每个实例上都有；依托 Stripe 的订阅管理跑在 Openship Cloud 上，自托管实例向它代理。 |
+
+## 数据保护
+
+| 模块 | 管辖内容 |
+|---|---|
+| [backups](/docs/api/backups) | 按计划或按需备份你的项目数据：定时安排，即**策略**（policy）；一次次单独的备份**执行**（run）；以及从备份**恢复**。 |
+
+## 自托管专属组件
+
+这些模块只存在于自托管实例上——在 Openship Cloud 上永远不会加载。
+
+| 模块 | 管辖内容 |
+|---|---|
+| [system](/docs/api/system) | 自管理实例背后的管道工程：浏览宿主机文件系统、首次运行设置，以及通过 SSH 接入并管理你自己的服务器（包括为每台服务器安装所需组件）。 |
+| [terminal](/docs/api/terminal) | 通过 SSH 进入你某台已连接服务器的交互式 shell，实时流式呈现到浏览器。 |
+| [mail](/docs/api/mail) | 一个向导，在你某台服务器上安装并管理一套完整的（基于 iRedMail 的）邮件服务器。 |
+
+## 相关指南
+
+<Cards>
+  <Card title="API 总览" href="/docs/api" description="所有模块共同遵循的鉴权模型、基础路径与错误结构。" />
+  <Card title="架构总览" href="/docs/architecture/overview" description="API、各界面与平台适配器如何拼装成一体。" />
+  <Card title="以云为源" href="/docs/architecture/cloud-as-source" description="为什么云项目归 SaaS 所有，而你的实例充当网关。" />
+</Cards>

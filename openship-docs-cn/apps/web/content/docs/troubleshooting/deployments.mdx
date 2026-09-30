@@ -1,0 +1,244 @@
+---
+title: 部署与构建故障
+description: 构建变红了——这里教你怎么读懂失败并修掉常见原因，从构建命令写错到需要你拍板的 compose 部署。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+部署失败几乎从来不是谜团。Openship 会在*花掉任何资源之前*先检查你的配置，构建一开始又会把每一行流式输出到构建界面。所以原因通常就摆在你眼前——你只需要知道去哪看。
+
+<Callout title="第一步：读最后几行红字">
+打开构建界面（从项目进入，或用[部署历史](/docs/guides/rollback-redeploy)里的链接），滚到底部。真正的报错就在最后几行红字里，之上的内容通常是噪音。如果部署在*任何构建输出出现之前*就停了，那是没过部署前检查——参见[下文](#pre-deploy-checks-failed)。
+</Callout>
+
+## "Pre-deploy checks failed"
+
+**你看到的现象**——部署几乎立刻被拒绝，消息类似于：
+
+<Callout type="error">
+`Pre-deploy checks failed: Build configuration: Missing required fields: install command, start command`
+</Callout>
+
+**含义**——你一按 Deploy，Openship 就会运行一组*预检*（preflight）检查，先于克隆任何代码或启动构建。任何一项不过，就什么都不会开通，你会拿到一个 `403`，上面列着确切的问题。这是一种“好”的失败：代价小、速度快，还精确告诉你该修什么。下面各节覆盖最常见的几种。
+
+---
+
+## 框架识别错了，或构建命令不对
+
+<Callout type="error">
+构建运行的命令和你的应用对不上——比如对一个纯 Vite 应用去跑 `next build`，或者部署“成功”了但服务的文件不对。
+</Callout>
+
+**含义**——导入仓库时，Openship 会检查它并猜测框架、包管理器以及 install/build/start 命令。绝大多数时候都猜得对，但少见的项目布局（或它认不出的仓库，会被识别为 **`unknown`**）可能导致猜错。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+打开项目，按 **Deploy** 重新进入[部署向导](/docs/dashboard/deploy-wizard)。当前检测到的值也会以只读形式显示在项目的 **Configuration** 标签页上。
+</Step>
+
+<Step>
+在构建/配置一步，把 **Framework**、**Install command**、**Build command** 和 **Start command** 改成你的应用本地实际使用的值。如果你用 `npm run build` 构建应用、用 `npm start` 启动，那么这里就该填这些。
+</Step>
+
+<Step>
+再次部署。Openship 会记住这些值，供之后的部署和重新部署使用。
+</Step>
+
+</Steps>
+
+<Callout type="info" title="静态站点不会运行 start 命令">
+如果你的项目是静态站点，多出来的 start 命令无害——会被忽略，部署继续，文件从边缘提供服务。
+</Callout>
+
+## 缺少必需的命令（或端口）
+
+<Callout type="error">
+`Pre-deploy checks failed: Build configuration: Missing required fields: ...`——列表里可能包含 `install command`、`start command`、`port` 或 `build image`。
+</Callout>
+
+**含义**——一个服务端应用需要知道怎么装依赖、怎么启动、跑在哪个端口上，而每个应用都需要一个构建镜像。这些里只要有一项空着，预检就会拦下部署，而不是让它深入构建之后才失败。（*build command* 缺失只是警告，不算失败——见上一节。）对于由[多个服务](/docs/guides/compose-multi-service)组成的项目，同一检查会按子应用分别报告，例如 *`sub-app "web" missing install command`*。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+按 **Deploy** 重新打开向导，把消息点名的字段填上。它列出的每个字段都必须有值。
+</Step>
+
+<Step>
+如果你的应用**确实**不需要构建步骤，没问题——但要明确说明，这样 Openship 就不会期待一个 build 命令。同样，静态站点不需要 start 命令和端口。
+</Step>
+
+<Step>
+再次部署。
+</Step>
+
+</Steps>
+
+## 应用没有监听在正确的端口上
+
+<Callout type="error">
+构建完成后，部署在收尾时失败，报：
+`Health check failed: the app never accepted a connection on port 3000 within 45s — it likely crashed on
+startup (check the runtime logs).`
+</Callout>
+
+**含义**——启动你的应用之后，Openship 最多等 45 秒，看它是否在配置的端口（默认 `3000`）上接受连接。如果始终没有响应，要么应用启动即崩，要么它监听的端口与 Openship 期待的*不一样*。这道就绪检查只在 **Local** 部署上运行；在远端 **Server** 或 **Cloud** 上，症状则表现为应用构建、启动都正常，但 URL 永远无响应。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+读运行时日志（构建界面，或项目的 **Logs** 标签页——见[日志与监控](/docs/guides/logs-monitoring)）。如果你的应用打了错误然后退出，先修那个——“端口”消息往往只是崩溃的表象。
+</Step>
+
+<Step>
+让你的应用绑定到 Openship 发给它的端口。从环境变量读端口（Node 里是 `process.env.PORT`，其他语言用等价物），而不是写死一个，并且要绑定到 `0.0.0.0`，不能只绑 `127.0.0.1`。
+</Step>
+
+<Step>
+确认项目 **Configuration** 标签页上的 **port** 与应用实际监听的端口一致。不一致就在[部署向导](/docs/dashboard/deploy-wizard)里改过来，然后重新部署。
+</Step>
+
+</Steps>
+
+<Callout type="warn" title="另一种“端口”问题：端口已被占用">
+在 Local 或 Server 部署上，如果另一个进程已占着端口，部署会暂停并询问怎么处理——一个 **Port In Use** 提示，内容为 *"Port 3000 is occupied by … This may not be a previous deployment."*，附带 **Free Port & Continue** 或 **Cancel Deploy**。只有当你认得占用者是某个残留部署时才选 *Free Port*；否则取消并换端口。如果释放不了，你会看到 *"Deploy aborted: port 3000 is in use by …"*。
+</Callout>
+
+## 应用需要比这台更大的机器
+
+<Callout type="error">
+`Pre-deploy checks failed: Host capacity: PostHog needs 8 GB of RAM (this machine has 2 GB) and
+4 vCPU (this machine has 2 vCPU). Install it on a bigger machine, or pick a different destination.`
+</Callout>
+
+**含义**——少数应用目录里的应用是真重（一个九容器的分析套件、一个要 8 GB 的 Postgres 分支），并声明了主机底线。Openship 读取你的目标机器 Docker 守护进程上报的数据来做比较。由于这是该应用的*首次*安装，它宁可直接停下，也不让你看着九个容器挨个被 OOM 杀掉。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+**换个更大的目标机器**——重新打开该应用的安装向导，底线就标在目标机器选择器旁边，并在你安装任何东西*之前*就标记出不达标的服务器。
+</Step>
+
+<Step>
+**或者给已选的服务器扩容**，然后再次部署。读数有短暂缓存，调整规格后等一分钟再试。
+</Step>
+
+</Steps>
+
+<Callout type="info" title="它只会拦下首次安装">
+一旦某个应用成功部署过，配置不足就只是警告、绝不拒绝——否则一个跑在小了点的机器上的应用就永远无法重新部署了。同理，Openship 测不了的机器绝不会被当成太小，而 Openship Cloud 的规格按套餐档位算，不看主机硬件。参见[主机要求](/docs/reference/app-catalog)。
+</Callout>
+
+## 构建内存不足
+
+<Callout type="error">
+构建中途死掉——常伴随 `JavaScript heap out of memory`、一个光秃秃的 `Killed`，或一个朴素的 `exited with code 1`。Openship 会补上提示：*"Build process was killed - typically because the target ran out of memory during the build."*
+</Callout>
+
+**含义**——构建现代应用（打包、类型检查、图片优化）可能短时间内用掉大量内存。机器耗尽时，内核会杀掉构建进程，而底层工具往往只报一个笼统的非零退出码。Openship 会扫描输出中的典型特征，把真正的原因呈现出来。
+
+**修复方法**——提示本身就给出了三条路：
+
+<Steps>
+
+<Step>
+**给构建更多内存**。调高项目的构建内存上限（构建限制与运行时限制相互独立——见[休眠模式与资源](/docs/guides/sleep-mode-resources)和 [Projects API 资源端点](/docs/api/projects)）。在 Openship Cloud 上就选更大的资源档位。
+</Step>
+
+<Step>
+**在自己的服务器上加 swap**，这样构建期间的短时内存尖峰就不会被杀。
+</Step>
+
+<Step>
+**在本地构建、上传结果**。在向导里把构建切换为 *"Build on this machine"*，或[部署一个预构建的文件夹](/docs/guides/deploy-local-folder)，让重活发生在你自己的硬件上。
+</Step>
+
+</Steps>
+
+## 缺少构建期环境变量
+
+<Callout type="error">
+构建失败，报错*来自你的框架*——引用了未定义的变量、某个 `process.env.SOMETHING` 是 `undefined`，或客户端包缺少需要的值。常见情形是 `NEXT_PUBLIC_...` 的值没有设置。
+</Callout>
+
+**含义**——你的环境变量会传给构建，而不只是传给运行中的应用。有些框架会**在构建期把某些值固化进去**（凡浏览器包会读的值都是，比如 Next.js 的 `NEXT_PUBLIC_*`）。如果构建运行时那个变量没设置，值就会被固化成空——或者构建直接报错。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+把变量加进项目的环境——见[环境变量](/docs/guides/environment-variables)。给你正在部署的环境（production 还是 preview）设置好。
+</Step>
+
+<Step>
+**重新部署**。构建期的值被冻结进了产物，所以光加变量不够——必须重新构建才能生效。
+</Step>
+
+</Steps>
+
+## 有些服务部署成功，有些失败了（“Action Required”）
+
+<Callout type="error">
+一个[多服务 / compose](/docs/guides/compose-multi-service) 项目在收尾时出现写着 **Action Required** 的横幅，以及类似 *"Some services failed — see service deployments for details."* 的提示。日志显示 *"Deployed 2/3 services. 1 service still need attention."*
+</Callout>
+
+**含义**——项目跑多个服务时，Openship 会逐个独立部署。如果至少一个成功而其他的失败，这次部署会进入一个特殊的**部分失败**状态：健康的服务已经上线，但这次部署*留给你裁决*，而不是报成干净的成功。没有任何东西被自动回滚——Openship 等你选择。
+
+**修复方法**
+
+<Steps>
+
+<Step>
+打开这次部署，看各服务的结果，找出哪个服务失败、为什么。每个失败的服务都有自己的日志——就当单应用失败一样处理，用上面几节的方法。
+</Step>
+
+<Step>
+决定这次部署怎么处理：
+- **Keep**——接受已成功的服务并清除横幅。健康的服务保持在线。
+- **Reject**——回滚这次部署改动的服务，回到之前的状态。
+</Step>
+
+<Step>
+如果你已修好底层问题，直接**重新部署**即可——启动新部署会自动解决任何待决的 keep/reject，横幅随之自行消失。
+</Step>
+
+</Steps>
+
+<Callout type="info">
+只有真正在等裁决的部署才能 keep 或 reject——对其他部署操作会返回 *"Only a deployment awaiting a decision can be kept."*。这是预期行为；只是说明没有待决的事项。
+</Callout>
+
+## 其他可能碰到的几种情况
+
+<Callout type="warn" title="“A deployment is already in progress”">
+`A deployment is already in progress (dep_…). Cancel it first or wait for it to complete.`——Openship 同一时间每个项目只跑一个部署。等当前的完成，或在构建界面取消它，然后再试。
+</Callout>
+
+<Callout type="warn" title="“Docker build failed…” / 非零退出码">
+`Docker build failed: docker build exited with code 1`（或类似的笼统非零退出）意味着失败出在你的构建本身，而不是 Openship。在构建日志里向上滚到第一条红色报错——那一行才是真正的原因（测试失败、TypeScript 报错、缺依赖）。
+</Callout>
+
+<Callout type="warn" title="“This operation targets the HOST machine, but no host channel is configured”">
+这根本不是构建失败：这种容器化安装够不到它所运行的机器，于是唯一需要主机的那几步（`:80`/`:443` 接管、邮件引擎、配置文件要写到主机上的目录应用）宁可拒绝，也不对错误的文件系统操作。普通部署不受影响。修法因安装形态而异——[主机控制通道](/docs/troubleshooting/host-channel)。
+</Callout>
+
+## 相关页面
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="上述大多数失败发生的完整链路。" />
+  <Card title="部署向导" href="/docs/dashboard/deploy-wizard" description="你在这里修正框架、命令、端口和构建设置。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="设置构建和应用需要的值——包括构建期用的那些。" />
+  <Card title="日志与监控" href="/docs/guides/logs-monitoring" description="应用启动即崩时去读运行时日志。" />
+  <Card title="回滚与重新部署" href="/docs/guides/rollback-redeploy" description="排查期间先回到一个已知良好的部署。" />
+  <Card title="多服务与 compose" href="/docs/guides/compose-multi-service" description="多服务项目如何构建与部署。" />
+</Cards>

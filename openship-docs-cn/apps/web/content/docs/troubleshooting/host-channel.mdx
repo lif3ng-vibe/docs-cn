@@ -1,0 +1,206 @@
+---
+title: 主机控制通道
+description: "\"This operation targets the HOST machine, but no host channel is configured\"——主机控制通道是什么、为什么安装的其余部分看起来一切正常，以及每种安装形态的修复方法。"
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Openship 跑在容器里时，通过 Docker socket 构建并运行你的应用——但容器操作不了它脚下的那台机器。对少数需要主机本身的任务，Openship 保留了一条通往主机的私有 SSH 通道：一把 ed25519 密钥，只授权给一个用户，经由内部的 `host.docker.internal` 桥接拨号，绝不走公网地址。
+
+本页讲的是这条通道从未建好的状态。安装报告成功、控制台看着正常、普通部署都能跑——然后某个特定操作失败，报出这个：
+
+<Callout type="error">
+```
+This operation targets the HOST machine, but no host channel is configured
+(OPENSHIP_HOST_SSH_HOST is unset) and Openship is running in a container — so it
+would have run inside the container instead, against the wrong filesystem.
+Re-run `openship up` to provision the host channel. `openship doctor` reports
+whether it worked.
+```
+</Callout>
+
+你也可能在出任何故障之前就撞见它：API 启动日志里的一条 `!!! HOST CONTROL NOT CONFIGURED` 横幅、`openship doctor` 里显示 *never provisioned* 的 **Host control** 行，或控制台里服务器页面上的横幅。
+
+<Callout title="它在哪里配置">
+这里没有一项是控制台设置——这条通道**有意仅限 CLI**，因为控制台里的开关恰恰是它要防的那个东西够得到的。安装时的背景见[安装 → 主机控制](/docs/getting-started/installation#主机控制加固)；命令见 [CLI 参考](/docs/cli/self-host)。
+</Callout>
+
+## 这是功能降级，不是坏了
+
+动手之前先读这段，因为“重建这台机器”的直觉是错的：
+
+- **发往这台机器的普通部署仍然正常——它们走 Docker socket**。构建、运行、重启和路由你的应用需要的是 socket，不是这条通道。
+- **通道修好之前被阻塞的：**
+  - 主机终端、主机系统信息和主机端口扫描
+  - 从不是 Openship 启动的代理手里接管 `:80`/`:443`
+  - 安装或更新邮件引擎
+  - 部署需要在主机上生成配置文件的目录应用（比如 Supabase 的 `kong.yml`）
+
+还有一个症状与这些并列，但并不是丢了什么功能：通道断着的时候，这台机器在控制台的服务器列表里也会显示 **Offline**。那是同一个故障换了个更吓人的标签——机器明明开着，只是控制面够不到它检查所用的那一条路。
+
+<Callout title="为什么其他一切都看着正常" type="info">
+因为它*确实*健康。通道的地址是主机**本地**的，所以会经过主机的 `filter/INPUT` 链——默认拒绝的防火墙就设在那里。发布的容器端口（`:4000`、`:3001`、`:80`、`:443`）被 DNAT，永远不会到那条链。凡是通过发布端口走的检查都能通过；只有这一条会挂起。
+</Callout>
+
+## 修复——取决于你怎么装的
+
+两种 Compose 安装形态在这台机器上看起来几乎一样，修法却**不同**。用错了：第一种毫无效果，第二种可能让你丢掉所有已存的环境变量。先确认你属于哪种：
+
+```bash
+ls ~/.openship/compose/docker-compose.yml   # 存在 → 说明这套堆栈是 CLI 装的
+```
+
+### 用 `openship up` 安装的
+
+一条命令——就是报错里点名的那个：
+
+```bash
+openship up
+```
+
+它会生成并授权密钥、写入环境变量、重建 API 容器使其读到这些变量，然后**从容器内部拨号到主机**并打印返回结果。如果探测报告连接被丢弃，它会主动提出帮你加防火墙规则（脚本化运行可以带 `--open-host-firewall`）。然后进行[验证](#验证是否生效)。
+
+这个运行是幂等的：你的密钥、数据库卷和证书都会保留，已经能用的通道会按同一把密钥重新置备。
+
+<Callout title="openship update 也会做这件事——但仅在有更新版本时" type="info">
+`openship update` 会用新模板重建堆栈、以同样方式重新置备通道，然后重新探测。所以如果你同时还落后版本，它是更好的命令——更新恰恰是能用的通道悄悄失效的时机，因为重建的 API 容器可能落在一个防火墙规则没放行的不同 docker 子网里。但如果已经在最新版本，它会在 *"Already on the latest version"* 处退出、不碰堆栈，所以单靠它不算修复。用 `openship up`。
+</Callout>
+
+### 直接用 `docker/docker-compose.yml` 装的
+
+<Callout type="warn" title="别在这台机器上跑 openship up">
+两种安装形态都固定用 Compose 项目名 `openship`，所以在这里跑 `openship up` 不会创建第二套堆栈——而是**接管**你现有的那套，连同所有卷，同时生成一份全新的 `~/.openship/compose/.env`。当前版本会在写入任何东西之前停下（*"Refusing to continue: this would regenerate secrets your existing install already has"*），这正是你想要的结果。没有这道防线的旧版本会签发新的 `BETTER_AUTH_SECRET`——也就是加密你已存环境变量的那把钥匙——让**每一项都永久无法解密**。`openship update` 也不是答案：没有 `~/.openship/compose` 堆栈可对账时，它只更新 CLI、不碰你的容器。
+</Callout>
+
+改为手动置备这条通道。一共五步，环境变量是*最后*一步——只设变量，你会得到 `Cannot read host SSH key` 或一次挂起的握手。
+
+<Steps>
+
+<Step>
+**在主机上生成密钥**（不要在容器里）：
+
+```bash
+sudo mkdir -p /var/lib/openship/host-ssh
+sudo ssh-keygen -t ed25519 -N '' -C openship-host-executor \
+  -f /var/lib/openship/host-ssh/id_ed25519
+```
+</Step>
+
+<Step>
+**授权给 `root`**，并限制在 docker 桥接拨号来源的私有网段。必须是 root：主机操作触及的路径都归 root 所有，换成低权限用户，通道能连上却干不了活。
+
+```bash
+sudo mkdir -p /root/.ssh && sudo chmod 700 /root/.ssh
+printf 'from="172.16.0.0/12,192.168.0.0/16,10.0.0.0/8,127.0.0.1",restrict,pty %s\n' \
+  "$(sudo cat /var/lib/openship/host-ssh/id_ed25519.pub)" \
+  | sudo tee -a /root/.ssh/authorized_keys
+sudo chmod 600 /root/.ssh/authorized_keys
+```
+
+`restrict` 禁止端口转发、agent 转发和 X11；`pty` 是特意加回来的，因为主机终端需要它。没有 `from=` 的话，这把密钥就是一个能从 sshd 接受的任何地方登录的通用 root 登录——在 VPS 上，就是整个互联网。
+</Step>
+
+<Step>
+**满足两个前提条件**——sshd 要能被容器访问到，主机防火墙要对它们放行。见[下文](#两个会无声搞坏它的前提)；在跑 `ufw` 的机器上，缺的往往正是防火墙那步。
+</Step>
+
+<Step>
+**设置变量**，写进你要用 `--env-file` 传入的 `.env`：
+
+```bash
+OPENSHIP_HOST_SSH_HOST=host.docker.internal
+OPENSHIP_HOST_SSH_USER=root
+OPENSHIP_HOST_SSH_PORT=22
+OPENSHIP_HOST_SSH_KEY=/run/secrets/openship_host_key
+OPENSHIP_HOST_KEY_PATH=/var/lib/openship/host-ssh/id_ed25519
+```
+
+最后两个是一对：`OPENSHIP_HOST_KEY_PATH` 是密钥**在主机上**的路径，`docker/docker-compose.yml` 会把它挂载到 API 容器内的 `OPENSHIP_HOST_SSH_KEY`——所以不需要改任何 compose 文件。它必须是**绝对**路径；相对路径会相对 `docker/` 解析，而不是你运行 `docker compose` 的那个目录。不设置的话，会改挂载 `/dev/null`，这就是完全没有密钥的机器上堆栈也能启动的原因。
+</Step>
+
+<Step>
+**重建 API 容器**。`env_file:` 只在容器*创建*时读取，所以重启什么都不会变，看起来修复毫无效果：
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml \
+  up -d --force-recreate --no-deps api
+```
+</Step>
+
+</Steps>
+
+## 验证是否生效
+
+修复发生在主机上，故障却出现在容器里，所以“命令成功了”和“通道能用了”确实是两个不同的问题。要问的是第二个：
+
+```bash
+openship doctor
+```
+
+**Host control** 那一行会从 API 容器内部拨号到主机：`reachable at host.docker.internal:22` 就是过关。其他结果都会点名原因——连接被丢弃（防火墙）、被拒绝（sshd），或名字没解析出来。
+
+<Callout title="直接 docker compose 安装时，doctor 报告的信息更少" type="info">
+上面的拨号需要 CLI 自己的堆栈（`~/.openship/compose`），手工跑的 `docker/docker-compose.yml` 安装没有这个。在那里，**Host control** 行会回退到 API 通过环回 API 对自己环境的描述：`never provisioned — run openship up`（先读上面的警告再做）、`reachable from the api container`，或点名故障。它说不出地址，因为没有任何东西拨过号。
+
+想要地址和确切的防火墙规则，用 API 的启动日志——它每次启动都会诊断这条通道：
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml logs api | grep 'HOST CONTROL'
+```
+
+没有输出就是过关；横幅只在有问题时才打印。或者直接演练这条通道——打开控制台里该服务器的 **Terminal** 标签页，它就是这条通道本身，别无其他。
+</Callout>
+
+## 两个会无声搞坏它的前提
+
+这两条中任何一条都会留下一个配置完整却彻底死掉的通道——这就是为什么在任何人怀疑主机之前，报错早就说着“未配置”。
+
+### sshd 必须在运行，且监听在容器够得着的地址上
+
+这条通道是货真价实的 SSH，连到主机自己的守护进程。极简云镜像或面向容器的操作系统可能没跑它，那就没有任何东西可连：
+
+```bash
+sudo systemctl enable --now ssh
+```
+
+另外检查 `/etc/ssh/sshd_config` 里的 `ListenAddress` 没有钉死在 `127.0.0.1`。这看起来像合理的加固，而且对所有其他检测都隐形，因为其他一切都经由发布端口到达这台机器。连接*被拒绝*（而不是挂起）就是这个问题。
+
+### 主机防火墙必须放行容器→主机的 SSH 端口
+
+这是最常见的原因。从 API 容器到 `host-gateway` 的流量是主机本地的，所以要经过 `filter/INPUT`——`ufw` 的默认拒绝就设在那里。发布的容器端口被 DNAT，完全绕开 `ufw`，机器上其他一切毫无察觉。连接不是失败，而是*挂起*，看起来和坏密钥一模一样。
+
+放行 API 容器拨号来源的 docker 桥接网段：
+
+```bash
+# ufw
+sudo ufw allow from 172.16.0.0/12 to any port 22 proto tcp
+
+# firewalld
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="172.16.0.0/12" port port="22" protocol="tcp" accept'
+sudo firewall-cmd --reload
+```
+
+`172.16.0.0/12` 是 Docker 的默认地址池——比单个桥接更宽，对其中任何一个都正确。直接写 `iptables` 规则也行，但它自己活不过重启；用 `iptables-persistent` 或你发行版的等价物来持久化。CLI 安装则不用你自己写任何一条：`openship up` 和 `openship update` 会读取 API 容器实际所在的网络，打印更窄的规则，并主动提出帮你应用（脚本化运行可带 `--open-host-firewall`）。
+
+<Callout title="规则加了还是不行" type="info">
+`ufw`/`firewalld` 之前还有东西在丢包——检查 Docker 自己的 `DOCKER-USER` 链，以及云服务商的防火墙或安全组。如果加了规则之后故障*变了形态*（挂起变成拒绝），说明规则起作用了，你现在面对的是上面的 sshd 问题。
+</Callout>
+
+## 有意关掉这条通道
+
+只管理*远端*服务器的机器不需要主机通道。关掉它是加固决定，不是修复——上面被阻塞清单里的一切继续保持阻塞：
+
+```bash
+openship up --no-host-control
+```
+
+这会删除私钥并吊销 `authorized_keys` 里对应的那一行，缩小的是整台机器的攻击面，而不只是这套安装的行为。直接 `docker compose` 安装的等价做法是在 `.env` 里设 `OPENSHIP_HOST_CONTROL=false`（外加自己删掉密钥和 authorized 行）。此后主机操作会拒绝执行，消息点名的是这个选择而不是故障，这台机器也不再被列为部署目标。
+
+## 相关页面
+
+<Cards>
+  <Card title="安装" href="/docs/getting-started/installation#host-control-hardening" description="安装时这条通道从哪来，哪种姿态适合你的机器。" />
+  <Card title="服务器与 SSH" href="/docs/troubleshooting/servers-ssh" description="另一种 SSH——连接你自己添加的远程服务器。" />
+  <Card title="部署与构建故障" href="/docs/troubleshooting/deployments" description="因为别的原因变红的部署。" />
+  <Card title="域名、DNS 与 SSL" href="/docs/troubleshooting/domains-ssl" description="这条通道负责的 :80/:443 接管，以及签发不出来的证书。" />
+</Cards>

@@ -1,0 +1,170 @@
+---
+title: 鉴权
+description: 你如何向 Openship 证明自己是谁——会话 Cookie、个人访问令牌、MCP OAuth，以及桌面环回模式。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+发往 Openship 的每个请求都要先回答一个问题：**你是谁**？Openship 接受四种回答方式，用哪一种取决于请求*从哪来*——浏览器标签页、脚本、AI 智能体，或是桌面应用自言自语。本页逐一讲清楚。
+
+<Callout title="基础路径">
+你的实例上，所有 API 路由都在 **`/api`** 之下——例如 `https://your-host/api/projects`。它们适用同一套鉴权规则；不存在免鉴权的后门。登录之后的访问检查在[权限模型](/docs/security/permissions)里单独讲解。
+</Callout>
+
+## 四种进场方式
+
+| 方式 | 你发送什么 | 何时适用 |
+|---|---|---|
+| **会话 Cookie** | 浏览器替你持有的 httpOnly Cookie | 控制台，普通浏览器里 |
+| **个人访问令牌（PAT）** | `Authorization: Bearer opsh_pat_…` | CLI、脚本、服务器到服务器调用，以及不支持 OAuth 的 MCP 客户端 |
+| **MCP OAuth** | 客户端替你取回的 OAuth 2.1 访问令牌 | 连接 `/api/mcp` 的 AI 智能体（Claude、Cursor 等） |
+| **零鉴权环回** | 什么都不用——请求只要来自 `127.0.0.1` | 桌面应用，或你主动启用的本地单用户实例 |
+
+一个请求只会用其中一种。Openship 先找 `Bearer` 令牌；没有就找会话 Cookie；两者皆无，才回退到环回路径（且仅当该模式已开启）。
+
+## 会话 Cookie（控制台）
+
+登录控制台时，Openship 会给你的浏览器一枚**签名的 httpOnly 会话 Cookie**。所谓 httpOnly，是指页面里运行的 JavaScript 读不到它——即使恶意脚本不知怎么在页面上跑了起来，也偷不走你的会话。浏览器在每个请求里自动携带这枚 Cookie；你从来不需要亲手碰它。
+
+Cookie 名称带有实例模式前缀——自托管安装是 `openship.session_token`，Openship Cloud 是 `openship-cloud.session_token`。
+
+<Callout title="来自控制台自身源的 Bearer 令牌会被拒绝" type="warn">
+如果一个请求既带 `Bearer` 头，又带与控制台可信浏览器源相匹配的 `Origin`，Openship 会拒绝它（`401 BEARER_NOT_ALLOWED_FROM_BROWSER`）。Bearer 令牌是给 CLI 和服务器用的；令牌出现在浏览器标签页里，就是凭据被盗后重放的典型特征，所以这扇门直接关死。CLI 则完全不发 `Origin` 头，这正是它的令牌能被接受的原因。
+</Callout>
+
+## 个人访问令牌（Bearer）
+
+**个人访问令牌**（personal access token，PAT）是一长串字符，放在 `Authorization` 头里发送，无需浏览器即可证明你是谁：
+
+```
+Authorization: Bearer opsh_pat_…
+```
+
+每个令牌长这样：`opsh_pat_` 后跟 43 个字符的随机密文（256 位熵）。Openship **只存它的 SHA-256 哈希**——明文只在创建那一刻给你看一次，之后永远无法再取回。令牌始终**以创建者的身份行事**并继承其角色，除非你给它设限（见下文）。
+
+### 创建令牌
+
+在控制台里打开**设置 → 令牌**，使用**个人访问令牌**区块。令牌出现时立刻复制——那是你唯一一次见到它。
+
+在终端里：
+
+```bash
+# 以你的身份行事的全权令牌
+openship token create "my laptop"
+
+# 90 天后过期的只读令牌
+openship token create "ci-readonly" --read-only --expires 90
+
+# 限定单个项目的令牌（只在该项目上有读 + 写权限）
+openship token create "deploy-bot" --grant project:proj_123:read,write
+
+openship token list      # 列出你的令牌（绝不显示密文）
+openship token revoke <id>
+```
+
+<Callout title="在 CLI 里使用令牌" type="info">
+`openship login` 会存下一枚令牌，让 CLI 在每次调用时携带。用 `--token opsh_pat_…` 可做非交互登录（在 CI 里很方便），或不带参数运行，打开令牌设置页手动粘贴。存储的令牌只会作为 `Bearer` 头发送——绝不会作为 Cookie。
+</Callout>
+
+创建调用背后的请求体：
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '令牌的人类可读标签。', required: true },
+    readOnly: { type: 'boolean', description: '拒绝一切变更类方法（POST/PUT/PATCH/DELETE）。', default: 'false' },
+    expiresInDays: { type: 'integer', description: 'N 天后过期（1–365）。省略则永不过期。' },
+    grants: { type: 'Grant[]', description: '把令牌限定到特定资源。提供该项时，令牌成为一个受限主体，恰好只能做这些授权。' },
+  }}
+/>
+
+### 给令牌设限的两种方式
+
+- **只读**——令牌可以调用读取端点，任何变更类请求都会被 `403 TOKEN_READ_ONLY` 拒绝。适合只需要“看”的场合——数据看板、监控和 CI。
+- **限定范围**——令牌不再以你的完整角色行事，而是被圈定在你授予它的一份具体资源清单内（某个项目、某台服务器、某个仓库……），每项带 `read`、`write` 或 `admin`。限范围令牌是一个**受限主体**（restricted principal）：能做的*少于*你，绝不会更多。你只能授予自己本就拥有的访问权——服务器在铸造令牌前会核查这一点。
+
+<Callout title="一枚令牌绑定一个组织" type="info">
+每枚令牌都绑定在创建它的组织上。如果请求携带的 `X-Organization-Id` 头指向另一个组织，会被 `403 TOKEN_ORG_SCOPE` 拒绝。无效或已吊销的令牌返回 `401 INVALID_TOKEN`。
+</Callout>
+
+## MCP OAuth（AI 智能体）
+
+对**模型上下文协议**（Model Context Protocol，MCP）——AI 智能体调用工具的方式——而言，Openship 是一个符合标准的 **OAuth 2.1** 服务器。支持 MCP 的客户端（Claude、Cursor 等）指向 `POST /api/mcp`，握手全自动：第一个未鉴权请求返回 `401` 并指向 `/.well-known/oauth-protected-resource`，客户端自行注册，走 **PKCE** 授权流程（Proof Key for Code Exchange——一种无需存放客户端密钥也能安全完成 OAuth 的方法），最后你在浏览器的**授权确认页**（consent screen）上批准。
+
+授权确认页上，你为智能体划定边界——**只读**，和/或一组特定的项目、服务器和仓库。你的选择保存为该客户端的绑定，并通过与限范围 PAT 完全相同的授权模型执行。不知怎么绕过授权确认的 OAuth 令牌**没有绑定，因此什么都拿不到**——不存在“已鉴权但未限定范围”这种状态。
+
+已连接的智能体在**设置 → MCP**里管理，可以看到每个客户端并断开它（其令牌随即吊销）。不支持 OAuth 的客户端可以退而求其次，用普通 PAT 作为 Bearer 凭据鉴权。
+
+<Callout title="完整的 MCP 配置">
+端点 URL、客户端配置片段和验证步骤都在 [MCP 页面](/docs/mcp)。
+</Callout>
+
+## 桌面与零鉴权环回模式
+
+桌面应用在你自己的机器上为你一个人运行一套 API 和控制台。在这强迫登录纯属徒增摩擦，所以它使用**零鉴权模式**：API 自动开一个本地管理员用户（`Local User`，个人工作区的所有者），并把本地流量视为该用户。没有密码，也没有要管的 Cookie。
+
+它之所以安全，是因为有两道闸门，且都必须通过：
+
+<Callout title="每个条件都缺一不可" type="warn">
+1. **非 CLI 管理或公开服务**。零鉴权**仅供桌面应用**。从 CLI 启动（`openship up` 会设置 `OPENSHIP_REQUIRE_AUTH`）或对外服务（`--public-url` / `OPENSHIP_PUBLIC_URL`）的实例会断然拒绝零鉴权——永远要求登录。
+2. **主动开启**。实例的鉴权模式必须是 `none`。桌面应用默认如此；其他任何部署形态还要求运维显式设置 `OPENSHIP_ALLOW_ZERO_AUTH=true`。
+3. **仅限环回**。请求必须来自环回地址（`127.0.0.1` / `::1`），读取的是内核报告的 TCP 对端——**而非** `Host` 头，后者可以被客户端或配置不当的反向代理伪造。来自其他任何地方的请求一律 `401` 拒绝，零鉴权模式下也不例外。
+</Callout>
+
+<Callout title="条件 1 为何存在" type="info">
+带 `--public-url` 时，控制台的同源代理跑在**这台机器上**，会从环回访问 API——否则这就能溜过环回闸门（条件 3）。对 CLI/公开实例的显式拒绝把这个洞堵上了，远程访客永远落不到零鉴权路径上。
+</Callout>
+
+正常的自托管安装根本走不到这条路径：鉴权模式默认 `local`，缺会话就是干干净净的 `401`。要开启它是运维的深思熟虑之举——鉴权模式 `none` **且** `OPENSHIP_ALLOW_ZERO_AUTH=true`——即便如此，环回检查也保证它只能从本机使用。经由网络反向代理进来的请求，其 TCP 对端是代理的地址而非环回地址，因此同样被拒。
+
+Openship 总共认三种鉴权模式：
+
+- **`none`**——零鉴权环回，即上文所述。仅桌面应用默认使用；CLI 启动或公开实例绝不使用。
+- **`local`**——要求标准登录（通过 [Better Auth](https://www.better-auth.com/) 的邮箱 + 密码）。全新自托管安装的默认值，CLI（`openship up`）和公开实例也始终用它。
+- **`cloud`**——桌面应用改用 Openship Cloud 账号登录，而非本地账号。
+
+<Callout title="创建第一个管理员" type="info">
+CLI 或自托管实例没有公开注册。第一个管理员（邮箱 + 密码）在 `openship` 引导式安装过程中创建，走的是一个由内部令牌把守、浏览器无法触达的一次性端点。之后，在控制台的**设置 → 团队**里添加更多用户。
+</Callout>
+
+<Callout title="一种绝不向下穿透的失败" type="error">
+如果会话机制本身出错（数据库宕机、解密失败），请求返回 `503 AUTH_UNAVAILABLE`。它**不会**悄悄跌落到零鉴权路径——坏掉的会话检查绝不能被误当成“无需登录”。
+</Callout>
+
+## 云端登录
+
+选择**使用云账号继续**（或把自托管实例连接到 Openship Cloud）会跑一次 PKCE 握手，为连接的所有者铸造一枚**云会话**。该会话**加密后仅存于服务端**——浏览器永远看不到——组织维度的云调用通过它以所有者名义执行。这条边界如何保持干净，见[本地与云的边界](/docs/security/cloud-boundary)。
+
+## 凭据存放在哪
+
+Openship 让机密待在最安全的地方，而不是到处复制：
+
+- **PAT 密文**只以 SHA-256 哈希存储；明文只存在一处——你的剪贴板。
+- **云会话**在实例上静态加密，从不暴露给浏览器。
+- 托管版 **Openship GitHub App 私钥**只存在于 Openship Cloud。自托管工作区可以改为在设置里注册一个或多个 App；每份私钥、客户端密钥和 Webhook 密钥都存放在带版本号的 AES-256-GCM 信封里，API 永不回传。旧式的进程环境变量配置仍然支持。每条 App 路径铸造的都是短命的、限定仓库的安装令牌。
+- 每项目的 git 令牌和环境机密均为静态加密存储。
+
+## 吊销
+
+- **令牌**：`openship token revoke <id>`，或在设置 → 令牌里点**吊销**按钮。它的下一次请求就会失效。
+- **MCP 客户端**：在设置 → MCP 里断开——它获发的令牌被吊销、授权确认被移除，重新连接时会再次弹窗询问。
+- **人**：移除成员即终止其访问；其会话在下一次校验时失效。
+- **云连接**：断开实例会吊销其云会话。
+
+## 你可能见到的错误
+
+| 状态码与错误码 | 含义 |
+|---|---|
+| `401 INVALID_TOKEN` | Bearer 令牌错误、过期或已吊销。 |
+| `401 BEARER_NOT_ALLOWED_FROM_BROWSER` | Bearer 令牌来自控制台的浏览器源——请改从 CLI/服务器发送。 |
+| `403 TOKEN_READ_ONLY` | 只读令牌尝试了变更类请求。 |
+| `403 TOKEN_ORG_SCOPE` | 令牌绑定的组织与请求的组织不一致。 |
+| `401 Unauthorized` | 没有有效会话，或零鉴权请求未通过模式/环回闸门。 |
+| `503 AUTH_UNAVAILABLE` | 会话检查本身失败——请重试；它绝不会静默降级为免鉴权。 |
+
+## 相关指南
+
+<Cards>
+  <Card title="权限模型" href="/docs/security/permissions" description="登录身份究竟能做什么——角色与资源授权。" />
+  <Card title="连接 AI 智能体（MCP）" href="/docs/mcp" description="MCP 客户端的端点 URL、客户端配置与验证。" />
+  <Card title="本地与云的边界" href="/docs/security/cloud-boundary" description="自托管实例如何与 Openship Cloud 通话而不泄露身份。" />
+</Cards>

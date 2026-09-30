@@ -1,0 +1,170 @@
+---
+title: system
+description: openship system 的命令、参数与选项。
+cliGroup: openship system
+---
+
+示例参见[工作流指南](/docs/cli/self-host)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship system
+
+实例设置、初始化引导、迁移与数据传输
+
+```text
+openship system [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`settings`](/docs/cli/reference/system#openship-system-settings) | 读取或更新实例设置 |
+| [`onboarding`](/docs/cli/reference/system#openship-system-onboarding) | 实例首次运行配置 |
+| [`upgrade-to-auth [options]`](/docs/cli/reference/system#openship-system-upgrade-to-auth) | 将无认证实例升级为邮箱/密码登录 |
+| [`browse [path]`](/docs/cli/reference/system#openship-system-browse) | 列出实例主机上的目录（默认为主目录） |
+| [`migration`](/docs/cli/reference/system/migration#openship-system-migration) | 团队模式迁移的生命周期管理 |
+| [`data-transfer`](/docs/cli/reference/system#openship-system-data-transfer) | 整实例导出 / 导入（仅所有者） |
+
+## openship system browse
+
+列出实例主机上的目录（默认为主目录）
+
+```text
+openship system browse [options] [path]
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `path` | 要列出的目录 |
+
+## openship system data-transfer
+
+整实例导出 / 导入（仅所有者）
+
+```text
+openship system data-transfer [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`export [options]`](/docs/cli/reference/system#openship-system-data-transfer-export) | 将整个实例导出为 JSON 文件 |
+| [`import [options]`](/docs/cli/reference/system#openship-system-data-transfer-import) | 导入实例导出文件 |
+
+## openship system data-transfer export
+
+将整个实例导出为 JSON 文件
+
+```text
+openship system data-transfer export [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--passphrase <passphrase>` | 用该口令加密保护敏感值 |
+| `--out <file>` | 将导出写入此文件，而不是 stdout |
+
+## openship system data-transfer import
+
+导入实例导出文件
+
+```text
+openship system data-transfer import [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--file <path>` | 导出文件的路径 |
+| `--passphrase <passphrase>` | 导出时使用的口令 |
+| `--mode <mode>` | wipe（替换）\| merge（默认："wipe"） |
+| `-y, --yes` | 跳过确认提示 |
+
+## openship system onboarding
+
+实例首次运行配置
+
+```text
+openship system onboarding [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`apply [options]`](/docs/cli/reference/system#openship-system-onboarding-apply) | 配置一个全新实例（已配置过则失败） |
+
+## openship system onboarding apply
+
+配置一个全新实例（已配置过则失败）
+
+```text
+openship system onboarding apply [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--ssh-host <host>` | 目标服务器的 SSH 主机 |
+| `--ssh-port <n>` | SSH 端口（默认 22） |
+| `--ssh-user <user>` | SSH 用户（默认 root） |
+| `--ssh-auth-method <method>` | SSH 认证方式 |
+| `--ssh-password <password>` | SSH 密码 |
+| `--ssh-key-path <path>` | SSH 私钥路径 |
+| `--ssh-key-passphrase <pass>` | SSH 密钥口令 |
+| `--ssh-jump-host <host>` | SSH 跳板机 |
+| `--ssh-transport <transport>` | SSH 传输方式（direct\|cloudflare） |
+| `--ssh-args <args>` | SSH 连接调优参数 |
+| `--server-name <name>` | 服务器的显示名称 |
+| `--auth-mode <mode>` | 初始认证模式：none \| local \| cloud |
+| `--tunnel-provider <provider>` | 隧道提供方 |
+| `--tunnel-token <token>` | 隧道令牌 |
+| `--default-build-mode <mode>` | 默认构建模式 |
+| `--default-rollback-window <n>` | 默认回滚窗口 |
+
+## openship system settings
+
+读取或更新实例设置
+
+```text
+openship system settings [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`get`](/docs/cli/reference/system#openship-system-settings-get) | 查看当前实例设置 |
+| [`set [options]`](/docs/cli/reference/system#openship-system-settings-set) | 更新实例级设置 |
+
+## openship system settings get
+
+查看当前实例设置
+
+```text
+openship system settings get [options]
+```
+
+## openship system settings set
+
+更新实例级设置
+
+```text
+openship system settings set [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--auth-mode <mode>` | 认证模式：none \| local \| cloud |
+| `--confirm <phrase>` | 认证模式为 none 时必填："I-understand-no-auth" |
+| `--tunnel-provider <provider>` | 隧道提供方（传空字符串即清除） |
+| `--tunnel-token <token>` | 隧道令牌 |
+| `--default-build-mode <mode>` | 默认构建模式 |
+| `--default-rollback-window <n>` | 默认回滚窗口 |
+| `--invitation-mail-source <src>` | 邀请邮件来源：platform \| cloud |
+
+## openship system upgrade-to-auth
+
+将无认证实例升级为邮箱/密码登录
+
+```text
+openship system upgrade-to-auth [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--name <name>` | 账户显示名称 |
+| `--email <email>` | 账户邮箱 |
+| `--password <password>` | 账户密码（省略时交互提示输入） |
+| `--use-own-mail-server` | 为认证邮件预热自托管的邮件服务器 |

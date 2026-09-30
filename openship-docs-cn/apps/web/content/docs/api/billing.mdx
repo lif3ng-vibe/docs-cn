@@ -1,0 +1,194 @@
+---
+title: 计费
+description: 读取套餐并管理订阅、点数与用量。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+计费（billing）涵盖套餐、订阅、点数（credit）与用量。套餐列表在每个安装上都是公开的。
+Openship 定义其价格、命名空间点数、限制与结账文案。支付与续订由 Oblien 收款并应用已保存的报价。每个
+组织映射到一个由 Openship 解析的、不可变的提供方命名空间。
+账号操作需要已配置的 Cloud 计费。自托管的 HTTP 路由可以代理已连接用户的 Cloud 计费账号；固定的 SDK 作用域则要求直连一套兼容的 Cloud API 连接。
+参见 [Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+## 列出套餐
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const catalog = await ship.billing.listPlans();
+console.log(catalog.plans);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/billing/plans"
+```
+
+</Tab>
+</Tabs>
+
+在任何部署模式下都公开。响应是解析好的定价目录：每个档位一条记录，按展示顺序排列，价格以货币的**最小单位**（美分）计，包含限额执行逻辑要读取的数字限制，以及已完成的本地化特性描述文案。
+
+传入 `?locale=<lang>`——或发送 `Accept-Language` 头——即可选择语言。不受支持的标签会回退到其基础语言，再回退到英语；实际使用的语言区域会在响应中返回。
+
+信封为 `{ data: { provider: "oblien", locale, annual, ui, plans } }`。`annual.enabled` 用于报告是否发布了年付条款；实际年价请从各套餐读取。
+`ui` 携带定价 UI 所需的短标签——`/月`（`/mo`）后缀、"自定义"和"免费"字样、"最受欢迎"徽章——均为现成翻译，因为营销站点可能没有自己的词典。
+
+`plans` 中每条记录形如：
+
+<TypeTable
+  type={{
+    id: { type: 'string', description: '稳定的档位 id——free、starter、pro、team、enterprise。永不本地化；发起订阅时回传的就是它。' },
+    name: { type: 'string', description: 'Openship 显示名称。不要以此作为逻辑判断依据。' },
+    description: { type: 'string', description: 'Openship 的结账描述文案。' },
+    popular: { type: 'boolean', description: '恰好在此档位上渲染"最受欢迎"徽章。' },
+    price: { type: 'object', description: '按最小单位（美分）计的月付与年付价格。任一侧为 null 表示该周期不可购买。' },
+    monthlyCredits: { type: 'number | null', description: '每月包含的点数额度，以 milli-credits 计。null 表示不设上限。' },
+    limits: { type: 'object', description: 'Openship 应用额度，包括工作负载、运行中服务、项目、机器档位、构建分钟数、域名数与席位数。' },
+    features: { type: 'string[]', description: 'Openship 特性条目文案。原样渲染。' },
+    contactSales: { type: 'string | null', description: '档位无自助价格时引导买家的去处——mailto 或 URL。可购买档位为 null。' },
+  }}
+/>
+
+渲染此数据时有两条惯例需要注意：
+
+- **`price.monthly` 以美分计**，`null` 表示该档位按合同定价——配合 `contactSales` 使用，渲染 `ui.custom` 标签而不是数字。
+- **应用限额为 `null` 表示"不设上限"**，绝不是零。缺失的流量容量代表未知；自定义报价不继承平台流量档位。年付条款未发布期间 `annual.enabled` 为
+  `false`，与此同时每个 `price.annual` 也都是 `null` 保持一致——此期间请隐藏年付入口。
+
+价格、点数、加购包与限制来自 `@repo/core` 中 Openship 的服务器端目录。API、控制台与[定价页](/pricing)读取同一份已发布的目录。月付套餐为 $5 / $20 / $40 / $99；在明确的年付条款发布之前不显示年付结账。已关联的本地安装可在不发送本地凭据的情况下读取 SaaS 公开目录。
+
+新的结账会发送一个通用 Oblien `offer`。其中包含服务器端选定的价格、点数、宽限期与 VM 上限；带版本的元数据记录 Openship 套餐、应用额度、组织与不可变命名空间。客户无法提交自己的价格、报价或命名空间。既有 Oblien 目录下的订阅仍可读取，而所有新购买都使用 Openship 的目录。
+
+付款资金进入转售方的 Oblien 钱包，不会改变转售账号的平台订阅。每个客户订阅都归属其命名空间。续订使用已保存的报价与应用额度，因此目录的编辑不会改变既有客户的条款。宽限期默认为零，可在目录中配置。点数与美元价格相互独立，也不代表固定 CPU 分钟数的承诺。
+
+工作区数量是命名空间额度；CPU、内存与磁盘上限作用于每台 VM。Openship 直接从其目录提交 `billing.resourceLimits`。VM 规格字段默认为 `null`，此时继承 Oblien 容量；转售方可以声明更严格的上限。Oblien 会解析账号、平台与已保存的客户限制，并在 VM 操作上强制执行。Openship 不计算 CPU/内存预算、不拉取账号配额去适配报价，也不会在续订时重写已保存的购买条款。一个 Compose 项目必须装进一台 VM；服务可以跨多个项目。
+
+## 订阅与用量
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const state = await ship.billing.getState();
+console.log(state);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/billing/state" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+`GET /state` 是一次调用即可渲染控制台计费页面的快照：活动档位、所处周期、点数余额，以及套餐容量的使用情况。`GET /usage` 返回用量图表背后的计量序列。`GET /subscription` 返回权益的档位/状态/周期和一个 `subscription` 对象（从未订阅时为 `null`）。该对象包含
+`tier`、`status`、`interval`（`monthly` 或 `annual`）、`currentPeriod`、
+`cancelAtPeriodEnd` 与 `canceledAt`。已排定的取消在付费周期结束前，权益仍可能是有效的。
+
+`POST /subscription` 接受 `{ planTierId, interval, idempotencyKey? }` 并返回
+`{ checkoutUrl }`。重试同一笔购买时请使用稳定的请求键。付款完成后 Oblien 只替换该组织的订阅，并以所选全价开始新周期，不做自动按比例折算。浏览器返回 URL 并不授予访问权限：以签名的 Oblien 事件和新鲜的权益读取为准确认当前套餐。
+
+`POST /cancel` 在周期结束时停止续订并返回 `{ cancelAt, subscription }`。
+`POST /resume` 撤销已排定的取消并返回 `{ subscription }`。
+两者都幂等可重复。取消会保留已付费的周期；它不删除资源。已终止的订阅需要重新结账。
+
+```ts
+await ship.billing.cancelSubscription();
+const { subscription } = await ship.billing.getSubscription();
+console.log(subscription?.cancelAtPeriodEnd);
+await ship.billing.resumeSubscription();
+```
+
+## 校验结账
+
+```ts
+const checkout = await ship.billing.getCheckout({ checkoutId: 'cs_...' });
+```
+
+`GET /api/billing/checkout?checkoutId=cs_...` 需要 `billing:read`。Openship 在向 Oblien 询问那个特定会话之前，会先解析当前组织的命名空间。无法读取其他组织的结账。响应包含 `id`、`kind`、`status`、`paymentStatus`、`fulfilled`、
+`fulfillmentStatus` 与 `creditsGranted`（milli-credits），不包含转售方钱包或支付提供方的标识符。
+
+成功 URL 中包含 `session_id`。返回 URL 或一个先前活跃的订阅都不能证明新的付款。控制台只确认"已付款、履约完成且净入账为正"的结账；订阅类购买还要求预期的档位与周期处于生效状态。未完成的交付保持待处理状态，而退款、争议与失败会被明确展示。Webhook 事件与向提供方的新鲜读取始终是权威依据。
+
+## 资源用量
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const resources = await ship.billing.getResources();
+if (resources.compute.status === "available") {
+  console.log(resources.compute.cpuHours, resources.compute.memoryGbHours);
+}
+if (resources.edge.status === "available") {
+  console.log(resources.edge.bandwidthGb, resources.edge.limits.bandwidthGb);
+  console.log(resources.edge.requests);
+}
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/billing/resources" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+需要 `billing:read`。Openship 会解析通过认证组织的命名空间；调用方无需提供命名空间，也不能查询其他客户的账号。REST 响应把资源快照包裹在 `{ data }` 中。
+
+`compute` 报告计费周期内构建与运行中应用累计的 vCPU 小时数、内存 GB 小时数、磁盘 I/O GB 与网络 GB。这些计量消耗共享的 Cloud 额度，并不是额外的运行小时配额。
+`edge` 报告请求次数、入站与出站带宽、总带宽，以及 `limits.bandwidthGb` 中的每月带宽上限。每组都带有自己的 `period`，因为即使在年付套餐上，edge 额度也是按月重置的。
+
+展示各组计量数据之前，先读取该组的 `status`。当某组提供方不可用时，该组返回 `"unavailable"` 且计量为 `null`，而另一组可以保持可用。`null` 的计量不代表零用量，也不代表无限资源。`measuredAt` 标识快照时间。
+
+## 加购包与客户门户
+
+`GET /topup-packs` 列出来自同一目录的一次性点数加购包；
+`POST /topup` 为其中一包打开结账页。以此方式购买的点数叠加在套餐额度之上；只有未用完的已购余量能在续订后保留。结账与计费状态中的加购资格要求持有生效中或试用期内的付费订阅，且 Oblien 当前权益为 `active` 或 `credit_exhausted`。已过期或逾期未付的权益无法凭借陈旧的"生效中"订阅记录获取资格；权益读取不可用时会阻止购买。
+加购不能提高资源/项目/构建限制，也不能激活订阅。
+Openship 从不自行重置或赠送点数。
+
+`POST /portal` 返回 `{ portalUrl }`，指向该组织的账单、支付方式与取消入口。与 cancel/resume 一样，它需要 `billing:admin`，因为托管门户可以停止续订。它绝不会暴露 API 密钥所有者的计费门户。共享的旧式计费必须先拆分，才能继续进行管理或购买。
+在新购买被禁用时，门户/取消/恢复仍然可用。计费状态中的 `capabilities` 对象会报告哪些操作可用。删除组织仍然需要联系支持团队，以协调提供方计费的关闭与资源清理。
+
+## 操作
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取套餐目录，可按语言本地化。 | `billing.listPlans(input?)` | `GET /api/billing/plans`<br />`Handler authentication` |
+| 读取当前计费状态。 | `billing.getState()` | `GET /api/billing/state`<br />`billing:read` |
+| 校验本组织的一次结账及其点数发放。 | `billing.getCheckout(input)` | `GET /api/billing/checkout`<br />`billing:read` |
+| 读取计算用量、edge 流量与带宽限制。 | `billing.getResources()` | `GET /api/billing/resources`<br />`billing:read` |
+| 读取订阅与续订状态。 | `billing.getSubscription()` | `GET /api/billing/subscription`<br />`billing:read` |
+| 创建订阅结账或订阅变更。 | `billing.createSubscription(input)` | `POST /api/billing/subscription`<br />`billing:write` |
+| 在付费周期结束时停止续订。 | `billing.cancelSubscription()` | `POST /api/billing/cancel`<br />`billing:admin` |
+| 恢复已排定的订阅续订。 | `billing.resumeSubscription()` | `POST /api/billing/resume`<br />`billing:admin` |
+| 创建点数加购结账。 | `billing.createTopup(input)` | `POST /api/billing/topup`<br />`billing:write` |
+| 列出可用的点数加购包。 | `billing.listTopupPacks()` | `GET /api/billing/topup-packs`<br />`billing:read` |
+| 创建计费门户会话。 | `billing.createPortal()` | `POST /api/billing/portal`<br />`billing:admin` |
+| 读取请求周期的计费用量。 | `billing.getUsage(input?)` | `GET /api/billing/usage`<br />`billing:read` |
+| 读取详细的额度分配与消耗。 | `billing.listAllowanceDetail()` | `GET /api/billing/allowances`<br />`billing:read` |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 接收经过认证的 Oblien 计费事件。 | HTTP only | `POST /api/billing/oblien-webhook`<br />`Handler authentication` |
+| 已退役的 Stripe webhook；返回 410，不影响计费。 | HTTP only | `POST /api/billing/webhook/stripe`<br />`Handler authentication` |
+
+{/* api-operations:end */}

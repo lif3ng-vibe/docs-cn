@@ -1,0 +1,185 @@
+---
+title: 接入你自己的服务器
+description: 通过 SSH 添加你自己的机器，让 Openship 装好运行应用所需要的一切。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Openship 可以在你已经拥有的机器上运行应用——一台便宜的 VPS、一台闲置的主机、租来的云服务器。你把地址和一种通过 **SSH**（从终端安全控制远程计算机的标准方式）登录的办法交给 Openship，其余的它来做：连接、检查已装了什么、补齐缺失的部分。
+
+想象一下你雇了一位搬家师傅，他还会顺手组装家具。你把新住处的钥匙给他；他上门、自带工具、把房间收拾妥当。你什么都不用手动安装。
+
+<Callout title="先准备好这些">
+- 自托管（self-hosted）的 Openship（接入自己的服务器是自托管功能——Openship Cloud 上由我们替你管机器）。
+- 一台能通过 SSH 连上的服务器——Ubuntu、Debian 或类似的 Linux 都很适合。
+- 一种登录方式：**SSH 密钥**、**密码**，或你机器上的 **SSH agent**。
+- 就这些。你**不用**预先安装 Docker 或任何别的东西——缺什么 Openship 装什么。
+</Callout>
+
+## 步骤
+
+<Steps>
+
+<Step>
+
+### 打开 Servers 页面并开始添加
+
+在控制台打开 **Servers** 页面，点 **Add Server**。（如果是第一台服务器，空页面上的 **Add Your First Server** 按钮干的是同一件事。）
+
+</Step>
+
+<Step>
+
+### 填写 SSH 连接表单
+
+这是"我要连向谁、怎么连"的界面。各字段：
+
+- **Server Name**——可选的标签，如 `Production` 或 `Staging`，方便区分服务器。留空时 Openship 用 IP 地址。
+- **Connection**——为已有的 Access SSH 应用选择 **Direct SSH** 或 **Cloudflare Access**。
+- **Server IP Address**——你机器的地址，例如 `203.0.113.10`。
+- **Port**——SSH 端口。几乎永远是 `22`（默认值）。
+- **Username**——登录用的用户。通常是 `root`。
+- **Authentication**——三选一：
+  - **Password**——输入服务器的密码。
+  - **SSH Key**——给出你的私钥文件路径（如 `~/.ssh/id_ed25519`），密钥有口令的话再填一个 passphrase。
+  - **Agent**——使用运行 Openship 的那台机器上已启动的 SSH agent（与 VSCode 的做法相同）。这里不需要密码或密钥，但那台主机必须已经被允许登录到服务器。
+
+还有一个 **Advanced** 区，用于 **Jump Host**（需要先跳板的中转服务器）和 **Extra SSH Arguments**——除非你确定需要，两个都可以忽略。
+
+对于 Cloudflare Access，输入应用的域名（`ssh.example.com`）和你服务器的 SSH 凭据。要在运行 OpenShip 的同一台机器、同一个 OS 用户下完成 Cloudflare 登录。Windows 桌面版自带 Cloudflare 客户端。对于自托管实例或 macOS/Linux，请在运行 API 的机器上安装 `cloudflared`，或把 `OPENSHIP_CLOUDFLARED_PATH` 设为它的绝对路径。容器化部署的 API 需要在容器里放好客户端及其认证。服务器的 SSH 端口躲在 Cloudflare Tunnel 之后；走这条路你不必把 22 端口暴露到公网。
+
+CLI 使用同一个连接设置：
+
+```bash
+openship server add --name Production --host ssh.example.com --ssh-transport cloudflare --auth-method agent
+```
+
+<Callout title="保存之前先测试" type="info">
+先点 **Test Connection**。Openship 会尝试登录并反馈结果，不保存任何东西。绿色的 **Connected** 说明你的信息填对了。出现红色报错先修好再继续——省得你之后瞎猜。
+</Callout>
+
+测试通过后，点击 **Save & Continue to Setup**。
+
+</Step>
+
+<Step>
+
+### 选择如何配置服务器
+
+服务器保存之后，Openship 提供两种安装所需组件的办法：
+
+- **Automatic Setup**——一键完成。Openship 检查服务器并替你装齐所有缺失的东西。
+- **Step-by-Step Setup**——先看详细状态，逐个组件审查并选择安装什么。
+
+新手请选 **Automatic Setup**。
+
+</Step>
+
+<Step>
+
+### 看核心组件装好
+
+Openship 现在会通过 SSH 连接，安装你的应用运行所需的东西。每装完一块它就会亮起，还有可展开的实时日志。
+
+安装先装**核心**组件——服务器离不开它们的那些：
+
+- **Docker**——真正运行你应用的容器运行时。
+- **Git**——用来拉取你的源码。
+
+路由与证书工具这时尚未安装。Openship 会在**以后自动**补上——当第一次有部署真的需要它们时——你从不需要动手装：
+
+- **OpenResty**——把 Web 流量路由到正确应用的反向代理。在应用第一次需要公网网址时添加。
+- **Certbot**——从 Let's Encrypt 开通免费 HTTPS 证书，让你的站点获得 SSL。在应用第一次需要 HTTPS 时添加。
+- **rsync**——快速文件传输，当构建在别处完成、需要复制到服务器时添加。
+
+以上任何组件装好后，都会出现在服务器的 **Components** 标签页（下文），在那里可以复查、重装或移除。安装完成后，你会落到服务器自己的页面。
+
+</Step>
+
+</Steps>
+
+## 服务器页面上有什么
+
+每台服务器有自己的页面，分成若干标签页。在这里你可以查看它的状态并进行管理。
+
+- **Overview**——机器的实时指标：CPU、内存、磁盘、在线时长和负载，外加一份哪些组件健康的简表。
+- **Components**——这台服务器的健康清单。**Re-check** 重新运行检查，**Install Missing** 安装服务器还缺的核心组件，已安装的每个组件都可以重装或移除。
+- **Security**——请求**速率限制（rate limit）**（见下文），以及一项**端口暴露扫描**，列出哪些端口正在监听，并标出哪些绑定在公网接口上而哪些仅回环。
+- **Terminal**——浏览器里的实时 SSH shell，让你不必离开 Openship 就能摆弄服务器。最多同时 3 个。
+- **Ports**——端口转发（**仅桌面应用**，见下文）。
+
+页头还有 **Edit**（修改连接信息），以及"…"菜单里的 **Remove Server**（清除已存的 SSH 凭据与设置）。
+
+### 速率限制（Security 标签页）
+
+速率限制限制单个访客每秒可发出的请求数，这样一台喧闹的客户端（或恶意爬虫）就没法淹没你的应用。它在 OpenResty 层面对整个服务器生效。
+
+设一个 **Requests / second** 即可开启。Openship 会自动给出合理的 **burst** 余量（对抗短时尖峰的小缓冲），或者你也可以在 **Advanced** 里自己设。你还可以添加 **Whitelisted IPs**——完全跳过限制的地址或 CIDR 段（如 `10.0.0.0/8`）。回环地址（`127.0.0.1`、`::1`）永远在白名单里。把每秒请求数改回 `0` 即取消限制。
+
+### 端口转发（Ports 标签页，仅桌面）
+
+如果你以**桌面应用**运行 Openship，**Ports** 标签页能把远程服务器上的某个端口映射为你自己电脑上的 `localhost`——和 VS Code 的端口转发同一个思路。输入**远程端口**，可选一个**本地端口**（留空自动挑选），然后启动转发。它只绑定在回环地址上，且仅在运行期间保持生效。桌面应用之外，该标签页是隐藏的。
+
+## CLI
+
+以上操作全部可以在 CLI 完成。你需要先登录（`openship login`）并在自托管的 Openship 上。
+
+```bash
+# 添加一台服务器（会先校验连接，再保存）
+openship server add \
+  --name production \
+  --host 203.0.113.10 \
+  --user root \
+  --auth-method key \
+  --key-path ~/.ssh/id_ed25519
+
+# 列出服务器，拿到下文需要的 id
+openship server list
+
+# 看看那台服务器装了什么
+openship server check <server-id>
+
+# 安装缺失的组件，实时输出日志
+openship server install <server-id> --component docker git openresty --follow
+```
+
+你还可以在不保存的情况下测试连接、观看实时指标、管理速率限制：
+
+```bash
+# 只试凭据，不创建服务器条目
+openship server test-connection --host 203.0.113.10 --user root --auth-method key --key-path ~/.ssh/id_ed25519
+
+# 实时输出 CPU / 内存 / 磁盘指标（Ctrl-C 停止）
+openship server monitor <server-id>
+
+# 设置 50 req/s 的速率限制（--rps 0 取消）
+openship server rate-limit <server-id> --rps 50 --burst 20
+```
+
+可安装的组件有 `docker`、`git`、`openresty`、`certbot` 和 `rsync`。
+
+## 故障排查
+
+<Callout title="连不上服务器" type="error">
+Openship 无法建立 SSH 连接。检查机器是否开着，SSH 服务是否在你输入的端口上接受连接（通常 `22`），以及——如果服务器在防火墙或 NAT 之后——从 Openship 运行处能否访问到那台主机。服务器页面会以 **Can't reach** 横幅显示确切的主机与端口。
+</Callout>
+
+<Callout title="SSH 凭据被拒" type="warn">
+Openship 连到了服务器，但登录被拒。你保存的密钥或密码与服务器 `~/.ssh/authorized_keys` 里允许的不匹配。在服务器上打开 **Edit** 修正凭据，然后再跑一次健康检查。如果你选的是 **Agent**，确认运行 Openship 的那台主机确实装有一把对该服务器可用的密钥。
+</Callout>
+
+<Callout title="某个组件安装失败" type="error">
+打开 **Components** 标签页，展开安装日志——最后几行红色文字说明原因。常见原因是服务器不能上外网，或软件包管理器正忙或被锁。在服务器上修好，然后点 **Re-check** 和 **Install Missing**，只重试失败的部分。
+</Callout>
+
+<Callout title="速率限制提示读不到配置" type="warn">
+Security 标签页的信息来自 OpenResty。如果 OpenResty 未安装（或不可达），你会看到"读不到"的提示。先在 **Components** 标签页安装 OpenResty，再回到 **Security**。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="把应用放上你的新服务器——Openship 问运行位置时选 'Server'。" />
+  <Card title="添加自定义域名" href="/docs/guides/custom-domains" description="把你的 yourname.com 指向一个应用，由 Certbot 自动配 HTTPS。" />
+  <Card title="多服务应用" href="/docs/guides/compose-multi-service" description="在你的服务器上同时运行多个服务（docker-compose 技术栈）。" />
+</Cards>

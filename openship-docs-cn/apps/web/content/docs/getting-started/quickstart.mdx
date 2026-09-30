@@ -1,0 +1,102 @@
+---
+title: 快速开始
+description: 从全新安装到应用上线最快的路径——启动 Openship，打开控制台，部署一个应用。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+刚装好 Openship？本页将用四个简短的步骤带你把一个应用跑上线。可以把 Openship 想象成一台运行在你自己电脑上的小厨房：你把它打开，推开灶台门，把代码递进去，它就烹好菜、端上桌。不用租服务器，也不用写配置文件。
+
+<Callout title="你需要准备什么">
+- 一台运行 macOS、Linux 或 Windows 的电脑。
+- 一些想发布上线的代码——一个 GitHub 仓库，或磁盘上的一个文件夹。
+- 无需租用服务器，也无需配置文件——Openship 就运行在你眼前的这台机器上。（在 Linux 上若已安装 Docker 会自动使用；否则以单个轻量进程运行。）
+</Callout>
+
+<Steps>
+
+<Step>
+
+### 安装 Openship CLI
+
+CLI 是一个小小的命令行工具。复制与你系统对应的那一行，粘贴到终端里：
+
+<InstallTabs />
+
+已经在用包管理器？`npm i -g openship` 也可以（或 `pnpm`、`yarn`、`bun`）——这条路需要 **Node 22+**，因为它跑在你自己的 Node 上，而不是自带运行时（runtime）。完整选项——桌面应用、云端、Docker Compose——见[安装](/docs/getting-started/installation)页。
+
+</Step>
+
+<Step>
+
+### 设置 Openship
+
+```bash
+openship
+```
+
+不带参数运行 **`openship`**——交互式设置会一步步引导你：先创建**管理员登录**（姓名、邮箱、密码），再选择实例是私有（仅本机）还是公开（你自己的域名 + HTTPS）。随后它会完成部署，把自己安装为常驻后台服务（开机自启、崩溃自动重启），并打印出你的登录 URL。**API** 运行在 `:4000`，**控制台**（dashboard）运行在 `:3001`。在装有 Docker 的 Linux 上，它会拉起完整技术栈（Postgres、Redis，以及一个负责域名 + TLS 的 OpenResty 边缘服务）；否则就是带内置数据库的单个轻量进程。除此之外无需任何设置。
+
+<Callout title="要写脚本或跑 CI？跳过交互问答" type="info">
+`openship up` 会执行同样的安装但**不启动**向导（不会创建管理员——你在控制台里注册第一个账号）。`openship up --foreground` 会在前台附着于你的终端运行（Ctrl-C 停止）；`openship stop` 停止该服务。
+</Callout>
+
+<Callout title="想要免登录、免终端的版本？" type="info">
+[桌面应用](/docs/getting-started/installation)只在其打开期间于你的机器上运行 Openship，无需登录。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 打开控制台
+
+```bash
+openship open
+```
+
+这会在浏览器中打开 `http://localhost:3001` 的控制台。**用你在设置阶段创建的管理员账号登录**。由 CLI 管理的实例始终需要登录——只有[桌面应用](/docs/getting-started/installation)可以免登录运行。（如果你用的是 `openship up` 而非向导，请现在在这里注册第一个账号。）
+
+</Step>
+
+<Step>
+
+### 部署一个应用
+
+在控制台中新建一个项目（project），把源指向你的代码——一个 GitHub 仓库或磁盘上的文件夹。Openship 会检查你的代码，判断这是什么类型的应用，并给出一份摘要。对大多数应用来说什么都不用改：直接按 **Deploy** 即可。
+
+接着你会进入构建页面，日志会实时流式输出——就像隔着玻璃门看着烤箱一样。构建完成后你会得到一个链接。点开它，你的应用就上线了。🎉
+
+</Step>
+
+</Steps>
+
+## CLI
+
+你可以不离开 shell 就完成部署。先在控制台里创建一个项目，然后在你的代码文件夹里执行：
+
+```bash
+cd your-project
+openship init         # 选择这个文件夹所属的项目
+openship deploy       # 构建并上线
+```
+
+`openship init` 会写入一个小的 `.openship/project.json` 文件，让后续命令知道要操作哪个项目。给 `openship deploy` 加上 `--watch` 可以持续跟踪构建日志直至完成。
+
+## 故障排查
+
+<Callout title="`openship open` 提示 API 没有响应" type="warn">
+平台还没启动完成。先运行 `openship up`（等几秒让它进入健康状态），再重试 `openship open`。随时可以用 `openship status` 查看状态。
+</Callout>
+
+<Callout title="构建失败" type="error">
+打开构建页面，读最后几行红色的日志——那才是真正的原因。首次失败通常是因为缺少构建命令、缺少环境变量（environment variable），或应用监听了错误的端口。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="安装" href="/docs/getting-started/installation" description="桌面应用、Docker Compose、云端与系统要求——全部安装方式一览。" />
+  <Card title="首次部署" href="/docs/getting-started/first-deployment" description="更深入的演练：从 Git 部署、自定义域名、环境变量、预览环境（preview environment）与回滚（rollback）。" />
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="连接仓库并开启自动部署，让每次推送都自动上线。" />
+</Cards>

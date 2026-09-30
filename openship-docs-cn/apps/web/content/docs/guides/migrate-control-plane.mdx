@@ -1,0 +1,113 @@
+---
+title: 把整套环境迁移到另一个实例
+description: 把整套 Openship 控制面（control plane）——服务器、项目、服务、域名、环境变量和密钥——从一个安装实例搬到另一个。最典型的场景是本地桌面 → 一台常开的自托管服务器。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+你最初在笔记本上用**桌面应用**，现在想让 Openship 本身运行在一台**常开的 Linux 服务器**上，这样合上笔记本后部署也能继续工作。你不想手动重建每一个项目、服务器连接、域名和密钥。
+
+为此 Openship 提供了一等公民级的**数据传输**（data transfer）功能：把整个实例导出为旧机器上的一个加密文件，再到新机器上导入。它携带整个控制面——服务器/SSH 连接、项目（包括本地文件夹源设置）、服务、域名和路由、环境变量、部署历史和备份目标——而且**密钥会以你选择的口令重新加密后传输**，绝不以明文出现。
+
+<Callout title="桌面 → 服务器可行">
+桌面应用把数据存在内嵌数据库（PGlite）中，而服务器使用 Postgres。导出会记录数据来源，导入时会自动适配，因此**桌面 → 服务器**的迁移可以干净地导入——你不需要手动转换任何东西。
+</Callout>
+
+<Callout title="实例迁移请使用数据传输" type="warn">
+**Settings → Team → Migrate → Own server**（设置 → 团队 → 迁移 → 自己的服务器）快捷入口在本版本中不可用。其预检会报告缺失的部署步骤，且无法在未准备好的目标上启动恢复。请先安装并启动目标实例，再使用下文的导出/导入步骤。在退役源实例之前，先验证导入后的安装及其项目。
+</Callout>
+
+## 哪些内容会迁移（以及迁移后要检查什么）
+
+**会携带**：servers/SSH 连接 · 项目 · 服务 · 域名与路由 · 环境变量 · 部署设置 · 备份目标 · Git 安装。**密钥**（环境变量值、SSH 密钥/密码、clone 令牌、备份凭据）在导出时会被封入一个由口令密封的 AES-256-GCM 包，导入时再以*目标实例*的密钥重新加密。
+
+**导入后检查**：从**本地文件夹**部署的项目（无 Git——即“部署本地文件夹”流程）保存的是文件夹*在源机器上的*路径。新机器上不存在该路径，因此 Openship 会在导入时标记这些项目。重新指向它们，或直接从新机器上的某个文件夹逐个重新部署（见最后一步）。
+
+## 开始迁移
+
+<Steps>
+
+<Step>
+
+### 在旧机器上导出
+
+**CLI**：
+
+```bash
+openship system data-transfer export --passphrase "a-strong-passphrase" --out openship-export.osx
+```
+
+**或在控制台**：**Settings → Instance → Data Transfer → Export**，设置口令，下载文件。
+
+口令用于加密文件内的密钥。拿到文件但没有口令的人只能得到你的项目/域名/配置，**得不到**任何密钥值。请妥善保管口令——导入时必须用到它。
+
+</Step>
+
+<Step>
+
+### 把文件复制到新服务器
+
+任何传输方式都行——`scp`、`rsync` 或 U 盘。文件是自包含的。
+
+```bash
+scp openship-export.osx you@your-server:/tmp/
+```
+
+</Step>
+
+<Step>
+
+### 在新服务器上导入
+
+先在服务器上安装并启动 Openship（参见[安装](/docs/getting-started/installation)），然后：
+
+```bash
+openship system data-transfer import --file /tmp/openship-export.osx \
+  --passphrase "a-strong-passphrase" --mode wipe
+```
+
+**或在控制台**：**Settings → Instance → Data Transfer → Import**，选择文件，输入口令，选择模式。
+
+- **`wipe`**（默认）——用文件替换目标实例的数据。全新服务器用这个模式。它也会替换登录/会话，之后你需要以导入的属主身份重新认证。
+- **`merge`**——只插入尚不存在的行；保留目标实例自己的账户/设置。用于把一个安装实例合并进另一个而不破坏它。
+
+</Step>
+
+<Step>
+
+### 重新指向本地文件夹项目
+
+如果导入时警告了**本地文件夹项目**，说明它们的源路径指向旧机器。对每一个这样的项目，把源放到新服务器上并从那里重新部署——无需 Git：
+
+```bash
+cd /path/to/your/app/on/this/server
+openship deploy
+```
+
+在非 Git 文件夹中运行 `openship deploy`，它会当场打包该文件夹、上传到此实例、检测技术栈并部署——相当于桌面端“部署本地文件夹”流程的无头版本。这会把项目重新绑定到一个本机上存在的路径。
+
+</Step>
+
+</Steps>
+
+## 源码发布版的维护命令
+
+源码发布版使用扁平的 `api/`、`dashboard/` 和 `packages/` 目录结构。其无头导入入口是 `api/scripts/import-instance.ts`；数据库转储与恢复入口在 `packages/db/scripts/` 下。这些命令和发布监督进程使用其已安装 PGlite 包中的资源，不会复用编译版 CLI 安装的 `OPENSHIP_PGLITE_ASSETS_DIR`。
+
+对正在运行的目标实例，请使用上文的数据传输 API 或控制台。无头导入必须使用目标实例的数据库配置和加密密钥，并先停掉占用该内嵌数据库的所有进程。它只是一条数据导入命令；不会为目标实例安装、启动、配置路由或执行切换。
+
+## 只部署有变化的部分（不要重启你的数据库）
+
+在服务器上运行起来之后，多服务（Compose）项目可以只部署服务的**一个子集**，这样仅后端的改动就不会重建你的 MySQL/Redis/Qdrant 容器：
+
+```bash
+openship deploy --service-ids web,api
+```
+
+未点名的服务会沿用其现有容器，不受影响。首次部署时省略 `--service-ids` 即可启动整个套栈。对有状态服务而言，这决定了你得到的是一次快速的应用更新，还是不必要的数据库停机。
+
+<Callout title="相关内容">
+- [部署本地文件夹](/docs/guides/deploy-local-folder)——本指南重新指向的无 Git 部署方式。
+- [服务器到服务器迁移](/docs/guides/server-to-server-migration)——在服务器之间迁移*运行中的应用及其卷*（与迁移控制面不同）。
+- [数据库迁移](/docs/guides/database-migrations)——围绕一次部署安全地备份并迁移有状态卷。
+</Callout>

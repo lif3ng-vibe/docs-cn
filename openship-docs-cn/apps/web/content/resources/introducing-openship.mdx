@@ -1,0 +1,46 @@
+---
+title: "推出 Openship：部署一切，拥有一切"
+description: "我们发布了 Openship——一个开源、可自托管的部署平台。聊聊我们为何构建它，以及它能做什么。"
+date: "2026-03-01"
+category: "公告"
+author: "Openship 团队"
+---
+
+# 推出 Openship：部署一切，拥有一切
+
+今天，我们正式开源 Openship——一个可以跑在你自己服务器上的部署平台。
+
+## 我们为什么做这个
+
+Vercel、Netlify 这类云平台很适合起步。但随着应用长大，账单也跟着长大。按量计费的 CPU、按席位的价格、带宽上限——加起来很快。而当你想离开时，才发现基础设施已经被锁死在它们的专有系统里。
+
+我们想要不一样的：
+
+- **自托管优先**——跑在任意 Linux 服务器上。一台每月 20 美元的 VPS，就能干托管平台上每月 200 多美元的活。
+- **开源**——Apache-2.0 许可。没有黑盒，没有厂商锁定。
+- **AI 辅助**——框架识别、构建优化与配置，全部自动搞定。
+
+## 你能部署什么
+
+Openship 支持一切能在容器里跑的技术栈：
+
+- **前端框架**——Next.js、Nuxt、SvelteKit、Astro、Remix
+- **后端**——Node.js、Python、Go、Rust、Ruby、PHP
+- **数据库**——Postgres、MySQL、Redis、MongoDB
+- **全栈**——共享网络的多服务应用
+
+## 快速开始
+
+```bash
+curl -fsSL https://get.openship.io | sh
+cd your-project
+openship deploy
+```
+
+三条命令，就这么简单。
+
+## 接下来
+
+我们正在做负载均衡、集群管理、私有网络和内置 CI/CD 流水线。详情参见[路线图](/docs)。
+
+欢迎在 [GitHub](https://github.com/oblien/openship) 上给我们加星，并加入社区。

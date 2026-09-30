@@ -1,0 +1,77 @@
+---
+title: CLI 命令参考
+description: 按任务分组收录每一条公开的 CLI 命令、参数与选项。
+---
+
+使用 `openship <command> --help` 检查你机器上已安装的版本。`<value>` 为必填，`[value]` 为可选。别名会在命令名旁列出。
+
+## 全局选项
+
+| 选项 | 含义 |
+| --- | --- |
+| `-V, --version` | 输出版本号 |
+| `--json` | 机器可读的 JSON 输出（仅 stdout 数据） |
+| `--native-config <file>` | 使用显式受信任的 JavaScript 配置运行 SDK 命令 |
+| `-h, --help` | 显示命令帮助 |
+
+全局选项应放在命令之前，例如 `openship --json project list`。使用 `--native-config` 前先参见[原生模式](/docs/cli/native)。
+
+## 连接
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship login`](/docs/cli/reference/login) | 使用个人访问令牌（Personal Access Token）进行认证（在控制台设置中创建） |
+| [`openship logout`](/docs/cli/reference/logout) | 移除已存储的 Openship 令牌 |
+| [`openship context`](/docs/cli/reference/context) | 管理连接上下文（list/use/add/rm） |
+| [`openship token`](/docs/cli/reference/token) | 管理个人访问令牌 |
+| [`openship api`](/docs/cli/reference/api) | 向任意 Openship API 路由发起已认证的请求（类似 `gh api`） |
+
+## 部署
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship init`](/docs/cli/reference/init) | 将当前目录关联到 Openship 项目（.openship/project.json） |
+| [`openship config`](/docs/cli/reference/config) | 编写并校验 openship.json（声明式部署配置） |
+| [`openship deploy`](/docs/cli/reference/deploy) | 为当前项目触发一次部署 |
+| [`openship deployment`](/docs/cli/reference/deployment) | 管理部署（list、inspect、redeploy、rollback 等） |
+| [`openship logs`](/docs/cli/reference/logs) | 查看或流式跟踪一次部署的日志 |
+
+## 应用
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship project`](/docs/cli/reference/project) | 管理 Openship 项目 |
+| [`openship app`](/docs/cli/reference/app) | 浏览、安装并配置目录中的应用 |
+| [`openship service`](/docs/cli/reference/service) | 管理 Compose 堆栈（多服务项目）中的服务 |
+| [`openship domain`](/docs/cli/reference/domain) | 管理自定义域名、DNS 验证与 SSL 证书 |
+
+## 基础设施
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship job`](/docs/cli/reference/job) | 管理自托管的任务（job）、调度与运行日志 |
+| [`openship server`](/docs/cli/reference/server) | 管理自托管的 SSH 服务器 |
+| [`openship backup`](/docs/cli/reference/backup) | 管理备份：策略、运行、恢复与目标 |
+| [`openship edge`](/docs/cli/reference/edge) | 安装并管理 OpenResty 边缘（反向代理、TLS 与按路由划分的规则） |
+| [`openship mail`](/docs/cli/reference/mail) | 自托管邮件服务器（iRedMail）的搭建与管理 [self-host] |
+| [`openship system`](/docs/cli/reference/system) | 实例设置、初始引导、迁移与数据传输 |
+
+## 本地安装
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship up`](/docs/cli/reference/up) | 以常驻服务启动 Openship（开机自启 + 自动重启）；--foreground 可前端附着运行 |
+| [`openship stop`](/docs/cli/reference/stop) | 停止 Openship（由 `openship up` 启动）——重启后不会自动再启动 |
+| [`openship status`](/docs/cli/reference/status) | 查看本地 Openship 服务（安装/运行状态、端口）与激活上下文的 API 健康状况 |
+| [`openship doctor`](/docs/cli/reference/doctor) | 检查数据库与服务的健康状况，并修复损坏的本地数据库 |
+| [`openship open`](/docs/cli/reference/open) | 在浏览器中打开 Openship 控制台 |
+| [`openship install`](/docs/cli/reference/install) | 下载并安装适用于当前操作系统的 Openship 桌面应用 |
+| [`openship update`](/docs/cli/reference/update) | 将 Openship CLI 与随附的服务端更新到最新发行版 |
+| [`openship uninstall`](/docs/cli/reference/uninstall) | 从本机移除 Openship：停止它、删除其数据（数据库、证书、edge 配置）、镜像与 ~/.openship。已部署的应用不受影响，继续运行。 |
+| [`openship reset-admin-password`](/docs/cli/reference/reset-admin-password) | 重置本机上的本地管理员登录（无需先登录） |
+
+## Shell
+
+| 命令 | 用途 |
+| --- | --- |
+| [`openship completion`](/docs/cli/reference/completion) | 生成 shell 补全脚本 |

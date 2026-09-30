@@ -1,0 +1,88 @@
+---
+title: system migration
+description: openship system migration 的命令、参数与选项。
+cliGroup: openship system migration
+---
+
+示例参见[工作流指南](/docs/cli/self-host)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship system migration
+
+团队模式迁移的生命周期管理
+
+```text
+openship system migration [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`preflight [options]`](/docs/cli/reference/system/migration#openship-system-migration-preflight) | 迁到自有服务器前的就绪检查（只读） |
+| [`start [options]`](/docs/cli/reference/system/migration#openship-system-migration-start) | 将本实例迁移到你自己的服务器上 |
+| [`start-cloud [options]`](/docs/cli/reference/system/migration#openship-system-migration-start-cloud) | 将本实例迁移到 Openship Cloud |
+| [`start-tunnel [options]`](/docs/cli/reference/system/migration#openship-system-migration-start-tunnel) | 通过边缘隧道将本实例暴露出去 |
+| [`switch-back [options]`](/docs/cli/reference/system/migration#openship-system-migration-switch-back) | 反向迁移回单用户模式（队友将失去访问权限） |
+
+## openship system migration preflight
+
+迁到自有服务器前的就绪检查（只读）
+
+```text
+openship system migration preflight [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--server-id <id>` | 目标服务器 ID |
+| `--hostname <host>` | 指向该服务器的自定义域名 |
+| `--slug <slug>` | 免费的 &lt;slug&gt;.opsh.io 子域名 |
+
+## openship system migration start
+
+将本实例迁移到你自己的服务器上
+
+```text
+openship system migration start [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--server-id <id>` | 目标服务器 ID |
+| `--hostname <host>` | 指向该服务器的自定义域名 |
+| `--slug <slug>` | 免费的 &lt;slug&gt;.opsh.io 子域名 |
+
+## openship system migration start-cloud
+
+将本实例迁移到 Openship Cloud
+
+```text
+openship system migration start-cloud [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--allow-non-empty-target` | 即使云端组织已有项目也继续执行 |
+
+## openship system migration start-tunnel
+
+通过边缘隧道将本实例暴露出去
+
+```text
+openship system migration start-tunnel [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--slug <slug>` | 隧道 slug |
+
+## openship system migration switch-back
+
+反向迁移回单用户模式（队友将失去访问权限）
+
+```text
+openship system migration switch-back [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--abandon-remote` | 跳过拉取远程数据；本地数据库保持原样 |
+| `-y, --yes` | 跳过确认提示 |

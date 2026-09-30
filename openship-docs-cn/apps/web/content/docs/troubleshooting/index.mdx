@@ -1,0 +1,159 @@
+---
+title: 故障排查
+description: Openship 在哪里告诉你哪里出了问题——构建界面、Logs 标签页和 CLI——以及在你动手修复之前，如何读懂一条报错。
+---
+
+出问题时，Openship 往往早就把原因告诉过你了——关键在于知道它把它写在了哪里。本页是起点：它会指出真正答案所在的那几处地方，以及一个能自行解决大多数问题的习惯。
+
+<Callout title="一个习惯解决大多数问题" type="info">
+无论出了什么问题，先把输出滚到**底部**，读**最后几行红字**。Openship（以及它运行的工具——npm、Docker、你的框架）在放弃之前都会打印出真正的原因。红色之上的内容通常只是正常的进度输出。
+</Callout>
+
+## 有用信息藏在哪里
+
+你真正需要的界面只有几个。把你的情况对号入座：
+
+| 何时…… | 看哪里 | 如何打开 |
+|---|---|---|
+| 部署正在运行或刚刚失败 | **实时构建界面** | 按下 **Deploy** 后你会直接落在这里；它会实时流式显示每一个构建步骤。 |
+| 应用已部署但表现异常 | **项目 → Logs 标签页** | 打开项目，选择 **Logs**。有两个子标签：**Terminal**（应用自身的输出）和 **Server**，后者的面板标题为 **HTTP Request Logs**（入站请求）。 |
+| 没有任何请求到达应用 | **HTTP Request Logs** | **Logs** 的 **Server** 子标签——每一行是一个请求，含方法、路径、状态码和响应时间。 |
+| 你习惯在终端里工作 | **CLI** | `openship logs <deploymentId> --follow`，外加 `openship doctor` 和 `openship status`。 |
+
+### 实时构建界面
+
+这就是部署过程中你盯着看的那一页——像隔着玻璃门看烤箱。它会实时流式呈现构建过程，构建结束时把线上 URL 交给你。如果构建失败，这里是第一落点：失败的命令及其报错就在流停止前的最后几行里。界面导览参见[部署向导](/docs/dashboard/deploy-wizard)。
+
+### 项目的 Logs 标签页
+
+应用上线后，打开它并选择 **Logs**。你会在两个子标签之间切换：
+
+- **Server**——面板标题为 **HTTP Request Logs**：每个入站请求一行（方法、路径、状态码、响应时间、国家和大小）。适合回答“到底有没有请求打到我的应用？”，也适合发现大量 `4xx`/`5xx` 响应。（对于没有运行时的静态站点，这个标签会改名为 **Requests**。）
+- **Terminal**——应用自己的 stdout/stderr，直接从运行中的容器流式传来。崩溃、堆栈跟踪或"listening on port…"之类的输出都出现在这里。
+
+想保存日志或寻求帮助时，用顶部一行的 **Copy** 或 **Download** 按钮把日志取走。完整操作见[日志与监控](/docs/guides/logs-monitoring)。
+
+<Callout title="Logs 标签页提示无法连接" type="warn">
+如果实时终端弹出 **"Failed to connect to terminal logs, make sure your project is running"**，或者 **HTTP Request Logs** 面板显示 **"Connection to log stream lost"**，说明应用当前没有在运行（或已进入休眠）。重新部署或唤醒它，实时日志流会自动重连。终端里的 **"Waiting for logs…"** 只表示已连上但应用还没有输出——安静的应用出现这个很正常。
+</Callout>
+
+### CLI
+
+上面的一切在终端里都有对应命令：
+
+```bash
+# 某次部署日志的快照
+openship logs <deploymentId>
+
+# 实时流式输出，直到该部署结束
+openship logs <deploymentId> --follow
+
+# 只看最后 50 行
+openship logs <deploymentId> --tail 50
+```
+
+在进一步排查之前，有两条命令能先回答“我的环境到底正不正常？”：
+
+```bash
+# 检查配置、当前登录、API 是否可达以及你的运行时
+openship doctor
+
+# 你所指向 API 的健康状态与模式（自托管还是云）
+openship status
+```
+
+`openship doctor` 会打印一份检查清单，在 **config**、**context**、**api**、**node**、**bun** 每一项旁边标出绿色 `✓`、黄色 `!` 或红色 `✗`——一条红线就能准确告诉你哪里出了问题。命令的完整说明见 [CLI 参考](/docs/cli)。
+
+## 如何读懂 Openship 的报错
+
+Openship 的报错刻意做到简短而有结构——并不是要吓唬你。
+
+**在控制台（dashboard）里**，失败会以 toast（小型弹窗）形式附一条消息出现，而对于流式输出的内容，还会在构建界面或 Logs 终端里多出一行红字。读这条消息即可——它就是服务器发来的原文。
+
+**通过 API 或 CLI**，每个错误都会以一个小 JSON 对象返回，其中有两个你关心的字段：
+
+```json
+{ "error": "human-readable message", "code": "MACHINE_CODE" }
+```
+
+- **`error`** 是要读的那句话。
+- **`code`** 是一个稳定、可供搜索的标签。输入不合法时会报 `code: "VALIDATION_ERROR"`，并附带一个 `details` 对象，指明具体哪些字段未通过。
+- **HTTP 状态码**让你一眼看出类别：`400` 请求有误，`401` 未登录，`403` 无权限，`404` 未找到，`409` 冲突（某物已存在或正在使用中），`500` 真正的服务器内部错误。状态码 `500` 加上一条裸的 `{ "error": "Internal server error" }`，意味着原因在服务器日志里，而不在你发送的内容中。
+
+### 症状：部署失败且看不出原因
+
+<Callout title="构建以红色报错告终，且没有明显的解释" type="error">
+构建界面（或 `openship logs <id> --follow`）以红色报错行收尾，而不是给出线上 URL。
+</Callout>
+
+**含义**——构建中的某条命令放弃了。要紧的是流停止前的**最后**一行，而不是它上面那一整墙的输出。
+
+**修复方法**
+
+1. 把构建界面滚到底部，认真读最后几行红字——它们会点名失败的那一步（缺少命令、某个包装不上、端口不匹配）。
+2. 如果它提到缺少某个设置或密钥，在项目的 **Configuration** 标签页里补上，然后重新部署。
+3. 还是卡住？按 **Copy**/**Download** 保存日志，然后把报错信息与[故障排查 → 部署](/docs/troubleshooting/deployments)对照——那里列出了常见的构建与运行时故障及其修法。
+
+### 症状：CLI 连不上你的实例
+
+<Callout title='"Cannot reach the API at …" 或 openship doctor 中 "api" 旁出现红色 ✗' type="error">
+命令还没做任何事就挂起或失败，`openship doctor` 把 **api** 检查报为 `unreachable` 或意料之外的 `HTTP` 状态。
+</Callout>
+
+**含义**——CLI 指向了一个它无法通信的实例：地址不对、实例没在运行，或者登录已过期。
+
+**修复方法**
+
+1. 运行 `openship doctor`。它会依次检查：你的 **config** 文件、当前生效的 **context** 与令牌（token），以及 **api** 是否有响应。
+2. 如果 **context** 是黄色并提示 *"has no token; run `openship login`"*，重新登录。
+3. 如果 **api** 是红色，确认实例确实在运行（`openship status` 会显示其健康状态与模式），并确认地址是你预期的那个。
+
+### 症状：openship up 拒绝重新生成密钥
+
+<Callout title='"Refusing to continue: this would regenerate secrets your existing install already has"' type="error">
+重新运行 `openship up`（Compose 安装）时什么都不启动就直接退出，并点名 `POSTGRES_PASSWORD`、`BETTER_AUTH_SECRET`、`INTERNAL_TOKEN` 中的一个或多个。
+</Callout>
+
+**含义**——这些密钥只生成一次，且仅存储在 `~/.openship/compose/.env` 中。这次运行在那里读不到它们，但安装的数据库卷还留在机器上。重新生成是行不通的：Postgres 只在第一次创建数据目录时应用 `POSTGRES_PASSWORD`（否则 API 会报 `password authentication failed for user "openship"`），而 `BETTER_AUTH_SECRET` 是加密你所存环境变量用的密钥。所以这次运行会在**写入任何内容之前**停下，而不是给你留一套起不来的堆栈。
+
+**修复方法**
+
+1. 检查你用的是什么身份。`sudo openship up` 读取 `/root/.openship/compose/.env`；不加 `sudo` 则读取你自己家目录下的那份。请以拥有这套安装的用户身份重新运行。
+2. 如果文件在但读不了，先修好它的权限——而不是让密钥被重新生成。
+3. 如果文件被覆盖了，把它恢复回来。每次 `openship up` 都会把被替换的 `.env` 保留在 `~/.openship/compose/.env.bak`；旧值也可能还留在某个已停止的容器里（`docker inspect <container> --format '{{json .Config.Env}}'`）。
+4. 只有在原始值确实已丢失时才用：`openship up --reset-secrets`。数据库密码会自动重新对齐，但**所有已存储的环境变量将永久无法解密**——你需要到每个项目的 Configuration 标签页里重新录入。
+
+<Callout title="先预览一遍" type="info">
+`openship up --dry-run` 会把每个密钥标为 `<preserved>` 或 `<generated on this run>`，并在真实运行会拒绝时给出警告——这样你就能在实际动到机器之前，先看清一次重跑会发生什么。
+</Callout>
+
+### 症状：openship 命令崩溃，或升级 Node 后消失
+
+<Callout title='"SyntaxError: Invalid regular expression flags"——或安装后立刻出现 "openship: command not found"' type="error">
+`npm i -g openship` 显示安装成功，但命令要么立即崩掉并抛出一个指向你从未听过的文件的 `SyntaxError`（`string-width`、`commander`），要么根本不在你的 `PATH` 里。
+</Callout>
+
+**含义**——用包管理器安装时跑在**你自己的** Node 上，而 Openship 需要 **Node 22+**。在 Node 18 上安装确实会成功、二进制也确实被链接了；出问题的是它加载的第一个依赖——那个 Node 解析不了。
+
+当前版本的 CLI 会替你处理好这种情况：不会再抛 `SyntaxError`，而是主动提出把一个官方 Node 22 下载到 `~/.openship/runtime`，仅供 Openship 使用。所以如果你看到了原始的 `SyntaxError`，说明你用的是旧版本——重装 CLI，它就会提供这个修复。
+
+`command not found` 这种变体通常出现在*修好*第一个问题之后：nvm、fnm 和 volta 按**各个 Node 版本**分别保存全局包，因此安装了新的 Node 后，CLI 还留在旧版本那边。
+
+**修复方法**
+
+1. 先看自己的版本：`node --version`。低于 22 时，要么接受 CLI 提出的自取 Node 的方案，要么自己升级，要么用 `curl -fsSL https://get.openship.io | sh` 完全绕开这个问题——那个安装器绝不碰你已有的 Node。
+2. 要写进脚本？`OPENSHIP_VENDOR_NODE=1` 可以免提示接受下载（`0` 表示拒绝）。
+3. 用版本管理器升级 Node 之后，在新版本上重装 CLI：`npm i -g openship`。
+4. 还是找不到？官方安装器会把它放进 `~/.openship/bin`——新开一个终端，或执行 `export PATH="$HOME/.openship/bin:$PATH"`。
+
+## 前往对应的页面
+
+<Cards>
+  <Card title="部署与构建故障" href="/docs/troubleshooting/deployments" description="构建变红、端口不对、缺环境变量、应用起不来——常见部署故障及其修法。" />
+  <Card title="GitHub 连接与仓库" href="/docs/troubleshooting/github" description="连接过期、私有仓库导入不了、自动部署的 Webhook 始终不触发。" />
+  <Card title="域名、DNS 与 SSL" href="/docs/troubleshooting/domains-ssl" description="自定义域名验证不过、DNS 还没生效、证书一直卡在签发中。" />
+  <Card title="服务器与 SSH" href="/docs/troubleshooting/servers-ssh" description="服务器 SSH 连不上、组件装不上、缺少 Docker、端口转发隧道。" />
+  <Card title="主机控制通道" href="/docs/troubleshooting/host-channel" description="&quot;This operation targets the HOST machine, but no host channel is configured&quot;——按安装形态给出修复方法。" />
+  <Card title="桌面应用与本地数据" href="/docs/troubleshooting/desktop-data" description="启动问题、数据库锁、更新卡住，以及本地数据存放在哪里。" />
+  <Card title="常见报错" href="/docs/troubleshooting/common-errors" description="你真正会碰到的 API 错误码与消息——各自的含义和修法。" />
+</Cards>

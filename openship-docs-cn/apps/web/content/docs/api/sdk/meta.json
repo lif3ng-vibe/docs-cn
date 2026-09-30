@@ -1,0 +1,18 @@
+{
+  "title": "SDK 配置",
+  "pages": [
+    "index",
+    "installation",
+    "---连接---",
+    "client",
+    "native",
+    "identity",
+    "lifecycle",
+    "---集成---",
+    "errors",
+    "utilities",
+    "operator",
+    "examples",
+    "compatibility"
+  ]
+}

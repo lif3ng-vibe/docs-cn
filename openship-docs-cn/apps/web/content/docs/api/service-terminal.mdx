@@ -1,0 +1,105 @@
+---
+title: 服务终端
+description: 签发访问票据并打开服务 Shell。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+服务终端 API 让你进入服务正在运行的容器内获得一个实时 Shell——与控制台里某个服务的 **Terminal** 标签页给你的那个 PTY 一模一样。你先用普通 HTTP 签发一张短期票据，
+再打开一个 WebSocket，把票据随连接携带并双向传输按键与输出。它在两种部署模式下都能用：在自托管实例上是对容器执行 `docker exec`；在 Openship Cloud 上则是你 Oblien 工作区里的一个 Shell。运行时会根据服务的活动部署自动选择。
+
+## 签发票据
+
+```
+POST /api/services/terminal/ticket
+```
+
+<TypeTable
+  type={{
+    serviceId: { type: 'string', description: '你想进入其容器打开 Shell 的服务。', required: true },
+  }}
+/>
+
+返回 `{ success: true, token, expiresIn }`。`token` 一次性使用，并在 `expiresIn`
+秒后过期——请在打开 socket 之前再签发。若该服务不存在、不属于你，或还没有活动部署，该路由会提前解析并返回 404（在你花费一次 WebSocket 尝试之前）。
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/services/terminal/ticket" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serviceId":"svc_123"}'
+```
+
+<Callout title="CLI 等价物" type="info">
+目前还没有可用的 CLI Shell——`openship service exec` 只是一个打印 “coming soon” 的占位实现（CLI
+不带 WebSocket 客户端）。请用控制台里服务的 **Terminal** 标签页，它就是围绕这些端点驱动的。
+</Callout>
+
+## 打开 WebSocket
+
+```
+GET /api/services/terminal/ws/:serviceId
+```
+
+把 WebSocket 连到这个路径。由于返回 `401` 的 HTTP 中间件会让握手中止，该
+路由在 HTTP 层是公开的，改为在升级（upgrade）过程中完成认证。有两道关卡：
+
+- **Origin**——请求的 `Origin` 必须在实例的受信源允许清单内，否则 socket 以
+  `4403` 关闭。
+- **身份**——把 `/ticket` 发的票据作为 WebSocket **子协议**（subprotocol）传入，前缀为
+  `openship.terminal.v1+`（例如 `openship.terminal.v1+<token>`）。若没有票据，Openship 回退使用
+  会话 Cookie（控制台场景）。要恢复一个已挂起的会话，再加一个以
+  `openship.terminal.resume+<resumeToken>` 为前缀的子协议。
+
+连接建立后，线路协议如下：
+
+- **二进制帧**是原始 PTY 字节——按键以二进制发送；stdout/stderr 以二进制到达。
+- **文本帧是 JSON 控制消息**。客户端 → 服务器：`{"type":"resize","cols":N,"rows":N}`
+  （cols 限制在 1–1000，rows 1–500）、`{"type":"ping"}`、`{"type":"close"}`。服务器 → 客户端：
+  连接时发 `{"type":"ready","sessionId","resumeToken","resumed"}`，Shell 结束时发
+  `{"type":"exit","code","signal"}`，还有 `{"type":"error","code","message"}` 与 `{"type":"pong"}`（后者也作为心跳每隔约 25 秒发送）。
+
+```bash
+# Mint a ticket, then connect with websocat, passing it as a subprotocol:
+websocat "wss://your-host/api/services/terminal/ws/svc_123" \
+  --protocol "openship.terminal.v1+$TICKET" \
+  -H "Origin: $OPENSHIP_URL"
+```
+
+## 错误
+
+WebSocket 通过发送一个 `{"type":"error"}` 帧并随后以特定代码关闭来报告失败：
+
+<Callout title="4401 —— 未授权" type="warn">
+没有有效票据或会话、没有活动组织，或票据对应的服务与路径上的
+`:serviceId` 不匹配。签发一张新票据（一次性、短效）并立即连接。
+</Callout>
+
+<Callout title="4404 —— 服务未找到或未部署" type="warn">
+该服务不在你的活动组织中、你对其项目缺少管理员权限，或它还没有正在运行的容器
+（仍在部署中，或项目没有活动部署）。用
+[服务 API](/docs/api/services) 列出服务以确认它处于运行状态。
+</Callout>
+
+<Callout title="4400 —— 不支持终端" type="error">
+该服务的运行时不提供交互式 Shell（`not_supported`），或 `:serviceId` 缺失。
+</Callout>
+
+<Callout title="4429 —— 会话过多" type="warn">
+你已达到按用户的并发会话上限。关闭一个已存在的终端后重试。
+</Callout>
+
+<Callout title="4403 —— Origin 不被允许" type="error">
+请求的 `Origin` 不在受信源允许清单内。请从控制台自身的主机发起连接。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 为某个服务签发一次性、短效的 WebSocket 认证票据。 | `POST /api/services/terminal/ticket`<br />`terminal:write` |
+| WebSocket 升级——认证发生在握手过程中（票据子协议或会话 Cookie）。 | `GET /api/services/terminal/ws/:serviceId`<br />`Handler authentication` |
+
+{/* api-operations:end */}

@@ -1,0 +1,212 @@
+---
+title: 邮件
+description: 从控制台运营你自己的邮件服务器——开通或收养一台服务器，走完设置向导，再从十个标签页的管理面板管理域名与邮箱。
+---
+
+**Email Server** 界面（路由 `/emails`）是你在一台自己的服务器上建立起一套完整的自托管邮件服务器、并对其日常运营的地方——域名、邮箱、DNS、健康、备份。OpenShip 通过 SSH 安装整套技术栈（Postfix、Dovecot、反垃圾邮件、SSL、DKIM/SPF/DMARC），然后给你一个管理面板（admin panel），让你永远不必亲手碰那台机器。
+
+你可以运行多套。每套邮件服务器都各自驻留在一台主机上（每台服务器一套邮件设置），界面会把它们全部列出供你选择管理哪套——只有一台时直接进入其管理面板，多套则落在一个 **Mail servers** 列表上，并带一个 **Add mail server** 操作去开通或收养新的一套。
+
+<Callout title="仅限自托管">
+此界面通过 SSH 管理**你自己已连接服务器**上的邮件服务器。它不属于 Openship Cloud——你需要针对在 **Servers** 下添加的服务器来开通它。想要一段对整个流程（包括网页邮箱）的友好讲解，参见[邮件与网页邮箱](/docs/guides/email-webmail)。
+</Callout>
+
+## 为什么要自己运营——以及送达率是怎么回事
+
+通常有两件事拦住人们自托管邮件，而 OpenShip 的模型正是围绕这两个缺口构建的：**送达率**（deliverability）（一台全新服务器 IP 会进垃圾箱），以及 **Amazon SES**、Postmark、SendGrid 这类事务性发信服务**只负责发送**的事实——它们不给你收件箱、不给 IMAP、不给网页邮箱，也不把消息的所有权交给你。
+
+- **收件箱归你所有。** OpenShip 自托管那些服务商不提供的*接收*侧——真正的 Postfix +
+  Dovecot 邮箱、IMAP/POP3 和网页邮箱——让你的消息、域名和邮箱数据都存在**你自己的**服务器上。基础设施和数据归你，而非供应商。
+- **发送侧借用人家的信誉。** 出站邮件可以直连 MX（direct-to-MX），也可以**经由可信服务商的 SMTP 中继**（Amazon SES 或任意 SMTP 中继）。走中继时，你的邮件继承服务商已预热、高信誉的发信 IP——即受托管发信方的送达率——其余一切仍留在你的机器上。OpenShip 会替你写好 Postfix 中继配置（`relayhost` + SASL），并对齐 SPF、DKIM 和 MAIL FROM（对 SES 有适配），让邮件通过认证。
+
+<Callout title="一个现实的承诺" type="info">
+经由可信服务商中继给你的是**该服务商的发信信誉**——这正是邮件真正进收件箱的关键，而且省去了自托管 IP 那场预热苦战。它不是字面上的 "100% delivery" 保证（没有哪个邮件系统能承诺这一点），但它补上了让自托管*发送*有风险的那个缺口，同时把**邮箱**——SES 无力回答的那部分——完全留给你。
+</Callout>
+
+中继是可选且限范围的：可以应用到**全部**域名，也可以只用于**选中的**发件人（其余仍直连 MX 送达）。更想用自己的 IP？带信誉预热的直连 MX 依然完全受支持。
+
+## 界面随状态呈现什么
+
+界面会随你已有的邮件服务器数量自适应：
+
+- **还没有** → 显示**设置向导**（或[收养](#收养一台已有的邮件服务器)流程）。
+- **恰好一台** → 直接打开那台服务器的[管理面板](#管理面板十个标签页)。
+- **多于一台** → 显示 **Mail servers** 列表，由你选择打开哪套。
+
+你正在操作的服务器会被记住在 URL 里（`?serverId=…`），刷新后仍停留在同一台。
+
+## Mail servers 列表
+
+当你有多套邮件服务器时，会进入一个标题为 **Mail servers** 的列表。每张卡片显示服务器的域名（或名称）、其主机，以及一个状态胶囊：
+
+| 胶囊 | 含义 |
+|---|---|
+| **Installing** | 该服务器上当前正在运行安装。 |
+| **Running** | 已开通并由 OpenShip 托管。 |
+| **Incomplete** | 已登记，但安装未完成。 |
+
+点击卡片打开它。**Add mail server** 会启动新一轮的开通/收养。垃圾桶图标（**Remove from
+list**）用于把一条过时或标记错误的条目从列表中剥离——这只是控制台层面的操作且可重新收养；它不会卸载服务器上的任何东西。
+
+## 设置一台新邮件服务器
+
+设置表单标题为 **Mail Server Setup**。你需要填两样东西：
+
+- **Domain**——你的根域名，如 `example.com`。邮件服务器将驻留在 `mail.<domain>`。
+- **Admin Password**——`postmaster@<domain>` 邮箱的密码。可点 **Generate** 生成一个强随机密码（带显示切换）。之后可以从管理面板修改。
+
+如果还没选过服务器，这些字段上方会出现一个服务器选择器。按 **Start Setup** 开始。
+
+边栏的 **What gets installed** 面板写明了整套技术栈：邮件服务器（Postfix、Dovecot、反垃圾邮件）、Let's Encrypt **SSL 证书**、**DNS 配置**（DKIM、SPF、DMARC）和**管理面板**。**Prerequisites** 框列出你需要先备齐的东西：
+
+- 一个可操作 DNS 的域名。
+- 出站端口 25 已获服务商放行，且入站 TCP 25、465、587、993 已在服务商的防火墙/安全组/安全列表/NSG 中放行。
+- 一台干净的 Ubuntu/Debian 服务器（推荐）。
+
+### 观看安装过程
+
+一旦开始，界面会在 **Live logs** 面板中实时流出安装日志——每行都带步骤编号。你可以对正在运行的安装 **Cancel**，或 **Reset**（两次点击确认）以清除服务器上的状态重新开始。某一步失败时，会出现一条错误横幅，提供 **Retry from step N**。右侧边栏追踪 **All steps**，若端口 80/443 已被占用，还会在继续之前弹出 **Port Conflict** 解决器。
+
+安装过程中向导会两度暂停并需要你动手——第一次是 DNS，第二次是反向 DNS。
+
+最后的 **Verify Public Mail Ports** 步骤先确认守护进程已在服务器上监听，然后从 OpenShip API 连接到公网 DNS 地址的 TCP 25、465、587 和 993。API 可能就跑在邮件服务器自身。监听缺失或仅有回环绑定、客户端端口（465/587/993）连接失败、以及 TCP 25 出现非超时错误，都会中止设置。当某个监听端口不可达时，要同时检查宿主机防火墙和云服务商防火墙。
+
+**仅 TCP 25** 超时的情况下，若该端口有一个非回环监听者且 465/587/993 全部完成 TCP 握手，设置会带警告完成。公网可达性在 Health 中仍标为**未验证**。AWS
+[默认封锁到公网地址的出站端口 25](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html)，即便入站邮件正常，也可能让 API 的检查无法进行。同样的超时也可能意味着入站 TCP 25 被封，所以请从一台独立的主机验证，或用另一个邮件服务商发一封测试邮件，再依赖接收功能。在 **Sending** 中配置的 SMTP 中继，如 Amazon SES，只处理出站邮件；它不会让被封的入站端口变得可达。
+
+### DNS 暂停——发布你的记录
+
+走完 DKIM 步骤后，安装停在一块醒目的琥珀色横幅上：**Publish DNS records before
+continuing**。缺少这些记录会让邮件收发中断。横幅把每条记录（A/AAAA、MX、SPF、DKIM、
+DMARC）列为一张卡片——一个类型芯片加 **Name** 与 **Value** 字段，各自带复制按钮。在你的 DNS 服务商那里添加这些记录，然后点击 **I've set the records - continue**——安装从 SSL 证书步骤继续。
+
+**Auto-configure DNS** 会打开一个服务商选择器（Cloudflare、Hostinger、AWS Route 53、DigitalOcean、
+Namecheap、Google Cloud DNS）。直接的 API 推送尚未提供——目前每个服务商都显示 "coming soon" 注释，所以暂时请手动发布这些记录。
+
+### PTR 暂停——设置反向 DNS
+
+你确认 DNS 之后，会出现一条天蓝色横幅：**Set reverse DNS (PTR) before continuing**。这是人们最容易漏掉的一步，因此单独标出。
+
+<Callout title="PTR 在 VPS 服务商面板配置，不在 DNS 服务商那里" type="warn">
+PTR（反向 DNS）记录是在你的 **VPS 服务商面板**（Hostinger、DigitalOcean、AWS 等）中配置的——**不是**在你的 DNS 服务商那里。没有匹配的 rDNS，Gmail 和 Outlook 会拒收你的出站邮件。
+</Callout>
+
+横幅显示一个 **IPv4 PTR**（必需）以及（如适用）一个 **IPv6 PTR**（推荐），各自给出 IP 和应指向的主机名（`mail.<domain>`）。它还给你一条验证命令——
+`dig +short -x <ip>` 应返回 `mail.<domain>.`。设置好之后，点击 **I've set the PTRs - continue**，安装将以 SSL 结束。
+
+## 收养一台已有的邮件服务器
+
+用 OpenShip 装好了邮件服务器，却在控制台弄丢了记录（比如你重置了编排器的镜像）？在设置表单上，点击 **Already have a mail server? Adopt it**。在 **Adopt existing
+mail server** 对话框中，选择那台服务器并按 **Scan server**——OpenShip 会读取那台机器（检测邮件栈及其服务器上的状态文件）而不做任何改动。若找到了邮件栈，**Adopt** 会把它重新纳入管理，不重装、不丢数据。
+
+## 管理面板（十个标签页）
+
+服务器完全置备完成后，`/emails` 就变成它的管理面板。一条横向标签栏（图标在标签旁，活动标签带主色下划线）在十个标签之间切换；当前标签存于 URL，刷新和前进/后退不会丢位置。对主域名而言，在开始发信的头几天，标签上方会有一条 **Reputation warm-up**（信誉预热）横幅。
+
+| 标签页 | 用途 |
+|---|---|
+| **Overview** | 主机名、网页邮箱、邮件统计和快捷操作。 |
+| **Domains** | 添加并管理该服务器托管的域名。 |
+| **Mailboxes** | 创建与管理账户，限定在一个域名范围内。 |
+| **Aliases** | 转发地址，以及域名的 catch-all。 |
+| **Notifications** | 有邮件到达这里的某个地址时，在通知渠道里提醒你。 |
+| **Sending** | 直连送达或经由服务商中继——并可发送测试邮件。 |
+| **DNS** | 逐域名列出应发布的记录，外加"这些记录发布了吗？"检查。 |
+| **Health** | 实时守护进程状态和一次 DNS 扫描。 |
+| **Backup** | 对邮件服务器做快照，以及恢复/迁移。 |
+| **Advanced** | 协议设置、恢复工具与危险区。 |
+
+### Overview
+
+你开启使用时的第一屏。顶部卡片显示邮件服务器 **Hostname**（`mail.<domain>`，点击复制）和一个网页邮箱操作：已部署网页邮箱则显示 **Open webmail**，未部署则显示 **Deploy webmail**——后者带你进入该服务器的网页邮箱部署流程。一条 **Protocol details →** 链接跳到 Advanced 标签。由 OpenShip 0.6.1 或更早版本部署的网页邮箱还会在此处得到一条 **Replace webmail** 链接——那些安装早于网页邮箱应用的存在形态，所以是替换而非重新部署（参见
+[邮件与网页邮箱](/docs/guides/email-webmail#步骤-3-部署-webmail-应用)）。
+
+其下，**Setup guides** 深链到各客户端教程（iOS 与 macOS Mail、Android Gmail 应用、
+桌面客户端、通过代码发送）。右栏显示 **Mail stats**（Domains、Mailboxes、Aliases、
+Storage、Messages）和 **Quick actions**（Add a mailbox、Add a domain、Review DNS records）。
+
+### Domains
+
+该服务器托管的每个域名的表格，列为 **Domain**、**Mailboxes**、**Aliases**、**Default
+quota** 和 **Status**（Active / Disabled，安装域名带 **Primary** 标签）。**Add domain** 创建新域名——DKIM 自动生成，随后一个逐域名的 DNS 横幅会提示你在邮件开始收发前发布其 MX/SPF/DKIM/DMARC 记录。行操作可 **Edit**（描述、默认配额、启用状态）或 **Delete**（域名仍有邮箱或别名时带一个级联复选框）。新添加的域名会显示一条信誉预热横幅。
+
+### Mailboxes
+
+始终经由顶部选择器限定在一个域名内（默认为主域名；该选择同步到 URL 的 `?domain=`）。表格列出 **Mailbox**、**Quota** 和 **Status**，引导账户带 **Postmaster** 标签。**Add mailbox** 收集局部名、全名、密码（带 **Generate**）和配额。删除提供**软删除**（去激活并排队清理）或**硬删除**（立即移除数据库行和 Maildir）；postmaster 账户受保护，不做硬删除。
+
+### Aliases
+
+同样限定在一个域名内。别名（alias）把邮件从一个地址转发到另一个——内部或外部均可——而 **catch-all** 会接住域名上所有未被邮箱或别名匹配到的地址。保存即生效；无需重启任何东西。
+
+### Notifications
+
+规则形如"邮件到达这里 → 在这个渠道提醒我"，作用于本服务器上的地址。每条规则监视**一个邮箱**、**整个域名**或**服务器上所有域名**，可以用 *From
+contains* / *Subject contains* 进一步收窄，并扇出到一个或多个通知渠道。
+
+渠道本身在 **Settings → Notifications** 里定义（它们与任务、部署和健康告警共用），且只有*已启用*且*已验证*的渠道才能被选中——未验证的渠道会在分发时被丢弃，等于一条永远投递不了消息的规则。当你一个渠道都没有时，**Add a notification channel** 会直接链过去。**Test now** 会把已捕获的邮件重放到你的规则上，并报告匹配了多少条——不发送也不删除任何东西。
+
+<Callout title="收件箱规则看不见 Bcc" type="info">
+按邮箱划定的规则匹配的是 To 和 Cc 头，因此经 Bcc 或别名到达该邮箱的邮件不会命中。如果你需要匹配每一条消息，请监视整个域名。
+</Callout>
+
+### Sending
+
+接收永远留在这台服务器上；这个标签只决定出站邮件如何**离开**它：
+
+- **Direct delivery**（默认）——本服务器自行投递到每个收件方的 MX。最简单，但全新的 VPS IP 常被列入黑名单，且许多主机封锁出站端口 25。
+- **Relay through a provider**——把出站邮件交给一个智能主机（SES、SendGrid、Mailgun、Postmark、Resend 或任意 SMTP 服务器）。你可以选择**所有发件人**都走中继，或只有**选中的**域名与地址走，DNS 标签随之会补上该服务商的 SPF include 和 DKIM 记录。
+
+在你按 **Save** 之前，什么都不会生效；右栏实时显示将要生效的内容。该栏底部有 **Test sending**：按 **Send test email**，选择一个收件人（和发信域名），然后去查目标收件箱——连同一个垃圾邮件文件夹一起查。它测试的是此刻实际生效的路径，所以刚改过配置的话请先保存。
+
+### DNS
+
+逐域名参考外加一次实时检查。选定一个域名后，**Records for publishing** 会准确列出应在你的 DNS 服务商处添加的内容。**Published records check** 按需运行一次公网 DNS 查询——按 **Verify**（或 **Rescan**），每条记录返回 **Pass**、**Warning** 或 **Fail**，有出入时给出期望值与实际值的对照。
+
+### Health
+
+唯一的"一切正常吗？"一屏。顶部横幅汇总四个区块的总体判定：
+
+- **Daemons**——每个邮件进程（Postfix、Dovecot、反垃圾邮件等）的实时 systemd 状态，按 10 秒轮询刷新。每行带一个 **Logs** 按钮和一个菜单，可对相应单元 **Start**、**Stop** 或 **Restart**。
+- **Public mail ports**——把服务器本地的监听表与 OpenShip 控制面到公网 DNS 地址的 TCP 25、465、587、993 连接探测合在一起。UI 轮询在 60 秒内复用同一次结果，因此这是有界的健康检查，而非持续的端口监控。
+- **Outbound delivery**——显示直连/中继的出站路径、队列深度，以及可采取行动的延迟原因。
+- **DNS scan**——对所有预期记录做一次实时公网 DNS 检查，带 **Rescan** 按钮。
+
+<Callout title="服务商防火墙是单独一层" type="warn">
+在服务器上打开 UFW 或 firewalld 不会改变 OCI 安全列表、AWS 安全组、GCP 防火墙规则、Azure NSG 或其他服务商防火墙。某行显示 **Blocked** 而守护进程又在监听时，通常就是外面这层丢掉了连接。
+</Callout>
+
+### Backup
+
+备份经由 OpenShip 的通用备份系统运行，所以邮件服务器只是又一个备份源。选择**备份什么**：账户、域名和别名（始终包含）、**Mailbox message data**（各 Maildir——可能很大），以及 **DKIM 密钥与私密信息**。
+
+<Callout title="备份可能包含私密信息" type="warn">
+包含密钥意味着压缩档里有密码哈希、DKIM 私钥和明文密钥。请确保备份目标保持私密。
+</Callout>
+
+选择一个**备份目标**（destination）（在[备份](/docs/dashboard/backups)页面管理）和一个**自动备份**计划（Manual only / Daily / Weekly），然后 **Save settings** 或 **Back up now**。**Recent backups** 列出每次运行；成功的运行提供**就地恢复**（Restore）和**迁移（Migrate）**（迁往另一台服务器）。
+
+### Advanced
+
+**Mail certificate** 显示有效期以及 SMTP（465/587）和 IMAP（993）所用的证书。**Check certificate** 刷新这些观测。**Renew certificate** 在到期时经由现有的 OpenShip 边缘获取证书，重载 Postfix 与 Dovecot，并检查在用的证书。仍有效的证书会被直接复用，因此反复点击不会造成多余的 ACME 订单。
+
+**Automatic renewal** 在每台邮件服务器上默认启用。它使用共享的 **SSL certificate
+renewal** 任务；关闭邮件侧开关之后，证书监控依然保持激活。到期、续期失败，以及服务仍在用旧证书等情况都会出现在 **Health** 和全局 **Monitoring** 中。
+这些检查共享一个五分钟缓存；Monitoring 的重新扫描会立即刷新它们。
+
+定时续期要求 OpenShip 控制面持续运行。在桌面端请保持 OpenShip 开启；无人值守场景请用自托管控制面。收养一台旧邮件主机时，只有当该主机的 Certbot 定时器只为这枚邮件证书服务时，OpenShip 才会将其退役。同时管理其他证书的定时器会被原样保留，并作为待迁移项上报。
+
+高级用户的操作面，从上到下：
+
+- **Protocol settings**——**Incoming · IMAP**（SSL/TLS）与 **Outgoing ·
+  SMTP**（STARTTLS）的 host/端口/加密组合，用于手动配置客户端。
+- **Mail-stack tools**——**Restart stack** 一次性轮转每个邮件守护进程（部署出岔子后的快速解法）；它不碰邮箱、队列或状态。
+- **Danger zone**——**Re-run setup wizard**（**Open wizard**）、**Reset on-server state**（**Reset state**——清除 OpenShip 的跟踪记录但保留在运行的邮件栈），以及 **Remove mail server**（**Remove**——仅从列表中移除，日后可重新收养）。
+- **Install metadata**——服务器 ID、主域名，以及 Started / Finished 时间戳。
+
+## 相关指南
+
+<Cards>
+  <Card title="邮件与网页邮箱指南" href="/docs/guides/email-webmail" description="友好的端到端讲解，包括部署网页邮箱。" />
+  <Card title="备份" href="/docs/dashboard/backups" description="管理邮件备份要写入的那些备份目标。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把自己的域名指向一个应用，自动配 HTTPS。" />
+</Cards>

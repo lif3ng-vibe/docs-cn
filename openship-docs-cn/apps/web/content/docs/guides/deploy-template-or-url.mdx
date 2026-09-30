@@ -1,0 +1,121 @@
+---
+title: 从模板或 Git URL 部署
+description: 不关联你的 GitHub 也能快速启动项目的两种方式——粘贴一个公开仓库链接，或在模板格里挑一个现成的入门套件。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+不是所有项目都始于你自己的仓库。有时你只是想把别人的公开项目搬上线，或者从一个空白入门套件拉起一个新应用。Openship 为此准备了两个捷径，而且都不要求先连接你的 GitHub 账户。
+
+想象一个图书馆。你可以凭确切的目录链接借书（**一个 Git URL**），也可以从"新书热榜"书架上拿一本已经替你摆好的（**一个模板**）。两条路都通向同一个借书台——Openship 常规的配置界面。
+
+<Callout title="先准备好这些">
+- 一个 Openship 账户（能看到控制台（dashboard）就算已经在里面了）。
+- 走 **Git URL** 这条路：一个**公开** GitHub 仓库的网址。
+- 走 **模板**这条路：什么都不用——入门代码由 Openship 提供。
+
+要部署你*自己*的仓库（包括私有仓库）？请改用[从 GitHub 部署](/docs/guides/deploy-from-github)。
+</Callout>
+
+## 粘贴 Git URL 导入
+
+这是试用任何公开 GitHub 项目最快的方式——不关联账户，也不用授权任何权限。
+
+<Steps>
+
+<Step>
+
+### 打开 Git URL 标签页
+
+前往 **Library** 页面（**New project** 按钮也会把你落到这里），点击 **Git URL** 标签页。
+
+</Step>
+
+<Step>
+
+### 粘贴仓库链接
+
+从 GitHub 复制项目页面的地址——浏览器地址栏里那个朴素的 `https://github.com/owner/repo` 链接——粘贴进输入框。然后点 **Import Repository**。
+
+<Callout title="必须是 github.com 上的公开仓库" type="info">
+这个输入框只读 **github.com** 上的**公开**仓库。你不需要连接任何东西——Openship 直接拉取代码。私有仓库和其他托管站点在这里行不通；那些请用[从 GitHub 部署](/docs/guides/deploy-from-github)连接你的账户。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 在配置界面上收尾
+
+Openship 读取仓库，然后把你落到与其他部署相同的配置界面：显示它检测到的框架、构建命令，以及你的应用将获得的网址。从这里开始，步骤与普通的 GitHub 部署完全一致——[选择运行位置并点 Deploy](/docs/guides/deploy-from-github#steps)。
+
+</Step>
+
+</Steps>
+
+## 从模板起步
+
+还没有代码？模板是 Openship 替你托管的一份现成的入门应用。挑一个框架，你就得到一个可以开干的项目——就像从留白的模板而不是一张白纸开始写文档。
+
+<Steps>
+
+<Step>
+
+### 打开 Template 标签页
+
+在 **Library** 页面上，点击 **Template** 标签页。你会看到一排框架格子——**Next.js**、**Astro**、**Express**、**Django** 等等。
+
+</Step>
+
+<Step>
+
+### 选一个框架
+
+点击你要的技术栈对应的格子。选择就这么多——Openship 用与之匹配的入门套件作为源码，没有什么可粘贴或填写。
+
+</Step>
+
+<Step>
+
+### 在配置界面上收尾
+
+与 URL 路径一样，你落到什么都预填好的标准配置界面。想检查就看一眼，然后[选择运行位置并点 Deploy](/docs/guides/deploy-from-github#steps)。
+构建完成后，你会得到一个可访问你崭新应用的链接。
+
+</Step>
+
+</Steps>
+
+## CLI
+
+Git URL 这条路本质上就是"创建一个指向这个 owner 和 repo 的项目"。CLI 也能做同样的事——把链接 `github.com/owner/repo` 中的 `owner` 和 `repo` 拆出来：
+
+```bash
+# 对于 https://github.com/openship/example →  owner = openship, repo = example
+openship project create --name my-app --git-owner openship --git-repo example
+
+# 发布它
+openship deploy
+```
+
+## 故障排查
+
+<Callout title="“Enter a valid GitHub repository URL”" type="warn">
+Openship 在你粘贴的内容里没找到 owner 和 repository。输入框只接受形如 `https://github.com/owner/repo` 的 **github.com** 链接。这个报错通常意味着链接指向其他托管站点（如 GitLab 或 Bitbucket），或者缺少 owner 或仓库名。从 GitHub 上该仓库的页面复制地址再试。
+</Callout>
+
+<Callout title="导入成功但构建失败" type="error">
+打开构建页面读最后几行红色文字——那就是真正的原因。常见原因是缺构建命令、缺环境变量，或应用监听了错误的端口。解决办法见[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+<Callout title="它是私有仓库" type="warn">
+Git URL 输入框只够得着**公开**代码。要部署私有仓库，先连接你的 GitHub 账户——见[从 GitHub 部署](/docs/guides/deploy-from-github)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="连接账户部署你自己的仓库——含私有的——并在每次推送时自动重新部署。" />
+  <Card title="添加自定义域名" href="/docs/guides/custom-domains" description="把应用放上你自己的名字，自动配 HTTPS。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="以安全的方式为应用提供机密与设置。" />
+</Cards>

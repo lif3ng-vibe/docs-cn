@@ -1,0 +1,72 @@
+---
+title: edge rules
+description: openship edge rules 的命令、参数与选项。
+cliGroup: openship edge rules
+---
+
+示例请参见[工作流指南](/docs/cli/edge)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship edge rules
+
+逐路由的边缘规则：速率限制、封禁、访问控制
+
+```text
+openship edge rules [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/edge/rules#openship-edge-rules-list) | 列出项目的边缘路由规则 |
+| [`add [options]`](/docs/cli/reference/edge/rules#openship-edge-rules-add) | 添加一条边缘路由规则（rate-limit · ban · access · block） |
+| [`rm [options] <ruleId>`](/docs/cli/reference/edge/rules#openship-edge-rules-rm) | 删除一条边缘路由规则 |
+
+## openship edge rules add
+
+添加一条边缘路由规则（rate-limit · ban · access · block）
+
+```text
+openship edge rules add [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+| `--path <prefix>` | 将规则限定到某路径前缀（默认整个项目） |
+| `--domain <id>` | 将规则限定到项目的某一个域名 |
+| `--rate-limit <rps>` | 触发限流前每个客户端 IP 允许的每秒请求数 |
+| `--burst <n>` | --rate-limit 允许的突发额度 |
+| `--ban-country <cc>` | 封禁 ISO-2 国家代码（可重复/逗号分隔） |
+| `--ban-ip <ip>` | 封禁 IP 地址（可重复/逗号分隔） |
+| `--deny-cidr <cidr>` | 拒绝的 CIDR 网段（可重复/逗号分隔） |
+| `--allow-cidr <cidr>` | 允许的 CIDR 网段白名单——其余一律拒绝 |
+| `--allow-country <cc>` | 允许的 ISO-2 国家代码白名单——其余一律拒绝 |
+| `--block-status <code>` | 拦截时返回的 HTTP 状态码（401/403/404/429/444/451/503） |
+| `--disabled` | 以禁用状态创建规则（默认：false） |
+
+## openship edge rules list
+
+列出项目的边缘路由规则
+
+```text
+openship edge rules list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+
+## openship edge rules rm
+
+删除一条边缘路由规则
+
+```text
+openship edge rules rm [options] <ruleId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `ruleId` | 路由规则 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |

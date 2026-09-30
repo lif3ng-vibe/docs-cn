@@ -1,0 +1,132 @@
+---
+title: 迁移
+description: 发现、收编并在服务器之间搬移服务。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Migration API 把你手工部署到某台服务器的工作负载——Compose 套件与零散容器——纳入 Openship 管理。
+它通过 SSH 检查服务器的 Docker，返回可收编的套件，然后从你挑选的项创建一个 Openship `services`
+项目。在控制台中这是**迁移向导**；没有等价的 CLI。
+
+<Callout title="仅限自托管" type="info">
+该模块只在实例运行于自托管模式时挂载——收编一次部署需要对由你管理的服务器取得 SSH 访问，
+而 Openship Cloud 没有这个概念。在云实例上这些路由不挂载，返回 `404`。
+</Callout>
+
+## 扫描服务器
+
+只读。枚举服务器的 Docker——Compose 套件加手工运行的容器——并把它们与磁盘上发现的 Compose 文件
+对账，然后返回发现的 `stack` 供向导预览。服务器上什么都不会改变。
+
+```
+POST /api/migration/scan
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要检查的服务器。必须属于你的组织。', required: true },
+  }}
+/>
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/migration/scan" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123"}'
+```
+
+成功时响应为 `{ "success": true, "stack": … }`，其中 `stack` 描述发现的、可收编的 Compose
+套件与容器。
+
+## 收编发现的服务
+
+从你选中的服务创建一个 Openship `services` 项目。服务器侧会重新发现取值（服务器才是权威来源，
+而不是客户端发来的配置），已有的具名卷原位复用——这一步只登记项目；部署与切换是独立的步骤。
+
+```
+POST /api/migration/adopt
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要收编自的服务器。必须属于你的组织。', required: true },
+    projectName: { type: 'string', description: '新建 Openship 项目的名称。', required: true },
+    serviceNames: { type: 'string[]', description: '要收编的已发现服务名称。至少需要一个。', required: true },
+  }}
+/>
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/migration/adopt" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123","projectName":"legacy-stack","serviceNames":["web","worker"]}'
+```
+
+成功时响应为 `{ "success": true, … }`，附带所创建项目的详情。
+
+## 运行一次经过审阅的迁移
+
+`POST /api/migration/migrate` 启动完整迁移。逐服务选项以发现的容器 ID 作为键；旧的服务名键仍然
+接受。`routesByServiceName` 为每个服务接受一组路由，保留别名、监听端口、路径前缀与精确匹配。
+环境值保存在服务的生产环境作用域。
+
+选择了路由时，迁移会在改动源容器之前先准备好目标端边缘。如果必须替换另一个代理，运行会等待
+同意。从 `GET /api/migration/migrations/:id` 读取 `pendingPrompt`（也包含在流式快照中），然后用
+以下方式应答：
+
+```http
+POST /api/migration/migrations/:id/respond
+Content-Type: application/json
+
+{"promptId":"<pendingPrompt.promptId>","action":"migrate"}
+```
+
+使用当前提示给出的 action ID。过期、已被应答或无效的提示返回 `409`。应答需要对两台迁移服务器
+都有写权限。取消则保持原始代理与源容器原样不动。在挂载或部署之后，Openship 会应用所拥有的
+路由并重试待处理的域名验证；未解决的路由失败会继续显示在运行记录上。
+
+## 错误
+
+<Callout title="400 — 字段缺失或为空" type="warn">
+两条路由都要求 `serverId`；`adopt` 还需要非空的 `projectName` 以及 `serviceNames` 中至少一个条目。
+响应体会指明缺失的字段。
+</Callout>
+
+<Callout title="404 — 找不到服务器" type="error">
+该 `serverId` 不属于你的组织（或不存在）。用 [`openship server list`](/docs/cli/projects) 列出你的
+服务器以获取有效 ID。在云实例上该模块完全不挂载，因此这里的每条路径都返回 `404`。
+</Callout>
+
+<Callout title="502 — 扫描或收编失败" type="error">
+Openship 无法连通或检查该服务器的 Docker（SSH 不可达、Docker 未运行、权限被拒），或收编失败。
+消息会包含底层原因。确认服务器在线且其 Docker 可访问，然后重试。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 列出活跃的服务器迁移会话。 | `GET /api/migration/active`<br />`server:read` · 自托管 |
+| 用选中的已发现服务创建一个 Openship 项目。 | `POST /api/migration/adopt`<br />`server:write` · 自托管 |
+| 从已审阅的计划启动一次服务器迁移。 | `POST /api/migration/migrate`<br />`server:write` · 自托管 |
+| 删除一条符合条件（eligible）的迁移记录。 | `DELETE /api/migration/migrations/:id`<br />`server:write` · 自托管 |
+| 读取迁移进度与状态。 | `GET /api/migration/migrations/:id`<br />`server:read` · 自托管 |
+| 请求取消一次迁移。 | `POST /api/migration/migrations/:id/cancel`<br />`server:write` · 自托管 |
+| 清理在迁移目标上创建的资源。 | `POST /api/migration/migrations/:id/cleanup-target`<br />`server:write` · 自托管 |
+| 把流量切换到准备好的迁移目标。 | `POST /api/migration/migrations/:id/cutover`<br />`server:write` · 自托管 |
+| 恢复一次被打断的迁移。 | `POST /api/migration/migrations/:id/resume`<br />`server:write` · 自托管 |
+| 应答一个待处理的迁移提示，包括边缘接管同意。 | `POST /api/migration/migrations/:id/respond`<br />`server:write` · 自托管 |
+| 流式输出迁移进度。 | `GET /api/migration/migrations/:id/stream`<br />`server:read` · 自托管 |
+| 预览一个迁移计划。 | `POST /api/migration/preview`<br />`server:write` · 自托管 |
+| 导入一个发现的项目。 | `POST /api/migration/project`<br />`server:write` · 自托管 |
+| 从其源端刷新一个已导入的项目。 | `POST /api/migration/reimport`<br />`server:write` · 自托管 |
+| 从一个仓库读取用于导入的 Compose 配置。 | `POST /api/migration/repo-compose`<br />`server:read` · 自托管 |
+| 透露一次已授权导入中显式请求的环境值。 | `POST /api/migration/reveal-env`<br />`server:write` · 自托管 |
+| 列出迁移历史。 | `GET /api/migration/runs`<br />`server:read` · 自托管 |
+| 检查一台服务器的 Docker 并返回可收编的套件——只读，不做任何改变。 | `POST /api/migration/scan`<br />`server:write` · 自托管 |
+| 流式输出服务器发现进度。 | `GET /api/migration/scan/stream`<br />`server:write` · 自托管 |
+
+{/* api-operations:end */}

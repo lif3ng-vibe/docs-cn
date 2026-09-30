@@ -1,0 +1,77 @@
+---
+title: 部署并管理发布
+description: 部署已关联的项目或本地文件夹，跟踪日志并控制发布。
+---
+
+先[连接到安装实例](/docs/cli/access)或配置[原生模式](/docs/cli/native)。
+
+## 部署 Git 项目
+
+在你的仓库中，关联一个已配置好 Git 源的现有 Openship 项目：
+
+```bash
+openship init --project proj_123
+openship deploy --watch
+```
+
+使用 `--project` 可在不更改本地关联的情况下选择项目。需要时可选定分支、提交、变量集（variable set）或已注册的服务器：
+
+```bash
+openship deploy --project proj_123 --branch main --env production --watch
+openship deploy --project proj_123 --server srv_123 --watch
+```
+
+若要部署预览环境，请先在控制台（dashboard）中创建或选定一个**非生产的项目环境**，再部署其项目 ID。该行拥有自己的路由、运行时与当前的活跃发布：
+
+```bash
+openship deploy --project proj_preview --env preview --watch
+```
+
+`--env` 用于选择该项目内已保存的变量集。它不会创建预览运行时，也不会切换项目 ID。在生产目标上指定预览变量会在部署开始前被拒绝。省略 `--env` 时使用项目默认的 `production` 变量集，包括在预览项目的控制台中编辑过的值。
+
+## 部署文件夹
+
+显式上传当前目录，包括从 Git 检出（checkout）中上传：
+
+```bash
+openship deploy --folder --name my-site --watch
+```
+
+CLI 通过共享的 SDK 源（source）工作流来暂存该目录。在 Git 之外，对已有脚本而言 `--name` 同样会启用文件夹上传。仅凭项目 ID 永远不会上传当前目录。使用 `--project <id>` 可以在检出之外重新部署；除非提供 `--branch`，否则沿用已保存的分支。
+
+`--branch`、`--commit`、`--smart-route` 与 `--refresh` 走 Git 路径，不能与 `--folder` 组合。`--service-ids` 对两条路径都适用。归档暂存必须位于源码树之外：系统临时目录及其祖先目录会被拒绝。请选定你的项目目录，或将 `TMPDIR` 设置在源码树之外。
+
+原生目录部署要求该目录位于 `policy.sourceRoots` 之内。打包行为参见[文件夹部署](/docs/guides/deploy-local-folder)指南。
+
+## 选择变更范围
+
+| 选项 | 行为 |
+| --- | --- |
+| `--force-all` | 重新构建所有已启用的服务。 |
+| `--service-ids svc_a,svc_b` | 选择要部署的服务。 |
+| `--smart-route` | 利用源的变更选定受影响的服务。 |
+| `--refresh` | 重新应用环境配置，而不拉取源或重新构建。 |
+
+全部选项参见 [deploy 参考](/docs/cli/reference/deploy)。
+
+## 查看进度
+
+```bash
+openship deployment list --project proj_123
+openship deployment get dep_123
+openship logs dep_123 --follow
+```
+
+不使用 `--watch` 时，部署提交会返回一个 ID，供你稍后检查。已提交的构建（build）还不等于一次成功的发布。请跟踪最终状态以及任何需要你做出的决策。
+
+## 控制发布
+
+```bash
+openship deployment cancel dep_123
+openship deployment redeploy dep_123 --use-existing-commit
+openship deployment rollback dep_previous
+```
+
+回滚（rollback）是否可用取决于保留的回滚构件（artifact）或重新构建的支持情况。`pin` 会保留某次部署的回滚构件；`keep` 与 `reject` 用于处理等待决策的发布。
+
+各类控制操作参见 [deployment 命令参考](/docs/cli/reference/deployment)，恢复行为参见[回滚指南](/docs/guides/rollback-redeploy)。

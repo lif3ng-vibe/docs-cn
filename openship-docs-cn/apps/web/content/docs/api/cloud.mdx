@@ -1,0 +1,304 @@
+---
+title: Cloud
+description: 将安装连接到 Cloud，并使用其 HTTP 控制端点。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Cloud 端点把一个自托管安装连接到 Openship Cloud，并支持浏览器交接、托管路由与数据传输。自托管的连接路由与 Cloud 的控制面（control-plane）路由共用 `/api/cloud`；进程运行模式决定哪些可用。
+
+没有名为 `cloud` 的原生 SDK 组。要通过 SDK 管理 Cloud 项目，请使用 [remote client](/docs/api/sdk/client)，并传入规范的 Cloud API 与 Cloud 组织 ID。本地所有者的 Cloud 链接无法为固定的 SDK 作用域提供已验证的映射；参见
+[Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+## 自托管端点
+
+仅存在于自托管实例上（不在 `CLOUD_MODE` 中）。Cloud 连接是**组织所有的**：它归属于组织所有者，因此每个成员看到的连接状态一致。断开连接与连接最终确认需要 `owner` 角色，而不只是 `cloud:admin` 授权。
+
+
+### 检查连接状态
+
+```
+GET /api/cloud/status
+```
+
+```bash
+curl "$OPENSHIP_URL/api/cloud/status" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+连接本身是一个从控制台发起的浏览器流程（**设置 → Cloud**）：弹窗与 Openship Cloud 完成 PKCE 握手，然后把结果提交给下方的 `connect-finalize`。没有专门的 `openship cloud connect` CLI 动词。
+
+### 完成连接
+
+控制台弹窗从 `localStorage` 读取其 PKCE verifier，并把返回的 code 提交到这里，以保存组织的 cloud bearer。
+
+```
+POST /api/cloud/connect-finalize
+```
+
+<TypeTable
+  type={{
+    code: { type: 'string', description: '由 cloud connect 流程返回的一次性交接码。', required: true },
+    codeVerifier: { type: 'string', description: '与流程开始时发送的 code_challenge 匹配的 PKCE verifier。' },
+  }}
+/>
+
+<Callout title="仅限所有者" type="warn">
+`connect-finalize` 与 `disconnect` 会接管组织的 cloud bearer，因此在 `cloud:admin` 标签之上还受 `requireRole("owner")` 限制。仅持有 `cloud:admin` 授权的非所有者仍会收到 `403`。
+</Callout>
+
+## Cloud 控制面端点
+
+仅在 cloud 模式下存在（`CLOUD_MODE`）——即这些端点运行在 Openship Cloud 上，而不是你的自托管机器上。所有租户级操作都通过**调用方的命名空间令牌**转发给 Oblien；Oblien 原生强制执行命名空间边界，因此没有 SaaS 侧的所有权账本。公开的交接路由通过浏览器重定向到达，并由 URL 中签名、一次性的令牌认证。
+
+
+<Callout title="这些大多是内部端点">
+你的自托管实例会通过其 cloud client 代为调用这些控制面端点——你无需手工接线，也没有与之逐一对应的 `openship` CLI 动词。下文记录请求形状，是为了让集成者能够理解这些流量。
+</Callout>
+
+### 交接与代码交换
+
+连接与桌面登录流程绝不会把浏览器 cookie 交给本地实例。取而代之的是：先签发一个短时效、绑定 PKCE 的**交接码**（handoff code）（`connect-authorize`），然后将其兑换为一个专用会话（`exchange-code`）。
+
+```
+POST /api/cloud/connect-authorize
+```
+
+<TypeTable
+  type={{
+    redirect: { type: 'string', description: '返回使用的回调 URL。必须是 HTTPS（localhost 除外）。', required: true },
+    state: { type: 'string', description: '不透明的 CSRF 值（1–256 个字符），会在回调时原样回传。', required: true },
+    codeChallenge: { type: 'string', description: 'PKCE S256 challenge（40–128 个 URL 安全字符），绑定到所签发的交接码。', required: true },
+  }}
+/>
+
+```
+POST /api/cloud/exchange-code
+```
+
+<TypeTable
+  type={{
+    code: { type: 'string', description: '来自 connect/desktop 流程的一次性交接码。', required: true },
+    code_verifier: { type: 'string', description: '与 code_challenge 匹配的 PKCE verifier（当交接码绑定 PKCE 时必填）。' },
+  }}
+/>
+
+公开的 `GET` 交接路由取查询参数，不取请求体——`desktop-handoff` 与 `connect-handoff`
+需要 `redirect`、`state` 与 `code_challenge`；`github/install-callback` 需要 `installation_id`、
+`setup_action` 与 `state`；`github/oauth-bridge` 需要 `token`。
+
+GitHub 的安装链接首先通过 `flow=select` 与 `state` 打开 Openship 的账号选择页。用户可以重新连接既有安装，或前往 GitHub 创建新的安装。这在自托管与桌面实例所用的外部浏览器中同样有效：
+临时的 state 会把选择绑定到发起它的用户和工作区，而不需要 Cloud 浏览器会话。发现与选择会重新检查访问权限，安装领取使用与控制台选择器相同的验证与事务。
+
+### 部署代理（预检、edge 代理、分析）
+
+```
+POST /api/cloud/preflight
+```
+
+<TypeTable
+  type={{
+    slug: { type: 'string', description: '要检查可用性的拟用 cloud 子域名 slug。' },
+    customDomain: { type: 'string', description: '要检查的拟用自定义域名。' },
+  }}
+/>
+
+```
+POST /api/cloud/edge-proxy
+```
+
+<TypeTable
+  type={{
+    slug: { type: 'string', description: '要在共享 cloud 区上绑定的项目 slug。', required: true },
+    target: { type: 'string', description: '代理应转发到的源目标（IP/主机）。', required: true },
+  }}
+/>
+
+```
+POST /api/cloud/analytics
+```
+
+<TypeTable
+  type={{
+    operation: { type: '"timeseries" | "requests" | "streamToken"', description: '要执行哪种分析读取。', required: true },
+    domain: { type: 'string', description: '要读取分析数据的主机名（必须位于调用方的命名空间内）。', required: true },
+    params: { type: 'Record<string, unknown>', description: '透传给 Oblien 的、按操作而异的查询参数。' },
+  }}
+/>
+
+### 控制台产品遥测
+
+```
+POST /api/cloud/telemetry
+```
+
+这个可选的第一方端点只接受白名单中的控制台页面事件与结账导航事件。它独立于上文的客户流量分析中继，也不是 SDK 或 MCP 操作。除非显式配置了生产环境的 Cloud 遥测，否则返回 `404`。
+
+请求必须来自已配置的控制台 Origin，已登录时使用浏览器的 cookie 会话，并且不得携带 bearer 授权。服务器在把事件关联到某个用户或组织之前会先验证当前会话。浏览器事件不得报告支付或其他业务结果；无法识别的属性与超过 4 KiB 的请求体都会被拒绝。
+
+### Pages
+
+`pages` 用于创建托管静态页面；启用/禁用/删除这些操作各自只需一个 slug。
+
+```
+POST /api/cloud/pages
+```
+
+<TypeTable
+  type={{
+    workspace_id: { type: 'string', description: 'Oblien 工作区 id（必须属于调用方的命名空间）。', required: true },
+    path: { type: 'string', description: '要发布的源路径/构建产物。', required: true },
+    name: { type: 'string', description: '页面的显示名称。', required: true },
+    slug: { type: 'string', description: '子域名 slug；必须在共享 zone 上空闲。', required: true },
+    domain: { type: 'string', description: '可选的、要挂载的自定义域名。' },
+  }}
+/>
+
+```
+POST /api/cloud/pages/disable   (also /enable, /delete)
+```
+
+<TypeTable
+  type={{
+    slug: { type: 'string', description: '要操作的页面 slug。', required: true },
+  }}
+/>
+
+### 邀请中继
+
+当自托管运营者设置 `invitationMailSource = "cloud"` 时使用——此时 SaaS 从自己的基础设施发送该邮件。服务内部按每小时每组织最多 20 封封顶。
+
+```
+POST /api/cloud/send-invitation
+```
+
+<TypeTable
+  type={{
+    to: { type: 'string', description: '收件人邮箱地址。', required: true },
+    subject: { type: 'string', description: '邮件主题行。', required: true },
+    html: { type: 'string', description: 'HTML 正文。', required: true },
+    text: { type: 'string', description: '纯文本正文。', required: true },
+  }}
+/>
+
+### 子图传输与拆除
+
+ingest/export 这一对端点在一个自托管实例与 SaaS 之间搬运一个组织或单个项目的数据行（团队模式的迁移与项目转移）。实例范围的整仓导出会被拒绝。
+
+```
+POST /api/cloud/ingest-subgraph
+```
+
+<TypeTable
+  type={{
+    dump: { type: 'DatabaseDump', description: '子图转储。其 formatVersion 必须与 SaaS 一致（否则返回 412）。', required: true },
+    allowNonEmptyTarget: { type: 'boolean', description: '允许导入到已有数据行的目标。', default: 'false' },
+  }}
+/>
+
+```
+POST /api/cloud/export-subgraph
+```
+
+<TypeTable
+  type={{
+    scope: { type: 'SubgraphScope', description: '可区分的范围——{ kind: "organization", organizationId } 或 { kind: "project", projectId }。默认为调用方的组织。"instance" 会被拒绝。' },
+  }}
+/>
+
+```
+POST /api/cloud/teardown-project
+```
+
+<TypeTable
+  type={{
+    projectId: { type: 'string', description: '要删除其 SaaS 数据行的项目（必须属于调用方的组织）。', required: true },
+  }}
+/>
+
+### GitHub App 代理
+
+GitHub App 的私钥由 Cloud 保管；自托管实例永远不持有。本地侧把 `(userId, request)` 交接出去并拿回解析好的数据——它从不签署 JWT，也看不到 App 凭据。
+
+```
+POST /api/cloud/github/installation-token
+```
+
+<TypeTable
+  type={{
+    owner: { type: 'string', description: '该 installation 所属的 GitHub 账号/组织。', required: true },
+    repos: { type: 'string[]', description: '可选，把令牌限定到这些仓库名。' },
+  }}
+/>
+
+<Callout title="永远不会从请求体接受 installationId" type="warn">
+`installation-token` 从调用方的组织解析出 installation，而不是从客户端提供的 id——传入 id 没有任何效果。这可以防止调用方为它不拥有的 installation 签发令牌。
+</Callout>
+
+## 错误
+
+<Callout title="403 — 需要所有者（自托管的连接/断开）" type="error">
+`connect-finalize` 与 `disconnect` 需要组织的 `owner` 角色。仅持有 `cloud:admin` 授权的成员会被拒绝。
+</Callout>
+
+<Callout title="409 — slug 已被占用（edge 代理 / pages）" type="warn">
+请求的 slug 已由共享 cloud 区上的其他租户持有。Oblien 返回 `409`，Openship 原样转发。请改用其他 slug。
+</Callout>
+
+<Callout title="412 — 转储格式不匹配（ingest）" type="warn">
+`ingest-subgraph` 会拒绝 `formatVersion` 与 SaaS 不一致的转储（`code: INGEST_FORMAT_MISMATCH`）。
+请更新你的本地实例并重新导出转储。
+</Callout>
+
+<Callout title="413 — 转储过大（ingest）" type="error">
+`ingest-subgraph` 在认证运行之前就把请求体限制在 50MB（`code: PAYLOAD_TOO_LARGE`）。
+</Callout>
+
+<Callout title="401 — 交接码/会话无效或过期" type="error">
+交接码是一次性且有时效的；`exchange-code` 在其被消费或过期后返回 `401`。控制面的 `cloud:*` 端点在 cloud 会话 bearer 缺失或被吊销时返回 `401`——请从控制台重新连接。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 已连接的 cloud 账号（名称、邮箱、头像）。 | `GET /api/cloud/account`<br />`cloud:read` |
+| 为调用方命名空间内的主机名代理 Oblien 分析。 | `POST /api/cloud/analytics`<br />`cloud:write` |
+| 以精确 Origin 与已验证 cookie 身份检查，采集可选的托管控制台产品事件。 | `POST /api/cloud/telemetry`<br />`Handler authentication` |
+| 授权同意页签发一次性交接码（内联检查 cookie 会话）。 | `POST /api/cloud/connect-authorize`<br />`Handler authentication` |
+| 完成连接弹窗：兑换 PKCE code 并保存 cloud bearer。 | `POST /api/cloud/connect-finalize`<br />`cloud:admin` · 自托管 |
+| 校验连接参数，然后 302 重定向到控制台授权同意页。 | `GET /api/cloud/connect-handoff`<br />`Handler authentication` |
+| 轮询本地 Cloud 连接的交接。 | `GET /api/cloud/connect-poll`<br />`Handler authentication` |
+| OAuth → 一次性交接码 → 重定向到桌面应用回调。 | `GET /api/cloud/desktop-handoff`<br />`Handler authentication` |
+| 在服务器端吊销当前 cloud 会话（幂等）。 | `POST /api/cloud/disconnect`<br />`cloud:admin` |
+| 同步托管 edge 代理（把一个 slug 绑定到一个目标）。 | `POST /api/cloud/edge-proxy`<br />`cloud:write` |
+| 移除一条已授权的 Cloud edge 代理路由。 | `POST /api/cloud/edge-proxy/delete`<br />`cloud:write` |
+| 为一个 edge 代理域名开始验证。 | `POST /api/cloud/edge-proxy/verify`<br />`cloud:write` |
+| 检查 edge 代理域名的验证结果。 | `POST /api/cloud/edge-proxy/verify-check`<br />`cloud:write` |
+| 用一次性交接码换取用户 + 会话（有限流）。 | `POST /api/cloud/exchange-code`<br />`Handler authentication` |
+| 导出组织或项目范围的子图转储（有限流）。 | `POST /api/cloud/export-subgraph`<br />`cloud:admin` |
+| 以 flow=select 选择既有 GitHub installation，或在完成 GitHub 用户令牌与 App JWT 验证后，原子化领取绑定工作区的安装尝试。 | `GET /api/cloud/github/install-callback`<br />`Handler authentication` |
+| 构建带有一次性工作区 state 的 Openship 安装选择 URL；既有安装可以重新连接，无需再次走 GitHub 的安装设置回调。 | `POST /api/cloud/github/install-url`<br />`cloud:write` |
+| 签发短时效（约 60 分钟）的 installation 访问令牌。 | `POST /api/cloud/github/installation-token`<br />`cloud:write` |
+| 列出组织所有者的 GitHub App 安装。 | `GET /api/cloud/github/installations`<br />`cloud:read` |
+| 消费桥接令牌并把浏览器重定向到 GitHub OAuth。 | `GET /api/cloud/github/oauth-bridge`<br />`Handler authentication` |
+| 启动 GitHub OAuth：返回一条一次性桥接 URL。 | `POST /api/cloud/github/oauth-handoff`<br />`cloud:write` |
+| 友好的"GitHub 已连接"关窗页面。 | `GET /api/cloud/github/oauth-success`<br />`Handler authentication` |
+| 为调用方解析出的 GitHub OAuth 身份（login、头像）。 | `GET /api/cloud/github/user-status`<br />`cloud:read` |
+| 导入组织或项目范围的子图转储（有限流，50MB 上限）。 | `POST /api/cloud/ingest-subgraph`<br />`cloud:admin` |
+| 创建一个 Cloud Page（代理 Oblien 的 `pages.create`）。 | `POST /api/cloud/pages`<br />`cloud:write` |
+| 按 slug 删除一个 Cloud Page。 | `POST /api/cloud/pages/delete`<br />`cloud:write` |
+| 按 slug 禁用一个 Cloud Page。 | `POST /api/cloud/pages/disable`<br />`cloud:write` |
+| 按 slug 启用一个 Cloud Page。 | `POST /api/cloud/pages/enable`<br />`cloud:write` |
+| Cloud 部署预检——slug / 自定义域名的可用性。 | `POST /api/cloud/preflight`<br />`cloud:write` |
+| 在验证客户命名空间所有权后，执行一条允许的 Pages 或路由操作。 | `POST /api/cloud/resource-proxy`<br />`cloud:write` |
+| 读取属于调用方 Cloud 命名空间的路由或证书。 | `GET /api/cloud/route-registry`<br />`cloud:read` |
+| 通过 SaaS 的邮件基础设施中继一封邀请邮件。 | `POST /api/cloud/send-invitation`<br />`cloud:write` |
+| 本实例的 Openship Cloud 连接状态。 | `GET /api/cloud/status`<br />`cloud:read` · 自托管 |
+| 删除一个项目在 SaaS 上的数据行（带回/对账）。 | `POST /api/cloud/teardown-project`<br />`cloud:admin` |
+| 为调用方的组织签发一个命名空间范围内的 Oblien 令牌。 | `POST /api/cloud/token`<br />`cloud:write` |
+| 列出组织的 Openship Cloud（Oblien）工作区，并附带漂移情况（云端/本地孤立项）。 | `GET /api/cloud/workspaces`<br />`cloud:read` · 自托管 |
+
+{/* api-operations:end */}

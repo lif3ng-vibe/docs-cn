@@ -1,0 +1,109 @@
+---
+title: Ship SDK
+description: 使用 JavaScript 或 TypeScript 部署并管理 OpenShip。
+---
+
+Ship SDK 让你可以使用 JavaScript 或 TypeScript 部署并运维 OpenShip。`openship` 包
+包含远程客户端、可嵌入的原生引擎和 CLI。原生 SDK 调用与 HTTP 控制器使用同一个
+共享核心。
+
+## 选择使用模式
+
+| 模式 | 适用场景 | 从这里开始 |
+| --- | --- | --- |
+| **远程客户端** | OpenShip 已经运行在服务器或 Cloud 上。 | [连接到 API](/docs/api/sdk/client) |
+| **原生 SDK** | 你的 Node 应用自己管理存储、提供方和安装生命周期。 | [嵌入 OpenShip](/docs/api/sdk/native) |
+
+两种模式暴露相同的命名操作组。已配置的提供方和调用者的权限决定了哪些操作可以运行。
+
+## 安装
+
+SDK 随 **`openship` 0.8.0 及更高版本**发布，要求 Node.js 22 或更高版本：
+
+```bash
+npm install openship
+```
+
+ESM、CommonJS 以及从旧版仅 CLI 包升级的说明，参见[安装](/docs/api/sdk/installation)。
+
+## 部署你的应用
+
+把 URL 替换为你的 OpenShip API 地址，为你可以创建并部署项目的组织设置
+`OPENSHIP_TOKEN` 和 `OPENSHIP_ORGANIZATION_ID`，并把你的应用放在 `./app` 中。
+该安装必须已经配置好部署目标。
+
+```ts title="deploy-app.mts"
+import { resolve } from "node:path";
+import { OpenshipClient } from "openship/client";
+
+const ship = new OpenshipClient({
+  baseUrl: "https://ship.example.com",
+  token: process.env.OPENSHIP_TOKEN!,
+  organizationId: process.env.OPENSHIP_ORGANIZATION_ID!,
+});
+
+const run = await ship.deploy({
+  name: "commerce-api",
+  source: { type: "directory", path: resolve("./app") },
+  onStep: console.log,
+});
+
+const result = await ship.deployment(run.deployment_id)
+  .wait({ timeoutMs: 120_000 });
+
+if (!result.success) throw new Error(result.status);
+console.log("Ready:", run.project_id);
+```
+
+把它保存为 `deploy-app.mts`，并使用 TypeScript 运行器（例如 `npx tsx deploy-app.mts`）
+运行它。`deploy()` 上传目录的快照，检测其构建配置，并提交部署。`wait()` 会检查已
+保存的执行结果；失败、已取消或需要人工处理的部署不会打印成功消息。请根据你应用的
+构建时间调整超时。
+
+给 `deploy()` 传入 `serverId` 以选择一台已注册的服务器。后续更新时，传入
+`projectId: run.project_id` 即可部署到同一个项目。令牌与组织的配置参见
+[远程设置](/docs/api/sdk/client)，如何处理要求人工审核的请求参见
+[部署决策](/docs/api/deployments#等待决策与取消)。
+
+## 代码中的一次部署
+
+这个函数既可以接受远程客户端，也可以接受原生用户作用域：
+
+```ts title="deploy-site.mts"
+import type { OpenshipClient, ScopedShip } from "openship";
+
+export async function deploySite(ship: OpenshipClient | ScopedShip) {
+  const submitted = await ship.deploy({
+    name: "my-site",
+    source: { type: "files", files: { "index.html": "<h1>Hello from Openship</h1>" } },
+  });
+  const outcome = await ship.deployment(submitted.deployment_id).wait({ timeoutMs: 120_000 });
+  if (!outcome.success) throw new Error(outcome.message ?? outcome.status);
+  return ship.projects.get(submitted.project_id);
+}
+```
+
+## 后续步骤
+
+<Cards>
+  <Card title="部署工作流" href="/docs/api/deployments" description="部署文件、目录或 Git 源；跟踪日志并处理决策。" />
+  <Card title="用户与组织" href="/docs/api/sdk/identity" description="选择租户并接入你应用的已验证身份。" />
+  <Card title="可运行的示例" href="/docs/api/sdk/examples" description="使用已安装的包完成部署、重新部署、恢复状态和清理。" />
+  <Card title="方法参考" href="/docs/api" description="按资源分类查找所有当前可用的操作。" />
+</Cards>
+
+## 扩缩容与运维
+
+两种客户端都在共享的[方法参考](/docs/api)中暴露当前的命名操作。对于自托管基础设施，
+从私有网络和就绪的计算集群开始：
+
+| 任务 | 指南 |
+| --- | --- |
+| 连接服务器并准备集群 | [私有网络](/docs/api/servers#服务器集群与私有网络) 与 [计算集群](/docs/api/servers#计算集群) |
+| 在多台服务器上运行应用 | [应用副本](/docs/api/projects#在集群上扩缩容无状态应用) |
+| 创建或扩展 PostgreSQL 与 Redis 数据库 | [数据库生命周期](/docs/api/projects#添加导入或恢复数据库) |
+| 在应用实例之间共享文件 | [集群存储](/docs/api/servers#跨服务器共享文件) 与 [项目卷](/docs/api/projects#共享应用文件) |
+| 跟踪日志、备份与恢复 | [部署工作流](/docs/api/deployments)、[备份](/docs/api/backups) 与 [错误与流](/docs/api/sdk/errors) |
+
+集群管理使用自托管的服务器。其他操作取决于所选的提供方和你的权限。原生、Cloud 以及
+仅 HTTP 可用的能力，参见[兼容性与当前限制](/docs/api/sdk/compatibility)。

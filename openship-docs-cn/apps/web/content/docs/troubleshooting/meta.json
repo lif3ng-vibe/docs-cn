@@ -1,0 +1,13 @@
+{
+  "title": "故障排查",
+  "pages": [
+    "index",
+    "deployments",
+    "domains-ssl",
+    "github",
+    "servers-ssh",
+    "host-channel",
+    "desktop-data",
+    "common-errors"
+  ]
+}

@@ -1,0 +1,110 @@
+---
+title: 自托管的 GitHub App
+description: 在不依赖 Openship Cloud 的情况下，创建和管理由工作区持有的 GitHub App，用于私有仓库、直连 Webhook 和短时效 clone 令牌。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+自托管的 Openship 工作区可以端到端地持有一个或多个 GitHub App。App 私钥和 Webhook 密钥加密存放在本地数据库中，GitHub 把 Webhook 直接发送到你的实例，构建则使用短时效的安装令牌（installation token）而不是长期有效的个人访问令牌。
+
+使用控制台（dashboard）的 **Settings → Git → Self-hosted GitHub Apps**（设置 → Git → 自托管 GitHub App）版块。你可以用一键 manifest 流程创建 GitHub.com App，或手动注册一个已有的 GitHub.com/GitHub Enterprise Server App。两种流程都不需要 Openship Cloud 连接，也不需要单独的 GitHub OAuth 登录。
+
+<Callout type="info" title="工作区持有，多源并存">
+每个源（source）都属于当前活跃的 Openship 工作区。一个工作区可以注册多个 App，并把每个 App 安装到多个 GitHub 用户或组织上。同一个 GitHub 属主可以由多个源覆盖；在拥有活跃安装的前提下，标记为 **Default**（默认）的源对新项目和既有项目绑定优先生效。
+</Callout>
+
+## 开始之前
+
+你必须是工作区属主，且实例必须拥有公开的 HTTPS URL。配置 `OPENSHIP_PUBLIC_URL=https://openship.example.com`（或等效的公网 URL 设置）并重启实例。GitHub 必须能访问源表单中显示的两个 URL：
+
+- 安装回调：`https://openship.example.com/auth/callback/github-app`
+- Webhook 端点：`https://openship.example.com/api/proxy/api/webhooks/github`
+
+在 Openship 能解析出已配置的公网 URL 之前，控制台会禁用 App 注册。
+
+## 一键 manifest 配置（GitHub.com）
+
+<Steps>
+
+<Step>
+
+### 在控制台中开始
+
+打开 **Settings → Git**，选择 **Create with GitHub**，给源起一个易于辨认的工作区标签，然后选择 **Continue on GitHub**。
+
+</Step>
+
+<Step>
+
+### 审核并创建 App
+
+Openship 提交一份私有的 GitHub App manifest，带有以下仓库权限：
+
+- **Contents**（内容）：读
+- **Metadata**（元数据）：读
+- **Pull requests**（拉取请求）：读
+- **Checks**（检查）：读写
+- **Commit statuses**（提交状态）：读写
+
+它订阅 `push`、`pull_request`、`check_run` 以及安装生命周期事件。在 GitHub 上核对各项值并创建 App。GitHub 只会返回一次生成的私钥、client secret 和 Webhook 密钥；回调会立即将其加密，且绝不会把它们回传给控制台。
+
+</Step>
+
+<Step>
+
+### 选择仓库访问范围
+
+转换完成后，Openship 会打开新 App 的安装页面。选择 GitHub 用户或组织，并选择全部仓库或选定仓库。设置回调会先用该 App 自己的私钥验证这次安装，然后才把它绑定到发起操作的 Openship 用户和工作区。
+
+</Step>
+
+</Steps>
+
+创建链接和安装链接各使用一个独立的、十分钟内有效的一次性 state 值。重放 state、从其他工作区使用它，或替换成其他 App 的 `installation_id` 都会被拒绝。
+
+## 注册已有 App 或 GitHub Enterprise Server
+
+选择 **Register existing App**（注册已有 App），并输入 App 设置中的各项值。对 GitHub Enterprise Server，还要展开 **GitHub Enterprise settings** 并设置两个 origin，例如：
+
+```text
+GitHub web URL: https://github.acme.example
+GitHub API URL: https://github.acme.example/api/v3
+```
+
+用 Openship 显示的 Setup URL 和 Webhook URL 配置 App 本身。赋予它上文列出的相同权限和事件订阅，创建私钥，并设置至少 16 个字符的高熵 Webhook 密钥。然后提供：
+
+- 工作区标签和数字形式的 App ID；
+- 完整的 PEM 私钥；
+- 对应的 Webhook 密钥；
+- Client ID 和 client secret（如果你的 App 也用到它们；安装令牌认证并不需要它们）。
+
+在保存任何内容之前，Openship 会用签名的 App JWT 调用所选 GitHub API 的 `/app` 端点。错误的 App ID、密钥或 Enterprise API URL 会被拒绝，且上游错误细节会从响应中隐去。
+
+## 管理源与安装
+
+每张源卡片显示其 App 身份、健康状态、已安装的账户、端点，以及它是否为默认源。工作区属主可以从卡片上：
+
+- 把 App 安装到另一个 GitHub 账户，或更改其仓库选择；
+- 验证已存储的密钥并刷新 App 元数据；
+- 编辑端点或轮换凭据（机密字段留空即保留其加密后的值）；
+- 把该源设为默认；或
+- 删除本地源。
+
+删除源会把它的加密凭据和安装绑定从 Openship 中移除，但无法在 GitHub 上卸载该 App。请用 **Manage on GitHub** 在那边卸载。如果同一属主还有另一个活跃安装，项目会被原子性地重新绑定到它；否则项目的 App 绑定会被清除，自动部署被禁用。只有当另一个安装仍覆盖该属主时，GitHub 访问授权才会保留。
+
+GitHub 挂起是可逆的：Openship 保留绑定，但把它排除在令牌解析之外，直到收到 `installation.unsuspend` 事件将其恢复。卸载则会永久移除受影响的绑定。
+
+## 运行时行为
+
+- 仓库浏览会把 App 可见的仓库与可选的本地 `gh`/令牌身份合并，且不会重复列出仓库。
+- 每个私有 clone 令牌都直接由持有该安装的 App 铸造，仅限于所请求的仓库，并在 GitHub 到期前刷新。
+- GitHub Enterprise 的 REST 请求和 HTTPS clone URL 使用该源配置的 API 与 Web origin。
+- App 级别的 push 和 check Webhook 会用该源的密钥校验。push 扇出还会额外受投递方安装 id 的限制，防止跨工作区部署。
+- 由 App 支撑的项目使用共享的 App Webhook；Openship 不会创建重复的仓库 Webhook。
+- 提交状态和 check run 会以自定义 App 的 GitHub 身份与品牌写入。
+
+## 遗留的环境变量式 App
+
+进程级的 `GITHUB_APP_ID`、`GITHUB_APP_SLUG`、`GITHUB_PRIVATE_KEY_BASE64` 和 `GITHUB_WEBHOOK_SECRET` 配置对既有安装仍受支持。控制台管理的源在工作区内优先，也是新自托管 App 的推荐配置，因为它们支持多个 App、凭据轮换和健康检查，且无需重启 Openship。
+
+个人访问令牌、每服务器的 SSH 密钥和 `gh` 仍是 App 未覆盖仓库的可选后备。工作区持有的 App 安装不需要它们。

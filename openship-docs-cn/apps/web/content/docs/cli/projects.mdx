@@ -1,0 +1,68 @@
+---
+title: 项目、服务与域名
+description: 从 CLI 管理应用配置及相关资源。
+---
+
+资源命令使用当前激活的[连接上下文](/docs/cli/access)或你选定的[原生配置](/docs/cli/native)。
+
+## 项目
+
+```bash
+openship project list
+openship project create --name my-app --git-owner my-team --git-repo my-app
+openship project get proj_123
+openship project rename proj_123 "My application"
+openship init --project proj_123
+```
+
+`project rename` 通过与控制台相同的操作更新显示名称。项目 ID、slug、卷（volume）与线上路由都保持原有身份。主机名通过下方的域名命令管理。
+
+`init` 会在 `.openship/project.json` 中写入项目关联。这与声明部署配置的 `openship.json` 不同：
+
+```bash
+openship config init
+openship config validate
+```
+
+参见 [project 命令](/docs/cli/reference/project)、[link 选项](/docs/cli/reference/init)与[配置命令](/docs/cli/reference/config)。
+
+## 环境与源设置
+
+```bash
+openship project env get proj_123
+openship project git branch proj_123 main
+openship project sleep-mode proj_123 always_on
+```
+
+环境变量写入、自动部署（auto-deploy）、发布镜像、日志与项目拆除（teardown）请使用 project 参考。[环境变量](/docs/guides/environment-variables)一文解释了密钥的处理方式，以及变更何时会传导到运行中的应用。
+
+## 服务
+
+```bash
+openship service list --project proj_123
+openship service get svc_123 --project proj_123
+openship service logs svc_123 --project proj_123 --follow
+```
+
+服务隶属于项目。请提供 `--project`，或使用已关联的目录。[service 参考](/docs/cli/reference/service)涵盖创建、Compose 同步、漂移（drift）决策、环境变量、运行时控制与执行。
+
+## 域名
+
+```bash
+openship domain add app.example.com --project proj_123
+openship domain records dom_123
+openship domain verify dom_123
+openship domain verify-ssl dom_123
+```
+
+验证之前请先完成返回的 DNS 指引。DNS 提供方、TLS 与主域名参见[域名选项](/docs/cli/reference/domain)与[自定义域名指南](/docs/guides/custom-domains)。
+
+## 目录应用
+
+```bash
+openship app list
+openship app get postgres
+openship app host-fit postgres --server srv_123
+```
+
+`app install` 会创建一个安装草稿。使用 `openship deploy` 部署返回的项目 ID。自定义应用定义、精选设置与连接细节见 [app 参考](/docs/cli/reference/app)。

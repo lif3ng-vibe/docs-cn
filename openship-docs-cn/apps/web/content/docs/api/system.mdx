@@ -1,0 +1,155 @@
+---
+title: 安装设置
+description: 读取并修改自托管安装的设置与配置流程。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+安装设置控制一个自托管的 Openship 实例。下文的资源操作在可用时使用共享的
+SDK/HTTP 接口；初始引导、恢复与其余搭建端点仅限 HTTP。
+
+宿主机与组件安装参见[Servers](/docs/api/servers)，既有站点参见[边缘管理](/docs/api/edge)，导入、导出与团队模式迁移参见[数据传输](/docs/api/data-transfer)。
+
+## 初始引导与搭建
+
+`GET /api/system/onboarding` 返回 `{ configured: boolean }`——一旦存在至少一台服务器即为 `true`。
+`POST` 变体执行与内部 `/setup` 推送相同的逻辑，但仅在实例尚未配置时有效
+（之后返回 **403 “Instance already configured”**），因此首启流程不需要令牌。
+
+```
+POST /api/system/onboarding
+```
+
+<TypeTable
+  type={{
+    sshHost: { type: 'string', description: '目标服务器的 SSH 主机/IP。提供时会创建一条服务器记录。' },
+    serverName: { type: 'string', description: '服务器的显示名称。' },
+    sshPort: { type: 'number', description: 'SSH 端口。', default: '22' },
+    sshUser: { type: 'string', description: 'SSH 用户。', default: 'root' },
+    sshAuthMethod: { type: 'string', description: '认证方式：password、key 或 agent。' },
+    sshPassword: { type: 'string', description: 'SSH 密码（静态加密存储）。' },
+    sshKeyPath: { type: 'string', description: '主机上私钥文件的路径。' },
+    sshKeyPassphrase: { type: 'string', description: '私钥口令（静态加密存储）。' },
+    sshJumpHost: { type: 'string', description: 'SSH 跳板/堡垒主机。' },
+    sshTransport: { type: 'string', description: '连接传输方式：direct（默认），或对 Cloudflare Access SSH 应用使用 cloudflare。' },
+    sshArgs: { type: 'string', description: '允许的 SSH 连接调优参数；任意本地命令会被拒绝。' },
+    authMode: { type: '"none" | "local" | "cloud"', description: '实例认证模式。', default: 'none' },
+    tunnelProvider: { type: 'string', description: '隧道提供方。' },
+    tunnelToken: { type: 'string', description: '隧道令牌。' },
+    defaultBuildMode: { type: 'string', description: '新部署的默认构建模式。', default: 'auto' },
+    defaultRollbackWindow: { type: 'number', description: '为回滚保留多少个历史发布。' },
+  }}
+/>
+
+`POST /api/system/setup` 路由接受相同的请求体，但保留给桌面应用使用，要求
+`internalAuth` 共享令牌而非用户会话；它也可以传
+`serverId` 把配置推送到既有服务器。
+
+## 实例设置
+
+`GET /api/system/settings` 返回实例配置（认证模式、隧道提供方、默认构建模式与
+回滚窗口、邀请邮件发件源、团队模式、迁移目标）。`PATCH` 只更新你发送的
+字段。`DELETE` 会清空实例设置**以及**每一条服务器记录。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.system.updateSettings({
+  defaultBuildMode: "docker",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/system/settings" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"defaultBuildMode":"docker"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    authMode: { type: '"none" | "local" | "cloud"', description: '实例认证模式。在非桌面部署上切到 none 受门控（见下文）。' },
+    confirm: { type: 'string', description: '在非桌面机器上把 authMode 设为 "none" 时必填——必须恰好为 "I-understand-no-auth"。' },
+    tunnelProvider: { type: 'string', description: '隧道提供方（发空值即清除）。' },
+    tunnelToken: { type: 'string', description: '隧道令牌。' },
+    defaultBuildMode: { type: 'string', description: '默认构建模式。', default: 'auto' },
+    defaultRollbackWindow: { type: 'number', description: '为回滚保留的发布数。' },
+    invitationMailSource: { type: '"platform" | "cloud"', description: '团队邀请邮件从哪里发出。' },
+  }}
+/>
+
+<Callout title="零认证有双重门控" type="warn">
+在非桌面部署上设置 `authMode: "none"` 意味着任何能访问 API 的人都能以管理员身份行事。运维者必须**同时**先用 `OPENSHIP_ALLOW_ZERO_AUTH=true` 启动该流程（否则 **403**），并在请求体里发送 `confirm: "I-understand-no-auth"`（否则 **400**）。
+</Callout>
+
+## 把零认证升级为真正的登录
+
+`POST /api/system/upgrade-to-auth` 把合成的零认证用户转换为一个邮箱/密码账号，并把
+`authMode` 从 `none` 翻转为 `local`，同时保留同一用户 id，使既有的项目、部署与审计记录仍可解析。只在 `authMode === "none"` 时可调用（否则 **400**）。
+
+```
+POST /api/system/upgrade-to-auth
+```
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '账号显示名称（1–100 个字符）。', required: true },
+    email: { type: 'string', description: '账号邮箱（有效地址，≤254 字符）。', required: true },
+    password: { type: 'string', description: '账号密码（8–128 个字符）。', required: true },
+    useOwnMailServer: { type: 'boolean', description: '预热自托管邮件服务器，使其能发送认证邮件。', default: 'false' },
+  }}
+/>
+
+## 浏览主机文件系统
+
+`GET /api/system/browse?path=<dir>` 列出一个路径下的子目录（默认为宿主的
+home 目录），并标出哪些看起来是可部署的项目。被“部署本地文件夹”选择器使用。
+
+返回 `{ path, directories: [{ name, path, isProject }] }`——项目在前，之后按字母排序。非目录
+路径返回 **400**，路径不存在返回 **404**。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 浏览一个已授权的主机文件系统位置。 | `system.browse(input?)` | `GET /api/system/browse`<br />`settings:read` · 自托管 |
+| 读取数据库与安装健康状况。 | `system.health()` | `GET /api/system/diagnostics`<br />`settings:read` · 自托管 |
+| 读取实例设置。 | `system.getSettings()` | `GET /api/system/settings`<br />`settings:read` · 自托管 |
+| 修改实例设置。 | `system.updateSettings(input)` | `PATCH /api/system/settings`<br />`settings:write` · 自托管 |
+| 读取 SMTP 设置，机密打码。 | `system.getEmailSettings()` | `GET /api/system/settings/email`<br />`settings:read` · 自托管 |
+| 为该安装配置 SMTP 投递。 | `system.updateEmailSettings(input)` | `PUT /api/system/settings/email`<br />`settings:write` · 自托管 |
+| 用已配置的 SMTP 设置发送测试邮件。 | `system.sendTestEmail(input)` | `POST /api/system/settings/email/test`<br />`settings:write` · 自托管 |
+| 重置受支持的实例设置。 | `system.resetSettings()` | `DELETE /api/system/settings`<br />`settings:admin` · 自托管 |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 在授权引导过程中创建初始管理员。 | 仅 HTTP | `POST /api/system/bootstrap-admin`<br />`Internal operator` · 自托管 |
+| 开始本安装的 Cloud 账号连接。 | 仅 HTTP | `POST /api/system/cloud-connect`<br />`Internal operator` · 自托管 |
+| 读取本安装的 Cloud 连接状态。 | 仅 HTTP | `GET /api/system/cloud-status`<br />`Internal operator` · 自托管 |
+| 读取安装健康状况。 | 仅 HTTP | `GET /api/system/health`<br />`Internal operator` · 自托管 |
+| 通过一条符合条件的自托管邀请创建账号。 | 仅 HTTP | `POST /api/system/invite-signup`<br />`Handler authentication` · 自托管 |
+| 首启检查——是否已配置过服务器？ | 仅 HTTP | `GET /api/system/onboarding`<br />`Handler authentication` · 自托管 |
+| 首启搭建；持久化设置并创建第一台服务器。配置完成后返回 403。 | 仅 HTTP | `POST /api/system/onboarding`<br />`Handler authentication` · 自托管 |
+| 初始引导期间测试连接。 | 仅 HTTP | `POST /api/system/onboarding/test-connection`<br />`Handler authentication` · 自托管 |
+| 通过本地恢复边界重置管理员密码。 | 仅 HTTP | `POST /api/system/reset-admin-password`<br />`Internal operator` · 自托管 |
+| 把 Openship 安装注册为受管应用。 | 仅 HTTP | `POST /api/system/self-register`<br />`Internal operator` · 自托管 |
+| 流式接收安装注册进度。 | 仅 HTTP | `GET /api/system/self-register/stream`<br />`Internal operator` · 自托管 |
+| 读取桌面应用所需的实例配置。 | 仅 HTTP | `GET /api/system/setup`<br />`Internal operator` · 自托管 |
+| 从桌面应用推送实例配置。 | 仅 HTTP | `POST /api/system/setup`<br />`Internal operator` · 自托管 |
+| 把零认证实例升级为邮箱/密码登录。 | 仅 HTTP | `POST /api/system/upgrade-to-auth`<br />`Handler authentication` · 自托管 |
+
+{/* api-operations:end */}

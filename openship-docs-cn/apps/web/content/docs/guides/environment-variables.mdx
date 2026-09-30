@@ -1,0 +1,247 @@
+---
+title: 环境变量与机密
+description: 给应用配置设置项与机密——在 Configuration 标签页或 CLI 里添加，敏感值保持遮蔽，改动生效无需完整重建。
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+大多数应用跑起来都需要几条信息：数据库地址、API 密钥、一个"我在生产环境吗？"的旗标。这些就是**环境变量（environment variable）**——应用启动时读取的一小撮有名字的设置。把它们想成你递给应用的便利贴：`DATABASE_URL = ...`、`STRIPE_KEY = ...`。Openship 替你保管这些便签，每次构建与运行时递给你的应用，并把敏感的藏起来，让别人没法从你背后偷看。
+
+<Callout title="先准备好这些">
+
+- 一个已在 Openship 创建的项目（还没有的话，从[从 GitHub 部署](/docs/guides/deploy-from-github)开始）。
+- 你想设置的名字与值——比如 `DATABASE_URL` 和它的连接字符串。
+- 别的不需要。Openship 替你加密并存储这些值。
+
+</Callout>
+
+## 在控制台添加或修改变量
+
+<Steps>
+
+<Step>
+
+### 打开 Configuration 标签页
+
+前往你的项目并打开 **Configuration** 标签页。找到 **Environment variables** 卡片，点 **Edit**。面板会展开，显示你已有的变量（空着也没关系——全新应用往往没有）。
+
+</Step>
+
+<Step>
+
+### 添加一个变量
+
+点 **Add variable**。你得到一行两个框：左边是 **KEY**（名字，如 `DATABASE_URL`），右边是**值**。两个都填上。
+
+需要多少行就加多少行。要删一行，点行末的垃圾桶图标。
+
+</Step>
+
+<Step>
+
+### 标记机密
+
+有些值是敏感的——密码、API 密钥、令牌（token）。对其中每一个，点这一行上的**钥匙图标**把它**标记为机密（secret）**。机密的值存储方式一样，但从那以后它显示为一串圆点（`••••••••`）而非明文，所以你每次重新打开编辑器都看不到它。
+
+<Callout title="环境变量的值都静态加密" type="info">
+  不管你有没有把某个变量标记为机密，Openship 都会**在保存前加密每个值**。
+  标记为机密只是在上面加了一层屏幕遮蔽——它决定的是*你*以后能看见什么，
+  而不是它在磁盘上是否受保护。
+</Callout>
+
+服务内联的环境变量值与构建参数同样被加密，包括它们存放在部署快照和 Compose 漂移基线里的副本。升级后 API 或原生引擎启动时，已有的明文服务配置会被转换。把你的 `BETTER_AUTH_SECRET` 与数据库备份放在一起保管：读取这些值需要它。要降级到这项保护之前的版本，请连同其对应的数据库备份一并恢复。
+
+换到另一个密钥的部署时，请使用 **Settings → Data Transfer** 并把机密包含在内。它会按目的地重新加密配置。省略机密的传输或恢复清单同样不含内联环境变量、构建参数与受保护的服务配置；部署前请重新设置这些值。
+
+</Step>
+
+<Step>
+
+### 保存
+
+点 **Save changes**。Openship 只写入你真正新增、修改或删除的行——其余变量原封不动。因此你没有碰过的遮蔽机密永远不会被覆盖：你从没重新输入它，它也就从没被重发。
+
+</Step>
+
+</Steps>
+
+<Callout title="保存不等于生效" type="warn">
+  保存的修改立即入库，但**正在运行的应用在下一次部署前仍然用着旧值**。如果已有东西在线上，Openship 提供一条捷径把改动立刻推出去——见下文[不重建就生效](#不重建就生效)。否则新值在你下次部署时生效。
+</Callout>
+
+## 你的应用何时能见到这些值
+
+项目级变量在**两个时刻**可用：
+
+- **构建期间**——构建期烙进去的值（比如前端里的 `NEXT_PUBLIC_...` 设置）在构建运行时就在场。
+- **运行时**——运行中的服务器用常规方式读它们（如 `process.env.DATABASE_URL`）。
+
+对于 Dockerfile 构建，用 `ARG` 声明你要消费的每个值（仅当运行中的镜像也需要它时再拷进 `ENV`）：
+
+```dockerfile
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN npm run build
+```
+
+项目环境是共享的构建/运行时层。多服务项目的 `services[].env` 不同：它在运行时只属于那个服务本身，绝不会泄进镜像构建。当某个镜像需要明确的仅构建期值，或者你想记录它继承了哪个共享键时，在 `openship.json` 中添加 `services[].buildArgs`：
+
+```json
+{
+  "env": { "NEXT_PUBLIC_API_URL": "https://api.example.com" },
+  "services": [
+    {
+      "name": "web",
+      "build": ".",
+      "buildArgs": { "NEXT_PUBLIC_API_URL": null, "BUILD_FLAVOR": "production" }
+    }
+  ]
+}
+```
+
+这里 `null` 表示"继承同名项目变量"；字符串则是对该镜像的单独覆盖。在顶层 `openship.json.env` 里声明的值会自动成为生效的项目默认值。通用的 `.env` 文件只有在你选择 **Import .env** 之后才会被采用。
+
+<Callout title="Docker 构建参数不是机密仓库" type="warn">
+  构建参数可能留在镜像元数据或构建缓存里可见。凭据请优先用运行时环境变量。如果构建确实需要机密，使用专门的 BuildKit secret 流程，而不要写进 `openship.json` 或烙进镜像。
+</Callout>
+
+## 服务覆盖与凭据轮换
+
+打开 **Services → 选一个服务 → Environment**，可以看到它生效的已保存变量。列表包括 Compose 值、共享项目变量与显式的服务覆盖，每行带一个来源标签。这些值由 Openship 存储；部署服务器离线时列表依然可用。
+
+编辑一个继承来的值，等于为该服务创建一条覆盖。保存只改动你编辑过的行；不会把其他继承值复制成覆盖。移除一条覆盖会恢复继承值（如果存在）。要移除继承的键，请到它的 Compose 或项目源上移除。其他会话产生的冲突修改在保存前会被拒绝。
+
+在一次普通的服务部署中，最高优先级的值按此序取胜：
+
+1. 来自其环境变量编辑器的服务级变量。
+2. 该服务 Compose `environment` 或 `openship.json` `env` 映射里的字面量。
+3. 部署启动时捕获的项目环境。
+
+像 `TOKEN: ${TOKEN}` 这样的 Compose 表达式按配置的值解析；它不会钉死上一次扫描的值。回滚则重放当时捕获的项目值，包括它们相对今天服务覆盖的优先级。
+
+当一个被改动或删除的键仍有服务覆盖时，`openship project env set` 会给出警告。API 与 SDK 返回同样的 `warnings` 数组，部署日志会点名哪些键以服务值取胜。这些消息只包含名字。保存项目值会成功，但它替代不了服务自有的凭据。更新服务值，或移除其覆盖以继承项目值，然后部署。删除项目变量不会删除服务的那份副本。
+
+例如，如果 `web` 钉着 `TOKEN=old`，把项目的 `TOKEN` 设为 `new` 会就 `web` 发出警告；仅重建一次也仍在使用钉住的值。想要依赖轮换后的项目令牌，先到服务编辑器里移除那条覆盖。
+
+## 查看、隐藏与替换一个机密
+
+编辑器里，每个值都有一个**眼睛图标**用来显示或隐藏。你之前保存过的机密回来时以占位符 `•••••••• (set — type to replace)` 遮蔽。要改它，直接把新值打在圆点上面。要留着它，就别动——Openship 保持已存值原样。
+
+## 生产与预览值
+
+Openship 的变量**按环境分开保存**，所以测试配置与线上配置可以不同（`preview` 构建可以指向测试数据库，而 `production` 指向真的）。三种环境是 `production`、`preview` 和 `development`。
+
+项目编辑器管理的是 **production** 值。某个服务的 Environment 标签页使用其当前部署的环境，首次部署之前用 production。CLI 还通过 `--environment` 支持 `preview` 和 `development`。
+
+它们是同一个项目内的变量集合。运行时隔离来自选定另一个非生产的项目环境并部署其项目 ID。对生产项目传 `--env preview` 会被拒绝；它不能把那个预览推升到生产运行时。完整流程见[预览部署](/docs/cli/deploy)。
+
+## 下载环境变量
+
+在某个服务的 **Environment** 标签页里，在 **Upload .env** 旁边选择 **Download .env**。文件包含列表中的变量及其真实保存的机密值。下载不会在编辑器里揭示这些机密、保存编辑或重启服务。编辑器里显示的未保存修改也会包含在下载中。
+
+文件采用与 Compose 兼容的 `.env` 引用规则。**Upload .env** 会按字面量恢复这些值，包括美元符、引号和多行值，不展开变量引用。
+
+## 不重建就生效
+
+为了改个设置就重建应用太慢了——你的*代码*什么都没变。所以当你保存了一个环境变量改动而项目已经部署过，编辑器会出现一个 **Apply (restart, no rebuild)** 按钮。
+
+按下它，Openship 用它已构建好的镜像重建运行中的容器，把新值注入。不用 git clone，不用构建——只是一次快速重启。这是推出一个改过的键或轮换过的机密最快的方式。
+
+在终端里，`openship deploy --refresh`（见下文）通过一次部署应用环境变量变更，不重新构建。
+
+对单个服务，打开它的 **Environment** 标签页，点 **Save**，再点变量上方工具栏里的 **Apply environment changes**。它只刷新该服务，使用其目标上已在运行的镜像。编辑器保持打开，服务启动后显示完成。这是一项专门的服务操作（`POST /api/projects/:id/services/:serviceId/apply-env`）；它不创建部署或构建会话。Docker 会得到一次优雅停止，替代容器保留现有的端口、项目网络地址、卷、命令和资源限制。如果启动失败，Openship 恢复前一个容器，改动保持待处理。只有与已部署容器比对发现存在已保存的差异（含被移除的变量）时，工具栏才提供 **Apply**。**Check running service** 会刷新这一次比对。服务器不可达时报告为状态未知，已保存的变量仍可编辑。
+
+对较旧的或迁入的服务，Docker 里可能还存着从未保存进 Openship 的变量。**Recover from running service** 会从该服务的容器读取这些缺失的值（不含镜像默认值），加进编辑器供你审视。点 **Save** 把它们加密存入 Openship。恢复从不覆盖已保存的值。在套用之前，请恢复这些值，或显式选择把它们从运行中的服务里移除。
+
+此操作支持服务器上的 Docker 服务和 Openship Cloud 的 Docker 工作区。旧式云工作区和收编（adopted）到 Docker 默认网桥上的容器需要 **Redeploy**。共享命名空间的服务必须通过一次部署一起刷新。
+
+普通的 **Restart** 保留容器现有的变量。当有已保存的改动待生效时，Openship 会打开该服务的 **Environment** 面板让你在那里套用。构建期间使用的变量仍需要重建。
+
+## CLI
+
+以上操作全部可以在 CLI 完成。列出时，机密值永远**遮蔽**返回。
+
+<Tabs items={['Whole project', 'One service in a stack']}>
+
+<Tab value="Whole project">
+
+```bash
+# 列出项目的变量（机密以遮蔽显示）
+openship project env get <project-id>
+
+# 设置一个或多个值（每个重复一次 --set）
+openship project env set <project-id> --set DATABASE_URL=postgres://... --set LOG_LEVEL=info
+
+# 把本命令中的值标记为机密
+openship project env set <project-id> --set STRIPE_KEY=sk_live_... --secret
+
+# 移除一个变量
+openship project env set <project-id> --unset OLD_FLAG
+
+# 指定另一个环境（默认 production）
+openship project env set <project-id> --environment preview --set API_URL=https://staging.example.com
+
+# 把当前环境变量推给运行中的应用——不 git pull，不重建
+openship deploy --refresh
+```
+
+`env set` 是**合并**：它只碰你用 `--set` 和 `--unset` 点名的键，其他一切原位不动。
+
+</Tab>
+
+<Tab value="One service in a stack">
+
+对多服务（compose）项目，每个服务有自己的变量。用 `-p` 指定栈，用名称指定服务：
+
+```bash
+# 列出某个服务的变量（机密遮蔽）
+openship service env get web -p my-stack
+
+# 为一个服务设置值（KEY=VALUE 对）
+openship service env set web -p my-stack DATABASE_URL=postgres://... --secret
+
+# 选择环境（默认 production）
+openship service env set web -p my-stack -e preview API_URL=https://staging.example.com
+```
+
+<Callout title="机密与服务环境变量" type="warn">
+  服务命令一次性写入整个环境，所以它会先读出当前的值再合并你的。由于已保存的机密值读不回来，如果该服务已有一个你没有重新输入的机密，命令会停下来要求你重新指定——或者传 `--replace`，丢弃所有不在你命令里的值。
+</Callout>
+
+</Tab>
+
+</Tabs>
+
+## 故障排查
+
+<Callout title="我保存了变量，但应用还是看不到" type="warn">
+  保存只是存了值；**正在运行的应用**要等到部署才会取用。用 **Apply (restart, no rebuild)**（或 `openship deploy --refresh`）现在就推出去，或者干脆重新部署。
+</Callout>
+
+<Callout title="机密显示为圆点，读不回来" type="info">
+  这是刻意设计——无论是在控制台还是 CLI，Openship 都不会再展示已存机密的值。要改它，把新值打在圆点上。原值丢了的话，就设一个全新的。
+</Callout>
+
+<Callout title="构建失败，报缺变量" type="error">
+  你的应用期待一个还没设置的变量。在 **Configuration** 标签页加上（或用 `openship project env set`），确保名字完全一致——环境变量名区分大小写——然后再次部署。更多内容见[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card
+    title="从 GitHub 部署"
+    href="/docs/guides/deploy-from-github"
+    description="关联仓库，把应用搬上线。"
+  />
+  <Card
+    title="添加自定义域名"
+    href="/docs/guides/custom-domains"
+    description="把应用放上你自己的地址，自动配 HTTPS。"
+  />
+  <Card
+    title="多服务应用"
+    href="/docs/guides/compose-multi-service"
+    description="给 docker-compose 技术栈里的每个服务各配各的变量。"
+  />
+</Cards>

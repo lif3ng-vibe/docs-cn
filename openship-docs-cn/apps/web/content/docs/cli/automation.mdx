@@ -1,0 +1,39 @@
+---
+title: CLI 自动化
+description: 在脚本与 CI 中使用上下文、JSON 输出和显式项目 ID。
+---
+
+## 认证运行器
+
+将个人访问令牌存入你的 CI 密钥存储中，并显式传给 login：
+
+```bash
+openship login \
+  --token "$OPENSHIP_TOKEN" \
+  --api-url "$OPENSHIP_API_URL" \
+  --dashboard-url "$OPENSHIP_DASHBOARD_URL" \
+  --context ci
+```
+
+这些变量是你脚本的输入。CLI 使用已保存的上下文；它不会自动读取 `OPENSHIP_TOKEN` 或 `OPENSHIP_API_URL` 作为连接覆盖项。请为该任务使用一个带有其所需资源授权（grant）的令牌。
+
+## 使用显式 ID 与 JSON
+
+```bash
+openship --json project list > projects.json
+openship deploy --project proj_123 --branch main --watch
+```
+
+全局的 `--json` 要放在命令之前。结构化资源命令将 JSON 写入 stdout，将诊断信息写入 stderr。`OPENSHIP_JSON=1` 也可启用 JSON 输出。交互式安装命令保留其命令特有的行为；在无人值守使用它们之前，请先查看其帮助。
+
+`--project` 可避免依赖目录关联。在自动化中使用 `init` 时，若 `--yes` 仍需要交互提示则会失败。
+
+## 处理失败
+
+检查每条命令的退出状态。操作与参数错误会以非零状态码退出。一次部署的提交会在完成前先返回一个 ID；在将任务视为成功之前，请使用 `--watch` 或检查该部署。
+
+如果某个变更（mutation）的响应丢失了，请在重新提交之前先检查已保存的资源。客户端不会自动重放变更。停止观察并不会撤销一次部署。
+
+## 原生自动化
+
+使用[原生 CLI 配置](/docs/cli/native)来选择明确的安装实例与组织。命令在完成时会排空（drain）其所属的工作进程（worker）。对于长期运行的 Node 应用，请[直接使用 SDK](/docs/api/sdk/native)，并在多次调用之间保持安装实例开放。

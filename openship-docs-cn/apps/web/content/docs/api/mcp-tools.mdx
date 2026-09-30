@@ -1,0 +1,798 @@
+---
+title: MCP 工具目录
+description: 生成的工具描述、API 映射、可用性以及有意仅限 HTTP 的路由。
+---
+
+本目录由 MCP 发现所使用的路由元数据生成。对你的实例运行 `tools/list` 可获取其当前输入 schema
+以及你的凭据可用的工具。参见 [MCP 安装](/docs/mcp)、[协议与参数](/docs/api/mcp)以及
+[集群/扩缩容工作流](/docs/guides/mcp-clusters-and-scaling)。
+
+当前 API 共有 **424 个不重复的工具**。下文的权限标签描述路由的初始权限；共享操作还会强制执行
+工作区、资源、源访问与实例管理要求。自托管工具在托管的云控制器上不可用。
+
+## 工具
+
+### analytics
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_analytics`<br />`GET /api/analytics` | 读取 query.projectId 的请求与流量总量，可按域名筛选。需要项目 ID；工作区汇总请用控制台。 | `analytics:read` |
+| `get_analytics_container`<br />`GET /api/analytics/container` | 一个项目运行时的容器级指标。 | `analytics:read` |
+| `get_analytics_dashboard`<br />`GET /api/analytics/dashboard` | 控制台分析汇总（核心指标）。 | `analytics:read` |
+| `get_analytics_deployments`<br />`GET /api/analytics/deployments` | 部署统计（频率、成功率、耗时）。 | `analytics:read` |
+| `get_analytics_geo`<br />`GET /api/analytics/geo` | 一个项目的访客地理分布：按国家统计的请求数、独立访客、热门路径。 | `analytics:read` |
+| `get_analytics_overview`<br />`GET /api/analytics/overview` | 分析总览（流量、状态码、热门路径）。 | `analytics:read` |
+| `get_analytics_periods`<br />`GET /api/analytics/periods` | 可用的分析时间段。 | `analytics:read` |
+| `get_analytics_resources`<br />`GET /api/analytics/resources` | 项目资源使用量：整体总量外加带实时状态的逐服务明细。 | `analytics:read` |
+| `get_analytics_server_by_serverId`<br />`GET /api/analytics/server/:serverId` | 读取该服务器上 query.domain 已保存的边缘请求/流量分桶，可限定 ISO 日期区间。这些是 HTTP 流量测量值，不是 k3s 工作负载的 CPU 指标。 | `server:read` |
+| `get_analytics_server_by_serverId_geo`<br />`GET /api/analytics/server/:serverId/geo` | 读取该服务器为 query.domain（及可选 query.day，YYYYMMDD）保存的访客地理数据。缺失的观测不代表零流量。 | `server:read` |
+| `get_analytics_server_by_serverId_live`<br />`GET /api/analytics/server/:serverId/live` | 读取该服务器上 query.domain 当前的 OpenResty 计数器。这是某一时点的 JSON 观测，不是持续流。 | `server:read` |
+| `get_analytics_usage`<br />`GET /api/analytics/usage` | 读取 query.projectId 当前的运行时资源用量。不支持的运行时不返回观测值；这不代表用量为零。 | `analytics:read` |
+| `get_analytics_usage_history`<br />`GET /api/analytics/usage/history` | 一个项目随时间变化的资源用量（CPU/内存/网络），可限定单个服务。 | `analytics:read` |
+| `post_analytics_paths_collection_by_projectId`<br />`POST /api/analytics/paths-collection/:projectId` | 为一个项目开启或关闭按路径的请求聚合（Top Paths）。 | `project:write` |
+
+### apps
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_apps_custom_by_appId`<br />`DELETE /api/apps/custom/:appId` | 从本组织的目录中移除一个自定义应用。 | `project:write` |
+| `get_apps_catalog`<br />`GET /api/apps/catalog` | 列出一键应用目录（Convex、WordPress、邮件等）。 | `project:list` |
+| `get_apps_catalog_by_id`<br />`GET /api/apps/catalog/:id` | 按 id 获取一个应用的完整模板（服务、配置、端点）。 | `project:list` |
+| `get_apps_catalog_by_id_host_fit`<br />`GET /api/apps/catalog/:id/host-fit` | 安装前预览应用容量。自托管的最低要求仅供参考；云端会对照套餐检查共享工作区配额。传入 projectId 可包含已有草稿保存的资源设置。查询参数：deployTarget、serverId、projectId。 | `project:list` |
+| `get_apps_custom`<br />`GET /api/apps/custom` | 列出本组织的自定义（用户上传、未校验）应用。 | `project:list` |
+| `get_projects_by_id_app_connection`<br />`GET /api/projects/:id/app-connection` | 获取一个已安装应用解析后的连接详情（URL + 生成的密钥）。 | `project:write` |
+| `get_projects_by_id_app_settings`<br />`GET /api/projects/:id/app-settings` | 获取一个已安装应用的精选设置 schema 与当前值。 | `project:read` |
+| `patch_projects_by_id_app_settings`<br />`PATCH /api/projects/:id/app-settings` | 更新一个已安装应用的精选设置（安全的 env 合并）。 | `project:write` |
+| `post_apps`<br />`POST /api/apps` | 从目录安装一个应用为项目（或为向导类应用返回一个流程路由）。公开主机名只能来自 `routes` —— 省略则应用只带端口安装（不会凭空生成域名）。 | `project:write` |
+| `post_apps_custom`<br />`POST /api/apps/custom` | 从上传的 JSON 定义添加一个自定义应用（按组织保存、未校验）。 | `project:write` |
+
+### audit
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_audit`<br />`GET /api/audit` | 列出工作区审计事件，可按操作者、资源与来源筛选。用 page/perPage 或 cursor/limit 分页；检查 sourceClientId 可识别 MCP 活动。 | `audit:read` |
+| `get_audit_facets`<br />`GET /api/audit/facets` | 读取该工作区可用的审计筛选器、事件计数、操作者与客户端名称。 | `audit:read` |
+| `get_audit_settings`<br />`GET /api/audit/settings` | 读取审计日志是否启用、其保留期，以及调用方能否管理它。 | `audit:read` |
+| `patch_audit_settings`<br />`PATCH /api/audit/settings` | 修改工作区审计日志与保留期。缩短保留期可能会删除较旧的审计历史。 | `audit:write` |
+
+### backup-destinations
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_backup_destinations_by_id`<br />`DELETE /api/backup-destinations/:id` | 从 Openship 中移除一个未使用的备份目标。先检查使用情况；依赖项可能阻止移除。这不会从外部存储中删除备份对象。 | `backup_destination:admin` |
+| `get_backup_destinations`<br />`GET /api/backup-destinations` | 列出可访问的备份目标及其存储字节/运行统计与可用性。目标密钥会被打码。 | `backup_destination:list` |
+| `get_backup_destinations_by_id`<br />`GET /api/backup-destinations/:id` | 读取一个备份目标的配置与统计，凭据打码。 | `backup_destination:read` |
+| `get_backup_destinations_by_id_runs`<br />`GET /api/backup-destinations/:id/runs` | 列出存在该目标的备份，按最新在前。用 query.limit 与 query.before 继续翻阅历史。 | `backup_destination:read` |
+| `get_backup_destinations_by_id_usage`<br />`GET /api/backup-destinations/:id/usage` | 列出正在使用此备份目标的项目、服务与保留策略，便于在变更或删除前审阅。 | `backup_destination:read` |
+| `get_backup_destinations_history`<br />`GET /api/backup-destinations/history` | 读取跨可访问目标的备份历史，按最新在前。用 query.limit 与返回的 next cursor（作为 query.before）翻到后续页。 | `backup_destination:list` |
+| `patch_backup_destinations_by_id`<br />`PATCH /api/backup-destinations/:id` | 更新备份目标的设置。省略的凭据会保留。当有依赖的备份或集群数据库仍需原位置时，目标地址的变更会被拒绝。 | `backup_destination:write` |
+| `post_backup_destinations`<br />`POST /api/backup-destinations` | 使用现有的目标契约创建 S3、SFTP 或本地备份目标。绑定保留策略前先做预检；创建目标不会创建备份。 | `backup_destination:write` |
+| `post_backup_destinations_by_id_preflight`<br />`POST /api/backup-destinations/:id/preflight` | 测试这个已保存备份目标的连通性与所需访问权限，返回实际的检查项与错误。 | `backup_destination:write` |
+| `post_backup_destinations_preflight`<br />`POST /api/backup-destinations/preflight` | 在保存目标之前测试草稿备份目标的连通性与权限。返回配置保留策略前需要解决的检查项与错误。 | `backup_destination:write` |
+
+### backups
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_backup_policies_by_policyId`<br />`DELETE /api/backup-policies/:policyId` | 禁用并移除这条备份保留策略。已有备份历史仍按其保留设置与目标状态可查。 | `backup_destination:backup_policy:write` |
+| `get_backup_restores_by_restoreId`<br />`GET /api/backup-restores/:restoreId` | 获取一次备份恢复的状态。 | `backup_destination:backup_restore:read` |
+| `get_backup_runs_by_runId`<br />`GET /api/backup-runs/:runId` | 获取一次备份运行的详情/状态。 | `backup_destination:backup_run:read` |
+| `get_projects_by_projectId_backup_policies`<br />`GET /api/projects/:projectId/backup-policies` | 列出项目的备份保留策略（计划/保留）。 | `project:write` |
+| `get_projects_by_projectId_backup_runs`<br />`GET /api/projects/:projectId/backup-runs` | 列出项目的备份运行（历史、状态）。 | `project:write` |
+| `patch_backup_policies_by_policyId`<br />`PATCH /api/backup-policies/:policyId` | 更新备份保留策略的计划、保留、负载或目标。省略的字段保留。修改保留设置可能清理较旧且未受保护的备份。 | `backup_destination:backup_policy:write` |
+| `post_backup_policies_by_policyId_run`<br />`POST /api/backup-policies/:policyId/run` | 按此策略发起按需备份。返回 runId，多服务批次还会返回 runIds；逐个轮询直到成功或失败。被接受（accepted）不代表已完成备份。 | `backup_destination:backup_policy:write` |
+| `post_backup_restores_by_restoreId_apply`<br />`POST /api/backup-restores/:restoreId/apply` | 使用其返回的 confirmationToken 执行一次准备好的恢复。原地恢复会覆盖目标数据并可能停掉服务。在报告成功之前，先轮询恢复状态直到结束。 | `backup_destination:backup_restore:admin` |
+| `post_backup_restores_by_restoreId_cancel`<br />`POST /api/backup-restores/:restoreId/cancel` | 请求取消这次备份恢复。轮询其返回的状态；被接受的取消无法撤销 apply 期间已写入的数据。 | `backup_destination:backup_restore:admin` |
+| `post_backup_runs_by_runId_protect`<br />`POST /api/backup-runs/:runId/protect` | 将这次备份设为受保留清理保护或解除保护，可选指定期限。读取返回的保留锁与备份状态。 | `backup_destination:backup_run:write` |
+| `post_backup_runs_by_runId_restore_prepare`<br />`POST /api/backup-runs/:runId/restore/prepare` | 从这次备份准备恢复而暂不应用。返回 restoreId 与 confirmationToken。轮询直到准备好，审阅目标与模式，再显式应用返回的令牌。 | `backup_destination:backup_run:admin` |
+| `post_projects_by_projectId_backup_policies`<br />`POST /api/projects/:projectId/backup-policies` | 创建带目标、计划与保留设置的项目或服务备份保留策略。一键卷/数据备份请使用现有策略负载的默认值；源代码仍留在其仓库中。单独运行该策略来测试。 | `project:write` |
+
+### billing-local
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_billing_allowances`<br />`GET /api/billing/allowances` | 列出正在消耗工作区配额的资源，包括持有托管域名的项目。 | `billing:read` |
+| `get_billing_resources`<br />`GET /api/billing/resources` | 列出计入本工作区账单与用量的云资源。 | `billing:read` |
+| `get_billing_state`<br />`GET /api/billing/state` | 读取工作区的云计费状态、当前套餐、余额与限制。自托管实例需要绑定云账号才能获得这些数据。 | `billing:read` |
+| `get_billing_subscription`<br />`GET /api/billing/subscription` | 读取工作区当前的订阅档位、状态与计费周期。 | `billing:read` |
+| `get_billing_topup_packs`<br />`GET /api/billing/topup-packs` | 列出可用的云点数包与价格。读取它不会购买点数。 | `billing:read` |
+| `get_billing_usage`<br />`GET /api/billing/usage` | 读取请求日期区间内的计量云用量，按小时或天分组。这是计费数据，不是实时工作负载指标。 | `billing:read` |
+
+### cloud-local
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_cloud_status`<br />`GET /api/cloud/status` | 本实例的 Openship Cloud 连接状态。 | `cloud:read`<br />自托管 |
+| `get_cloud_workspaces`<br />`GET /api/cloud/workspaces` | 列出该组织的 Openship Cloud（Oblien）工作区。 | `cloud:read`<br />自托管 |
+
+### credentials
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_credentials_by_id`<br />`DELETE /api/credentials/:id` | 删除一条已存储的凭据。 | `settings:admin` |
+| `get_credentials`<br />`GET /api/credentials` | 列出该组织已存储的凭据。密钥会被打码。 | `settings:read` |
+| `get_credentials_by_id`<br />`GET /api/credentials/:id` | 获取一条已存储的凭据。其密钥会被打码。 | `settings:read` |
+| `get_credentials_providers`<br />`GET /api/credentials/providers` | 列出本实例支持的凭据提供方，以及各自所需的字段。 | `settings:read` |
+| `patch_credentials_by_id`<br />`PATCH /api/credentials/:id` | 重命名、重新限定作用域或轮换一条已存储的凭据。 | `settings:admin` |
+| `post_credentials`<br />`POST /api/credentials` | 为第三方提供方存储一条凭据（镜像仓库登录、DNS 令牌）。 | `settings:admin` |
+| `post_credentials_by_id_verify`<br />`POST /api/credentials/:id/verify` | 用其提供方重新校验一条已存储的凭据并记录结果。 | `settings:admin` |
+
+### deployments
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_deployments_by_id`<br />`DELETE /api/deployments/:id` | 删除一条非活跃的部署记录及其可释放资源。活跃部署受保护；删除前先查看状态。 | `deployment:admin` |
+| `get_deployments`<br />`GET /api/deployments` | 列出该组织的部署（可用 query.projectId 筛选）。 | `deployment:list` |
+| `get_deployments_by_id`<br />`GET /api/deployments/:id` | 按 id 获取一次部署——状态、url、耗时、错误摘要。 | `deployment:read` |
+| `get_deployments_by_id_build`<br />`GET /api/deployments/:id/build` | 实时构建/部署状态：进度、当前步骤、逐服务状态，以及——当部署处于 HELD 等待决策时——`pendingPrompt`（其 `actions[].id` 是 build-respond 工具接受的值，`expiresAt` 是部署放弃的时间点）。还携带 `deploymentStatus`（实际持久化状态，例如 action_required）、已分类失败的 `errorCode`/`errorDetails`、部分失败发布的 `decisionPending`，以及建议性的 `portCheck` 结果。当你想把处置方式直接拿到手时，优先使用 pending-actions 工具。 | `deployment:read` |
+| `get_deployments_by_id_info`<br />`GET /api/deployments/:id/info` | 获取这次部署的容器信息。 | `deployment:read` |
+| `get_deployments_by_id_logs`<br />`GET /api/deployments/:id/logs` | 拉取一次部署的构建/运行时日志。 | `deployment:read` |
+| `get_deployments_by_id_pending`<br />`GET /api/deployments/:id/pending` | 这次部署在等待什么，每个条目在 `resolveWith`（&#123;method, path, body&#125;）里携带可直接执行的具体调用。当部署看起来卡住时轮询它：阻塞式提示（例如端口被占用）会在这里显示其 action id 与 `expiresAt`，你不必猜测如何应答。 | `deployment:read` |
+| `get_deployments_by_id_restore_plan`<br />`GET /api/deployments/:id/restore-plan` | 回滚到这次部署将如何执行：从其保留的镜像即时回滚，或从其 commit 重新构建。 | `deployment:read` |
+| `get_deployments_by_id_usage`<br />`GET /api/deployments/:id/usage` | 获取这次部署的容器 CPU/内存用量。 | `deployment:read` |
+| `post_deployments`<br />`POST /api/deployments` | 基于 Git 的部署——从其 Git 源重新部署已关联的项目。要改为部署本地文件夹，请使用文件夹上传流程：projects folder/session → （上传）→ folder/scan → projects/ensure → deployments/build/access。 | `deployment:write` |
+| `post_deployments_build_access`<br />`POST /api/deployments/build/access` | 部署——向导中的"部署"动作。启动构建与部署。文件夹上传部署时传入 projectId（来自 projects/ensure）与 uploadSessionId（来自 folder/session）。向导设置（envVars、publicEndpoints、buildStrategy、runtimeMode、cloudResourceTier）可选。返回 &#123; success, deployment_id, project_id &#125;。在自托管实例上**不要**设置 deployTarget:'cloud' —— 它会触发 promote-to-cloud；留空即可，由上传会话模式决定。 | `deployment:write` |
+| `post_deployments_by_id_build_respond`<br />`POST /api/deployments/:id/build/respond` | 应答部署正在等待（HELD）的决策，解除流水线阻塞。`action` 必须是提示本身给出的 id 之一（例如端口冲突时的 free_port / abort）——从 pending-actions 或 build-status 工具读取，不要凭空编造 id。在提示的 `expiresAt` 截止前无人应答时，部署会自行中止。 | `deployment:write` |
+| `post_deployments_by_id_cancel`<br />`POST /api/deployments/:id/cancel` | 取消进行中的部署。 | `deployment:write` |
+| `post_deployments_by_id_keep`<br />`POST /api/deployments/:id/keep` | 让等待决策的部分失败部署保持保留（接受已成功的服务）。 | `deployment:write` |
+| `post_deployments_by_id_pin`<br />`POST /api/deployments/:id/pin` | 用 body.pinned 固定或取消固定一个保留的部署镜像以便回滚。读取 restore-plan 确认该镜像是否仍可用。 | `deployment:write` |
+| `post_deployments_by_id_redeploy`<br />`POST /api/deployments/:id/redeploy` | 为该项目重新运行最近一次部署。 | `deployment:write` |
+| `post_deployments_by_id_reject`<br />`POST /api/deployments/:id/reject` | 拒绝等待决策的部分失败部署（回滚已变更的服务）。 | `deployment:write` |
+| `post_deployments_by_id_restart`<br />`POST /api/deployments/:id/restart` | 重启这次部署正在运行的容器。 | `deployment:write` |
+| `post_deployments_by_id_rollback`<br />`POST /api/deployments/:id/rollback` | 回滚到这次部署的产物/commit。 | `deployment:write` |
+| `post_deployments_by_id_skip_port_check`<br />`POST /api/deployments/:id/skip-port-check` | 为某个目标（服务 id，或字符串形式的端口）消除"该端口上没有东西在监听"的建议性警告。仅具建议性——绝不会改变部署状态。应用确实在其他端口监听时使用。 | `deployment:write` |
+| `post_deployments_prepare`<br />`POST /api/deployments/prepare` | 在部署前检测 Git 仓库或本地路径的栈/构建配置。 | `deployment:write` |
+
+### dns
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_dns_credentials_by_id`<br />`DELETE /api/dns/credentials/:id` | 断开一个 DNS 提供方凭据。 | `settings:admin` |
+| `get_dns_credentials`<br />`GET /api/dns/credentials` | 列出该组织已连接的 DNS 提供方凭据。 | `settings:read` |
+| `get_dns_credentials_by_id`<br />`GET /api/dns/credentials/:id` | 获取一条已连接的 DNS 提供方凭据。 | `settings:read` |
+| `get_dns_providers`<br />`GET /api/dns/providers` | 列出受支持的 DNS 提供方及其所需的令牌权限范围。 | `settings:read` |
+| `post_dns_credentials`<br />`POST /api/dns/credentials` | 连接一个 DNS 提供方凭据（Cloudflare API 令牌）。 | `settings:admin` |
+| `post_dns_verify_zone`<br />`POST /api/dns/verify-zone` | 检查某个已连接的 DNS 提供方是否管理该主机名的区域。 | `settings:read` |
+### domains
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_domains_by_id`<br />`DELETE /api/domains/:id` | 按 id 删除一个域名。 | `domain:admin` |
+| `get_domains`<br />`GET /api/domains` | 列出 projectId 查询参数所指项目的域名。 | `domain:list` |
+| `get_domains_by_id`<br />`GET /api/domains/:id` | 读取一个域名的验证与 SSL 状态。 | `domain:read` |
+| `get_domains_by_id_dns_challenge`<br />`GET /api/domains/:id/dns/challenge` | 读取当前的 DNS-01 HTTPS 设置，包括实际的 ACME TXT 记录、截止时间、日志与结果。重连后轮询或重新打开都是安全的；不含证书密钥。 | `domain:read` |
+| `get_domains_by_id_dns_plan`<br />`GET /api/domains/:id/dns/plan` | 预览通过已连接提供方自动配置该域名 DNS 会改变什么。 | `domain:read` |
+| `get_domains_by_id_records`<br />`GET /api/domains/:id/records` | 获取一个域名的 DNS 记录。 | `domain:read` |
+| `post_domains`<br />`POST /api/domains` | 添加一个域名（免费子域名或自定义）。 | `domain:write` |
+| `post_domains_by_id_certificate`<br />`POST /api/domains/:id/certificate` | 安装运营者提供的 TLS 证书（自带/Cloudflare Origin CA）。 | `domain:write`<br />自托管 |
+| `post_domains_by_id_dns_apply`<br />`POST /api/domains/:id/dns/apply` | 通过已连接的提供方自动配置该域名的 DNS。 | `domain:write` |
+| `post_domains_by_id_dns_challenge`<br />`POST /api/domains/:id/dns/challenge` | 在自托管部署上启动泛域名或 DNS-01 HTTPS。自动方式使用已连接的 DNS 提供方；手动方式准备一条真实的 ACME TXT 记录待发布。立即返回当前尝试；重复发起会复用活跃尝试。读取 DNS challenge 状态，然后在添加 TXT 值后检查手动尝试。手动续期需要再次走这个流程。 | `domain:write` |
+| `post_domains_by_id_dns_challenge_cancel`<br />`POST /api/domains/:id/dns/challenge/cancel` | 取消指定的手动 DNS 证书尝试。保留现有证书与路由。已在进行中的安装必须先完成。事后只从 DNS 中移除该尝试的 TXT 值。 | `domain:write` |
+| `post_domains_by_id_dns_challenge_check`<br />`POST /api/domains/:id/dns/challenge/check` | 检查手动 DNS 证书尝试的确切 TXT 记录，然后向 CA 校验并在当前部署服务器上安装 HTTPS。传入 DNS challenge 状态返回的 attemptId。读取状态获取结果；TXT 缺失时同一指令仍可重试。 | `domain:write` |
+| `post_domains_by_id_primary`<br />`POST /api/domains/:id/primary` | 将此域名设为项目的主域名。 | `domain:write` |
+| `post_domains_by_id_renew`<br />`POST /api/domains/:id/renew` | 续期该域名的 SSL 证书。 | `domain:write` |
+| `post_domains_by_id_verify`<br />`POST /api/domains/:id/verify` | 验证一个域名的所有权/DNS。 | `domain:write` |
+| `post_domains_by_id_verify_ssl`<br />`POST /api/domains/:id/verify-ssl` | 检查/校验该域名的 SSL 证书。 | `domain:write` |
+| `post_domains_preview`<br />`POST /api/domains/preview` | 在添加之前预览一个域名将需要的 DNS 记录。 | `domain:read` |
+| `post_domains_renew_all`<br />`POST /api/domains/renew-all` | 为该工作区内符合条件的域名尝试证书续期。事后逐个检查各域名的 SSL 状态；单个域名的失败不代表所有续期都失败了。 | `domain:write` |
+| `post_domains_verify_pending`<br />`POST /api/domains/verify-pending` | 复查该工作区中待验证的域名并记录当前的 DNS/验证结果。剩余阻塞项请读取各域名的单独状态。 | `domain:write` |
+
+### github
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_github_repos_by_owner_by_repo_webhooks`<br />`DELETE /api/github/repos/:owner/:repo/webhooks` | 按 body.hookId 删除一个仓库 Webhook（网络回调）。先读取该仓库的 Webhook 列表；移除它可能导致自动部署中断。 | `github:admin` |
+| `get_github_connect_poll`<br />`GET /api/github/connect/poll` | 用其返回的 state 读取一次 GitHub 连接尝试，或不带 state 读取自托管的设备授权。完成即表示请求的连接已提交；轮询本身从不授予权限。 | `github:read` |
+| `get_github_home`<br />`GET /api/github/home` | GitHub 总览：一次调用返回连接状态、账号与仓库。 | `github:read` |
+| `get_github_local_status`<br />`GET /api/github/local-status` | 读取该自托管控制器的 GitHub 身份状态及任何连接问题。此处"本地"指 Openship 控制器，而非 MCP 客户端。 | `github:read`<br />自托管 |
+| `get_github_orgs_by_org_repos`<br />`GET /api/github/orgs/:org/repos` | 列出一个 GitHub 组织/账号的仓库。 | `github:list` |
+| `get_github_repos`<br />`GET /api/github/repos` | 列出已连接账号的 GitHub 仓库。 | `github:list` |
+| `get_github_repos_by_owner_by_repo`<br />`GET /api/github/repos/:owner/:repo` | 获取一个 GitHub 仓库的元数据。 | `github:read` |
+| `get_github_repos_by_owner_by_repo_branches`<br />`GET /api/github/repos/:owner/:repo/branches` | 列出一个仓库的分支。 | `github:list` |
+| `get_github_repos_by_owner_by_repo_detect`<br />`GET /api/github/repos/:owner/:repo/detect` | 不读取文件即可检测仓库的构建配置——框架、包管理器、install/build/start 命令、输出目录、端口与 Compose 服务。用它来配置部署；无需内容访问权限。 | `github:read` |
+| `get_github_repos_by_owner_by_repo_file`<br />`GET /api/github/repos/:owner/:repo/file` | 从仓库读取单个文件的内容。需要仓库内容访问权限；构建配置请优先用 /detect。 | `github:read` |
+| `get_github_repos_by_owner_by_repo_files`<br />`GET /api/github/repos/:owner/:repo/files` | 列出 query.path（及可选 query.branch）下的文件与目录。需要仓库内容访问权限；结果始终限定在已授权路径内。 | `github:list` |
+| `get_github_repos_by_owner_by_repo_webhooks`<br />`GET /api/github/repos/:owner/:repo/webhooks` | 列出仓库的 Webhook（用于检查推送自动部署的接线）。 | `github:list` |
+| `get_github_sources`<br />`GET /api/github/sources` | 列出已配置的自托管 GitHub App 源及其连接状态，不含私钥。需要工作区属主权限。 | `github:admin`<br />自托管 |
+| `get_github_status`<br />`GET /api/github/status` | 该组织的 GitHub 连接状态。 | `github:read` |
+| `post_github_connect`<br />`POST /api/github/connect` | 发起 GitHub 连接并返回重定向、安装选择、设备码或令牌指引。让用户在 Openship 或 GitHub 中完成批准。对于带 completion=attempt 的重定向，用返回的 state 轮询；已有的连接状态并不能确认一次新安装。 | `github:write` |
+| `post_github_repos_by_owner_by_repo_webhooks`<br />`POST /api/github/repos/:owner/:repo/webhooks` | 为该仓库注册 Openship 的部署 Webhook。配置已有项目时优先使用项目自动部署工具；它会选择正确的投递策略。 | `github:write` |
+| `post_github_sources_by_id_verify`<br />`POST /api/github/sources/:id/verify` | 校验一个已配置的自托管 GitHub App 源并刷新其健康状态。不会创建安装，也不返回其凭据。 | `github:admin`<br />自托管 |
+
+### issues
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_issues`<br />`GET /api/issues` | 回答"整个安装现在有什么坏了"的最佳入口——先用它，再谈按项目的工具。一条组织级信息流，合并 OpenShip 已经在跑的每项检查：容器健康事故（unhealthy / crash_loop / down，整台机器离线时另有一条 `server_unreachable` 行）、托管的边缘/邮件容器状态、部署阻塞与挂起的提示、部分发布的决策、未同步的路由、端口建议、未验证域名、证书错误与可用的更新。每个条目携带 `severity`（`outage` = 此刻没有在提供服务、`action_required`、`advisory`）、带控制台链接的 `target`，以及 `resolveWith`——可直接原样调用的具体 &#123;method, path&#125; 修复调用。修复方式是托管容器的条目则携带 `infraFix`（一个 UI 流程，不是 API 调用）。`?status=resolved` 返回事故历史（唯一带生命周期的来源，最多 30 天），因此已解决标签页里没有东西，绝不等于"别的东西从来没坏过"。基础设施行需要服务器读权限，在云模式下不出现。 | `project:list` |
+| `get_issues_health`<br />`GET /api/issues/health` | 组织内每个预期工作负载的最新健康监控（health-watch）快照。纯缓存读取：不执行任何 Docker 轮询。包含 healthy、unhealthy、crash-looping、down、unknown 状态及 watcher 启用状态。 | `project:list`<br />自托管 |
+| `get_issues_rescan_status`<br />`GET /api/issues/rescan/status` | 读取当前或最近一次问题重扫会话，包括阶段状态、错误与完成情况。先用 rescan 工具启动一次，之后轮询本工具，而不是反复启动扫描。 | `job:read`<br />自托管 |
+| `get_issues_summary`<br />`GET /api/issues/summary` | 只包含与 GET /issues 同一条信息流的计数：&#123;outage, actionRequired, advisory, total&#125;。用于快速健康判断；行及其修复方式请读 GET /issues。 | `project:list` |
+| `post_issues_health_scan`<br />`POST /api/issues/health/scan` | 检查调用方组织中每个已部署工作负载的当前容器状态。复用健康监控扫描器并只刷新其内存快照：不启用任务、不更新事故历史、不发送告警、也不启动 Docker 事件订阅。在台式机与自托管运行时上，OpenShip 运行期间均可用。 | `project:list`<br />自托管 |
+| `post_issues_rescan`<br />`POST /api/issues/rescan` | 立即运行 GET /issues 背后的检查器，而不是等它们的计划时间，然后再读一次 GET /issues。发送 &#123;healthOnly:true&#125; 可只复查容器/服务器健康，不运行组件更新或域名对账。返回一个带阶段的扫描会话；GET /issues/rescan/status 跟踪其完成。这些是现有的定时任务，会作为手动运行记入任务历史。仅限自托管，且需要实例管理员。 | `job:write`<br />自托管 |
+### jobs
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_jobs_by_key`<br />`DELETE /api/jobs/:key` | 删除一个自定义任务（系统任务不可删除）。 | `job:write`<br />自托管 |
+| `get_jobs`<br />`GET /api/jobs` | 列出系统与自定义任务及其 cron、下次运行与近期运行历史。 | `job:read`<br />自托管 |
+| `get_jobs_backup_schedules`<br />`GET /api/jobs/backup-schedules` | 列出已计划的备份保留策略（只读），与任务一同呈现。 | `job:read`<br />自托管 |
+| `get_jobs_by_key`<br />`GET /api/jobs/:key` | 获取一个任务的配置、计划与近期运行。 | `job:read`<br />自托管 |
+| `get_jobs_by_key_runs`<br />`GET /api/jobs/:key/runs` | 列出一个任务的运行历史。 | `job:read`<br />自托管 |
+| `get_jobs_runs_by_runId`<br />`GET /api/jobs/runs/:runId` | 获取一次任务运行及捕获的输出。 | `job:read`<br />自托管 |
+| `get_jobs_trigger_events`<br />`GET /api/jobs/trigger-events` | 列出任务可被触发的事件。 | `job:read`<br />自托管 |
+| `patch_jobs_by_key`<br />`PATCH /api/jobs/:key` | 更新一个任务的计划/启用状态（任意任务）或完整配置（自定义任务）。 | `job:write`<br />自托管 |
+| `post_jobs`<br />`POST /api/jobs` | 创建一个在一台或多台服务器上运行命令的自定义任务（cron/一次性/手动），带重试、env、密钥、依赖、触发器与通知。 | `job:write`<br />自托管 |
+| `post_jobs_by_key_run`<br />`POST /api/jobs/:key/run` | 立即运行一个任务（自定义任务实时流式输出；返回 runId）。 | `job:write`<br />自托管 |
+
+### mail
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_mail_admin_by_serverId_aliases_by_id`<br />`DELETE /api/mail/admin/:serverId/aliases/:id` | 删除一个邮件别名或转发。经由它寻址的消息将不再使用该映射。 | `mail_server:admin`<br />自托管 |
+| `delete_mail_admin_by_serverId_domains_by_domain`<br />`DELETE /api/mail/admin/:serverId/domains/:domain` | 删除一个邮件域名。先检查依赖项；query.cascade=true 还会一并移除依赖它的邮箱与别名。 | `mail_server:admin`<br />自托管 |
+| `delete_mail_admin_by_serverId_inbound_rules_by_ruleId`<br />`DELETE /api/mail/admin/:serverId/inbound-rules/:ruleId` | 删除一条入站邮件通知规则，并释放已无规则需要的捕获。 | `mail_server:write`<br />自托管 |
+| `delete_mail_admin_by_serverId_mailboxes_by_email`<br />`DELETE /api/mail/admin/:serverId/mailboxes/:email` | 移除一个邮箱账号。query.hard=true 还会删除其已存的邮件；请求永久移除前先读取其详情。 | `mail_server:admin`<br />自托管 |
+| `delete_mail_servers_by_serverId`<br />`DELETE /api/mail/servers/:serverId` | 忘记 Openship 对该邮件服务器的登记，但不卸载守护进程、不删除邮件数据。扫描加收编可以恢复登记。 | `mail_server:admin`<br />自托管 |
+| `get_mail_admin_by_serverId_aliases`<br />`GET /api/mail/admin/:serverId/aliases` | 列出邮件别名与转发，可用 query.domain 筛选。 | `mail_server:list`<br />自托管 |
+| `get_mail_admin_by_serverId_backup_policy`<br />`GET /api/mail/admin/:serverId/backup-policy` | 读取该邮件服务器已保存的备份保留策略，不存在时为 null。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_backup_runs`<br />`GET /api/mail/admin/:serverId/backup-runs` | 读取该邮件服务器近期的备份运行。用通用的备份状态与恢复工具跟进其 run ID。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_certificate`<br />`GET /api/mail/admin/:serverId/certificate` | 读取邮件证书、SMTP/IMAP TLS 检查与自动续期设置。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_components_by_key_logs`<br />`GET /api/mail/admin/:serverId/components/:key/logs` | 读取一个托管邮件组件的近期日志，可选 query.lines。日志可能包含收件人地址；分享前请脱敏。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_dns_scan`<br />`GET /api/mail/admin/:serverId/dns-scan` | 检查当前邮件 DNS 记录，可针对 query.domain。不应用任何变更。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_domains`<br />`GET /api/mail/admin/:serverId/domains` | 列出配置在这台邮件服务器上的邮件域名。 | `mail_server:list`<br />自托管 |
+| `get_mail_admin_by_serverId_domains_by_domain`<br />`GET /api/mail/admin/:serverId/domains/:domain` | 读取一个邮件域名的配置与状态。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_domains_by_domain_dependents`<br />`GET /api/mail/admin/:serverId/domains/:domain/dependents` | 查看删除这个邮件域名会影响哪些邮箱与别名。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_domains_by_domain_dns`<br />`GET /api/mail/admin/:serverId/domains/:domain/dns` | 读取该邮件域名所需的 DNS 记录与当前 DNS 确认状态。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_domains_by_domain_dns_plan`<br />`GET /api/mail/admin/:serverId/domains/:domain/dns/plan` | 预览通过已连接 DNS 提供方为该邮件域名带来的 DNS 变化。不会应用记录。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_domains_dns_pending`<br />`GET /api/mail/admin/:serverId/domains-dns/pending` | 列出仍需 DNS 配置或确认的邮件域名。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_inbound_rules`<br />`GET /api/mail/admin/:serverId/inbound-rules` | 列出入站邮件通知规则及其启用或暂停状态。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_mailboxes`<br />`GET /api/mail/admin/:serverId/mailboxes` | 列出邮箱，可用 query.domain 筛选。不返回密码。 | `mail_server:list`<br />自托管 |
+| `get_mail_admin_by_serverId_mailboxes_by_email`<br />`GET /api/mail/admin/:serverId/mailboxes/:email` | 读取一个邮箱的资料、配额与启用状态，不返回密码。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_relay`<br />`GET /api/mail/admin/:serverId/relay` | 读取出站中继配置，密码隐藏。中继凭据在该服务器的邮件设置中管理。 | `mail_server:read`<br />自托管 |
+| `get_mail_admin_by_serverId_stats`<br />`GET /api/mail/admin/:serverId/stats` | 读取邮件服务器的域名、邮箱、别名与存储总量。 | `mail_server:read`<br />自托管 |
+| `get_mail_health_by_serverId`<br />`GET /api/mail/health/:serverId` | 检查实时邮件组件、投递与网络可达性。设置 query.refreshReachability 可绕过可达性缓存。 | `mail_server:read`<br />自托管 |
+| `get_mail_servers`<br />`GET /api/mail/servers` | 列出本工作区管理的邮件服务器、其安装状态与关联的 Webmail 项目。 | `mail_server:list`<br />自托管 |
+| `get_mail_status`<br />`GET /api/mail/status` | 读取 query.serverId 已保存的安装进度。SSH 失败后状态缺失并不能证明邮件已被卸载；实时可达性请查邮件健康工具。 | `mail_server:read`<br />自托管 |
+| `get_mail_steps`<br />`GET /api/mail/steps` | 读取按序排列的邮件安装步骤。安装新邮件套件请使用控制台的流式安装向导。 | `mail_server:read`<br />自托管 |
+| `get_mail_webmail_targets`<br />`GET /api/mail/webmail/targets` | 列出 query.serverId 所指邮件服务器允许的部署目标。 | `mail_server:read`<br />自托管 |
+| `patch_mail_admin_by_serverId_aliases_by_id`<br />`PATCH /api/mail/admin/:serverId/aliases/:id` | 用 body.active 启用或禁用这个邮件别名。 | `mail_server:write`<br />自托管 |
+| `patch_mail_admin_by_serverId_certificate`<br />`PATCH /api/mail/admin/:serverId/certificate` | 启用或禁用邮件证书自动续期。禁用续期后监控继续。 | `mail_server:admin`<br />自托管 |
+| `patch_mail_admin_by_serverId_domains_by_domain`<br />`PATCH /api/mail/admin/:serverId/domains/:domain` | 更新一个邮件域名的描述、容量上限、默认配额或启用状态。 | `mail_server:write`<br />自托管 |
+| `patch_mail_admin_by_serverId_inbound_rules_by_ruleId`<br />`PATCH /api/mail/admin/:serverId/inbound-rules/:ruleId` | 更新一条入站邮件通知规则，并对受影响域名对账捕获。pausedReason=null 会清除已保存的暂停原因。 | `mail_server:write`<br />自托管 |
+| `patch_mail_admin_by_serverId_mailboxes_by_email`<br />`PATCH /api/mail/admin/:serverId/mailboxes/:email` | 更新一个邮箱的名称、配额、密码或启用状态。省略密码即保留原密码。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_aliases`<br />`POST /api/mail/admin/:serverId/aliases` | 创建一个邮件别名、转发或全收（catch-all）及其目标地址。全收适用于该域名内未匹配任何规则的收件人。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_backup_policy`<br />`POST /api/mail/admin/:serverId/backup-policy` | 创建或更新邮件服务器的备份保留策略。设 messageData=true 以包含已存的邮件；keys 默认包含。省略保留设置时保留现有策略或采用创建默认值；null 会移除该保留限制。要立即备份请使用通用的备份策略运行工具。 | `mail_server:admin`<br />自托管 |
+| `post_mail_admin_by_serverId_certificate_check`<br />`POST /api/mail/admin/:serverId/certificate/check` | 重新检查磁盘上及 SMTP/IMAP 所提供的邮件证书。不签发证书，也不发送邮件。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_certificate_renew`<br />`POST /api/mail/admin/:serverId/certificate/renew` | 通过 Openship Edge 续期到期的邮件证书并重载 Postfix/Dovecot。仍有效的证书会被复用并修复其服务配置。 | `mail_server:admin`<br />自托管 |
+| `post_mail_admin_by_serverId_components_by_key_by_action`<br />`POST /api/mail/admin/:serverId/components/:key/:action` | 对一个托管邮件组件执行受支持的操作。组件 key 与可用操作请读健康数据；确认恢复请再查一次健康。 | `mail_server:admin`<br />自托管 |
+| `post_mail_admin_by_serverId_components_restart_all`<br />`POST /api/mail/admin/:serverId/components/restart-all` | 重启这台服务器上托管的邮件组件。邮件投递可能短暂中断；事后请检查健康状态。 | `mail_server:admin`<br />自托管 |
+| `post_mail_admin_by_serverId_domains`<br />`POST /api/mail/admin/:serverId/domains` | 创建一个带邮箱、别名与配额上限的邮件域名。随后检查其 DNS 计划并应用或配置所需记录。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_domains_by_domain_dns_acknowledge`<br />`POST /api/mail/admin/:serverId/domains/:domain/dns/acknowledge` | 复查并确认一个邮件域名的 DNS 配置。仅在所需记录已配置之后使用。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_domains_by_domain_dns_apply`<br />`POST /api/mail/admin/:serverId/domains/:domain/dns/apply` | 通过已连接的提供方应用该邮件域名所需的 DNS 记录。先检查 DNS 计划。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_inbound_rules`<br />`POST /api/mail/admin/:serverId/inbound-rules` | 为某个邮箱、某个域名或全部域名创建一条入站邮件通知规则，指向已有的通知渠道。如果引擎捕获无法布防，请检查其 resulting 启用/暂停状态。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_inbound_rules_test`<br />`POST /api/mail/admin/:serverId/inbound-rules/test` | 预演该服务器入站通知规则的匹配结果，不发送通知也不删除已捕获的消息。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_mailboxes`<br />`POST /api/mail/admin/:serverId/mailboxes` | 用提供的密码与可选配额创建一个邮箱。这会改动该邮件服务器的账号数据库。 | `mail_server:write`<br />自托管 |
+| `post_mail_admin_by_serverId_test_email`<br />`POST /api/mail/admin/:serverId/test-email` | 向 body.to 发送一封投递测试邮件，可选指定 body.fromDomain。这会发送真实邮件；请使用用户指定的收件人。 | `mail_server:write`<br />自托管 |
+| `post_mail_adopt`<br />`POST /api/mail/adopt` | 登记扫描发现的一个已有 OpenShip 邮件安装。在不重装套件的情况下恢复控制面所有权。 | `mail_server:write`<br />自托管 |
+| `post_mail_scan`<br />`POST /api/mail/scan` | 检查 body.serverId 上的已有邮件安装，不做重装。返回可收编的状态；用 adopt 登记已有套件。 | `mail_server:write`<br />自托管 |
+| `post_mail_webmail_deploy_project`<br />`POST /api/mail/webmail/deploy-project` | 为一台已有的邮件服务器把 Webmail 部署到允许的目标。返回 projectId 与 deploymentId 供常规部署监控。replaceLegacy=true 会显式替换较旧的失控（unmanaged）Webmail 安装。 | `mail_server:write`<br />自托管 |
+
+### migration
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_migration_migrations_by_id`<br />`DELETE /api/migration/migrations/:id` | 删除一次已终结迁移的历史记录。不删除已迁移的项目或其数据；活跃的运行必须先完成或取消。 | `server:write`<br />自托管 |
+| `get_migration_active`<br />`GET /api/migration/active` | 在开始工作或重新接入之前，查找涉及 query.serverId 的已有活跃迁移。返回其 ID 与切换（cutover）状态；源环境值保持打码。 | `server:read`<br />自托管 |
+| `get_migration_migrations_by_id`<br />`GET /api/migration/migrations/:id` | 读取迁移状态、已保存进度、日志与 pendingPrompt。处于 awaiting_cutover 时，确认前先审阅目标端的健康/路由。部分完成的运行可以恢复；轮询绝不会启动另一次迁移。 | `server:read`<br />自托管 |
+| `get_migration_runs`<br />`GET /api/migration/runs` | 列出 query.serverId 或 query.projectId 最多 50 条近期迁移摘要。读取具体某次运行可获取日志、提示与切换细节。 | `server:read`<br />自托管 |
+| `post_migration_adopt`<br />`POST /api/migration/adopt` | 将选中的已发现 Docker 服务登记为一个 Openship 项目，同时保持运行中的容器与卷不变。在服务器上重新发现取值；不要把打码的密钥作为替换值发回。部署与切换相互独立。 | `server:write`<br />自托管 |
+| `post_migration_migrate`<br />`POST /api/migration/migrate` | 为已审阅的 Docker 服务启动收编、数据传输、部署与路由验证。返回 migrationId 与 confirmationToken；轮询该运行并应答其给出的待处理提示。killOriginals 保持 false 以便审阅显式切换。设为 true 即授权校验完成后自动退役原始容器。 | `server:write`<br />自托管 |
+| `post_migration_migrations_by_id_cancel`<br />`POST /api/migration/migrations/:id/cancel` | 取消进行中的迁移并请求回滚目标端变更。轮询直到回滚完成。进入 awaiting_cutover 或终态后不可用；那时请使用显式切换。 | `server:write`<br />自托管 |
+| `post_migration_migrations_by_id_cleanup_target`<br />`POST /api/migration/migrations/:id/cleanup-target` | 清除一次失败迁移复制到目标端的卷，让以后的重试可以从干净状态开始。源端数据保留；已成功的迁移会被拒绝。清理前请审阅那次失败的运行。 | `server:write`<br />自托管 |
+| `post_migration_migrations_by_id_cutover`<br />`POST /api/migration/migrations/:id/cutover` | 使用返回的 confirmationToken 确认迁移切换。kill:true 销毁原始容器；false 则保留为停止状态。一次失败掉的破坏性切换只能按同一选择恢复。事后检查运行状态。 | `server:write`<br />自托管 |
+| `post_migration_migrations_by_id_respond`<br />`POST /api/migration/migrations/:id/respond` | 用其 promptId 与给出的 action ID 应答迁移当前的 pendingPrompt。使用该运行的实际选项与过期时间；不要臆断接管决策。 | `server:write`<br />自托管 |
+| `post_migration_migrations_by_id_resume`<br />`POST /api/migration/migrations/:id/resume` | 恢复一次部分迁移的剩余路径，可选经过审阅的源路径覆盖或跳过。被跳过的数据不会随迁移移动。轮询该运行直到验证与切换完成。 | `server:write`<br />自托管 |
+| `post_migration_preview`<br />`POST /api/migration/preview` | 预览一次 Docker 迁移的镜像、卷、目标端冲突与停机警告，但不移动工作负载。后续的 migrate 调用请使用同一台服务器与同一批服务选择。 | `server:write`<br />自托管 |
+| `post_migration_project`<br />`POST /api/migration/project` | 通过迁移流水线把一个已有的 Docker 项目搬移或复制到一台已登记服务器。需要该项目的访问权限以及两台服务器的权限。返回 migrationId；轮询并显式确认切换。不搬移 k3s 项目，也不转换数据库复制。 | `server:write`<br />自托管 |
+| `post_migration_reimport`<br />`POST /api/migration/reimport` | 重新登记在这台服务器上发现的孤立 Openship 项目，保留其扫描得到的项目 ID 与配置。用 scan 识别项目；这是对已有工作负载的恢复。 | `server:write`<br />自托管 |
+| `post_migration_repo_compose`<br />`POST /api/migration/repo-compose` | 从一个可访问的 GitHub 仓库读取派生的 Compose 服务配置，用于迁移映射。环境值会被打码；没有 Compose 时返回空的 services 列表。 | `server:read`<br />自托管 |
+| `post_migration_scan`<br />`POST /api/migration/scan` | 检查 body.serverId 上的 Docker 工作负载，返回分组、容器 ID、卷与检测到的路由，密钥打码。不收编也不停止工作负载。选择跨 Compose 项目共享的服务时请使用容器 ID。 | `server:write`<br />自托管 |
+
+### notifications
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_notifications_channels_by_id`<br />`DELETE /api/notifications/channels/:id` | 删除一个通知渠道。 | `notifications:write` |
+| `delete_notifications_subscriptions_by_id`<br />`DELETE /api/notifications/subscriptions/:id` | 删除一个通知订阅。 | `notifications:write` |
+| `get_notifications_categories`<br />`GET /api/notifications/categories` | 列出通知分类（事件类型的登记表）。 | `notifications:read` |
+| `get_notifications_channels`<br />`GET /api/notifications/channels` | 列出调用方的通知渠道（email、webhook 等）。 | `notifications:read` |
+| `get_notifications_defaults`<br />`GET /api/notifications/defaults` | 列出组织级默认通知设置。 | `notifications:read` |
+| `get_notifications_deliveries`<br />`GET /api/notifications/deliveries` | 列出通知投递（应用内告警信息流）。 | `notifications:read` |
+| `get_notifications_deliveries_unseen_count`<br />`GET /api/notifications/deliveries/unseen-count` | 统计未读通知数量。 | `notifications:read` |
+| `get_notifications_subscriptions`<br />`GET /api/notifications/subscriptions` | 列出调用方的通知订阅。 | `notifications:read` |
+| `patch_notifications_channels_by_id`<br />`PATCH /api/notifications/channels/:id` | 更新一个通知渠道。 | `notifications:write` |
+| `post_notifications_channels`<br />`POST /api/notifications/channels` | 创建一个通知渠道。 | `notifications:write` |
+| `post_notifications_channels_by_id_test`<br />`POST /api/notifications/channels/:id/test` | 向一个渠道发送测试投递；成功后将其标记为已验证。 | `notifications:write` |
+| `post_notifications_deliveries_by_id_seen`<br />`POST /api/notifications/deliveries/:id/seen` | 将一条通知投递标记为已读。 | `notifications:write` |
+| `put_notifications_defaults`<br />`PUT /api/notifications/defaults` | 为某个事件分类设置工作区默认通知目标与启用状态。已有的订阅与投递策略仍然生效。 | `notifications:admin` |
+| `put_notifications_subscriptions`<br />`PUT /api/notifications/subscriptions` | 创建或更新一个通知订阅。 | `notifications:write` |
+
+### permissions
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_permissions_grants`<br />`GET /api/permissions/grants` | 读取 query.userId 的工作区资源授权。需要查看该成员的权限；不会扩大本凭据的访问范围。 | `permissions:read` |
+| `get_permissions_invitations`<br />`GET /api/permissions/invitations` | 列出待处理的工作区邀请及其拟议授权。接受或发送邀请仍属于账号属主的工作流。 | `permissions:read` |
+| `get_permissions_members`<br />`GET /api/permissions/members` | 列出工作区成员及其当前角色。 | `permissions:read` |
+| `get_permissions_org_meta`<br />`GET /api/permissions/org-meta` | 读取该工作区的身份、团队状态与成员数。 | `permissions:read` |
+| `get_permissions_resources`<br />`GET /api/permissions/resources` | 列出本凭据可见的、query.type 这一类的可授权资源。这是读取资源；不授予权限。 | `permissions:read` |
+| `get_permissions_workspaces`<br />`GET /api/permissions/workspaces` | 列出本凭据可用的 Openship 工作区（组织/工作组），包括空工作区。返回每个的名称、organizationId、slug 与角色，外加 currentOrganizationId、boundOrganizationId、canSwitchOrganization 与 readOnly。创建应用或 Compose 项目之前调用；每次调用都把选定的 organizationId 作为顶层工具参数传入。绑定型凭据只能列出并指向自己的工作区。 | `permissions:read` |
+### projects
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_projects_by_id`<br />`DELETE /api/projects/:id` | 删除该项目及其拥有的部署资源。先查看删除预览（deletion-preview）。除非 query.wipeVolumes 显式为 true，卷会被保留；force-orphan 与仅记录（record-only）选项可能遗留远端资源。 | `project:admin` |
+| `delete_projects_by_id_cluster_databases`<br />`DELETE /api/projects/:id/cluster/databases` | 停止一个托管数据库并在 deleteData:false 时保留其卷；deleteData:true 时永久删除属主的数据库数据。需要其确切名称与最新的 expectedSequence。被保留的数据会继续阻塞项目/运行时清理；轮询检查直到操作结束。 | `project:write`<br />自托管 |
+| `delete_projects_by_id_cluster_volumes`<br />`DELETE /api/projects/:id/cluster/volumes` | 用其 resourceVersion 永久删除一个已卸载的项目卷，要求匹配的 confirmName 与 deleteData:true。先断开连接并重新部署。外部备份会保留。 | `project:write`<br />自托管 |
+| `delete_projects_by_id_cluster_volumes_backups`<br />`DELETE /api/projects/:id/cluster/volumes/backups` | 永久删除一个项目文件备份归档。用 confirmName 确认确切的 backupName；源卷会保留。 | `project:write`<br />自托管 |
+| `delete_projects_by_id_connections_by_linkId`<br />`DELETE /api/projects/:id/connections/:linkId` | 移除一个数据库/应用连接及其注入的环境变量。 | `project:admin` |
+| `delete_projects_by_id_incoming_webhooks_by_hookId`<br />`DELETE /api/projects/:id/incoming-webhooks/:hookId` | 删除一个入站 Webhook（网络回调）。 | `project:write` |
+| `delete_projects_by_id_route_rules_by_ruleId`<br />`DELETE /api/projects/:id/route-rules/:ruleId` | 删除该项目的边缘流量规则并同步路由。移除一条限制会改变被放行的流量。 | `project:write`<br />自托管 |
+| `delete_projects_by_id_storage`<br />`DELETE /api/projects/:id/storage` | 移除对象存储绑定及其注入的环境变量。 | `project:admin` |
+| `get_projects`<br />`GET /api/projects` | 列出该组织内的项目。 | `project:list` |
+| `get_projects_by_id`<br />`GET /api/projects/:id` | 按 id 获取一个项目——配置、源、路由、状态。 | `project:read` |
+| `get_projects_by_id_branches`<br />`GET /api/projects/:id/branches` | 列出已关联仓库的分支。 | `project:read` |
+| `get_projects_by_id_cluster`<br />`GET /api/projects/:id/cluster` | 读取项目选定的集群、期望副本数、activeDeploymentId、updatedAt 与观测到的 pod 就绪情况。把那些确切的 ID/时间戳作为扩缩容前置条件。error 表示运行时观测失败；已保存的期望副本数不能证明副本在运行。 | `project:read`<br />自托管 |
+| `get_projects_by_id_cluster_databases`<br />`GET /api/projects/:id/cluster/databases` | 列出本项目的托管集群数据库，含已保存的生命周期进度与连接。数据库复制与无状态的应用副本有各自的生命周期。 | `project:read`<br />自托管 |
+| `get_projects_by_id_cluster_databases_imports`<br />`GET /api/projects/:id/cluster/databases/imports` | 列出可导入到服务器集群新数据库的、已完成的 PostgreSQL 与 Redis 备份。需要源项目管理员权限；返回已审阅的备份标识，绝不返回归档路径或凭据。 | `project:read`<br />自托管 |
+| `get_projects_by_id_cluster_volumes`<br />`GET /api/projects/:id/cluster/volumes` | 列出项目的共享卷、当前挂载健康与备份。变更之后观察该状态。 | `project:read`<br />自托管 |
+| `get_projects_by_id_cluster_volumes_backups`<br />`GET /api/projects/:id/cluster/volumes/backups` | 列出项目文件备份，包括源卷已被删除的归档。把已完成的归档恢复到新卷。 | `project:read`<br />自托管 |
+| `get_projects_by_id_commit_status`<br />`GET /api/projects/:id/commit-status` | 把已部署的 commit 与远端 HEAD 比较。 | `project:read` |
+| `get_projects_by_id_connections`<br />`GET /api/projects/:id/connections` | 列出接入本项目的数据库/应用连接。 | `project:read` |
+| `get_projects_by_id_connections_candidates`<br />`GET /api/projects/:id/connections/candidates` | 列出可用于服务连接的项目与应用，按访问权限过滤。 | `project:write` |
+| `get_projects_by_id_connections_consumers`<br />`GET /api/projects/:id/connections/consumers` | 列出消费"本应用"连接的项目（一个共享数据库常有多个）。 | `project:read` |
+| `get_projects_by_id_deletion_preview`<br />`GET /api/projects/:id/deletion-preview` | 预览删除该项目会移除什么（只读）。 | `project:read` |
+| `get_projects_by_id_deployments`<br />`GET /api/projects/:id/deployments` | 列出项目的部署（历史、状态）。 | `project:deployment:list` |
+| `get_projects_by_id_edge_config`<br />`GET /api/projects/:id/edge-config` | 把已保存的项目路由与自托管边缘当前提供的配置做比较。重试前先用它排查路由漂移。 | `project:read`<br />自托管 |
+| `get_projects_by_id_env`<br />`GET /api/projects/:id/env` | 列出一个项目的环境变量（密钥值打码）。 | `project:read` |
+| `get_projects_by_id_environments`<br />`GET /api/projects/:id/environments` | 列出一个项目的环境（生产/预览）。 | `project:read` |
+| `get_projects_by_id_git`<br />`GET /api/projects/:id/git` | 获取项目关联的 Git 仓库信息。 | `project:read` |
+| `get_projects_by_id_incidents`<br />`GET /api/projects/:id/incidents` | 该项目容器运行时的健康：OPEN 状态的事故（health watch 发现某工作负载为 `unhealthy`、`crash_loop` 或 `down`，各带原因、退出码、重启计数、OOM 标志与日志摘录）以及最近已解决的。有两个字段决定"空列表"是否意味着什么，务必读它们：`watching` 为 false 时健康监控是关闭的——关着的时候，没有事故**不是**健康的证据；`serverUnreachable` 非空时说明机器本身不可达，此时该项目的行是冻结且过时的（什么都观测不到）。当项目看起来不健康，或一次报告成功的部署仍未提供服务时，读它——它报告的是运行时状态，并与 pending-actions 工具互补（后者覆盖部署/域名/路由条目，每条都带具体修复方式）。当工作负载恢复时，事故自动解决；对开启的事故，通常的动作是重新部署或检查其 `logExcerpt`。仅限自托管。 | `project:read`<br />自托管 |
+| `get_projects_by_id_incoming_webhooks`<br />`GET /api/projects/:id/incoming-webhooks` | 列出一个项目的入站 Webhook（动态触发 URL）。 | `project:read` |
+| `get_projects_by_id_incoming_webhooks_by_hookId_deliveries`<br />`GET /api/projects/:id/incoming-webhooks/:hookId/deliveries` | 列出一个入站 Webhook 的近期投递（分页）。 | `project:read` |
+| `get_projects_by_id_info`<br />`GET /api/projects/:id/info` | 获取一个项目的详细信息（运行时、构建、源）。 | `project:read` |
+| `get_projects_by_id_logs`<br />`GET /api/projects/:id/logs` | 拉取项目的运行时日志（非流式）。 | `project:read` |
+| `get_projects_by_id_pending_actions`<br />`GET /api/projects/:id/pending-actions` | 该项目正在等待什么人，以及每项如何解决。覆盖：因明确原因被阻塞的部署（例如端口被占用）、此刻因决策而 HELD 的部署（用 build-respond 工具应答——确切的 action id 与请求体在条目的 resolveWith 里，`expiresAt` 是部署放弃的时间点）、等待 keep/reject 的部分失败发布、未同步的路由、未验证域名以及失败/过期证书。每个条目携带 `resolveWith`，一组具体的 &#123;method, path, body&#125; 调用——用它们，别猜。在启动一个看起来卡住的部署之后调用，以及每当项目状态显示"需要处理（Action Required）"时调用。它只覆盖部署/域名/路由条目——容器运行时健康（crash loop、unhealthy 或 down 的容器）请读项目的事故。限定于**单个项目**：要问"整个安装有什么坏了"（每个项目的这类条目，外加运行时事故、不可达服务器与边缘/邮件状态，按严重程度排序），请改读 issues 信息流。 | `project:read` |
+| `get_projects_by_id_resources`<br />`GET /api/projects/:id/resources` | 获取项目的 CPU/内存/磁盘资源配置。 | `project:read` |
+| `get_projects_by_id_rollback_capacity`<br />`GET /api/projects/:id/rollback-capacity` | 获取当前生效的回滚保留窗口（显式设置或受磁盘大小约束）、实测的单次发布大小，以及部署主机的空闲磁盘。 | `project:read` |
+| `get_projects_by_id_route_rules`<br />`GET /api/projects/:id/route-rules` | 列出该项目的边缘规则，用于速率限制、访问限制与流量过滤。 | `project:read`<br />自托管 |
+| `get_projects_by_id_routing_edge_status`<br />`GET /api/projects/:id/routing/edge-status` | 检查该项目的服务器边缘（80/443 上的 OpenResty）是否已就绪。 | `project:read` |
+| `get_projects_by_id_server_logs_recent`<br />`GET /api/projects/:id/server-logs/recent` | 拉取该项目的近期 HTTP 请求日志。 | `project:read` |
+| `get_projects_by_id_storage`<br />`GET /api/projects/:id/storage` | 读取本项目的对象存储绑定（接入其文件系统配置的 S3 桶）以及可以绑定的对象。 | `project:read` |
+| `get_projects_by_id_webhook_deliveries`<br />`GET /api/projects/:id/webhook-deliveries` | 列出项目的 Webhook 投递信息流——GitHub 推送 + 自定义 hook（分页）。 | `project:read` |
+| `get_projects_home`<br />`GET /api/projects/home` | 读取合并了本地与已连接云端的项目总览，包括项目分组与宿主位置。各个操作仍然执行每个项目各自的作用域。 | `project:list` |
+| `get_projects_local`<br />`GET /api/projects/local` | 列出从本控制器目录登记的项目。这些路径不在 MCP 客户端机器上。 | `project:list`<br />自托管 |
+| `patch_projects_by_id`<br />`PATCH /api/projects/:id` | 更新项目配置（构建配置、源、选项）。 | `project:write` |
+| `patch_projects_by_id_cluster`<br />`PATCH /api/projects/:id/cluster` | 为一个无状态应用或 worker 选择一个就绪的 k3s 计算集群，或用 clusterId:null 清除选择。需要最近一次集群读取的 expectedUpdatedAt 以及 stateless:true。源码构建需要可达的 imageRepository。只保存目标；部署单独执行。不支持 Compose 项目、持久应用挂载与在线 worker 变更。 | `project:write`<br />自托管 |
+| `patch_projects_by_id_cluster_databases`<br />`PATCH /api/projects/:id/cluster/databases` | 用其最新的 expectedSequence 更新数据库资源与副本数。Redis 分区变更要求先前已配置的备份目标与 confirmRedisRebalance:true；移动数据前会先验证备份。PostgreSQL 大版本升级走单独副本，而非就地修改。要确认完成请检查进度。 | `project:write`<br />自托管 |
+| `patch_projects_by_id_cluster_volumes`<br />`PATCH /api/projects/:id/cluster/volumes` | 用其当前 resourceVersion 扩容项目的共享卷。卷不能缩容；检查状态直到扩容完成。 | `project:write`<br />自托管 |
+| `patch_projects_by_id_cluster_volumes_backups`<br />`PATCH /api/projects/:id/cluster/volumes/backups` | 设置每小时或每天、带保留归档数的文件备份计划，或选 manual 停止计划。原生存储控制器会独立执行被接受的计划。 | `project:write`<br />自托管 |
+| `patch_projects_by_id_env`<br />`PATCH /api/projects/:id/env` | 合并环境变量变更（upsert + 删除）；未触及的变量保留。 | `project:write` |
+| `patch_projects_by_id_incoming_webhooks_by_hookId`<br />`PATCH /api/projects/:id/incoming-webhooks/:hookId` | 更新一个入站 Webhook（名称/启用/动作/认证）。 | `project:write` |
+| `patch_projects_by_id_resources`<br />`PATCH /api/projects/:id/resources` | 更新项目的 CPU/内存/磁盘、休眠模式或端口。 | `project:write` |
+| `patch_projects_by_id_route_rules_by_ruleId`<br />`PATCH /api/projects/:id/route-rules/:ruleId` | 更新该项目的边缘流量规则。修改时请提供完整的替换规则规格；省略的顶层字段会保留。 | `project:write`<br />自托管 |
+| `post_projects`<br />`POST /api/projects` | 从 Git 或本地源创建项目（构建配置烘焙进项目）。文件夹上传部署请改用 projects/ensure（它接受 folder/scan 配置与 gitProvider:'upload'）。 | `project:write` |
+| `post_projects_by_id_auto_deploy`<br />`POST /api/projects/:id/auto-deploy` | 开启/关闭推送时自动部署。 | `project:write` |
+| `post_projects_by_id_branch`<br />`POST /api/projects/:id/branch` | 设置项目的部署分支。 | `project:write` |
+| `post_projects_by_id_clear_build`<br />`POST /api/projects/:id/clear-build` | 清除该项目自托管 Docker 服务器上所有未使用的构建缓存。构建缓存是整台主机的，因此该服务器上的其他项目可能在其下次部署时重建依赖。返回回收的字节数。 | `project:admin`<br />自托管 |
+| `post_projects_by_id_cluster_databases`<br />`POST /api/projects/:id/cluster/databases` | 用一个稳定 requestId 在就绪集群上创建 PostgreSQL 或 Redis。可选 clusterId 会在搬移一个 Docker 应用之前先备数据。只能选择一种来源：restoreFrom 一个托管备份、importFrom 一个列出的项目备份，或 copyFrom 一个就绪的 PostgreSQL 数据库（用于已审阅的复制或大版本升级）。原件保留；切换应用连接与部署是独立的动作。Redis 集群模式要求 clusterAwareClient:true。检查已保存进度直到就绪。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_databases_backup`<br />`POST /api/projects/:id/cluster/databases/backup` | 用最新的 expectedSequence 与已配置目标保存一个 PostgreSQL 或 Redis 备份。检查直到备份完成。Redis 快照按分区一致，没有跨分区的事务保证。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_databases_connect`<br />`POST /api/projects/:id/cluster/databases/connect` | 把该数据库的应用连接保存在 envKey 下，或用 envKey:null 移除其托管连接。需要最新的 expectedSequence，并拒绝覆盖无关变量。环境变更需另行重新部署应用才能生效。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_databases_inspect`<br />`POST /api/projects/:id/cluster/databases/inspect` | 按 databaseId 读取一个托管数据库。设 observe:true 获取最新的原生操作器、实例、卷与备份观测；声称就绪前先检查时间戳与错误。 | `project:read`<br />自托管 |
+| `post_projects_by_id_cluster_databases_retry`<br />`POST /api/projects/:id/cluster/databases/retry` | 用其最新的 expectedSequence 恢复一次失败或中断的数据库操作。保留已保存的意图，包括删除；重试前检查其错误与进度。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_scale`<br />`POST /api/projects/:id/cluster/scale` | 用一次全新集群读取得到的 expectedDeploymentId 与 expectedUpdatedAt，把已部署的 k3s 应用扩缩容到 1–100 个副本。以当前不可变镜像启动一次配置部署，不重新构建。轮询返回的 deploymentId，然后核实观测到的 ready/available 副本。这是手动副本扩缩容，不是指标驱动的自动扩缩容策略。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_volumes`<br />`POST /api/projects/:id/cluster/volumes` | 创建一个多副本共享卷，可选从一个已完成的项目备份恢复进新卷。响应丢失后复用同一个稳定 requestId。用项目的集群配置挂载接入它并部署。 | `project:write`<br />自托管 |
+| `post_projects_by_id_cluster_volumes_backup`<br />`POST /api/projects/:id/cluster/volumes/backup` | 在集群配置的外部目标创建一个文件卷备份。使用稳定 requestId 并检查进度；应用一致的快照可能需要暂停写入。 | `project:write`<br />自托管 |
+| `post_projects_by_id_connect`<br />`POST /api/projects/:id/connect` | 为该项目绑定一个自定义域名，可选 www 别名或外部入口。检查返回的路由状态与待处理动作；绑定主机名不代表 DNS 或 HTTPS 就绪。 | `project:write` |
+| `post_projects_by_id_connections`<br />`POST /api/projects/:id/connections` | 把一个数据库应用接入本项目（把它的连接 URL 作为密钥环境变量注入）。 | `project:write` |
+| `post_projects_by_id_connections_bundle`<br />`POST /api/projects/:id/connections/bundle` | 原子性地（要么全成功要么全失败）把一个源应用的多个输出接入本项目。 | `project:write` |
+| `post_projects_by_id_disable`<br />`POST /api/projects/:id/disable` | 禁用一个项目（暂停部署/下线）。 | `project:write` |
+| `post_projects_by_id_enable`<br />`POST /api/projects/:id/enable` | 启用一个项目（允许部署/上线）。 | `project:write` |
+| `post_projects_by_id_environments`<br />`POST /api/projects/:id/environments` | 创建一个项目环境（例如预览环境）。 | `project:write` |
+| `post_projects_by_id_git_link`<br />`POST /api/projects/:id/git/link` | 把一个 Git 仓库关联到项目。 | `project:write` |
+| `post_projects_by_id_incoming_webhooks`<br />`POST /api/projects/:id/incoming-webhooks` | 创建一个入站 Webhook，其 URL 被调用时触发一次部署或任务。 | `project:write` |
+| `post_projects_by_id_incoming_webhooks_by_hookId_invoke`<br />`POST /api/projects/:id/incoming-webhooks/:hookId/invoke` | 以当前与已保存操作者的权限调用一个已启用的入站 Webhook。 | `project:write` |
+| `post_projects_by_id_incoming_webhooks_by_hookId_rotate`<br />`POST /api/projects/:id/incoming-webhooks/:hookId/rotate` | 轮换一个入站 Webhook 的令牌/HMAC secret。 | `project:write` |
+| `post_projects_by_id_options`<br />`POST /api/projects/:id/options` | 为一个项目设置构建/部署选项。 | `project:write` |
+| `post_projects_by_id_output_check`<br />`POST /api/projects/:id/output-check` | 对项目活跃部署的实时静态产物检查（建议性；静态应用适用）。 | `project:read` |
+| `post_projects_by_id_port_check`<br />`POST /api/projects/:id/port-check` | 对项目活跃部署的实时端口可达性检查（建议性）。 | `project:read` |
+| `post_projects_by_id_route_rules`<br />`POST /api/projects/:id/route-rules` | 为该项目创建一条边缘流量规则，可限定到某个域名或路径。规则可以阻断实时流量；修改访问前先读现有规则。 | `project:write`<br />自托管 |
+| `post_projects_by_id_routing_retry`<br />`POST /api/projects/:id/routing/retry` | 修复项目路由并验证待定域名与 HTTPS，无需重新构建；仅当所有检查通过时才清除路由警告。 | `project:write` |
+| `post_projects_by_id_sleep_mode`<br />`POST /api/projects/:id/sleep-mode` | 设置项目的休眠模式（auto_sleep / always_on）。 | `project:write` |
+| `post_projects_by_id_storage`<br />`POST /api/projects/:id/storage` | 为该项目绑定一个 S3 桶——可以是一个已安装的 MinIO 应用，也可以是外部提供方。校验桶以后注入框架的存储环境变量。 | `project:write` |
+| `post_projects_by_id_transfer_to_cloud`<br />`POST /api/projects/:id/transfer/to-cloud` | 把该项目的控制面记录转移到已连接的 Openship Cloud。检查返回的部署指引：记录转移不是工作负载或卷的迁移。k3s 项目不能使用这条 Docker/云转移路径。 | `project:admin`<br />自托管 |
+| `post_projects_by_id_transfer_to_self_hosted`<br />`POST /api/projects/:id/transfer/to-self-hosted` | 把该云上项目的控制面记录转移到本自托管实例。检查返回的指引并单独部署；它不搬移数据库卷。k3s 工作负载沿用其集群生命周期。 | `project:admin`<br />自托管 |
+| `post_projects_by_id_webhook_domain`<br />`POST /api/projects/:id/webhook-domain` | 为该项目的 GitHub 自动部署端点选择或清除一个已验证的公开 Webhook 域名。它配置 Webhook 投递，不添加站点路由。 | `project:write` |
+| `post_projects_ensure`<br />`POST /api/projects/ensure` | 文件夹上传部署——STEP 3/4。创建或更新承载构建配置的项目——deployments/build/access 从**项目行**读取配置而不是上传会话，所以必须先运行这一步。映射 folder/scan 的字段（framework = 扫描出的 stack id）并设置 gitProvider:'upload'。对 docker-compose 文件夹，把扫描的 `services` 数组一并传下去——它固化项目的服务集合——并同时传 `uploadSessionId`，因为扫描会打码 env 值（`••••••••`），正是靠它恢复原值。传 projectId 可更新已有项目。返回用于 STEP 4 的项目 id。 | `project:write` |
+| `post_projects_folder_scan_by_sessionId`<br />`POST /api/projects/folder/scan/:sessionId` | 文件夹上传部署——STEP 2/4。在 tarball 上传之后运行。检测上传源的框架/构建配置（stack、packageManager、install/build/start 命令、outputDirectory、productionPaths、port），对 docker-compose 文件夹还会检测 `services` 数组。请求体可以为空（&#123;&#125;）。把结果喂给 projects/ensure（STEP 3）——如有 `services` 必须原样传入。 | `project:write` |
+| `post_projects_folder_session`<br />`POST /api/projects/folder/session` | 文件夹上传部署——STEP 1/4。为一个本地源文件夹打开上传会话并返回 `upload` = &#123; url, absoluteUrl, method, headers, requiresAuth &#125;。接下来，自行上传 gzip 压缩的 tarball：把它 POST 到 `upload.absoluteUrl`（或相对于你自己的 API 基地址解析 `upload.url`），带上返回的 headers 与 Content-Type: application/gzip——当 `upload.requiresAuth` 为 true 时，还要带上你打开会话所用的同一 `Authorization: Bearer` 令牌。那一次字节上传**不是** MCP 工具（原始二进制无法穿越 JSON-RPC）——请使用 HTTP 客户端。然后调用 folder/scan。顺序：session →（带外 tarball 上传）→ folder/scan → projects/ensure → deployments/build/access。 | `project:write` |
+| `post_projects_import`<br />`POST /api/projects/import` | 从控制器可访问的一个源目录登记一个项目。这只创建项目配置；审阅检测到的设置后再单独部署。 | `project:write`<br />自托管 |
+| `post_projects_scan`<br />`POST /api/projects/scan` | 检查控制器可访问的一个源目录并检测构建或 Compose 配置。对 MCP 客户端机器上的文件夹，请用文件夹上传工作流。 | `project:write`<br />自托管 |
+| `put_projects_by_id_release_image_source`<br />`PUT /api/projects/:id/release-image-source` | 原子性地配置这个单应用项目，使其跟踪并部署来自 GitHub releases 或版本 URL 的预构建容器镜像。 | `project:write` |
+
+### services
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_projects_by_id_services_by_serviceId`<br />`DELETE /api/projects/:id/services/:serviceId` | 从其项目中删除该服务并清理其拥有的运行时。移除前审阅持久卷与依赖它的服务。 | `project:service:admin` |
+| `get_projects_by_id_services`<br />`GET /api/projects/:id/services` | 列出项目的服务（Compose 服务/monorepo 子应用）。 | `project:service:list` |
+| `get_projects_by_id_services_by_serviceId`<br />`GET /api/projects/:id/services/:serviceId` | 按 id 获取一个服务。 | `project:service:read` |
+| `get_projects_by_id_services_by_serviceId_env`<br />`GET /api/projects/:id/services/:serviceId/env` | 列出一个服务的环境变量。 | `project:service:read` |
+| `get_projects_by_id_services_by_serviceId_environment`<br />`GET /api/projects/:id/services/:serviceId/environment` | 读取一个服务生效的已保存环境，包括 Compose 与项目共享值。可选与其实际部署的容器比较。密钥打码。 | `project:service:read` |
+| `get_projects_by_id_services_by_serviceId_logs`<br />`GET /api/projects/:id/services/:serviceId/logs` | 拉取一个服务的运行时日志（非流式）。 | `project:service:read` |
+| `get_projects_by_id_services_by_serviceId_volume_sizes`<br />`GET /api/projects/:id/services/:serviceId/volume-sizes` | 测量一个服务各卷的磁盘占用（du）。 | `project:service:read` |
+| `get_projects_by_id_services_containers`<br />`GET /api/projects/:id/services/containers` | 列出一个项目各服务正在运行的容器。 | `project:read` |
+| `patch_projects_by_id_services_by_serviceId`<br />`PATCH /api/projects/:id/services/:serviceId` | 更新一个服务的配置。部分更新：省略的字段不动。`environment` 与 `advanced` 是**合并**到已存值上而不是整体替换——省略某键即保留，把某键设为 null 即移除，整个字段传 null 即清空。Env 值读回时打码为 `••••••••`；回显该占位符即可保留不变。其余每个字段（`ports`、`volumes`、`dependsOn`、`publicEndpoints`……）都是**整体替换**已存值，因此要发送完整列表。 | `project:service:write` |
+| `patch_projects_by_id_services_by_serviceId_env`<br />`PATCH /api/projects/:id/services/:serviceId/env` | 只保存所指服务的环境覆盖值。其他变量保留；源 ID 会拒绝过时的修改。 | `project:service:write` |
+| `post_projects_by_id_services`<br />`POST /api/projects/:id/services` | 向项目添加一个服务。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_apply_env`<br />`POST /api/projects/:id/services/:serviceId/apply-env` | 用该服务当前的镜像与运行时配置，把已保存的运行时环境应用到这个服务。无需构建或部署会话即可优雅替换其容器。替换启动后返回；失败时保留先前配置。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_drift_accept`<br />`POST /api/projects/:id/services/:serviceId/drift/accept` | 接受上游 docker-compose 对该服务的变更。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_drift_keep`<br />`POST /api/projects/:id/services/:serviceId/drift/keep` | 对该服务保留本地修改而不采纳上游 docker-compose 的变更。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_exec`<br />`POST /api/projects/:id/services/:serviceId/exec` | 在这个服务的运行容器里运行 shell 命令并返回其退出码与合并输出。由 `sh -c` 解释；stderr 合并进来。会超时（默认 30s，最大 120s）并截断大输出。需要 Docker 运行时——裸进程或云托管服务没有容器可进入。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_restart`<br />`POST /api/projects/:id/services/:serviceId/restart` | 重启 (bounce) 这个服务的容器。已保存 env 尚未应用时返回 409 SERVICE_CONFIG_STALE。此时用 POST /api/projects/:id/services/:serviceId/apply-env 应用，或用 ?force=true 带旧 env 重启。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_start`<br />`POST /api/projects/:id/services/:serviceId/start` | 启动这个服务的容器。 | `project:service:write` |
+| `post_projects_by_id_services_by_serviceId_stop`<br />`POST /api/projects/:id/services/:serviceId/stop` | 停止这个服务的容器。 | `project:service:write` |
+| `post_projects_by_id_services_sync`<br />`POST /api/projects/:id/services/sync` | 从项目的 docker-compose 文件同步服务到服务表。 | `project:service:write` |
+| `put_projects_by_id_services_by_serviceId_env`<br />`PUT /api/projects/:id/services/:serviceId/env` | 整体替换一个服务的环境变量。 | `project:service:write` |
+
+### settings
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_settings`<br />`GET /api/settings` | 获取该组织的工作区设置（构建模式、部署默认值、偏好）。 | `settings:read` |
+| `get_settings_webhook_deliveries`<br />`GET /api/settings/webhook-deliveries` | 列出该组织的 Webhook 投递信息流，包括转发到云端或来自未纳管仓库的推送（分页）。 | `settings:read` |
+| `patch_settings_build_mode`<br />`PATCH /api/settings/build-mode` | 设置默认构建模式（server / local）。 | `settings:write` |
+| `patch_settings_clone_strategy_preference`<br />`PATCH /api/settings/clone-strategy-preference` | 设置默认克隆策略偏好（prompt / local / remote-with-token）。 | `settings:write` |
+| `patch_settings_deploy_defaults`<br />`PATCH /api/settings/deploy-defaults` | 设置/清除默认部署目标（local/server/cloud）与服务器。 | `settings:write` |
+| `patch_settings_forward_git`<br />`PATCH /api/settings/forward-git` | 开启/关闭在服务器克隆期间把你的本地 Git 身份（gh CLI）转发给远端构建服务器。 | `settings:write` |
+| `patch_settings_route_strategy`<br />`PATCH /api/settings/route-strategy` | 设置默认的边缘→应用路由策略（auto / loopback-port / container-ip）。 | `settings:write` |
+| `patch_settings_transfer`<br />`PATCH /api/settings/transfer` | 为迁移设置默认的卷传输模式（auto/stream/direct/rsync）与压缩方式（auto/zstd/gzip/none）。 | `settings:write` |
+### system
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `delete_system_compute_clusters_by_id`<br />`DELETE /api/system/compute-clusters/:id` | 用其当前修订号删除一条空的计算集群记录。先移除依赖的项目、数据库与其拥有的运行时。私有网络与已登记服务器会保留。 | `server:admin`<br />自托管 |
+| `delete_system_compute_clusters_by_id_runtime`<br />`DELETE /api/system/compute-clusters/:id/runtime` | 用最新的运行时序号开始移除其所拥有的 k3s 安装。拒绝仍挂载的项目、数据库数据或外来资源。轮询 runtime 直到移除完成；失败可恢复。保留 Docker 工作负载与私有网络。 | `server:admin`<br />自托管 |
+| `delete_system_compute_clusters_by_id_storage`<br />`DELETE /api/system/compute-clusters/:id/storage` | 用其最新序号移除一个空的共享存储安装。拒绝持久或受保护的卷，并保留外部备份归档。 | `server:admin`<br />自托管 |
+| `delete_system_networks_by_id`<br />`DELETE /api/system/networks/:id` | 用其当前修订号移除一条原生私有网络记录。依赖项会阻止移除。对 OpenShip 托管的 WireGuard 网络，先准备并应用一个移除计划；此调用不会强删主机网络配置。 | `server:admin`<br />自托管 |
+| `delete_system_networks_operations_by_operationId`<br />`DELETE /api/system/networks/operations/:operationId` | 用其当前 planHash 丢弃一个未应用的托管网络计划。拒绝活跃或部分已应用的计划；检查该操作，并在需要主机清理时使用其回滚动作。 | `server:admin`<br />自托管 |
+| `delete_system_networks_operations_by_operationId_members_by_serv`<br />`DELETE /api/system/networks/operations/:operationId/members/:serverId` | 用其 planHash 与序号把一台服务器从未完成的托管网络操作中移除。对齐其托管的部分变更并返回替代用的准备/计划；应用前请检查。 | `server:admin`<br />自托管 |
+| `delete_system_networks_preparations_by_preparationId`<br />`DELETE /api/system/networks/preparations/:preparationId` | 用其最新序号取消或丢弃一个未完成的托管网络准备。若返回了 cleanupOperationId，请一直跟进直到托管的主机变更被清理干净；仅一个取消请求并不证明清理已完成。 | `server:admin`<br />自托管 |
+| `delete_system_networks_preparations_by_preparationId_members_by_`<br />`DELETE /api/system/networks/preparations/:preparationId/members/:serverId` | 用最新序号与一个新的 requestId 把一台服务器从未完成的托管网络准备中移除。返回替代性的设置状态与所需的清理项；这不是实时的 k3s worker 摘除。 | `server:admin`<br />自托管 |
+| `delete_system_servers_by_id`<br />`DELETE /api/system/servers/:id` | 移除这台已登记服务器及其托管记录。先读取删除预览。query.destroyOnSource 显式选择销毁远端工作负载；不传则工作负载留在源机器上。 | `server:admin`<br />自托管 |
+| `delete_system_servers_by_id_tunnels_by_tunnelId`<br />`DELETE /api/system/servers/:id/tunnels/:tunnelId` | 停止并删除这条已保存的 SSH 隧道。使用其本地端口的连接将关闭。 | `server:write`<br />自托管 |
+| `get_system_browse`<br />`GET /api/system/browse` | 浏览本控制器（而非 MCP 客户端）上的源目录。需要实例管理员权限；客户端侧目录请用文件夹上传。 | `settings:read`<br />自托管 |
+| `get_system_compute_clusters`<br />`GET /api/system/compute-clusters` | 列出计算集群及其服务器成员、选定的私有网络与已保存的 k3s 就绪情况。运行时安装成功之前，计算集群不会进入可部署状态。 | `server:read`<br />自托管 |
+| `get_system_compute_clusters_by_id`<br />`GET /api/system/compute-clusters/:id` | 读取一个计算集群及其当前修订号、服务器 ID、私有网络与已保存的运行时就绪情况。安装 k3s 或变更集群时使用该修订号。 | `server:read`<br />自托管 |
+| `get_system_compute_clusters_by_id_runtime`<br />`GET /api/system/compute-clusters/:id/runtime` | 读取已保存的 k3s 安装或移除进度，包括状态、序号、逐主机步骤、日志与错误；安装前返回 null。启动工作后轮询该端点。读取绝不会启动或重试操作。 | `server:read`<br />自托管 |
+| `get_system_compute_clusters_by_id_storage`<br />`GET /api/system/compute-clusters/:id/storage` | 读取共享存储的安装、容量与已保存进度。用 observe=true 获取当前磁盘与卷健康。 | `server:read`<br />自托管 |
+| `get_system_containers`<br />`GET /api/system/containers` | 列出跨已登记服务器缓存的托管容器清单。要最新观测请扫描整个机群或单台服务器。 | `server:read`<br />自托管 |
+| `get_system_containers_applying`<br />`GET /api/system/containers/applying` | 读取排队中、运行中与最近完成的托管容器更新或修复操作。发起机群级 apply 后轮询它。 | `server:read`<br />自托管 |
+| `get_system_containers_behind`<br />`GET /api/system/containers/behind` | 读取整个机群中存在可用更新的托管容器数量。读取的是缓存清单；扫描以刷新。 | `server:read`<br />自托管 |
+| `get_system_containers_issues`<br />`GET /api/system/containers/issues` | 列出整个服务器机群中托管容器的问题，包括过时或不可达的观测。 | `server:read`<br />自托管 |
+| `get_system_diagnostics`<br />`GET /api/system/diagnostics` | 读取实例健康、数据库/迁移状态与资源计数。需要实例管理员权限。它不检查每个远端工作负载。 | `settings:read`<br />自托管 |
+| `get_system_edge_untracked`<br />`GET /api/system/edge/untracked` | 检查本实例中不归属任何项目的边缘主机名。需要实例管理员权限；移除任何东西之前先比对归属。 | `settings:read`<br />自托管 |
+| `get_system_install_session`<br />`GET /api/system/install/session` | 读取当前或指定服务器的安装会话，包括进度与待处理决策。query.serverId 选择服务器；query.sessionId 重新接入特定会话。 | `server:read`<br />自托管 |
+| `get_system_networks`<br />`GET /api/system/networks` | 列出私有网络及其成员、已保存的验证状态与任何托管安装操作。私有网络负责连通性；计算集群及其 k3s 运行时是不同的资源。 | `server:read`<br />自托管 |
+| `get_system_networks_by_id`<br />`GET /api/system/networks/:id` | 读取一个私有网络、其当前修订号、成员地址、验证报告与托管操作。验证后轮询；已保存的报告只是某个时刻的证据，不是持续监控。 | `server:read`<br />自托管 |
+| `get_system_networks_capabilities`<br />`GET /api/system/networks/capabilities` | 检查私有网络是否可用、本凭据能否管理服务器机群、受支持的提供方与网络模式，以及成员上限。从这里开始网络或集群的安装。 | `server:read`<br />自托管 |
+| `get_system_networks_operations_by_operationId`<br />`GET /api/system/networks/operations/:operationId` | 读取一个托管网络操作、其 planHash、序号、逐主机步骤/日志、验证报告与错误。在应用、验证、提交或回滚期间轮询。已保存的计划不等于已应用的网络。 | `server:read`<br />自托管 |
+| `get_system_networks_preparations`<br />`GET /api/system/networks/preparations` | 列出已保存的托管网络准备，以便找回被打断的安装而不必另起操作。 | `server:read`<br />自托管 |
+| `get_system_networks_preparations_by_preparationId`<br />`GET /api/system/networks/preparations/:preparationId` | 读取一个托管网络准备的状态、序号、逐主机步骤/日志与错误。就绪后跟进 operationId 检查生成的计划。replacementPreparationId 与 cleanupOperationId 标识任何后续工作。 | `server:read`<br />自托管 |
+| `get_system_servers`<br />`GET /api/system/servers` | 列出本凭据可访问的已登记部署服务器，含服务器 ID 与连接摘要。基础设施操作使用这些 ID；私有网络与计算集群的 ID 是不同的。 | `server:list`<br />自托管 |
+| `get_system_servers_by_id`<br />`GET /api/system/servers/:id` | 读取这台已登记服务器的配置与当前连接摘要。不返回已存的 SSH 密钥。新鲜连接检查请用 reachability。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_containers`<br />`GET /api/system/servers/:id/containers` | 读取这台服务器上的托管容器及其缓存的健康/版本信息。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_containers_by_component_apply_session`<br />`GET /api/system/servers/:id/containers/:component/apply/session` | 读取该服务器组件当前活跃的托管容器更新或修复会话。它只观测已存在的操作。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_deletion_preview`<br />`GET /api/system/servers/:id/deletion-preview` | 预览删除这台服务器会影响哪些项目、应用与服务器级记录。移除前先审阅；不改变任何资源。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_github`<br />`GET /api/system/servers/:id/github` | 读取这台部署服务器上的 GitHub 认证状态。这是服务器的克隆身份，与控制器的 GitHub 连接相互独立。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_github_connect_poll`<br />`GET /api/system/servers/:id/github/connect/poll` | 轮询这台服务器上已启动的 GitHub 设备授权。用户必须完成返回的浏览器批准。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_infrastructure`<br />`GET /api/system/servers/:id/infrastructure` | 读取这台服务器挂接的私有网络与计算集群，受机群可见范围限制。用这些资源 ID 检查网络或 k3s 就绪情况。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_modules`<br />`GET /api/system/servers/:id/modules` | 列出这台服务器已安装的原生模块、可用更新以及需征得同意的迁移。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_rate_limit`<br />`GET /api/system/servers/:id/rate-limit` | 读取这台服务器的 OpenResty 请求速率限制、突发允许与白名单。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_reachability`<br />`GET /api/system/servers/:id/reachability` | 探测控制器此刻能否连通这台服务器。控制器连接失败并不代表已部署的应用宕机了。 | `server:read`<br />自托管 |
+| `get_system_servers_by_id_tunnels`<br />`GET /api/system/servers/:id/tunnels` | 列出这台服务器已保存的 SSH 端口转发隧道及其当前状态。隧道从本控制器发起，而非 MCP 客户端。 | `server:read`<br />自托管 |
+| `get_system_settings`<br />`GET /api/system/settings` | 读取公开的实例设置与安装状态，密钥打码。 | `settings:read`<br />自托管 |
+| `get_system_settings_email`<br />`GET /api/system/settings/email` | 读取实例的邮件投递配置，凭据打码。 | `settings:read`<br />自托管 |
+| `patch_system_compute_clusters_by_id`<br />`PATCH /api/system/compute-clusters/:id` | 用当前修订号更新计算集群的成员与网络。必须先移除运行时才能变更成员；这不是实时的 worker 加入或摘除。 | `server:admin`<br />自托管 |
+| `patch_system_compute_clusters_by_id_storage_backup`<br />`PATCH /api/system/compute-clusters/:id/storage/backup` | 为共享文件配置一个已有的外部备份目标。使用当前存储序号，并保留已配置的目标以使归档保持可恢复。 | `server:admin`<br />自托管 |
+| `patch_system_networks_by_id`<br />`PATCH /api/system/networks/:id` | 用当前修订号整体替换一个原生私有网络的配置。已有的运行时依赖会阻止成员变更。变更配置后重新验证。 | `server:admin`<br />自托管 |
+| `patch_system_networks_preparations_by_preparationId_connections`<br />`PATCH /api/system/networks/preparations/:preparationId/connections` | 用最新序号与新的 requestId 修订一个未完成托管网络准备中允许的服务器到服务器连接。返回替代的准备；检查并应用其新计划。k3s 要求所有选定成员之间双向可达。 | `server:admin`<br />自托管 |
+| `patch_system_servers_by_id`<br />`PATCH /api/system/servers/:id` | 更新这台已登记服务器的名称或 SSH 连接设置。省略的字段保留。修改连接设置后检查可达性。 | `server:write`<br />自托管 |
+| `patch_system_servers_by_id_rate_limit`<br />`PATCH /api/system/servers/:id/rate-limit` | 更新整机级别的 OpenResty 速率限制与白名单。这会影响该服务器上所有路由的流量。 | `server:admin`<br />自托管 |
+| `post_system_check`<br />`POST /api/system/check` | 检查 body.serverId 上的必备软件与组件就绪情况。返回缺失组件与健康消息；不安装它们。 | `server:admin`<br />自托管 |
+| `post_system_compute_clusters`<br />`POST /api/system/compute-clusters` | 由处于同一私有网络上的已登记服务器创建一个计算集群。响应丢失后为同一意图复用 requestId。它只保存成员关系；接着启动其运行时安装。 | `server:admin`<br />自托管 |
+| `post_system_compute_clusters_by_id_runtime`<br />`POST /api/system/compute-clusters/:id/runtime` | 用其当前修订号与稳定的 requestId 在该计算集群上启动持久化的 k3s 安装。安装前检查私有连通性与主机前置条件。返回的是已接受的进度而非完成；轮询 runtime 直到就绪、失败或被打断。需要机群管理权限。 | `server:admin`<br />自托管 |
+| `post_system_compute_clusters_by_id_runtime_retry`<br />`POST /api/system/compute-clusters/:id/runtime/retry` | 用最新的运行时序号恢复一次失败或被打断的 k3s 安装或移除。复用已保存的版本、所有权与操作意图。先检查错误并轮询 runtime 等待完成；不要只因为响应丢失就重试。 | `server:admin`<br />自托管 |
+| `post_system_compute_clusters_by_id_storage`<br />`POST /api/system/compute-clusters/:id/storage` | 在已审阅的集群服务器与专用的空目录上启用持久化与共享存储。安装前置条件但不格式化磁盘。响应丢失后复用 requestId，并跟进已保存的进度。 | `server:admin`<br />自托管 |
+| `post_system_compute_clusters_by_id_storage_retry`<br />`POST /api/system/compute-clusters/:id/storage/retry` | 用其最新序号恢复失败或被打断的存储安装/移除。重试前先检查错误。 | `server:admin`<br />自托管 |
+| `post_system_containers_apply_all`<br />`POST /api/system/containers/apply-all` | 对整个机群的托管容器启动选定的更新或修复意图。目标来自当前清单。轮询 containers/applying 获取进度与失败。 | `server:write`<br />自托管 |
+| `post_system_containers_scan`<br />`POST /api/system/containers/scan` | 侦测整个机群的托管容器版本与健康状态，但不应用更新。 | `server:write`<br />自托管 |
+| `post_system_edge_untracked_remove`<br />`POST /api/system/edge/untracked/remove` | 在复查确认没有任何项目拥有之后，从边缘移除一个未纳管的主机名。需要实例管理员权限。绝不要用它来修复仍归属某项目的域名。 | `settings:admin`<br />自托管 |
+| `post_system_install`<br />`POST /api/system/install` | 用共享的服务器安装器在 body.serverId 上安装一个具名组件。先读 check。k3s 集群安装请用计算集群运行时工具，它会校验整个集群。 | `server:admin`<br />自托管 |
+| `post_system_install_respond`<br />`POST /api/system/install/respond` | 用其 sessionId 与给出的 action ID 应答一次服务器安装当前的待处理提示。先读 install/session；绝不臆断接管决策。 | `server:admin`<br />自托管 |
+| `post_system_networks`<br />`POST /api/system/networks` | 用发现的私有接口与互不相同的 IPv4 地址登记一个已有的原生私有网络。它不置备提供方网络。响应丢失后复用 requestId，然后验证已保存的网络。 | `server:admin`<br />自托管 |
+| `post_system_networks_by_id_verify`<br />`POST /api/system/networks/:id/verify` | 针对当前修订号启动双向私有网络验证。轮询网络详情直到验证完成并检查其对等报告。提供方防火墙必须已放行探测流量。 | `server:admin`<br />自托管 |
+| `post_system_networks_operations_by_operationId_apply`<br />`POST /api/system/networks/operations/:operationId/apply` | 应用、恢复或回滚由 planHash 标识的确切托管网络计划。先审阅主机变更与提供方防火墙要求。返回已接受的进度；轮询该操作直到落定，重试前先检查失败。 | `server:admin`<br />自托管 |
+| `post_system_networks_plans`<br />`POST /api/system/networks/plans` | 规划一次 OpenShip 托管的 WireGuard 网络变更而不应用它。返回一个会过期的 planHash、主机变更与防火墙要求。同一意图复用 requestId；调用 operations/apply 前先检查计划。 | `server:admin`<br />自托管 |
+| `post_system_networks_preparations`<br />`POST /api/system/networks/preparations` | 为托管 WireGuard 网络启动持久化准备：检查主机并安装缺失的前置条件，然后产出一份待审阅计划。响应丢失后复用 requestId。轮询准备；就绪后检查其 operationId 与计划，再应用网络。 | `server:admin`<br />自托管 |
+| `post_system_remove`<br />`POST /api/system/remove` | 从 body.serverId 上移除一个托管组件。这可能中断正在使用它的工作负载；先读组件就绪情况与移除限制。 | `server:admin`<br />自托管 |
+| `post_system_servers`<br />`POST /api/system/servers` | 用 SSH 连接设置登记一台部署服务器。凭据由既有的服务器操作加密。它不创建云主机；接下来测试连接并检查前置条件。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_containers_scan`<br />`POST /api/system/servers/:id/containers/scan` | 刷新这台服务器的托管容器版本与健康，但不应用变更。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_exec`<br />`POST /api/system/servers/:id/exec` | 在这台服务器的主机上运行 shell 命令并返回其退出码与合并输出。由 `sh -c` 解释，因此管道与重定向有效；stderr 合并进来。会超时（默认 30s，最大 120s）并截断大输出。用它检查或修复服务器；能由只读端点回答的问题请优先用只读端点。 | `server:admin`<br />自托管 |
+| `post_system_servers_by_id_github_connect`<br />`POST /api/system/servers/:id/github/connect` | 在这台部署服务器上启动 GitHub 设备授权。把返回的用户码与 URL 出示给用户，然后轮询该服务器的 GitHub 连接。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_modules_by_module_apply`<br />`POST /api/system/servers/:id/modules/:module/apply` | 通过其托管的迁移工作流对该原生服务器模块应用可用更新。先读 modules 并检查结果中的 pendingConsent；返回一个同意请求不代表更新已完成。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_modules_scan`<br />`POST /api/system/servers/:id/modules/scan` | 刷新这台服务器上的原生模块版本与可用迁移信息。不应用更新。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_network_inspect`<br />`POST /api/system/servers/:id/network/inspect` | 通过 SSH 检查这台服务器实际的网络接口、私有 IPv4 地址、MTU 与机器身份。不改变网络。登记原生私有网络时使用该观测。 | `server:admin`<br />自托管 |
+| `post_system_servers_by_id_ports_scan`<br />`POST /api/system/servers/:id/ports/scan` | 检查服务器上对外的监听端口。返回协议、地址、进程与已知服务信息，不改变监听器。 | `server:read`<br />自托管 |
+| `post_system_servers_by_id_tunnels`<br />`POST /api/system/servers/:id/tunnels` | 保存一个 SSH 端口转发隧道配置。另行启动它；其本地绑定地址属于该控制器。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_tunnels_by_tunnelId_start`<br />`POST /api/system/servers/:id/tunnels/:tunnelId/start` | 在 Openship 控制器上启动这条已保存的隧道并返回其本地地址。读隧道列表以检查状态。 | `server:write`<br />自托管 |
+| `post_system_servers_by_id_tunnels_by_tunnelId_stop`<br />`POST /api/system/servers/:id/tunnels/:tunnelId/stop` | 停止这条控制器侧的 SSH 隧道，同时保留其已保存的配置。 | `server:write`<br />自托管 |
+| `post_system_test_connection`<br />`POST /api/system/test-connection` | 在登记服务器之前测试草稿 SSH 连接设置。不保存服务器，也不安装组件。 | `server:write`<br />自托管 |
+### updates
+
+| 工具与 HTTP 路由 | 描述 | 权限 |
+| --- | --- | --- |
+| `get_updates`<br />`GET /api/updates` | 列出该组织的更新状态（应用、项目、self-app、webmail）。?behind=1 过滤出有更新可用的项。 | `updates:read` |
+| `post_updates_by_projectId_apply`<br />`POST /api/updates/:projectId/apply` | 把可用更新应用到一个项目/应用（强拉镜像 tag、重新部署，部署前备份）。 | `project:write` |
+| `post_updates_scan`<br />`POST /api/updates/scan` | 对该组织的项目/应用触发一次全新的更新扫描。 | `updates:write` |
+
+## 仅 HTTP 路由
+
+其余每条路由都有明确的边界：浏览器授权、流式/二进制传输、内部中继、兼容别名，或运营者工作流。
+这些排除并不削减 HTTP 功能。如果一条新的已认证路由既没有 MCP 元数据也没有排除理由，文档检查会失败。
+
+| HTTP 路由 | 为什么它不是 MCP 工具 |
+| --- | --- |
+| `GET /.well-known/oauth-authorization-server` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /.well-known/oauth-authorization-server/api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /.well-known/oauth-authorization-server/api/proxy/api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /.well-known/oauth-protected-resource` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /.well-known/oauth-protected-resource/api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /.well-known/oauth-protected-resource/api/proxy/api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/analytics/usage/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/auth/*` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/*` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/callback/github` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/cloud-callback` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/desktop-auth-poll` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/desktop-auth-start` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/desktop-claim` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/desktop-login` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/get-session` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/invitation-preview/:id` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/mcp/jwks` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/auth/mcp/userinfo` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/accept-invitation` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/cancel-invitation` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/invite-member` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/leave` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/reject-invitation` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/remove-member` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/organization/update-member-role` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/auth/sign-up/*` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/backup-restores/:restoreId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/backup-runs/:runId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/billing/cancel` | 付费订阅续订由账号属主在 设置 → 计费 中管理；MCP 只暴露最终的订阅状态。 |
+| `GET /api/billing/checkout` | 浏览器结账配置；用计费读取工具查看套餐，并在 设置 → 计费 中完成购买。 |
+| `POST /api/billing/oblien-webhook` | Oblien Webhook——通过 X-Webhook-Signature 校验，而非用户会话 |
+| `GET /api/billing/plans` | 公开定价端点——在认证之前由营销站 + 注册流程读取 |
+| `POST /api/billing/portal` | 创建账号的计费门户（billing-portal）会话。打开 设置 → 计费 管理支付信息。 |
+| `POST /api/billing/resume` | 付费订阅续订由账号属主在 设置 → 计费 中管理；MCP 只暴露最终的订阅状态。 |
+| `POST /api/billing/subscription` | 发起付费的浏览器结账。购买与支付授权在 设置 → 计费 中完成。 |
+| `POST /api/billing/topup` | 发起付费的浏览器结账。在 设置 → 计费 中购买点数；MCP 可以列出点数包价格与当前余额。 |
+| `POST /api/billing/webhook/stripe` | 已退役的 Stripe 端点——永远返回 410，没有任何计费变更 |
+| `GET /api/cloud/account` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/analytics` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/connect-authorize` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/connect-finalize` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/connect-handoff` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/connect-poll` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/desktop-handoff` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/disconnect` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/edge-proxy` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/edge-proxy/delete` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/edge-proxy/verify` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/edge-proxy/verify-check` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/exchange-code` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/export-subgraph` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/github/install-callback` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/github/install-url` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/github/installation-token` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/github/installations` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/github/oauth-bridge` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/github/oauth-handoff` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/github/oauth-success` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/github/user-status` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/ingest-subgraph` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/pages` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/pages/delete` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/pages/disable` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/pages/enable` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/preflight` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/resource-proxy` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `GET /api/cloud/route-registry` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/send-invitation` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/support` | 公开的云端支持受理入口，包括无法登录的客户。只返回一张回执；匿名状态下不能读取任何工单数据。 |
+| `GET /api/cloud/support/tickets` | 云端支持运营 API。需要实例的内部令牌；客户组织的属主永远不可用。 |
+| `GET /api/cloud/support/tickets/:id` | 云端支持运营 API。需要实例的内部令牌；客户组织的属主永远不可用。 |
+| `PATCH /api/cloud/support/tickets/:id` | 云端支持运营 API。需要实例的内部令牌；客户组织的属主永远不可用。 |
+| `POST /api/cloud/support/tickets/:id/replies` | 云端支持运营 API。需要实例的内部令牌；客户组织的属主永远不可用。 |
+| `POST /api/cloud/support/tickets/:id/retry` | 云端支持运营 API。需要实例的内部令牌；客户组织的属主永远不可用。 |
+| `POST /api/cloud/teardown-project` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/cloud/telemetry` | 可选的托管控制台产品遥测；校验确切的 Origin，只关联已验证的 cookie 会话。不是 SDK/MCP 操作。 |
+| `POST /api/cloud/token` | 内部云端中继或浏览器凭据交接。请改用已认证的项目、域名、GitHub、分析与云端状态工具。 |
+| `POST /api/deployments/:id/build` | 旧的按部署 ID 启动适配器。启动或重新部署请走 /api/deployments 或 /api/deployments/build/access。 |
+| `GET /api/deployments/:id/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/deployments/ssl/renew` | 旧版主机名续期；受管域名的身份与所有权请用 POST /api/domains/:id/renew。 |
+| `POST /api/deployments/ssl/status` | 旧版主机名探测；带作用域的路由与证书证据请用托管域名详情/状态工具。 |
+| `POST /api/domains/:id/verify/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/github/connect/redirect` | GitHub OAuth 回调——重定向期间尚无会话 |
+| `POST /api/github/disconnect` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/installations/claim` | 浏览器完成 GitHub 授权并选择一个安装。启动并检查连接请用 connect/status。 |
+| `POST /api/github/instance-token` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/repos` | GitHub 仓库创建不属于部署管理。先在 GitHub 上创建仓库，再用 Openship 部署。 |
+| `DELETE /api/github/repos/:owner/:repo` | 删除上游 GitHub 仓库不属于部署管理。移除 Openship 项目不会删除源仓库。 |
+| `GET /api/github/repos/:owner/:repo/clone-token` | 返回一个 bearer 凭据。MCP 通过带权限范围的 GitHub 工具进行部署和浏览，而不导出安装令牌。 |
+| `GET /api/github/repos/:owner/:repo/tree` | 递归的控制台访问选择器；MCP 用带路径范围的 files 工具做有边界的仓库浏览。 |
+| `DELETE /api/github/sources/:id` | GitHub App 凭据与源所有权由工作区属主在 设置 → GitHub 中管理。 |
+| `PATCH /api/github/sources/:id` | GitHub App 凭据与源所有权由工作区属主在 设置 → GitHub 中管理。 |
+| `POST /api/github/sources/:id/default` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/sources/:id/install` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/sources/manifest` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/sources/manifest/convert` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `POST /api/github/sources/manual` | GitHub 凭据所有权与 App 安装由工作区属主在 设置 → GitHub 中配置。已有的受支持连接流程请用 connect/status。 |
+| `GET /api/health` | 公开发现或回调，自带 HTTP 认证/传输。 |
+| `GET /api/health/env` | 公开发现或回调，自带 HTTP 认证/传输。 |
+| `GET /api/images` | 镜像上传/下载使用二进制 HTTP 传输。 |
+| `GET /api/jobs/runs/:runId/stream` | 实时 SSE 输出可保持长连。捕获的输出与完成情况可通过 MCP 轮询 GET /api/jobs/runs/:runId。 |
+| `POST /api/mail/admin/:serverId/platform-mailbox/rotate` | 轮换平台的私有邮件投递凭据。请在邮件服务器设置中操作；这不是用户邮箱。 |
+| `DELETE /api/mail/admin/:serverId/relay` | 将全服务器投递从中继改为直连 SMTP。中继身份与移除请在邮件服务器设置中一起管理。 |
+| `POST /api/mail/admin/:serverId/relay` | 在邮件服务器设置中配置出站投递凭据与提供方身份；MCP 可以检查最终的中继状态。 |
+| `POST /api/mail/credentials/postmaster` | 特权的邮件管理员凭据在已认证的邮件设置中修改。 |
+| `POST /api/mail/setup` | 邮件安装是带 DNS/PTR 检查点的交互式 SSE 向导。打开 邮件 → 设置邮件；MCP 可以检查状态并运维或收编已有安装。 |
+| `POST /api/mail/setup/cancel` | 控制当前浏览器邮件安装 SSE 会话。请在邮件向导中完成或取消该安装。 |
+| `POST /api/mail/setup/dns-ack` | 确认当前邮件安装向导中的一个检查点。请使用邮件向导；已有域名的 DNS 有专用的 MCP 工具。 |
+| `POST /api/mail/setup/ptr-ack` | 确认当前邮件安装向导中提供方一侧的 PTR 设置。请使用邮件向导审阅所需的反向 DNS。 |
+| `POST /api/mail/setup/reset` | 重置邮件安装向导在主机上的状态。请使用邮件恢复流程；忘记登记功能单独提供。 |
+| `POST /api/mail/webmail/deploy-external` | 外部邮件提供方的安装属于目录/浏览器配置流程。使用目录中的 webmail 应用及其模板输入；托管邮件服务器的 Webmail 有专用部署工具。 |
+| `GET /api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/mcp` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/migration/migrations/:id/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/migration/reveal-env` | 控制台显式的凭据展示。迁移在服务端重新发现真实的源环境值；MCP 只传递选定的容器 ID。 |
+| `GET /api/migration/scan/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/notices` | 平台状态公告——显示在应用横幅中的非敏感运营者公告 |
+| `POST /api/notices` | 运营者状态公告推送——internalAuth 共享令牌 |
+| `DELETE /api/notices/:id` | 运营者状态公告下线——internalAuth 共享令牌 |
+| `GET /api/notices/all` | 运营者公告列表（含已下线的）——internalAuth 共享令牌 |
+| `POST /api/permissions/create-team-org` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/grants` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `PUT /api/permissions/grants` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `DELETE /api/permissions/grants/:id` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invitations/:id/accept` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invitations/:id/cancel` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invitations/:id/materialize` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invitations/:id/reject` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invitations/:id/resend` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `POST /api/permissions/invite-with-grants` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `DELETE /api/permissions/members/:id` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `PATCH /api/permissions/members/:id` | 成员资格、邀请与授权会改变账号权限。请在 设置 → 团队 中管理；MCP 可以查看访问情况，但不能铸造或扩大自身权限。 |
+| `GET /api/projects/:id/clone-token` | Git 凭据管理保留在已认证的控制台中；MCP 通过已配置的凭据部署。 |
+| `PATCH /api/projects/:id/clone-token` | Git 凭据管理保留在已认证的控制台中；MCP 通过已配置的凭据部署。 |
+| `GET /api/projects/:id/cluster/databases/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/projects/:id/cluster/volumes/stream` | 实时卷状态的 SSE 传输。通过 MCP 使用 JSON 列表工具。 |
+| `POST /api/projects/:id/deployment-session` | 浏览器部署会话交接。MCP 通过 /api/deployments/build/access 启动部署。 |
+| `GET /api/projects/:id/logs/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/projects/:id/resources` | 兼容别名；请使用 PATCH /api/projects/:id/resources。 |
+| `POST /api/projects/:id/routing/ensure-edge/respond` | 对浏览器 ensure-edge SSE 会话的应答。路由修复请使用 routing/retry 与项目 pending-actions 工具；交互式边缘安装与代理接管仍在控制台中。 |
+| `POST /api/projects/:id/routing/ensure-edge/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/projects/:id/routing/retry/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/projects/:id/server-logs/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/projects/:id/server-logs/stream-token` | 浏览器流式读取凭据。MCP 用自己的 bearer 读取有边界的 server-logs 端点。 |
+| `POST /api/projects/:id/services/:serviceId/env-reveal` | 控制台显式的凭据展示。MCP 读取打码后的生效环境并保存具名覆盖值，不取回明文。 |
+| `GET /api/projects/:id/services/:serviceId/logs/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/projects/folder/scan/:sessionId/env-reveal` | 控制台显式的凭据展示。MCP 把 uploadSessionId 传给 project ensure，使真实值留在服务端。 |
+| `POST /api/projects/folder/upload/:sessionId` | 二进制 tarball 上传；在 JSON-RPC 之外使用 folder/session 返回的已认证上传 URL。 |
+| `POST /api/services/terminal/ticket` | 一次性的浏览器 WebSocket 终端票据。在 MCP 上做有界命令请使用服务 exec 工具。 |
+| `GET /api/services/terminal/ws/:serviceId` | WebSocket 升级——认证在 upgradeWebSocket 内部完成，经票据子协议或会话 cookie 兜底（HTTP 中间件会阻断握手） |
+| `PUT /api/settings` | 兼容的设置更新；该偏好请使用专用的 build-mode 工具。 |
+| `PATCH /api/settings/clone-credentials` | 用户全局的 Git 克隆凭据在已认证的控制台中配置；MCP 使用这些已保存的凭据部署。 |
+| `POST /api/system/bootstrap-admin` | CLI 首个管理员创建——内部令牌把关，在任何管理员存在之前一次性执行（openship setup） |
+| `POST /api/system/cloud-connect` | CLI 安装——为免费域名完成 Openship Cloud 的 PKCE 握手；内部令牌把关 |
+| `GET /api/system/cloud-status` | CLI 安装——读取 Openship Cloud 连接状态；内部令牌把关 |
+| `GET /api/system/clusters` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `POST /api/system/clusters` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `DELETE /api/system/clusters/:id` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `GET /api/system/clusters/:id` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `PATCH /api/system/clusters/:id` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `POST /api/system/clusters/:id/verify` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `GET /api/system/clusters/capabilities` | 兼容的私有网络 API。请用 /api/system/networks；计算集群位于 /api/system/compute-clusters。 |
+| `DELETE /api/system/clusters/network-operations/:operationId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `GET /api/system/clusters/network-operations/:operationId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `POST /api/system/clusters/network-operations/:operationId/apply` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `DELETE /api/system/clusters/network-operations/:operationId/members/:serverId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `GET /api/system/clusters/network-operations/:operationId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/clusters/network-plans` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `GET /api/system/clusters/network-preparations` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `POST /api/system/clusters/network-preparations` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `DELETE /api/system/clusters/network-preparations/:preparationId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `GET /api/system/clusters/network-preparations/:preparationId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `PATCH /api/system/clusters/network-preparations/:preparationId/connections` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `DELETE /api/system/clusters/network-preparations/:preparationId/members/:serverId` | /api/system/networks 的兼容别名；请使用规范的网络工具。 |
+| `GET /api/system/clusters/network-preparations/:preparationId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/clusters/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/compute-clusters/:id/runtime/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/compute-clusters/:id/storage/stream` | SSE 进度传输；通过 MCP 读取 JSON 存储状态。 |
+| `PUT /api/system/data-transfer/direct/chunk/:sessionId/:index` | 接收一个有边界、已加密、已签名的直传（direct-transfer）分块。 |
+| `POST /api/system/data-transfer/direct/chunk/:sessionId/finalize/stream` | 通过代理超时维持已认证直传恢复的存活。 |
+| `POST /api/system/data-transfer/direct/chunk/:sessionId/heartbeat` | 延长一个已认证、进行中的直传租约。 |
+| `POST /api/system/data-transfer/direct/chunk/init` | 用一次性接收能力初始化一个加密上传。 |
+| `POST /api/system/data-transfer/direct/receive` | 实例的一次性接收能力——负载经 ECDH 加密，并由其中会过期的令牌授权。 |
+| `POST /api/system/data-transfer/direct/send` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/direct/send/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/data-transfer/direct/session` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/export` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/import` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/import/session` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `PUT /api/system/data-transfer/import/session/:sessionId/chunk/:index` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/import/session/:sessionId/finalize/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/data-transfer/import/session/:sessionId/preview` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `GET /api/system/data-transfer/preview` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/data-transfer/preview` | 实例归档导入/导出以二进制数据和凭据作为运营者的恢复工作流传输。请在 设置 → 数据传输 中使用；应用迁移与卷备份有专用的 MCP 工具。 |
+| `POST /api/system/edge/import-sites` | CLI `openship up`（compose）——把从外部代理迁移来的站点登记进容器边缘（up 前宿主会停止该代理；api 经由 DockerEdgeExecutor 重新提供服务）；内部令牌把关 |
+| `GET /api/system/health` | CLI `openship doctor`——内部令牌把关的深度健康汇总（数据库存活/迁移 + 项目/服务计数）；公开的 /api/health 只是一个存活桩 |
+| `GET /api/system/install/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/install/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/invite-signup` | 自托管邀请注册——由邮件链接中不可猜测的邀请 id（token）授权，而不是会话；为邀请对应的邮箱创建账号。 |
+| `POST /api/system/migration/preflight` | 实例控制面/团队模式迁移使用浏览器会话并改变实例身份。请在 设置 → 团队模式 中使用；应用迁移有专用的 /api/migration MCP 工具。 |
+| `POST /api/system/migration/start` | 实例控制面/团队模式迁移使用浏览器会话并改变实例身份。请在 设置 → 团队模式 中使用；应用迁移有专用的 /api/migration MCP 工具。 |
+| `POST /api/system/migration/start-cloud` | 实例控制面/团队模式迁移使用浏览器会话并改变实例身份。请在 设置 → 团队模式 中使用；应用迁移有专用的 /api/migration MCP 工具。 |
+| `POST /api/system/migration/start-tunnel` | 实例控制面/团队模式迁移使用浏览器会话并改变实例身份。请在 设置 → 团队模式 中使用；应用迁移有专用的 /api/migration MCP 工具。 |
+| `POST /api/system/migration/switch-back` | 实例控制面/团队模式迁移使用浏览器会话并改变实例身份。请在 设置 → 团队模式 中使用；应用迁移有专用的 /api/migration MCP 工具。 |
+| `GET /api/system/monitor/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/networks/operations/:operationId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/networks/preparations/:preparationId/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/networks/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `GET /api/system/onboarding` | 首次运行引导状态检查——尚无用户 |
+| `POST /api/system/onboarding` | 首次运行引导安装——创建初始管理员账号 |
+| `POST /api/system/onboarding/test-connection` | 首次运行的 SSH 可达性测试——尚无用户；限制为尚无服务器的实例 |
+| `POST /api/system/reset-admin-password` | CLI 密码恢复——内部令牌把关；为被锁在门外的运营者重置本地管理员登录（openship reset-admin-password） |
+| `POST /api/system/self-edge/preflight` | CLI 安装——在安装 OpenResty 之前检测 80/443 端口被谁占用；内部令牌把关 |
+| `POST /api/system/self-register` | CLI 安装——把控制面登记为一个应用并绑定其域名；内部令牌把关 |
+| `GET /api/system/self-register/stream` | CLI 安装——自定义域名边缘置备的 SSE 进度；内部令牌把关 |
+| `GET /api/system/servers/:id/containers/:component/apply/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `POST /api/system/servers/:id/containers/:component/apply/stream` | 实时进度的 SSE 传输。通过 MCP 使用该资源的 JSON 状态/日志工具，或用已认证的 HTTP 客户端进行流式读取。 |
+| `DELETE /api/system/servers/:id/github` | 断开服务器级的克隆身份。凭据所有权请在服务器的 GitHub 设置中管理。 |
+| `PUT /api/system/servers/:id/github/deploy-key-mode` | 更改部署服务器的 GitHub 凭据模式。令牌与部署密钥请在服务器的 GitHub 设置中配置。 |
+| `POST /api/system/servers/:id/github/ssh-key` | 更改部署服务器的 GitHub 凭据模式。令牌与部署密钥请在服务器的 GitHub 设置中配置。 |
+| `PUT /api/system/servers/:id/github/token` | 更改部署服务器的 GitHub 凭据模式。令牌与部署密钥请在服务器的 GitHub 设置中配置。 |
+| `DELETE /api/system/settings` | 实例重置/恢复是设置中的运营者工作流，不是租户自动化操作。 |
+| `PATCH /api/system/settings` | 实例身份与认证设置由运营者通过设置页控制；工作区部署偏好有专用的 MCP 工具。 |
+| `PUT /api/system/settings/email` | 实例级的邮件身份与凭据由实例管理员在设置中配置。 |
+| `POST /api/system/settings/email/test` | 实例邮件设置测试可以发送给任意收件人；请使用实例管理员的设置工作流。 |
+| `GET /api/system/setup` | Electron 桌面客户端安装读取——由 internalAuth 共享令牌保护 |
+| `POST /api/system/setup` | Electron 桌面客户端安装——由 internalAuth 共享令牌保护 |
+| `POST /api/system/upgrade-to-auth` | 零认证升级流程——合成的本地用户不存在会话 cookie。处理器在变更前强制 authMode === 'none'。 |
+| `POST /api/terminal/ticket` | 一次性的浏览器 WebSocket 终端票据。在 MCP 上做有界命令请使用 exec 工具。 |
+| `GET /api/terminal/ws/:serverId` | WebSocket 升级——认证在 upgradeWebSocket 工厂内完成，经一次性票据（由 terminal:write 下的 POST /ticket 签发）或会话 cookie 兜底；HTTP 中间件会阻断升级握手 |
+| `GET /api/tokens` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/tokens` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `DELETE /api/tokens/:id` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/tokens/mcp-authorize` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/tokens/mcp-clients` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `DELETE /api/tokens/mcp-clients/:clientId` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /api/tokens/mcp-clients/:clientId` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `POST /api/webhooks/:provider` | 提供方 Webhook（GitHub）——在处理器中校验 HMAC/签名 |
+| `POST /api/webhooks/backup` | 备份 Webhook——Authorization 头中的 bearer 令牌就是凭据 |
+| `POST /api/webhooks/incoming/:id` | 入站 Webhook——在处理器中校验每个 hook 的令牌/HMAC/无凭据 |
+| `GET /auth/callback/close` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |
+| `GET /auth/callback/install` | 认证、凭据发放或 MCP 传输。这些模块无法成为工具。 |

@@ -1,0 +1,309 @@
+---
+title: 服务器与 SSH
+description: 修复 SSH 连不上的服务器、装不上或报告不健康的组件、缺少 Docker，以及起不来的端口转发隧道。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+部署到自己的机器时，Openship 通过 SSH 访问它——就像你在终端里敲 `ssh you@your-box` 一样。“我的服务器不好使”的问题绝大多数归为四类之一：Openship 登录不了、够不到那台机器、装不上需要的工具，或装好的工具没在运行。本页逐一讲。
+
+<Callout title="入口在哪里">
+服务器在 **`/servers`**；每台服务器的详情页是 **`/servers/<serverId>`**，带 **Overview**、**Components**、**Security**、**Ports**（仅桌面应用）和 **Terminal** 标签页。正常路径的完整演示见[部署到自己的服务器](/docs/guides/custom-servers)与[服务器控制台参考](/docs/dashboard/servers)。终端一侧对应的命令在 [`openship server`](/docs/cli/self-host) 下。
+</Callout>
+
+<Callout title="不在本页范围：Openship 自己运行的那台机器" type="info">
+容器化安装访问**自己的宿主机**走的是另一条 SSH 通道，由 Openship 自行置备——不用你输入任何凭据，服务器页面里也没有它。如果你的症状是 *"This operation targets the HOST machine, but no host channel is configured"*、容器明明在跑服务器却显示 **Offline**，或 `:80`/`:443` 接管起不来，请改去[主机控制通道](/docs/troubleshooting/host-channel)。
+</Callout>
+
+## 两条能告诉你问题所在的命令
+
+修任何东西之前，先弄清*哪一*环节在失败。两个操作能回答这个问题：
+
+- **Test Connection**（服务器表单上的按钮，或 `openship server test-connection --host ...`）只用你填的信息试一次 SSH 登录，什么都不保存。还在猜凭据的时候用它。
+- **Re-check**（Components 标签页，或 `openship server check <serverId>`）登录一台**已保存**的服务器，报告哪些组件已安装、健康，哪些必需组件缺失。
+
+如果 Test Connection 成功而 Re-check 显示问题，说明 SSH 没问题，出在某个组件上。如果 Test Connection 本身就失败，从下面的 SSH 各节开始。
+
+## SSH 连接失败
+
+### 认证失败
+
+<Callout type="error">
+`Authentication failed - check your credentials`，或更长的一行，如
+`SSH password authentication failed for root@123.45.67.89:22. Check the username/password, or verify that the
+server allows password login.` / `SSH key authentication failed for … Check the username, private key,
+passphrase, or whether the server accepts this key.`
+</Callout>
+
+**含义**。Openship 到达了服务器，但服务器拒绝了这次登录。网络没问题——是用户名、密钥材料（密码 / 密钥 / 口令）或所选的**认证方式**不对，或服务器不接受这类登录。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+确认 **Username** 和 **Port**。表单默认 `root` 和 `22`；如果你的提供商用的是别的用户（比如 `ubuntu`）或非标准端口，请显式设置。
+</Step>
+
+<Step>
+让 **Authentication** 方式和你实际的登录方式一致：
+
+- **Password**——服务器必须允许密码登录（sshd 配置里 `PasswordAuthentication yes`）。很多云镜像把它禁了。
+- **SSH Key**——**Key Path** 必须指向运行 Openship 的机器能读的**私钥**（如 `~/.ssh/id_rsa`），且对应的公钥在服务器的 `~/.ssh/authorized_keys` 里。密钥有口令就填 **Passphrase**。
+- **Agent**——使用宿主机上运行的 `ssh-agent`；参见 [Agent 认证找不到密钥](#agent-认证找不到密钥)。
+</Step>
+
+<Step>
+用普通终端验证同样的信息：`ssh -p <port> <user>@<host>`。如果这也失败，要修的是服务器，不是 Openship。
+</Step>
+
+<Step>
+重跑 **Test Connection**。绿色 **Connection successful** 就说明好了；**Save & Continue to Setup** 会把服务器保存下来。
+</Step>
+
+</Steps>
+
+<Callout title="编辑时会保留旧密钥材料" type="info">
+**Edit** 一台已保存的服务器时，密码或密钥字段留空即保留已存的密钥材料。只有切换认证方式或轮换凭据时才需要重新输入。
+</Callout>
+
+### 连不上主机（被拒绝、超时或不可达）
+
+<Callout type="error">
+与凭据无关的失败——底层消息里包含类似 `ECONNREFUSED`、`ETIMEDOUT`、`EHOSTUNREACH`、`ENETUNREACH` 或 `SSH connection closed before ready` 的字样。
+</Callout>
+
+**含义**。Openship 根本没走到登录那一步。要么那个主机和端口上没有任何东西在监听，要么防火墙在丢包，要么地址不对。
+
+- `ECONNREFUSED`——主机有应答，但那个**端口**上没有东西在监听（端口不对，或 sshd 没跑）。
+- `ETIMEDOUT` / `EHOSTUNREACH` / `ENETUNREACH`——包没有得到任何回应：IP 不对，或防火墙 / 安全组挡住了 SSH 端口。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+仔细核对 **Server IP Address** 和 **Port**。这里敲错是最常见的原因。
+</Step>
+
+<Step>
+确认 SSH 端口对运行 Openship 的那台机器是开放的——查你提供商的防火墙 / 安全组规则，别只看服务器本机防火墙。
+</Step>
+
+<Step>
+从 Openship 宿主机测试原始连通性：`nc -vz <host> <port>`（或 `ssh -p <port> <user>@<host>`）。连不上就是网络/防火墙问题，不是 Openship 的问题。
+</Step>
+
+</Steps>
+
+<Callout title="&quot;Cooling down after repeated failures&quot;" type="warn">
+连续失败几次后，Openship 会触发一个短暂的熔断器，快速失败并报 `Server is unreachable — cooling down after repeated failures, retry in ~30s.`，而不是每次检查都去捶一台死机器。这是预期行为——先修好底层的可达性问题，等倒计时走完再重试。成功一次即解除。
+</Callout>
+
+### 通过 Cloudflare Access 连接
+
+在服务器的 **Connection** 字段里选 **Cloudflare Access**。填 Access 应用的主机名，不要填 URL 或裸的 `ProxyCommand`。支持密码、加密密钥和 agent 认证。
+
+如果 OpenShip 报告缺少 `cloudflared`，在运行 API 的那台机器上安装它。Windows 桌面版自带。操作者可以用进程环境变量 `OPENSHIP_CLOUDFLARED_PATH` 覆盖可执行文件路径；设置该变量时，含空格的 Windows 路径要加引号。用运行 OpenShip 的同一操作系统用户完成 Cloudflare 认证，然后重试 **Test Connection**。在无头或容器安装里，该环境中必须有一个已认证的 `cloudflared` 会话。确认 Access 策略允许该账号，且隧道指向 SSH。
+
+Cloudflare 和跳板机是两种独立的连接选择。裸 `ProxyCommand` 和其他会在本地执行命令的选项在服务器表单和 API 里都会被拒绝。
+
+### 跳板机或额外 SSH 参数像是被忽略了
+
+<Callout type="error">
+你在 **Advanced** 下设置了 **Jump Host**（堡垒机）或 **Extra SSH Arguments**，但连接的表现就好像它们不存在。
+</Callout>
+
+**含义**。**Jump Host**（`-J`）和 **Extra SSH Arguments** 字段只在 **Agent** 认证路径上生效——那条路径驱动的是你操作系统的真实 `ssh` 客户端。Password 和 SSH-Key 认证走的是进程内 SSH 库，不使用这两个字段。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+把服务器的 **Authentication** 切到 **Agent**，跳板机和额外参数才会生效。
+</Step>
+
+<Step>
+确保能到达最终主机的密钥已加载进 `ssh-agent`（见下一节），然后重新 **Test Connection**。
+</Step>
+
+<Step>
+更推荐在 `~/.ssh/config` 里一次性配好堡垒机，然后让 Openship 直指目标主机——Agent 路径读取 SSH 配置的方式和你的终端一样。
+</Step>
+
+</Steps>
+
+### Agent 认证找不到密钥
+
+<Callout type="error">
+选了 **Agent**，但连接失败的表现就像没提供任何密钥——通常以认证失败的形式出现。
+</Callout>
+
+**含义**。Agent 认证的方式与你在终端里 `ssh <host>` 完全一致：通过宿主机的 `ssh-agent`。Openship 在 `SSH_AUTH_SOCK` 里找 agent 套接字；由于 GUI 启动的桌面应用常常继承不到这个变量，它会回退到 macOS 的 `launchctl getenv SSH_AUTH_SOCK` 和 Linux 的 `systemctl --user show-environment`。找不到 agent（或没有已加载的密钥）时，这次登录无凭据可提供，只能失败。Agent 路径还是非交互的（`BatchMode=yes`），从不提示输密码或口令——它必须只靠 agent/密钥成功。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+在运行 Openship 的机器上，确认 agent 在跑且装着你的密钥：`ssh-add -l`。如果它列出 "no identities"，用 `ssh-add ~/.ssh/id_rsa` 加载一把。
+</Step>
+
+<Step>
+在同一台机器上确认裸 `ssh <user>@<host>` 能通。如果它通而 Openship 不通，就是没找到 agent 套接字——从一个设了 `SSH_AUTH_SOCK` 的 shell 重启 Openship，或改用 **SSH Key** 认证直接指向密钥文件。
+</Step>
+
+<Step>
+在 Windows 上，OpenSSH agent 是命名管道而不是套接字，这条路径不支持——改用 **SSH Key** 或 **Password** 认证。
+</Step>
+
+</Steps>
+
+## 组件装不上或报告不健康
+
+Openship 会在每台服务器上安装并健康检查一小组组件：**Docker**、**Git**、**OpenResty**、**Certbot** 和 **rsync**。Docker 和 Git 是部署的核心要求；其余是可选基础设施。在服务器的 **Components** 标签页（**System Health** 卡片）管理它们，或用 `openship server install`/`check`。
+
+### 缺少 Docker，或守护进程没在运行
+
+<Callout type="error">
+`Docker is not installed`，或 `Docker is installed but the daemon is not running`。
+</Callout>
+
+**含义**。健康检查先跑 `docker --version` 看装没装，再跑 `docker info` 看守护进程是否真的起来了。第一条消息说明二进制不存在；第二条说明二进制在，但后台服务停了。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+缺 Docker 时，在 Docker 那一行用 **Install**（或 `openship server install <serverId> -c docker`）。Openship 通过官方 `curl -fsSL https://get.docker.com | sh` 脚本安装，在 systemd 主机上还会启用并启动服务。
+</Step>
+
+<Step>
+装了但没运行时，在服务器上启动它：`systemctl start docker`（再加 `systemctl enable
+docker` 让它开机自启）。
+</Step>
+
+<Step>
+按 **Re-check**（或 `openship server check <serverId>`）——Docker 那一行应该显示健康并带版本号。
+</Step>
+
+</Steps>
+
+<Callout title="Docker 只装在 Linux 上" type="warn">
+自动安装 Docker（和 OpenResty）只针对 Linux 服务器。在非 Linux 主机上你会看到 `Docker installation is only supported on Linux servers`——自己装好 Docker，然后 Re-check。
+</Callout>
+
+### 组件装了但“不健康”
+
+<Callout type="error">
+某一行显示了版本号却被标记为不健康，例如 `OpenResty is installed but not running` 或
+`OpenResty is running but analytics scripts are not deployed - reinstall to fix`。
+</Callout>
+
+**含义**。二进制存在，但检查它是否在干活的环节失败了——服务没在运行，或（对 OpenResty 而言）受管的 Lua 脚本没就位。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+"not running" 就在服务器上启动服务（`systemctl start openresty`）然后 **Re-check**。
+</Step>
+
+<Step>
+"analytics scripts are not deployed" 就在该组件那一行用 **Reinstall**——这会重新铺好 OpenResty 受管的配置和脚本，不做破坏性移除。
+</Step>
+
+<Step>
+重装仍失败时，盯着流式输出的 **Install Logs** 面板找真正的错误；最后几行会点名是包的问题还是权限的问题。
+</Step>
+
+</Steps>
+
+<Callout title="刷新用 Reinstall，别用 Remove" type="info">
+**Remove** 是破坏性的——移除 **OpenResty** 会连反向代理和它的受管配置一起拿走，直到你重新安装。如果只是想刷新脚本或设置，用 **Reinstall**。
+</Callout>
+
+### 安装中途报错停止
+
+<Callout type="error">
+安装返回诸如 `install_in_progress`、`Invalid component names` 或 `Invalid or missing component name` 的错误。
+</Callout>
+
+**含义**。
+
+- `install_in_progress`——这台服务器已有一个安装会话在跑；同一时间只允许一个。
+- `Invalid component names` / `Invalid or missing component name`——该组件不在 Openship 的安装范围内。有效名称是 `docker`、`git`、`openresty`、`certbot` 和 `rsync`。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+`install_in_progress` 就等正在跑的安装结束（进度实时流式输出），再启动新的安装。在控制台里，进行中的会话会直接重新接上。
+</Step>
+
+<Step>
+名字无效就用五种受支持组件之一重跑——CLI 会当场拒绝其他任何名字并报 `Unknown component(s): … Valid: docker, git, openresty, certbot, rsync`。
+</Step>
+
+<Step>
+安装真失败时，每个组件的结果都带着底层错误，失败的那步会保持 **Failed**——用 **Retry Failed** 只重跑那些组件。
+</Step>
+
+</Steps>
+
+<Callout title="这和构建失败不是一回事" type="info">
+SSH 和组件都健康但*部署*失败时，问题出在构建或运行步骤，不在服务器。前往[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+## 端口转发隧道起不来
+
+端口转发把远程服务器的端口映射到你本机的 `localhost:<port>`（类似 VS Code 的端口转发）。它在服务器详情页的 **Ports** 标签页里。
+
+### 没有 Ports 标签页，或隧道返回 "Not available"
+
+<Callout type="error">
+没有 **Ports** 标签页，或隧道操作失败并报 `Not available in this mode`。
+</Callout>
+
+**含义**。端口转发是**桌面版独占**的。把远程端口转发到“localhost”只有在 Openship 编排器*就是*你自己的机器时才有意义，所以在云端托管和自托管 VPS 实例上这个功能是隐藏的。
+
+**修复方法**：用桌面应用管理那台服务器的端口转发。服务器本身没有任何要改的。
+
+### 隧道打不开，或端口被拒绝
+
+<Callout type="error">
+添加转发被拒绝并报 `Remote port must be between 1 and 65535` 或 `Local port must be 0 (auto) or 1–65535`，或启动失败——错误会显示底层原因（往往与上面的 SSH 问题相同），没有细节时则是一个笼统的 `Failed to start tunnel`。
+</Callout>
+
+**含义**。前两个是校验：远程端口必须是真实端口，本地端口必须是 `0`（让操作系统挑）或有效端口。启动失败说明 SSH 连接没能打开这条转发——通常是和上面几节相同的底层 SSH 问题，或本地端口已被占用。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+**Remote port** 填 `1–65535` 之间的值；**Local** 留 `0`（自动）或选一个空闲端口。
+</Step>
+
+<Step>
+确认服务器本身能连上——打开它的 **Terminal** 标签页或跑一次 **Re-check**。隧道搭在同一条 SSH 连接上，SSH 不通隧道就起不来。
+</Step>
+
+<Step>
+还是启动失败的话，可能是操作系统挑了个被占的本地端口——把 **Local** 设为 `0` 让 Openship 绑定任意空闲端口，再 **Start**。**Stop** 再 **Start** 能干净地重开一条卡住的转发。
+</Step>
+
+</Steps>
+
+## 还是没解决？
+
+<Cards>
+  <Card title="部署到自己的服务器" href="/docs/guides/custom-servers" description="连接服务器并部署上去的完整演示。" />
+  <Card title="服务器控制台参考" href="/docs/dashboard/servers" description="服务器页面上每个字段、标签和按钮的说明。" />
+  <Card title="System API" href="/docs/api/system" description="这些页面背后的服务器、检查、安装与隧道端点。" />
+  <Card title="日志与监控" href="/docs/guides/logs-monitoring" description="读取已连接服务器的 CPU、内存与健康信号。" />
+</Cards>

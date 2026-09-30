@@ -1,0 +1,128 @@
+---
+title: job
+description: openship job 的命令、参数与选项。
+cliGroup: openship job
+---
+
+示例请参见[工作流指南](/docs/guides/jobs)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship job
+
+管理自托管的任务（job）、定时计划与运行日志
+
+```text
+openship job|jobs [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list`](/docs/cli/reference/job#openship-job-list) | 列出系统任务与自定义任务 |
+| [`get <key>`](/docs/cli/reference/job#openship-job-get) | 查看某个任务的配置与近期运行记录 |
+| [`create [options]`](/docs/cli/reference/job#openship-job-create) | 创建自定义任务（必须提供 name、server、command 和 schedule） |
+| [`update [options] <key>`](/docs/cli/reference/job#openship-job-update) | 更新任务；内置任务允许修改 schedule 和 enabled |
+| [`delete\|rm [options] <key>`](/docs/cli/reference/job#openship-job-delete) | 删除自定义任务（系统任务不可删除） |
+| [`run [options] <key>`](/docs/cli/reference/job#openship-job-run) | 立即运行任务；自定义任务会返回运行 ID |
+| [`runs [options] <key>`](/docs/cli/reference/job#openship-job-runs) | 列出某个任务的运行历史 |
+| [`logs [options] <runId>`](/docs/cli/reference/job#openship-job-logs) | 显示已存储的运行输出；JSON 模式下输出完整运行记录 |
+
+## openship job create
+
+创建自定义任务（必须提供 name、server、command 和 schedule）
+
+```text
+openship job create [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--name <name>` | 任务名称 |
+| `--server <id>` | 目标服务器 ID |
+| `--command <command>` | 在服务器上执行的 shell 命令 |
+| `--schedule <type>` | 计划类型（可选值："recurring"、"once"、"manual"） |
+| `--cron <expression>` | 五段式 cron 表达式 |
+| `--at <iso>` | once 计划的运行时间 |
+| `--file <path>` | JSON 格式的 API 请求体（env、secrets、retry 等）；flag 优先于文件取值 |
+
+## openship job delete
+
+删除自定义任务（系统任务不可删除）
+
+```text
+openship job delete|rm [options] <key>
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-y, --yes` | 确认删除 |
+
+## openship job get
+
+查看某个任务的配置与近期运行记录
+
+```text
+openship job get [options] <key>
+```
+
+## openship job list
+
+列出系统任务与自定义任务
+
+```text
+openship job list [options]
+```
+
+## openship job logs
+
+显示已存储的运行输出；JSON 模式下输出完整运行记录
+
+```text
+openship job logs [options] <runId>
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-f, --follow` | 流式跟随输出直至完成；失败时以非零码退出 |
+
+## openship job run
+
+立即运行任务；自定义任务会返回运行 ID
+
+```text
+openship job run [options] <key>
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-f, --follow` | 流式跟随自定义任务的运行直至完成 |
+
+## openship job runs
+
+列出某个任务的运行历史
+
+```text
+openship job runs [options] <key>
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--limit <n>` | 最大运行记录数（默认 50） |
+
+## openship job update
+
+更新任务；内置任务允许修改 schedule 和 enabled
+
+```text
+openship job update [options] <key>
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--name <name>` | 任务名称 |
+| `--server <id>` | 目标服务器 ID |
+| `--command <command>` | 在服务器上执行的 shell 命令 |
+| `--schedule <type>` | 计划类型（可选值："recurring"、"once"、"manual"） |
+| `--cron <expression>` | 五段式 cron 表达式 |
+| `--at <iso>` | once 计划的运行时间 |
+| `--file <path>` | JSON 格式的 API 请求体（env、secrets、retry 等）；flag 优先于文件取值 |
+| `--enabled` | 启用该任务 |
+| `--no-enabled` | 禁用该任务 |

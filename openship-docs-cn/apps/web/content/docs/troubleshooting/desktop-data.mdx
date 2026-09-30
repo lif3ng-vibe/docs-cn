@@ -1,0 +1,144 @@
+---
+title: 桌面应用与本地数据
+description: 解决桌面版与自托管的启动问题——数据库锁、"can't reach the server"、更新卡住——并找到本地数据的存放位置与恢复方法。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+本页面向把 Openship **跑在自己机器上**的人——**桌面应用**，或使用内置数据库的自托管安装。如果你用的是 Openship Cloud，以下内容都不适用——数据库由我们替你管。
+
+<Callout title="一个文件夹，一个进程" type="info">
+当你没有让 Openship 指向真正的 Postgres 时，它会使用 **PGlite**——一种嵌入式 Postgres，把所有东西都放在磁盘上的单个文件夹里。同一时间只允许**一个** Openship 进程使用那个文件夹。下面的大多数问题都来自两个进程试图共享它，或那个文件夹进入了坏状态。如果你跑自己的 Postgres（Docker Compose 那套），这里的锁问题与你无关。
+</Callout>
+
+## "Another Openship instance is already using the database"
+
+<Callout title="症状 / 现象" type="error">
+Openship 启动不了。**自托管或从源码运行**时，进程一启动就退出，终端（或日志）里出现类似这样的消息：
+
+> Another Openship instance is already using the database at `/…/data` (pid 12345). PGlite allows only one
+> process per data directory; opening a second would corrupt it. Stop the other instance (e.g. quit the
+> desktop app) and retry. If you are certain no Openship process is running, remove: `/…/data.lock`
+
+在**桌面应用**上，你看到的则是一个标题为 **“Openship failed to start”** 的原生对话框，正文是 *“Local services failed to start after 3 attempts.”*——上面那条消息才是根本原因，会以 `[api]` 为前缀打印到应用的控制台日志里。
+</Callout>
+
+**含义**（说白了）：数据库文件夹同一时间只能被一个程序打开，而已经有东西占着它。通常那个“东西”是另一份 Openship——桌面应用的第二个窗口、你没关的 `bun dev`，或一个还没退出的旧进程。
+
+**修复方法**：
+
+<Steps>
+
+<Step>
+### 关掉另一个
+
+退出所有其他开着的 Openship——第二个桌面窗口、跑着 `openship` 或 `bun dev` 的终端，或更新留下的残留进程。然后重新打开应用。
+</Step>
+
+<Step>
+### 稍等片刻再试
+
+如果上次 Openship 是*崩溃*的（而非正常退出），锁会在下次启动时自愈——它发现旧进程已不在就恢复了。重启期间它也会等几秒以完成干净的交接。稍等片刻再启动一次。
+</Step>
+
+<Step>
+### 仅在确定没有任何进程在跑时——删除锁文件
+
+消息末尾给出了锁文件的确切路径，名为 `<data-dir>.lock`（数据文件夹的邻居，不在其中）。如果你**确定**没有任何 Openship 进程存活，删掉那一个文件再启动。删它是安全的——里面绝不会有你的数据。**不要**删除数据文件夹本身里面的任何东西。
+</Step>
+
+</Steps>
+
+<Callout title="“…locked by a process on a different host”" type="warn">
+另一种措辞——*“The Openship database … is locked by a process on a different host … PGlite data directories cannot be shared across machines”*——意思是你的数据文件夹在别的机器打开过的网络/共享盘上。PGlite 文件夹不能跨电脑共享。把数据挪到本地磁盘（或把 [`PGLITE_DATA_DIR`](#本地数据存放在哪里) 设为本地路径），只有确认那台主机真的用完了，才删除它点名的锁文件。
+</Callout>
+
+## "Cannot reach the server" / "fetch failed"（启动时）
+
+<Callout title="症状 / 现象" type="error">
+窗口开了但一直空白，或弹出红色 toast：**“Cannot reach the server. Make sure the API is running.”** 日志里可能看到 Node 的原始消息 `fetch failed`。有时你看到的则是 **“Openship failed to start”** 对话框，内容为 *“Local services failed to start after 3 attempts.”*
+</Callout>
+
+**含义**（说白了）：桌面应用在幕后替你跑两样东西——**API** 和**控制台**（dashboard）——各自占用启动时挑选的一个端口。这条消息的意思是控制台起来了，但 API 还没应答。多数时候它只是在启动中；偶尔是 API 启动即崩，而最常见的原因就是上一节的数据库锁。
+
+**修复方法**：
+
+1. **等几秒**。安装或更新后的首次启动，API 要先跑完数据库迁移才会应答。应用会轮询它——给它最多一分钟。
+2. **确认是不是其实是锁报错**。如果你也看到 "already using the database"，先修[那个问题](#another-openship-instance-is-already-using-the-database)——被锁在门外的 API 永远起不来，控制台连不上它就是这个原因。
+3. **彻底退出再重开**。完全退出应用（不是只关窗口），确认没有 `openship` 进程残留，然后再启动。它会自动挑选新端口，端口被占不会挡路。
+
+<Callout title="细节在哪里" type="info">
+桌面应用会把两个服务的日志都打印到它的控制台，前缀分别是 `[api]` 和 `[dashboard]`。如果一直失败，这段输出能告诉你是哪个挂了、为什么——提 issue 时请附上。
+</Callout>
+
+## 更新卡住或失败
+
+<Callout title="症状 / 现象" type="error">
+更新下载条卡着不动，或者你按了 **Update now**，应用退出后再也没回来——或者一重开就是 **“Openship failed to start.”**
+</Callout>
+
+**含义**（说白了）：桌面应用靠拉取最新的**公开 GitHub release** 检查更新——它只*拉*，不会往你这里推任何东西。它下载安装器，然后一个小的后台脚本等应用完全退出，换上新版本再重新拉起。两件事常打断这个过程：下载连不上 GitHub（离线、被限速、链路慢），或新副本在旧副本还没松开数据库时就去打开它。
+
+**修复方法**：
+
+1. **下载卡住时**：检查网络连接。检查更新失败或离线只会安静地得出“没有更新”的结果，所以卡住的进度条通常意味着到 GitHub 的连接慢或被阻断。关掉更新提示，稍后再试。
+2. **退出了但没重开，或带着错误重开**：等几秒（旧版本需要一点时间释放数据库），然后自己启动 Openship。如果出现锁报错，照[上面的修法](#another-openship-instance-is-already-using-the-database)处理。
+3. **手动安装**：从项目的 GitHub **Releases** 页面下载你平台的安装器，在现有安装上直接运行。重装不会碰你的数据文件夹。
+
+<Callout title="它会回退到手动安装器" type="info">
+如果无缝自替换没能完成，Openship 不会把你晾在半路——它会打开已下载的安装器然后退出，让你自己完成更新。自动更新**默认关闭**；开关在 **Settings → Instance → Updates** 下。完整流程见[更新指南](/docs/guides/updating)。
+</Callout>
+
+## 本地数据存放在哪里
+
+Openship 本地存储的一切，每种安装都在一个固定位置。动它们之前先退出 Openship。
+
+| 安装形态 | 数据文件夹 |
+|---|---|
+| **桌面应用——macOS** | `~/Library/Application Support/Openship/data` |
+| **桌面应用——Windows** | `%APPDATA%\Openship\data` |
+| **桌面应用——Linux** | `~/.config/Openship/data` |
+| **自托管 / CLI（默认）** | `~/.openship/data` |
+| **自托管且自定义了路径** | 你在 `PGLITE_DATA_DIR` 里设置的路径 |
+
+数据旁边还有几个伴生文件：
+
+- **`<data-dir>.lock`**——单实例锁（数据文件夹的邻居，绝不在其中）。只有在没有 Openship 运行时才可安全删除。
+- **桌面应用**的父文件夹里还有 `config.json`（应用设置）、`ports.json`（它复用的端口，让你重启后仍保持登录）和 `auth-secret`（维持会话有效）。除非有意重置，否则别动这些。
+
+<Callout title="自定义数据路径（自托管）" type="info">
+用 `PGLITE_DATA_DIR` 环境变量把自托管 API 指向任意文件夹——如果默认的 `~/.openship/data` 不是你想放数据的地方，推荐设置。开头的 `~` 会自动展开。
+</Callout>
+
+### 恢复损坏的数据库
+
+<Callout title="症状 / 现象" type="error">
+Openship 启动不了，日志显示 `RuntimeError: Aborted()`，常伴随 `DrizzleQueryError: Failed query: CREATE SCHEMA IF NOT EXISTS "drizzle"`。
+</Callout>
+
+**含义**：内嵌数据库文件夹损坏了——最常见于写入中途被强杀，或两个进程同时打开它（这正是锁要防的事）。这是数据文件夹的问题，不是你项目的 bug。
+
+**修复方法**（从源码运行 / 自托管检出时）：仓库里有两个恢复脚本，它们会在改动任何东西之前**先备份你的数据**：
+
+```bash
+# 第一招：备份文件夹、清掉残留锁、裁掉损坏的 WAL 尾部
+bun --cwd packages/db db:heal-pglite
+
+# 不够用时的深度恢复（需要本地 Postgres 17 提供 pg_resetwal）
+bun --cwd packages/db db:heal-pglite-resetwal
+```
+
+两个脚本都会先把你的数据复制到别处（`<data-dir>.backup-…` / `.preheal-…`），所以如果恢复结果不合你意，总能回退到原始数据。
+
+<Callout title="桌面版，最后手段" type="warn">
+如果你用的是打包的桌面应用（没有仓库检出）且恢复不了：退出 Openship，把数据文件夹**复制**到安全的地方，再把原件挪走。下次启动时 Openship 会重建一个全新的空数据库。这能让你重新跑起来，但本地数据从头开始——备份副本是你回到旧数据的唯一途径，务必留好。
+</Callout>
+
+## 还是没解决？
+
+<Cards>
+  <Card title="安装" href="/docs/getting-started/installation" description="运行 Openship 的所有方式——桌面应用、npm CLI，或搭配真实 Postgres 的 Docker Compose。" />
+  <Card title="更新" href="/docs/guides/updating" description="桌面更新器与自托管 CLI 的更新流程如何工作。" />
+  <Card title="自托管基础设施" href="/docs/cli/self-host" description="把 Openship 作为后台服务跑在你自己的机器上。" />
+  <Card title="部署问题" href="/docs/troubleshooting/deployments" description="构建失败、应用上不了线。" />
+</Cards>

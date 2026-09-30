@@ -1,0 +1,126 @@
+---
+title: 从 GitHub 部署
+description: 关联一个 GitHub 仓库并把它搬上线——一步一步来或一条命令搞定。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+这是人们用 Openship 做得最多的事：把住在 GitHub 上的某段代码变成一个真实可用、有自己网址的网站。这样想——你的代码是一份菜谱，Openship 就是照着烹饪并端上桌的厨房。你把菜谱指给 Openship 一次，剩下的它来做。
+
+<Callout title="先准备好这些">
+- 一个 Openship 账户（能看到控制台（dashboard）就算已经在里面了）。
+- 一个放着你的应用的 GitHub 仓库。
+- 就这些。你**不需要** Docker、服务器或任何配置文件——Openship 会自己搞定。
+</Callout>
+
+## 步骤
+
+<Steps>
+
+<Step>
+
+### 关联你的 GitHub 账户（只需一次）
+
+Openship 需要读你仓库的权限。这一步只需做一次。
+
+前往 **Settings → Git** 并选择一种 GitHub 连接方式。可能会弹出 GitHub 窗口问"你允许吗？"——选允许。窗口关闭后，就连接好了。
+
+<Callout title="自托管：多种连接方式（不需要 Openship 账户）" type="info">
+在自托管实例上，你永远不会被强制经由 Openship Cloud。**Settings → Git** 提供：
+
+- **Openship Cloud GitHub App**——托管的 App（短期令牌，非常适合远程服务器部署）。可选；它需要一条 Openship Cloud 连接。
+- **你自己的自托管 GitHub Apps**——用一键 manifest 流程，或在控制台注册一个或多个已有的 GitHub/GitHub Enterprise App，然后使用安装令牌，不依赖 Openship Cloud 或 PAT。参见[自托管 GitHub App](/docs/guides/self-hosted-github-app)。
+- **手动**——用**你自己的** GitHub 身份连接，中间不需要 Openship：
+  - **实例上的 `gh` CLI**——点 **Log in with GitHub**；如果实例上 `gh` 已认证会立即识别，否则在机器上运行提示的 `gh auth login`，页面会自动检测。
+  - **你自己的 GitHub OAuth/App（设备登录）**——设好 **`GITHUB_CLIENT_ID`**（源自*你自己*注册的、启用了设备流的 GitHub App/OAuth 应用的公开 client id），**Log in with GitHub** 就会在界面里直接显示一次性代码 + `github.com/login/device` 链接——不需要终端，也不用 Openship 的 client id。
+  - **一个克隆令牌**——或者干脆在 **Clone credentials** 下加一个个人访问令牌。
+
+哪个合适用哪个；在自托管机器上，Openship 绝不会拿自己的 GitHub 身份顶替你的。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 选一个要部署的仓库
+
+打开 **Library** 页面（"New project"按钮也会把你带到这里）。选择 **Repositories** 标签页——你会看到你的 GitHub 仓库列表。点击你要的那个。
+
+</Step>
+
+<Step>
+
+### 选择它在哪里运行
+
+Openship 会问你的应用跑在哪里。按需选择：
+
+- **Local**——在这台电脑上（在桌面应用里试用非常合适）。
+- **Server**——在你的某台已连接的服务器上。
+- **Cloud**——在 Openship Cloud 上，由我们替你运行。
+
+刚上手的话，默认选择就挺好——以后随时可以挪。
+
+</Step>
+
+<Step>
+
+### 检查设置并点 Deploy
+
+Openship 给你一份摘要：检测到了哪个框架、构建命令是什么、将使用哪个网址。大多数应用在这里什么都不用改。
+
+点击 **Deploy**。
+
+<Callout title="Tip" type="info">
+有看不懂的字段？别动它。Openship 检测出的默认值对绝大多数应用都是对的——只有当你有明确理由时才覆盖。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 看它上线
+
+你会落到构建页面，日志实时滚动——就像隔着玻璃门看着烤箱。构建完成后你会得到一个链接。点它，你的应用就上线了。🎉
+
+</Step>
+
+</Steps>
+
+## 打开自动部署（可选但极好用）
+
+默认情况下，你选择部署时才部署。如果希望 Openship **每次你向 GitHub 推送时都自动重新部署**，打开自动部署（auto-deploy）：
+
+打开你的项目 → **Source** 标签页 → 拨开 **Auto-deploy** 开关。从此以后，每次向你部署分支 `git push` 都会自动重新构建并发布。
+
+## CLI
+
+以上操作同样可以用 CLI 完成：
+
+```bash
+# 创建一个指向你仓库的项目
+openship project create --name my-app --git-owner your-name --git-repo my-app
+
+# 发布它
+openship deploy
+
+# 可选：每次推送时重新部署
+openship project git auto-deploy my-app --enable
+```
+
+## 故障排查
+
+<Callout title="“Connect GitHub”没反应 / 不显示仓库" type="warn">
+你的 GitHub 连接没完成，或者 Openship 对那个仓库没有权限。回到 **Settings → General**，断开后重新连接——GitHub 询问授权哪些仓库时，确认你的仓库被选中。
+</Callout>
+
+<Callout title="构建失败了" type="error">
+打开构建页面读最后几行红色文字——那就是真正的原因。大多数首建失败不出这几样：缺构建命令、缺环境变量，或应用监听了错误的端口。解决办法见[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="添加自定义域名" href="/docs/guides/custom-domains" description="把应用放上你自己的 yourname.com 地址，自动配 HTTPS。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="以安全的方式为应用提供机密与设置。" />
+  <Card title="推送时自动部署" href="/docs/guides/auto-deploy" description="让每个提交自动发布。" />
+</Cards>

@@ -1,0 +1,75 @@
+---
+title: 原生 CLI 模式
+description: 借助原生 SDK 的存储与提供方使用受支持的 CLI 命令。
+---
+
+`--native-config` 通过原生 SDK 运行受支持的命令。该配置会选择安装实例、受信任的身份与组织。仅在你显式传入时才会加载它。
+
+## 创建配置文件
+
+安装 [SDK 预览包](/docs/api/sdk/installation)，并设置一个至少 32 字节、持久保存的 `OPENSHIP_ENCRYPTION_KEY`。将下面这个文件保存在你的 Node 项目中：
+
+```js title="ship-native.config.mjs"
+import { resolve } from "node:path";
+
+const encryptionKey = process.env.OPENSHIP_ENCRYPTION_KEY;
+if (!encryptionKey) throw new Error("Set OPENSHIP_ENCRYPTION_KEY");
+const stateDirectory = resolve("./ship-state");
+/** @type {import("openship/native").VerifiedIdentity | null} */
+let identity = null;
+
+export default {
+  options: {
+    instanceId: "local-cli",
+    stateDirectory,
+    storage: { driver: "pglite", dataDir: resolve(stateDirectory, "database") },
+    encryptionKey,
+    runtime: "bare",
+    routing: "none",
+    administration: true,
+    policy: { allowHostExecution: true, sourceRoots: [process.cwd()] },
+    identity: {
+      resolve: async (/** @type {string} */ assertion) =>
+        assertion === "local-cli" ? identity : null,
+    },
+  },
+  /** @param {import("openship/native").OwnedShip<string>} ship */
+  async scope(ship) {
+    const operator = ship.operator;
+    if (!operator) throw new Error("Native administration is required");
+    const person = await operator.ensureIdentity({
+      issuer: "local-cli",
+      subject: "me",
+      email: "me@example.test",
+    });
+    identity = { user: person.user, sessionId: "local-cli" };
+    return { identity: "local-cli", organizationId: person.personalOrganizationId };
+  },
+};
+```
+
+这个受信任的主机文件会选择一个本地用户。多用户集成应通过自身的认证服务验证身份。重新打开时请沿用相同的密钥、实例 ID 与存储配置。
+
+## 运行命令
+
+```bash
+npx openship --native-config ./ship-native.config.mjs --json project create --name my-app
+npx openship --native-config ./ship-native.config.mjs --json project list
+npx openship --native-config ./ship-native.config.mjs status
+```
+
+CLI 会创建并启动安装实例，选定作用域（scope），运行命令，并在退出前排空（drain）工作进程（worker）。原生项目关联会记录其实例与组织；配置不匹配时会被拒绝。
+
+## 支持的命令
+
+| 命令分组 | 原生行为 |
+| --- | --- |
+| `project`、`app`、`service`、`domain` | 具名的 SDK 资源操作。 |
+| `deploy`、`deployment`、`logs`、`init` | 部署工作流与项目关联。 |
+| `server`、`backup` | 可用操作视主机/提供方（provider）策略而定。 |
+| `system`、`status`、`doctor` | 受支持的 SDK 信息/设置操作；其余主机/安装操作受各命令自身的限制。 |
+| `edge`、`mail`、`api`、`token`、login/context 及安装类命令 | 不被原生命令门控接受；请按其正常的连接方式或本地安装模式使用。 |
+
+配置文件必须是 `.mjs`、`.cjs` 或 `.js`，并导出 `{ options, scope }`，或导出一个返回该对象的工厂函数。`scope` 可以是作用域对象，也可以是异步函数。此 CLI 模式不支持附带 `PlatformKernel` 实例。
+
+配置选项参见[原生配置](/docs/api/sdk/lifecycle)，当前的平台限制参见[兼容性](/docs/api/sdk/compatibility)。

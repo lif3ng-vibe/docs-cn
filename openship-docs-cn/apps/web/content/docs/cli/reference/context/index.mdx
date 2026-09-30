@@ -1,0 +1,73 @@
+---
+title: context
+description: openship context 的命令、参数与选项。
+cliGroup: openship context
+---
+
+示例请参见[工作流指南](/docs/cli/access)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship context
+
+管理连接上下文（list/use/add/rm）
+
+```text
+openship context|ctx [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list\|ls`](/docs/cli/reference/context#openship-context-list) | 列出已配置的上下文 |
+| [`use <name>`](/docs/cli/reference/context#openship-context-use) | 切换当前活动的上下文 |
+| [`add [options] <name>`](/docs/cli/reference/context#openship-context-add) | 创建或更新上下文的端点/令牌 |
+| [`rm\|remove <name>`](/docs/cli/reference/context#openship-context-rm) | 移除上下文（不能移除当前活动的上下文） |
+
+## openship context add
+
+创建或更新上下文的端点/令牌
+
+```text
+openship context add [options] <name>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `name` | 上下文名称 |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--api-url <url>` | API 基础 URL |
+| `--dashboard-url <url>` | 控制台（dashboard）基础 URL |
+| `--token <token>` | 要存储的个人访问令牌（Personal Access Token） |
+| `--use` | 添加后切换到该上下文 |
+
+## openship context list
+
+列出已配置的上下文
+
+```text
+openship context list|ls [options]
+```
+
+## openship context rm
+
+移除上下文（不能移除当前活动的上下文）
+
+```text
+openship context rm|remove [options] <name>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `name` | 上下文名称 |
+
+## openship context use
+
+切换当前活动的上下文
+
+```text
+openship context use [options] <name>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `name` | 上下文名称 |

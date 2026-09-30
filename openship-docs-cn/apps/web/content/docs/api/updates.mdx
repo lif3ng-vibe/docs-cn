@@ -1,0 +1,92 @@
+---
+title: 更新
+description: 检查项目可用更新，并通过部署工作流应用它们。
+---
+
+更新功能把项目的已部署版本与其上游源做对比。列出操作不会重新部署任何东西。
+只包含调用者可见的项目。
+
+## 查找可用更新
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const updates = await ship.updates.list({ behindOnly: true });
+console.log(updates);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/updates?behind=1" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+SDK 的 `behindOnly` 布尔值对应 REST 的 `behind=1` 过滤器。省略它即可包含已经
+处于最新状态或不支持上游对比的项目。
+
+## 刷新上游信息
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const scan = await ship.updates.scan();
+console.log(scan.scanned, scan.supported);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/updates/scan" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+扫描返回 `scanned` 与 `supported` 计数。上游结果会缓存；已部署一侧在列出更新时
+从项目当前状态读取。
+
+## 应用一个更新
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const submitted = await ship.updates.apply("proj_123");
+console.log(submitted.deployment_id, submitted.project_id);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/updates/proj_123/apply" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+应用更新走既有的部署工作流，并带一个更新触发器。它返回部署与项目
+ID，而不是新版本已就绪的证明。[跟进该部署](/docs/api/deployments#等待决策与取消)
+并处理其最终结果。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出更新状态；behindOnly 过滤出有可用更新的项目。 | `updates.list(input?)` | `GET /api/updates`<br />`updates:read` |
+| 刷新组织的更新扫描。 | `updates.scan()` | `POST /api/updates/scan`<br />`updates:write` |
+| 对指定项目 ID 应用一个可用更新。 | `updates.apply(id)` | `POST /api/updates/:projectId/apply`<br />`project:write` |
+
+{/* api-operations:end */}

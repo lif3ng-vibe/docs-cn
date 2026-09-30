@@ -1,0 +1,292 @@
+---
+title: Compose 与多服务应用
+description: 运行一个其实由好几部分组成的应用——Web、worker、数据库——既可以从 docker-compose 文件来，也可以手动添加，并让每个服务保持同步。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+有些应用不止一件事——它们是一个团队。前面是一家网站，后台一个干慢活的 **worker**，还有一个存数据的**数据库**。想想一家餐厅：前厅、厨房、储藏室是三个独立的岗位，但合起来才是同一家餐厅。Openship 把一组一起运行的服务称为一个**技术栈（stack）**，它可以替你把整个栈跑起来。
+
+栈里的每个服务都是自己的一个小盒子（一个**容器（container）**），有自己的镜像、端口、存储和设置——但你在同一处管理它们全部：项目的 **Services** 标签页。
+
+<Callout title="先准备好这些">
+- 一个 Openship 项目。所谓技术栈，不过是拥有不止一个服务的项目。
+- 你的服务要么来自仓库里的 **`docker-compose.yml`** 文件，要么你在控制台**手动添加**。下面两种都会讲到。
+- 别的什么都不用——从目录添加服务不需要 Docker 知识。
+</Callout>
+
+## 你的服务住在哪里
+
+打开项目并选择 **Services** 标签页。每个服务占一行。每行让你一眼看到：
+
+- 服务的**名称**（例如 `web`、`worker`、`db`）。
+- 一个 **Public** 或 **Internal** 徽章——Public 表示它有供人访问的网址；Internal 表示只有其他服务能触达它（数据库几乎总是 Internal）。
+- 一个**状态**圆点：**Running**、**Stopped**、**Starting**、**Failed** 或 **Disabled**。
+
+点击任意一行打开该服务的完整页面。仓库更新会保留你的显式修改并自动套用其他变更——参见[当仓库与你的修改不一致：漂移](#当仓库与你的修改不一致漂移)。
+
+## 服务如何进入一个栈
+
+有两种方式，而且可以混用。
+
+### 1. 来自 `docker-compose.yml` 文件
+
+如果仓库里有 compose 文件，Openship 会读取它，把**文件中的每个服务变成一行服务**——包括它的镜像（或构建上下文与 Dockerfile）、端口、卷、环境变量、命令、重启策略、`depends_on` 连接和健康检查。从那以后，Openship 部署的就是这些行。
+
+Openship 只跟踪它建模的 compose 字段：`image`、`build`、`dockerfile`、`ports`、`depends_on`、`environment`、`volumes`、`command`、`restart` 和 `healthcheck`。文件里其余的一切——`networks`、构建参数、label、`profiles`、注释——都原封不动：Openship 既不读取也不改写。
+
+#### Compose 文件在子文件夹里
+
+Openship 在项目根目录寻找 compose 文件。如果你的文件在别处——比如 `deploy/docker-compose/docker-compose.yml`——在部署向导中打开 **Compose file** 并输入路径，然后点 **Scan**。Openship 会重新读取仓库，纳入文件声明的服务。你可以给出文件本身或其所在文件夹，文件名也不必是标准的（`stack.yml` 也行）。
+
+相对的 `build:` 上下文按 compose 的规则解析——相对 compose 文件所在文件夹——因此放在 `deploy/docker-compose/` 里的文件可以用 `build: ../../api` 来构建仓库根下的 `api` 目录。
+
+#### `build:` 是什么意思
+
+`build:` 是 docker 构建的**上下文（context）**：docker 从这个目录开始构建。该服务 Dockerfile 里的 `COPY` 和 `ADD` 路径相对它，`dockerfile:` 在它里面查找，适用的 `.dockerignore` 也在那个目录里——与 `docker compose build` 的行为完全一致。当服务确实从仓库根构建时，用 `build: .`。
+
+有两点后果值得知道：
+
+- `build:` 目录里没有 Dockerfile 的服务会以明确的错误失败。它不会回退到仓库其他地方的 Dockerfile——那会在该服务的名义下构建出另一个不同的镜像。
+- Compose 的 `build.args` 与 `build.target` 不被建模。构建参数改由服务的环境变量提供（每个变量会作为一个 `--build-arg` 传入）。
+
+#### BuildKit
+
+现代 Dockerfile 语法——`RUN --mount=type=cache`、`# syntax=` 指令、heredoc——需要 BuildKit。当对 Docker socket 构建时，Openship 会对要求它的 Dockerfile 自动启用；在远程服务器上，只要该主机的 Docker CLI 装了 `buildx` 插件也同样启用。如果构建失败并报 `the --mount option requires BuildKit`，在构建主机上安装插件（`docker-buildx-plugin` 软件包，或 Docker 官方软件包）后重新部署。构建日志会写明用的是哪个构建器。
+
+与其每个项目都设置一次，不如直接写进仓库：在 [`openship.json`](/docs/reference/openship-json) 中声明：
+
+```json
+{ "composePath": "deploy/docker-compose/docker-compose.yml" }
+```
+
+如果后来你在向导字段里改了值，以向导为准——配置文件只是播种初值，你改写后的值才是部署时用的。
+
+<Callout title="Openship 永远不写你的仓库" type="info">
+你在控制台做的修改由 Openship 存储，并在每次部署时使用。你的 `docker-compose.yml` 永远不会被改。如果想让文件本身反映某项变更（让同事或新克隆的人也能看到），请在仓库中编辑该文件并推送。
+</Callout>
+
+#### Next.js 构建期间的数据库访问
+
+如果 `next build` 报 `getaddrinfo ENOTFOUND db`，随后又出现诸如 `Failed to collect page data for /api/hours` 的错误，说明构建期间执行的代码试图解析 `db` 主机名。检查该路由及其导入的辅助模块里是否有数据库初始化。
+
+在 `openship.json` 里用 `"dependsOn": ["db"]`（或在 Compose 里 `depends_on: [db]`）。它只决定容器启动顺序；不会让 Postgres 在镜像构建之前启动，也不会把构建机接入服务们的网络。即使数据库已经在跑，构建机也无法自动通过服务名访问它。
+
+对于只在处理请求时才需要数据的路由，把 Payload 初始化挪进已有的 `GET` 或 `POST` 处理器，或该处理器调用的辅助函数。Next.js 在构建期间也会导入路由模块，因此仅靠 `export const dynamic = 'force-dynamic'` 阻止不了模块顶层的 `await getPayload(...)` 或急切创建的初始化 promise 执行。同样要检查导入的辅助函数与配置里的副作用。
+
+例如，下面这个 Next.js 15 / Payload 3 处理器在请求到达时才初始化 Payload。它假定存在一个 `hours` 集合；改造成自己的路由时，请保留原有的认证、查询选项、权限检查和响应结构：
+
+```ts
+import config from "@payload-config";
+import { getPayload } from "payload";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const payload = await getPayload({ config });
+  const result = await payload.find({
+    collection: "hours",
+    overrideAccess: false,
+  });
+  return Response.json(result);
+}
+```
+
+`overrideAccess: false` 会应用该集合的访问规则；在你自己的查询里保留现有的已认证用户上下文。多个运行中的服务共享项目网络时，保持运行时连接串指向 `db:5432`。
+
+如果某页面确实要在静态生成期间查询数据，把 API 处理器改成延迟初始化并不能消除这一需求。要么提供一个构建环境可达的数据源，要么在符合应用逻辑的前提下改为请求时加载数据。
+
+### 2. 手动添加
+
+任何项目都可以从内置目录里加额外的常用镜像——数据库、缓存、搜索、队列、对象存储等等——或者加任何你指定的 Docker 镜像。
+
+<Steps>
+
+<Step>
+
+### 打开 Add Service 对话框
+
+在 **Services** 标签页上，点击 **Add Service**。
+
+</Step>
+
+<Step>
+
+### 选择一个服务
+
+你会进入一个目录。在左侧浏览分类（Databases、Caches、Search、Vector & AI、Queues & Streams、Object Storage、Auth & Identity、Mail & SMTP、Runtimes），按名称搜索，或选择 **Custom image** 自己输入任意镜像 tag。点击你要的那个。
+
+</Step>
+
+<Step>
+
+### 填写细节
+
+Openship 能预先填的都填好了。检查这些：
+
+- **Service name**——简短且在栈内唯一（例如 `db`）。
+- **Ports**——容器监听的端口，用逗号分隔（例如 `5432`）。
+- **Image**——Docker 镜像与 tag（例如 `postgres:16-alpine`）。
+- **Persistent volumes**——可选的`名称 → 路径`对，让数据在重启后仍存在。
+- **Environment variables**——服务需要的设置。
+- **Routing**——保持 **Internal only**（数据库和后台 worker 的正确选择），或切到 **Publicly exposed** 给该服务一个自己的网址——免费子域名或你自定义的域名。
+
+点击 **Add service**。
+
+</Step>
+
+<Step>
+
+### 它会自动部署
+
+如果项目已经有在线部署，添加服务会**重新部署**项目，让新容器真的启动——你会看到"deploying…"消息。如果项目从未部署过，该服务只是被**保存**，需要你自己部署项目把它拉起来。
+
+</Step>
+
+</Steps>
+
+### compose 文件变更后的重新同步
+
+你一般不需要手动同步——每次部署 Openship 都会**重读当前的 Compose 源**（GitHub 项目用仓库，本地项目用 `localPath`），并自动与你的服务行对账。GitHub 推送走同一路径，只有当变更文件清单证明 Compose 文件未动时才跳过扫描。在终端里你也可以强制从某个特定文件同步：
+
+```bash
+# 从 compose 文件重建栈的服务行。
+# 在栈内但不在文件里的服务会被移除——会要求你确认。
+openship service sync --project my-app ./docker-compose.yml
+```
+
+<Callout title="同步需要 Docker Compose v2" type="warn">
+`openship service sync` 会调用 `docker compose config` 来解析并校验文件，因此运行命令的机器上必须装有 Docker Compose v2。如果找不到 `docker`，同步会以明确的消息终止。
+</Callout>
+
+## 打开一个服务
+
+点击一个服务行打开它的页面。顶部是一排标签页：
+
+- **Overview**——只读的事实，每项只在适用时显示：**Network**（其他服务访问它的内部地址、容器端口、发布到主机的端口、当前 IP 和容器 ID——在 Openship Cloud 上显示为 **Workspace ID**）、**Configuration**（重启策略、命令、依赖项）和 **Volumes**。
+- **Terminal**——容器内的实时 shell。只在服务**Running** 时可开（此前提示 "Start the service to open a shell."）。
+- **Logs**——服务的输出，实时流式呈现。
+- **Environment**——该服务的环境变量。编辑后点 **Save environment**。
+- **Settings**——你可以修改的构建与运行时字段：名称、镜像（或构建上下文与 Dockerfile）、端口、依赖项、卷、命令、重启策略和可选的健康检查——外加启用开关、生命周期按钮和 **Delete**。（环境变量有独立的 **Environment** 标签页。）
+- **Backup**——计划并执行备份。该标签页只对 compose 服务（有状态的容器）显示，不对源码构建的子应用显示。
+
+## 启动、停止、重启
+
+生命周期按钮位于服务的 **Settings** 标签页。出现哪些按钮取决于状态：
+
+- **Running** → **Stop** 和 **Restart**。
+- **Stopped** → **Start**。
+- **Disabled**（从未启动）→ **Enable & start**，开启服务并部署它。
+- **Enabled** 且有在线部署 → **Redeploy**，只重建**这个服务**，栈里其余照常运行。
+
+还有 **Disable Service** / **Enable Service**（禁用的服务在部署时被跳过）和 **Delete**（拆除该服务）。
+
+<Tabs items={['Dashboard', 'CLI']}>
+
+<Tab value="Dashboard">
+打开服务 → **Settings** 标签页 → 点击 **Start**、**Stop** 或 **Restart**。
+</Tab>
+
+<Tab value="CLI">
+```bash
+openship service start   --project my-app db
+openship service stop    --project my-app db
+openship service restart --project my-app db
+
+# 看看实际在运行什么
+openship service containers --project my-app
+```
+用服务名或其 `svc_…` id 来指定目标服务。
+</Tab>
+
+</Tabs>
+
+## 当仓库与你的修改不一致：漂移
+
+每次部署时，Openship 把当前的 Compose 源与你保存的服务配置合并，逐字段与上次导入的版本比较：
+
+- **base**——它上次读入的 compose 值，
+- **yours**——该服务当前的值（包括你在控制台的修改），
+- **theirs**——仓库文件此刻的内容。
+
+| 仓库改了吗 | 你改过吗 | Openship 的动作 |
+| --- | --- | --- |
+| 否 | — | 保留你的值 |
+| 是 | 否 | **自动套用仓库的值** |
+| 是 | 是 | **保留被编辑的字段**，并套用仓库的其他变更 |
+| 仓库新增服务 | — | 自动加入 |
+| 仓库移除了服务 | 否 | 仅当它没有保存过环境变量时才移除 |
+| 仓库移除了服务 | 是 | 保留它，直到你显式删除 |
+
+常规的 Compose 变更不需要先点 **Accept upstream** 或 **Keep mine** 就能重新部署。已保存的项目与服务环境变量的值原样保留。仓库中省略的键会作为本地覆盖保留；一次未解析的表达式不能顶替该键唯一保存的值。不再需要时，请在环境变量编辑器中显式移除已保存的变量。
+
+如果旧版本留下了一个待处理的审核项，下一次部署会自动对账。传统的裁决操作仍然可用：**Accept upstream** 套用源配置并保留已保存的环境变量值；**Keep mine** 保留当前配置。
+
+<Tabs items={['Dashboard', 'CLI']}>
+
+<Tab value="Dashboard">
+重新部署项目即可套用当前的源变更。你也可以在旧版遗留的横幅上处理那个审核项。
+</Tab>
+
+<Tab value="CLI">
+```bash
+# 接受一次遗留的源变更审核；已保存的环境变量值会得到保留
+openship service drift accept --project my-app web
+
+# 保留你的修改，并不再标记该变更
+openship service drift keep --project my-app web
+```
+</Tab>
+
+</Tabs>
+
+## 端口与卷：Cloud 与自托管之别
+
+端口和卷的行为取决于栈**在哪里**运行：
+
+- **自托管 / 你自己的服务器（Docker）**：完整的 compose 语义。`host:container` 端口映射发布在宿主机上，卷（named 卷或 bind mount）会被挂载。
+- **Openship Cloud**:只有**容器**端口有意义——它经边缘（edge）代理路由到你的域名，发布到主机的端口会被忽略。**Docker 卷挂载不适用**。云上服务的数据存放在其工作区磁盘上，重启后仍在，但除非你开启备份，**不会**跨重建携带。
+
+Compose 的端口发布与 Openship 托管的域名路由是两个独立的权属边界。只有当你在 Openship 中显式配置项目/服务的端点时域名才会变更；从不会从 `ports` 推断出无关的 Caddy、nginx 或 Traefik 虚拟主机，也从不改写它们。对同一服务器上由 Openship 托管的域名，重新部署会保持其跟踪的主机端口固定，让路由不会悄悄换到别的上游。
+
+界面上也能看到这些差异。在部署向导中配置栈时，云项目会把**发布（宿主）端口和卷字段置灰**，并注明只有容器端口参与路由。有状态的镜像——Postgres、MySQL、MariaDB、MongoDB、Redis 或 Elasticsearch 之类数据库，以及任何声明了卷的服务——会得到一条琥珀色提醒：除非开启备份，数据不会跨重建保留。之后在 **Services** 标签页上，云服务的 **Overview** 会以 **Workspace ID** 替代容器 ID。
+
+## CLI
+
+每个服务操作都有对应的 CLI 命令。全部命令都用 `-p / --project`（id、slug 或名称）指定栈，并用服务名或 `svc_…` id 指定服务。
+
+```bash
+openship service list    --project my-app                 # 列出服务
+openship service get     --project my-app db              # 显示单个服务的配置
+openship service create  --project my-app cache \
+  --image redis:7 --port 6379                             # 手动添加一个服务
+openship service sync    --project my-app ./docker-compose.yml
+openship service start   --project my-app web             # start / stop / restart
+openship service logs    --project my-app web --follow    # 流式查看日志
+openship service env set --project my-app web KEY=value   # 设置环境变量（--secret, -e <env>）
+openship service drift accept --project my-app web        # 处理漂移
+openship service delete  --project my-app cache           # 移除一个服务
+```
+
+## 故障排查
+
+<Callout title="添加了服务却没有东西在运行" type="warn">
+添加服务只是保存它，容器只有在部署时才会启动。如果项目已有在线部署，Openship 会替你重新部署；如果没有，打开项目并部署（或者用服务 Settings 标签页上的 **Enable & start** 按钮）。
+</Callout>
+
+<Callout title="`openship service sync` 提示找不到 docker" type="error">
+同步命令需要 Docker Compose v2 来读取你的文件。在运行命令的机器上安装 Docker（自带 `docker compose`），再试一次。你也可以随时改在控制台里添加或编辑服务。
+</Callout>
+
+<Callout title="旧的 Compose 审核横幅还挂在那里" type="info">
+重新部署即可与当前源对账。你的显式覆盖继续生效，其他仓库变更自动套用。真正缺失的必需变量仍需要在环境变量编辑器里补值；部署错误会指明是哪个服务的哪个键。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="先把你的仓库——连同 compose 文件——搬上线。" />
+  <Card title="核心概念" href="/docs/getting-started/core-concepts" description="大白话词汇表：项目、服务、部署与运行时。" />
+  <Card title="运行时模型" href="/docs/architecture/runtime-model" description="技术栈的三处栖身之地——本机、你的服务器，或 Openship Cloud。" />
+  <Card title="数据所有权" href="/docs/architecture/data-ownership" description="自托管时服务数据住在哪里，备份如何保护它。" />
+</Cards>

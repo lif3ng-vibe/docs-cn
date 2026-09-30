@@ -1,0 +1,18 @@
+{
+  "title": "CLI",
+  "pages": [
+    "index",
+    "---连接---",
+    "run",
+    "access",
+    "native",
+    "---工作流---",
+    "deploy",
+    "projects",
+    "self-host",
+    "edge",
+    "automation",
+    "---参考---",
+    "reference"
+  ]
+}

@@ -1,0 +1,75 @@
+---
+title: 生命周期与配置
+description: 配置原生存储、提供方、执行策略与有序关闭。
+---
+
+在拥有它的应用的生命周期内，保持一个原生安装处于打开状态。
+
+## 生命周期
+
+| 调用 | 效果 |
+| --- | --- |
+| `await createShip(options)` | 初始化自有的 worker、存储和提供方。 |
+| `await ship.start()` | 启用各项操作以及任何显式配置的调度。 |
+| `await ship.scope({ identity, organizationId })` | 创建一个经过授权的用户/组织视图。 |
+| `await ship.close({ mode: "drain" })` | 拒绝新的变更操作，排空自有工作，并释放资源。 |
+
+用 `try/finally` 包裹工作过程，或在你的应用关闭时执行关闭。作用域不拥有安装。关闭
+安装并不会删除其数据库或项目配置。
+
+## 必需配置
+
+| 选项 | 要求 |
+| --- | --- |
+| `instanceId` | 稳定的安装 ID；重新打开时复用它。 |
+| `stateDirectory` | 存放源、发布和提供方状态的绝对私有目录。 |
+| `storage` | 显式的 PGlite 或 PostgreSQL 配置。 |
+| `encryptionKey` | 32–4096 字节的持久 UTF-8 密钥。 |
+| `runtime` | `bare`、`docker` 或 `cloud`。 |
+| `identity` | 可信的身份适配器；参见[身份设置](/docs/api/sdk/identity)。 |
+
+数据库与其安装 ID 和密钥指纹绑定。重新打开时，不同的 ID 或密钥会被拒绝。存储绝不会
+默认使用 CLI 已有的数据库。
+
+## 存储
+
+| 驱动 | 配置 | 迁移行为 |
+| --- | --- | --- |
+| PGlite | `{ driver: "pglite", dataDir: "/absolute/path/database" }` | 默认应用内置迁移。 |
+| 内存版 PGlite | `{ driver: "pglite", dataDir: "memory://" }` | 适用于测试或短期安装的临时状态。 |
+| PostgreSQL | `{ driver: "postgres", url, migrations: "verify" }` | 默认校验迁移；需要显式选择 `"apply"` 才会应用迁移。 |
+
+重新打开已完成迁移的安装时，使用 `migrations: "verify"`。`stateDirectory` 与 PGlite
+的 `dataDir` 是两个独立的设置。要持久使用，请同时保留两者和加密密钥。
+
+## 提供方与策略
+
+| 选项 | 效果 |
+| --- | --- |
+| `routing` | 默认为 `"managed"`；bare 运行时可用 `"none"`。 |
+| `cloud` | 显式的 Cloud 提供方凭据和可选的托管配置。 |
+| `policy.allowHostExecution` | 允许本地构建、主机管理和主机 SSH 设施。默认禁用。 |
+| `policy.sourceRoots` | 允许原生目录源导入的绝对目录列表。 |
+| `policy.allowLocalForwarding` | 允许转发到已授权远程服务器的回环监听器。 |
+| `administration` | 暴露可信的 `ship.operator` 方法。默认禁用。 |
+| `jobs` | 在启动时启用保留的任务/备份调度器。默认禁用。 |
+| `recovery` | `"none"`，或对自有的基于文件的 PGlite 进程进行独占恢复。 |
+| `diagnostics` | 引擎诊断，取值为 `"inherit"`、`"stderr"` 或 `"silent"`。 |
+| `environment` | 额外的提供方设置；保留的 storage、identity 和 ownership 字段不能被覆盖。 |
+| `caller` | 可信的调用归因：`source`（`"api"` 或 `"cli"`）和 `userAgent`。它不会授予权限。 |
+
+启用调度或 Cloud 转发之前，参见[兼容性](/docs/api/sdk/compatibility)。
+
+## 关闭时限
+
+`close({ mode: "drain", timeoutMs })` 限制调用者等待的时长。超时会拒绝该等待；自有
+工作继续排空。在安装仍在关闭过程中时，不要删除安装文件。
+
+取消部署等待只会停止观察。使用 `deployment(id).cancel()` 请求取消执行，并检查其
+结果状态。
+
+## 附加到现有内核
+
+已经拥有 `PlatformKernel` 的高级宿主可以调用 `createShip({ platform, identity })`。
+这个重载返回一个同步门面。它不会启动或关闭调用者自有的资源。大多数集成应使用
+[原生设置](/docs/api/sdk/native)中展示的自有工厂。

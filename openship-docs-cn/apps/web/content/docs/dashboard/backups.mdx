@@ -1,0 +1,142 @@
+---
+title: 备份
+description: Backups 页面用于注册存储目标——S3 存储桶、SFTP 主机、已有的服务器或本地磁盘——你的项目备份都写入这里。
+---
+
+**Backups** 页面（在侧边栏里，或位于 `/backups`）用来设置备份写入的**存储目标**（storage target）。OpenShip 把这些目标称为**备份目标**（destination）。可以把一个备份目标理解为对一个问题的回答："备份运行时，文件写到哪去？"
+
+本页只管理备份目标。至于**何时**备份、**备份什么**——某个项目的计划与保留策略——在该项目自己的 **Backup** 标签上配置。全局图景参见[备份与恢复](/docs/guides/backups-restore)。
+
+<Callout title="设置一次，处处复用">
+备份目标在这里添加一次，之后任何项目的备份策略都可以指向它。一个目标被多个项目共用是正常且预期的。
+</Callout>
+
+## 界面内容
+
+顶部是页面标题和副标题 "External storage targets for project and service backups."。当你已至少拥有一个备份目标时，右上角会出现 **Add Destination** 按钮。
+
+每个备份目标是列表中的一行，显示：
+
+- 一个图标和你给它的**名称**。
+- 若它是默认目标，则带 **Default** 徽标。
+- 一个**类型**胶囊——*S3-compatible*、*SFTP*、*Existing server*、*Local disk* 或 *HTTP upload* 之一。
+- 一个**验证徽标**：*Verified*（绿色）、*Failed*（红色）、*Verifying…* 或 *Not verified*。
+- 一行指向位置的摘要（bucket · region · endpoint，或 `user@host:port` 等）。
+- 一行凭据信息（如 "Access key stored"、"Private key stored"、"Reuses server credentials"）。
+
+每行右侧：一个 **Verify connection** 按钮（刷新图标）和一个 **⋯** 菜单，含 **Edit**、**Set as default** 和 **Delete**。
+
+### 首次访问（空态）
+
+尚未添加任何目标时，页面显示 "No backup destinations yet"，带 **Add Your First Destination** 按钮，以及 **Supported destinations** 下方的一排卡片：
+
+| 卡片 | 副标签 |
+|---|---|
+| S3-compatible | AWS · R2 · B2 · MinIO |
+| SFTP | 任意 SSH 主机 |
+| Existing server | 复用 SSH 凭据 |
+| Local disk | 仅自托管 |
+
+## 添加备份目标
+
+按 **Add Destination**（或 **Add Your First Destination**）。会弹出一个两步的对话框。
+
+### 第 1 步——选择类型
+
+标题为 "Add backup destination"，提示 "Pick where your backups will be stored."。在四种类型中选一个：
+
+| 类型 | 适合 | 是什么 |
+|---|---|---|
+| **S3-compatible** | 大多数场景，到处可用 | 任何 S3 API 存储——AWS S3、Cloudflare R2、Backblaze B2、Wasabi、MinIO。 |
+| **SFTP** | 专门的备份机或 NAS | 通过 SSH 把备份推送到任意主机，使用新凭据。 |
+| **Existing server** | 复用已添加的服务器 | 复用 `/servers` 中某台服务器的 SSH 凭据。 |
+| **Local disk** | 仅自托管 | 写入 API 主机上的某个目录。云端模式下禁用。 |
+
+### 第 2 步——配置它
+
+每种类型都以一个 **Name** 开始（如 "Production R2"）。其余字段取决于类型。页眉处的锁形图标提醒你：**凭据静态加密存储，且从不回显**。
+
+<Tabs items={["S3-compatible", "SFTP", "Existing server", "Local disk"]}>
+<Tab value="S3-compatible">
+
+| 字段 | 说明 |
+|---|---|
+| **Endpoint** | 留空 = AWS S3。R2 为：`https://<account>.r2.cloudflarestorage.com`。 |
+| **Region** | 如 `us-east-1`，R2 用 `auto`。 |
+| **Bucket** | 存储桶名称，如 `my-backups`。 |
+| **Path prefix** | 存储桶内的可选子路径。 |
+| **Access key ID** | S3 访问密钥。 |
+| **Secret access key** | S3 私密密钥（加密存储）。 |
+
+</Tab>
+<Tab value="SFTP">
+
+| 字段 | 说明 |
+|---|---|
+| **Host** | SSH 主机，如 `backups.example.com`。 |
+| **Port** | 默认 `22`。 |
+| **User** | SSH 用户，如 `backup`。 |
+| **Path prefix** | 远端目录，如 `/backups/openship`。 |
+| **Password** | 使用私钥时留空。 |
+| **Private key (PEM)** | 密码为空时使用。 |
+
+</Tab>
+<Tab value="Existing server">
+
+| 字段 | 说明 |
+|---|---|
+| **Server** | 选择你在 **Servers** 页面（`/servers`）里已添加的服务器——它复用该服务器的 SSH 凭据。 |
+| **Remote path** | 服务器上的绝对目录，如 `/backups/openship`。 |
+
+如果还没有配置任何服务器，表单会链接到 **Servers** 页面让你先去添加。
+
+</Tab>
+<Tab value="Local disk">
+
+| 字段 | 说明 |
+|---|---|
+| **Absolute path** | API 主机上的文件系统路径，如 `/var/backups/openship`。云端模式下禁用。 |
+
+</Tab>
+</Tabs>
+
+按 **Save destination** 完成。会有 toast 确认 "Destination created."。
+
+## 验证备份目标
+
+验证是对备份目标做一次真实的连通性检查——确认凭据可用且目标可写，这样你现在就能发现，而不是等某天备份静默失败时才知道。
+
+点击某行的 **Verify connection**（刷新）按钮。徽标先变为 *Verifying…*，随后落定为 **Verified**（悬停显示上次验证时间）或 **Failed**（悬停显示错误）。一次 toast 报告结果。
+
+<Callout title="每次修改后都验证一遍" type="info">
+只要编辑了备份目标或轮换了它的凭据，就重新验证一次。在你把某个备份策略挂上去之前，绿色的 **Verified** 徽标是信任一个目标的最快方式。
+</Callout>
+
+## 设置默认备份目标
+
+打开某行的 **⋯** 菜单，选择 **Set as default**。该目标获得 **Default** 徽标——一个便利标记，标出你的常用目标，便于在列表中一眼找到。（"Set as default" 只出现在还不是默认目标的行上。）
+
+## 编辑备份目标
+
+从 **⋯** 菜单选择 **Edit**。对话框直接落在配置步骤（创建后不能更改目标的类型）。非密钥字段已预填。
+
+<Callout title="编辑时密钥保持隐藏" type="info">
+密钥字段（访问密钥、SFTP 密码/私钥）显示为 `•••••• stored — leave blank to keep`。留空即保留已存储的值，或输入新值替换它。
+</Callout>
+
+*S3-compatible*、*SFTP*、*Existing server* 和 *Local disk* 这几种类型可编辑。*HTTP upload* 类型的目标可以存在，但不能从这个界面编辑。
+
+## 删除备份目标
+
+从 **⋯** 菜单选择 **Delete**，并在对话框中确认。
+
+<Callout title="使用中的目标无法删除" type="warn">
+删除不可撤销，且**仍被某个备份策略使用的目标无法删除**。请先在受影响项目的 **Backup** 标签上移除这些策略，或把它们指向别处。
+</Callout>
+
+## 后续步骤
+
+<Cards>
+  <Card title="备份与恢复" href="/docs/guides/backups-restore" description="为每个项目设置计划与保留策略，需要时再恢复或回滚。" />
+  <Card title="服务器" href="/docs/guides/custom-servers" description="添加 'Existing server' 目标所复用 SSH 凭据的服务器。" />
+</Cards>

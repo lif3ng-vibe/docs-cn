@@ -1,0 +1,199 @@
+---
+title: Webhook
+description: 创建接收式动作并检查服务商投递记录。
+---
+
+接收式 hook 会触发一次已保存的部署或任务动作。服务商 Webhook 则接收来自 GitHub 等服务的带签名事件。两者都记录投递，但认证协议不同。
+
+## 创建接收式 hook
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const hook = await ship.webhooks.create("proj_123", {
+  name: "Deploy site",
+  actionType: "deploy",
+  authMode: "token",
+});
+console.log(hook.id, hook.url);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/incoming-webhooks" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Deploy site","actionType":"deploy","authMode":"token"}'
+```
+
+</Tab>
+</Tabs>
+
+| 字段 | 用途 |
+| --- | --- |
+| `actionType` | 必填：`deploy` 或 `job`。 |
+| `name` | 显示名称；默认为 `Webhook`。 |
+| `authMode` | `token`（默认）、`hmac` 或 `none`；`none` 不允许用于任务。 |
+| `actionConfig.serviceId` / `serviceIds` | 把部署动作限定到本项目内的服务。 |
+| `actionConfig.jobKey` | 任务动作必填。 |
+
+返回的 hook 包含其 URL，以及在授权情形下的机密。请安全保管该机密。
+任务 hook 需要项目写权限、任务写权限，以及每个任务目标服务器的管理权限。
+
+## 调用已授权的动作
+
+当你的集成已与 Openship 完成认证时使用该操作：
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.webhooks.invoke("proj_123", "hook_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/incoming-webhooks/hook_123/invoke" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+外部发信方则用其令牌或 HMAC 认证方式调用 hook 返回的 URL。分发器会重新核对已保存的执行身份、当前成员身份与任何已保存的凭据限制。
+它不会把调用者替换为组织所有者。
+
+缺少已保存授权的 hook 返回 `requiresReauthorization: true`。被授权的编辑者可以
+轮换该 hook，或用 `{ enabled: true }` 更新它以重新授权。授权关系变更会轮换凭据；
+请更新外部发信方改用新机密。
+
+## 读取投递记录
+
+`deliveries(projectId)` 列出一个项目的事件。`hookDeliveries(projectId, hookId)` 选定一个 hook；
+`listDeliveries()` 列出所选组织内可见的事件。分页在选定页面之前就先过滤访问权限。
+
+## 分发服务商 Webhook
+
+```
+POST /api/webhooks/:provider
+```
+
+没有 Openship 定义的请求体：请求体就是服务商的**原始事件载荷**，按逐字节原样读取
+以便校验签名。GitHub 投递会携带这些请求头，分发器依赖它们：
+
+| 请求头 | 用途 |
+|---|---|
+| `X-Hub-Signature-256` | 原始请求体的 HMAC-SHA256（`sha256=…`）。必填——缺失或不匹配即被拒绝。 |
+| `X-GitHub-Event` | 事件类型（`push`、`installation`、`check_run`、`ping`……）。决定走哪个 handler。 |
+| `X-GitHub-Delivery` | 唯一的投递 id。用于幂等——同一个重投的 id 只被认领一次，重复即丢弃。 |
+
+分发器：
+
+1. 查找路径中指明的服务商。未注册 → `404 { "error": "Webhook provider '…' is not configured" }`。
+2. 校验签名。无效或缺失 → `401`。
+3. 解析 JSON 请求体。格式错误 → `400`。
+4. 运行 handler，且对已验证的投递**始终响应 `200`**——即使 handler 抛错，
+   错误也是在响应体中返回（`{ "success": false, "error": "…" }`），而不是以 `4xx/5xx`。返回
+   错误状态码会让 GitHub 重试，进而带来重复部署的风险。
+
+```bash
+# GitHub sends this automatically. Illustrative manual delivery — the signature
+# must be a valid HMAC-SHA256 of the exact body using the project's webhook secret:
+curl -X POST "$OPENSHIP_URL/api/webhooks/github" \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: ping" \
+  -H "X-GitHub-Delivery: $(uuidgen)" \
+  -H "X-Hub-Signature-256: sha256=<hmac-of-body>" \
+  -d '{"zen":"Keep it simple."}'
+```
+
+### 签名校验（GitHub）
+
+GitHub 投递使用**按项目维度**的机密校验。分发器先在载荷中查看 `repository.full_name`，
+找到关联该 `owner/repo` 的项目，然后把签名与该项目的 `webhookSecret` 对比。若没有任何按项目的机密可用（旧版 hook，以及没有所属项目的
+installation/ping 事件），则回退到实例的 `GITHUB_WEBHOOK_SECRET`。解析不出机密的投递无法被校验，
+会被拒绝——不存在不签名的通路，自托管也不例外。
+
+### 服务商注册
+
+`github` 在分发器启动时即注册，因此 `POST /api/webhooks/github` 始终可用。`stripe`
+是一个可接受的 `:provider` 名称，但默认**并未**接入统一分发器；Stripe 计费
+事件在 cloud 模式下改由 `/api/billing/webhook/stripe` 接收。在未注册 Stripe 服务商时向
+`/api/webhooks/stripe` 发请求返回 `404 … is not configured`。
+
+## 一次 GitHub push 如何变成一次部署
+
+已验证的 `push` 事件到达后，handler 按如下方式映射到部署：
+
+- **仅处理分支 push。**`ref` 必须以 `refs/heads/` 开头；tag push 与分支删除会被
+  确认并忽略。
+- **按仓库 + 分支匹配项目**。它会找到关联所选 `owner/repo` 的每个项目，然后保留
+  **启用了自动部署**、且项目配置的分支（未设置时为仓库
+  默认分支）与所推送分支一致的那些。
+- **记到组织所有者名下**。Webhook 没有真人操作者，因此部署按
+  组织所有者（即 GitHub App 安装的属主）审计。
+- **按服务智能路由**。对 monorepo/compose 项目，push 中变更的文件决定哪些
+  服务需要重建；无关的 push 可以完全跳过。单应用项目始终重建。“下次重建所有服务”的待处理标志会强制完整部署一次。
+- **幂等。**`X-GitHub-Delivery` id 会被持久认领，因此 at-least-once 的同一 push 重投会被丢弃，而不是部署两次。
+- **Cloud 转发**。在自托管机器上，若没有本地项目匹配，但该仓库/分支属于一个已关联的 **cloud** 项目，push 会被转发到 Openship Cloud，让云端副本重新部署。
+
+接线细则与边界情况深入解析：[push 触发自动部署](/docs/guides/auto-deploy)。
+
+## 错误
+
+<Callout title="401 —— 签名无效或缺失" type="warn">
+`X-Hub-Signature-256` 请求头缺失，或 HMAC 与存储的机密不匹配。手工构造的
+请求出现这种情况属预期；真实的 GitHub/Stripe 投递都带签名。若真实投递失败，说明项目上的 webhook
+机密（或 `GITHUB_WEBHOOK_SECRET`）已与服务商签名所用机密不一致——
+重新关联仓库即可重置。
+</Callout>
+
+<Callout title="404 —— 未知或未配置的服务商" type="error">
+该 `:provider` 不是 `github`/`stripe`，或所提服务商未在该实例上注册（例如
+自托管机器上的 `stripe`）。检查路径；GitHub 请使用 `/api/webhooks/github`。
+</Callout>
+
+<Callout title="400 —— JSON 请求体无效" type="warn">
+签名校验通过，但请求体不是合法 JSON。确认服务商发送的是
+`Content-Type: application/json`，且载荷没有被截断（5 MB 请求体上限适用）。
+</Callout>
+
+<Callout title="200 但 success: false" type="info">
+已验证但 handler 抛错的投递仍返回 `200`——这是有意为之，避免 GitHub 重试导致
+重复部署。失败详情在响应体内；请在实例日志中查找
+`[Webhook] github handler error` 条目。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出项目的接收式 Webhook。 | `webhooks.list(id)` | `GET /api/projects/:id/incoming-webhooks`<br />`project:read` |
+| 用已授权的动作与认证模式创建一条接收式 hook。 | `webhooks.create(id, input)` | `POST /api/projects/:id/incoming-webhooks`<br />`project:write` |
+| 列出项目 Webhook 投递记录。 | `webhooks.deliveries(id, input?)` | `GET /api/projects/:id/webhook-deliveries`<br />`project:read` |
+| 更新 hook，并按请求重新授权其动作。 | `webhooks.update(parentId, id, input)` | `PATCH /api/projects/:id/incoming-webhooks/:hookId`<br />`project:write` |
+| 轮换 hook 凭据并重新授权执行。 | `webhooks.rotate(parentId, id)` | `POST /api/projects/:id/incoming-webhooks/:hookId/rotate`<br />`project:write` |
+| 移除一条接收式 hook。 | `webhooks.remove(parentId, id)` | `DELETE /api/projects/:id/incoming-webhooks/:hookId`<br />`project:write` |
+| 读取单个 hook 的投递历史。 | `webhooks.hookDeliveries(parentId, id, input?)` | `GET /api/projects/:id/incoming-webhooks/:hookId/deliveries`<br />`project:read` |
+| 经 SDK 调用 hook 的已保存动作。 | `webhooks.invoke(parentId, id)` | `POST /api/projects/:id/incoming-webhooks/:hookId/invoke`<br />`project:write` |
+| 读取组织内可见的 Webhook 投递记录。 | `webhooks.listDeliveries(input?)` | `GET /api/settings/webhook-deliveries`<br />`settings:read` |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 接收服务商 Webhook（`github` 或 `stripe`），校验其签名并分发。 | 仅 HTTP | `POST /api/webhooks/:provider`<br />`Handler authentication` |
+| 从入站 Webhook 触发备份（bearer 令牌即凭据）。 | 仅 HTTP | `POST /api/webhooks/backup`<br />`Handler authentication` |
+| 认证一条入站 hook 并分发其已保存的动作。 | 仅 HTTP | `POST /api/webhooks/incoming/:id`<br />`Handler authentication` |
+
+{/* api-operations:end */}

@@ -1,0 +1,581 @@
+---
+title: 项目
+description: 创建与配置项目、源设置与运行环境。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+一个项目将源代码、构建配置、环境变量、域名与部署历史组合在一起。先创建项目记录，再[提交部署](/docs/api/deployments)。
+
+本地文件系统与边缘管理操作需要自托管能力。使用 Cloud 时，请直接连接 Cloud API。[固定作用域不会经由所有者的 Cloud 链路转发](/docs/api/sdk/compatibility#cloud)。
+
+## 创建项目
+
+从 Git 仓库或本地路径创建项目，把构建配置固化进项目记录。上传文件夹请改用[源文件上传流程](/docs/api/sources)。只有 `name` 是必填的——其余字段都会自动探测或取默认值。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.create({
+  name: "marketing-site",
+  gitOwner: "acme",
+  gitRepo: "site",
+  gitBranch: "main",
+  framework: "nextjs",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"marketing-site","gitOwner":"acme","gitRepo":"site","gitBranch":"main","framework":"nextjs"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '显示名称（1–100 个字符）。', required: true },
+    slug: { type: 'string', description: '覆盖自动生成的 slug（用作免费子域名 slug.opsh.io）。' },
+    localPath: { type: 'string', description: '本地源文件夹的绝对路径（本地源）。' },
+    gitProvider: { type: 'string', description: 'Git 源的 Git 提供方。', default: 'github' },
+    gitOwner: { type: 'string', description: '仓库所有者/组织。' },
+    gitRepo: { type: 'string', description: '仓库名称。' },
+    gitBranch: { type: 'string', description: '要部署的分支。', default: 'main' },
+    installationId: { type: 'number', description: 'GitHub App 安装 id（私有仓库）。' },
+    framework: { type: 'string (stack id)', description: '注册表中的技术栈，例如 nextjs、vite、go、django。' },
+    packageManager: { type: 'string (enum)', description: 'npm、pnpm、yarn、bun、pip、cargo、……' },
+    installCommand: { type: 'string', description: '覆盖安装命令。' },
+    buildCommand: { type: 'string', description: '覆盖构建命令。' },
+    outputDirectory: { type: 'string', description: '构建输出目录（静态/SSG）。' },
+    productionPaths: { type: 'string', description: '生产环境对外提供的路径。' },
+    rootDirectory: { type: 'string', description: '构建起始的子目录。' },
+    startCommand: { type: 'string', description: '覆盖运行时启动命令。' },
+    buildImage: { type: 'string', description: '覆盖构建镜像。' },
+    productionMode: { type: '"host" | "static" | "standalone"', description: '生产环境对应用的提供方式。' },
+    port: { type: 'number', description: '监听端口（1–65535）。' },
+    publicEndpoints: { type: 'PublicEndpoint[]', description: '要暴露的公开路由/域名（1–20）。' },
+    hasServer: { type: 'boolean', description: '项目运行长期驻留的服务器进程。', default: 'true' },
+    hasBuild: { type: 'boolean', description: '项目有构建步骤。', default: 'true' },
+    rollbackWindow: { type: 'number', description: '保留供即时回滚的部署数量（0–20）。' },
+    cloudArchiveStrategy: { type: '"inplace" | "offload"', description: '云端快照策略（目前仅实现了 "inplace"）。' },
+    projectType: { type: '"app" | "docker" | "services" | "monorepo"', description: '项目类型；"monorepo" 启用下方的多应用字段。' },
+    monorepoApps: { type: 'MonorepoApp[]', description: '在 monorepo 内发现的子应用（1–50）。' },
+    monorepoWorkspace: { type: 'object', description: '在仓库根目录一次性执行的共享工作区安装。' },
+    monorepoSharedPaths: { type: 'string[] | null', description: '强制所有子应用重新构建的前缀；[] 表示清空，null 表示停用。' },
+    routingConfig: { type: 'object | null', description: '从仓库 vercel.json 解析出的路由。' },
+    defaultRollbackStrategy: { type: '"git" | "snapshot"', description: '新部署采用的回滚策略。' },
+  }}
+/>
+
+<Callout title="创建项目并不等于部署" type="info">
+`POST /api/projects` 只记录项目及其配置。请用[部署 API](/docs/api/deployments)（`POST /api/deployments`）或 `openship deploy` 触发首次构建。
+</Callout>
+
+## 在集群上扩缩容无状态应用
+
+自托管项目可以把流量指向[就绪的服务器集群](/docs/api/servers)。
+保存集群目标需要集群舰队管理权限。为源码构建选择一个镜像仓库；
+集群节点使用已保存的镜像仓库凭据拉取不可变的发布镜像。
+它支持单个应用或 worker，其实例可启动到任何选定的服务器上。
+项目自有的共享卷可以让文件在多个实例间持久化；节点本地 bind mount 与
+Compose 转换需要单独的迁移。PostgreSQL 与 Redis 使用各自受管的
+数据库生命周期与复制。
+
+```ts
+const current = await ship.projects.getClusterWorkload("proj_123");
+await ship.projects.setClusterTarget("proj_123", {
+  clusterId: "cluster_123",
+  config: { replicas: 3, imageRepository: "ghcr.io/acme/api" },
+  expectedUpdatedAt: current.updatedAt,
+  stateless: true,
+});
+// Deploy the project through the existing Deployments API.
+// After that release is active, change its replicas without rebuilding:
+const live = await ship.projects.getClusterWorkload("proj_123");
+if (live.activeDeploymentId && live.activeClusterId === live.clusterId) {
+  const scale = await ship.projects.scaleClusterWorkload("proj_123", {
+    replicas: 4,
+    expectedDeploymentId: live.activeDeploymentId,
+    expectedUpdatedAt: live.updatedAt,
+  });
+  console.log(scale.deploymentId); // Follow the normal deployment progress stream.
+}
+```
+
+副本数量变更属于配置式发布。它们复用当前镜像、等待 Pod 就绪，
+并沿用既有的更新/回滚历史。请为新旧两套发布同时预留容量。
+`status` 与 `observedAt` 描述最近一次观测结果；保存的 `config` 描述未来意图。
+OpenShip Edge 目前经由第一个集群控制服务器进入。自动网关
+故障转移与基于策略的自动扩缩容尚未实现。
+
+### 共享应用文件
+
+先在服务器集群上启用共享存储。用 `createClusterVolume` 创建项目
+卷，再把它的名称与挂载路径加入集群配置并部署。每个发布都保留自己审核过的卷标识。`listClusterVolumes` 与 `streamClusterVolumeEvents` 会报告挂载健康状态、独立副本、扩容与备份情况。
+
+共享文件备份使用集群已配置的外部备份目标。定时任务可按小时或按天运行。`listClusterVolumeBackups` 也包含原卷已被删除的存档；
+先恢复到一个新卷并校验其内容，再把它挂到应用上。
+删除卷之前先断开挂载并部署。外部备份在卷被移除后依然保留。
+
+### 添加、导入或恢复数据库
+
+通过 `createClusterDatabase` 创建 PostgreSQL 或 Redis，然后持续检查进度直到就绪。
+数据库实例与 Redis 分片的扩缩容与应用副本无关。Redis 分片
+变更需要一份已验证的备份和显式审核。
+
+`listClusterDatabaseImports` 返回本项目现有 PostgreSQL 或
+Redis 服务的合格备份。可用选定的备份走 `importFrom`，或对受管数据库存档走 `restoreFrom` 恢复。PostgreSQL 17 升级到 18 用 `copyFrom` 构建一个独立的数据库。
+每条路径都保留源数据。你可以在改变应用的集群目标之前先准备好导入的数据库；之后目标必须选择同一个集群。
+
+校验恢复出的数据，然后基于两个数据库的当前序列，显式保存或替换受管的应用连接。
+重新部署以使用新连接。做最终切换时，暂停源库写入并生成一个新的恢复点；捕获之后的写入不会自动复制。
+参见[数据库工作流](/docs/guides/mcp-clusters-and-scaling#数据库与备份工作流)。
+
+## 更新项目
+
+更新请求体是[创建请求体](#创建项目)的**部分更新（partial）**——只发送你想修改的
+字段。上表中的每个字段在这里都接受且可选。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.update("proj_123", {
+  buildCommand: "pnpm build",
+  gitBranch: "release",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/projects/proj_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"buildCommand":"pnpm build","gitBranch":"release"}'
+```
+
+</Tab>
+</Tabs>
+
+## 关联 Git 仓库
+
+把 GitHub 仓库挂到（或重新指向）既有项目。`branch` 省略时使用仓库的
+默认分支。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.linkRepo("proj_123", {
+  owner: "acme",
+  repo: "site",
+  branch: "main",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/git/link" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"owner":"acme","repo":"site","branch":"main"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    owner: { type: 'string', description: '仓库所有者/组织。', required: true },
+    repo: { type: 'string', description: '仓库名称。', required: true },
+    branch: { type: 'string', description: '要部署的分支（默认为仓库默认分支）。' },
+    installationId: { type: 'number', description: '私有仓库对应的 GitHub App 安装 id。' },
+  }}
+/>
+
+相关 Git 路由：`POST /api/projects/:id/branch`（修改部署分支）、
+`POST /api/projects/:id/auto-deploy`（开关 push 即部署）、`GET /api/projects/:id/branches`，以及
+`GET /api/projects/:id/commit-status`（已部署提交是否落后于远端 HEAD？）。连接 GitHub App 本身请见
+[GitHub API](/docs/api/github)。
+
+## 绑定自定义域名
+
+一个快捷方式，一次调用即把域名加入项目并标记为主域名。完整的域名
+生命周期（DNS 预览、验证、SSL）请用[域名 API](/docs/api/domains)。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.connectDomain("proj_123", {
+  domain: "app.example.com",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/connect" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"app.example.com"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    domain: { type: 'string', description: '完整主机名，例如 app.example.com。', required: true },
+    includeWww: { type: 'boolean', description: '同时挂载 www. 变体。' },
+    externalIngress: { type: 'boolean', description: 'TLS 在上游终结；只通过 TXT 验证，不签发证书。', default: 'false' },
+  }}
+/>
+
+## 环境变量
+
+```
+GET   /api/projects/:id/env
+PATCH /api/projects/:id/env
+```
+
+`GET` 列出项目的变量，机密值已打码。写入走**合并**（merge）逻辑：只有你点名的
+键会被改动——`upserts` 被插入/更新，`deletes` 被移除，其余变量
+（包括未触及的已打码机密）原样保留。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.mergeEnvVars("proj_123", {
+  environment: "production",
+  upserts: [
+    {
+      key: "DATABASE_URL",
+      value: "postgres://…",
+      isSecret: true,
+    },
+  ],
+  deletes: ["OLD_FLAG"],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/projects/proj_123/env" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "environment": "production",
+    "upserts": [{"key":"DATABASE_URL","value":"postgres://…","isSecret":true}],
+    "deletes": ["OLD_FLAG"]
+  }'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    environment: { type: '"production" | "preview" | "development"', description: '要编辑哪个环境。', required: true },
+    upserts: { type: '{ key, value, isSecret? }[]', description: '要插入或更新的变量（0–100）。isSecret 默认为 false。', required: true },
+    deletes: { type: 'string[]', description: '要移除的变量键（0–100）。', required: true },
+  }}
+/>
+
+<Callout title="没有全量替换端点" type="warn">
+旧的可造成破坏的 `PUT /:id/env` 已被移除——它可能清空或破坏已打码的机密。请始终通过合并式 `PATCH` 发送差异。
+</Callout>
+
+## 资源配置
+
+```
+GET   /api/projects/:id/resources
+PATCH /api/projects/:id/resources
+POST  /api/projects/:id/resources
+```
+
+读取或更新 CPU/内存/磁盘配额（生产与构建分列）、休眠行为与监听
+端口。`POST` 是 `PATCH` 的别名。所有字段可选；只发送你想修改的部分。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.updateResources("proj_123", {
+  production: {
+    cpuCores: 1,
+    memoryMb: 1024,
+  },
+  sleepMode: "always_on",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/projects/proj_123/resources" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"production":{"cpuCores":1,"memoryMb":1024},"sleepMode":"always_on"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    production: { type: '{ cpuCores?, memoryMb?, diskMb? }', description: '运行时限制。cpuCores 0.25–4，memoryMb 128–8192，diskMb 64–204800。' },
+    build: { type: '{ cpuCores?, memoryMb?, diskMb? }', description: '构建期限制（范围与生产相同）。' },
+    sleepMode: { type: '"auto_sleep" | "always_on"', description: '应用空闲时是否休眠。' },
+    port: { type: 'number', description: '监听端口（1–65535）。' },
+  }}
+/>
+
+休眠模式也有自己的快捷路由：`POST /api/projects/:id/sleep-mode`。
+
+## 创建环境
+
+```
+POST /api/projects/:id/environments
+```
+
+<TypeTable
+  type={{
+    environmentName: { type: 'string', description: '显示名称（1–80 个字符）。', required: true },
+    environmentSlug: { type: 'string', description: 'URL 安全的 slug（小写字母数字加连字符）。' },
+    environmentType: { type: '"production" | "preview" | "development"', description: '环境种类。' },
+    gitBranch: { type: 'string', description: '该环境跟踪的分支。' },
+    sourceMode: { type: '"branch" | "manual"', description: '从跟踪分支部署或手动部署。' },
+  }}
+/>
+
+## 文件夹上传
+
+上传文件夹或部署生成的代码请见[源文件](/docs/api/sources)。
+
+## 转入 / 转出云端
+
+```
+POST /api/projects/:id/transfer/to-cloud         † self-hosted only
+POST /api/projects/:id/transfer/to-self-hosted   † self-hosted only
+```
+
+把本地项目晋升到 Openship Cloud，或把云端项目拉回本实例。这两个操作在 SaaS 上没有意义（它本身就是云端），会返回 `404`。两者都要求 `project:admin`。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.projects.transferToCloud("proj_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/transfer/to-cloud" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## 携带日志重试路由
+
+路由修复可以包含 SSH 与证书签发。用流式操作跟进其进度，避免普通请求超时：
+
+```ts
+for await (const event of ship.projects.retryRoutingStream("proj_123")) {
+  console.log(event.event, event.data);
+}
+```
+
+对应的 HTTP 形式是 `POST /api/projects/:id/routing/retry/stream`，以 SSE 响应返回。日志事件
+包含服务器的消息。终止性 `complete` 事件携带 `status: "completed"` 或
+`status: "failed"`；仅凭流断开不能断定成功。取消流会停止日志投递，而已被接受的路由修复会在项目的运行时锁之下继续执行。
+
+## 错误
+
+<Callout title="400 —— 校验失败" type="warn">
+某个字段缺失或超出范围（例如 `name` 为空、`cpuCores` 大于 4，或 `git/link` 缺少
+`owner`/`repo`）。响应会指出违规字段。
+</Callout>
+
+<Callout title="403 —— 权限不足" type="error">
+你的令牌或角色缺少该路由的标签——删除需要 `project:admin`，写入需要 `project:write`。
+参见[权限模型](/docs/security/auth)。
+</Callout>
+
+<Callout title="项目维度路由返回 404" type="error">
+该 `:id` 不属于你的组织（或已被删除）。仅限自托管的路由（标为 **†**）在 Openship Cloud 上调用时同样返回 `404`。用 `GET /api/projects` 列出你的项目以获取有效
+ID。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+### 生命周期
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取项目总览与汇总计数。 | `projects.getHome()` | `GET /api/projects/home`<br />`project:list` |
+| 从显式配置创建项目记录。 | `projects.create(input)` | `POST /api/projects`<br />`project:write` |
+| 源导入过程中创建或选中项目。 | `projects.ensure(input)` | `POST /api/projects/ensure`<br />`project:write` |
+| 返回一页可访问的项目。 | `projects.list(input?)` | `GET /api/projects`<br />`project:list` |
+| 读取单个项目及其活动部署 ID。 | `projects.get(id)` | `GET /api/projects/:id`<br />`project:read` |
+| 更新项目配置。 | `projects.update(id, input)` | `PATCH /api/projects/:id`<br />`project:write` |
+| 拆除项目并移除其记录；可检查返回的步骤。 | `projects.remove(id, input?)` | `DELETE /api/projects/:id`<br />`project:admin` |
+| 启用项目运行时。 | `projects.enable(id)` | `POST /api/projects/:id/enable`<br />`project:write` |
+| 停用项目运行时。 | `projects.disable(id)` | `POST /api/projects/:id/disable`<br />`project:write` |
+| 检查项目删除会影响哪些资源。 | `projects.deletionPreview(id)` | `GET /api/projects/:id/deletion-preview`<br />`project:read` |
+
+### 源与部署
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取项目的详细信息。 | `projects.getInfo(id)` | `GET /api/projects/:id/info`<br />`project:read` |
+| 读取已关联 Git 源的信息。 | `projects.getGitInfo(id)` | `GET /api/projects/:id/git`<br />`project:read` |
+| 列出已关联源可用的分支。 | `projects.listBranches(id, input?)` | `GET /api/projects/:id/branches`<br />`project:read` |
+| 把 Git 仓库关联到项目。 | `projects.linkRepo(id, input)` | `POST /api/projects/:id/git/link`<br />`project:write` |
+| 将一个发布镜像设为部署源。 | `projects.setReleaseImageSource(id, input)` | `PUT /api/projects/:id/release-image-source`<br />`project:write` |
+| 启用或停用自动部署触发器。 | `projects.setAutoDeploy(id, input)` | `POST /api/projects/:id/auto-deploy`<br />`project:write` |
+| 选择项目 Webhook 使用的域名。 | `projects.setWebhookDomain(id, input)` | `POST /api/projects/:id/webhook-domain`<br />`project:write` |
+| 读取一页项目部署记录。 | `projects.listDeployments(id, input?)` | `GET /api/projects/:id/deployments`<br />`project:deployment:list` |
+| 读取项目当前的部署会话。 | `projects.deploymentSession(id)` | `POST /api/projects/:id/deployment-session`<br />`project:read` |
+| 清除项目的已授权构建缓存。 | `projects.clearBuildCache(id)` | `POST /api/projects/:id/clear-build`<br />`project:admin` · 自托管 |
+| 检查保留的回滚容量。 | `projects.getRollbackCapacity(id)` | `GET /api/projects/:id/rollback-capacity`<br />`project:read` |
+| 检查部署端口要求。 | `projects.checkPorts(id)` | `POST /api/projects/:id/port-check`<br />`project:read` |
+| 检查已配置的构建输出。 | `projects.checkOutput(id)` | `POST /api/projects/:id/output-check`<br />`project:read` |
+| 读取需要部署或路由决策的操作项。 | `projects.getPendingActions(id)` | `GET /api/projects/:id/pending-actions`<br />`project:read` |
+| 对比源码与已部署提交的状态。 | `projects.getCommitStatus(id)` | `GET /api/projects/:id/commit-status`<br />`project:read` |
+| 选择默认 Git 分支。 | `projects.setBranch(id, input)` | `POST /api/projects/:id/branch`<br />`project:write` |
+| 扫描允许的本地源目录。 | `projects.scanLocal(input)` | `POST /api/projects/scan`<br />`project:write` · 自托管 |
+| 导入允许的本地项目。 | `projects.importLocal(input)` | `POST /api/projects/import`<br />`project:write` · 自托管 |
+| 列出可发现的本地项目。 | `projects.listLocal()` | `GET /api/projects/local`<br />`project:list` · 自托管 |
+
+### 集群扩缩容
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取所选集群、活动发布与观测到的副本数。 | `projects.getClusterWorkload(id)` | `GET /api/projects/:id/cluster`<br />`project:read` · 自托管 |
+| 保存就绪的自托管集群目标、应用配置与可选的共享文件挂载。需要集群舰队管理权限与当前项目时间戳。 | `projects.setClusterTarget(id, input)` | `PATCH /api/projects/:id/cluster`<br />`project:write` · 自托管 |
+| 通过一次部署、使用当前不可变镜像来应用副本数。需要活动部署与项目时间戳前置条件。 | `projects.scaleClusterWorkload(id, input)` | `POST /api/projects/:id/cluster/scale`<br />`project:write` · 自托管 |
+
+### 集群数据库
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出项目中由运维方管理的数据库与已保存的观测记录。自托管的 OpenShip 上可用。 | `projects.listClusterDatabases(id)` | `GET /api/projects/:id/cluster/databases`<br />`project:read` · 自托管 |
+| 列出可从本项目导入的 PostgreSQL 与 Redis 备份。需要项目管理员权限；源备份与运行中的服务均保留。 | `projects.listClusterDatabaseImports(id)` | `GET /api/projects/:id/cluster/databases/imports`<br />`project:read` · 自托管 |
+| 读取已保存的数据库进度，或用 observe 刷新运维方的实例、卷与存档状态。不会启动或重试搭建。 | `projects.getClusterDatabase(id, input)` | `POST /api/projects/:id/cluster/databases/inspect`<br />`project:read` · 自托管 |
+| 在就绪的服务器集群上以稳定请求 UUID 创建 PostgreSQL 或 Redis。可恢复数据库存档、导入既有项目备份，或创建升级版 PostgreSQL 副本。需要集群舰队管理权限；保留源数据。 | `projects.createClusterDatabase(id, input)` | `POST /api/projects/:id/cluster/databases`<br />`project:write` · 自托管 |
+| 按当前序列应用受支持的资源、副本或备份设置。Redis 分片变更需要显式审核与已验证备份；PostgreSQL 大版本升级使用新的数据库副本。 | `projects.updateClusterDatabase(id, input)` | `PATCH /api/projects/:id/cluster/databases`<br />`project:write` · 自托管 |
+| 根据保存的意图恢复失败或中断的数据库操作。先隔离上一个控制器，并在复用前检查已接受的运维资源。 | `projects.retryClusterDatabase(id, input)` | `POST /api/projects/:id/cluster/databases/retry`<br />`project:write` · 自托管 |
+| 在已配置的 S3 目标处请求 PostgreSQL 或 Redis 存档。原生控制器与任务负责执行；重试会复用已接受的备份请求。 | `projects.backupClusterDatabase(id, input)` | `POST /api/projects/:id/cluster/databases/backup`<br />`project:write` · 自托管 |
+| 通过名称与系列号确认来停开一台已断连的数据库。deleteData=false 保留持久磁盘；true 显式回收自有存储。S3 存档保留。 | `projects.removeClusterDatabase(id, input)` | `DELETE /api/projects/:id/cluster/databases`<br />`project:write` · 自托管 |
+| 把私有数据库 URL 保存进项目环境，或基于双方当前序列显式替换另一条受管数据库绑定。将 envKey 设为 null 即断开。重新部署以使审核后的变更生效。 | `projects.connectClusterDatabase(id, input)` | `POST /api/projects/:id/cluster/databases/connect`<br />`project:write` · 自托管 |
+| 通过 SSE 订阅可重放的数据库进度快照。重连只读取已保存状态，绝不重复任何变更。 | `projects.streamClusterDatabaseEvents(id, options?)` | `GET /api/projects/:id/cluster/databases/stream`<br />`project:read` · 自托管 |
+
+### 共享文件
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取共享文件卷、独立副本、挂载健康状态与备份状态。 | `projects.listClusterVolumes(id)` | `GET /api/projects/:id/cluster/volumes`<br />`project:read` · 自托管 |
+| 列出项目文件存档，包括原卷已被删除的备份。 | `projects.listClusterVolumeBackups(id)` | `GET /api/projects/:id/cluster/volumes/backups`<br />`project:read` · 自托管 |
+| 以稳定请求 ID 创建可复制的共享卷，或把存档恢复到新卷。通过集群配置挂载并部署。 | `projects.createClusterVolume(id, input)` | `POST /api/projects/:id/cluster/volumes`<br />`project:write` · 自托管 |
+| 用该卷当前的 resourceVersion 扩容共享卷。持续观察状态直到扩容完成；不支持缩容。 | `projects.resizeClusterVolume(id, input)` | `PATCH /api/projects/:id/cluster/volumes`<br />`project:write` · 自托管 |
+| 以稳定请求 ID 把文件卷备份保存到集群已配置的外部目标。一致性需要时暂停应用写入。 | `projects.backupClusterVolume(id, input)` | `POST /api/projects/:id/cluster/volumes/backup`<br />`project:write` · 自托管 |
+| 按小时或按天调度文件备份并设定保留存档数，或选择 manual 以停止调度。 | `projects.scheduleClusterVolumeBackups(id, input)` | `PATCH /api/projects/:id/cluster/volumes/backups`<br />`project:write` · 自托管 |
+| 确认确切的备份名称后永久删除项目文件存档。源卷保留。 | `projects.removeClusterVolumeBackup(id, input)` | `DELETE /api/projects/:id/cluster/volumes/backups`<br />`project:write` · 自托管 |
+| 通过 resourceVersion、名称与数据删除确认删除一个未挂载的卷。先断开挂载并重新部署；外部存档保留。 | `projects.removeClusterVolume(id, input)` | `DELETE /api/projects/:id/cluster/volumes`<br />`project:write` · 自托管 |
+| 通过 SSE 订阅当前文件卷与存档快照，重连时不重复任何变更。 | `projects.streamClusterVolumeEvents(id, options?)` | `GET /api/projects/:id/cluster/volumes/stream`<br />`project:read` · 自托管 |
+
+### 环境与设置
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出项目的环境。 | `projects.listEnvironments(id)` | `GET /api/projects/:id/environments`<br />`project:read` |
+| 用提供的配置创建环境。 | `projects.createEnvironment(id, input)` | `POST /api/projects/:id/environments`<br />`project:write` |
+| 读取环境变量，机密已打码。 | `projects.listEnvVars(id, input?)` | `GET /api/projects/:id/env`<br />`project:read` |
+| 插入/更新并删除指定的环境变量。 | `projects.mergeEnvVars(id, input)` | `PATCH /api/projects/:id/env`<br />`project:write` |
+| 读取资源限制与休眠设置。 | `projects.getResources(id)` | `GET /api/projects/:id/resources`<br />`project:read` |
+| 修改资源分配。 | `projects.updateResources(id, input)` | `PATCH /api/projects/:id/resources`<br />`project:write` |
+| 设置项目的休眠行为。 | `projects.setSleepMode(id, input)` | `POST /api/projects/:id/sleep-mode`<br />`project:write` |
+| 修改部署选项。 | `projects.setOptions(id, input)` | `POST /api/projects/:id/options`<br />`project:write` |
+| 读取是否配置了项目克隆令牌。 | `projects.getCloneToken(id)` | `GET /api/projects/:id/clone-token`<br />`project:read` |
+| 设置、轮换或清除项目克隆令牌。 | `projects.updateCloneToken(id, input)` | `PATCH /api/projects/:id/clone-token`<br />`project:admin` |
+
+### 路由与监控
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 修复项目路由并验证待处理域名与 HTTPS。 | `projects.retryRouting(id)` | `POST /api/projects/:id/routing/retry`<br />`project:write` |
+| 修复路由并附带实时日志，以终止性的成功或失败事件收尾。 | `projects.retryRoutingStream(id, options?)` | `POST /api/projects/:id/routing/retry/stream`<br />`project:write` |
+| 读取近期的运行时日志条目。 | `projects.runtimeLogs(id, input?)` | `GET /api/projects/:id/logs`<br />`project:read` |
+| 列出项目的边缘路由规则。 | `projects.listRouteRules(id)` | `GET /api/projects/:id/route-rules`<br />`project:read` · 自托管 |
+| 新增一条边缘路由规则。 | `projects.createRouteRule(id, input)` | `POST /api/projects/:id/route-rules`<br />`project:write` · 自托管 |
+| 用其结构化输入更新边缘路由规则。 | `projects.updateRouteRule(id, input)` | `PATCH /api/projects/:id/route-rules/:ruleId`<br />`project:write` · 自托管 |
+| 移除指定的边缘路由规则。 | `projects.removeRouteRule(id, input)` | `DELETE /api/projects/:id/route-rules/:ruleId`<br />`project:write` · 自托管 |
+| 读取已开启与已解决的健康事件。 | `projects.getIncidents(id)` | `GET /api/projects/:id/incidents`<br />`project:read` · 自托管 |
+| 把域名挂到项目上。 | `projects.connectDomain(id, input)` | `POST /api/projects/:id/connect`<br />`project:write` |
+| 读取项目的边缘配置。 | `projects.getEdgeConfig(id)` | `GET /api/projects/:id/edge-config`<br />`project:read` · 自托管 |
+| 获取一条经过授权的服务器日志流令牌。 | `projects.getServerLogStreamToken(id, input?)` | `GET /api/projects/:id/server-logs/stream-token`<br />`project:read` |
+| 读取近期的请求/服务器日志。 | `projects.recentServerLogs(id, input?)` | `GET /api/projects/:id/server-logs/recent`<br />`project:read` |
+| 流式接收项目运行时日志事件。 | `projects.streamRuntimeLogs(id, input?, options?)` | `GET /api/projects/:id/logs/stream`<br />`project:read` |
+| 流式接收项目请求/服务器日志事件。 | `projects.streamServerLogs(id, input?, options?)` | `GET /api/projects/:id/server-logs/stream`<br />`project:read` |
+
+### 连接、存储与应用
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出项目的对外资源连接。 | `projects.listConnections(id)` | `GET /api/projects/:id/connections`<br />`project:read` |
+| 列出可用于服务连接的项目与应用。 | `projects.listConnectionCandidates(id)` | `GET /api/projects/:id/connections/candidates`<br />`project:write` |
+| 列出消费本项目输出的项目。 | `projects.listConnectionConsumers(id)` | `GET /api/projects/:id/connections/consumers`<br />`project:read` |
+| 把一个输出连接到目标环境变量。 | `projects.createConnection(id, input)` | `POST /api/projects/:id/connections`<br />`project:write` |
+| 应用一组互相兼容的资源连接。 | `projects.connectBundle(id, input)` | `POST /api/projects/:id/connections/bundle`<br />`project:write` |
+| 移除一条资源连接。 | `projects.removeConnection(id, input)` | `DELETE /api/projects/:id/connections/:linkId`<br />`project:admin` |
+| 读取项目的对象存储绑定。 | `projects.getStorage(id)` | `GET /api/projects/:id/storage`<br />`project:read` |
+| 绑定一个已配置的存储桶。 | `projects.bindStorage(id, input)` | `POST /api/projects/:id/storage`<br />`project:write` |
+| 解除存储绑定。 | `projects.unbindStorage(id)` | `DELETE /api/projects/:id/storage`<br />`project:admin` |
+
+### 云端迁移
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 请求 Cloud 迁移；固定作用域目前需要尚不可用的租户映射。 | `projects.transferToCloud(id)` | `POST /api/projects/:id/transfer/to-cloud`<br />`project:admin` · 自托管 |
+| 请求从 Cloud 迁出；受固定作用域的 Cloud 映射限制。 | `projects.transferToSelfHosted(id)` | `POST /api/projects/:id/transfer/to-self-hosted`<br />`project:admin` · 自托管 |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 更新资源配置（PATCH 的 POST 别名）。 | 仅 HTTP | `POST /api/projects/:id/resources`<br />`project:write` |
+| 读取项目的边缘就绪状态。 | 仅 HTTP | `GET /api/projects/:id/routing/edge-status`<br />`project:read` |
+| 回答项目的边缘搭建提示。 | 仅 HTTP | `POST /api/projects/:id/routing/ensure-edge/respond`<br />`project:write` |
+| 流式跟进项目的边缘搭建。 | 仅 HTTP | `POST /api/projects/:id/routing/ensure-edge/stream`<br />`project:write` |
+
+{/* api-operations:end */}

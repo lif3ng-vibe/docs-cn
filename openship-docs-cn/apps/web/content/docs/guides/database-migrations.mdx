@@ -1,0 +1,60 @@
+---
+title: 数据库迁移与有状态安全
+description: 围绕一次部署安全地备份并迁移持久化数据库（MySQL/Postgres）卷——使用 Openship 的部署前备份触发器与部署后任务。
+---
+
+如果你的项目里某个服务带 **Docker 卷（volume）**（MySQL、Postgres、Redis、Qdrant……），关于部署有两件事值得弄清楚：
+
+1. 容器的 `docker-entrypoint-initdb.d` 脚本只在**首次初始化**时运行——也就是卷为空的时候。一旦卷里有了数据，这些脚本就再也不会跑，所以你**不能**靠它们向已有数据库套用模式迁移。
+2. 在一次全栈部署中，有状态的容器可能被**重建**。它的 named 卷会被保留（数据幸存），但重建对生产环境来说依然是高风险时刻。
+
+Openship 给了你两个积木，把这事做安全——部署*之前*的备份和部署*之后*的迁移——外加一条完全不碰数据库的路。
+
+## 无关的变更别碰数据库
+
+最简单的安全措施：只部署真正变更了的服务。改一次后端代码，不该把你的数据库容器重建。
+
+```bash
+openship deploy --service-ids api,web
+```
+
+没被点名的服务沿用它们现有的容器，完好不动。参见[Compose 与多服务](/docs/guides/compose-multi-service)。
+
+## 每次部署前备份（回滚安全网）
+
+为有状态的服务建一个**备份策略**，并勾上它的 **"trigger on pre-deploy"** 选项。每次部署时，Openship 会在**新构建成功之后、破坏性切换（cutover）之前**执行那次备份，因此快照捕捉到的是*旧*容器的数据——正是新版本行为不端时你想恢复的那个状态。
+
+- 在 **Backups** 里配置（参见[备份与恢复](/docs/guides/backups-restore)）；选一个 S3/卷备份目标，并打开部署前触发器。
+- 部署前备份在设计上是尽力而为（best-effort）：一个慢的或失败的备份**不会阻塞**部署，并且它们会在备份历史里归为 `pre_deploy` 类型的运行，方便你找到切换前那一刻的确切快照。
+
+## 部署完成后执行迁移
+
+要向**已有**的卷套用模式/数据迁移，用一个在部署完成时触发的**任务（Job）**：
+
+1. 前往 **Jobs**（参见[定时任务](/docs/guides/jobs)）并创建一个 **command** 任务。
+2. 把触发器设为 **"Deploy succeeded"** 事件。
+3. 把命令指向你的迁移工具。例如：
+
+**Postgres**（dbmate / Flyway / 原生 psql）：
+
+```bash
+# 一个与你 db 服务同一网络上的一次性迁移容器
+docker run --rm --network <project-network> \
+  -e DATABASE_URL="postgres://user:pass@db:5432/app" \
+  ghcr.io/amacneil/dbmate:latest up
+```
+
+**MySQL**（套用一个带版本号的文件）：
+
+```bash
+docker run --rm --network <project-network> \
+  mysql:8 sh -c 'mysql -h db -u user -ppass app < /migrations/0007.sql'
+```
+
+<Callout title="操作顺序">
+安全的次序是：**部署前备份**（策略开关打开时自动执行）→ 新版本部署 → **部署后迁移任务**对刚更新的卷运行。如果迁移失败，从备份历史恢复 `pre_deploy` 快照。
+</Callout>
+
+## Openship 目前不做的事
+
+目前没有内置的**门控式**（gating）部署前迁移步骤——迁移未完成前阻止应用启动；部署后任务在新容器上线*之后*才运行。如果你的应用严格要求先完成模式迁移才能启动，就把迁移做成镜像里一个独立的部署步骤（例如先运行 `migrate` 再 `exec` 应用的入口脚本），或者让应用容忍短暂的迁移窗口。门控式部署前钩子已在路线图上。

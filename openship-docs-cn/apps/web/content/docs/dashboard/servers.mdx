@@ -1,0 +1,168 @@
+---
+title: 服务器
+description: 通过 SSH 接入你自己的服务器，由 Openship 安装部署所需的一切，并管理每台服务器的健康状况、速率限制、端口转发和实时终端。
+---
+
+**Servers** 分区是把 OpenShip 要部署的机器接入进来的地方。你把已拥有的机器——一台 VPS、裸金属服务器或虚拟机——通过 SSH 交给 OpenShip，它就会安装并检查部署所需的一切（Docker、OpenResty、Git）。服务器连接之后，你可以把它选为[部署流程](/docs/guides/deploy-from-github)里的部署目标，并在它自己的详情页对它进行管理。
+
+<Callout title="入口位置">
+列表在 **`/servers`**，添加服务器在 **`/servers/new`**，每台服务器的详情页是
+**`/servers/<serverId>`**。概念层面的完整讲解参见[部署到你自己的服务器](/docs/guides/custom-servers)。
+</Callout>
+
+## Servers 列表
+
+这个界面（**`/servers`**）列出你接入的每台服务器。页眉是 **Servers**，副标题为 "Manage your deployment servers
+and infrastructure"，右上角有 **Add Server** 按钮。
+
+每台服务器显示为一张卡片：名称（未命名则显示主机名）、**Connected** / **Error** 状态胶囊，以及它拨号的 `user@host:port`。点击卡片打开该服务器的详情页。
+
+右侧有一个 **Quick Info** 面板，统计 **Total Servers**、**Connected** 和 **Errors**。
+
+<Callout title="仅桌面端">
+在桌面应用中，服务器卡片还可能显示一个 **\{n} forwarding** 徽标——即该服务器处于活动状态的[端口转发](#ports-标签端口转发)数量。托管实例上不会出现该徽标。
+</Callout>
+
+如果还没有任何服务器，空态页面会说明自动设置会配置什么，带一个 **Add Your First Server** 按钮，以及在 "What gets configured" 下方的四张卡片：
+
+| 卡片 | 含义 |
+|---|---|
+| **Docker** | 容器运行时 |
+| **OpenResty** | 反向代理与 SSL |
+| **Monitoring** | 健康检查 |
+| **Git** | 源部署 |
+
+## 添加服务器
+
+按下 **Add Server** 进入 **`/servers/new`**。页面标题是 **Add Server**，副标题为 "Enter your server details
+and choose an auth method"，右侧的 **Getting Started** 面板列出所需条件：一台可 SSH 访问的服务器（Ubuntu、Debian 等）以及 SSH 密钥或密码。
+
+### SSH 连接表单
+
+| 字段 | 说明 |
+|---|---|
+| **Server Name** | 可选标签，显示在列表和页眉中。留空则回退显示主机名。 |
+| **Connection** | **Direct SSH** 或 **Cloudflare Access**。 |
+| **Server IP Address** | 要连接的主机，如 `123.45.67.89`。必填。 |
+| **Port** | SSH 端口；默认 `22`。 |
+| **Username** | SSH 用户；默认 `root`。 |
+| **Authentication** | 选择 **Password**、**SSH Key** 或 **Agent**（见下文）。 |
+
+**Authentication** 控件是三选一开关：
+
+- **Password**——输入服务器密码。
+- **SSH Key**——提供**密钥路径**（如 `~/.ssh/id_rsa`）和可选的 **Passphrase**。
+- **Agent**——使用宿主机的 `ssh-agent`（与 VS Code 相同）连接；这里不输入密码或密钥。运行 OpenShip 的机器必须已经具备对该服务器的访问权限。
+
+在 **Advanced** 下可以添加 **Jump Host**（如 `user@bastion.example.com`）和 **Extra SSH Arguments**
+（如 `-o ConnectTimeout=30`）。仅接受连接调优类参数。
+
+对于已有的 Cloudflare Access SSH 应用，选择 **Cloudflare Access** 并输入其主机名——例如 `ssh.example.com`。支持密码、加密私钥和 agent 认证。SSH 源端口在 Cloudflare Tunnel 中配置。在测试连接之前，先在运行 OpenShip 的机器上完成 Cloudflare 登录。Windows 桌面端内置了经过验证的 `cloudflared`
+客户端；其他安装方式需要它在 PATH 上可用，或通过 `OPENSHIP_CLOUDFLARED_PATH` 指定。保存的连接会复用于设置、部署、健康检查、Docker 操作、源传输、终端和端口转发。服务器的 **Open Cloudflare Access** 链接会打开其 Access 应用；只有在你在 Cloudflare 中启用了浏览器终端时，那里才会提供该终端。
+
+两个按钮收尾：
+
+- **Test Connection**——用你填写的详情拨号该服务器并报告成功或失败原因，不保存任何内容。
+- **Save & Continue to Setup**——保存服务器并直接进入组件设置流程。（编辑已有服务器时，该按钮显示为 **Save Changes**。）
+
+### 设置流程
+
+保存新服务器之后，OpenShip 会带你逐步安装前提软件。首先选择执行方式：
+
+- **Automatic Setup**——"检查要求并自动安装全部所需。一次点击——OpenShip 负责 Docker、OpenResty 和 Git。"
+- **Step-by-Step Setup**——安装前逐个检查每个组件及其详细状态。
+
+流程按 **Connect → Check → Install** 推进：OpenShip 建立 SSH 连接，运行健康检查，并安装缺失的部分。进度按组件实时流式呈现（Waiting → Installing → Installed，或 Failed），并配一个可展开的 **Install Logs** 面板。完成后你可以直接跳到服务器详情页；如果有任何失败，**Retry Failed** 只重跑失败的那些组件。
+
+<Callout title="提示" type="info">
+不必在这一步把设置做到完美。每一项检查、安装、重装和移除，日后都可以从服务器的 **Components** 标签里再做。
+</Callout>
+
+## 服务器详情页
+
+打开一台服务器（**`/servers/<serverId>`**）会看到其名称和一个 **Healthy** 或 **Issues** 徽标，下方是
+`user@host:port`。右上角有三个控件：
+
+- **Migrate Docker**——打开迁移向导，把该服务器上正在运行的 Docker 或 Compose 部署迁入 OpenShip。
+- **Edit**——重新打开 SSH 连接表单（带 `?edit=true`），以便修改连接详情。
+- **⋯** 菜单——包含 **Remove Server**，清除存储的 SSH 凭据和连接设置。
+
+如果 OpenShip 无法连通服务器，标签上方会出现一条横幅，说明是机器不可达、凭据被拒还是配置不完整——并配 **Retry** 与 **Edit** 快捷入口。右侧的 **Connection** 面板始终显示当前的 **Host**、**User** 和 **Auth** 方式。
+
+该页面按标签组织。**Overview**、**Components**、**Security** 与 **Terminal** 始终显示；**Ports** 仅在桌面应用中出现。
+
+### Overview 标签
+
+服务器的实时控制面板。四张统计卡片分别显示 **CPU**（带负载均值）、**Memory**、**Disk**
+（各带一根用量条，超过 70% 变琥珀色、超过 90% 变红色）和 **Uptime**（在线率）。卡片下方，一张
+**Components** 卡片列出每个已安装组件及 **Healthy** / **Unhealthy** 标记和版本。页眉摘要显示 "All systems
+operational" 或 "\{n} of \{m} unhealthy"。关于如何解读这些信号，更多内容参见[日志与监控](/docs/guides/logs-monitoring)。
+
+### Components 标签
+
+管理 OpenShip 依赖的软件。**System Health** 卡片列出所有必需组件，并在 **Detected Infrastructure** 分隔线下列出它发现的任何可选组件。每行显示健康状况、版本和状态消息，并带按组件的操作：
+
+| 操作 | 何时出现 | 作用 |
+|---|---|---|
+| **Install** | 组件缺失且可安装 | 安装它。 |
+| **Reinstall** | 组件已安装 | 重装 / 刷新它。 |
+| **Remove** | 组件可移除且已安装 | 卸载它（具有破坏性——需要确认）。 |
+
+页眉按钮可以一键 **Install Missing (\{count})**，或用 **Re-check** 重跑健康检查。安装与移除过程会流出一张进度卡片，含组件行和可展开的日志面板，与设置流程一致。
+
+<Callout title="移除 OpenResty" type="warn">
+移除组件具有破坏性，可能使相关部署功能失效，直到你重新安装它。移除 **OpenResty** 会连带拆掉反向代理及其托管的配置；如果只是想刷新它的脚本或设置，请用 **Reinstall**。
+</Callout>
+
+### Security 标签（速率限制）
+
+此标签为服务器配置 **OpenResty 请求速率限制**（rate limiting）。核心控件是 **Requests /
+second**；OpenShip 自动推导一个 **burst** 允许量（约为速率的 40%）。打开 **Advanced**，可以把 **Burst mode**
+切换为手动并自定义 **Burst allowance**。
+
+**Whitelisted IPs** 可以列入绕过限制的地址或 CIDR 网段（回环地址 `127.0.0.1` 和
+`::1` 始终在白名单内）。输入 IP 或 CIDR 后按 **Add**。
+
+用 **Apply rate limit**（首次）或 **Save changes**（已有时）保存；**Remove rate limit** 清除限制，**Refresh**
+从 OpenResty 重新读取实时配置。保存前，底部的草稿指示器会汇总待保存的变更。
+
+<Callout title="需要 OpenResty" type="info">
+速率限制直接读写服务器上的实时 OpenResty 配置，因此 OpenResty 必须已安装且可达。若无法读取，该标签会显示
+"Couldn't read OpenResty rate limit config" 提示，并附 **Retry**。
+</Callout>
+
+#### 暴露端口扫描
+
+Security 标签还有一个 **Scan ports** 操作，列出服务器上真正处于**监听**状态的端口，并把每个端口归类为
+**exposed**（绑定到公网/所有接口地址）或 **loopback-only**（绑定 `127.0.0.1`，仅本机可达）。可用它发现任何无意间从互联网可达的东西——本应仅回环可达的数据库、忘记关闭的调试端口——以便锁死。这是一次只读探测（不改动任何东西）；部署之后重新运行一次，确认暴露的只有你预期中的端口。
+
+### Ports 标签（端口转发）
+
+仅桌面端。端口转发（port forwarding）把远程服务器端口暴露为你本机的 `localhost:<port>`——类似 VS Code 的端口转发。每条转发绑定回环地址，且仅在运行期间有效。
+
+已有转发以列表呈现，含运行/停止圆点、远程 `host:port`、本地地址，以及每条转发的控件：**Start** / **Stop**、
+**Remove** 和 **Open on startup** 开关。要添加一条转发，填入**远程端口**（1–65535）和可选的**本地端口**
+（**Local (auto)**，`0` 表示自动，或 1–65535），然后按 **Add**。
+
+<Callout title="仅桌面端" type="info">
+托管实例上隐藏此标签——端口转发只有在 OpenShip 编排器就是你自己机器时才有意义。
+</Callout>
+
+### Terminal 标签
+
+直达该服务器的实时 SSH shell，就在浏览器里，经由 WebSocket 运行。最多可同时打开 **3 个**shell 标签页，选中文本即复制。只有在本标签处于激活状态时 shell 才保持连接。
+
+## 编辑与移除服务器
+
+要修改连接详情，在详情页按 **Edit**（或在单服务器列表中从 **Edit** 进入）——这会重新打开同一个 SSH 连接表单，按钮为 **Save Changes**。编辑时，把密码或密钥留空即沿用已存储的密文；只有切换认证方式时才需要重新输入。
+
+要断开一台服务器，从 **⋯** 菜单使用 **Remove Server**。这会清除该条目的 SSH 凭据和连接设置。
+
+## 相关指南
+
+<Cards>
+  <Card title="部署到你自己的服务器" href="/docs/guides/custom-servers" description="接入服务器并向其部署的完整流程。" />
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="发布仓库时选择服务器作为目标。" />
+  <Card title="日志与监控" href="/docs/guides/logs-monitoring" description="读取你服务器与应用的 CPU、内存和健康信号。" />
+  <Card title="邮件与网页邮箱" href="/docs/guides/email-webmail" description="邮件管理在 Emails 界面中对已连接的服务器执行。" />
+</Cards>

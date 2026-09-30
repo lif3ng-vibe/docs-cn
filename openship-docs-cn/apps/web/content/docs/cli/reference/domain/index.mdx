@@ -1,0 +1,136 @@
+---
+title: domain
+description: openship domain 的命令、参数与选项。
+cliGroup: openship domain
+---
+
+示例请参见[工作流指南](/docs/cli/projects)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship domain
+
+管理自定义域名、DNS 验证与 SSL 证书
+
+```text
+openship domain [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/domain#openship-domain-list) | 列出项目的自定义域名 |
+| [`add [options] <hostname>`](/docs/cli/reference/domain#openship-domain-add) | 为项目添加自定义域名 |
+| [`preview <hostname>`](/docs/cli/reference/domain#openship-domain-preview) | 预览某主机名所需的 DNS 记录（不保存任何变更） |
+| [`verify <id>`](/docs/cli/reference/domain#openship-domain-verify) | 对域名执行 DNS 验证 |
+| [`primary <id>`](/docs/cli/reference/domain#openship-domain-primary) | 将某域名设为项目的主主机名 |
+| [`records <id>`](/docs/cli/reference/domain#openship-domain-records) | 显示既有域名的 DNS 记录 |
+| [`renew <id>`](/docs/cli/reference/domain#openship-domain-renew) | 为域名续期 SSL 证书 |
+| [`verify-ssl <id>`](/docs/cli/reference/domain#openship-domain-verify-ssl) | 复查某域名的 SSL 证书是否已签发且有效（不重新签发） |
+| [`renew-all`](/docs/cli/reference/domain#openship-domain-renew-all) | 为组织中所有临近到期的域名续期 SSL |
+
+## openship domain add
+
+为项目添加自定义域名
+
+```text
+openship domain add [options] <hostname>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `hostname` | 域名主机名（例如 app.example.com） |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 要挂载该域名的项目 ID |
+| `--primary` | 将该域名标记为项目的主域名（默认：false） |
+
+## openship domain list
+
+列出项目的自定义域名
+
+```text
+openship domain list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 要列出域名的项目 ID |
+
+## openship domain preview
+
+预览某主机名所需的 DNS 记录（不保存任何变更）
+
+```text
+openship domain preview [options] <hostname>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `hostname` | 要预览的域名主机名 |
+
+## openship domain primary
+
+将某域名设为项目的主主机名
+
+```text
+openship domain primary [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 域名 ID |
+
+## openship domain records
+
+显示既有域名的 DNS 记录
+
+```text
+openship domain records [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 域名 ID |
+
+## openship domain renew
+
+为域名续期 SSL 证书
+
+```text
+openship domain renew [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 域名 ID |
+
+## openship domain renew-all
+
+为组织中所有临近到期的域名续期 SSL
+
+```text
+openship domain renew-all [options]
+```
+
+## openship domain verify
+
+对域名执行 DNS 验证
+
+```text
+openship domain verify [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 域名 ID |
+
+## openship domain verify-ssl
+
+复查某域名的 SSL 证书是否已签发且有效（不重新签发）
+
+```text
+openship domain verify-ssl [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 域名 ID |

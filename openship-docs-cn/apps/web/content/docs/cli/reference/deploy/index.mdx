@@ -1,0 +1,30 @@
+---
+title: deploy
+description: openship deploy 的命令、参数与选项。
+cliGroup: openship deploy
+---
+
+示例请参见[工作流指南](/docs/cli/deploy)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship deploy
+
+触发当前项目的一次部署
+
+```text
+openship deploy [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 项目 ID（默认取 .openship/project.json 中关联的项目） |
+| `--branch <name>` | 要部署的 Git 分支（默认取当前分支） |
+| `--commit <sha>` | 指定的 commit SHA（默认取该分支的最新提交） |
+| `--env <environment>` | 变量集：production \| preview（项目 ID 决定运行时）（默认："production"） |
+| `--force-all` | 重建所有已启用的服务（跳过智能的逐服务路由） |
+| `--service-ids <ids>` | 要部署的服务 ID（以逗号分隔）（智能路由） |
+| `--smart-route` | 只重建自上次活动部署以来有变更的服务 |
+| `--refresh` | 将当前环境变量重新应用到活动部署（不拉取 git、不重建） |
+| `--folder` | 将当前文件夹作为源上传（在 Git 仓库内同样可用） |
+| `--name <name>` | 文件夹（非 git）部署的项目名称（默认取目录名） |
+| `--server <id>` | 已注册服务器 ID（参见 `openship server list`） |
+| `--watch` | 流式跟随部署日志直至完成 |

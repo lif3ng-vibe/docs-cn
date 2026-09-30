@@ -1,0 +1,360 @@
+---
+title: 邮件
+description: 搭建并运维一台自托管邮件服务器。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Mail API 驱动 Openship 的自托管邮件功能：它通过 SSH 在你的一台服务器上安装
+[iRedMail](https://www.iredmail.org) 套件，跟踪安装向导的进度，然后为运行中的服务器开放一个
+管理面板——域名、邮箱、统计、备份、DNS 健康以及逐组件控制——外加一键部署 Webmail。
+在控制台中这是 **邮件** 页面。
+
+<Callout title="仅限自托管">
+这里的每条路由都由 `localOnly` 把关，并且**绝不挂载于 Openship Cloud**——该模块只在自托管实例上
+动态导入。在云实例上这些路径返回 `404`。
+</Callout>
+
+<Callout title="每条路由都限定于某一台服务器" type="info">
+大多数路径携带一个 `:serverId`（或在请求体 / `?serverId=` 中传入）。Openship 在每次调用时都会
+检查该服务器是否属于你的组织——`mail_server` 授予对机器的 SSH 级接触能力，因此不属于你组织的
+`serverId` 会返回 `404`，与不存在无法区分。
+</Callout>
+
+## 开始（或恢复）安装
+
+针对一台服务器启动 iRedMail 安装向导，并以
+[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) 流式输出进度。
+向导是幂等的：带 `startStep` 重新 POST 即可从上次运行停止（或被闸门拦下）的地方恢复。
+每个实例同一时间只允许一个安装。
+
+```
+POST /api/mail/setup
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要安装到的 Openship 服务器。', required: true },
+    domain: { type: 'string', description: '邮件域名，例如 example.com。邮件由 mail.<domain> 提供。', required: true },
+    startStep: { type: 'number', description: '从中开始/恢复的步骤（钳制到 1..total）。', default: '1' },
+    config: { type: 'IRedMailConfig', description: '可选的安装配置（见下）。' },
+  }}
+/>
+
+`config` 是可选的 `IRedMailConfig`：
+
+<TypeTable
+  type={{
+    adminPassword: { type: 'string', description: 'postmaster 账号的密码。缺省时自动生成。' },
+    storageBackend: { type: "'mariadb' | 'postgresql'", description: 'iRedMail 存储后端。', default: "'postgresql'" },
+    prefillSecrets: { type: 'Record<string, string>', description: '重试时复用的先前生成的密钥，按 iRedMail 预期的键名（例如 VMAIL_DB_BIND_PASSWD）。' },
+  }}
+/>
+
+```bash
+curl -N -X POST "$OPENSHIP_URL/api/mail/setup" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123","domain":"example.com"}'
+```
+
+流会为每个步骤发出 `step_start`、`log` 与 `step_done` 事件，外加这些控制事件：
+
+- `dns_records` / `dns_pending` —— DKIM 步骤发布你需要添加的记录，然后**暂停**。在你的 DNS
+  提供方处添加这些记录，调用 `POST /api/mail/setup/dns-ack`，再携带事件中的 `resumeStep`
+  重新 POST `/setup`。
+- `ptr_pending` —— DNS 确认之后，向导会再次暂停等待反向 DNS（PTR）。在你的 VPS 提供方处设置
+  PTR 记录，调用 `POST /api/mail/setup/ptr-ack`，然后恢复。
+- `complete` —— 携带 `domain`、`webmailUrl` 与 `adminUrl`。
+- `error` —— 携带 `message`（以及在可恢复时的）`resumeStep`。
+
+末尾的 `verify_reachability` 步骤读取目标的 TCP 监听表，然后从 API 主机向公网 DNS 地址连接
+25、465、587、993 端口。监听失败与机外失败在结果中保持区分。实测失败会阻塞完成，并同时指向
+主机防火墙与提供方侧的防火墙/安全组/安全列表/NSG；探测不可用会作为非阻塞警告返回，
+而不会被臆断成故障。
+
+`GET /api/mail/health/:serverId` 在 60 秒内复用同一轮公网端口扫描。在更改防火墙规则后传入
+`?refreshReachability=1` 强制立即复查；并发请求仍会被合并为一次有界的四端口探测。
+
+## 确认 DNS / PTR
+
+二者都会翻转机内状态文件中的一个标志，使向导能在下次 `/setup` POST 时越过其闸门。两者的请求体相同。
+
+```
+POST /api/mail/setup/dns-ack
+POST /api/mail/setup/ptr-ack
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要更新安装状态的服务器。', required: true },
+  }}
+/>
+
+同样的 `{ serverId }` 请求体也适用于 `POST /api/mail/scan`、`POST /api/mail/adopt`、
+`POST /api/mail/setup/cancel` 与 `POST /api/mail/setup/reset`。
+
+## 收编已有安装
+
+如果 Openship 丢失了某台邮件服务器的记录（桌面端重建、数据库被清空），先扫描该服务器再收编——
+无需重装，机器上不会有任何改变。
+
+```
+POST /api/mail/scan
+POST /api/mail/adopt
+```
+
+```bash
+# 1. 探测 iRedMail 及其机内状态
+curl -X POST "$OPENSHIP_URL/api/mail/scan" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123"}'
+
+# 2. 重新收编（幂等）
+curl -X POST "$OPENSHIP_URL/api/mail/adopt" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123"}'
+```
+
+## 轮换 postmaster 密码
+
+```
+POST /api/mail/credentials/postmaster
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '这台邮件服务器。', required: true },
+    password: { type: 'string', description: '新密码（至少 12 个字符）。', required: true },
+  }}
+/>
+
+## 添加邮件域名
+
+```
+POST /api/mail/admin/:serverId/domains
+```
+
+<TypeTable
+  type={{
+    domain: { type: 'string', description: '要添加的域名，例如 example.com。', required: true },
+    description: { type: 'string', description: '域名的自由文本标签。' },
+    maxMailboxes: { type: 'number', description: '该域名的邮箱数上限。' },
+    maxAliases: { type: 'number', description: '该域名的别名数上限。' },
+    defaultQuotaMB: { type: 'number', description: '每个邮箱的默认配额（MB）。' },
+  }}
+/>
+
+`PATCH /api/mail/admin/:serverId/domains/:domain` 接受相同的字段（均可选）外加
+`active`（boolean）。
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/mail/admin/srv_123/domains" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"example.com","defaultQuotaMB":2048}'
+```
+
+## 创建邮箱
+
+```
+POST /api/mail/admin/:serverId/mailboxes
+```
+
+<TypeTable
+  type={{
+    localPart: { type: 'string', description: '@ 之前的部分，例如 alice。', required: true },
+    domain: { type: 'string', description: '该服务器上已存在的邮件域名。', required: true },
+    password: { type: 'string', description: '邮箱初始密码。', required: true },
+    name: { type: 'string', description: '显示名。' },
+    quotaMB: { type: 'number', description: '邮箱配额（MB）。' },
+  }}
+/>
+
+`PATCH /api/mail/admin/:serverId/mailboxes/:email` 接受 `name`、`password`、`quotaMB` 与
+`active`（均可选）。`DELETE` 默认软删除；加 `?hard=true` 以清除邮件目录。
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/mail/admin/srv_123/mailboxes" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"localPart":"alice","domain":"example.com","password":"a-strong-password"}'
+```
+
+## 配置备份
+
+把邮件服务器接入通用的[备份系统](/docs/api/backups)——选择一个目标以及要捕获的内容。
+要求你的组织中已存在一个备份目标。
+
+```
+POST /api/mail/admin/:serverId/backup-policy
+```
+
+<TypeTable
+  type={{
+    destinationId: { type: 'string', description: '你组织中已存在的一个备份目标。', required: true },
+    messageData: { type: 'boolean', description: "包含邮箱消息数据（邮件目录）。", default: 'false' },
+    keys: { type: 'boolean', description: '包含密钥（DKIM key、配置）。', default: 'true' },
+    cronExpression: { type: 'string | null', description: '计划；null 表示仅手动。' },
+    retainCount: { type: 'number | null', description: '保留最新的 N 次运行。' },
+    retainDays: { type: 'number | null', description: '保留 N 天内的运行。' },
+  }}
+/>
+
+## 发送测试邮件
+
+```
+POST /api/mail/admin/:serverId/test-email
+```
+
+<TypeTable
+  type={{
+    to: { type: 'string', description: '收件地址。', required: true },
+    fromDomain: { type: 'string', description: '发件域名（默认为首次安装的主域名）。' },
+  }}
+/>
+
+## 部署 Webmail
+
+从应用目录安装 **webmail** 应用，指向这台邮件服务器的 IMAP/SMTP，然后排队一次部署并启动。
+返回 `{ deploymentId, projectId }`，控制台据此跳转到 `/build/[deploymentId]`。
+重新部署已有 Webmail 会复用其项目（以及其保存的会话）。
+
+IMAP/SMTP 后端由邮件服务器推导而来——`mail.<domain>` 的 993/465 端口——因此这里无需任何配置。
+若要把 Webmail 指向你在别处运行的邮箱主机，请改为从 `/apps` 安装 `webmail` 应用
+（或使用 `POST /api/mail/webmail/deploy-external`）。
+
+```
+POST /api/mail/webmail/deploy-project
+```
+
+<TypeTable
+  type={{
+    mailServerId: { type: 'string', description: '此 Webmail 所前置的邮件服务器。', required: true },
+    hostname: { type: 'string', description: '对外提供 Webmail 的完整主机名。', required: true },
+    target: { type: 'object', description: '部署到哪里——见下。', required: true },
+    replaceLegacy: {
+      type: 'boolean',
+      description: '同意替换目录出现之前的 Webmail。仅在接受到 409 LEGACY_WEBMAIL 后才需要。',
+    },
+  }}
+/>
+
+`target` 为以下之一：
+
+- `{ "kind": "self", "serverId": "srv_123" }` —— 自托管在你的某台 Openship 服务器上。
+- `{ "kind": "cloud" }` —— 由 Openship Cloud 托管。
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/mail/webmail/deploy-project" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mailServerId":"srv_123","hostname":"mail.example.com","target":{"kind":"self","serverId":"srv_123"}}'
+```
+
+### 替换目录出现之前的 Webmail
+
+Openship 0.6.1 及更早版本以预构建包（而非镜像）的形式提供 Webmail。这类安装无法重新部署——
+只能被目录应用**替换**。`GET /api/mail/status` 会把它们报告为 `webmail.legacy: true`，
+且在其上部署会被 `409` 与 `"code": "LEGACY_WEBMAIL"` 拒绝，直到你带着 `replaceLegacy: true`
+重试同一请求。
+
+替换会拆除旧项目——容器、路由、宿主状态目录、项目行——然后在同一主机名上安装 webmail 应用。
+邮箱、邮件数据与每一条消息都存放在邮件服务器上，不会受影响；但旧 Webmail 的登录会话与
+按用户设置不会保留，所有用户都需要重新登录。如果旧安装无法清除，则什么都不安装，
+现有 Webmail 继续运行。
+
+## 错误
+
+<Callout title="404 — 不可用" type="error">
+你在调用一个云实例。Mail API 仅限自托管；请在关闭 `CLOUD_MODE` 的实例上运行。
+</Callout>
+
+<Callout title="404 — 找不到服务器" type="error">
+该 `:serverId` 不属于你的组织（或不存在）。用 `GET /api/mail/servers` 列出你的邮件服务器
+以获取有效 ID。
+</Callout>
+
+<Callout title="409 — 安装正在进行" type="warn">
+每个实例同一时间只允许一个安装，且该服务器的安装进行期间，针对它的写入（reset、postmaster
+轮换）会被拒绝。等待安装完成，或用 `POST /api/mail/setup/cancel` 取消。
+</Callout>
+
+<Callout title="409 — LEGACY_WEBMAIL" type="warn">
+该邮件服务器关联的 Webmail 早于目录应用，因此只能被替换。在你确认操作员接受丢失旧 Webmail
+的会话与按用户设置后，带着 `replaceLegacy: true` 重试同一 `deploy-project` 调用。
+</Callout>
+
+<Callout title="502 — 扫描/收编失败" type="warn">
+Openship 无法通过 SSH 连到该服务器，或探测抛出异常。检查服务器在线且其 SSH 凭据有效，
+然后重试。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 列出一台服务器上的邮件别名。 | `GET /api/mail/admin/:serverId/aliases`<br />`mail_server:list` · 自托管 |
+| 创建一个邮件别名。 | `POST /api/mail/admin/:serverId/aliases`<br />`mail_server:write` · 自托管 |
+| 移除一个邮件别名。 | `DELETE /api/mail/admin/:serverId/aliases/:id`<br />`mail_server:admin` · 自托管 |
+| 更新一个邮件别名。 | `PATCH /api/mail/admin/:serverId/aliases/:id`<br />`mail_server:write` · 自托管 |
+| 读取邮件服务器的备份保留策略（或 `null`）。 | `GET /api/mail/admin/:serverId/backup-policy`<br />`mail_server:read` · 自托管 |
+| 创建或更新备份保留策略。 | `POST /api/mail/admin/:serverId/backup-policy`<br />`mail_server:admin` · 自托管 |
+| 读取邮件服务器近期的备份运行。 | `GET /api/mail/admin/:serverId/backup-runs`<br />`mail_server:read` · 自托管 |
+| 读取邮件证书、SMTP/IMAP TLS 检查与自动续期设置。 | `GET /api/mail/admin/:serverId/certificate`<br />`mail_server:read` · 自托管 |
+| 设置 `autoRenew` 以启用或禁用邮件证书自动续期。禁用续期后监控继续。 | `PATCH /api/mail/admin/:serverId/certificate`<br />`mail_server:admin` · 自托管 |
+| 重新检查磁盘上及 SMTP/IMAP 所提供证书，不签发证书也不发送邮件。 | `POST /api/mail/admin/:serverId/certificate/check`<br />`mail_server:write` · 自托管 |
+| 通过 Openship Edge 续期到期的邮件证书并重载 Postfix/Dovecot，继续使用仍有效的证书并修复其服务配置。 | `POST /api/mail/admin/:serverId/certificate/renew`<br />`mail_server:admin` · 自托管 |
+| 对单个组件执行操作（`start`/`stop`/`restart`/…）。 | `POST /api/mail/admin/:serverId/components/:key/:action`<br />`mail_server:admin` · 自托管 |
+| 跟踪输出一个组件的日志。 | `GET /api/mail/admin/:serverId/components/:key/logs`<br />`mail_server:read` · 自托管 |
+| 重启所有邮件组件。 | `POST /api/mail/admin/:serverId/components/restart-all`<br />`mail_server:admin` · 自托管 |
+| 实时 DNS 健康扫描（MX/SPF/DKIM/DMARC/PTR）。 | `GET /api/mail/admin/:serverId/dns-scan`<br />`mail_server:read` · 自托管 |
+| 列出服务器上的邮件域名。 | `GET /api/mail/admin/:serverId/domains`<br />`mail_server:list` · 自托管 |
+| 添加一个邮件域名。 | `POST /api/mail/admin/:serverId/domains`<br />`mail_server:write` · 自托管 |
+| 列出 DNS 尚未就绪的附加域名。 | `GET /api/mail/admin/:serverId/domains-dns/pending`<br />`mail_server:read` · 自托管 |
+| 删除一个域名（加 `?cascade=true` 同时移除其邮箱）。 | `DELETE /api/mail/admin/:serverId/domains/:domain`<br />`mail_server:admin` · 自托管 |
+| 读取单个域名的配置。 | `GET /api/mail/admin/:serverId/domains/:domain`<br />`mail_server:read` · 自托管 |
+| 更新一个域名（配额、限制、active 标志）。 | `PATCH /api/mail/admin/:serverId/domains/:domain`<br />`mail_server:write` · 自托管 |
+| 统计依赖某个域名的邮箱/别名数量。 | `GET /api/mail/admin/:serverId/domains/:domain/dependents`<br />`mail_server:read` · 自托管 |
+| 读取一个附加域名的 DNS 记录与发布状态。 | `GET /api/mail/admin/:serverId/domains/:domain/dns`<br />`mail_server:read` · 自托管 |
+| 确认某个域名的 DNS 记录已发布。 | `POST /api/mail/admin/:serverId/domains/:domain/dns/acknowledge`<br />`mail_server:write` · 自托管 |
+| 通过已配置的提供方应用邮件域名的 DNS 计划。 | `POST /api/mail/admin/:serverId/domains/:domain/dns/apply`<br />`mail_server:write` · 自托管 |
+| 预览邮件域名的 DNS 记录。 | `GET /api/mail/admin/:serverId/domains/:domain/dns/plan`<br />`mail_server:read` · 自托管 |
+| 列出入站邮件规则。 | `GET /api/mail/admin/:serverId/inbound-rules`<br />`mail_server:read` · 自托管 |
+| 创建一条入站邮件规则。 | `POST /api/mail/admin/:serverId/inbound-rules`<br />`mail_server:write` · 自托管 |
+| 移除一条入站邮件规则。 | `DELETE /api/mail/admin/:serverId/inbound-rules/:ruleId`<br />`mail_server:write` · 自托管 |
+| 更新一条入站邮件规则。 | `PATCH /api/mail/admin/:serverId/inbound-rules/:ruleId`<br />`mail_server:write` · 自托管 |
+| 按入站邮件规则评估一条消息。 | `POST /api/mail/admin/:serverId/inbound-rules/test`<br />`mail_server:write` · 自托管 |
+| 列出一个域名下的邮箱。 | `GET /api/mail/admin/:serverId/mailboxes`<br />`mail_server:list` · 自托管 |
+| 创建一个邮箱。 | `POST /api/mail/admin/:serverId/mailboxes`<br />`mail_server:write` · 自托管 |
+| 删除一个邮箱（加 `?hard=true` 清除其邮件目录；默认为软删除）。 | `DELETE /api/mail/admin/:serverId/mailboxes/:email`<br />`mail_server:admin` · 自托管 |
+| 读取一个邮箱。 | `GET /api/mail/admin/:serverId/mailboxes/:email`<br />`mail_server:read` · 自托管 |
+| 更新一个邮箱（名称、密码、配额、active）。 | `PATCH /api/mail/admin/:serverId/mailboxes/:email`<br />`mail_server:write` · 自托管 |
+| 轮换平台邮箱凭据。 | `POST /api/mail/admin/:serverId/platform-mailbox/rotate`<br />`mail_server:admin` · 自托管 |
+| 移除出站中继配置。 | `DELETE /api/mail/admin/:serverId/relay`<br />`mail_server:admin` · 自托管 |
+| 读取出站中继配置。 | `GET /api/mail/admin/:serverId/relay`<br />`mail_server:read` · 自托管 |
+| 配置一个出站中继。 | `POST /api/mail/admin/:serverId/relay`<br />`mail_server:admin` · 自托管 |
+| 聚合统计（域名、邮箱、存储）。 | `GET /api/mail/admin/:serverId/stats`<br />`mail_server:read` · 自托管 |
+| 从服务器发送一封测试邮件。 | `POST /api/mail/admin/:serverId/test-email`<br />`mail_server:write` · 自托管 |
+| 重新收编一台编排器状态丢失但已扫描过的服务器。 | `POST /api/mail/adopt`<br />`mail_server:write` · 自托管 |
+| 轮换 postmaster 账号密码。 | `POST /api/mail/credentials/postmaster`<br />`mail_server:write` · 自托管 |
+| 邮件守护进程、出站投递以及缓存的公网端口可达性（TCP 25/465/587/993）。 | `GET /api/mail/health/:serverId`<br />`mail_server:read` · 自托管 |
+| 探测一台服务器上是否已有 iRedMail 安装及其机内状态（只读）。 | `POST /api/mail/scan`<br />`mail_server:write` · 自托管 |
+| 列出 Openship 已（或正在）提供邮件服务的所有服务器。 | `GET /api/mail/servers`<br />`mail_server:list` · 自托管 |
+| 停止管理一台服务器（仅删除数据库行；保持套件与状态文件完好）。 | `DELETE /api/mail/servers/:serverId`<br />`mail_server:admin` · 自托管 |
+| 开始或恢复安装向导——返回一个 SSE 流。 | `POST /api/mail/setup`<br />`mail_server:write` · 自托管 |
+| 取消正在运行的安装。 | `POST /api/mail/setup/cancel`<br />`mail_server:write` · 自托管 |
+| 将 DNS（DKIM）记录标记为已配置，解除 DNS 闸门。 | `POST /api/mail/setup/dns-ack`<br />`mail_server:write` · 自托管 |
+| 将反向 DNS（PTR）标记为已配置，解除 PTR 闸门。 | `POST /api/mail/setup/ptr-ack`<br />`mail_server:write` · 自托管 |
+| 清除机内状态文件（不触碰 iRedMail）。 | `POST /api/mail/setup/reset`<br />`mail_server:admin` · 自托管 |
+| 读取一台服务器当前的安装进度（由其机内状态文件渲染）。 | `GET /api/mail/status`<br />`mail_server:read` · 自托管 |
+| 列出全部安装步骤与总步数。 | `GET /api/mail/steps`<br />`mail_server:read` · 自托管 |
+| 为一台外部邮件服务器部署 Webmail。 | `POST /api/mail/webmail/deploy-external`<br />`mail_server:write` · 自托管 |
+| 创建一个 Webmail 项目加部署并启动构建。 | `POST /api/mail/webmail/deploy-project`<br />`mail_server:write` · 自托管 |
+| 列出部署目标选项（自托管服务器/云端）。 | `GET /api/mail/webmail/targets`<br />`mail_server:read` · 自托管 |
+
+{/* api-operations:end */}

@@ -1,0 +1,13 @@
+{
+  "name": "openship-docs-cn",
+  "version": "0.8.0",
+  "private": true,
+  "description": "OpenShip 文档站中文镜像（非官方翻译）——fumadocs + Next.js 静态导出",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "pnpm --filter @repo/web dev",
+    "build": "pnpm --filter @repo/web build",
+    "lint": "pnpm -r lint"
+  }
+}

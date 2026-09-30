@@ -1,0 +1,127 @@
+---
+title: 预览环境
+description: 从 Git 分支创建项目的独立安全副本——让你在改动到达正式站点之前先行试验。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+假设你有一个已经上线的项目，想尝试一些有风险的东西——新设计、大规模重写——又不想弄坏真实用户正在使用的版本。**环境**（environment）让你恰好能做到这一点。可以把它想象成搭在主舞台旁边的排练场：同样的剧本、同样的道具，但观众只会看到主舞台。你在旁边排练，满意了再把东西搬过去。
+
+在 Openship 中，每个环境都是项目的一份独立副本。它跟踪自己的 Git 分支并拥有自己的网址，因此你的 `production` 站点和 `preview` 副本互不干扰。
+
+<Callout title="前置要求">
+- 一个已在 Openship 中设置好的项目（还没有的话，参见[从 GitHub 部署](/docs/guides/deploy-from-github)）。
+- 项目已连接 **GitHub**，且有不止一个分支——环境从分支构建。
+- 一个要指向的分支（例如 `staging` 或 `preview` 分支）。
+</Callout>
+
+## “production”与“preview”是什么意思
+
+这两个词在这里频繁出现。通俗地说：
+
+- **生产（production）**——真家伙。这是访客看到的副本，跟踪你的主分支（通常是 `main` 或 `master`）。
+- **预览（preview）**——练习副本。它跟踪其他分支，位于自己独立的网址，可以有自己的环境变量（自己的机密和设置）。随便折腾——生产环境毫无察觉。
+
+Openship 通过分支判断新环境的类型：
+
+- 名为 `main` 或 `master` 的分支会成为**生产**环境。
+- 任何其他分支会成为**预览**环境。
+- 手动创建且不带分支的环境则是**开发**环境。
+
+每个环境都是完整、独立的副本：自己的地址、自己的变量、自己的部署历史。它们共享的是构建配方——创建环境时，Openship 会复制原项目的框架、构建命令和设置，让你不必重新配置。
+
+## 从分支创建环境
+
+操作在项目页面进行，使用**环境切换器**——页面顶部的小胶囊按钮，显示当前环境的名称及其分支。
+
+<Steps>
+
+<Step>
+
+### 打开项目并找到切换器
+
+前往你的项目。顶部有一个圆角按钮显示当前环境（全新项目只会显示 **Production**，旁边是主分支）。紧邻它的是用于添加分支的小 **+** 按钮。
+
+</Step>
+
+<Step>
+
+### 点击 + 并选择分支
+
+点击 **+**。Openship 读取你的仓库并列出其分支，顶部有 **Search branches**（搜索分支）框用于过滤长列表。点击你想作为新环境基础的分支。
+
+Openship 会创建绑定该分支的项目全新副本，并把你带到它的页面。就这么简单——你现在看到的就是新环境。
+
+<Callout title="技巧" type="info">
+名称会根据分支自动填好（名为 `feature/new-home` 的分支会变成“Feature New Home”）。无需输入任何内容。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 部署新环境
+
+新环境起初是空的——创建时不会部署任何东西。像部署任何项目一样部署它：打开并按 **Deploy**。完成后，这份副本拥有自己独立的线上网址，与生产环境分开。
+
+</Step>
+
+</Steps>
+
+### 在环境之间切换
+
+当你有多个环境后，点击切换器胶囊即可查看完整列表。每行显示环境名称及其分支，正在查看的那一行带勾号。点击任意行即可跳到项目的那个副本——它自己的部署、日志和变量。
+
+### 手动创建（不带分支）
+
+添加分支面板底部有一个 **Manual environment**（手动环境）选项。当你想要一个尚未绑定特定分支的环境时使用它——给它起个名字（可选填 **Branch label** 分支标签），然后按 **Create**。这会创建一个*开发*环境。
+
+## CLI
+
+如果从 CLI 部署，`deploy` 命令有一个 `--env` 标志，告诉 Openship 这次部署针对哪个环境。它会应用该环境的变量，并把部署记录在其名下。
+
+```bash
+# 部署你的文件夹所关联的项目，作为生产环境（默认行为）
+openship deploy
+
+# 改为以预览身份部署——使用你预览环境的变量
+openship deploy --env preview
+```
+
+<Callout title="只有两个取值" type="info">
+`--env` 只接受 `production` 或 `preview`。其他任何值都会被拒绝。省略时默认为 `production`。
+</Callout>
+
+在切换器中创建的每个环境都是拥有自己 ID 的独立项目。要专门部署其中某个副本，用 `--project` 把 CLI 指向它：
+
+```bash
+openship deploy --project <environment-project-id> --env preview --watch
+```
+
+`--watch` 会流式输出构建日志直到结束，让你在终端里就能看到它上线。
+
+## 故障排查
+
+<Callout title="点击 + 后没有出现分支" type="warn">
+环境列表来自你的 GitHub 分支，因此项目必须已连接 GitHub 且有分支可显示。如果列表为空，请检查项目是否已关联仓库。连接 GitHub 参见[从 GitHub 部署](/docs/guides/deploy-from-github)。
+</Callout>
+
+<Callout title="“Branch … was not found”" type="error">
+Openship 在仓库中找不到该分支。确认该分支确实存在于 GitHub 上（且已推送，而不只是本地），然后重试。
+</Callout>
+
+<Callout title="同名环境已存在" type="warn">
+同一项目下的每个环境名称必须唯一。如果你已经把该分支变成环境，请从胶囊切换器直接切换过去，而不是再建一个。
+</Callout>
+
+<Callout title="我的预览环境缺少某个机密" type="warn">
+变量按环境隔离——预览副本不会自动继承生产环境的变量。打开预览环境并补上它需要的变量。参见[环境变量](/docs/guides/environment-variables)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="为每个环境配置自己的机密和设置。" />
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="核心部署流程，以及如何在每次 push 时自动重新部署。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把环境放到你自己的地址上，自动配置 HTTPS。" />
+</Cards>

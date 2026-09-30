@@ -57,5 +57,12 @@
     "orig": "https://github.com/mvschwarz/openrig",
     "repo": "https://github.com/mvschwarz/openrig",
     "lang": "en"
+  },
+  {
+    "name": "OpenShip",
+    "slug": "openship",
+    "desc": "开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。",
+    "orig": "https://openship.io/docs",
+    "repo": "https://github.com/oblien/openship"
   }
 ]

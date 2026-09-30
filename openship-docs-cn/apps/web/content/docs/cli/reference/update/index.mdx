@@ -1,0 +1,21 @@
+---
+title: update
+description: openship update 的命令、参数与选项。
+cliGroup: openship update
+---
+
+示例参见 [CLI 总览](/docs/cli)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship update
+
+将 Openship CLI 及其打包的服务端更新到最新发布版本
+
+```text
+openship update [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--check` | 只报告当前版本与最新版本；不安装 |
+| `--via <manager>` | 用哪个包管理器更新：bun \| npm |
+| `--rebuild` | 源码安装：即使已处于远端最新提交也重新构建 |

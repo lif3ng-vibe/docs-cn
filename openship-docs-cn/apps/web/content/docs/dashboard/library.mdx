@@ -1,0 +1,89 @@
+---
+title: 新建项目（Library）
+description: 一次次部署都从这里选源——上传文件夹、导入 GitHub 仓库、粘贴 Git URL、挑一个模板，或收养既有的服务器。
+---
+
+每一笔新部署都从这里开始。按下控制台里的 **New Project**，你就落到了 Library 页面（路由 `/library`），标题 **New Project**，副标题 *"Import a repository, paste
+a URL, or start from a template"*。它的任务很简单：选好**代码从哪来**，OpenShip 便带着全部预填的配置把你交给部署向导（`/deploy/...`）。
+
+把这个页面想成正门后的五扇门——每个标签都是引入代码的一条不同路径。无论选哪条，终点都是一个：在向导里确认框架、选择运行位置，然后按下 Deploy。
+
+## 五个标签页
+
+标签行就在页面标题下方。**GitHub** 标签默认被选中。最后一个标签
+（**Existing server**）只在自托管和桌面安装上出现——Openship Cloud 没有可供收养的服务器清单。
+
+| 标签 | 图标 | 用途 |
+|---|---|---|
+| **Folder** | folder-up | 从一个文件夹部署——经浏览器上传，或在桌面应用上直接读取磁盘。 |
+| **GitHub** | github | 浏览并部署你已连接 GitHub 账户上的仓库。 |
+| **Git URL** | link-2 | 粘贴一条公开的 GitHub 仓库链接——无需连接账户。 |
+| **Template** | sparkles | 从某框架现成的起步模板开始。 |
+| **Existing server** | boxes | *(仅自托管)* 收养你自己的机器上已在运行的 Docker/Compose 应用。 |
+
+每个标签的右侧都是 **Overview** 边栏——仓库计数和一条 "Quick Tip"——外加你的 GitHub /
+Cloud 连接状态。它是信息性的；动作永远在左侧。
+
+## Folder
+
+从一个文件夹部署应用，无需 Git。这个标签的行为随你运行 OpenShip 的方式而不同：
+
+- **桌面应用**——你看到 **Local Projects** 面板。把 OpenShip 指向你机器上的某个文件夹
+  （拖进来或输入绝对路径，然后 **Scan**），它自动检测框架，并在本地构建和运行应用。不发生上传——本地管线直接原地读取文件夹。
+- **浏览器（Openship Cloud 或远程自托管实例）**——你看到 **Folder upload** 流程。浏览器看不见你的文件系统，所以 OpenShip 先问 **"What are you deploying?"**，展示一网格可选的技术栈
+  （这决定了构建镜像）。然后你拖入或浏览选择项目文件夹——它在浏览器里被打包（跳过 `node_modules`、`.git` 和构建产物）、上传，然后你继续进入向导。
+
+<Callout title="完整流程" type="info">
+桌面端选择器、浏览器上传，以及等价的一条 CLI 命令，参见[部署本地文件夹](/docs/guides/deploy-local-folder)。
+</Callout>
+
+## GitHub（仓库）
+
+默认标签。如果你的 GitHub 账户尚未连接，这里会显示一个**连接**提示而非列表——连接一次，仓库就会显现。（首次连接参见[从 GitHub 部署](/docs/guides/deploy-from-github)。）
+
+连接之后，这个面板列出你的仓库，并附上找出目标仓库的工具：
+
+- 顶部的**账户行**，用于在你授过权的 GitHub owner/组织之间切换，外加一个 **+** 添加其他账户。
+- 一个**搜索**框（`Search repositories...`）。
+- **可见性**胶囊：**All**、**Public**、**Private**。
+- 一个**排序**下拉框：**Recent**、**Name**、**Stars**。
+
+点击任一仓库，OpenShip 会直接带你进入它的部署向导。
+
+<Callout title="'Local only' 徽标" type="warn">
+被标为 **Local only** 的仓库能通过 `gh` CLI 看到，但 OpenShip GitHub App 未安装到其 owner 上——所以可以本地构建，但远程部署会被拒绝。在那个 owner 上安装 App（**Install GitHub App** 操作）即可启用远程部署。
+</Callout>
+
+## Git URL
+
+用于部署你不拥有或未连接的公开仓库。面板名为 **Import from Git URL**：
+粘贴一条 `https://github.com/username/repository` 风格的 URL，按 **Import Repository**。不需要 GitHub 连接。OpenShip 从链接中解析出 owner 和仓库名，然后送你去向导。
+
+<Callout title="仅限公开仓库">
+这条路径通过公开 URL clone。私有仓库请用 **GitHub** 标签，让 OpenShip 完成认证。参见[从模板或 Git URL 部署](/docs/guides/deploy-template-or-url)。
+</Callout>
+
+## Template
+
+一个框架起步模板网格。选定框架后，OpenShip 以该模板为种子打开向导——不先带着自己的代码也能快速把一个能跑的项目拉上线。（纯粹的 "static" 选项在这里不出现。）
+
+每个起步模板包含什么，参见[从模板或 Git URL 部署](/docs/guides/deploy-template-or-url)。
+
+## Existing server
+
+*(仅限自托管与桌面端。)* 这个标签用于**收养一个你已经在跑的部署**——卡片标题为 **Existing Docker server**，描述为 *"Migrate a running Docker or Compose deployment into
+Openship."*。按下 **Migrate Docker** 打开迁移向导，它通过 SSH 连到你的机器，检查在运行的容器，并把它们纳入 OpenShip 的管理。
+
+<Callout title="需要对你自己机器的 SSH 访问">
+收养读取的是你掌控的服务器上的容器，所以在 Openship Cloud 上不可用。如果你想添加一台全新机器而非收养一台，参见[接入你自己的服务器](/docs/guides/custom-servers)。
+</Callout>
+
+## 接下来发生什么
+
+每个标签都通向同一处——位于 `/deploy/...` 的**部署向导**，在那里你确认检测到的框架、选择应用的运行位置（Local、Server 或 Cloud），然后按 **Deploy**。
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="连接仓库并发布，逐击演示。" />
+  <Card title="部署本地文件夹" href="/docs/guides/deploy-local-folder" description="从浏览器上传，或在桌面应用上直接读盘。" />
+  <Card title="从模板或 Git URL 部署" href="/docs/guides/deploy-template-or-url" description="不连接自己的 GitHub 也能开始。" />
+</Cards>

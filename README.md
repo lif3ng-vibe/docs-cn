@@ -15,8 +15,10 @@
 | Nimbus | `nimbus-docs-cn/` | https://nimbus-docs.com | https://github.com/cloudflare/nimbus | 2026-09-28 |
 | OpenRig | `openrig-docs-cn/` | https://openrig.dev/ | https://github.com/mvschwarz/openrig | 2026-09-30 |
 | OpenRig (EN) | `openrig-docs-en/` | 无（仓库即源） | https://github.com/mvschwarz/openrig | 2026-09-30 |
+| OpenShip | `openship-docs-cn/` | https://openship.io/docs | https://github.com/oblien/openship | 2026-09-30 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
+> OpenShip 子站亦为 pnpm monorepo（fumadocs + Next.js 16 静态导出）：Next 按 `NEXT_BASE_PATH` 自动加前缀，**无需 sed**；canonical/sitemap 由 `NEXT_PUBLIC_SITE_URL` 注入；产物在 `apps/web/out/`（见 CI 的 openship 构建段与其 README）。
 
 ## 运行任意子项目
 
@@ -56,6 +58,7 @@ docs-cn/
 ├── nimbus-docs-cn/                     # Nimbus 中文文档（pnpm monorepo，apps/www 站点，66 篇）
 ├── openrig-docs-cn/                    # OpenRig 中文文档（Starlight，仓库 docs/ 全集 90 篇）
 ├── openrig-docs-en/                    # OpenRig 英文镜像（Starlight，脚本生成，90 篇）
+├── openship-docs-cn/                   # OpenShip 中文文档（fumadocs + Next.js 16 静态导出，164 篇 + 营销站）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -112,6 +115,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Nimbus：https://lif3ng-vibe.github.io/docs-cn/nimbus/
 - OpenRig：https://lif3ng-vibe.github.io/docs-cn/openrig/
 - OpenRig（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/openrig-en/
+- OpenShip：https://lif3ng-vibe.github.io/docs-cn/openship/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

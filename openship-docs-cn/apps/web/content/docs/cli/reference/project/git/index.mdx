@@ -1,0 +1,88 @@
+---
+title: project git
+description: openship project git 的命令、参数与选项。
+cliGroup: openship project git
+---
+
+示例参见[工作流指南](/docs/cli/projects)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship project git
+
+管理 Git 关联与自动部署
+
+```text
+openship project git [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`link [options] <id>`](/docs/cli/reference/project/git#openship-project-git-link) | 将 GitHub 仓库关联到项目 |
+| [`branch <id> <branch>`](/docs/cli/reference/project/git#openship-project-git-branch) | 设置部署分支 |
+| [`auto-deploy [options] <id>`](/docs/cli/reference/project/git#openship-project-git-auto-deploy) | 启用或停用推送即部署（push-to-deploy） |
+| [`webhook-domain [options] <id> [domain]`](/docs/cli/reference/project/git#openship-project-git-webhook-domain) | 设置或清除接收 GitHub Webhook 的域名 |
+
+## openship project git auto-deploy
+
+启用或停用推送即部署
+
+```text
+openship project git auto-deploy [options] <id>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `id` | 项目 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `--enable` | 启用自动部署 |
+| `--disable` | 停用自动部署 |
+
+## openship project git branch
+
+设置部署分支
+
+```text
+openship project git branch [options] <id> <branch>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `id` | 项目 ID |
+| `branch` | 分支名 |
+
+## openship project git link
+
+将 GitHub 仓库关联到项目
+
+```text
+openship project git link [options] <id>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `id` | 项目 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `--owner <owner>` | GitHub 所有者/组织 |
+| `--repo <repo>` | 仓库名 |
+| `--branch <branch>` | 分支（默认取仓库的默认分支） |
+| `--installation-id <id>` | GitHub App 安装 ID |
+
+## openship project git webhook-domain
+
+设置或清除接收 GitHub Webhook（网络回调）的域名
+
+```text
+openship project git webhook-domain [options] <id> [domain]
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `id` | 项目 ID |
+| `domain` | 已验证的项目域名（配合 --clear 省略以取消） |
+
+| 选项 | 说明 |
+| --- | --- |
+| `--clear` | 清除 Webhook 域名 |

@@ -1,0 +1,216 @@
+---
+title: MCP
+description: 通过 Model Context Protocol 调用 Openship 工具。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+MCP API 是一个单一的 **Model Context Protocol** 端点，让 AI 智能体（Claude、Cursor 以及任何
+兼容 MCP 的客户端）把 Openship 当成一组工具来驱动。每个工具映射到一个带权限标签的 REST 路由，
+而每次调用都会重新走完完整的认证与权限栈——因此智能体永远只能看到并做到其令牌允许的事。
+客户端配置（OAuth 流程、配置片段）参见 [MCP 总览](/docs/mcp)。
+
+自托管与 Openship Cloud 均可用（挂载在共享路由集中）。
+
+## 认证如何工作
+
+缺失或无效的 bearer 会返回 **`401`**，并附带指向
+`/.well-known/oauth-protected-resource/api/mcp` 的 `WWW-Authenticate` 请求头，OAuth-2.1 的 MCP
+客户端据此可以发现授权服务器并启动 PKCE 流程。经由 `/api/proxy/api/mcp` 的自托管客户端收到的是
+该路径的元数据，资源标识符与之匹配。有效的凭据会解析出调用方的实际能力（effective capability）
+——它仅用于**过滤 `tools/list`**，让端点不会把该令牌用不了的工具宣传出去。
+
+这个能力**不是**授权闸门。每次 `tools/call` 都会构造一个内部 HTTP 请求并通过真实的 Hono 应用
+分发，转发调用方的 bearer，因此路由、校验、认证与逐资源的权限检查与 HTTP 上完全一致。
+只读令牌只能触达 GET 工具；被限定作用域的令牌被约束在其获授权的项目、服务器与仓库内。
+
+该端点按 IP 限流（`mcp` 策略：每分钟 300 次请求），因为连一次未认证的探测都要付出一次凭据查找的代价。
+
+## 请求体（JSON-RPC 2.0 信封）
+
+`POST` 的请求体是一条 JSON-RPC 2.0 消息（ batching 在协议 `2025-06-18` 中被移除了——数组请求体
+返回 `-32600`）。
+
+<TypeTable
+  type={{
+    jsonrpc: { type: 'string', description: '协议标识符。必须是 "2.0"。', required: true },
+    method: { type: 'string', description: '以下之一：initialize、ping、tools/list、tools/call、prompts/list、prompts/get、notifications/initialized。', required: true },
+    id: { type: 'string | number', description: '请求 id，响应中会原样回显。通知类请求请省略——服务器以无响应体的 202 回应。' },
+    params: { type: 'object', description: '方法参数——例如 initialize 用 { protocolVersion }，tools/call 用 { name, arguments }。' },
+  }}
+/>
+
+### 方法
+
+| 方法 | 结果 |
+|---|---|
+| `initialize` | 协商协议版本（默认 `2025-06-18`；也兼容 `2025-03-26` 与 `2024-11-05`），返回能力、服务器信息以及标识当前工作区与如何选择目标的说明。 |
+| `ping` | 返回 `{}`。 |
+| `tools/list` | 返回调用方令牌实际可用的工具（按只读标志、角色与授权过滤）。 |
+| `tools/call` | 把所指工具派发到真实 API，并将其响应作为 JSON 文本内容返回。 |
+| `prompts/list` | 返回引导式流程目录——每个多步工作流一条，涵盖部署、集群/扩缩容、备份与迁移。 |
+| `prompts/get` | 以用户消息的形式返回一个具名提示的引导，工具引用解析为其实际工具名，并内插所有 `arguments`。 |
+| `notifications/initialized` | 仅确认（notification，无回复 → `202`）。 |
+
+## 列出可用工具
+
+```
+POST /api/mcp
+```
+
+```bash
+curl -s "$OPENSHIP_URL/api/mcp" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+工具集源自 OpenShip 中带有 `mcp` 块、选择参与的带权限标签路由；凭据/认证层面（`tokens`、
+`auth` 与 `mcp` 本身）永远不会被暴露。
+
+## 发现并选择工作区
+
+OpenShip 的工作区（workspace）或工作组（workgroup）在 API 中就是**组织**。在创建应用或
+Compose 项目之前，先调用 `get_permissions_workspaces` 并传入 `{}` 来发现工作区名称与 ID。
+该工具对只读与受限凭据同样可用。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": { "name": "get_permissions_workspaces", "arguments": {} }
+}
+```
+
+响应的 `data` 包含 `currentOrganizationId`、`boundOrganizationId`、`canSwitchOrganization`、
+`readOnly` 与 `workspaces`。每个工作区包含 `organizationId`、`name`、`slug`、`isTeam` 与
+实际生效的 `role`。空工作区也会列出。绑定组织的凭据只能看到自己的工作区；未绑定的凭据可以
+发现其用户的成员关系。显式的固定请求作用域只返回选定的那个工作区。
+
+在流程中的每一次工具调用里，都把这个选定的 ID 用在**顶层**：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "post_apps",
+    "arguments": {
+      "organizationId": "org_target",
+      "body": { "templateId": "redis", "name": "Cache" }
+    }
+  }
+}
+```
+
+同样的 `organizationId` 参数也适用于 Compose 扫描、`post_projects_ensure`、服务、部署与状态
+工具。它固定那一次调用的作用域，并不会持久化一次工作区切换。当用户有多个可用工作区而尚未
+指定目标时，智能体应当在创建资源前询问使用哪个工作区。
+
+现有的 PAT 与 OAuth 连接都绑定到它们被授权时所在的组织。`boundOrganizationId` 标识这条边界。
+选择另一个组织会返回 `TOKEN_ORG_SCOPE`；用户需要目标工作区内的令牌或授权。无效或无法访问的
+ID 会直接失败，而不会回退到默认工作区。
+
+这个 ID 选择的是请求作用域；它**不会**把一个已有的应用转移到另一个组织。已有的项目转移端点
+改变的是宿主目标（云/自托管）。跨组织的应用转移目前没有开放。`get_cloud_workspaces` 列出的是
+运行时基础设施，属于另一个概念。
+
+## 调用一个工具
+
+`params.name` 是 `tools/list` 里的工具名；`params.arguments` 携带所有路径参数、一个 `query`
+对象和/或该工具 schema 声明的 JSON `body`（包括受保护的 `DELETE` 操作），以及可选的
+`organizationId`（作为 `X-Organization-Id` 连同 `X-Openship-Scope: fixed` 一起发送）。
+
+```bash
+curl -s "$OPENSHIP_URL/api/mcp" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
+       "params":{"name":"get_projects","arguments":{}}}'
+```
+
+结果把底层 API 响应包装为文本内容，派发的请求失败时 `isError: true`。
+
+## 引导式流程（prompts）
+
+`tools/list` 是扁平的——它告诉智能体每个工具做什么、一次调用一个，却不说明多步流程之间如何
+串联。**prompts** 目录补上了这个缺口：每个提示（prompt）都是一份简短、有序的工作流操作手册，
+指明按什么顺序调用哪些确切工具。MCP 客户端把它们呈现为斜杠命令/起始项，因此它们同时也是一个
+流程的可发现入口。
+
+```bash
+curl -s "$OPENSHIP_URL/api/mcp" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"prompts/get",
+       "params":{"name":"deploy-from-git","arguments":{"repo":"acme/widgets"}}}'
+```
+
+| 提示 | 它带你走完什么 |
+|---|---|
+| `openship-overview` | 各工具分组、每条流程的入口，以及权限作用域（包括按仓库粒度的 GitHub 授权）如何塑造你能看到和做到的事。 |
+| `deploy-from-git` | 连接/校验 GitHub → 挑一个仓库 → 检测技术栈 → 创建项目 → 部署 → 观察。可选 `repo` / `branch` 参数。 |
+| `deploy-a-folder` | 四步文件夹上传流程，包括那次刻意**不是** MCP 工具的带外 tarball 上传（原始二进制无法穿越 JSON-RPC）。 |
+| `install-catalog-app` | 浏览目录 → 安装 → 处理向导类应用（例如邮件）返回的 `flowHref`，而不是进程内直接安装。 |
+| `cluster-and-scale` | 私有网络 → k3s → 部署 → 扩容/缩容 → 恢复/清理。仅自托管。 |
+| `cluster-database` | 创建 → 观察 → 连接 → PostgreSQL 备份/恢复到新实例 → 清理。仅自托管。 |
+| `backup-and-restore` | 目标/预检 → 保留策略 → 运行 → 准备恢复 → 显式应用 → 核验。 |
+| `migrate-docker-project` | 扫描/映射 → 预览 → 迁移 → 处理提示/部分转移 → 验证 → 显式切换。仅自托管。 |
+
+每个提示都以工作区发现与选择引导开头。工具引用会对照实时注册表解析，因此路由改名不会让某个
+提示指向一个过时的工具名。
+
+## 输入与工作流契约
+
+把 `tools/list` 当作必填字段的唯一权威。路径参数是顶层、非空的字符串。`..` 这一确切取值会被
+拒绝，这样 URL 规范化就无法选中另一条路由；含点的名称（例如 `.github`）仍然有效。端点的
+查询参数放在 `query`；负载放在 `body`。参数无效或缺失时在派发前返回
+`INVALID_TOOL_ARGUMENTS`。可选的、默认值齐全的请求体会以 `{}` 发送。
+校验错误只报告字段路径，不回显提交的值。
+
+一次成功的调用可能只**受理**（accepted）了异步工作。用返回的运行/部署/操作 ID 配合对应的
+JSON 状态工具跟进，并检查其最终状态。实时 SSE 流与二进制上传仍走 HTTP。
+任务输出工具返回的是已捕获的输出；它不会打开实时流。
+
+并发与恢复护栏仍然是强制的：网络/集群配置要用 `revision`，持久化操作要用 `sequence` 或
+`expectedSequence`，应用扩缩容要用 `expectedDeploymentId` 加 `expectedUpdatedAt`。
+响应丢失后为同一意图复用该操作的 `requestId`；重试冲突前先重新读取状态。
+
+每个路由的描述、权限、可用性与有意排除项参见[生成的工具目录](/docs/api/mcp-tools)。
+[集群/扩缩容指南](/docs/guides/mcp-clusters-and-scaling)覆盖完整生命周期及其当前限制。
+基于策略的自动扩缩容尚未实现。
+
+## 错误
+
+<Callout title="401 — 缺失或无效的访问令牌" type="error">
+没有 bearer，或 bearer 已过期/被撤销。响应携带 `WWW-Authenticate` 请求头，OAuth 客户端可以据此
+开始发现；PAT 客户端应当用 `openship token create` 重新铸造一个新令牌。
+</Callout>
+
+<Callout title="GET /api/mcp 返回 405" type="warn">
+这是预期的。这是一个无服务器→客户端流的请求/响应服务器，因此不支持 `GET`——永远用
+`POST` 发送你的 JSON-RPC 消息。
+</Callout>
+
+<Callout title="-32600 / -32700 — 请求错误" type="warn">
+`-32700` 是 JSON 解析错误；`-32600` 是信封无效或批处理（数组）请求体，本服务器不接受。
+`-32601` 表示 JSON-RPC 方法未知，`-32602` 表示 `tools/call` 中的工具名不存在。
+</Callout>
+
+<Callout title="工具调用对某资源返回 404" type="info">
+`tools/list` 成功但某个具体的 `tools/call` 报告 `404`——这正是令牌作用域在设计内的工作方式：
+它没有被授予那个项目、服务器或仓库。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 返回 `405`——本服务器从不推送消息，因此没有可打开的 SSE 流。 | `GET /api/mcp`<br />`Handler authentication` |
+| 无状态 Streamable-HTTP JSON-RPC 2.0 端点。自行认证 bearer，然后处理 `initialize`、`ping`、`tools/list` 与 `tools/call`。 | `POST /api/mcp`<br />`Handler authentication` |
+
+{/* api-operations:end */}

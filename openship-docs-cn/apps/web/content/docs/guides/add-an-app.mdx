@@ -1,0 +1,393 @@
+---
+title: 添加应用
+description: 编写目录 JSON 来制作一键安装的 Openship 应用——从一个裸服务逐字段搭建到完整提交——并介绍如何通过 Pull Request 提交，或私密上传到自己的组织。
+---
+
+Openship 的 **Apps** 标签页是一个一键安装目录。每个条目就是一份 JSON 文件，而这份文件就是全部交付物：它描述了所需的容器、容器之间如何连接、要生成哪些机密、如何对外暴露，以及应用运行起来后用户能看到什么。
+
+本页带你从零开始编写一个应用。每个字段都在[应用目录 JSON 参考](/docs/reference/app-catalog)中有详细说明；这里我们把一个真实的应用从头到尾搭建出来。
+
+| | 精选目录条目 | 自定义应用 |
+|---|---|---|
+| 如何收录 | 通过 **Pull Request** 添加 `catalog/<id>.json` | 在控制台（dashboard）上传 JSON，或 `POST /api/apps/custom` |
+| 谁能看到 | 所有实例上的所有人 | 仅你的组织 |
+| 是否审核 | 是，由维护者审核 | 否——始终标记为未验证 |
+| 适合场景 | 全社区都想要的应用 | 你自己的内部技术栈，或试验一个想法 |
+
+两种方式使用**相同格式**和**相同严格校验**，因此下文内容对两者都适用。不打算开 Pull Request 的话，[可直接跳到自定义应用路径](#上传自定义应用无需-pull-request)。
+
+## Pull Request 包含什么
+
+一个文件：`packages/core/src/apps/catalog/<id>.json`，再加上重新生成的 `catalog.json`。可选附带一个 Logo SVG。仅此而已——不含任何代码。
+
+```
+packages/core/src/apps/catalog/umami.json    ← the app you wrote
+packages/core/src/apps/catalog.json          ← regenerated (a drift test fails CI without it)
+apps/dashboard/public/app-logos/umami.svg    ← only if the logo is not on simpleicons
+```
+
+### 必须达到的门槛
+
+目录是**精选制，而非完全开放**——安装应用永远不会运行任意第三方代码。审核会精确聚焦以下几点：
+
+- **仅限开源。** 必须是有公开源码仓库的知名项目，任何人都能在安装前看清它是什么。
+- **官方或可信镜像，版本固定。** 使用项目自己发布、固定到具体版本的镜像（`postgres:16-alpine`、`qdrant/qdrant:v1.18.3`）——绝不使用未固定版本的 tag 或来源不明的发布者。
+- **默认安全。** 凭据自动生成，绝不使用明文默认值。对外暴露的管理界面必须要求认证。
+- **完全可审计。** JSON 即全部真相——镜像、端口、环境变量、卷，全部集中在一个小文件里。没有任何内容取自私有源仓库。
+
+## 逐步搭建
+
+我们将添加 **Umami**，一个需要 Postgres 数据库的自托管（self-hosted）分析应用。下面每一步就是一个决策；[完整文件](#完整文件)附在最后。
+
+<Callout title="保留 $schema 这一行" type="info">
+文件开头先写 `"$schema": "https://openship.io/app.schema.json"`。之后编辑器会自动补全字段名，并标记错误的**取值**——非法的 `category`、错误的 `type`、缺失的必填字段。它无法标记拼写错误的字段*名*，因为未知键是被有意忽略而不是拒绝的，所以请多依赖自动补全。
+</Callout>
+
+### 1. 身份信息与应用本身
+
+`id` 是一个稳定的 kebab-case 标识符，且文件名必须与之匹配。先写 `available: false`，这样应用会显示为*即将上线*，在你打磨期间无法被安装。
+
+```json
+{
+  "$schema": "https://openship.io/app.schema.json",
+  "available": false,
+  "id": "umami",
+  "name": "Umami",
+  "description": "Privacy-focused web analytics — a lightweight, self-hosted alternative to Google Analytics.",
+  "kind": "template",
+  "logo": "umami",
+  "category": "analytics",
+  "tags": ["analytics", "privacy", "statistics"],
+  "framework": "docker-compose",
+  "services": [
+    {
+      "name": "umami",
+      "image": "ghcr.io/umami-software/umami:postgresql-v2.11.3",
+      "ports": ["3000:3000"],
+      "exposedPort": 3000,
+      "exposed": true,
+      "restart": "unless-stopped"
+    }
+  ]
+}
+```
+
+`kind: "template"` 的含义是"实例化这些服务"——这是常规情况。（`kind: "flow"` 只为内置专属向导的应用而存在，比如邮件技术栈，且不声明任何服务。）
+
+### 2. 添加数据库，并共享生成的密码
+
+Umami 需要 Postgres。把它作为第二个服务添加——并记住**服务名就是主机名**：在项目网络中，`umami` 通过 `umami-db` 访问数据库。
+
+密码绝不能是明文默认值。把它声明为带 `generate: "secret"` 的 `configField`，Openship 会在安装时生成随机值，操作者全程无需手动输入。
+
+有意思的部分在于，如何把这一个生成的密码送进 **两处**——数据库自身的 `POSTGRES_PASSWORD`，以及应用读取的连接字符串：
+
+```json
+"services": [
+  {
+    "name": "umami-db",
+    "image": "postgres:16-alpine",
+    "environment": { "POSTGRES_DB": "umami", "POSTGRES_USER": "umami" },
+    "secretEnv": ["POSTGRES_PASSWORD"],
+    "volumes": ["umami_db_data:/var/lib/postgresql/data"],
+    "healthcheck": { "test": "pg_isready -U umami", "interval": "5s", "retries": 10 },
+    "restart": "unless-stopped"
+  },
+  {
+    "name": "umami",
+    "image": "ghcr.io/umami-software/umami:postgresql-v2.11.3",
+    "ports": ["3000:3000"],
+    "exposedPort": 3000,
+    "exposed": true,
+    "dependsOn": ["umami-db"],
+    "environment": {
+      "DATABASE_TYPE": "postgresql",
+      "DATABASE_URL": "postgresql://umami:{{config:POSTGRES_PASSWORD}}@umami-db:5432/umami"
+    },
+    "secretEnv": ["DATABASE_URL", "APP_SECRET"],
+    "restart": "unless-stopped"
+  }
+],
+"configFields": [
+  { "key": "POSTGRES_PASSWORD", "service": "umami-db", "label": "Database password",
+    "generate": "secret", "secret": true },
+  { "key": "APP_SECRET", "service": "umami", "label": "App secret",
+    "help": "Signs session tokens. Auto-generated.", "generate": "secret", "secret": true }
+]
+```
+
+这里有三点值得弄懂，因为大多数创作错误都出在这里：
+
+- **`{{config:KEY}}`** 可以把生成的值内联进任意 `environment` 字符串。一个密码就是这样出现在*另一个*服务的 `DATABASE_URL` 里的。
+- **`secretEnv`** 列出该服务上属于机密的环境变量键——强制加密存储、绝不以明文写入，无论值来自 `environment` 还是 `configField`。`DATABASE_URL` 之所以被列出，是因为它*内嵌*了机密。
+- **`dependsOn` + `healthcheck`** 能让应用等待一个真正就绪的数据库，而不只是刚启动的容器。
+
+<Callout title="generateGroup 是另一种共享机制">
+当一个生成的值要放进另一个服务的环境变量字符串时，用 `{{config:KEY}}`。当两个独立的 **`configFields`** 必须拿到*相同*的生成值时，用 `generateGroup`——例如数据库的 `MYSQL_ROOT_PASSWORD` 和应用自己的 `database__connection__password`。给这两个字段相同的 `generateGroup`，它们就始终一致。
+</Callout>
+
+### 3. 选择对外暴露方式
+
+`endpoints` 是安装向导会询问操作者的内容。省略它时，Openship 会为每个暴露的服务推导出一个 `http` 端点——本例中也可以，但显式声明能让你为它加上合适的标签：
+
+```json
+"endpoints": [
+  { "service": "umami", "port": 3000, "label": "Dashboard", "kind": "http" }
+]
+```
+
+`kind: "tcp"` 用于不带域名、仅提供裸端口的场景，例如不应能通过域名路由到的数据库。`defaultMode` 预选一种暴露方式，`allowedModes` 限制可选范围。
+
+<Callout title="绝不会替你凭空生成域名" type="warn">
+公共主机名只能来自操作者在安装时的路由选择。没人做路由的应用会以**仅端口**方式安装——对数据库或内部工具而言，这正是正确的结果。
+</Callout>
+
+### 4. 用户安装后看到什么
+
+这是区分优质提交与粗糙提交的关键部分。`connection` 会变成安装后的 **Connection 卡片**——呈现用户真正需要的 URL 和密钥：
+
+```json
+"connection": {
+  "title": "Umami",
+  "description": "Sign in to the dashboard, then add a website to get its tracking snippet.",
+  "outputs": [
+    { "id": "dashboard", "label": "Dashboard", "source": "publicUrl:umami",
+      "kind": "url", "recommended": true }
+  ],
+  "firstLogin": {
+    "username": "admin",
+    "password": "umami",
+    "note": "Change this immediately after the first sign-in."
+  }
+}
+```
+
+- **`source`** 必须是 `env:<service>:<KEY>`、`publicUrl:<service>[:<port>]` 或 `template:…`。
+- **`kind: "url"`** 会在该值旁边加一个"在新标签页打开"的操作。
+- **`secret: true`** 会把值隐藏在"显示"操作之后——所有凭据都该用它。
+- **`envKey`** 在用户把该应用接入另一个项目时，为对接环节预填值。
+- **`firstLogin`** 用于镜像自带**静态**凭据的情况（Umami 的 `admin` / `umami`）。这些是固定值，不从运行中的服务解析，因此不能作为 `outputs`。
+
+### 5. 后续运维设置
+
+`settings` 渲染出一个精心组织的表单，让用户不必直接改原始环境变量。凡带 `installStep: true` 的项，安装时*也*会一并收集：
+
+```json
+"settings": [
+  {
+    "id": "tracking",
+    "label": "Tracking",
+    "description": "How the tracker behaves on your sites.",
+    "fields": [
+      { "key": "DISABLE_TELEMETRY", "service": "umami", "label": "Disable telemetry",
+        "type": "boolean", "trueValue": "1", "falseValue": "0", "default": "0",
+        "requiresRedeploy": true },
+      { "key": "TRACKER_SCRIPT_NAME", "service": "umami", "label": "Tracker script name",
+        "type": "text", "advanced": true, "requiresRedeploy": true }
+    ]
+  }
+]
+```
+
+<Callout title="settings 与 configFields——头号易错点" type="warn">
+如果是**用户输入的内容**，它就是一个 `setting`（并配 `installStep: true` 以便在安装时收集）。如果操作者**从不输入**——生成的机密、签名密钥、推导出的默认值——它就是一个 `configField`，由服务端解析、绝不渲染成输入框。参见[对比表](/docs/reference/app-catalog#两套字段体系)。
+</Callout>
+
+### 完整文件
+
+把上面所有内容拼在一起——这正是该 PR 会添加的内容：
+
+```json
+{
+  "$schema": "https://openship.io/app.schema.json",
+  "available": false,
+  "id": "umami",
+  "name": "Umami",
+  "description": "Privacy-focused web analytics — a lightweight, self-hosted alternative to Google Analytics.",
+  "kind": "template",
+  "logo": "umami",
+  "category": "analytics",
+  "tags": ["analytics", "privacy", "statistics"],
+  "framework": "docker-compose",
+  "services": [
+    {
+      "name": "umami-db",
+      "image": "postgres:16-alpine",
+      "environment": { "POSTGRES_DB": "umami", "POSTGRES_USER": "umami" },
+      "secretEnv": ["POSTGRES_PASSWORD"],
+      "volumes": ["umami_db_data:/var/lib/postgresql/data"],
+      "healthcheck": { "test": "pg_isready -U umami", "interval": "5s", "retries": 10 },
+      "restart": "unless-stopped"
+    },
+    {
+      "name": "umami",
+      "image": "ghcr.io/umami-software/umami:postgresql-v2.11.3",
+      "ports": ["3000:3000"],
+      "exposedPort": 3000,
+      "exposed": true,
+      "dependsOn": ["umami-db"],
+      "environment": {
+        "DATABASE_TYPE": "postgresql",
+        "DATABASE_URL": "postgresql://umami:{{config:POSTGRES_PASSWORD}}@umami-db:5432/umami"
+      },
+      "secretEnv": ["DATABASE_URL", "APP_SECRET"],
+      "restart": "unless-stopped"
+    }
+  ],
+  "configFields": [
+    { "key": "POSTGRES_PASSWORD", "service": "umami-db", "label": "Database password",
+      "help": "Auto-generated. Also inlined into the app's DATABASE_URL.",
+      "generate": "secret", "secret": true },
+    { "key": "APP_SECRET", "service": "umami", "label": "App secret",
+      "help": "Signs session tokens. Auto-generated.", "generate": "secret", "secret": true }
+  ],
+  "endpoints": [
+    { "service": "umami", "port": 3000, "label": "Dashboard", "kind": "http" }
+  ],
+  "settings": [
+    {
+      "id": "tracking",
+      "label": "Tracking",
+      "description": "How the tracker behaves on your sites.",
+      "fields": [
+        { "key": "DISABLE_TELEMETRY", "service": "umami", "label": "Disable telemetry",
+          "help": "Stop Umami sending anonymous usage data upstream.",
+          "type": "boolean", "trueValue": "1", "falseValue": "0", "default": "0",
+          "requiresRedeploy": true },
+        { "key": "TRACKER_SCRIPT_NAME", "service": "umami", "label": "Tracker script name",
+          "help": "Rename the tracker script to dodge ad blockers, e.g. \"stats\".",
+          "type": "text", "advanced": true, "requiresRedeploy": true }
+      ]
+    }
+  ],
+  "connection": {
+    "title": "Umami",
+    "description": "Sign in to the dashboard, then add a website to get its tracking snippet.",
+    "outputs": [
+      { "id": "dashboard", "label": "Dashboard", "source": "publicUrl:umami",
+        "kind": "url", "recommended": true }
+    ],
+    "firstLogin": {
+      "username": "admin",
+      "password": "umami",
+      "note": "Change this immediately after the first sign-in."
+    }
+  }
+}
+```
+
+<Callout title="固定到当前发布版本" type="info">
+上面的镜像 tag 仅为示意。请查看项目的发布页，固定到你实际测试过的版本。
+</Callout>
+
+### 进阶字段
+
+想写更丰富的应用，还有两个字段值得了解，参考文档中均有覆盖：
+
+- **[`prepare`](/docs/reference/app-catalog#prepare)** 会在启动后**于服务容器内部**运行一条命令——绝不在宿主 shell 上运行——并能捕获其 stdout 存入环境变量。应用就是这样创建首个存储桶或生成管理员密钥的。该命令必须可安全重复运行，或用 `once` 作门控。
+- **[`provides` / `requires`](/docs/reference/app-catalog#provides-与-requires)** 让应用之间相互对接：`provides` 声明自己提供一套可连接的资源包（如一个 S3 端点及其密钥），`requires` 声明本应用需要从另一个项目获取什么，向导会为此提供选择器。
+
+`packages/core/src/apps/catalog/minio.json` 是同时用到两者的真实好例子。
+
+### 构建服务镜像而非拉取现成镜像
+
+到目前为止的每个服务都是拉取预构建的 `image`。有些应用做不到——上游提供的基础镜像还需要额外软件包和一个置备入口内置进去（Neon 的计算节点是典型例子）。对这类应用，给服务一个 **`build`** 而不是 `image`：一份内联 Dockerfile 加上它的构建上下文文件，Openship 会在部署时于部署主机上将其物化并执行 `docker build`。每个服务的 `image` 和 `build` 只能**二选其一**。
+
+```json
+{
+  "name": "compute",
+  "build": {
+    "dockerfile": "FROM ghcr.io/example/base:1.2.3\nRUN apt-get update && apt-get install -y curl jq\nCOPY compute/start.sh /start.sh\nRUN chmod +x /start.sh\nENTRYPOINT [\"/start.sh\"]\n",
+    "files": [
+      { "path": "start.sh", "content": "#!/bin/sh\nexec my-server --config {{config:SERVER_MODE}}\n" }
+    ]
+  }
+}
+```
+
+有一个关键点必须弄对：**COPY 源路径要以服务名为前缀**。每个可构建的服务都会在一个共享上下文中被物化到以它命名的子目录里，因此服务 `compute` 上 `files[].path` 为 `start.sh` 的文件要以 `COPY compute/start.sh …` 复制，而不是 `COPY start.sh …`。`{{config:KEY}}` 在 `dockerfile` 和 `files[].content` 中均可解析；Dockerfile 的 `ARG` 来自项目的构建环境（把它声明为 `environment` 或 `configField` 即可，无需单独的 args 映射）。完整规则见 **[构建镜像](/docs/reference/app-catalog#构建镜像)**。
+
+## 配个 Logo
+
+`logo` 是一个 id，由控制台的 `AppLogo` 组件解析：
+
+- **在 [simpleicons](https://simpleicons.org) 上有？** 把 `logo` 设为对应的标识（`"umami"`、`"ghost"`、`"grafana"`）即可完成。
+- **没有，或图标渲染不对？** 把 SVG 放到 `apps/dashboard/public/app-logos/<id>.svg`，并添加一条 `LOGO_CONFIG` 条目把 id 映射到它。没有合适图标的应用会回退到通用字形。
+
+## 重新生成并验证
+
+打包引用的是单个合并产物，因此要重新生成它并运行目录测试：
+
+```bash
+cd packages/core
+bun scripts/gen-catalog.ts                  # 从 catalog/*.json 重新生成 src/apps/catalog.json
+bunx vitest run src/apps/catalog.test.ts    # 断言同步 + 每个应用都通过完整 schema 校验
+```
+
+该测试既检查合并文件处于同步状态，**也**检查你的条目通过校验——必填字段、合法的 `category`，以及每一条[引用规则](/docs/reference/app-catalog#校验)（每个 `service` 引用都能解析、每个 `output.source` 格式合法，等等）。
+
+`catalog.json` 中的顺序沿用现有文件（精选制、推荐靠前）；**新**应用按字母顺序追加在末尾，如果想让它排名更靠前，需要手动调整位置。
+
+### 预览本地改动
+
+以 `NODE_ENV=development` 运行 API，然后打开应用的安装页。开发模式对表单展示和实际安装都使用你本地检出中重新生成的目录。GitHub 上发布的目录不会覆盖本地改动，因此可以预览尚未发布的布局或模板。每次编辑后，按上文方法重新生成 `catalog.json`。
+
+## 发布提交
+
+等它端到端部署顺畅后，把 `"available"` 设为 `true`。在那之前它会显示为*即将上线*，且安装请求会在服务端被拒绝——而不只是在界面里隐藏。
+
+<Callout title="合并的应用无需重新部署即可到达现有实例" type="info">
+在生产环境中，运行时目录是打包副本叠加一份对仓库中 `catalog.json` 的实时拉取，TTL 为 10 分钟。因此你的应用会出现在已在运行的实例上——并按条目受 [`minEngine`](/docs/reference/app-catalog#稳定性与版本) 门控。如果你的定义用到了某个较新版本才具备的能力，就把 `minEngine` 设为该版本：旧实例随后会显示一张引导性的 *需要 Openship ≥ X* 卡片，而不是安装失败。
+</Callout>
+
+## 用户在安装过程中看到什么
+
+四个命名阶段，以步骤条形式呈现：
+
+| 阶段 | 含义 |
+|---|---|
+| **准备镜像** | 拉取或构建。纯拉取型应用会跳过此阶段。 |
+| **启动服务** | 创建并启动容器。 |
+| **完成设置** | 你的 `prepare` 步骤。仅当应用声明了这些步骤时才出现。 |
+| **上线运行** | 完成——Connection 卡片可用。 |
+
+第三阶段中的自定义 `prepare` 步骤可以用 `title` 和 `description` 命名。
+
+## 核对清单
+
+- [ ] **开源**应用；**官方或可信**镜像，并**固定**到具体版本。
+- [ ] 已创建 `catalog/<id>.json`，`id` 与文件名一致且为 kebab-case。
+- [ ] 服务间按名称连接；有一个服务设置 `exposed` 并带 `exposedPort`。
+- [ ] 机密使用 `generate` 配 `secret: true`——任何地方都不出现明文凭据。
+- [ ] *内嵌*机密的环境变量（连接 URL）已列入 `secretEnv`。
+- [ ] 用户输入的所有内容都是 `installStep` 设置，而非 `configField`。
+- [ ] `connection` 向用户呈现所需的 URL 和密钥，凭据带 `secret: true`。
+- [ ] Logo 可解析——simpleicons 标识，或自带 SVG 加 `LOGO_CONFIG` 条目。
+- [ ] 已运行 `bun scripts/gen-catalog.ts` 并提交 `catalog.json`。
+- [ ] `bunx vitest run src/apps/catalog.test.ts` 通过。
+- [ ] 若定义用到了新近加入的能力，已设置 `minEngine`。
+- [ ] 仅在端到端部署顺畅后才设 `available: true`。
+
+## 上传自定义应用（无需 Pull Request）
+
+同样的 JSON，仅在你的组织内私有保存，且无需审核。在控制台打开 **Apps → 添加自定义应用**，粘贴或上传该文件。也可以走 API：
+
+```bash
+curl -X POST https://your-host/api/apps/custom \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data @umami.json
+```
+
+它会经过与精选目录**相同的严格校验**，并通过常规的服务流水线安装，具备与你自行部署的任何项目相同的容器内边界——不会获得新的权限。强制执行四条规则：
+
+- **始终未验证。** 信任来自来源，而非文件本身：`verified` 和 `available` 由服务端设置，因此 JSON 中自称 `"verified": true` 会被忽略。
+- **`kind` 必须是 `template`。** Flow 类应用指向内置向导，不能上传。
+- **`id` 不能与内置应用撞名。** 精选应用永远优先。
+- **必须通过校验**，出错细节会在报错中返回。
+
+## 另请参阅
+
+- [应用目录 JSON](/docs/reference/app-catalog)——每个字段的详细说明
+- [Apps API](/docs/api/apps) ——目录、安装、自定义应用、settings、connection
+- [Compose 与多服务](/docs/guides/compose-multi-service)——应用部署所经由的引擎

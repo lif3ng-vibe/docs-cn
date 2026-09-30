@@ -1,0 +1,97 @@
+---
+title: Cloud 支持
+description: 提交 Cloud 支持请求，并以运维者权限管理工单队列。
+---
+
+`https://openship.io/support` 与 `/contact` 使用同一个工单受理入口。该
+网站转发到 Cloud API 的 `POST /api/cloud/support`；其默认值为
+`https://api.openship.io`。开发环境网站可用 `OPENSHIP_CLOUD_API_URL` 选择不同的 Cloud API。网站不需要 SMTP 凭据或运维者
+令牌，且从不转发浏览器 Cookie 或声明的客户端 IP。
+
+API 仅在 `CLOUD_MODE=true` 时挂载支持路由并启动投递 worker。工单数据对 Cloud 运维者私有，不进入
+客户、项目与自托管实例的导出。
+
+## 投递与邮箱配置
+
+开通 `support@openship.io` 以接收邮件。用可用的发件方配置 Cloud API 既有的
+`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASS` 与 `SMTP_FROM`。例如在该邮箱开通后：
+
+```dotenv
+SMTP_HOST=mail.oblien.com
+SMTP_PORT=587
+SMTP_USER=support@openship.io
+SMTP_PASS=<mailbox-password>
+SMTP_FROM=Openship Support <support@openship.io>
+```
+
+使用与实际邮件服务器相匹配的凭据；把它们放进部署
+机密。这只是运维者配置示例，并非网站的凭据要求。创建工单不依赖 SMTP 是否可用。
+
+每次提交会原子地保存一条 `cloud_support_ticket` 和两条
+`cloud_support_message` 投递：一条发给客户的回执，与一条发给
+`support@openship.io` 的通知。客户回执包含一个稳定的引用号，不含
+回显的消息正文，并带有 `Reply-To: support@openship.io`。团队通知
+包含报告全文并把 Reply-To 设为请求者。普通来信与
+邮件回复会进入支持邮箱；该 API 不摄取 IMAP。
+
+响应丢失时客户端会复用其请求 UUID。相同的重试
+返回原回执；同一键下内容不同则返回 409。受理入口会校验有界输入，并按联系地址哈希跨 Cloud 副本对
+新提交做速率限制，此外还有公开的按 IP 上限。
+
+投递在数据库提交之后才开始。既有的系统调度器每分钟运行一次
+`cloud-support:deliver` 并在重启后恢复待投递任务。
+SQL 租约防止并发 worker 发送同一条已被认领的消息。
+失败按从一分钟到一小时的间隔退避，十次尝试后停止。
+工单与错误状态仍然可用，运维者可重试投递。
+已被接收的邮件不会在普通重试中被重发。与其他 SMTP 发件箱一样，若进程在 SMTP 接收之后、数据库确认之前崩溃，投递至少发生一次；此时会复用一个稳定的 Message-ID。
+
+## 运维者 API
+
+下述所有路由都要求 `X-Internal-Token` 与 Cloud API 的 `INTERNAL_TOKEN` 匹配。
+组织所有者、客户 Cookie、PAT 或任意的工单引用都不够用。响应不缓存。不要把该令牌放进客户端代码。
+
+| 方法 | `/api/cloud/support` 下的路径 | 结果 |
+| ------ | ------------------------------- | ------------------------------------------------------------------------------- |
+| GET    | `/tickets?status=open&limit=25` | 队列，带 `nextCursor`；下一页用 `before=<nextCursor>` |
+| GET    | `/tickets/<reference>`          | 报告、回复、投递尝试、错误与下一次尝试时间 |
+| POST   | `/tickets/<reference>/replies`  | 保存并把回复入队；可选在同一事务中关闭工单 |
+| PATCH  | `/tickets/<reference>`          | 把 `status` 设为 `open` 或 `resolved` |
+| POST   | `/tickets/<reference>/retry`    | 重试未送达的邮件，不抢占正在进行的发送，也不重发已接收的邮件 |
+
+列表示例：
+
+```sh
+curl --fail-with-body 'https://api.openship.io/api/cloud/support/tickets?status=open&limit=25' \
+  -H "X-Internal-Token: $OPENSHIP_INTERNAL_TOKEN"
+```
+
+回复时发送 JSON，`requestId` 用新 UUID，回复放 `message`，
+并传 `resolve: true` 关闭工单。响应结果不确定而重试时复用该 UUID。202 响应表示回复已保存并入队，不代表 SMTP
+已送达。读取工单查看每条消息的 `deliveredAt`、`lastError` 与
+`nextAttemptAt`。
+
+在网站之前先部署 API（包括迁移 `0152_cloud_support.sql`）。
+然后从 `/support` 提交一份测试报告，通过运维者 API 查看其引用号，并在配置好的邮箱中确认回执与团队通知。
+
+## 验证
+
+`apps/api/test/modules/cloud-support` 覆盖网站到 API 的 HTTP 请求、真实
+SQL 持久化、共享的 SMTP 发件器、收件方拒绝与重试、并发
+提交去重、worker 租约恢复、运维者访问、回复、
+关闭工单、分页、输入校验与本地模式隔离。SMTP 测试使用
+回环服务器；不会向真实客户发信。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 保存一份 Cloud 支持工单，并把确认邮件与团队邮件入队。公开受理只返回一份回执，并对重试去重。 | `POST /api/cloud/support`<br />`Handler authentication` |
+| 列出 Cloud 支持工单，支持状态过滤与游标分页。需要内部运维者权限。 | `GET /api/cloud/support/tickets`<br />`Internal operator` |
+| 读取一张 Cloud 工单、其回复与邮件投递尝试。需要内部运维者权限。 | `GET /api/cloud/support/tickets/:id`<br />`Internal operator` |
+| 打开或关闭一张 Cloud 支持工单。需要内部运维者权限。 | `PATCH /api/cloud/support/tickets/:id`<br />`Internal operator` |
+| 保存并入队一条幂等的支持回复，可选在同一事务中关闭工单。需要内部运维者权限。 | `POST /api/cloud/support/tickets/:id/replies`<br />`Internal operator` |
+| 重试未送达的支持邮件，同时保留活动投递租约与已接收的消息。需要内部运维者权限。 | `POST /api/cloud/support/tickets/:id/retry`<br />`Internal operator` |
+
+{/* api-operations:end */}

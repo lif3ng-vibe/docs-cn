@@ -1,0 +1,47 @@
+---
+title: 安装操作员
+description: 以显式的安装权限关联外部身份与命名空间。
+---
+
+操作员（operator）是一项面向可信宿主代码的安装能力。普通的 `ScopedShip` 对象不会
+暴露它。如果你的宿主需要开通身份或命名空间，请在[创建原生安装](/docs/api/sdk/native)
+时启用 `administration: true`。
+
+## 原生操作员
+
+启动之后，使用 `ownedShip.operator`。它提供以下身份管理方法：
+
+| 方法 | 用途 |
+| --- | --- |
+| `ensureIdentity({ issuer, subject, email, name?, instanceAdmin? })` | 创建或解析一个稳定的外部身份和个人组织。 |
+| `resolveIdentity({ issuer, subject })` | 读取已有的身份映射，或返回 `null`。 |
+| `ensureNamespace({ issuer, key, name, ownerUserId })` | 创建或解析一个稳定的组织映射。 |
+| `setMembership({ organizationId, userId, role })` | 设置成员角色；使用 `null` 移除成员身份。 |
+
+`issuer` 和 `subject` 必须来自你已验证的身份系统。请把这项能力保留在宿主集成内部；
+租户提供的 ID 不能确立身份。[身份作用域](/docs/api/sdk/identity)展示了完整的映射与
+作用域流程。
+
+## 远程操作员
+
+`OpenshipOperatorClient` 使用内部安装令牌，并暴露公告管理功能：
+
+```ts title="operator.mts"
+import { OpenshipOperatorClient } from "openship";
+
+const internalToken = process.env.OPENSHIP_INTERNAL_TOKEN;
+if (!internalToken) throw new Error("Set OPENSHIP_INTERNAL_TOKEN");
+
+export const operator = new OpenshipOperatorClient({
+  baseUrl: "https://ship.example.com",
+  internalToken,
+});
+```
+
+它接受除用户 `token` 和 `organizationId` 之外的远程传输选项。令牌也可以是同步或异步
+的提供函数。它不暴露原生的身份开通方法。
+
+## 公告
+
+两种操作员都提供 `notices.listAll()`、`notices.create(input)` 和 `notices.remove(id)`。
+共享字段与 SDK/REST 示例参见[公开公告](/docs/api/notices)。

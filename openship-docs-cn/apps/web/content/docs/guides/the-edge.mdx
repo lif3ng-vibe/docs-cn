@@ -1,0 +1,140 @@
+---
+title: 边缘（The edge）
+description: Openship 内置的反向代理——你的应用如何获得公网地址和 HTTPS、如何保护一条路由、流量数字从哪里来，以及如何接管服务器上已在运行的代理。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+来自互联网的每个请求都要先落在*某个地方*，Openship 才知道它属于你的哪个应用。那个地方就是**边缘**（edge）——一个驻守在 `80` 和 `443` 端口上的反向代理，是整台机器的前门。它应答连接、搞定 HTTPS、判断主机名属于哪个应用，把请求转发到那个应用的容器，并在请求经过时顺手计数。
+
+大多数时候你根本不用想它：`openship up` 会替你装好边缘，每个带域名的部署都会自动把域名接进边缘。只有在几个特定时刻你才会直接关心边缘——迁移已有服务器时、想把裸主机名指向某个端口时、需要限速或封禁时，或当你想问“我的流量到底从哪儿来？”时。
+
+<Callout title="边缘与服务器之别" type="info">
+一台机器上跑着两个不同的东西，值得分清。**服务器**是 Openship 本身——API 和控制台（dashboard），是控制室。**边缘**是位于你应用前的公网反向代理——前门。`openship up` 会同时安装两者；访客的请求只会触到边缘，永远不会触到服务器。
+</Callout>
+
+## 边缘实际做什么
+
+四项职责，全部位于请求路径上：
+
+- **免费 HTTPS**。它终止 TLS 并为每个域名获取 Let's Encrypt 证书，你的应用以 `https://` 提供服务，证书完全不用你打理。
+- **路由**。它把每个主机名映射到正确的容器——十个应用共享一台服务器一个 IP、各用自己的域名，靠的就是它。
+- **防护**。逐路由规则——速率限制、IP/国家封禁、CIDR 白名单——都在这里执行，先于请求抵达你的应用。
+- **流量计数**。它本来就看得见每个请求，因此几乎零成本地完成统计（请求数、带宽、国家、热门路径），你稍后看到的分析数据正是从这里来。
+
+<Callout title="前置要求">
+- 一台 Linux 服务器——边缘是 Linux 上的反向代理。在 macOS/Windows 上你仍然可以从 CLI*读取*边缘的域名与流量，但安装和接管代理只能在 Linux 机器上进行。
+- 那台机器上装有 Openship（`openship up`）。边缘随它而来。
+- 凡要读取 CLI 安装实例上的数据，都需要登录：用控制台里的令牌运行一次 `openship login`。
+</Callout>
+
+## 接管一台已在服役的服务器
+
+这是招牌场景。你有一台服务器，*已经*在 `:80/:443` 上跑着 Nginx、Apache 或 Caddy，上面有真实站点，而你想让 Openship 来当前门——而且不要出现什么都不服务的“切换日”。
+
+边缘把这件事当作一次**迁移**来做：先读取现有代理的站点，把每个站点注册到边缘使其继续服务，然后才接管端口。整个过程有日志记录（journaled），任何一步失败都能干净回滚，因此绝不会落到两个代理都不在的局面。
+
+<Steps>
+
+<Step>
+
+### 看看那里有什么
+
+在服务器上，问边缘它会导入什么：
+
+```bash
+openship edge sites
+```
+
+它会列出在主机上发现的反向代理站点——主机名和每个站点当前指向哪里。
+
+</Step>
+
+<Step>
+
+### 接管并把站点带过来
+
+```bash
+openship edge migrate
+```
+
+这会导入刚才列出的每个站点，然后释放 `:80/:443`，并开始由边缘服务这些站点。如果你*不想*保留旧站点——只想要端口——改用 `openship edge takeover`，它会停掉旧代理而不导入任何东西。
+
+</Step>
+
+</Steps>
+
+<Callout title="你不必特意找它" type="info">
+当一个外来代理占着 `:80/:443` 时，Openship 会在 `openship up` 期间以及纯 `openship` 控制面板中**自动**弹出同样的“这里已有别的代理——接管并迁移其站点？”提示。上述命令只是同一个提议的手动版本，供你按需运行。
+</Callout>
+
+## 把域名放到边缘上
+
+边缘跑起来之后，给应用一个公网主机名只需一条命令。你可以把域名指向已有项目，或把一个新域名直接绑定到本地端口：
+
+```bash
+# 把主机指向本机上的一个端口（会为它创建一个受跟踪的项目）
+openship edge domains add app.example.com --port 8080
+
+# 把主机挂到已有项目（使用该项目的端口）
+openship edge domains add www.example.com --project prj_123 --primary
+```
+
+注册域名还会验证其 DNS 并替你签发 HTTPS 证书。如果 DNS 还没指向这台机器，命令会打印需要添加的记录，等记录传播后再重跑验证即可。完整的域名工作流——DNS 记录、验证、主域名与重定向——见[自定义域名](/docs/guides/custom-domains)指南；`openship edge domains` 是它的边缘视角。
+
+## 保护一条路由
+
+规则由边缘自身执行，因此恶意请求在消耗你的应用任何资源之前就被拒之门外。规则可以作用于整个项目、单个域名或路径前缀，并可以把任意多的条件合进一条规则：
+
+```bash
+# 登录路径上每客户端 IP 每秒 20 个请求，允许短时突发
+openship edge rules add -p prj_123 --path /login --rate-limit 20 --burst 40
+
+# 封禁两个国家和一个恶意 IP，以 403 应答
+openship edge rules add -p prj_123 --ban-country RU,CN --ban-ip 203.0.113.7 --block-status 403
+
+# 只允许办公网络进入；拒绝其他人
+openship edge rules add -p prj_123 --allow-cidr 198.51.100.0/24
+
+openship edge rules list -p prj_123
+```
+
+<Callout title="以 IP 为键的规则需要真实客户端 IP" type="warn">
+速率限制和国家规则只在边缘看得见访客真实地址时才有效。Openship 自家的边缘看得到。如果你在它前面又放了一层*别的*代理（或 Cloudflare），那一层必须透传真实 IP，而且你要以 `--trust-proxy` 运行——否则每个访客看起来都像那个代理。该标志见 [`openship up`](/docs/cli/run)。
+</Callout>
+
+## 观察你的流量
+
+这正是让边缘成为你可*观察*之物、而不仅是管道的部分。因为它在请求经过时计数，你无需写一行代码、也不给访客增加负担，就能得到流量全貌。看它有两种方式。
+
+**在控制台里**，打开项目的 **Overview** 标签页看汇总——Server Requests、Unique IPs、Avg Response、Bandwidth Out、流量图和 Top Paths——再到 **Logs → Server** 子标签页看单条请求记录。详见[日志与监控](/docs/guides/logs-monitoring)。
+
+**在终端里**，同样的数字只需三条命令：
+
+```bash
+# 请求数、带宽与按小时分段
+openship edge traffic -p prj_123
+
+# 单个域名的访客、国家与热门路径
+openship edge analytics -p prj_123 --domain app.example.com
+
+# 最近的原始请求日志——并可实时跟随
+openship edge logs -p prj_123 --follow
+```
+
+<Callout title="这些数字从哪儿来" type="info">
+**边缘计数，控制面收集**。代理在每个响应发出时在共享内存里累加计数器——没有数据库、没有额外的网络跳数、访客无需等待任何东西。一个后台任务每 30 分钟把这些汇总搬进数据库，上文看到的命令和标签页都是从那里读的。因此新应用在有流量之前什么都看不到，且最近几分钟可能还没进汇总。
+</Callout>
+
+## 更想看完整的命令参考？
+
+本页都是任务层面的走读。要查看 `openship edge` 全部子命令和每个标志——交互面板、`up`/`repair`、所有域名、规则与分析选项——请参阅[边缘与监控（Edge & monitoring）](/docs/cli/edge) CLI 参考。
+
+## 相关指南
+
+<Cards>
+  <Card title="边缘与监控（CLI）" href="/docs/cli/edge" description="openship edge 的每个子命令与标志，应有尽有。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="DNS 记录、验证与证书，端到端讲解。" />
+  <Card title="日志与监控" href="/docs/guides/logs-monitoring" description="运行日志、请求日志与流量的控制台视图。" />
+  <Card title="从 Coolify / Dokploy / Dokku 迁移" href="/docs/guides/migrate-from-coolify-dokploy-dokku" description="把现有 PaaS 整机搬过来，连边缘一起。" />
+</Cards>

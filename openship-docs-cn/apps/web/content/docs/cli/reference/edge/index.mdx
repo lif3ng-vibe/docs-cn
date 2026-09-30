@@ -1,0 +1,198 @@
+---
+title: edge
+description: openship edge 的命令、参数与选项。
+cliGroup: openship edge
+---
+
+示例请参见[工作流指南](/docs/cli/edge)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship edge
+
+安装并管理 OpenResty 边缘层（反向代理、TLS、逐路由规则）
+
+```text
+openship edge [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`status`](/docs/cli/reference/edge#openship-edge-status) | 显示边缘层是否已安装并在监听 :80/:443 |
+| [`up\|install [options]`](/docs/cli/reference/edge#openship-edge-up) | 确保边缘层已启动并在提供服务；可选启用监控（内置分析数据库） |
+| [`migrate`](/docs/cli/reference/edge#openship-edge-migrate) | 接管 :80/:443，并将既有代理的站点导入边缘层 |
+| [`takeover`](/docs/cli/reference/edge#openship-edge-takeover) | 为边缘层腾出 :80/:443——占用者会被停止，其站点随之失效 |
+| [`sites\|scan`](/docs/cli/reference/edge#openship-edge-sites) | 列出本主机上可供边缘层导入的反向代理站点 |
+| [`repair\|doctor [options]`](/docs/cli/reference/edge#openship-edge-repair) | 诊断边缘层未提供服务的原因；用 --fix 解决端口冲突 |
+| [`rules`](/docs/cli/reference/edge/rules#openship-edge-rules) | 逐路由的边缘规则：速率限制、封禁、访问控制 |
+| [`domains\|domain`](/docs/cli/reference/edge#openship-edge-domains) | 经边缘层路由的域名：列出、注册到端口、验证 SSL、移除 |
+| [`traffic [options]`](/docs/cli/reference/edge#openship-edge-traffic) | 项目的流量总览（请求数、带宽、按小时区间） |
+| [`analytics [options]`](/docs/cli/reference/edge#openship-edge-analytics) | 项目逐域名的分析数据：访客、国家、热门路径 |
+| [`logs [options]`](/docs/cli/reference/edge#openship-edge-logs) | 边缘层为项目捕获的近期 HTTP 请求日志 |
+
+## openship edge analytics
+
+项目逐域名的分析数据：访客、国家、热门路径
+
+```text
+openship edge analytics [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+| `--domain <host>` | 限定到单个已跟踪的域名 |
+| `--from <ts>` | 窗口起点（ISO 8601 或 epoch 毫秒；默认 7 天） |
+| `--to <ts>` | 窗口终点 |
+
+## openship edge domains
+
+经边缘层路由的域名：列出、注册到端口、验证 SSL、移除
+
+```text
+openship edge domains|domain [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/edge#openship-edge-domains-list) | 列出项目经边缘层路由的域名 |
+| [`add [options] <hostname>`](/docs/cli/reference/edge#openship-edge-domains-add) | 在边缘层注册一个主机名并绑定到端口（自动验证 SSL） |
+| [`rm [options] <hostname>`](/docs/cli/reference/edge#openship-edge-domains-rm) | 从边缘层移除一个主机名 |
+
+## openship edge domains add
+
+在边缘层注册一个主机名并绑定到端口（自动验证 SSL）
+
+```text
+openship edge domains add [options] <hostname>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `hostname` | 域名主机名（例如 app.example.com） |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 挂载到一个既有项目（使用其目标端口） |
+| `--port <n>` | 将新建的跟踪项目绑定到 127.0.0.1:&lt;n&gt; |
+| `--primary` | 将该域名标记为项目的主域名（默认：false） |
+| `--no-verify` | 跳过 DNS 验证与 SSL 签发（仅认领该主机名） |
+
+## openship edge domains list
+
+列出项目经边缘层路由的域名
+
+```text
+openship edge domains list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+
+## openship edge domains rm
+
+从边缘层移除一个主机名
+
+```text
+openship edge domains rm [options] <hostname>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `hostname` | 要移除的域名主机名 |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 该域名所属的项目 |
+
+## openship edge logs
+
+边缘层为项目捕获的近期 HTTP 请求日志
+
+```text
+openship edge logs [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+| `--limit <n>` | 要获取的近期条目数（最多 200）（默认：50） |
+| `--follow` | 轮询新条目并随到达逐条打印（默认：false） |
+
+## openship edge migrate
+
+接管 :80/:443，并将既有代理的站点导入边缘层
+
+```text
+openship edge migrate [options]
+```
+
+## openship edge repair
+
+诊断边缘层未提供服务的原因；用 --fix 解决端口冲突
+
+```text
+openship edge repair|doctor [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--fix` | 尝试修复检测到的冲突（默认：导入其站点）（默认：false） |
+| `--migrate` | 配合 --fix：导入既有代理的站点 |
+| `--takeover` | 配合 --fix：停用占用 :80/:443 的程序（其站点随之失效） |
+
+## openship edge sites
+
+列出本主机上可供边缘层导入的反向代理站点
+
+```text
+openship edge sites|scan [options]
+```
+
+## openship edge status
+
+显示边缘层是否已安装并在监听 :80/:443
+
+```text
+openship edge status [options]
+```
+
+## openship edge takeover
+
+为边缘层腾出 :80/:443——占用者会被停止，其站点随之失效
+
+```text
+openship edge takeover [options]
+```
+
+## openship edge traffic
+
+项目的流量总览（请求数、带宽、按小时区间）
+
+```text
+openship edge traffic [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `-p, --project <id>` | 项目 ID |
+| `--domain <host>` | 限定到单个已跟踪的域名 |
+| `--from <ts>` | 窗口起点（ISO 8601 或 epoch 分钟） |
+| `--to <ts>` | 窗口终点（ISO 8601 或 epoch 分钟） |
+
+## openship edge up
+
+确保边缘层已启动并在提供服务；可选启用监控（内置分析数据库）
+
+```text
+openship edge up|install [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--migrate` | 遇端口冲突时，导入既有代理的站点并接管 |
+| `--takeover` | 遇端口冲突时，停用占用 :80/:443 的程序（其站点随之失效） |
+| `--monitoring` | 同时启用监控：安装内置 Openship 服务与用于分析的内嵌数据库 |
+| `--no-monitoring` | 仅边缘层——跳过监控提示（无头模式的默认行为） |
+| `--admin-name <name>` | 全新监控安装的管理员显示名称 |
+| `--admin-email <email>` | 全新监控安装的管理员邮箱（无头模式下必填） |
+| `--admin-password <pw>` | 管理员密码（建议改用 OPENSHIP_ADMIN_PASSWORD 环境变量） |

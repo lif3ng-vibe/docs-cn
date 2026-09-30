@@ -1,0 +1,53 @@
+---
+title: up
+description: openship up 的命令、参数与选项。
+cliGroup: openship up
+---
+
+示例参见 [CLI 总览](/docs/cli)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship up
+
+将 Openship 作为常驻服务启动（开机自启 + 自动重启）；`--foreground` 可以前台挂起运行
+
+```text
+openship up [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--port <port>` | API 监听端口（默认 4000，若被占用则顺延下一个空闲端口） |
+| `--data-dir <dir>` | 内嵌数据库所在目录 |
+| `--dashboard-port <port>` | 控制台端口（默认 3001，若被占用则顺延下一个空闲端口） |
+| `--no-ui` | 只运行 API —— 不下载/不托管控制台 |
+| `--ui-version <tag>` | 要运行的控制台发布标签（默认：本 CLI 的版本） |
+| `--image-version <tag>` | Compose 模式：api/dashboard/edge 要拉取的镜像标签（默认：本 CLI 的版本，或 OPENSHIP_VERSION 环境变量）。若某个发布的镜像尚未进入镜像仓库，请使用一个确定可用的已知标签。 |
+| `-f, --foreground` | 在当前终端前台挂起运行，而不是作为后台服务 |
+| `--dry-run` | 仅预览：打印 `up` 将要安装的内容（方式、端口、文件、命令、服务定义 / compose 文件），然后退出，不改动本机 |
+| `--public-url <url>` | 以此公开 URL 远程提供服务（VPS）：控制台绑定到所有网卡，API 以同源方式被代理，并要求登录 |
+| `--trust-proxy` | 信任前置反向代理设置的 X-Real-IP（代理必须用真实客户端 IP 覆写 X-Real-IP，例如 `proxy_set_header X-Real-IP $remote_addr`，且应用端口必须配好防火墙，只允许代理访问；启用后可按客户端做速率限制） |
+| `--host <addr>` | 将控制台绑定到指定网卡，让上游反向代理（或局域网内其他主机）可访问——例如 0.0.0.0 或 192.168.1.50 这类局域网 IP。默认 127.0.0.1。API 保持在 loopback 上（由控制台代理转发）。绑定到具体 IP 会自动信任该浏览器来源以允许登录；若为 0.0.0.0 或域名，还需传入 --public-url（或设置 OPENSHIP_EXTRA_TRUSTED_ORIGINS），否则登录会被拒绝。 |
+| `--managed-edge` | 托管边缘（managed edge）：在本机安装 OpenResty + 免费 Let's Encrypt 证书，并将 --public-url 的域名路由到控制台（无需反向代理） |
+| `--acme-email <email>` | Let's Encrypt 证书的联系邮箱（托管边缘） |
+| `--from-source` | 预览用途：从源码（某条分支）构建并运行 Openship，而不是已发布的版本——以前台方式运行 |
+| `--ref <branch>` | 配合 --from-source 使用的 Git 分支/标签/sha（默认：main） |
+| `--source <path>` | 从本机已有的 Openship 检出构建，而不是重新克隆 |
+| `--repo <url>` | --from-source 要克隆的 Git remote（默认：oblien/openship） |
+| `--compose` | 使用已发布镜像通过 Docker Compose 安装（postgres + redis + api + dashboard + edge，监听 :80/:443）。Linux 上有 Docker 时默认采用这种方式。 |
+| `--bare` | 以裸进程服务方式安装（内嵌数据库，不依赖 Docker），而不是 Compose |
+| `--mail` | 以 Openship Mail 方式安装：控制台打开的是邮件控制面（邮件服务器、域名、邮箱），而不是完整平台。同一套安装、同一个二进制——只是一个默认的外壳，不是限制。任何人都可在 Settings → General 中切换回来，管理员可在 Settings → Instance 中修改全机默认值。 |
+| `--no-host-control` | 加固：不给控制面一条通往本机操作系统的通道。不生成也不挂载主机 SSH 密钥，主机操作会拒绝执行，本机不再被推荐为部署目标。当本机只用来管理远程服务器时推荐开启——代价是失去 :80/:443 接管、主机终端和主机端口扫描。Docker socket 仍会挂载（部署需要它），因此这是纵深防御，不是完全隔离。 |
+| `--host-ssh-host <addr>` | Compose 模式：api 容器执行主机操作时拨连的地址（默认 host.docker.internal，映射到 docker host-gateway）。当 host-gateway 无法到达宿主机时（rootless Docker 下尤其如此），请将它设置为本机的局域网/网桥地址。重跑时保留。 |
+| `--host-ssh-port <port>` | Compose 模式：宿主机 sshd 为主机操作监听的端口（默认 22）。重跑时保留。 |
+| `--host-ssh-user <name>` | Compose 模式：api 容器执行主机操作时登录的宿主机账户。通常无需设置——置备过程会授权一个密钥并逐个拨连，寻找宿主机 sshd 实际接受的账户（以 root 调用时用 root，否则用调用者用户，当 root 登录被拒绝时回退到 $SUDO_USER）。若两者都不是你想要的账户，或 sshd 规则导致两者都不行，才设置此项：指定账户将按原样使用、不再回退，因此它必须能通过 SSH 登录，且应有无密码 sudo（主机操作会逐条命令提权）。重跑时保留。 |
+| `--open-host-firewall` | Compose 模式：若 api 容器无法访问本机的 SSH 端口，则添加允许访问的主机防火墙规则（限定在容器子网内，仅支持 ufw/firewalld）。不加此项时，被封住的通道只会被报告，不做改动。`--yes` 不会隐含此选项。 |
+| `--edge <action>` | Compose 模式：如何处理 :80/:443 上已有的代理——'migrate'（把它的站点导入 Openship 的 edge）、'takeover'（停掉它，其站点停止提供服务），或 'cancel'。默认：交互模式下提示选择，否则 cancel。 |
+| `--reset-secrets` | Compose 模式：即使本次安装的数据卷仍存在，也重新生成密钥。`up` 通常会拒绝，因为数据库仍保留创建时的密码，而且所有已存储的环境变量都是用旧的 BETTER_AUTH_SECRET 加密的——密码会被重新对齐，那些环境变量不会。仅在原 .env 确实已丢失时使用。 |
+| `--non-interactive` | 无头安装：服务启动后，直接依据下面的参数创建管理员并注册域名（不交互提示）。别名：--yes。 |
+| `--yes` | --non-interactive 的别名。 |
+| `--admin-name <name>` | 管理员显示名称（无头安装） |
+| `--admin-email <email>` | 管理员邮箱——无头安装时必填 |
+| `--admin-password <password>` | 管理员密码（至少 8 位）。建议改用 OPENSHIP_ADMIN_PASSWORD 环境变量，避免留在 shell 历史里。 |
+| `--domain-kind <kind>` | 无头安装的域名：byo \| custom \| free \| none（默认：设置了 --public-url 则为 byo，否则 none） |
+| `--hostname <host>` | --domain-kind 为 byo\|custom 时的域名/主机名（或从 --public-url 推导） |
+| `--slug <slug>` | --domain-kind 为 free 时的免费 .opsh.io 子域名（本机必须已连接到云端） |

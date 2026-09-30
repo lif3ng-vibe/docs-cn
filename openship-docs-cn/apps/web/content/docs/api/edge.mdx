@@ -1,0 +1,60 @@
+---
+title: 边缘管理
+description: 在自托管安装上检查并收编已有的边缘站点。
+---
+
+在自托管安装上检查或收编已由边缘代理管理的站点。SDK 通过 `ship.system` 暴露
+站点检查与移除能力；导入与安装预检目前仅支持 HTTP。项目域名的管理参见[域名](/docs/api/domains)，
+边缘组件的安装与更新参见[服务器](/docs/api/servers)。
+
+## 检查现有站点
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const scan = await ship.system.listUntrackedEdgeSites();
+console.log(scan.scanned, scan.orphans);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/system/edge/untracked" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+站点检查与移除需要安装管理员权限。在导入或移除发现的站点之前，请先审查它们。导入会把受支持的站点
+关联到 Openship 项目；移除未纳管的站点会改变宿主机的边缘配置。
+
+## 安装的边缘预检
+
+`POST /api/system/self-edge/preflight` 用于检查将 Openship 自身对外暴露所需的边缘配置。
+它与为应用项目绑定域名的流程是分开的。
+
+交互式工作流与命令选项参见[边缘指南](/docs/guides/the-edge)和
+[CLI 边缘参考](/docs/cli/reference/edge)。
+
+## 操作
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出未被项目记录纳管的边缘站点。 | `system.listUntrackedEdgeSites()` | `GET /api/system/edge/untracked`<br />`settings:read` · 自托管 |
+| 移除一个已授权、未被纳管的边缘站点。 | `system.removeUntrackedEdgeSite(input)` | `POST /api/system/edge/untracked/remove`<br />`settings:admin` · 自托管 |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 导入发现的边缘站点。 | 仅 HTTP | `POST /api/system/edge/import-sites`<br />`Internal operator` · 自托管 |
+| 检查 Openship 安装自身的边缘就绪状态。 | 仅 HTTP | `POST /api/system/self-edge/preflight`<br />`Internal operator` · 自托管 |
+
+{/* api-operations:end */}

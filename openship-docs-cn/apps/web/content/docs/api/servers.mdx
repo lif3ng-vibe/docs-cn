@@ -1,0 +1,602 @@
+---
+title: 服务器
+description: 通过 SDK 或 REST API 注册与运维服务器。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+服务器是 Openship 构建与运行应用的宿主机。注册 SSH 连接信息、
+检查必需的组件，并安装目标机器所需的内容。服务器管理需要相应
+权限与主机执行策略。这些操作仅限自托管。
+
+## 注册服务器
+
+服务器是你部署到的 SSH 目标。响应永远不包含 SSH 机密——密码与密钥口令
+静态加密存储，只在 SSH 客户端内部解密。参见
+[自定义服务器指南](/docs/guides/custom-servers)。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.servers.create({
+  sshHost: "203.0.113.10",
+  sshUser: "root",
+  sshAuthMethod: "agent",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/system/servers" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"sshHost":"203.0.113.10","sshUser":"root","sshAuthMethod":"agent"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    sshHost: { type: 'string', description: 'SSH 主机/IP。', required: true },
+    name: { type: 'string', description: '显示名称。' },
+    sshPort: { type: 'number', description: 'SSH 端口。', default: '22' },
+    sshUser: { type: 'string', description: 'SSH 用户。', default: 'root' },
+    sshAuthMethod: { type: 'string', description: '认证方式：password、key 或 agent。' },
+    sshPassword: { type: 'string', description: 'SSH 密码（静态加密存储）。' },
+    sshKeyPath: { type: 'string', description: '主机上私钥文件的路径。' },
+    sshKeyPassphrase: { type: 'string', description: '私钥口令（静态加密存储）。' },
+    sshJumpHost: { type: 'string', description: 'SSH 跳板/堡垒主机。' },
+    sshArgs: { type: 'string', description: '额外的原始 ssh 参数。' },
+  }}
+/>
+
+`PATCH /api/system/servers/:id` 接受同样的字段，全部可选——只修改你发送的键。
+
+## 服务器健康检查与安装
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const health = await ship.servers.check("srv_123", { components: ["docker"] });
+console.log(health.ready, health.missing);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/system/check" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123","components":["docker"]}'
+```
+
+</Tab>
+</Tabs>
+
+先测试连接，再检查已保存服务器装了哪些组件，然后安装或移除组件。
+这些路由在**请求体**中用 `serverId`（而非 URL 参数）标识服务器，且每个
+handler 都各自执行按服务器的 `server:admin`（或 `server:read`）检查。
+
+`POST /api/system/test-connection` 用请求体里的凭据临时开启一条 SSH 连接并返回
+`{ ok, message }`——不持久化任何内容。要求调用者是组织所有者/管理员。
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要检查的已保存服务器。', required: true },
+    components: { type: 'string[]', description: '把检查限定到这些组件名（对照允许清单校验）。省略时检查必需 + 已检测到的基础设施组件。' },
+  }}
+/>
+
+返回 `{ components, ready, missing }`。
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要把组件安装到的已保存服务器。', required: true },
+    component: { type: 'string', description: '单个可安装组件名（例如 docker、openresty、certbot）。对照允许清单校验。', required: true },
+    config: { type: 'object', description: '可选的该安装器专有配置。', default: '{}' },
+  }}
+/>
+
+`POST /api/system/remove` 与 `install` 对应，用于移除单个可移除组件。`POST /api/system/install/stream`
+接受 `{ serverId, components: string[], config? }` 并返回一份**Server-Sent Events**（服务器推送事件）流
+（`progress`、`log`、`complete`、`end`）；若已有会话在运行，则返回 **409 `install_in_progress`**。
+
+<Callout title="是 SSE，不是 JSON" type="info">
+`install/stream` 和 `monitor/stream` 是事件流。可以改为读取 `GET /api/system/install/session` 来轮询
+运行中会话的状态，或在页面刷新后用 `GET /api/system/install/stream?id=<sessionId>` 重新挂回。
+</Callout>
+
+`GET /api/system/monitor/stream?serverId=<id>` 每隔几秒发出一个 `stats` 事件，附带通过 SSH 采集的 CPU 占用率、内存、
+磁盘、在线时长与负载均值——对应 `openship server monitor <serverId>`。
+
+## 按服务器的速率限制
+
+读取或更新某台服务器的 OpenResty 请求速率限制。目标服务器上的 OpenResty 是
+唯一事实来源；API 会解析并改写它的 `ratelimit.conf`。
+
+```
+PATCH /api/system/servers/:id/rate-limit
+```
+
+<TypeTable
+  type={{
+    rps: { type: 'number', description: '每秒请求数（0 表示移除限制）。向下取整。' },
+    burst: { type: 'number', description: '高于 rps 的突发额度。' },
+    whitelist: { type: 'string[]', description: '免受限制的 CIDR 网段；无效条目会被丢弃。' },
+  }}
+/>
+
+## 端口转发隧道
+
+仅限桌面端。像 VS Code 那样，把远程服务器端口转发到运维者机器上的
+`localhost`。每个 handler 还会额外断言桌面模式；在非桌面实例上直接拒绝。
+
+```
+POST /api/system/servers/:id/tunnels
+```
+
+<TypeTable
+  type={{
+    remotePort: { type: 'number', description: '要转发的远程端口（1–65535）。', required: true },
+    remoteHost: { type: 'string', description: '在服务器端绑定的远程主机。', default: '127.0.0.1' },
+    localPort: { type: 'number', description: '期望的本地端口；0 表示交给操作系统选择。省略即自动。' },
+    autoStart: { type: 'boolean', description: '桌面端启动时自动重新打开该隧道。', default: 'false' },
+  }}
+/>
+
+用 `POST .../tunnels/:tunnelId/start`、`.../stop` 与
+`DELETE .../tunnels/:tunnelId` 来启动/停止/删除一条已保存的隧道。已启动的隧道会返回实际绑定的 `localPort` 与一个
+`http://localhost:<port>` URL。
+
+## 服务器集群与私有网络
+
+在自托管的 OpenShip 实例上，私有网络通过既有的私有 IPv4 网络或受管的 WireGuard 网格，连接 2–16 台已注册的 Linux
+服务器。读取
+`ship.servers.networkCapabilities()` 了解可用的服务商配置档与你拥有的
+管理权限。本地与桌面版自托管控制器支持
+网络清点与手动网络检查。Oblien 托管的 Cloud 不提供
+这类基础设施管理。
+
+计算集群是另一种独立记录，把选定的服务器归组到一条既有
+私有网络上。联网功能用 `*Network` 方法与 `/api/system/networks`，
+这类服务器分组用 `*ComputeCluster` 方法与 `/api/system/compute-clusters`。
+较旧的 `*Cluster` 方法与 `/api/system/clusters` URL 保留为私有网络的
+兼容别名。
+
+对既有的网络，create 保存配置；verify 启动一个独立的、会持久化的操作。
+重试未变更的创建请求时复用同一个 `requestId`。update、
+verify 与 remove 需要该网络当前的 `revision`。并发编辑
+会返回冲突，而正在进行的验证会阻止配置变更。
+
+```ts
+const network = await ship.servers.createNetwork({
+  requestId: crypto.randomUUID(),
+  name: "Production EU",
+  network: {
+    mode: "native",
+    cidrs: ["10.20.0.0/24"],
+    mtu: 1400,
+    probePort: 51821,
+  },
+  members: [
+    { serverId: "srv_a", providerId: "hetzner-dedicated", privateIp: "10.20.0.2" },
+    { serverId: "srv_b", providerId: "hetzner-dedicated", privateIp: "10.20.0.3" },
+  ],
+});
+const verification = await ship.servers.verifyNetwork({
+  networkId: network.id,
+  revision: network.revision,
+});
+console.log(verification.id, verification.status);
+```
+
+订阅只读的 SSE 端点 `GET /api/system/networks/stream` 即可跟进
+验证进度，重连后依然有效。用
+`ship.servers.getNetwork({ networkId })` 读取已保存的快照。报告包含
+按方向的 TCP、UDP、MTU、UDP 往返时延、丢包与抖动
+结果。受管 WireGuard 的报告还包含按对端（peer）的握手观测。
+主机需要 Linux、Python 3、iproute2、持久的
+机器标识，以及可用的私有网卡与路由。选定的探测
+端口必须在成员之间放行 TCP 与 UDP。检查器
+`ship.servers.inspectNetwork(serverId)` 只读取网卡信息，不做配置。
+
+临时授权的监听器绑定到选定的私有地址，
+如果清理流程失联则本地过期。运行在四分钟后过期；
+成功的观测在十五分钟后视为过期。探测程序
+测试其选定的端口与包大小。加密与应用端口访问
+不在验证范围内。
+
+验证完成后，还可以用同一端点对一个选定连接做双向
+测量：
+
+```ts
+const network = await ship.servers.getNetwork({ networkId: "network_id" });
+const speedTest = await ship.servers.verifyNetwork({
+  networkId: network.id,
+  revision: network.revision,
+  speedTest: { sourceServerId: "srv_a", targetServerId: "srv_b" },
+});
+```
+
+测速先检查连通性，然后每个方向最多传输 32 MiB 或持续三
+秒。`report.throughput` 记录接收方确认的字节数、
+耗时与 Mbps，或一个具体的传输错误。普通验证
+不发送大流量。两台服务器都必须属于该私有网络；验证进行中时
+不能启动不同的测试。对同一对重复发起活动请求会
+复用其运行。进度与最终结果走同一条 SSE 流。
+
+网络读取需要全舰队的服务器读取权限。管理需要
+全舰队的服务器管理员权限，且每个成员也须单独授权。移除一条
+已被接管的私有网络只移除 OpenShip 的清点记录；服务器与
+外部管理的网络保留。受管网络使用下文的受审核清理
+流程。移除服务器之前必须先处理好成员关系与活动操作。私有网络负责连接主机；而一个具备就绪运行时的
+[计算集群](#计算集群)可以运行[应用副本与数据库](/docs/api/projects#在集群上扩缩容无状态应用)。
+[共享存储](#跨服务器共享文件)需单独启用。服务商
+API/VLAN 置备仍在受管网络搭建的范围之外。
+
+### 受管的私有网络
+
+受管组网会创建一个加密的 WireGuard 网格，并自动
+分配私有地址。启动服务器准备流程来检查基础设施、
+安装缺失工具，并生成一份可审核的计划：
+
+```ts
+const preparation = await ship.servers.prepareManagedNetwork({
+  requestId: crypto.randomUUID(),
+  name: "Production mesh",
+  members: [
+    { serverId: "srv_a", providerId: "hetzner-dedicated" },
+    { serverId: "srv_b", providerId: "custom" },
+  ],
+});
+console.log(preparation.id, preparation.status, preparation.hosts);
+
+for await (const event of ship.servers.managedNetworkPreparationEvents(preparation.id)) {
+  if (event.event === "snapshot") {
+    const { run } = JSON.parse(event.data);
+    console.log(run.sequence, run.status, run.hosts);
+  }
+}
+```
+
+该订阅在连接时以及每次进度变化时发送一份完整的已保存 `snapshot`，
+在尝试收尾后关闭前再发送 `complete`。控制台在连接断开后以退避方式重连。
+SDK 调用者可用同一方法重新挂回；重连绝不重新开始工作。请用每份快照整体替换本地状态，
+而不是往日志上追加。单调递增的 `sequence` 也能防止过晚的响应造成错乱。
+
+`ship.servers.getManagedNetworkPreparation({ preparationId })` 仍可用于
+单次读取已保存状态。当其状态为 `ready` 时，用它的 `operationId`
+读取网络计划。要重试失败或中断的准备流程，用与上次相同的输入和请求 ID 调用
+`prepareManagedNetwork`。已经健康的工具会被检查后复用。`listManagedNetworkPreparations()` 列出最近仍需处理或审核的工作。
+准备阶段不会启动任何隧道变更。
+
+要丢弃一个已停止的准备流程，用其最新的
+进度序列调用 `discardManagedNetworkPreparation({ preparationId, sequence })`。尚未应用的计划可用
+`discardManagedNetworkPlan({ operationId, planHash })` 丢弃。两者都要求舰队
+管理权限。准备流程与任何未应用的计划在同一个事务中关闭，
+并从待处理搭建中消失；既有的服务器、服务与已安装工具
+保留。已取消的记录仍可读取用于诊断，并阻止过晚的重试复活已被丢弃的工作。活动中的准备流程必须先完成。
+
+要从尚未完成的**初始集群搭建**中移除一台服务器，调用
+`removeManagedNetworkPreparationMember({ preparationId, serverId, sequence, requestId })`。
+对初始网络操作，用
+`removeManagedNetworkOperationMember({ operationId, serverId, sequence, planHash, requestId })`。
+至少要保留两台服务器。`requestId` 用新的 UUID，响应丢失时复用它。
+不同的选择需要不同的请求。
+两个方法都要求舰队管理权限并返回 `{ preparation, operation }`。
+原始记录通过 `replacementPreparationId` 链接到替代记录；
+设置与诊断仍然可用，且原始请求不能再恢复。
+
+在网络应用（apply）之前，移除操作会取消旧的选择，并把余下
+服务器保存到一个暂停（`pending`）状态的准备流程中。部分应用之后，它还会有一个
+`cleanupOperationId`。OpenShip 复用回滚，在**所有原始主机**上恢复这次尝试的网络
+变更，包括被移除服务器的 peer 条目。
+该服务器、其工作负载、磁盘、其他网络与共享安装的工具保留。
+清理运行期间待处理准备流保持打开；订阅该清理操作可查看按主机的进度。
+失联或被外部改动过的主机会让清理与预留一直挂着。解决问题后用
+`action: "rollback"` 重试该操作。一旦所有主机确认回滚，准备流程保持暂停。随后显式用替代记录保存的输入调用 `prepareManagedNetwork`
+以重试；在清理完成前它会拒绝请求。移除、清理重试与流重连都不会启动准备流程。
+由此产生的网络计划始终需要重新审核并应用。已建成的集群沿用其既有的、经审核的成员变更工作流。
+
+对已满足前置条件的主机，`planManagedNetwork` 接受
+同样的输入并执行只读检查，不安装任何软件包。
+
+审核之后，把该 operation ID 与哈希传给
+`ship.servers.applyManagedNetwork({ operationId, planHash, action: "apply" })`。
+计划在十五分钟后过期，并拒绝任何对集群 revision、
+主机标识或已检查网络信息的改动。订阅
+`ship.servers.managedNetworkOperationEvents(operationId)` 可获得持久化的进度；
+`getManagedNetworkOperation({ operationId })` 提供单次状态读取。
+同一 operation 在中断之后还支持 `action: "resume"` 或 `action: "rollback"`。活动中的工作是幂等的，不能被启动两次。
+一旦网络变更已经开始，discard 即被阻止。用 `action: "rollback"`
+清理未完成的新集群，或恢复既有集群的上一个网络。每台主机都必须确认清理后，
+清点信息与预留才会释放。失联的主机会让恢复一直挂着；待访问恢复后再重试回滚。恢复后的既有集群随后可以走受审核的移除流程。
+
+`ship.servers.clusterEvents()` 流式推送包含 `clusters` 与
+`preparations` 的总览快照。三个订阅方法都接受 `{ signal }`，可在不取消搭建的情况下断开某个查看端。这些流使用已保存的数据库状态，在订阅时再次校验舰队
+读取权限，并每十五秒做一次对账，以发现另一个控制器的更新与过期的 worker 租约。
+
+主机要求带 WireGuard 内核支持的 Linux、Python 3.8+、iproute2、systemd、
+以及 root 或免密 sudo。准备流程会通过共享工具链自动安装缺失的
+Python 3.8+、iproute2（4.15+）与 WireGuard 工具（1.0+）。
+它在检查之前先验证安装。内核、init 系统与权限
+问题会在某个具名步骤停下；OpenShip 不会更换内核或重启主机。
+若后续的网络操作回滚，已安装的工具仍保持安装。支持的
+防火墙是：无任何主机防火墙、原生 iptables，或使用标准
+`inet filter input/output` 链且没有额外过滤型 IPv4 input/output
+基础链的 nftables。UFW、firewalld 与不受支持的 nftables 布局会在检查时失败。
+服务商防火墙必须放行经审核的传输端口（默认 51820/UDP）。
+传输使用可达的 IPv4 端点，没有中继或自动 NAT 穿透。
+提供了显式 IPv4 传输端点时，IPv6 SSH 管理亦可工作。
+准备阶段检查本地前置条件与路由；它不证明主机之间的 UDP 可达性。应用（Apply）之后，`transport` 步骤会暂存 WireGuard 端点与
+自有的主机防火墙规则。`handshake` 步骤在 `configure` 分配私有地址与路由之前测试每个对端。失败会保留按对端的端点与端口，
+并恢复先前的配置。服务商防火墙或 NAT 的变更需要管理员先介入，再做一次显式重试。
+
+私钥留在各自的主机上。每台主机会有一个持续二十分钟的
+回滚计时器，因此即使控制器断连或主机重启，未完成的搭建也能恢复。OpenShip 只改动自己的网卡、peer 路由与
+防火墙规则。传输阶段沿用同样的回执与回滚计时器；
+成功晋升后，已验证的网卡与密钥得以保留。握手与
+每一次定向的 TCP/UDP/MTU 检查都必须成功才能提交。已提交的组网可在无控制器的情况下本地重启。失联
+或被外部改动过的主机保留其认领，直到恢复得到确认。
+
+对受管集群做编辑时，在新的计划中包含 `clusterId` 与 `revision`。成员关系、
+传输端点/端口、MTU 与 `rotateKeys` 可以变更；既有地址与
+已分配子网保持稳定。要移除受管集群，用 `intent: "remove"` 制定计划，
+并在应用前审核其主机清理。这些网络
+操作不会排空工作负载或迁移其数据。
+
+## 计算集群
+
+通过选择已接入私有网络的服务器来创建计算集群。
+网络与计算集群的成员关系相互独立。重试未变更的创建请求时复用同一个
+`requestId`；更新与移除需要计算集群当前的
+`revision`。
+
+```ts
+const cluster = await ship.servers.createComputeCluster({
+  requestId: crypto.randomUUID(),
+  name: "Production EU",
+  networkId: "network_id",
+  serverIds: ["srv_a", "srv_b"],
+});
+console.log(cluster.id, cluster.networkId, cluster.serverIds);
+```
+
+`removeComputeCluster({ clusterId, revision })` 移除这一分组并保留
+其服务器与私有网络。`ship.servers.infrastructure(serverId)` 会报告
+与某台服务器关联的网络和计算集群。
+
+### 受管的 K3s 搭建
+
+创建资源池并不会安装软件。在把选定服务器接入其私有网络之后，启动其独立的运行时操作：
+
+```ts
+const runtime = await ship.servers.setupClusterRuntime({
+  clusterId: "cluster_id",
+  revision: 1,
+  requestId: crypto.randomUUID(),
+});
+console.log(runtime.status);
+
+const abort = new AbortController();
+for await (const event of ship.servers.clusterRuntimeEvents("cluster_id", { signal: abort.signal })) {
+  console.log(event.data);
+  abort.abort(); // Close the subscription when leaving the setup view.
+  break;
+}
+```
+
+搭建会安装缺失的工具、固定 K3s 版本并校验 checksum、配置私有
+主机防火墙规则、把服务器加入集群，并检查真实的 Pod 流量、Services
+与 DNS。一/两成员的池使用一台控制服务器；更大的池使用
+三台控制服务器与更多 worker。初始支持要求 Linux
+amd64/arm64、systemd、root 或免密 sudo、已禁用 swap，以及未过滤或原生 iptables 主机防火墙。服务商私有网络 ACL 仍是运维者的
+责任；控制台会列出确切的私有 peer 端口。这些端口
+不应暴露到公网。
+
+用 `getClusterRuntime({ clusterId })` 读取已保存的进度；搭建开始前它返回 `null`。
+用 `retryClusterRuntime({ clusterId, sequence })` 显式重试被中断或失败的操作。
+重试会保留已固定的版本/配置，并对主机状态做对账。重连 SSE 绝不会
+启动或重试安装。运行时流保持打开以便观察后续变化；
+离开页面时取消它们。快照包含带时间戳的验证结果，
+不是持续的工作负载监控。
+
+`removeClusterRuntime({ clusterId, sequence })` 启动有归属的清理。应用
+工作负载、持久卷与额外的运维组件必须先移除。
+清理会保留私有网络与既有的 Docker 应用，并可在部分移除后恢复。运行时仍在安装或未完成时，
+移除该池或变更其成员/网络会被阻止。
+
+搭建就绪后，在项目的拓扑中选择该集群即可让应用跨其服务器运行，或添加受管的 PostgreSQL 与 Redis 数据库。
+既有项目部署只有在你选定新目标并部署时才会迁移。
+
+### 跨服务器共享文件
+
+用集群上的**共享存储**（Share storage）在至少两台
+服务器上准备独立副本。搭建会安装所需的工具、检查选定的空目录、
+配置共享存储并验证一次跨服务器写/读。它绝不会格式化磁盘。其技术实现展示在折叠的详情中。
+
+`setupClusterStorage` 接受经审核的磁盘、副本数与一个稳定请求 ID。
+读取 `getClusterStorage` 或订阅 `clusterStorageEvents`，直到搭建就绪。
+中断之后，检查已保存的错误，并用最新 sequence 显式重试。
+读取状态以了解当前容量与磁盘健康状况时用 `observe: true`。
+
+选择一个外部备份目标即可启用可恢复的文件存档。项目
+随后就能创建、挂载、扩容、备份并恢复自己的共享卷。
+多副本让文件在集群内保持可用；外部备份则在删除或数据损坏后提供恢复点。
+
+移除共享存储之前，先断开并移除项目卷。空存储清理
+会保留外部存档与集群的其他存储类别。移除集群运行时之前先移除共享存储。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+### 受管容器
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 应用一份受管容器配置。 | `servers.applyContainer(id, input, options?)` | `POST /api/system/servers/:id/containers/:component/apply/stream`<br />`server:write` · 自托管 |
+| 流式跟进一次受管容器应用会话。 | `servers.containerApplyEvents(id, input, options?)` | `GET /api/system/servers/:id/containers/:component/apply/stream`<br />`server:read` · 自托管 |
+| 列出全部可访问服务器上的受管容器。 | `servers.listAllContainers()` | `GET /api/system/containers`<br />`server:read` · 自托管 |
+| 刷新全部可访问服务器上的受管容器状态。 | `servers.scanAllContainers()` | `POST /api/system/containers/scan`<br />`server:write` · 自托管 |
+| 列出存在可用更新的受管容器。 | `servers.containersBehind()` | `GET /api/system/containers/behind`<br />`server:read` · 自托管 |
+| 列出受管容器的健康或配置问题。 | `servers.containerIssues()` | `GET /api/system/containers/issues`<br />`server:read` · 自托管 |
+| 读取当前处于活动状态的容器应用会话。 | `servers.applyingContainers()` | `GET /api/system/containers/applying`<br />`server:read` · 自托管 |
+| 跨服务器应用请求的受管容器变更。 | `servers.applyAllContainers(input?)` | `POST /api/system/containers/apply-all`<br />`server:write` · 自托管 |
+| 列出单台服务器的受管容器。 | `servers.listContainers(id)` | `GET /api/system/servers/:id/containers`<br />`server:read` · 自托管 |
+| 刷新单台服务器的受管容器状态。 | `servers.scanContainers(id)` | `POST /api/system/servers/:id/containers/scan`<br />`server:write` · 自托管 |
+| 读取某容器的活动应用会话。 | `servers.containerApplySession(id, input)` | `GET /api/system/servers/:id/containers/:component/apply/session`<br />`server:read` · 自托管 |
+
+### 组件与安装
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取一次安装会话。 | `servers.getInstallSession(input?)` | `GET /api/system/install/session`<br />`server:read` · 自托管 |
+| 回答一个待处理的安装提示。 | `servers.respondToInstall(input)` | `POST /api/system/install/respond`<br />`server:admin` · 自托管 |
+| 提交所选组件的安装。 | `servers.installComponents(id, input, options?)` | `POST /api/system/install/stream`<br />`server:admin` · 自托管 |
+| 流式跟进安装进度。 | `servers.installEvents(input?, options?)` | `GET /api/system/install/stream`<br />`server:read` · 自托管 |
+| 列出该服务器上受管的组件。 | `servers.listModules(id)` | `GET /api/system/servers/:id/modules`<br />`server:read` · 自托管 |
+| 刷新受管组件状态。 | `servers.scanModules(id)` | `POST /api/system/servers/:id/modules/scan`<br />`server:write` · 自托管 |
+| 应用某受管组件的配置。 | `servers.applyModule(id, input)` | `POST /api/system/servers/:id/modules/:module/apply`<br />`server:write` · 自托管 |
+| 安装一个受管组件。 | `servers.installComponent(id, input)` | `POST /api/system/install`<br />`server:admin` · 自托管 |
+| 移除一个受管组件。 | `servers.removeComponent(id, input)` | `POST /api/system/remove`<br />`server:admin` · 自托管 |
+
+### 服务器生命周期
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 流式接收服务器监控数据。 | `servers.monitor(id, options?)` | `GET /api/system/monitor/stream`<br />`server:read` · 自托管 |
+| 列出已注册的服务器。 | `servers.list()` | `GET /api/system/servers`<br />`server:list` · 自托管 |
+| 注册一台 SSH 服务器。 | `servers.create(input)` | `POST /api/system/servers`<br />`server:write` · 自托管 |
+| 测试所提供的 SSH 连接配置。 | `servers.testConnection(input)` | `POST /api/system/test-connection`<br />`server:write` · 自托管 |
+| 读取与某服务器关联的私有网络和计算集群。 | `servers.infrastructure(id)` | `GET /api/system/servers/:id/infrastructure`<br />`server:read` · 自托管 |
+| 读取服务器的配置与状态。 | `servers.get(id)` | `GET /api/system/servers/:id`<br />`server:read` · 自托管 |
+| 读取服务器的可达性。 | `servers.reachability(id)` | `GET /api/system/servers/:id/reachability`<br />`server:read` · 自托管 |
+| 修改已注册服务器的配置。 | `servers.update(id, input)` | `PATCH /api/system/servers/:id`<br />`server:write` · 自托管 |
+| 检查移除该服务器会影响哪些工作负载。 | `servers.deletionPreview(id)` | `GET /api/system/servers/:id/deletion-preview`<br />`server:read` · 自托管 |
+| 按请求的工作负载清理策略移除服务器。 | `servers.remove(id, input?)` | `DELETE /api/system/servers/:id`<br />`server:admin` · 自托管 |
+| 在服务器上执行一条经过授权的命令。 | `servers.exec(id, input)` | `POST /api/system/servers/:id/exec`<br />`server:admin` · 自托管 |
+| 运行服务器健康检查。 | `servers.check(id, input?)` | `POST /api/system/check`<br />`server:admin` · 自托管 |
+| 扫描已授权服务器上的端口。 | `servers.scanPorts(id)` | `POST /api/system/servers/:id/ports/scan`<br />`server:read` · 自托管 |
+
+### 私有网络
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取基础设施可用性、服务商配置档与支持的网络操作。 | `servers.networkCapabilities()` | `GET /api/system/networks/capabilities`<br />`server:read` · 自托管 |
+| 列出组织拥有的私有网络及其最近一次验证。 | `servers.listNetworks()` | `GET /api/system/networks`<br />`server:read` · 自托管 |
+| 读取私有网络、其服务器挂载关系与验证报告。 | `servers.getNetwork(input)` | `GET /api/system/networks/:id`<br />`server:read` · 自托管 |
+| 用幂等请求 ID 保存一条既有私有网络。 | `servers.createNetwork(input)` | `POST /api/system/networks`<br />`server:admin` · 自托管 |
+| 用当前 revision 更新空闲原生网络的清点信息；使先前的验证失效。 | `servers.updateNetwork(input)` | `PATCH /api/system/networks/:id`<br />`server:admin` · 自托管 |
+| 验证私有连通性、时延与丢包；可选地对选定的一对测量有界吞吐。 | `servers.verifyNetwork(input)` | `POST /api/system/networks/:id/verify`<br />`server:admin` · 自托管 |
+| 按当前 revision 移除未使用的原生网络清点信息，保留服务器与外部网络。 | `servers.removeNetwork(input)` | `DELETE /api/system/networks/:id`<br />`server:admin` · 自托管 |
+| 用当前进度序列与幂等请求 ID，修改已停止搭建的私有连接策略。 | `servers.reviseManagedNetworkAccess(input)` | `PATCH /api/system/networks/preparations/:preparationId/connections`<br />`server:admin` · 自托管 |
+| 在选定服务器上准备缺失的组网工具、保留按步骤的日志，并产出一份可审核的计划。重复同一请求即可重试失败的准备流程。 | `servers.prepareManagedNetwork(input)` | `POST /api/system/networks/preparations`<br />`server:admin` · 自托管 |
+| 读取已保存的前置检查、安装日志、失败情况与由此产生的网络操作。 | `servers.getManagedNetworkPreparation(input)` | `GET /api/system/networks/preparations/:preparationId`<br />`server:read` · 自托管 |
+| 用当前进度序列丢弃已停止的搭建及其未应用的计划。已安装的工具与服务器保留；apply 一旦开始，必须先完成网络清理。 | `servers.discardManagedNetworkPreparation(input)` | `DELETE /api/system/networks/preparations/:preparationId`<br />`server:admin` · 自托管 |
+| 从已停止的初始搭建中移除一台服务器，并保存一个暂停状态的替代选择。仅在显式重试时才开始准备流程；诊断、服务、数据与已安装工具保留。 | `servers.removeManagedNetworkPreparationMember(input)` | `DELETE /api/system/networks/preparations/:preparationId/members/:serverId`<br />`server:admin` · 自托管 |
+| 从未完成的初始网络操作中移除一台服务器。在原始主机上恢复其变更，并保存剩余选择，直到显式重试准备流程前保持暂停。 | `servers.removeManagedNetworkOperationMember(input)` | `DELETE /api/system/networks/operations/:operationId/members/:serverId`<br />`server:admin` · 自托管 |
+| 列出最近仍需处理或网络审核的服务器准备流程。 | `servers.listManagedNetworkPreparations()` | `GET /api/system/networks/preparations`<br />`server:read` · 自托管 |
+| 订阅已保存的准备快照与完成事件。重连只读取进度；绝不会重启准备流程。 | `servers.managedNetworkPreparationEvents(id, options?)` | `GET /api/system/networks/preparations/:preparationId/stream`<br />`server:read` · 自托管 |
+| 订阅持久化的网络应用、验证与恢复进度。 | `servers.managedNetworkOperationEvents(id, options?)` | `GET /api/system/networks/operations/:operationId/stream`<br />`server:read` · 自托管 |
+| 订阅私有网络总览与未完成准备流程的快照。 | `servers.clusterEvents(options?)` | `GET /api/system/networks/stream`<br />`server:read` · 自托管 |
+| 检查服务器并持久化一份可审核的 WireGuard 计划，不改动主机网络。 | `servers.planManagedNetwork(input)` | `POST /api/system/networks/plans`<br />`server:admin` · 自托管 |
+| 读取受管网络计划、按主机进度、验证与恢复状态。 | `servers.getManagedNetworkOperation(input)` | `GET /api/system/networks/operations/:operationId`<br />`server:read` · 自托管 |
+| 应用一份已批准的网络计划、恢复被中断的操作，或恢复其先前的网络。 | `servers.applyManagedNetwork(input)` | `POST /api/system/networks/operations/:operationId/apply`<br />`server:admin` · 自托管 |
+| 原子地丢弃一份未应用的计划及其已停止的准备流程。活动的或未解决的主机变更必须经由网络操作恢复。 | `servers.discardManagedNetworkPlan(input)` | `DELETE /api/system/networks/operations/:operationId`<br />`server:admin` · 自托管 |
+| 检查某服务器的机器标识与私有网卡，不改其网络。 | `servers.inspectNetwork(id)` | `POST /api/system/servers/:id/network/inspect`<br />`server:admin` · 自托管 |
+
+### 计算集群
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出组织拥有的计算集群及其私有网络。 | `servers.listComputeClusters()` | `GET /api/system/compute-clusters`<br />`server:read` · 自托管 |
+| 读取一个计算集群及其选定服务器与私有网络。 | `servers.getComputeCluster(input)` | `GET /api/system/compute-clusters/:id`<br />`server:read` · 自托管 |
+| 用幂等请求 ID 把选定服务器归组到一条既有私有网络上。 | `servers.createComputeCluster(input)` | `POST /api/system/compute-clusters`<br />`server:admin` · 自托管 |
+| 用当前 revision 更新计算集群及其选定服务器。 | `servers.updateComputeCluster(input)` | `PATCH /api/system/compute-clusters/:id`<br />`server:admin` · 自托管 |
+| 按当前 revision 移除计算集群清点信息，保留其服务器与私有网络。 | `servers.removeComputeCluster(input)` | `DELETE /api/system/compute-clusters/:id`<br />`server:admin` · 自托管 |
+
+### 集群运行时
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取已保存的 K3s 搭建、验证与清理进度；搭建前为 null。 | `servers.getClusterRuntime(input)` | `GET /api/system/compute-clusters/:id/runtime`<br />`server:read` · 自托管 |
+| 用计算集群 revision 与幂等请求 ID 启动 K3s 自动搭建。 | `servers.setupClusterRuntime(input)` | `POST /api/system/compute-clusters/:id/runtime`<br />`server:admin` · 自托管 |
+| 用当前进度序列恢复失败或中断的搭建或移除。 | `servers.retryClusterRuntime(input)` | `POST /api/system/compute-clusters/:id/runtime/retry`<br />`server:admin` · 自托管 |
+| 在确认集群为空后移除有归属的运行时，保留 Docker 服务与组网。 | `servers.removeClusterRuntime(input)` | `DELETE /api/system/compute-clusters/:id/runtime`<br />`server:admin` · 自托管 |
+| 通过只读、可重放的 SSE 订阅已保存的运行时进度。 | `servers.clusterRuntimeEvents(id, options?)` | `GET /api/system/compute-clusters/:id/runtime/stream`<br />`server:read` · 自托管 |
+
+### 共享存储
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取已保存的存储搭建与容量，或在 observe=true 时请求当前磁盘与卷健康状况。 | `servers.getClusterStorage(input)` | `GET /api/system/compute-clusters/:id/storage`<br />`server:read` · 自托管 |
+| 在经审核的集群服务器与空目录之间启用共享存储。安装前置组件而不格式化磁盘；稳定请求 ID 避免重复搭建。 | `servers.setupClusterStorage(input)` | `POST /api/system/compute-clusters/:id/storage`<br />`server:admin` · 自托管 |
+| 用当前 sequence 显式恢复失败或中断的搭建或移除。 | `servers.retryClusterStorage(input)` | `POST /api/system/compute-clusters/:id/storage/retry`<br />`server:admin` · 自托管 |
+| 用当前存储 sequence 配置外部备份目标。既有目标会保留，以便其存档仍可恢复。 | `servers.configureClusterStorageBackup(input)` | `PATCH /api/system/compute-clusters/:id/storage/backup`<br />`server:admin` · 自托管 |
+| 用最新 sequence 移除一个空的存储安装。持久或保留中的卷会阻止移除；外部存档保留。 | `servers.removeClusterStorage(input)` | `DELETE /api/system/compute-clusters/:id/storage`<br />`server:admin` · 自托管 |
+| 通过可重放的 SSE 订阅已保存的存储搭建与移除进度。 | `servers.clusterStorageEvents(id, options?)` | `GET /api/system/compute-clusters/:id/storage/stream`<br />`server:read` · 自托管 |
+
+### 旧版网络方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 私有网络能力的兼容方法；推荐用 networkCapabilities。 | `servers.clusterCapabilities()` | `GET /api/system/clusters/capabilities`<br />`server:read` · 自托管 |
+| 私有网络清点的兼容方法；推荐用 listNetworks。 | `servers.listClusters()` | `GET /api/system/clusters`<br />`server:read` · 自托管 |
+| 用旧版 clusterId 输入读取私有网络详情；推荐用 getNetwork。 | `servers.getCluster(input)` | `GET /api/system/clusters/:id`<br />`server:read` · 自托管 |
+| 用旧版方法创建私有网络清点信息；推荐用 createNetwork。 | `servers.createCluster(input)` | `POST /api/system/clusters`<br />`server:admin` · 自托管 |
+| 用旧版 clusterId 输入更新私有网络清点信息；推荐用 updateNetwork。 | `servers.updateCluster(input)` | `PATCH /api/system/clusters/:id`<br />`server:admin` · 自托管 |
+| 用旧版 clusterId 输入验证私有网络连通性；推荐用 verifyNetwork。 | `servers.verifyCluster(input)` | `POST /api/system/clusters/:id/verify`<br />`server:admin` · 自托管 |
+| 用旧版 clusterId 输入移除原生网络清点信息；推荐用 removeNetwork。 | `servers.removeCluster(input)` | `DELETE /api/system/clusters/:id`<br />`server:admin` · 自托管 |
+
+### Git 凭据
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取服务器的 GitHub 认证状态。 | `servers.githubStatus(id)` | `GET /api/system/servers/:id/github`<br />`server:read` · 自托管 |
+| 为服务器启动 GitHub 认证。 | `servers.connectGitHub(id)` | `POST /api/system/servers/:id/github/connect`<br />`server:write` · 自托管 |
+| 轮询服务器的 GitHub 认证流程。 | `servers.pollGitHubConnection(id)` | `GET /api/system/servers/:id/github/connect/poll`<br />`server:read` · 自托管 |
+| 为服务器保存 GitHub 令牌。 | `servers.setGitHubToken(id, input)` | `PUT /api/system/servers/:id/github/token`<br />`server:write` · 自托管 |
+| 在服务器上生成 GitHub SSH 密钥。 | `servers.generateGitHubKey(id)` | `POST /api/system/servers/:id/github/ssh-key`<br />`server:write` · 自托管 |
+| 为服务器克隆选择仓库部署密钥。 | `servers.useGitHubDeployKeys(id)` | `PUT /api/system/servers/:id/github/deploy-key-mode`<br />`server:write` · 自托管 |
+| 移除服务器的 GitHub 认证。 | `servers.disconnectGitHub(id)` | `DELETE /api/system/servers/:id/github`<br />`server:write` · 自托管 |
+
+### 网络功能
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出服务器的端口转发配置。 | `servers.listTunnels(id)` | `GET /api/system/servers/:id/tunnels`<br />`server:read` · 自托管 |
+| 创建或更新一条端口转发配置。 | `servers.saveTunnel(id, input)` | `POST /api/system/servers/:id/tunnels`<br />`server:write` · 自托管 |
+| 启动一次已授权的端口转发。 | `servers.startTunnel(id, input)` | `POST /api/system/servers/:id/tunnels/:tunnelId/start`<br />`server:write` · 自托管 |
+| 停止一次端口转发。 | `servers.stopTunnel(id, input)` | `POST /api/system/servers/:id/tunnels/:tunnelId/stop`<br />`server:write` · 自托管 |
+| 移除一条端口转发配置。 | `servers.removeTunnel(id, input)` | `DELETE /api/system/servers/:id/tunnels/:tunnelId`<br />`server:write` · 自托管 |
+| 读取按服务器的请求速率限制配置。 | `servers.getRateLimit(id)` | `GET /api/system/servers/:id/rate-limit`<br />`server:read` · 自托管 |
+| 更新按服务器的请求速率限制。 | `servers.updateRateLimit(id, input)` | `PATCH /api/system/servers/:id/rate-limit`<br />`server:admin` · 自托管 |
+
+### 旧版网络 URL
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| `POST /api/system/networks/preparations` 的兼容别名。 | 仅 HTTP | `POST /api/system/clusters/network-preparations`<br />`server:admin` · 自托管 |
+| `GET /api/system/networks/preparations/:preparationId` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/network-preparations/:preparationId`<br />`server:read` · 自托管 |
+| `DELETE /api/system/networks/preparations/:preparationId` 的兼容别名。 | 仅 HTTP | `DELETE /api/system/clusters/network-preparations/:preparationId`<br />`server:admin` · 自托管 |
+| `DELETE /api/system/networks/preparations/:preparationId/members/:serverId` 的兼容别名。 | 仅 HTTP | `DELETE /api/system/clusters/network-preparations/:preparationId/members/:serverId`<br />`server:admin` · 自托管 |
+| `DELETE /api/system/networks/operations/:operationId/members/:serverId` 的兼容别名。 | 仅 HTTP | `DELETE /api/system/clusters/network-operations/:operationId/members/:serverId`<br />`server:admin` · 自托管 |
+| `GET /api/system/networks/preparations` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/network-preparations`<br />`server:read` · 自托管 |
+| `GET /api/system/networks/preparations/:preparationId/stream` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/network-preparations/:preparationId/stream`<br />`server:read` · 自托管 |
+| `GET /api/system/networks/operations/:operationId/stream` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/network-operations/:operationId/stream`<br />`server:read` · 自托管 |
+| `GET /api/system/networks/stream` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/stream`<br />`server:read` · 自托管 |
+| `POST /api/system/networks/plans` 的兼容别名。 | 仅 HTTP | `POST /api/system/clusters/network-plans`<br />`server:admin` · 自托管 |
+| `GET /api/system/networks/operations/:operationId` 的兼容别名。 | 仅 HTTP | `GET /api/system/clusters/network-operations/:operationId`<br />`server:read` · 自托管 |
+| `POST /api/system/networks/operations/:operationId/apply` 的兼容别名。 | 仅 HTTP | `POST /api/system/clusters/network-operations/:operationId/apply`<br />`server:admin` · 自托管 |
+| `DELETE /api/system/networks/operations/:operationId` 的兼容别名。 | 仅 HTTP | `DELETE /api/system/clusters/network-operations/:operationId`<br />`server:admin` · 自托管 |
+| `PATCH /api/system/networks/preparations/:preparationId/connections` 的兼容别名。 | 仅 HTTP | `PATCH /api/system/clusters/network-preparations/:preparationId/connections`<br />`server:admin` · 自托管 |
+
+{/* api-operations:end */}

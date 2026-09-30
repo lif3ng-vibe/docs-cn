@@ -1,0 +1,327 @@
+---
+title: 通知
+description: 配置通知渠道、订阅方式与告警投递。
+---
+
+import { TypeTable } from "fumadocs-ui/components/type-table";
+
+通知 API 决定由谁、以何种方式收到诸如部署失败、SSL 证书即将过期等事件的消息。你可以注册**渠道**（告警发往何处——邮件、Webhook（网络回调）、Slack、Discord、Microsoft Teams 或应用内铃铛）、开关**订阅**（哪些事件类别送达哪个渠道）、为组织新成员设置全局**默认项**，以及读取**投递记录**（铃铛图标背后的告警信息流）。在控制台中对应 **Settings → Notifications** 页面。渠道、订阅与投递记录按用户维度隔离；默认项按组织维度隔离。
+
+<Callout title="每个实例均可用" type="info">
+  该模块在自托管与云端实例上均内置提供。没有专门的 `openship` CLI 命令——请通过控制台或直接调用这些端点来管理通知。
+</Callout>
+
+## 事件类别
+
+事件类别是稳定的、面向用户的事件分组（例如 `deploy.failed`、`backup.failed`、`domain.expiring`），订阅和默认项都以它为键。类别定义在代码里而非数据库中，因此 `GET
+/api/notifications/categories` 是一个静态注册表——每一项包含 `id`、`group`、`label`、
+`description` 和 `defaultEnabled`。
+
+响应还带一个 `groups` 数组（`{ id, label }`，已按展示顺序排列），各类别的 `group` 字段指向其中的条目——`deployment`、`app_health`、`backups`、`jobs`、`domains`、`members`、`billing`。`billing` 组及其类别仅在 Openship Cloud 之外才会被省略（因为自托管实例上没有可触发它们的事件）。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.notifications.categories();
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/notifications/categories" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## 创建渠道
+
+渠道是一个投递目的地。`config` 对象会按 `kind` 做形状校验；其中的机密信息（Webhook 签名密钥、Slack URL、Telegram 机器人令牌）会加密存储，且永远不会完整返回。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.notifications.createChannel({
+  kind: "email",
+  label: "On-call inbox",
+  config: {
+    address: "ops@example.com",
+  },
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/notifications/channels" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"kind":"email","label":"On-call inbox","config":{"address":"ops@example.com"}}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    kind: {
+      type: '"email" | "webhook" | "in_app" | "slack" | "discord" | "msteams" | "telegram"',
+      description: "渠道类型。其他取值一律拒绝。",
+      required: true,
+    },
+    label: { type: "string", description: "渠道的人类可读名称。", required: true },
+    config: {
+      type: "object",
+      description: "按 kind 区分的配置项——见下文。in_app 传空对象即可。",
+      required: true,
+    },
+  }}
+/>
+
+`config` 的形状取决于 `kind`：
+
+<TypeTable
+  type={{
+    "email.address": {
+      type: "string",
+      description: "有效的邮箱地址。kind 为 \"email\" 时必填。",
+    },
+    "webhook.url": {
+      type: "string",
+      description: "用于接收告警 POST 的 http(s) URL。kind 为 \"webhook\" 时必填。",
+    },
+    "webhook.hmacSecret": {
+      type: "string",
+      description:
+        "载荷 HMAC 的签名密钥。省略时自动生成，随后通过验证流程展示。",
+    },
+    "slack.webhookUrl": {
+      type: "string",
+      description: "形如 https://hooks.slack.com/... 的传入 Webhook URL。kind 为 \"slack\" 时必填。",
+    },
+    "slack.channelName": {
+      type: "string",
+      description: "可选的 Slack 频道显示名称。",
+    },
+    "discord.webhookUrl": {
+      type: "string",
+      description:
+        "形如 https://discord.com/api/webhooks/... 的传入 Webhook URL。kind 为 \"discord\" 时必填。",
+    },
+    "msteams.webhookUrl": {
+      type: "string",
+      description: "Microsoft Teams 的传入 Webhook URL。kind 为 \"msteams\" 时必填。",
+    },
+    "telegram.botToken": {
+      type: "string",
+      description:
+        "形如 <id>:<secret> 的 BotFather 令牌。kind 为 \"telegram\" 时必填。加密存储；响应只报告 botTokenConfigured 以及公开的 botId。",
+    },
+    "telegram.chatId": {
+      type: "string",
+      description:
+        "目标聊天：数字 id（群组/超级群组为负数）或 @公开频道名。kind 为 \"telegram\" 时必填。",
+    },
+    "telegram.messageThreadId": {
+      type: "string",
+      description: "可选的论坛话题 id，用于发帖到超级群组的某个话题串。",
+    },
+  }}
+/>
+
+<Callout title="获取 Teams Webhook URL" type="info">
+  在 Teams 中创建一个**工作流（Workflow）**，触发器选用 **“When a Teams webhook request is received”**，并使用其生成的 URL。旧版 `webhook.office.com` 连接器 URL 也接受。URL 会加密存储，在响应中以 `webhookUrlConfigured` 的形式出现，永远不会完整返回。
+</Callout>
+
+<Callout title="获取 Telegram 机器人令牌与 chat id" type="info">
+  给 **@BotFather** 发消息 → `/newbot` 获取令牌。机器人只能向已主动开启过它的聊天写消息，所以请先给机器人发一条消息（或把它加进你的群组）。要获取 chat id，调用
+  `https://api.telegram.org/bot<token>/getUpdates` 并读取 `result[].message.chat.id`——群组 id 为负数。编辑 Telegram 渠道但不重新提交 `botToken` 时，会继续沿用已存储的令牌。
+</Callout>
+
+新渠道默认 `enabled: true`。`in_app` 渠道立即就是 `verified` 状态；其他类型初始均未验证，必须先（通过一次测试发送）完成验证才能投递——用 `PATCH` 翻转 `verified`。
+
+## 更新渠道
+
+只发送你想修改的字段。对非 `in_app` 渠道修改 `config` 会把 `verified` 重置为 `false`，因为投递目的地可能已经变了。
+
+```
+PATCH /api/notifications/channels/:id
+```
+
+<TypeTable
+  type={{
+    label: { type: "string", description: "重命名渠道。" },
+    enabled: { type: "boolean", description: "开启或关闭该渠道。" },
+    verified: {
+      type: "boolean",
+      description: "把渠道标记为已验证（例如测试发送成功后）。",
+    },
+    config: {
+      type: "object",
+      description: "整体替换该 kind 的配置项。会按现有 kind 重新校验。",
+    },
+  }}
+/>
+
+## 为渠道订阅事件类别
+
+订阅是（用户、组织、类别、渠道）四元网格中的一个开关。`PUT` 是幂等的 upsert——再次发送同样的三元组即可翻转 `enabled`。`channelId` 必须是你拥有的渠道。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.notifications.upsertSubscription({
+  category: "deploy.failed",
+  channelId: "chan_123",
+  enabled: true,
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PUT "$OPENSHIP_URL/api/notifications/subscriptions" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"category":"deploy.failed","channelId":"chan_123","enabled":true}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    category: {
+      type: "string",
+      description: "GET /categories 返回的类别 id（例如 \"deploy.failed\"）。",
+      required: true,
+    },
+    channelId: {
+      type: "string",
+      description: "该类别要路由到的渠道。必须属于你。",
+      required: true,
+    },
+    enabled: {
+      type: "boolean",
+      description: "该类别是否投递到该渠道。",
+      required: true,
+    },
+  }}
+/>
+
+## 组织默认项
+
+默认项为组织新成员预填订阅网格。设置默认项仅管理员可用（`notifications:admin`）；读取则不受限。
+
+```
+PUT /api/notifications/defaults
+```
+
+<TypeTable
+  type={{
+    category: {
+      type: "string",
+      description: "GET /categories 返回的类别 id。",
+      required: true,
+    },
+    defaultEnabled: {
+      type: "boolean",
+      description: "新成员是否默认启用该类别。",
+      required: true,
+    },
+    defaultChannelKind: {
+      type: '"email" | "webhook" | "in_app" | "slack" | "discord" | "msteams" | "telegram"',
+      description: "默认项路由到哪种渠道类型。",
+      default: '"email"',
+    },
+  }}
+/>
+
+## 读取告警信息流
+
+`GET /api/notifications/deliveries` 返回你在当前组织的近期投递记录——即铃铛图标背后的历史。`GET /api/notifications/deliveries/unseen-count` 驱动未读角标，`POST
+/api/notifications/deliveries/:id/seen` 清除一条。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.notifications.listDeliveries({
+  unseen: true,
+  limit: 20,
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/notifications/deliveries?unseen=true&limit=20" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    unseen: {
+      type: "boolean",
+      description: "传 ?unseen=true 只返回未读投递。",
+      default: "false",
+    },
+    limit: {
+      type: "integer",
+      description: "最多返回的投递条数。上限 500。",
+      default: "100",
+    },
+  }}
+/>
+
+## 错误
+
+<Callout title="400 —— 渠道无效或字段缺失" type="warn">
+  `kind` 不属于 `email`/`webhook`/`in_app`/`slack`/`discord`/`msteams`/`telegram`、`label`
+  缺失，或 `config` 未通过对应 kind 的校验（邮箱格式错误、Webhook URL 不是
+  `http(s)`、Slack URL 不是 `https://hooks.slack.com/...`、Discord URL 不是
+  `https://discord.com/api/webhooks/...`、Teams URL 不是 https Workflow 或
+  `webhook.office.com` 地址、Telegram 令牌/chat id 不符合 `<id>:<secret>` 或数字/`@name` 格式）。订阅需要 `category`、`channelId` 和布尔值 `enabled`；默认项需要 `category` 和布尔值 `defaultEnabled`。
+</Callout>
+
+<Callout title="按用户维度的路由返回 404" type="error">
+  该渠道、订阅或投递的 `:id` 不属于你（或已被删除）。用对应的 `GET` 路由列出你自己的记录以获得有效 id。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出支持的通知类别与事件。 | `notifications.categories()` | `GET /api/notifications/categories`<br />`notifications:read` |
+| 列出已配置的投递渠道。 | `notifications.listChannels()` | `GET /api/notifications/channels`<br />`notifications:read` |
+| 创建投递渠道。 | `notifications.createChannel(input)` | `POST /api/notifications/channels`<br />`notifications:write` |
+| 读取通知订阅。 | `notifications.listSubscriptions()` | `GET /api/notifications/subscriptions`<br />`notifications:read` |
+| 创建或更新订阅。 | `notifications.upsertSubscription(input)` | `PUT /api/notifications/subscriptions`<br />`notifications:write` |
+| 读取默认通知路由。 | `notifications.listDefaults()` | `GET /api/notifications/defaults`<br />`notifications:read` |
+| 设置某类别的默认通知路由。 | `notifications.upsertDefault(input)` | `PUT /api/notifications/defaults`<br />`notifications:admin` |
+| 读取通知投递历史。 | `notifications.listDeliveries(input?)` | `GET /api/notifications/deliveries`<br />`notifications:read` |
+| 统计用户未读通知数。 | `notifications.unseenCount()` | `GET /api/notifications/deliveries/unseen-count`<br />`notifications:read` |
+| 更新渠道配置或轮换凭据。 | `notifications.updateChannel(id, input)` | `PATCH /api/notifications/channels/:id`<br />`notifications:write` |
+| 测试渠道的投递配置。 | `notifications.testChannel(id)` | `POST /api/notifications/channels/:id/test`<br />`notifications:write` |
+| 移除投递渠道。 | `notifications.removeChannel(id)` | `DELETE /api/notifications/channels/:id`<br />`notifications:write` |
+| 移除订阅。 | `notifications.removeSubscription(id)` | `DELETE /api/notifications/subscriptions/:id`<br />`notifications:write` |
+| 将所选通知标记为已读。 | `notifications.markSeen(id)` | `POST /api/notifications/deliveries/:id/seen`<br />`notifications:write` |
+
+{/* api-operations:end */}

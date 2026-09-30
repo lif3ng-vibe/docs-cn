@@ -1,0 +1,260 @@
+---
+title: deployment
+description: openship deployment 的命令、参数与选项。
+cliGroup: openship deployment
+---
+
+示例请参见[工作流指南](/docs/cli/deploy)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship deployment
+
+管理部署（列出、查看、重新部署、回滚等）
+
+```text
+openship deployment|deployments [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/deployment#openship-deployment-list) | 列出部署（全组织范围，或限定到某项目） |
+| [`get <id>`](/docs/cli/reference/deployment#openship-deployment-get) | 查看单次部署 |
+| [`info <id>`](/docs/cli/reference/deployment#openship-deployment-info) | 查看某次部署的容器信息 |
+| [`usage <id>`](/docs/cli/reference/deployment#openship-deployment-usage) | 查看某次部署的容器资源用量 |
+| [`redeploy [options] <id>`](/docs/cli/reference/deployment#openship-deployment-redeploy) | 从一次既有部署重新部署 |
+| [`rollback <id>`](/docs/cli/reference/deployment#openship-deployment-rollback) | 回滚到之前的某次部署 |
+| [`pin [options] <id>`](/docs/cli/reference/deployment#openship-deployment-pin) | 固定（或解除固定）某次部署的回滚产物 |
+| [`cancel <id>`](/docs/cli/reference/deployment#openship-deployment-cancel) | 取消进行中的部署 |
+| [`restart <id>`](/docs/cli/reference/deployment#openship-deployment-restart) | 重启某次部署的容器 |
+| [`reject <id>`](/docs/cli/reference/deployment#openship-deployment-reject) | 拒绝一次等待保留/拒绝决定的已完成部署 |
+| [`keep <id>`](/docs/cli/reference/deployment#openship-deployment-keep) | 保留一次等待保留/拒绝决定的已完成部署 |
+| [`pending <id>`](/docs/cli/reference/deployment#openship-deployment-pending) | 查看某次部署当前的提示与待决定事项 |
+| [`respond [options] <id>`](/docs/cli/reference/deployment#openship-deployment-respond) | 回应部署的待处理提示 |
+| [`rm [options] <id>`](/docs/cli/reference/deployment#openship-deployment-rm) | 删除一次部署 |
+| [`ssl`](/docs/cli/reference/deployment#openship-deployment-ssl) | SSL 证书操作 |
+
+## openship deployment cancel
+
+取消进行中的部署
+
+```text
+openship deployment cancel [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment get
+
+查看单次部署
+
+```text
+openship deployment get [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment info
+
+查看某次部署的容器信息
+
+```text
+openship deployment info [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment keep
+
+保留一次等待保留/拒绝决定的已完成部署
+
+```text
+openship deployment keep [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment list
+
+列出部署（全组织范围，或限定到某项目）
+
+```text
+openship deployment list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 限定到某项目（默认取关联项目） |
+| `--env <environment>` | 按环境筛选：production \| preview |
+| `--limit <n>` | 最大获取行数（默认："50"） |
+
+## openship deployment pending
+
+查看某次部署当前的提示与待决定事项
+
+```text
+openship deployment pending [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment pin
+
+固定（或解除固定）某次部署的回滚产物
+
+```text
+openship deployment pin [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--off` | 解除固定而非固定 |
+
+## openship deployment redeploy
+
+从一次既有部署重新部署
+
+```text
+openship deployment redeploy [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--use-existing-commit` | 重建同一 commit 而非该分支上的最新提交 |
+
+## openship deployment reject
+
+拒绝一次等待保留/拒绝决定的已完成部署
+
+```text
+openship deployment reject [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment respond
+
+回应部署的待处理提示
+
+```text
+openship deployment respond [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--action <action>` | 待处理提示中提供的一个操作 ID |
+
+## openship deployment restart
+
+重启某次部署的容器
+
+```text
+openship deployment restart [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+## openship deployment rm
+
+删除一次部署
+
+```text
+openship deployment rm [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-y, --yes` | 跳过确认提示 |
+
+## openship deployment rollback
+
+回滚到之前的某次部署
+
+```text
+openship deployment rollback [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 要回滚到的部署 ID |
+
+## openship deployment ssl
+
+SSL 证书操作
+
+```text
+openship deployment ssl [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`status <domain>`](/docs/cli/reference/deployment#openship-deployment-ssl-status) | 检查某域名的 SSL 证书状态 |
+| [`renew [options] <domain>`](/docs/cli/reference/deployment#openship-deployment-ssl-renew) | 为域名续期（签发）SSL 证书 |
+
+## openship deployment ssl renew
+
+为域名续期（签发）SSL 证书
+
+```text
+openship deployment ssl renew [options] <domain>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `domain` | 要续期的域名 |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--www` | 同时续期 www 子域名（单独处理——拥有各自的证书） |
+
+## openship deployment ssl status
+
+检查某域名的 SSL 证书状态
+
+```text
+openship deployment ssl status [options] <domain>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `domain` | 要探测的域名 |
+
+## openship deployment usage
+
+查看某次部署的容器资源用量
+
+```text
+openship deployment usage [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 部署 ID |

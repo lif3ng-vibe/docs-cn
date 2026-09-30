@@ -1,0 +1,210 @@
+---
+title: MCP
+description: 让 Claude 等 AI 客户端通过 Model Context Protocol 以工具的形式驱动你的 Openship 实例。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+**MCP**（Model Context Protocol，模型上下文协议）是一种标准协议，让 AI 客户端——Claude、Cursor、VS Code Copilot 等——以*工具*（tool）的形式调用一个应用的功能。把这类客户端指向 Openship，它就能列出你的项目、发起部署、查看日志、添加域名等等——而且使用的权限与你本人完全相同。
+
+关键在于：它不是通往 Openship 的另一扇更宽松的门。**每次工具调用都会重新走一遍完整的鉴权与权限校验流程**，因此智能体（agent）能看到和做到的，仅限于其凭据（credential）所允许的范围——绝无更多。
+
+<Callout title="在控制台中的位置">
+以下所有配置都在 **Settings → MCP** 中完成。该标签页会显示你的实例的确切端点、各客户端的"接入"步骤（Claude Code、Codex、Cursor、VS Code、Claude Desktop、Windsurf、Zed），以及已连接客户端的列表。
+</Callout>
+
+## 端点
+
+只有一个端点，自托管（self-hosted）与 Openship Cloud 上完全相同：
+
+```
+POST /api/mcp
+```
+
+因此在你的实例上就是 `https://<your-host>/api/mcp`。有几点值得提前了解：
+
+- 这是一个无状态（stateless）的 **Streamable-HTTP JSON-RPC 2.0** 端点——一个请求进来，一个响应出去。
+- 它**只接受 `POST`**。`GET` 请求会返回 `405`（没有可供打开的服务器到客户端的流）。
+- **不支持批量请求**——每个请求只发送一条 JSON-RPC 消息，而不是数组。
+
+你几乎不需要手动输入这个 URL。**Settings → MCP** 中已预先填好，并带有复制按钮。
+
+## 连接客户端
+
+认证方式有两种，大多数客户端会自动替你选定一种。请使用与你客户端对应的标签页。
+
+<Tabs items={['OAuth (recommended)', 'Static token']}>
+
+<Tab value="OAuth (recommended)">
+
+Openship 是一个符合标准的 **OAuth 2.1** MCP 服务器，因此支持的客户端只需提供 URL 即可。
+
+<Steps>
+
+<Step>
+### 将端点粘贴到你的客户端
+
+把你的端点告诉客户端——`https://<your-host>/api/mcp`。在 Claude Code 中只需一条命令：
+
+```bash
+claude mcp add --transport http openship https://<your-host>/api/mcp
+```
+
+Codex 用两条命令完成服务器注册与授权：
+
+```bash
+codex mcp add openship --url https://<your-host>/api/mcp
+codex mcp login openship
+```
+
+其他客户端则通过各自的 UI 添加；**Settings → MCP** 中有每个客户端对应的准确配置片段。
+</Step>
+
+<Step>
+### 在浏览器中批准
+
+对大多数客户端来说，这一步发生在首次连接时：浏览器窗口会自动打开。对 Codex 而言就是上面那条显式的 `codex mcp login openship`——不执行它服务器也能注册成功，但在你运行它之前，每次调用都会返回未授权。
+
+无论如何，这个浏览器页面就是你**选择客户端可以做什么**的地方——只读或完全控制，以及访问全部资源，还是仅限特定的一组项目、服务器和仓库。无需复制或粘贴任何凭据。
+</Step>
+
+<Step>
+### 连接完成
+
+客户端现在可以在你批准的范围内调用工具了。该连接会显示在 **Settings → MCP → Connected clients** 下，你可以随时断开它。
+</Step>
+
+</Steps>
+
+<Callout title="所选授权范围会被强制执行，而非仅作提示" type="info">
+你的选择会保存为该客户端的授权（grant）——与限范围的[个人访问令牌](/docs/api/tokens)采用同一套授权模型。客户端绝不可能超出你授予的范围，也不可能访问你自己都无权访问的内容。
+</Callout>
+
+<Callout title="Codex：本地形态共享一份配置；托管任务则不然" type="warn">
+Codex 的 **CLI、桌面应用和 IDE 扩展**读取的都是同一份本地 MCP 配置，因此只需添加一次 Openship 即可覆盖三者。已经在运行的要重启一下——它们只在启动时读取配置。
+
+**托管**的 Codex 任务则是一个不同的环境。它不会继承你机器上的 MCP 配置，而且只有当该环境能通过网络访问到你的实例时，才能连上 `https://<your-host>/api/mcp`。对于私有或仅限局域网的自托管 Openship，它是连不上的——端点必须能被智能体实际运行的地方访问到。Openship Cloud，或部署在公网主机名上的自托管实例，是可以访问的；`localhost`/私有网络端点则不行。若要有意暴露一个实例，参见[远程访问](/docs/getting-started/installation)。
+</Callout>
+
+</Tab>
+
+<Tab value="Static token">
+
+对于不支持 OAuth 的客户端——或者当你想在配置文件里放一个固定且范围收窄的凭据时——请使用**个人访问令牌**（personal access token）作为持有者凭据（bearer credential）进行认证。MCP 没有单独的凭据形式。
+
+在 **Settings → Tokens** 下创建令牌（参见 [Tokens API](/docs/api/tokens)），然后把端点和令牌填入客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "openship": {
+      "url": "https://<your-host>/api/mcp",
+      "headers": { "Authorization": "Bearer opsh_pat_…" }
+    }
+  }
+}
+```
+
+对于 Claude Code，在命令上附加该请求头即可：
+
+```bash
+claude mcp add --transport http openship https://<your-host>/api/mcp \
+  --header "Authorization: Bearer opsh_pat_…"
+```
+
+<Callout title="给智能体发一个范围收窄的令牌" type="warn">
+为智能体签发**只读**或**限范围**的令牌，而不是交出你的全部权限。只读令牌把智能体限制在读取类工具；限范围令牌则把它严格限定在你授予的项目、服务器和仓库内——甚至可以低于你自己的角色权限。
+</Callout>
+
+</Tab>
+
+</Tabs>
+
+## 每次调用都会重新校验
+
+这是整个安全模型的核心，也是 MCP 访问能与你令牌同样安全的原因：
+
+- 认证一次就能确定你的**能力**（capability），但它只用于**过滤 `tools/list`**——这样客户端不会看到其令牌根本用不了的工具。
+- 真正的关卡设在**每一次 `tools/call`** 上：端点会构造一个内部请求，转发你的持有者凭据，并按与普通 HTTP 调用完全相同的路由、校验、鉴权中间件和逐资源权限检查来分发它。
+
+只读令牌只能调用读取类（GET）工具。限范围令牌能看到其授权启用的工具，若持有匹配的通配（wildcard）权限，还包括集合类工具。对某个项目的授权并不意味着可以列出所有项目。如果一次 `tools/call` 触及该范围之外的资源，会返回 `404`——这正是范围在起作用。完整的协议细节（JSON-RPC 方法、协商过程、错误码）参见 [MCP API 参考](/docs/api/mcp)。
+
+**组织边界**对 MCP 的约束与对浏览器会话完全一致：由于每次调用都要经过同样的逐资源权限检查，MCP 客户端只能在你所属的组织内行动，永远无法触及其他组织的项目、服务器或密钥——不属于你的成员范围的资源会返回 `404`，与在控制台中的表现一样。参见[隔离机制](/docs/security/isolation)。
+
+## 工具与 API 的对应关系
+
+要查看你的**工作区 ID**，让智能体不带参数调用 `get_permissions_workspaces` 即可。在 API 中 Openship 把它称为 `organizationId`。返回结果会列出工作区名称与 ID（包括空工作区），并标识当前工作区及任何凭据绑定。
+
+安装应用或部署 Compose 时，在每次工具调用中把选定的 `organizationId` 与 `body` 一并传入。服务器会使用这个确切的工作区。如果存在多个可用目标，智能体的指令会要求它先确认目标再创建资源。示例参见[工作区选择](/docs/api/mcp#发现并选择工作区)。
+
+现在创建的令牌和 OAuth 连接都绑定到一个组织。若要面向另一个组织，请在该工作区内授权连接或创建令牌。选择一个 ID 不能扩大凭据的范围，也不会把已安装的应用在组织之间移动。
+
+工具并不是一套独立的功能——每个工具都**对应一条带权限标记的 REST 路由**，工具名就是由该路由的方法和路径构成的。所以 `get_projects` 对应 `GET /api/projects`，`post_domains` 对应 `POST /api/domains`，`patch_projects_by_id` 对应 `PATCH /api/projects/:id`。调用 `tools/list` 可以看到你的令牌能使用的确切工具集。
+
+并非每条路由都是工具：只有**主动选择加入**的路由才会成为工具，因此这个集合是 API 的精选切片，而非全部接口。每个暴露的工具还带有两个可供客户端展示的提示——`readOnlyHint`（该工具只读取）和 `destructiveHint`（它会删除或拆除某些东西）——这样智能体 UI 就能在破坏性调用执行前给出警示。
+
+| 工具名（示例） | REST 路由 | 参考 |
+|---|---|---|
+| `get_permissions_workspaces` | `/api/permissions/workspaces` | [工作区发现](/docs/api/permissions#列出工作区) |
+| `get_projects`, `patch_projects_by_id` | `/api/projects` | [项目 API](/docs/api/projects) |
+| `get_deployments`, `post_deployments_build_access` | `/api/deployments` | [部署 API](/docs/api/deployments) |
+| `get_projects_by_id_services`, `post_projects_by_id_services` | `/api/projects/:id/services` | [服务 API](/docs/api/services) |
+| `get_domains`, `post_domains` | `/api/domains` | [域名 API](/docs/api/domains) |
+| `get_github_repos` | `/api/github` | [GitHub API](/docs/api/github) |
+| `get_analytics` | `/api/analytics` | [分析 API](/docs/api/analytics) |
+| `get_notifications_channels` | `/api/notifications` | [通知 API](/docs/api/notifications) |
+| `get_settings`, `patch_settings_build_mode` | `/api/settings` | [设置 API](/docs/api/settings) |
+| `get_projects_by_projectId_backup_policies`, `post_backup_policies_by_policyId_run` | `/api/backups` | [备份 API](/docs/api/backups) |
+| `get_cloud_status`, `get_cloud_workspaces` | `/api/cloud` | [Cloud API](/docs/api/cloud) |
+| `get_jobs`, `post_jobs_by_key_run` | `/api/jobs` | [任务指南](/docs/guides/jobs) |
+| `get_apps_catalog`, `post_apps` | `/api/apps` | [应用目录](/docs/api/apps) |
+| `get_updates`, `post_updates_scan` | `/api/updates` | [更新 Openship](/docs/guides/updating) |
+
+<Callout title="凭据与鉴权永远不会被暴露" type="info">
+`tokens`、`auth` 和 `mcp` 模块被硬性禁止成为工具——全权限的 MCP 令牌无法给自己签发新凭据，也无法越出自己的范围。请在控制台或 [Tokens API](/docs/api/tokens) 中管理令牌与已连接客户端，而不是交给智能体。
+</Callout>
+
+[自动生成的 MCP 目录](/docs/api/mcp-tools)直接从路由发布当前的工具名称、描述和仅限 HTTP 的边界。[集群与扩缩容指南](/docs/guides/mcp-clusters-and-scaling)涵盖私有网络、自动化 k3s 搭建、应用副本调整、恢复与清理。手动调整副本数受支持；基于指标的自动扩缩容和工作节点动态加入尚未实现。
+
+## 引导式流程
+
+有些任务是一串按特定顺序执行的调用——部署一个仓库、上传一个文件夹、安装一个目录应用。服务器内置了一小套**提示**（prompts，`prompts/list` / `prompts/get`），逐步写明这些调用链，并指明要调用的具体工具。兼容的客户端会把它们呈现为斜杠命令或起始操作，智能体可以选择一个流程照着执行，而不必从平铺的工具列表里反推顺序。完整目录参见 [MCP API 参考](/docs/api/mcp#引导式流程prompts)。
+
+## 在终端中验证
+
+要确认某个令牌有效并查看它能做什么，请求工具列表即可：
+
+```bash
+curl -s https://<your-host>/api/mcp \
+  -H "Authorization: Bearer opsh_pat_…" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+返回结果就是该令牌被允许调用的全部工具。
+
+## 故障排查
+
+<Callout title="401——缺少或无效的访问令牌" type="error">
+请求没有携带持有者凭据，或者凭据已过期或被吊销。响应中包含 `WWW-Authenticate` 请求头，便于 OAuth 客户端开始发现流程；如果你用的是静态令牌，请在 **Settings → Tokens** 下签发一个新令牌，并更新客户端配置。
+</Callout>
+
+<Callout title="GET 请求返回 405" type="warn">
+这是预期行为。这是一个纯请求/响应式服务器，没有服务器到客户端的流，因此不支持 `GET /api/mcp`。请始终用 `POST` 发送你的 JSON-RPC 消息。
+</Callout>
+
+<Callout title="工具调用对某个项目、服务器或仓库返回 404" type="info">
+`tools/list` 正常，但某次具体的 `tools/call` 返回 `404`——这正是令牌范围在按预期工作：该资源未在授权之内。请把该资源包含进去，重新授权客户端（或重新签发令牌）。
+</Callout>
+
+## 管理已连接的客户端
+
+你批准过的每个 OAuth 客户端都列在 **Settings → MCP → Connected clients** 下，并标注其访问级别（只读或完全控制）以及可访问的资源数量。**Disconnect** 会立即吊销该客户端已签发的令牌并清除其授权同意，因此下次它必须重新授权。同样的列表和操作也可以通过 [Tokens API](/docs/api/tokens) 以编程方式使用。
+
+## 相关指南
+
+<Cards>
+  <Card title="MCP API 参考" href="/docs/api/mcp" description="/api/mcp 背后的 JSON-RPC 方法、协议协商与错误码。" />
+  <Card title="Tokens API" href="/docs/api/tokens" description="签发限范围或只读的个人访问令牌，并管理已连接的 MCP 客户端。" />
+  <Card title="设置" href="/docs/dashboard/settings" description="控制台中 MCP 标签页、令牌与连接的所在位置。" />
+</Cards>

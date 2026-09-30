@@ -1,0 +1,380 @@
+---
+title: 部署
+description: 提交构建、跟踪进度并管理发布。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+部署（deployment）会构建并发布项目所配置的源。使用本页面提交构建、查看进度、处理决策、重新部署或回滚。要处理生成的文件与文件夹上传，请从[源文件](/docs/api/sources)开始。
+
+在所选提供方支持的前提下，这些操作适用于自托管与 Cloud 部署。
+[Cloud 作用域要求](/docs/api/sdk/compatibility#cloud)仍然适用。
+
+## 部署 Git 项目
+
+重新部署一个已关联的项目，从其 Git 源拉取。如果要部署**本地文件夹**，请使用以 [`/build/access`](#deploy-wizard-buildaccess) 收尾的上传流程。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.deployments.create({
+  projectId: "proj_123",
+  branch: "main",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/deployments" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"projectId":"proj_123","branch":"main"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    projectId: { type: 'string', description: '要部署的项目。', required: true },
+    branch: { type: 'string', description: '要部署的 Git 分支。', default: 'main' },
+    commitSha: { type: 'string', description: '要构建的具体 commit；默认使用该分支上的最新提交。' },
+    environment: { type: '"production" | "preview"', description: '目标环境。' },
+  }}
+/>
+
+## 检测构建配置
+
+无副作用：把一个 Git 仓库或本地路径交给它，它会返回检测到的框架、包管理器与构建/启动命令，供向导预填。不创建任何东西。
+
+```
+POST /api/deployments/prepare
+```
+
+<TypeTable
+  type={{
+    source: { type: '"github" | "local"', description: '源类型。提供 owner + repo 时推断为 \'github\'。' },
+    owner: { type: 'string', description: 'GitHub 所有者/组织（source = github）。' },
+    repo: { type: 'string', description: 'GitHub 仓库名称（source = github）。' },
+    branch: { type: 'string', description: '要检查的分支（source = github）。' },
+    path: { type: 'string', description: '宿主机上的绝对路径（source = local；仅自托管）。' },
+    includeEnv: { type: 'boolean', description: '在本次响应中包含可编辑的源环境变量值。默认为 false；Git 需要整个仓库的内容读权限。' },
+  }}
+/>
+
+<Callout title="本地源仅限自托管" type="warn">
+`source: "local"` 在 cloud 模式下会被 **403** 拒绝——cloud 没有可读的宿主机文件系统。
+</Callout>
+
+准备过程默认对环境变量值做掩码处理。导入编辑器可以通过 `includeEnv: true` 在同一响应中请求这些值；参见
+[公开环境变量值](/docs/api/services#揭示环境值)。
+
+## 提交已上传的构建 [#deploy-wizard-buildaccess]
+
+创建一次部署并启动其构建。文件夹上传部署时，传入 `projectId`（来自 `projects/ensure`）与 `uploadSessionId`（来自 `projects/folder/session`）；
+Git 项目则传入 `projectId` 与可选的 `branch`。返回 `{ success, deployment_id, project_id }`。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.deployments.buildAccess({
+  projectId: "proj_123",
+  branch: "main",
+  buildStrategy: "server",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/deployments/build/access" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"projectId":"proj_123","branch":"main","buildStrategy":"server"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    projectId: { type: 'string', description: '目标项目 id。', required: true },
+    uploadSessionId: { type: 'string', description: '文件夹上传会话 id——部署上传的源而不是 git。' },
+    branch: { type: 'string', description: 'Git 分支（git 源项目）。' },
+    environment: { type: 'string', description: 'production | preview（默认 production）。' },
+    envVars: { type: 'Record<string, string>', description: '运行时环境变量 { KEY: value }。' },
+    publicEndpoints: { type: 'PublicEndpoint[]', description: '域名/路由；省略则从项目 slug 自动派生一个免费子域名。' },
+    buildStrategy: { type: '"server" | "local"', description: '构建在哪里运行。' },
+    deployTarget: { type: '"local" | "server" | "cloud"', description: '文件夹上传时通常省略——由上传会话的模式决定。' },
+    serverId: { type: 'string', description: 'deployTarget = \'server\' 时的目标服务器 id。' },
+    runtimeMode: { type: '"bare" | "docker"', description: '应用在目标上如何运行。' },
+    serviceDeploymentMode: { type: '"services" | "single"', description: '多服务（compose/monorepo）还是单应用。' },
+    services: { type: 'BuildService[]', description: 'Compose / 多服务定义（services 模式）。文件夹上传时省略此项，则使用扫描为该上传会话解析出的服务。' },
+    cloudResourceTier: { type: '"micro" | "low" | "medium" | "high" | "custom"', description: 'Cloud 资源档位。' },
+    cloudResourceCustom: { type: '{ cpuCores; memoryMb; diskMb }', description: 'cloudResourceTier = \'custom\' 时的 CPU/内存/磁盘。' },
+    cloneStrategy: { type: '"api-host" | "server"', description: '仓库 clone 在哪里发生。' },
+  }}
+/>
+
+每条 `publicEndpoints` 记录为 `{ port?, targetPath?, domain?, customDomain?, domainType? }`，其中
+`domainType` 为 `"free"` 或 `"custom"`。一条 `services` 记录对应一个 compose/monorepo 服务
+（`name`、`image?`、`build?`、`dockerfile?`、`ports`、`dependsOn`、`environment`、`volumes`，以及每个应用可选的构建字段）。
+
+<Callout title="不要在自托管上强行指定 deployTarget" type="warn">
+在自托管实例上设置 `deployTarget: "cloud"` 会触发一个"晋升到 cloud"的流程。普通文件夹上传时，请把 `deployTarget` 留空，让上传会话的模式来决定。
+</Callout>
+
+## 等待、决策与取消
+
+部署提交会在工作负载就绪之前返回 ID。读取持久化的构建状态来判断是否成功。SDK 的 `deployment(id)` 句柄在状态之上增加了轮询与归一化的结果。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const outcome = await ship.deployment("dep_123").wait({ timeoutMs: 120_000 });
+if (!outcome.success) throw new Error(outcome.message ?? outcome.status);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/deployments/dep_123/build" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+REST 请求返回一个状态快照；部署运行期间请轮询它。SDK 会等待直到到达终态或需要决策。`ready` 与 `no_changes` 都算成功。失败、取消、部分失败与被拒绝的情况需要显式处理。
+
+`wait()` 返回 `status`、`success`、`decisionPending` 与 `cancellationPending`，可能附带可选的 `prompt`、`message` 或 `warning`。不提供 `onPrompt` 回调时，只要还有决策待处理就会返回 `action_required`。要接入你自己的决策 UI：
+
+```ts
+import type { PromptPayload } from "openship";
+
+export async function waitWithDecisions(
+  deploymentId: string,
+  chooseAction: (prompt: PromptPayload) => Promise<string>,
+) {
+  return ship.deployment(deploymentId).wait({
+    timeoutMs: 120_000,
+    onPrompt: chooseAction,
+  });
+}
+```
+
+返回 prompt 提供的某个 action ID。REST 调用方把所选的 action 以
+`{ "action": "<offered-id>" }` 提交到 `POST /api/deployments/:id/build/respond`。
+
+中止或超时会停止等待观察。要取消执行，请调用 `deployments.cancel(id)` 并检查随后的状态。取消请求可以在工作收尾期间保持待处理；它不会回滚已经创建的发布。
+
+## 读取进度事件
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+for await (const event of ship.deployments.events("dep_123", {
+  signal: AbortSignal.timeout(30_000),
+})) {
+  console.log(event);
+}
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -N "$OPENSHIP_URL/api/deployments/dep_123/stream" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+REST 返回 Server-Sent Events。SDK 事件包含事件名与序列化数据；
+[`consumeDeploymentEvents()`](/docs/api/sdk/utilities#部署辅助工具) 可解码日志分块。
+在游标仍可用时，可用 `since` 从已知的事件游标处恢复。跨 worker 重启的持久化重放尚未实现。流结束不代表部署成功；请读取状态。
+
+## 重新部署
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const submitted = await ship.deployments.redeploy("dep_123", { useExistingCommit: true });
+console.log(submitted.deployment_id);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/deployments/dep_123/redeploy" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"useExistingCommit":true}'
+```
+
+</Tab>
+</Tabs>
+
+重新运行构建。默认会解析分支上的最新 commit（即自动重新部署语义）；
+发送 `{ "useExistingCommit": true }` 则按原始部署所用的确切 commit 重新构建。
+
+## 回滚与固定
+
+回滚（rollback）把此前某次部署的产物/commit 恢复为活动发布。固定（pin）把一次部署标记为受保护，使其不被回滚窗口的清理回收——`POST /:id/pin` 默认为
+`{ "pinned": true }`；发送 `{ "pinned": false }` 可解除固定。
+
+```
+POST /api/deployments/:id/rollback
+POST /api/deployments/:id/pin
+```
+
+## 取消进行中的部署
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const cancellation = await ship.deployments.cancel("dep_123");
+console.log(cancellation);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/deployments/dep_123/cancel" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## 部分失败的 Compose 部署：保留或拒绝
+
+当多服务（compose）部署中部分服务成功、部分失败时，部署会停在 `partial_failure` 且 `decision: pending`（"需要操作"）状态。需要显式解决：
+
+- **保留**（Keep）接受已成功的部分，其余服务维持此前的版本。
+- **拒绝**（Reject）把已变更的服务回滚到之前的状态。
+
+```
+POST /api/deployments/:id/keep
+POST /api/deployments/:id/reject
+```
+
+## SSL 状态与续期
+
+两个接口都在 JSON 请求体中携带域名。`/ssl/status` 是无副作用的探测（用 `POST` 只是为了让主机名随请求体传输）；`/ssl/renew` 会重新签发证书。
+
+```
+POST /api/deployments/ssl/status
+POST /api/deployments/ssl/renew
+```
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.deployments.sslStatus({
+  domain: "app.example.com",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/deployments/ssl/status" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"app.example.com"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    domain: { type: 'string', description: '要检查或续期的主机名。', required: true },
+    includeWww: { type: 'boolean', description: '仅续期时可用——同时覆盖 www 子域名。' },
+  }}
+/>
+
+## 错误
+
+<Callout title="400 — 请求错误/操作失败" type="warn">
+缺少必填字段（`domain is required`、`source must be 'github' or 'local'`），或无法执行操作（例如取消一个已结束的部署，或对一个未处于等待决策状态的部署执行 keep/reject）。响应体携带 `{ success: false, error }`。
+</Callout>
+
+<Callout title="403 — cloud 模式下的本地源" type="error">
+`source: "local"` 的 `prepare`（或文件夹部署）在 Openship Cloud 上不可用——那里没有宿主机文件系统。请改用 Git 源。
+</Callout>
+
+<Callout title="针对单个部署路由的 404" type="error">
+该 `:id` 不属于你的组织（或已被删除）。用 `GET /api/deployments` 列出，即可获得
+有效 ID。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+### 提交
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 为已配置的项目提交一次部署。 | `deployments.create(input)` | `POST /api/deployments`<br />`deployment:write` |
+| 基于既有发布提交一次新部署。 | `deployments.redeploy(id, input?)` | `POST /api/deployments/:id/redeploy`<br />`deployment:write` |
+| 提交前检测并准备源配置。 | `deployments.prepare(input)` | `POST /api/deployments/prepare`<br />`deployment:write` |
+| 提交一次已准备好的上传/构建工作流。 | `deployments.buildAccess(input)` | `POST /api/deployments/build/access`<br />`deployment:write` |
+| 启动一个已准备好的部署。 | `deployments.start(id)` | `POST /api/deployments/:id/build`<br />`deployment:write` |
+
+### 观察
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取持久化的部署记录。 | `deployments.get(id)` | `GET /api/deployments/:id`<br />`deployment:read` |
+| 按项目与环境过滤读取一页部署。 | `deployments.list(input?)` | `GET /api/deployments`<br />`deployment:list` |
+| 读取采集到的部署日志。 | `deployments.logs(id, input?)` | `GET /api/deployments/:id/logs`<br />`deployment:read` |
+| 读取持久化状态、待处理的 prompt 与取消状态。 | `deployments.buildStatus(id)` | `GET /api/deployments/:id/build`<br />`deployment:read` |
+| 检查回滚需要保留的产物还是需要重新构建。 | `deployments.restorePlan(id)` | `GET /api/deployments/:id/restore-plan`<br />`deployment:read` |
+| 流式读取部署进度事件。 | `deployments.events(id, options?)` | `GET /api/deployments/:id/stream`<br />`deployment:read` |
+| 读取运行时/容器信息。 | `deployments.containerInfo(id)` | `GET /api/deployments/:id/info`<br />`deployment:read` |
+| 读取当前 CPU、内存、磁盘与网络用量。 | `deployments.containerUsage(id)` | `GET /api/deployments/:id/usage`<br />`deployment:read` |
+| 读取该部署未解决的操作。 | `deployments.pendingActions(id)` | `GET /api/deployments/:id/pending`<br />`deployment:read` |
+
+### 控制
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 请求取消，并返回是否仍有收尾动作待完成。 | `deployments.cancel(id)` | `POST /api/deployments/:id/cancel`<br />`deployment:write` |
+| 用提供的 action ID 回应一个待处理的部署 prompt。 | `deployments.respond(id, input)` | `POST /api/deployments/:id/build/respond`<br />`deployment:write` |
+| 通过回滚工作流恢复所选部署。 | `deployments.rollback(id)` | `POST /api/deployments/:id/rollback`<br />`deployment:write` |
+| 固定或解除固定已保留的回滚产物。 | `deployments.pin(id, input?)` | `POST /api/deployments/:id/pin`<br />`deployment:write` |
+| 接受一个等待 keep/reject 决策的发布。 | `deployments.keep(id)` | `POST /api/deployments/:id/keep`<br />`deployment:write` |
+| 拒绝一个被扣留的发布，并尽可能恢复先前部署。 | `deployments.reject(id)` | `POST /api/deployments/:id/reject`<br />`deployment:write` |
+| 移除一个符合条件的部署及其保留的资源。 | `deployments.remove(id)` | `DELETE /api/deployments/:id`<br />`deployment:admin` |
+| 重启部署的运行时。 | `deployments.restart(id)` | `POST /api/deployments/:id/restart`<br />`deployment:write` |
+| 跳过指定的建议性端口检查。 | `deployments.skipPortCheck(id, input)` | `POST /api/deployments/:id/skip-port-check`<br />`deployment:write` |
+
+### 证书
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取某域名的证书状态。 | `deployments.sslStatus(input)` | `POST /api/deployments/ssl/status`<br />`deployment:read` |
+| 为某域名请求证书续期。 | `deployments.renewSsl(input)` | `POST /api/deployments/ssl/renew`<br />`deployment:write` |
+
+{/* api-operations:end */}

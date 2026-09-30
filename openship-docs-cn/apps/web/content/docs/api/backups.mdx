@@ -1,0 +1,227 @@
+---
+title: 备份与恢复
+description: 创建备份策略、查看运行记录并恢复数据。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+备份（backup）API 管理一个项目的备份**策略**（备份什么、按什么周期）、随之产生的**运行记录**（run），以及把某次运行的数据恢复回去的**恢复**（restore）操作。它与[备份目标 API](/docs/api/backup-destinations)（备份存放在哪里）配套——在控制台中这是项目的**备份**（Backups）标签页；在终端里则是 [`openship backup`](/docs/cli/projects) 命令。
+
+路由分布在几个前缀之下：策略的**创建与列出**按项目限定范围（`/api/projects/:projectId/backup-policies`），而已存在的策略、运行记录或恢复则通过各自的 id 定位（`/api/backup-policies/:id`、`/api/backup-runs/:id`、`/api/backup-restores/:id`）。入站的 `POST /api/webhooks/backup` 触发器单独位于一个无需认证的前缀下。在自托管与云端实例上均可用；针对云项目的项目级策略与运行记录路由会代理到 Openship Cloud。
+
+## 创建备份策略
+
+一个策略将某个项目（可选单个服务）绑定到一个[备份目标](/docs/api/backup-destinations)，外加可选的定时计划与保留规则。请求体内联读取（本模块没有 TypeBox schema 文件）；`destinationId` 是唯一必填字段。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.backups.createPolicy("proj_123", {
+  destinationId: "dst_abc",
+  cronExpression: "0 3 * * *",
+  retainCount: 7,
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/backup-policies" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"destinationId":"dst_abc","cronExpression":"0 3 * * *","retainCount":7}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    destinationId: { type: 'string', description: '存放运行记录的备份目标。必须属于你的组织。', required: true },
+    serviceId: { type: 'string | null', description: '把策略限定到一个服务；null 则备份整个项目。', default: 'null' },
+    cronExpression: { type: 'string', description: 'cron 定时计划，例如 \'0 3 * * *\'。保存时校验；省略则为仅手动策略。', default: 'null' },
+    triggerOnPreDeploy: { type: 'boolean', description: '同时在每个部署之前运行此备份。', default: 'false' },
+    retainCount: { type: 'number', description: '最多保留 N 条运行记录（保留修剪会丢弃其余）。', default: 'null' },
+    retainDays: { type: 'number', description: '运行记录保留 N 天。', default: 'null' },
+    payloadKind: { type: 'string', description: '抓取内容（例如 auto、database、volumes）。auto 由编排器自行决定。', default: '"auto"' },
+    payloadConfig: { type: 'object', description: '所选 payloadKind 的自由格式选项。', default: '{}' },
+    preHook: { type: 'string', description: '备份开始前运行的 shell 命令。', default: 'null' },
+    postHook: { type: 'string', description: '备份完成后运行的 shell 命令。', default: 'null' },
+    enabled: { type: 'boolean', description: '策略是否启用。', default: 'true' },
+  }}
+/>
+
+## 更新备份策略
+
+`PATCH` 只接受下述白名单中的字段——`projectId`、`serviceId` 与 `createdBy` 不可更改；webhook 令牌通过 `enableWebhook` / `rotateWebhookToken` 标志控制，而不是直接写入。未知的字段会被丢弃。
+
+```
+PATCH /api/backup-policies/:policyId
+```
+
+<TypeTable
+  type={{
+    cronExpression: { type: 'string | null', description: '新的 cron 计划，或传 null 清除。保存时校验。' },
+    triggerOnPreDeploy: { type: 'boolean', description: '在每个部署之前运行。' },
+    enableWebhook: { type: 'boolean', description: 'true 签发一个 webhook 令牌（若尚无）；false 则移除。' },
+    rotateWebhookToken: { type: 'boolean', description: '把现有 webhook 令牌轮换为新值。' },
+    retainCount: { type: 'number | null', description: '最多保留 N 条运行记录。' },
+    retainDays: { type: 'number | null', description: '运行记录保留 N 天。' },
+    payloadKind: { type: 'string', description: '抓取内容。' },
+    payloadConfig: { type: 'object', description: '所选类型的载荷选项。' },
+    preHook: { type: 'string | null', description: '备份开始前运行的命令。' },
+    postHook: { type: 'string | null', description: '备份完成后运行的命令。' },
+    hookTimeoutSeconds: { type: 'number', description: '用于 pre/post 钩子的超时。' },
+    enabled: { type: 'boolean', description: '启用或禁用该策略。' },
+    destinationId: { type: 'string', description: '把策略指向你组织内的另一个备份目标。' },
+  }}
+/>
+
+## 手动触发备份
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const run = await ship.backups.run("policy_123");
+console.log(run);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/backup-policies/policy_123/run" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+立即为该策略启动一次运行。返回 `{ data: { runId } }`——可随后通过运行流跟踪它。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.backups.run("bkp_abc");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/backup-policies/bkp_abc/run" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+## 保护运行记录免于保留修剪
+
+保留修剪（retention prune）会丢弃超过策略 `retainCount` / `retainDays` 限制的运行记录。锁定（lock）一条运行记录可以保住它，解除锁定后它重新变为可修剪。
+
+```
+POST /api/backup-runs/:runId/protect
+```
+
+<TypeTable
+  type={{
+    until: { type: 'string', description: 'ISO 8601 时间戳——保护到该时刻为止。' },
+    protected: { type: 'boolean', description: 'true 锁定该运行记录（未提供 `until` 时无限期）；false 则解除锁定。' },
+  }}
+/>
+
+## 准备与执行恢复
+
+恢复分两步。**准备**（prepare）阶段把恢复暂存起来并返回一个一次性的 `confirmationToken`**；执行**（apply）阶段回传该令牌，才真正运行（具有破坏性的）恢复。这可以防止意外重复提交。
+
+```
+POST /api/backup-runs/:runId/restore/prepare
+```
+
+<TypeTable
+  type={{
+    mode: { type: '"in_place" | "to_fork"', description: 'in_place 原地恢复到源上；to_fork 把邮件服务器备份迁移到另一台服务器。', default: '"in_place"' },
+    forkMailServerId: { type: 'string | null', description: 'mode 为 to_fork 时必填：目标邮件服务器。必须是你组织中另一台已安装的邮件服务器。', default: 'null' },
+  }}
+/>
+
+响应为 `{ data: { restoreId, confirmationToken } }`。执行时两个值都要传入：
+
+```
+POST /api/backup-restores/:restoreId/apply
+```
+
+<TypeTable
+  type={{
+    confirmationToken: { type: 'string', description: 'prepare 步骤返回的令牌。', required: true },
+  }}
+/>
+
+暂存中或进行中的恢复可用 `POST /api/backup-restores/:restoreId/cancel` 取消
+（`openship backup restore cancel rst_123`）。
+
+## 实时进度（SSE）
+
+运行与恢复都提供 Server-Sent Events 通道：先立即发出一条携带当前数据行的 `snapshot` 事件，然后是实时的 `transition` / `progress` 事件，最后是一条 `complete` 事件。终态包括 `succeeded`、`failed`、`cancelled` 与 `server_error`；到达终态后流即关闭（若数据行已处于终态则立刻关闭）。
+
+```
+GET /api/backup-runs/:runId/stream
+GET /api/backup-restores/:restoreId/stream
+```
+
+## 通过 Webhook 触发备份
+
+`POST /api/webhooks/backup` 是唯一**无需认证**的路由——每条策略的 webhook 令牌本身就是凭据，以 bearer 头发送（通过策略上的 `enableWebhook` 启用）。无请求体。成功时返回 `{ data: { runId } }`；所有失败都返回不透明的 `404`，探测者无法据此区分令牌错误还是策略已禁用。该路由有限流，以抑制触发洪水式滥用。
+
+```
+POST /api/webhooks/backup
+```
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/webhooks/backup" \
+  -H "Authorization: Bearer $POLICY_WEBHOOK_TOKEN"
+```
+
+## 错误
+
+<Callout title="400 — cron 表达式无效" type="warn">
+`createPolicy` / `updatePolicy` 会预先校验 cron，因此无法解析的计划不会悄悄把策略置于失效状态。修正表达式（例如 `0 3 * * *`）后重试。
+</Callout>
+
+<Callout title="400 — 需要 confirmationToken" type="warn">
+未携带 `restore/prepare` 返回的确切令牌就执行恢复会被拒绝。若令牌已丢失，请重新运行 prepare 获取新令牌。
+</Callout>
+
+<Callout title="针对单个资源路由的 404" type="error">
+该 `:id` 不属于你的组织（或已被删除）——与 webhook 对错误令牌返回的是同一种不透明的 `404`。用 `GET /api/projects/:projectId/backup-runs` 列出运行记录，即可获得有效 ID。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 流式读取备份执行进度。 | `backups.streamRun(id, options?)` | `GET /api/backup-runs/:runId/stream`<br />`backup_destination:backup_run:read` |
+| 流式读取恢复进度。 | `backups.streamRestore(id, options?)` | `GET /api/backup-restores/:restoreId/stream`<br />`backup_destination:backup_restore:read` |
+| 列出请求源的备份策略。 | `backups.listPolicies(id)` | `GET /api/projects/:projectId/backup-policies`<br />`project:write` |
+| 创建备份策略与保留策略配置。 | `backups.createPolicy(id, input)` | `POST /api/projects/:projectId/backup-policies`<br />`project:write` |
+| 按类型过滤列出已记录的备份运行。 | `backups.listRuns(id, input?)` | `GET /api/projects/:projectId/backup-runs`<br />`project:write` |
+| 更改备份策略。 | `backups.updatePolicy(id, input)` | `PATCH /api/backup-policies/:policyId`<br />`backup_destination:backup_policy:write` |
+| 移除备份策略。 | `backups.removePolicy(id)` | `DELETE /api/backup-policies/:policyId`<br />`backup_destination:backup_policy:write` |
+| 立即触发该策略的备份。 | `backups.run(id, input?)` | `POST /api/backup-policies/:policyId/run`<br />`backup_destination:backup_policy:write` |
+| 读取一次备份运行及其结果。 | `backups.getRun(id)` | `GET /api/backup-runs/:runId`<br />`backup_destination:backup_run:read` |
+| 保护或解除保护，使运行记录免受保留修剪。 | `backups.protectRun(id, input?)` | `POST /api/backup-runs/:runId/protect`<br />`backup_destination:backup_run:write` |
+| 暂存并校验一次恢复但不执行。 | `backups.prepareRestore(id, input?)` | `POST /api/backup-runs/:runId/restore/prepare`<br />`backup_destination:backup_run:admin` |
+| 读取一次恢复会话及其确认要求。 | `backups.getRestore(id)` | `GET /api/backup-restores/:restoreId`<br />`backup_destination:backup_restore:read` |
+| 使用必需的确认令牌执行已准备好的恢复。 | `backups.applyRestore(id, input)` | `POST /api/backup-restores/:restoreId/apply`<br />`backup_destination:backup_restore:admin` |
+| 请求取消一次恢复。 | `backups.cancelRestore(id)` | `POST /api/backup-restores/:restoreId/cancel`<br />`backup_destination:backup_restore:admin` |
+
+{/* api-operations:end */}

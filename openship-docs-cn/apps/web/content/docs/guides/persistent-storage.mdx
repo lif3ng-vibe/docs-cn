@@ -1,0 +1,120 @@
+---
+title: 持久化存储与对象存储
+description: 留住应用写入的文件——选择能在重新部署后幸存的路径，或连接一个 S3 存储桶，让上传内容完全存在于容器之外。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+每次部署都会用一份全新的副本替换你的应用。这让部署可以放心地反复执行——但也因此，应用昨天写的文件今天就不在了，除非你告诉 Openship 保留它。本页介绍两种保留方式：**持久化存储**（persistent storage）用于机器上的路径，**对象存储**（object storage）用于完全存在于应用之外的存储桶。
+
+<Callout title="我该选哪种？">
+- **用户绝不能丢失的上传内容** → 对象存储（存储桶）。运行多个应用副本时它也能正常工作。
+- **缓存、SQLite 文件、框架自己的临时目录** → 持久化存储（路径）。
+- **真正的数据库** → 两者都不选。添加一个数据库服务并连接它（参见[多服务项目](/docs/guides/compose-multi-service)）。
+</Callout>
+
+## 持久化存储（部署后仍保留的路径）
+
+Openship 已经了解一些框架会写什么。Laravel 应用无需任何配置就会保留 `storage/`，因为 Laravel 把上传、会话、缓存和日志都放在那里。打开 **Configuration → Persistent storage**（配置 → 持久化存储）即可查看你的项目保留了什么。
+
+<Steps>
+
+<Step>
+
+### 打开 Configuration → Persistent storage
+
+卡片列出了当前保留的路径，还会告诉你这份列表来自哪里：*"Framework defaults for this stack"*（此技术栈的框架默认值）表示是 Openship 选的，*"Set for this project"*（为本项目设置）表示是你自己设置的。
+
+</Step>
+
+<Step>
+
+### 点击 Edit 并逐行列出路径
+
+纯路径相对于你的应用：
+
+```
+storage
+public/uploads
+```
+
+如果想控制卷名，或使用主机上的目录，也可以写完整的挂载：
+
+```
+uploads:/app/public/uploads
+/srv/app-data:/app/var
+```
+
+</Step>
+
+<Step>
+
+### 保存，然后部署
+
+存储变更在**下一次部署**时生效——运行中的容器沿用启动时的挂载。
+
+</Step>
+
+</Steps>
+
+想回到框架自己的默认值，点击 **Use framework defaults**（使用框架默认值）。想什么都不保留，就保存一个空列表——这是一个真实选项，Openship 不会悄悄把默认值加回来。
+
+你也可以改为在仓库中声明同样的内容，这样同一份代码的新部署会自动获得它：
+
+```json title="openship.json"
+{
+  "volumes": ["storage", "uploads:/app/public/uploads"]
+}
+```
+
+### 值得了解的几点
+
+- **首次部署会播种该目录**。应用在该路径下自带的任何内容（比如 Laravel 的 `storage/` 骨架）都会被复制进去，应用不会对着一个空目录启动。
+- **后续发布不会刷新它**。这正是意义所在——它现在是你的数据，而不是镜像的。因此不要列出同时包含代码的路径。Laravel 的 `database/` 目录既装迁移又装 SQLite 文件，这就是 Openship 保留 `storage/` 而不是 `database/` 的原因。
+- **卷名按项目隔离**。两个都保留 `storage` 的项目绝不会共享同一个卷。
+- **多服务项目**改为按服务声明挂载——参见 Services 标签页，或 `openship.json` 中的 `services[].volumes`。
+- **Openship Cloud 没有卷**。在那里声明的路径会被报告并跳过；请使用对象存储。
+
+## 对象存储（S3 存储桶）
+
+机器上的路径能避免数据丢失，但无法扩展：运行两个应用副本时，各自都有自己的上传目录，表现为某些访客能看到文件、另一些访客却 404。存储桶由所有副本共享，且比机器更长久。
+
+Openship 会把存储桶接入你的应用自身的文件系统配置，你不必去寻找正确的变量名。Laravel 应用会得到 `FILESYSTEM_DISK=s3` 及其 S3 磁盘读取的 `AWS_*` 变量；Django 应用会得到 django-storages 读取的 `AWS_STORAGE_BUCKET_NAME` / `AWS_S3_*` 变量；其他应用则得到中性的 `S3_*` 变量。
+
+<Steps>
+
+<Step>
+
+### 打开 Configuration → Object storage 并点击 Connect
+
+</Step>
+
+<Step>
+
+### 选择存储桶的来源
+
+**已安装的 MinIO 应用**——如果你已从应用目录安装 MinIO，在这里选择它。它的端点和密钥会自动填好，你的应用会加入其私有网络，因此流量永远不会离开这台机器。MinIO 安装时创建的存储桶已预填。
+
+**外部提供方**——Amazon S3、Cloudflare R2、Wasabi、Backblaze B2、DigitalOcean Spaces 或任何其他 S3 兼容服务。填写端点（Amazon S3 不需要）、区域、存储桶，以及访问密钥 + 私密密钥。
+
+</Step>
+
+<Step>
+
+### 点击 Test & connect
+
+在保存任何内容之前，Openship 会写入、读取并删除一个一次性对象来测试。如果存储桶不存在或密钥只读，你会在这里发现——而不是在用户第一次上传文件时。
+
+</Step>
+
+</Steps>
+
+之后卡片会显示存储桶、提供方，以及具体设置了哪些变量。它会在下一次部署时生效。**Disconnect**（断开连接）会移除这些变量——只移除由该连接添加的，绝不会碰你手动设置的任何东西。
+
+<Callout type="info" title="凭据存放在哪里">
+密钥以加密环境变量的形式存在项目上，与你所有机密的存放位置相同。任何地方都没有第二份副本，删除该连接即删除它们。
+</Callout>
+
+### 在代码中使用存储桶
+
+连接后，你框架常用的文件 API 会直接写入存储桶——Laravel 中的 `Storage::put(...)`、Django 中的 `default_storage`。其他技术栈，读取卡片列出的 `S3_*` 变量，交给任选的 S3 客户端。

@@ -1,0 +1,380 @@
+---
+title: openship.json
+description: Openship 的声明式部署配置——如同 vercel.json 或 railway.toml。声明框架、构建、运行时、环境变量、域名、路由、资源、服务和 monorepo 布局，Openship 每次都以同样的方式部署。
+---
+
+import { TypeTable } from "fumadocs-ui/components/type-table";
+
+`openship.json` 是仓库根目录下的一个文件，告诉 Openship 如何构建、运行、路由和扩缩容一个项目。它把你原本要在[部署向导](/docs/guides/deploy-from-github)里设置的东西固化下来，仓库因此变成“在 Openship 上随取随发”，[推送自动部署](/docs/guides/auto-deploy)和 `openship deploy` 也变得可预期——不再需要向导。
+
+<Callout title="权威覆盖层">
+  Openship 先**自动检测**你的技术栈，再把 `openship.json` 里出现的每个字段叠加到检测结果之上。省略的字段保留检测值。所以一份好的 `openship.json` 应当**很小**——只声明你想覆盖或钉死的项，而不是把检测到的配置抄一遍。
+</Callout>
+
+加上 `$schema` 一行，编辑器就能自动补全并内联校验：
+
+```json
+{
+  "$schema": "https://openship.io/openship.schema.json",
+  "framework": "nextjs",
+  "port": 3000
+}
+```
+
+随时可以用 CLI 校验：
+
+```bash
+openship config init       # 生成一份起步 openship.json
+openship config validate   # 对照 schema 做检查
+```
+
+它是 **JSON，不是 JSONC**——不能有注释，不能有尾逗号。
+
+## 构建
+
+<TypeTable
+  type={{
+    framework: {
+      type: "string (enum)",
+      description: "技术栈 slug——nextjs、vite、django、go、docker 等。覆盖检测。",
+    },
+    packageManager: {
+      type: "string (enum)",
+      description:
+        "npm、yarn、pnpm、bun、go、cargo、pip、poetry、pipenv、uv、bundler、composer、maven、gradle、dotnet、mix。",
+    },
+    rootDirectory: {
+      type: "string",
+      description: '应用目录，相对仓库根（如 "./"、"apps/web"）。',
+    },
+    composePath: {
+      type: "string",
+      description:
+        '放在检测根之外的 Compose 文件——写文件路径（"deploy/stack.yml"）或其所在文件夹（"deploy/docker-compose"）。设了它即成为 compose 部署。',
+    },
+    installCommand: { type: "string", description: "安装依赖的命令。" },
+    buildCommand: { type: "string", description: "构建应用的命令。" },
+    startCommand: { type: "string", description: "在生产环境启动服务器的命令。" },
+    releaseCommands: {
+      type: "string[]",
+      description:
+        "每次部署运行一次的命令，在构建之后、新版本上线之前。失败即部署失败。参见发布命令。",
+    },
+    outputDirectory: {
+      type: "string",
+      description: "构建产物写入的目录（dist、.next、build、out）。",
+    },
+    buildImage: {
+      type: "string",
+      description: '构建所用的 Docker 镜像（如 "node:22"）。',
+    },
+    productionPaths: {
+      type: "string[]",
+      description: "作为生产产物交付给运行时的路径。",
+    },
+  }}
+/>
+
+## 运行时
+
+<TypeTable
+  type={{
+    runtime: {
+      type: '"bare" | "docker"',
+      description:
+        '单应用的运行时隔离。services/docker 项目恒为 "docker"。',
+    },
+    productionMode: {
+      type: '"host" | "static" | "standalone"',
+      description: '"static" ⇒ 以静态文件伺服，无服务器。',
+    },
+    port: { type: "integer", description: "服务器监听的端口（1–65535）。" },
+    volumes: {
+      type: "string[]",
+      description:
+        "跨部署保留的路径。省略则继承框架默认；[] 关闭持久化。",
+    },
+  }}
+/>
+
+## 发布命令
+
+`releaseCommands` 每次部署运行一次，**在构建之后、新版本上线之前**：数据库迁移就该放这儿。每条命令按顺序执行，输出流进部署日志，非零退出码**判部署失败**：什么都不会切换，原本在服务的版本继续服务。
+
+```json
+{
+  "releaseCommands": ["php artisan migrate --force"]
+}
+```
+
+不会替你注入任何东西。框架的发布命令集是一种选择，没有 `releaseCommands` 的应用就完全不走发布阶段。其他生态里的等价物：
+
+| 技术栈  | 典型发布命令                          |
+| ------- | ------------------------------------ |
+| Laravel | `php artisan migrate --force`        |
+| Rails   | `bundle exec rails db:prepare`       |
+| Django  | `python manage.py migrate --noinput` |
+
+Rails 用 `db:prepare` 而不是 `db:migrate`，因为它在数据库为空时还会建库并载入 schema——这正是首次部署时的状态。
+
+这些命令可以在**构建设置 → 激活前**、`openship.json` 或项目 API/SDK 里设置。仓库扫描会给新项目播种；既有项目保留已保存的命令，包括显式的空列表。每次部署时该列表被固化。
+
+每条命令拿到的环境变量与启动命令相同，预算 10 分钟。每次正向部署尝试各跑一遍，按列表顺序。失败、超时或取消都会中止激活，先前的应用继续运行。
+
+在 Docker 上，每条命令在一个临时容器里运行，使用候选镜像、项目的持久化挂载和已连接服务的网络。它不发布端口，也不重启。事后 Openship 会移除该容器及其匿名临时卷。在 Bare 上，命令在暂存的发布目录里运行，**在持久化路径链接之后**、监督者切换运行中应用之前。正向部署复用保留的 Bare 发布时，命令拿到的是一份临时拷贝，改不了在运行应用的文件。
+
+<Callout title="数据请用持久化存储" type="warn">
+在 Docker 发布容器里，只有数据库和挂载卷的变更能活下来。镜像本地的缓存生成、符号链接和收集好的静态资源请放进构建或启动命令。SQLite 文件请放在已声明的持久化路径下（如 `storage/`），这样发布命令和应用在 Docker 与 Bare 上用的才是同一个数据库。
+</Callout>
+
+<Callout title="运行时支持" type="warn">
+发布命令目前要求**单应用 Docker 或 Bare 部署**，包括无端口的 worker。应用可以挂载或连接数据库服务，不影响其单应用部署模式。
+
+完整的 Compose/monorepo 部署、静态站点，以及不支持一次性命令的运行时，在配置了命令时会**在激活之前失败**。按服务的发布命令尚未实现。显式只针对所选服务的操作会跳过主应用的发布命令。
+</Callout>
+
+<Callout title="回滚与数据库变更" type="warn">
+回滚会跳过发布命令，包括从 Git 重新构建的回滚。其他重新部署则运行保存在那次部署上的命令，即使复用了已有镜像。
+
+请使用幂等命令，并保证 schema 变更与先前的应用兼容。**回滚代码不会撤销数据库变更**，而且命令失败前可能已做了部分变更。Openship 不承诺跨多条命令的事务。
+</Callout>
+
+## 持久化存储
+
+下一个版本顶替上来时，容器写下的东西全被丢弃。`volumes` 指明要保留的路径。
+
+裸路径相对应用目录；完整的 compose 语法也支持，你可以把挂载指向具体的卷名或主机目录：
+
+```json
+{
+  "volumes": ["storage", "uploads:/app/public/uploads", "/srv/data:/app/var"]
+}
+```
+
+省略该字段则继承框架自己的默认（Laravel 应用不配置也会保留 `storage/`）。声明 `[]` 则彻底关闭持久化——这与省略是两回事。
+
+命名卷按项目划界，两个都声明 `storage` 的项目绝不会共享同一个。Bare（非容器）部署时，同样的路径保留在发布目录之外，再以符号链接接进来。Openship Cloud 没有卷这个原语：声明的挂载在那边会被报告并跳过，上传请改用对象存储。
+
+Compose 服务在 [`services[].volumes`](#servicescompose) 下声明自己的挂载。
+
+## 环境变量
+
+`env` 是一个对象。值可以是普通字符串，或 `{ "value", "secret" }` 把它标记为机密（静态加密——之后永远不会回传给客户端）。这些声明自动生效；在控制台或 CLI 里为同一个键保存的值会覆盖仓库默认。
+
+```json
+{
+  "env": {
+    "NEXT_PUBLIC_URL": "https://app.acme.com",
+    "DATABASE_URL": { "value": "postgres://…", "secret": true }
+  }
+}
+```
+
+## 域名
+
+`domains` 是主机名或对象组成的数组。裸标签（`"myapp"`）是免费的 `*.opsh.io` 风格子域名；带点的主机名（`"app.acme.com"`）是[自定义域名](/docs/guides/custom-domains)。
+
+```json
+{ "domains": ["app.acme.com", { "domain": "api.acme.com", "port": 8080, "type": "custom" }] }
+```
+
+<TypeTable
+  type={{
+    domain: {
+      type: "string",
+      description: "主机名。裸标签 = 免费子域名；带点 = 自定义。",
+    },
+    port: { type: "integer", description: "该主机名路由到哪个端口。" },
+    targetPath: { type: "string", description: '目标上的路径前缀（默认 "/"）。' },
+    type: { type: '"free" | "custom"', description: "覆盖 free/custom 推断。" },
+  }}
+/>
+
+## 路由
+
+`routes` 复刻 `vercel.json` 风格的路由，部署时编译进反向代理。
+
+<TypeTable
+  type={{
+    rewrites: {
+      type: "{ source, destination }[]",
+      description: "内部改写（如 SPA 兜底）。",
+    },
+    redirects: {
+      type: "{ source, destination, permanent?, statusCode? }[]",
+      description: "3xx 重定向。",
+    },
+    headers: {
+      type: "{ source, headers: { key, value }[] }[]",
+      description: "按路径设置响应头。",
+    },
+    cleanUrls: { type: "boolean", description: "去掉 .html 扩展名。" },
+    trailingSlash: { type: "boolean", description: "强制或移除尾部斜杠。" },
+  }}
+/>
+
+## 资源
+
+项目容器的 CPU/内存上限——一个命名档位，**或**显式数值（即成为 `custom` 档）。参见[休眠模式与资源](/docs/guides/sleep-mode-resources)。
+
+<Callout title="自托管默认不设限">
+在自托管实例上，默认是 **`unlimited`**——机器就是天花板，因为硬件是你自己的。只有刻意想给容器封顶时才设档位或显式数值。非零值会对照**目标机器的真实容量**校验，64 GB 的机器就能给容器 64 GB。
+
+在 Openship Cloud 上，工作区是计量计费的、必须定规格，因此 `unlimited` 不可用，省略时回退到 `low` 档。
+
+</Callout>
+
+<TypeTable
+  type={{
+    tier: {
+      type: '"unlimited" | "micro" | "low" | "medium" | "high"',
+      description: '命名规格档。"unlimited" = 不设上限（仅自托管）。',
+    },
+    cpuCores: { type: "number", description: "小数 vCPU 核数。0 = 不限。" },
+    memoryMb: { type: "integer", description: "内存 MB。0 = 不限。" },
+    diskMb: { type: "integer", description: "磁盘 MB（仅云工作区）。0 = 不限。" },
+  }}
+/>
+
+```json
+{
+  "resources": { "cpuCores": 4, "memoryMb": 8192 }
+}
+```
+
+## services（compose）
+
+声明 `services` 即把项目变成多服务（Docker）项目——参见 [Compose 与多服务应用](/docs/guides/compose-multi-service)。每个条目都必须有 `name`。
+
+已经有 compose 文件了？别在这里重复声明——把 `composePath` 指过去，`services` 留空。compose 文件放在仓库任何位置（`deploy/docker-compose/`）、取任何文件名（`stack.yml`）都行，文件继续保持唯一权威来源：每次部署重新读取其中的服务，`build:` 上下文也相对它解析，与 compose 的行为一致。
+
+```json
+{ "composePath": "deploy/docker-compose/docker-compose.yml" }
+```
+
+```json
+{
+  "services": [
+    {
+      "name": "web",
+      "build": ".",
+      "buildArgs": { "NEXT_PUBLIC_API_URL": null },
+      "ports": ["3000"],
+      "exposed": true,
+      "domain": "app.acme.com"
+    },
+    {
+      "name": "db",
+      "image": "postgres:17",
+      "volumes": ["pgdata:/var/lib/postgresql/data"],
+      "env": { "POSTGRES_PASSWORD": { "value": "…", "secret": true } },
+      "restart": "unless-stopped"
+    }
+  ]
+}
+```
+
+<TypeTable
+  type={{
+    name: { type: "string", description: "必填。服务名。" },
+    image: { type: "string", description: "预构建镜像（如 postgres:17）。" },
+    build: { type: "string", description: "构建上下文路径。" },
+    dockerfile: { type: "string", description: "Dockerfile 路径。" },
+    buildArgs: {
+      type: "Record<string, string | null>",
+      description:
+        "Docker 构建参数。null 继承同名的顶层环境变量值；字符串则为该服务覆盖它。",
+    },
+    ports: { type: "string[]", description: '如 ["3000"]、["5432:5432"]。' },
+    volumes: { type: "string[]", description: '如 ["pgdata:/var/lib/postgresql/data"]。' },
+    dependsOn: { type: "string[]", description: "本服务依赖的其他服务名。" },
+    env: { type: "env object", description: "与顶层 env 同构。" },
+    command: { type: "string", description: "覆盖容器命令。" },
+    restart: {
+      type: '"no" | "always" | "on-failure" | "unless-stopped"',
+      description: "重启策略。",
+    },
+    exposed: { type: "boolean", description: "按公开路由。" },
+    exposedPort: { type: "string", description: "暴露哪个容器端口。" },
+    domain: { type: "string", description: "该服务的公开主机名。" },
+    healthcheck: {
+      type: "object",
+      description: "{ test, interval, timeout, retries, startPeriod, disable }。",
+    },
+    resources: {
+      type: "object",
+      description:
+        "每服务的 CPU/内存上限，逐字段覆盖顶层 resources。同构；0 = 不限。对齐 compose 的 mem_limit / deploy.resources.limits。",
+    },
+  }}
+/>
+
+`dependsOn` 接收 `["db"]` 这类服务名，不带端口。它控制容器启动顺序，不管镜像构建期间数据库是否可用。`next build` 期间报 `ENOTFOUND db`，参见 [Next.js 构建期间的数据库访问](/docs/guides/compose-multi-service#nextjs-构建期间的数据库访问)。
+
+顶层 `env` 既可用于 Dockerfile 构建，也可用于运行中的容器。服务需要显式覆盖，或想让配置文件写明它消费哪些 Dockerfile 参数时，用 `buildArgs`。服务自己的 `env` 只在运行时有效，绝不与兄弟构建共享。尽量把仅运行时的凭据放在服务 `env` 里：Docker 构建参数不是机密存储机制，可能残留在镜像元数据或构建缓存里。
+
+compose 文件自带的限额同样有效——Openship 会读取每个服务的 `mem_limit` / `cpus` 和 `deploy.resources.limits.{memory,cpus}`，并将其叠加在项目级设置之上。
+
+## monorepo
+
+`monorepo` 覆盖 Openship 检测到的子应用。`apps[]` 里的条目按 `rootDirectory` 与检测到的子应用配对并覆盖其构建设置——不是从零声明应用（应用由检测器找出）。
+
+每条覆盖的规范化 `rootDirectory` 必须互不相同。在同一个根上声明一个 web 进程加一个 worker，不是受支持的多应用声明。`openship config validate` 会拒绝重复的根；源码扫描会在配置诊断里报告未匹配的应用和工作区覆盖。
+
+monorepo 请通过仓库导入流程创建，由它提供检测到的应用元数据。API/SDK 也接受以 `monorepoApps` 传入同样的元数据。缺了它，设置 `projectType: "monorepo"`（或 CLI `project create --type monorepo`）现在会在创建项目之前失败。本地 CLI 导入会先扫描工作区。不用容器的独立进程，请用各自指向所需根目录和启动命令的独立项目。
+
+```json
+{
+  "monorepo": {
+    "workspace": { "packageManager": "pnpm", "prepareCommand": "pnpm install && pnpm codegen" },
+    "apps": [
+      { "name": "web", "rootDirectory": "apps/web", "framework": "nextjs", "port": 3000 },
+      { "name": "api", "rootDirectory": "apps/api", "framework": "hono", "port": 8080 }
+    ]
+  }
+}
+```
+
+<TypeTable
+  type={{
+    "workspace.packageManager": { type: "string", description: "根工作区的包管理器。" },
+    "workspace.prepareCommand": {
+      type: "string",
+      description: "在各应用构建之前于仓库根运行一次。",
+    },
+    "apps[].name": { type: "string", description: "必填。" },
+    "apps[].rootDirectory": {
+      type: "string",
+      description: "必填。与检测到的某个子应用匹配。",
+    },
+    "apps[]…": {
+      type: "build fields",
+      description:
+        "framework、packageManager、installCommand、buildCommand、startCommand、outputDirectory、buildImage、port。",
+    },
+  }}
+/>
+
+<Callout title="尚不支持" type="warn">
+  `sleepMode`、monorepo 的 `sharedPaths`，以及按应用的 `domain`/`env`/`exposed`，校验器接受但**不生效**——请先别写。休眠模式和按应用域名暂时到控制台里设置。
+</Callout>
+
+## 字段对应关系
+
+| `openship.json`                                                                                                | 部署向导 / API                                    |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `framework`, `packageManager`, `*Command`, `outputDirectory`, `buildImage`, `productionPaths`, `rootDirectory` | 构建设置                                          |
+| `port`, `productionMode`, `runtime`                                                                            | 运行时设置（`hasServer`、运行时隔离）             |
+| `releaseCommands`                                                                                              | 构建设置 → 激活前                                 |
+| `volumes`                                                                                                      | 配置 → 持久化存储                                 |
+| `env`                                                                                                          | 环境变量（播种为可编辑行）                        |
+| `domains`                                                                                                      | 公开端点 / 自定义域名                             |
+| `routes`                                                                                                       | 反向代理路由（`routingConfig`）                   |
+| `resources`                                                                                                    | 云资源档位 / 自定义规格                           |
+| `services`                                                                                                     | Compose 服务                                      |
+| `monorepo`                                                                                                     | monorepo 子应用 + 工作区                          |
+
+## 另请参阅
+
+- [指南：用 openship.json 部署](/docs/guides/openship-json)
+- [从 GitHub 部署](/docs/guides/deploy-from-github) · [推送自动部署](/docs/guides/auto-deploy)

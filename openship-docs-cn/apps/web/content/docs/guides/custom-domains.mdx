@@ -1,0 +1,304 @@
+---
+title: 自定义域名、DNS 与 SSL
+description: 添加自定义域名与泛域名，把 DNS 指向你的应用，并通过连接 DNS 提供方或手动 TXT 验证配置 HTTPS。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+第一次部署时，Openship 会免费送你的应用一个可用的网址。本指南讲的是下一步：把它放到你**自己**拥有的名字上，比如 `app.example.com`，并自动配上那把小挂锁（HTTPS）。
+
+用大白话说清楚这几件事。**域名**（domain）是人们键入以访问你应用的名字。**DNS** 是互联网的电话簿——一个 `app.example.com` 这样的名字就是靠它连到真正运行应用的那台计算机。**SSL**（那把挂锁）让地址以 `https://` 开头并保持流量私密。挂锁由 Openship 替你搞定；你唯一真正的任务是在域名的电话簿里加几条记录。本指南带你走完全程。
+
+<Callout title="先准备好这些">
+- 一个已在 Openship 部署的项目（参见[你的第一次部署](/docs/getting-started/first-deployment)）。
+- 一个你拥有的域名，从**注册商**处购买（Namecheap、Cloudflare、GoDaddy、Google Domains 等）。
+- 能访问该注册商的 **DNS 设置**页面——也就是添加记录的地方。你将把 Openship 给你的那两行记录粘贴进去。
+</Callout>
+
+## 步骤
+
+<Steps>
+
+<Step>
+
+### 打开项目的 Domains 标签页
+
+前往你的项目并打开 **Domains** 标签页。这里是地址与 HTTPS 一切事务的大本营。
+
+</Step>
+
+<Step>
+
+### 添加你的域名
+
+点击 **Add domain**。在打开的表单里选择 **Custom domain**，然后输入你想要的完整地址，例如 `app.example.com`。
+
+如果你的项目运行着服务器，还会看到一个 **Maps to port** 字段——它指定该域名把流量发往哪个内部端口。Openship 会预填成你应用的端口，通常保持不动即可。
+
+有两个可选开关：
+
+- **Include www**——同时占有你的域名的 `www.` 版本。它会成为一个独立的域名：有自己的 DNS 记录、自己的 **Verify**、自己的证书，且默认通过 `301` 重定向把访客送往裸域（如果想反过来，或让两者都服务应用，参见[把一个域名重定向到另一个](#把一个域名重定向到另一个)）。
+- **External ingress & TLS**——**只有**当你自己的边缘（比如 Cloudflare Tunnel 或负载均衡器）已经处理了 HTTPS 时才开启。大多数人保持关闭。参见下文[三种 DNS 配置方式](#三种-dns-配置方式)。
+
+<Callout title="www 需要自己的 DNS 记录" type="warn">
+因为 `www.example.com` 是一个独立的域名，它需要一条独立的 DNS 记录——Openship 会在下一步把它与裸域的记录并列列出。跳过它，`www` 就会一直停留在 Pending：无法验证，也就永远拿不到证书。
+</Callout>
+
+表单填好后，点表单底部的 **Add domain** 按钮保存。（没错，它和你刚才点的按钮同名——第一个是打开表单，这个是保存。）
+
+<Callout title="添加域名并不等于它已上线" type="info">
+保存域名只是登记你的意向。它会保持 **Pending**，直到你添加 DNS 记录并验证——也就是接下来的两步。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 复制 Openship 给你的 DNS 记录
+
+添加域名之后，立刻会弹出一个 **DNS Records** 面板，列出你需要去注册商那里创建的确切条目。每一行有 **Type**、**Host** 和 **Value**，旁边有 **Copy** 按钮。
+
+面板显示的是你这次部署的记录：
+
+- 一条**路由记录**（`A` 或 `CNAME`——Openship 替你选对的那一种，见下文），把名字指向你的应用。
+- 在 **Openship Cloud** 上，还有一条放在 `_openship-challenge.<hostname>` 的所有权 **TXT** 记录。
+  自托管的 HTTP 验证不需要那条记录。泛域名的 HTTPS 使用由证书机构生成的另一条 `_acme-challenge` TXT 值；参见[泛域名](#泛域名)。
+
+每个值都原样复制——不要手打，用 Copy 按钮。
+
+如果 DNS 托管在 Cloudflare，可在此面板中选择 **Connect a DNS provider**。属主或管理员可以在不离开部署设置的情况下，为相关 zone 添加一个带 **Zone:Read** 和 **DNS:Edit** 的令牌。连接保存在 **Settings → Credentials**，可在整个工作区复用。连接时会校验令牌；它不会改动 DNS 记录。
+
+凭据归属于你连接它们所在的实例。对于通过已连接的本地或桌面实例打开的 Cloud 项目，请在 Cloud 控制台里连接该提供方；本地凭据不会被复制到 Cloud。
+
+对已保存的域名，检查拟新增或变更的内容，然后点击 **Auto-configure DNS**。重指向一条记录之前会先展示旧值，未变化的记录会被跳过，冲突的记录集会留给人工处理。套用后记录列表会刷新。
+
+在新的部署过程中，你可以提前连接提供方。如果域名尚未保存，先部署，随后在其 DNS 设置中套用记录，或用 **Manual DNS setup** 现在就发布它们。Cloudflare 是目前唯一支持自动写入记录的提供方；其他提供方请用下面的手动步骤。
+
+</Step>
+
+<Step>
+
+### 粘贴到你的注册商
+
+另开一个标签页打开你的域名注册商，找到它的 **DNS** 或 **DNS records** 页面。把 Openship 的每一条记录加上去——对好 Type、Host 和 Value。保存。
+
+<Callout title="注册商那里的“Host”是什么意思？" type="info">
+各家叫法不同——你看到的可能是 "Host"、"Name" 或 "@"。把 host 按 Openship 显示的原样粘贴。如果注册商不接受 `@`，它通常表示"域名的根"；而像 `_openship-challenge` 这样的 host 要作为子域名条目添加。拿不准时，原样复制 Openship 的值。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 验证
+
+回到 Openship，点击域名旁的 **Verify**。在自托管或桌面连接的服务器上，Openship 会先取得或复用证书，然后才报告成功。在 Openship Cloud 上，它会检查路由与所有权记录，然后申请托管 HTTPS。你自己的服务器上的泛域名会打开 **DNS-verified HTTPS**，可选已连接的 DNS 提供方或手动 TXT 验证。
+
+<Callout title="DNS 不会即时生效" type="info">
+在注册商保存记录后，可能要过几分钟——偶尔长达 48 小时——才能扩散到全网。如果第一次 Verify 没成功，稍等片刻再点一次。当验证任务启用时，Openship 也会自动复查普通的 Pending 域名。手动 TXT 质询则等你发布记录后按下 **Check TXT & enable HTTPS**。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 看 HTTPS 亮起来
+
+证书安装完成后，**SSL** 状态变为 **Active**。在你自己的服务器上，验证本身就包含这一步。在 Openship Cloud 上，所有权验证通过后托管 HTTPS 还可能停留在 **Provisioning**。路由配置好且 SSL 激活后，应用即可通过 `https://app.example.com` 访问。证书通过 HTTP 验证或已连接的 DNS 提供方自动续期。手动 TXT 证书在续期时需要重新发起 TXT 质询；域名详情里会显示续期何时到期。
+
+</Step>
+
+</Steps>
+
+## 泛域名
+
+在项目的 **Domains** 标签页或服务的公开路由中添加 `*.example.com`。Openship 会自动为 HTTPS 选择 DNS-01；HTTP 验证不能签发泛域名证书。泛域名证书覆盖 `app.example.com` 和 `api.example.com`，但不覆盖 `example.com` 或 `deep.app.example.com`。如果裸域也要服务应用，单独添加它。项目的主地址和要用浏览器打开的链接请选择具体的域名。
+
+在自托管或桌面连接的服务器上，先部署项目，然后在泛域名卡片上打开 **DNS-verified HTTPS**。内嵌面板把路由 DNS 与证书验证分开：
+
+1. **把域名指向这台服务器。** 添加显示的路由记录，通常是名称为 `*`、值为部署服务器 IP 的 `A` 记录。你也可以通过已连接的提供方预览并套用。这条记录把应用流量送进服务器；它与证书的 TXT 无关。
+2. **启用 HTTPS。** 从下面的方法中选一种。进度与 **Certificate logs** 一并显示在面板里。某次尝试失败后，已有的证书保持安装不变。
+
+### 自动提供方
+
+从 DNS 面板或 **Settings → Credentials** 连接 **Cloudflare**，使用对相关 zone 带 **Zone:Read** 和 **DNS:Edit** 的令牌。选择 **Automatic provider**，然后 **Enable HTTPS automatically**。Openship 会发布证书质询、等待 DNS、取得证书并移除临时 TXT 记录。保持该连接开启，Openship 才能自动续期证书。
+
+路由记录仍需指向部署服务器。DNS 证书质询成功只能证明你拥有该域名的控制权；它不能证明应用请求到达了正确的端口。
+
+### 手动 TXT
+
+不想接入 API 凭据时，可对任意 DNS 提供方使用此法：
+
+1. 选择 **Manual TXT**，点击 **Get TXT record**。
+2. 从生成的 TXT 卡片原样复制 **Name** 和 **Value**。对 `*.example.com` 而言，完整名称是 `_acme-challenge.example.com`。在会自动补上 `example.com` 的提供方里，名称填 `_acme-challenge` 即可。对 `*.apps.example.com`，则填 `_acme-challenge.apps`。
+3. 在同一名称现有值的旁边添加这条 TXT 值。不要替换无关的验证记录。等 DNS 生效后，点击 **Check TXT & enable HTTPS**。
+4. 一旦面板显示 **HTTPS is ready**，如无必要可删除这次尝试的 TXT 值。
+
+你可以离开页面、断开重连，或重启 Openship——已保存的质询仍可继续。重试进行中的尝试会复用其订单。请在面板显示的截止时间前完成；已过期或失效的质询需要重新发起。**Cancel challenge** 允许你放弃本次尝试或改换方式。已经开始安装的必须等它装完。
+
+<Callout title="手动 TXT 也意味着手动续期" type="warn">
+当证书距到期不足 14 天时，域名详情会提示续期需要关注。选择 **Renew SSL**，发布新的 TXT 值并完成检查。Openship 不会反复替手动域名无人值守地签发。要开启自动续期，请连接 Cloudflare，打开设置面板并选择 **Automatic provider**。
+</Callout>
+
+Cloud 项目以及标记了 **External ingress & TLS** 的域名走它们原有的托管或外部 HTTPS 流程。本地 TXT 面板只适用于 Openship 装在你自己的部署服务器上的证书。
+
+### SDK 与 MCP
+
+SDK 和 MCP 使用与控制台相同的已保存质询与权限检查。用已初始化的 SDK 客户端和已保存域名的 ID：
+
+```ts
+await client.domains.startDnsChallenge(domainId, { mode: "manual" });
+const pending = await client.domains.dnsChallenge(domainId);
+// Read status until it is "waiting", then publish pending.record in DNS.
+if (pending?.status === "waiting") {
+  await client.domains.checkDnsChallenge(domainId, { attemptId: pending.id });
+}
+// Read status again for completion, errors and logs.
+```
+
+续期时以 `{ mode: "manual", force: true }` 发起。取消则调用
+`client.domains.cancelDnsChallenge(domainId, { attemptId })`。
+[域名 API 参考](/docs/api/domains)和 [MCP 工具参考](/docs/api/mcp-tools)列出了等价的
+start、status、check 与 cancel 工具。工作运行期间持续读取状态；等人工发布 DNS 或尝试落定后停止轮询。
+
+## 带日志重试路由
+
+对于已部署的项目，打开 **Domains**，从警告横幅、页面操作或域名菜单中选择 **Retry routing**。它会修复项目已保存的路由，并检查 Pending 域名与 HTTPS。底层记录缺失的域名卡片也会直接提供 **Retry routing**。
+
+日志查看器显示进度与任何失败的原因，包括 SSH 连通性与证书错误。其他域名失败时，正常的域名保留原状态。尝试结束后，卡片会从服务器刷新；只有检查全部成功，警告才会消失。已有的可用证书会被复用。
+
+关闭查看器只是停止观察；已受理的修复会继续在服务器上进行。如果连接在完成前断开，查看器会报告结果未知，并保留已收到的日志。
+
+## 三种 DNS 配置方式
+
+Openship 根据项目运行的位置来推断你需要哪些记录。前两种由它替你选好，无须你操心。记录面板会告诉你适用的是哪一种。
+
+<Tabs items={['Self-hosted (A record)', 'Openship Cloud (CNAME)', 'External edge']}>
+
+<Tab value="Self-hosted (A record)">
+
+你的项目运行在自己的服务器上，所以域名直接指向那台机器的公网 IP 地址。
+
+| 类型 | Host | 值 |
+|---|---|---|
+| `A` | `@` | 你服务器的公网 IP |
+
+`A` 记录只是指引。自托管验证通过 ACME 获取证书；它不会把公网 DNS 与你的服务器 IP 做比对，也不要求所有权 TXT 记录。要让所选的 ACME 质询成功，主机名必须能到达服务器。
+
+</Tab>
+
+<Tab value="Openship Cloud (CNAME)">
+
+你的项目运行在 Openship Cloud 上，域名通过 `CNAME`（"这个名字是那个名字的别名"记录）指向一个 Cloud 地址。
+
+| 类型 | Host | 值 |
+|---|---|---|
+| `CNAME` | `@` | 一个 Openship Cloud 目标 |
+| `TXT` | `_openship-challenge` | 一长串验证字符串 |
+
+Openship 确认 `CNAME` 与 TXT 之后，HTTPS 就由它接手。
+
+</Tab>
+
+<Tab value="External edge">
+
+适用于**你自己的边缘已经终结 HTTPS** 的高级场景——Cloudflare Tunnel、负载均衡器，或 Openship 前面再架一层反向代理（proxy）。添加域名时打开 **External ingress & TLS**。
+
+| 类型 | Host | 值 |
+|---|---|---|
+| `TXT` | `_openship-challenge` | 一长串验证字符串 |
+
+在 **Openship Cloud** 上，加上面的 TXT 记录以证明域名所有权。在**自托管实例**上，操作者本来就拥有服务器：不要求也不检查任何 DNS 记录。两种情况下 Openship 都不签发证书；SSL 状态显示为 **External TLS**。
+
+对于 **Nginx Proxy Manager** 后面的家庭实验室，把你的内部 DNS 名称指向 NPM，并配置它转发到局域网或隧道上可达的 Openship 服务器。HTTPS 由 NPM 负责。给域名选择 **External ingress & TLS**，然后验证。你不断变化的家庭宽带地址不是验证的必要条件。局域网外的客户端仍需要一个可达地址、VPN 或隧道；仅靠私有 DNS 提供不了公网访问。
+
+</Tab>
+
+</Tabs>
+
+## 把一个域名重定向到另一个
+
+项目上的任何域名都可以把它的访客送往同一项目的另一个域名，而不是服务应用。Openship 应答 `301`（选了也可以是 `302`），并保留 URL 其余部分，因此 `https://www.example.com/pricing?ref=x` 会落到 `https://example.com/pricing?ref=x`。
+
+打开项目的 **Domains** 标签页，点 **Edit**，在要送*走*的那个域名上设置 **Redirect**。从列表中选择目的地——只会列出本项目自己的域名——并选择永久（`301`）还是临时（`302`）。选择 **Serve the app here** 可以撤销重定向。
+
+两种常见用法：
+
+- **选定规范主机名。** `www.example.com` → `example.com`，或者反过来。**Include www** 就是为这个准备的（把 `www` 指向裸域），两个方向你都可以任意切换。没有重定向时，两个主机名会服务同一个应用，搜索引擎会视作重复内容。
+- **迁到新域名。** 旧域名保持验证状态并重定向到新域名，这样已有链接和书签不会失效。
+
+<Callout title="做重定向的域名依然需要 DNS、验证和证书" type="info">
+它得先能应答 `https://`，才能重定向别人，所以流程与其他域名完全一样。这也是它一直有自己 **Status** 和 **SSL** 两行显示的原因。
+</Callout>
+
+Openship 不允许的两件事，因为那两种都会弄坏站点而非仅坏设置：重定向到项目外的域名（那会让你自己拥有的域名变成给别人流量当跳板的开放重定向），以及制造循环——`A` → `B` → `A` 会让每个请求来回弹跳直到浏览器放弃。
+
+重定向是渲染进你服务器自己的边缘配置的，所以它是自托管特性。在 Openship Cloud 上由托管边缘接管路由（edge）；把额外的主机名直接指向同一个应用即可。
+
+## 自带证书
+
+如果你的上游要求源站也出示真实证书——最常见的是 **Cloudflare Full (strict)**——那就上传你自己的，而不用 Let's Encrypt。
+
+1. 在一个已验证的域名上，打开它的菜单并选择 **Upload certificate**。
+2. 粘贴**证书**（完整链，PEM）和匹配的**私钥**（PEM）。免费的
+   [Cloudflare Origin CA](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/) 证书（15 年）在这里非常合适。
+3. Openship 用这份证书提供 HTTPS，并停止为该域名运行 Let's Encrypt。
+
+<Callout title="上传的证书不会自动续期" type="info">
+没有可供 Openship 自动续期的东西，它会盯住到期时间并提醒你——在失效之前上传一份新证书。
+</Callout>
+
+## CLI
+
+CLI 支持普通域名的创建与验证。`add` 命令会打印 DNS 记录和域名的 ID；用这个 ID 来验证。手动 TXT 请使用控制台、SDK、API 或上文所述的 MCP 生命周期。
+
+```bash
+# 预览一个域名需要哪些记录（不会保存任何东西）
+openship domain preview app.example.com
+
+# 把域名加到项目（打印记录 + 域名 ID）
+openship domain add app.example.com --project <projectId>
+
+# 等 DNS 就位后，验证它
+openship domain verify <domainId>
+
+# 列出项目的域名及其状态
+openship domain list --project <projectId>
+```
+
+<Callout title="其他域名命令" type="info">
+`openship domain records <domainId>` 重新打印已有域名的记录，`openship domain primary
+<domainId>` 把某个域名设为项目主地址，`openship domain renew <domainId>` /
+`openship domain verify-ssl <domainId>` 管理证书。完整细节见
+[域名 API 参考](/docs/api/domains)。
+</Callout>
+
+## 故障排查
+
+<Callout title="Verify 一直失败" type="warn">
+按所选验证模式阅读失败信息。Cloud 的失败会指明是路由还是所有权记录的问题。自托管的失败会指明是证书质询还是服务器连接的问题。手动 TXT 则逐字核对 `_acme-challenge` 的名称与值，然后从 **DNS-verified HTTPS** 重试已保存的质询。
+</Callout>
+
+<Callout title="DNS 一直没生效" type="error">
+这是最常见的卡点，而且通常只是时间问题。DNS 变更可能要几分钟，偶尔长达 48 小时才扩散到全球。保存记录，稍候再点 Verify——任务启用时 Openship 也会自动复查普通 Pending 域名。手动 TXT 则等你来检查。顺带检查记录名有没有打错、有没有冲突的路由记录。按需移除冲突的路由记录，但保留质询名称下无关的 TXT 值。
+</Callout>
+
+<Callout title="验证通过了，SSL 却卡在“Provisioning”" type="warn">
+证书还在签发中，或者向 Let's Encrypt 的请求尚未完成。先等一会儿，然后打开域名的 **⋯** 菜单并点击 **Recheck SSL**——一次快速免费的检查，证书真正到位后状态会翻到 **Active**。如果一直签不下来，用 **Renew SSL** 再试；错误信息会给出真正的原因。
+</Callout>
+
+<Callout title="裸域好用而 www 不行（或反过来）" type="warn">
+它们是两个独立的域名，所以要分别配置。打开 **Domains** 标签页：哪个还是 **Pending**，哪个就缺 DNS 记录。添加域名时 Openship 把两条记录都列出来了——重新打开失败域名的 DNS 面板，补上它要的那条，再单独点它的 **Verify**。裸域一切正常并不能说明 `www` 也正常；每个域名各有自己的记录、验证与证书。
+</Callout>
+
+<Callout title="Verify 失败，但你想知道真实原因" type="info">
+在自托管安装上，Verify 会实时流出证书请求的过程，无论结果如何日志都会留在屏幕上——那份日志会写明真正的原因（DNS 解析不了、80 端口不可达、有代理在答 `404`）。想留存就用 **Copy log**，想重试就点 **Try again**，窗口不用关。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="Domains API 参考" href="/docs/api/domains" description="域名相关的每个端点——add、preview、verify、primary 与 SSL——附请求结构。" />
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="还没上线的话，这里是让仓库上线的完整流程。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="以安全的方式为应用提供机密与设置。" />
+</Cards>

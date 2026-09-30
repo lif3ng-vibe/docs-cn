@@ -1,0 +1,81 @@
+---
+title: backup
+description: openship backup 的命令、参数与选项。
+cliGroup: openship backup
+---
+
+示例请参见[工作流指南](/docs/cli/self-host)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship backup
+
+管理备份：策略、执行、恢复、目标
+
+```text
+openship backup [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`policy`](/docs/cli/reference/backup/policy#openship-backup-policy) | 项目的备份策略（定时计划） |
+| [`run`](/docs/cli/reference/backup/run#openship-backup-run) | 备份执行记录 |
+| [`restore`](/docs/cli/reference/backup#openship-backup-restore) | 管理待执行的恢复 |
+| [`destination`](/docs/cli/reference/backup/destination#openship-backup-destination) | 备份目标（存储目标） |
+
+## openship backup restore
+
+管理待执行的恢复
+
+```text
+openship backup restore [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`apply [options] <restoreId>`](/docs/cli/reference/backup#openship-backup-restore-apply) | 应用一个待执行的恢复（有破坏性） |
+| [`cancel <restoreId>`](/docs/cli/reference/backup#openship-backup-restore-cancel) | 取消一个待执行或进行中的恢复 |
+| [`get [options] <restoreId>`](/docs/cli/reference/backup#openship-backup-restore-get) | 查看某次恢复（可选流式跟随输出） |
+
+## openship backup restore apply
+
+应用一个待执行的恢复（有破坏性）
+
+```text
+openship backup restore apply [options] <restoreId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `restoreId` | 来自 `backup run restore` 的恢复 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--token <token>` | prepare 阶段给出的确认令牌 |
+| `--follow` | 流式跟随恢复直至完成 |
+
+## openship backup restore cancel
+
+取消一个待执行或进行中的恢复
+
+```text
+openship backup restore cancel [options] <restoreId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `restoreId` | 恢复 ID |
+
+## openship backup restore get
+
+查看某次恢复（可选流式跟随输出）
+
+```text
+openship backup restore get [options] <restoreId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `restoreId` | 恢复 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--follow` | 流式跟随进度直至完成 |

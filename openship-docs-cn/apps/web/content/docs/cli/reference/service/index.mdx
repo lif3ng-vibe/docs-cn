@@ -1,0 +1,313 @@
+---
+title: service
+description: openship service 的命令、参数与选项。
+cliGroup: openship service
+---
+
+示例参见[工作流指南](/docs/cli/projects)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship service
+
+管理 Compose 套件（stack，即多服务项目）中的服务
+
+```text
+openship service|services [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/service#openship-service-list) | 列出某个套件中的服务 |
+| [`get [options] <service>`](/docs/cli/reference/service#openship-service-get) | 查看某个服务的配置 |
+| [`create [options] <name>`](/docs/cli/reference/service#openship-service-create) | 向套件中添加一个服务 |
+| [`delete\|rm [options] <service>`](/docs/cli/reference/service#openship-service-delete) | 从套件中移除一个服务 |
+| [`sync [options] <compose-file>`](/docs/cli/reference/service#openship-service-sync) | 从 docker-compose 文件同步套件服务（文件中不存在的服务会被移除） |
+| [`start [options] <service>`](/docs/cli/reference/service#openship-service-start) | 启动某服务的容器 |
+| [`stop [options] <service>`](/docs/cli/reference/service#openship-service-stop) | 停止某服务的容器 |
+| [`restart [options] <service>`](/docs/cli/reference/service#openship-service-restart) | 重启某服务的容器（不会应用已变更的环境变量——请改用 `deploy --refresh`） |
+| [`containers [options]`](/docs/cli/reference/service#openship-service-containers) | 列出该套件当前生效部署的容器 |
+| [`drift`](/docs/cli/reference/service#openship-service-drift) | 处理某服务的 Compose 漂移（上游 compose 改动了你编辑过的值） |
+| [`env`](/docs/cli/reference/service#openship-service-env) | 读取和写入某服务的环境变量 |
+| [`logs [options] <service>`](/docs/cli/reference/service#openship-service-logs) | 查看或流式输出某服务的运行时日志 |
+| [`exec [options] <service> <command>`](/docs/cli/reference/service#openship-service-exec) | 在某服务的隔离容器内执行 shell 命令 |
+
+## openship service containers
+
+列出该套件当前生效部署的容器
+
+```text
+openship service containers [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service create
+
+向套件中添加一个服务
+
+```text
+openship service create [options] <name>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `name` | 服务名（套件内唯一） |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `--image <image>` | 容器镜像（例如 postgres:16） |
+| `--build <context>` | 构建上下文路径（相对仓库根目录） |
+| `--dockerfile <path>` | Dockerfile 路径（相对构建上下文） |
+| `--port <mapping>` | 端口映射，例如 8080:80（可重复）（默认：[]） |
+| `--depends-on <service>` | 所依赖的服务（可重复）（默认：[]） |
+| `--env <KEY=VALUE>` | Compose 环境变量默认值（可重复）（默认：[]） |
+| `--command <command>` | 覆盖容器命令 |
+| `--restart <policy>` | 重启策略：no \| always \| on-failure \| unless-stopped |
+| `--expose` | 通过托管路由将服务公开暴露 |
+| `--exposed-port <port>` | 要公开暴露的容器端口 |
+| `--domain <label>` | 自由子域名标签（配合 --expose） |
+
+## openship service delete
+
+从套件中移除一个服务
+
+```text
+openship service delete|rm [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `-y, --yes` | 跳过确认提示 |
+
+## openship service drift
+
+处理某服务的 Compose 漂移（上游 compose 改动了你编辑过的值）
+
+```text
+openship service drift [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`accept [options] <service>`](/docs/cli/reference/service#openship-service-drift-accept) | 应用上游 compose 的值，放弃你的编辑 |
+| [`keep [options] <service>`](/docs/cli/reference/service#openship-service-drift-keep) | 保留你的编辑，并停止标记上游变更 |
+
+## openship service drift accept
+
+应用上游 compose 的值，放弃你的编辑
+
+```text
+openship service drift accept [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service drift keep
+
+保留你的编辑，并停止标记上游变更
+
+```text
+openship service drift keep [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service env
+
+读取和写入某服务的环境变量
+
+```text
+openship service env [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`get [options] <service>`](/docs/cli/reference/service#openship-service-env-get) | 列出某服务的环境变量（敏感值打码） |
+| [`set [options] <service> <pairs...>`](/docs/cli/reference/service#openship-service-env-set) | 为某个环境设置某服务的环境变量 |
+
+## openship service env get
+
+列出某服务的环境变量（敏感值打码）
+
+```text
+openship service env get [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `-e, --env <environment>` | 环境：production \| preview \| development |
+
+## openship service env set
+
+为某个环境设置某服务的环境变量
+
+```text
+openship service env set [options] <service> <pairs...>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+| `pairs` | KEY=VALUE 键值对 |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `-e, --env <environment>` | 环境：production \| preview \| development（默认："production"） |
+| `--secret` | 将所提供的变量标记为敏感值 |
+| `--replace` | 用所给的键值对替换该环境的全部变量 |
+
+## openship service exec
+
+在某服务的隔离容器内执行 shell 命令
+
+```text
+openship service exec [options] <service> <command>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+| `command` | shell 命令（作为一个参数加引号） |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `--cwd <path>` | 容器内的工作目录 |
+| `--timeout <ms>` | 命令超时时间（毫秒）（默认："30000"） |
+
+## openship service get
+
+查看某个服务的配置
+
+```text
+openship service get [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service list
+
+列出某个套件中的服务
+
+```text
+openship service list [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service logs
+
+查看或流式输出某服务的运行时日志
+
+```text
+openship service logs [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `-f, --follow` | 新日志到达时实时流式输出（SSE） |
+| `--tail <n>` | 从末尾起显示的行数（默认："200"） |
+
+## openship service restart
+
+重启某服务的容器（不会应用已变更的环境变量——请改用 `deploy --refresh`）
+
+```text
+openship service restart [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `--force` | 存在待应用的环境变量变更时也强制重启（变更不会被应用） |
+
+## openship service start
+
+启动某服务的容器
+
+```text
+openship service start [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service stop
+
+停止某服务的容器
+
+```text
+openship service stop [options] <service>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `service` | 服务名或 ID |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+
+## openship service sync
+
+从 docker-compose 文件同步套件服务（文件中不存在的服务会被移除）
+
+```text
+openship service sync [options] <compose-file>
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `compose-file` | docker-compose.yml / compose.yaml 的路径 |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-p, --project <id\|slug\|name>` | 套件（项目）的 ID、slug 或名称 |
+| `-y, --yes` | 跳过确认提示 |

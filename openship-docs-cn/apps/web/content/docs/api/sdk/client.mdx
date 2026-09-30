@@ -1,0 +1,71 @@
+---
+title: 连接到 API
+description: 为自托管或 Cloud 的 OpenShip API 配置远程 SDK 客户端。
+---
+
+当安装已经存在时，使用 `OpenshipClient`。它需要一个 API URL、一个 bearer 令牌，
+以及你的集成要在其中运作的组织。请先[安装 SDK](/docs/api/sdk/installation)。
+
+## 连接
+
+```ts title="client.mts"
+import { OpenshipClient } from "openship/client";
+
+const token = process.env.OPENSHIP_TOKEN;
+const organizationId = process.env.OPENSHIP_ORGANIZATION_ID;
+if (!token || !organizationId)
+  throw new Error("Set OPENSHIP_TOKEN and OPENSHIP_ORGANIZATION_ID");
+
+export const ship = new OpenshipClient({
+  baseUrl: "https://ship.example.com",
+  token,
+  organizationId,
+});
+
+const projects = await ship.projects.list({ page: 1, perPage: 20 });
+console.log(projects.data);
+```
+
+在**设置 → 令牌**中或通过 [CLI](/docs/cli/access) 创建个人访问令牌。远程客户端
+不需要 `start()` 或 `close()`。
+
+## 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `baseUrl` | HTTP(S) 实例 URL。支持 `/api` 后缀和反向代理前缀。 |
+| `token` | Bearer 令牌，或为每个请求返回令牌的同步/异步函数。 |
+| `organizationId` | 将所有应用请求固定到该组织。 |
+| `timeoutMs` | 请求截止时间（毫秒）；`0` 表示禁用。流式请求有单独的中止信号。 |
+| `userAgent` | 标识你的应用，例如 `my-product/1.0`。 |
+| `fetch` | 为自定义传输层或测试提供 fetch 实现。 |
+
+`baseUrl` 中不允许包含凭据、查询字符串和片段。请求不会跟随重定向。变更操作只提交
+一次；客户端不会自动重试它们。
+
+## 组织作用域
+
+`client.scope(organizationId)` 会创建一个新客户端，而不改变原客户端。令牌必须已经
+拥有对该组织的访问权限。绑定到某个组织的令牌不能选择另一个组织。
+
+显式指定组织要求服务器版本兼容。参见
+[固定作用域](/docs/api/sdk/compatibility#固定组织作用域)。省略该参数时
+将使用 API 的默认/由资源推导的作用域；它不提供同样的租户固定。
+
+## OpenShip Cloud
+
+将 `https://api.openship.io` 用作 `baseUrl`，并使用你的 Cloud 令牌和 Cloud 组织的
+ID。已部署的 Cloud API 必须支持 SDK 协议。自托管的 Cloud 账户关联目前无法把固定的
+本地作用域映射到 Cloud 作用域；参见 [Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+## 返回结果与其他 HTTP 端点
+
+命名方法返回应用数据：`projects.get(id)` 返回一个项目；`projects.list()` 返回一个
+包含 `data`、`total`、`page` 和 `perPage` 的分页。
+
+对于没有对应命名 SDK 方法的端点，可以使用 `client.http.request()` 或
+`client.http.raw()`。它们分别返回 HTTP JSON 响应体或 `Response`。二者都遵循客户端
+的 URL、凭据和作用域限制。原生作用域不暴露这个 HTTP 传输层。
+
+参见[错误与流](/docs/api/sdk/errors)、[HTTP 辅助工具](/docs/api/sdk/utilities)和
+[操作员访问](/docs/api/sdk/operator)。

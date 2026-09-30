@@ -1,0 +1,53 @@
+import type { Metadata, Viewport } from "next";
+import type { CSSProperties, ReactNode } from "react";
+
+// Fumadocs ships a COMPLETE standalone Tailwind build (its own preflight +
+// global `body`/`*` rules). This is a SEPARATE root layout (own <html>/<body>)
+// so that build lives ONLY in the docs document — navigating between docs and
+// the marketing site is a full page load, so the fumadocs reset can never
+// bleed into the product pages. See (site)/layout.tsx for the marketing root.
+import "fumadocs-ui/style.css";
+// Match the marketing site's typeface. fonts.css is PURE @font-face (no Tailwind
+// reset), so it registers Gellix in this isolated docs document without pulling
+// the marketing globals into the fumadocs build.
+import "../../styles/fonts.css";
+// Docs-only tweaks layered after fumadocs' stylesheet (e.g. sidebar cursor).
+import "../../styles/docs-overrides.css";
+
+// 中文镜像：规范地址随构建注入（NEXT_PUBLIC_SITE_URL，含 base 子路径）
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://openship.io";
+
+// Same stack as the marketing site (globals.css `--font-sans`). Fumadocs renders
+// off the Tailwind `--font-sans` token, so overriding it here re-fonts all docs.
+// 中文镜像：拉丁字体后追加 CJK fallback。
+const FONT_SANS =
+  "'Gellix', 'SF Arabic', system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif";
+
+export const metadata: Metadata = {
+  // Docs pages set only relative OG/canonical URLs; this resolves them.
+  metadataBase: new URL(SITE_URL),
+  title: { default: "OpenShip 文档", template: "%s – OpenShip 文档" },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function DocsRootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html
+      lang="zh-CN"
+      suppressHydrationWarning
+      style={{ "--font-sans": FONT_SANS } as CSSProperties}
+    >
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
+      <body className="min-h-screen antialiased" style={{ fontFamily: "var(--font-sans)" }}>
+        {children}
+      </body>
+    </html>
+  );
+}

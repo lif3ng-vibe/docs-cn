@@ -1,0 +1,175 @@
+---
+title: 备份目标
+description: 配置与验证备份的存储位置。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+备份目标（backup destination）是一个可复用的存储位置——S3 兼容存储桶、SFTP 服务器、本地文件系统路径，或另一台 Openship 服务器——[备份策略](/docs/api/backups)会把归档写入其中。本 API 负责创建与管理这些目标，并运行一次**预检**（preflight）来证明目标确实可访问（它会写入、读回并删除一个探测对象）。凭据在存储时已加密；序列化后的目标永不返回密钥值，只返回 `hasX` 标志以标明哪些已配置。
+
+本模块在自托管与云端实例上均可用。`local` 目标类型仅限自托管——在 cloud 模式下会被拒绝，而且在自托管上还必须显式启用（见下文）。
+
+## 创建备份目标
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.backupDestinations.create({
+  name: "prod-s3",
+  kind: "s3_compatible",
+  bucket: "my-backups",
+  region: "us-east-1",
+  accessKeyId: "AKIA...",
+  secretAccessKey: "...",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/backup-destinations" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"prod-s3","kind":"s3_compatible","bucket":"my-backups","region":"us-east-1","accessKeyId":"AKIA...","secretAccessKey":"..."}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '显示名称，在组织内唯一（最长 80 个字符）。', required: true },
+    kind: { type: "'s3_compatible' | 'sftp' | 'openship_server' | 'local'", description: '存储后端，决定其他哪些字段为必填。', required: true },
+    endpoint: { type: 'string | null', description: 'S3 端点 URL；local 类型则为绝对文件系统路径。' },
+    region: { type: 'string | null', description: 'S3 区域。' },
+    bucket: { type: 'string | null', description: 'S3 存储桶名称。s3_compatible 必填。' },
+    pathPrefix: { type: 'string | null', description: '归档存放所用的键/路径前缀。' },
+    sshHost: { type: 'string | null', description: 'SFTP 主机。sftp 必填。' },
+    sshPort: { type: 'number | null', description: 'SFTP 端口。' },
+    sshUser: { type: 'string | null', description: 'SFTP 用户名。sftp 必填。' },
+    serverId: { type: 'string | null', description: '要复用的现有服务器 ID。openship_server 必填；必须属于你的组织。' },
+    accessKeyId: { type: 'string | null', description: 'S3 访问密钥 ID。s3_compatible 必填（需同时提供 secret）。' },
+    secretAccessKey: { type: 'string | null', description: 'S3 私有访问密钥。加密存储。' },
+    sftpPassword: { type: 'string | null', description: 'SFTP 密码。与 sftpPrivateKey 二选一。加密存储。' },
+    sftpPrivateKey: { type: 'string | null', description: 'SFTP 私钥（原始 PEM）。与 sftpPassword 二选一。加密存储。' },
+    sftpKeyPassphrase: { type: 'string | null', description: 'SFTP 私钥的口令。加密存储。' },
+    isDefault: { type: 'boolean', description: '标记为组织的默认备份目标。', default: 'false' },
+  }}
+/>
+
+必填字段取决于 `kind`：
+
+- **`s3_compatible`**——需要 `bucket`、`accessKeyId` 和 `secretAccessKey`。
+- **`sftp`**——需要 `sshHost`、`sshUser`，以及 `sftpPassword` / `sftpPrivateKey` 二者之一。
+- **`openship_server`**——需要 `serverId`（你组织内的一台服务器）。
+- **`local`**——需要 `endpoint`（位于 `BACKUP_LOCAL_ROOT` 内的绝对路径）。
+
+## 更新备份目标
+
+只发送你想更改的字段。对于凭据，`undefined`（省略）表示保持已存储的值不变，`null` 表示清除，字符串则表示替换。`kind` 在创建之后不可更改。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.backupDestinations.update("bkd_123", {
+  pathPrefix: "nightly/",
+  isDefault: true,
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/backup-destinations/bkd_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"pathPrefix":"nightly/","isDefault":true}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '新的显示名称（最长 80 个字符）。' },
+    endpoint: { type: 'string | null', description: 'S3 端点 URL；local 类型则为绝对路径（会针对 BACKUP_LOCAL_ROOT 重新校验）。' },
+    region: { type: 'string | null', description: 'S3 区域。' },
+    bucket: { type: 'string | null', description: 'S3 存储桶名称。' },
+    pathPrefix: { type: 'string | null', description: '键/路径前缀。' },
+    sshHost: { type: 'string | null', description: 'SFTP 主机。' },
+    sshPort: { type: 'number | null', description: 'SFTP 端口。' },
+    sshUser: { type: 'string | null', description: 'SFTP 用户名。' },
+    accessKeyId: { type: 'string | null', description: 'S3 访问密钥 ID。undefined = 保持，null = 清除，字符串 = 替换。' },
+    secretAccessKey: { type: 'string | null', description: 'S3 私有访问密钥。undefined = 保持，null = 清除，字符串 = 替换。' },
+    sftpPassword: { type: 'string | null', description: 'SFTP 密码。undefined = 保持，null = 清除，字符串 = 替换。' },
+    sftpPrivateKey: { type: 'string | null', description: 'SFTP 私钥。undefined = 保持，null = 清除，字符串 = 替换。' },
+    sftpKeyPassphrase: { type: 'string | null', description: 'SFTP 私钥口令。undefined = 保持，null = 清除，字符串 = 替换。' },
+    isDefault: { type: 'boolean', description: '标记为组织的默认备份目标。' },
+  }}
+/>
+
+## 预检（验证连通性）
+
+通过写入、读回并删除一个小的探测对象来证明目标可用。成功时会记录 `lastVerifiedAt`；失败时会把错误记录在 `lastVerifyError` 中。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.backupDestinations.preflight("bkd_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/backup-destinations/bkd_123/preflight" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+<Callout title="检查失败也返回 200" type="info">
+当目标不可达或配置错误时，预检会返回 `200` 和 `{"ok": false, "reason": "..."}`——具体原因（凭据错误、DNS 解析失败、权限不足等）在响应体里，而不是 HTTP 状态码里。这里的 `404` 表示该 `:id` 不属于你的组织。
+</Callout>
+
+## 错误
+
+<Callout title="400 — 校验失败" type="warn">
+请求体缺少其 `kind` 所需的字段（例如没有 `bucket` 或凭据的 S3 目标）；`name` 为空、超过 80 个字符或与现有目标重名；或传入了不支持的 `kind`。`http_upload` 已定义但尚未支持。
+</Callout>
+
+<Callout title="400 — local 目标已禁用" type="warn">
+`local` 目标要求设置 `BACKUP_ALLOW_LOCAL_DESTINATION=true` 并配置 `BACKUP_LOCAL_ROOT`，且 `endpoint` 必须解析为该根目录内的绝对路径。根目录与端点都会在检查前解析符号链接，因此逃出根目录的符号链接会被拒绝。`BACKUP_LOCAL_ROOT` 本身必须是专用目录——不能是 `/`、`/var`、`/var/lib`、Openship 自己的状态目录，也不能是 `/etc`、`/var/lib/docker` 等系统目录树内的任何路径。cloud 模式下 local 目标一律被拒绝。
+</Callout>
+
+<Callout title="针对单个目标路由的 404" type="error">
+该 `:id` 不属于你的组织（或已被删除）。用 `GET /api/backup-destinations` 列出你的备份目标，即可获得有效 ID。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出备份存储目标。 | `backupDestinations.list()` | `GET /api/backup-destinations`<br />`backup_destination:list` |
+| 创建一个备份目标。 | `backupDestinations.create(input)` | `POST /api/backup-destinations`<br />`backup_destination:write` |
+| 在保存前测试目标配置。 | `backupDestinations.preflightDraft(input)` | `POST /api/backup-destinations/preflight`<br />`backup_destination:write` |
+| 跨存储目标列出备份历史。 | `backupDestinations.history(input?)` | `GET /api/backup-destinations/history`<br />`backup_destination:list` |
+| 列出存储在某个目标中的备份运行记录。 | `backupDestinations.runs(id, input?)` | `GET /api/backup-destinations/:id/runs`<br />`backup_destination:read` |
+| 在凭据受保护的前提下读取目标。 | `backupDestinations.get(id)` | `GET /api/backup-destinations/:id`<br />`backup_destination:read` |
+| 读取目标的存储用量。 | `backupDestinations.usage(id)` | `GET /api/backup-destinations/:id/usage`<br />`backup_destination:read` |
+| 更新目标设置。 | `backupDestinations.update(id, input)` | `PATCH /api/backup-destinations/:id`<br />`backup_destination:write` |
+| 移除一个符合条件的目标。 | `backupDestinations.remove(id)` | `DELETE /api/backup-destinations/:id`<br />`backup_destination:admin` |
+| 测试一个已保存的目标并记录其验证状态。 | `backupDestinations.preflight(id)` | `POST /api/backup-destinations/:id/preflight`<br />`backup_destination:write` |
+
+{/* api-operations:end */}

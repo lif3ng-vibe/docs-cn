@@ -1,0 +1,148 @@
+---
+title: 服务器终端
+description: 签发访问票据并打开 SSH 会话。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+终端 API 在你的某台 SSH 服务器上打开一个实时 Shell（PTY），并经 WebSocket
+把它流式推送到浏览器——即控制台中服务器的 **Terminal** 标签页，底层由 `xterm.js` 驱动。由于浏览器无法在
+`WebSocket()` 上设置 `Authorization` 请求头，认证被拆成两步：先用普通 HTTP 调用签发一张短期、一次性的
+**票据**，再在 WebSocket 升级的
+`Sec-WebSocket-Protocol` 请求头中出示该票据。
+
+<Callout title="仅限自托管" type="warn">
+该模块只在实例**不**处于 cloud 模式时挂载，且每条路由还额外受一个 local-only 中间件保护。在 Openship Cloud 上这些路径返回 **404**。（Cloud 的服务 Shell 走另一套子系统，`/api/services/terminal`。）
+</Callout>
+
+## 签发票据
+
+打开 PTY 属于管理操作，因此调用者必须对目标服务器持有 `server:admin`。该端点
+在签发令牌之前还会确认服务器存在于你的组织中（返回与 WebSocket 相同的 404）。
+
+```
+POST /api/terminal/ticket
+```
+
+<TypeTable
+  type={{
+    serverId: { type: 'string', description: '要打开 Shell 的 SSH 服务器。必须属于你的组织。', required: true },
+  }}
+/>
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/terminal/ticket" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"serverId":"srv_123"}'
+```
+
+响应携带一次性令牌及其有效期：
+
+```json
+{ "success": true, "token": "<opaque-single-use-token>", "expiresIn": 30 }
+```
+
+令牌在升级过程中第一次出示时即被消费——无法重放。每次连接尝试都签发一张新票据。
+
+<Callout title="尚无 CLI 等价物" type="info">
+`openship server ssh <serverId>` 目前只是打印 “coming soon” 的占位——CLI 不内置
+WebSocket 客户端，因此今天没有终端命令。请用控制台，或按下文所示直接驱动 WebSocket。
+</Callout>
+
+## 打开 WebSocket
+
+```
+GET /api/terminal/ws/:serverId
+```
+
+连到该路径的 `wss://` 形式，并把票据作为 WebSocket 子协议传入。浏览器在
+`Sec-WebSocket-Protocol` 请求头中发送子协议；其值必须是前缀 `openship.terminal.v1+`
+后接 `/ticket` 发的令牌：
+
+```js
+const { token } = await fetch("/api/terminal/ticket", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ serverId }),
+}).then((r) => r.json());
+
+const ws = new WebSocket(`wss://your-host/api/terminal/ws/${serverId}`, [
+  `openship.terminal.v1+${token}`,
+]);
+```
+
+升级过程按顺序执行校验：请求的 `Origin` 必须是受信源；票据必须有效（或存在同源会话 Cookie）；票据的 `serverId` 必须与路径一致；调用者必须持有
+`server:admin`；服务器必须存在于组织中；且按用户的并发会话上限
+不得超出。任何一步失败，都会只向 socket 发送一个 `error` 控制帧，然后以 `4xxx` 代码关闭。
+
+### 恢复挂起的会话
+
+socket 没有显式关闭就断线时，Shell 会被**挂起（parked）**（保持存活），以便客户端
+重新挂回。恢复时，在票据之外再出示一个子协议：`openship.terminal.resume+<resumeToken>`，
+其中 `resumeToken` 来自先前 `ready` 帧。恢复会复用既有的 PTY 与审计记录，且不占用会话上限。
+
+### 线路协议
+
+连接建立后，分帧如下：
+
+- **双向的二进制帧**——原始 PTY 字节。客户端 → 服务器字写入 Shell 的 stdin；
+  服务器 → 客户端字节是 Shell 的 stdout/stderr。
+- **文本帧**——JSON 控制消息。
+
+客户端 → 服务器的控制消息：
+
+<TypeTable
+  type={{
+    'resize': { type: '{ type, cols, rows }', description: '放大/缩小 PTY 窗口。cols 限制在 1–1000，rows 1–500。' },
+    'ping': { type: '{ type }', description: '保活；刷新空闲计时并触发一次 pong。' },
+    'close': { type: '{ type }', description: '显式终止——把 Shell 拆除而不是挂起它。' },
+  }}
+/>
+
+服务器 → 客户端的控制消息：
+
+<TypeTable
+  type={{
+    'ready': { type: '{ type, sessionId, resumeToken, resumed }', description: '握手完成；Shell 已就绪。恢复场景下 resumed 为 true。' },
+    'exit': { type: '{ type, code, signal? }', description: '远端 Shell 以该 code/signal 退出。' },
+    'error': { type: '{ type, code, message }', description: '发生失败；见下方错误码。在关闭前一刻发送。' },
+    'pong': { type: '{ type }', description: '对 ping 的回应，也是周期性心跳（每约 25 秒）。' },
+  }}
+/>
+
+## 错误
+
+`error` 帧携带机器可读的 `code`：`ssh_auth`、`ssh_connect`、`server_not_found`、`max_sessions`、
+`idle_timeout`、`session_cap`、`resume_failed` 或 `server_error`。随附的关闭代码位于
+应用层 `4xxx` 区间。
+
+<Callout title="4401 —— 未授权" type="warn">
+没有有效票据也没有可用的会话 Cookie、无法解析出活动组织，或票据的 `serverId`
+与路径不匹配。签发一张新票据（一次性、短效）后重新连接。
+</Callout>
+
+<Callout title="4403 —— Origin 不被允许" type="warn">
+升级请求的 `Origin` 请求头不在受信源允许清单内。WebSocket 终端预期从
+控制台源打开。
+</Callout>
+
+<Callout title="4404 —— 服务器未找到" type="error">
+该 `:serverId` 不在你的组织中，或调用者缺少其 `server:admin`。两者报告方式一致，因此无法跨租户探测服务器存在性。
+</Callout>
+
+<Callout title="4429 —— 活动会话过多" type="warn">
+你已达到按用户的并发终端上限。先关闭既有会话（或等挂起会话超时）
+再打开新的。恢复连接不占用该上限。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 为针对某台服务器的 WebSocket 握手签发一次性票据。 | `POST /api/terminal/ticket`<br />`terminal:write` · 自托管 |
+| 打开远端 PTY 的 WebSocket 升级。 | `GET /api/terminal/ws/:serverId`<br />`Handler authentication` · 自托管 |
+
+{/* api-operations:end */}

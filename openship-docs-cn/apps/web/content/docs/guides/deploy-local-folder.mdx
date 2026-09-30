@@ -1,0 +1,161 @@
+---
+title: 部署本地文件夹
+description: 直接把电脑上一个文件夹里的应用搬上线——不需要 GitHub。桌面选目录、浏览器上传，以及一条命令的 CLI 方式。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+不是所有代码都住在 GitHub 上。有时它只是你笔记本上的一个文件夹——很久以前克隆的、下载的，或者从零开始写的。Openship 可以收下那个文件夹并把它搬上线，不需要 git 远端。想象成寄包裹而不是寄信：你把整盒文件交过去，Openship 拆包、看清里面是什么、构建它，再还给你一个真实的网址。
+
+<Callout title="先准备好这些">
+- Openship 已在运行（你能看到控制台（dashboard））。如果没有，先从[安装](/docs/getting-started/installation)开始。
+- 磁盘上一个装着你应用的文件夹——网站、API，随便什么。
+- 你**不需要** Docker、服务器配置或任何特殊文件。Openship 读你的文件夹，其余自己想。
+</Callout>
+
+## 实际上传的是什么
+
+Openship 只发送你的**源码文件**——你写的代码——其他一概不传。笨重的、可重建的东西会被跳过：`node_modules`、`.git`，以及 `dist`、`.next` 这类构建产物从不过网络。你的依赖会在构建期间重新安装，所以把它们留下正是你想要的。这既让上传保持精简，也让构建保持干净。
+
+**桌面应用**是例外：它直接从磁盘读你的文件夹，什么都不上传。
+
+## 在控制台里
+
+打开 **Library** 页面（**New project** 按钮也会把你落到这里）并选择 **Folder** 标签页。
+
+接下来看到什么取决于你如何使用 Openship。**桌面应用**可以直接读你电脑上的文件夹；**网页浏览器**（连着自托管或云端实例）看不到你的文件系统，所以改为上传一份文件夹副本。选择与你相符的标签页。
+
+<Tabs items={['Desktop app', 'Web browser']}>
+
+<Tab value="Desktop app">
+
+桌面应用与你的文件在同一台机器上，因此直接从磁盘打开——什么都不会上传。
+
+<Steps>
+
+<Step>
+
+### 打开 Folder 标签页并点击 Import
+
+**Folder** 标签页显示你的**本地项目**。第一次进来是空的——你会看到 "No local projects yet" 和一个 **Import Project** 按钮。加过一些之后，面板会列出来，顶部还有继续添加的 **Import** 按钮。
+
+</Step>
+
+<Step>
+
+### 选择你的文件夹
+
+会打开一个文件夹选择器。浏览到你的项目文件夹并选它——这就是 Openship 需要的全部。
+
+<Callout title="没有文件夹选择器？" type="info">
+某些部署形态下原生选择器不可用。此时你会看到 **Import from folder** 表单：输入文件夹的完整绝对路径（如 `/Users/you/projects/my-app`），或点 **Browse**，然后点 **Scan**。Openship 显示**Detected** 技术栈和一个可编辑的 **Project name**——点 **Import Project** 把它加进你的本地项目列表，再从那里部署。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 点 Deploy，看它上线
+
+Openship 把你带到部署页面，检测到的技术栈已经填好——框架、包管理器以及构建与启动命令。大多数应用没什么可改的。点 **Deploy**，构建页面实时滚动日志。完成后你会得到一个链接——点开，你的应用就上线了。🎉
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+<Tab value="Web browser">
+
+在浏览器里，Openship 看不到你的磁盘——所以你先声明要部署什么，再把文件夹交过去，它打包并上传一份副本。
+
+<Steps>
+
+<Step>
+
+### 选择你的技术栈
+
+Folder 标签页会问 **"What are you deploying?"** 选择与你应用相符的格子（例如 Next.js、Vite 或 Express）。这告诉 Openship 该准备哪个构建环境。
+
+</Step>
+
+<Step>
+
+### 放入你的文件夹
+
+把项目文件夹拖进投放区，或点击浏览选取。面板会注明什么会被留下——`node_modules`、`.git` 和构建产物被跳过。选好后你会看到一行摘要：文件夹名和它包含多少个文件。
+
+</Step>
+
+<Step>
+
+### 点 Continue
+
+Openship 在**你的浏览器里**打包该文件夹并上传，然后把你带到部署页面。按钮会先短暂显示 **Packing folder…**，随后是 **Uploading…**——文件夹越大耗时越长。
+
+</Step>
+
+<Step>
+
+### 点 Deploy，看它上线
+
+在部署页面点 **Deploy**。构建页面边跑边流式输出日志，完成后你得到一个可访问的链接。🎉
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## CLI
+
+CLI 能用一条命令完成全部流程。运行 `openship deploy --folder` 显式上传当前目录。它会打包该文件夹、上传、自动检测技术栈、创建项目（或复用同名已有项目）并部署——与上面浏览器上传是同一条流水线。
+
+```bash
+# 在你的项目文件夹内运行：
+openship deploy --folder --name my-app --watch
+```
+
+- `--name` 设定项目名（不给时用文件夹名）。
+- `--watch` 在终端里跟随构建日志直到结束。不打它的话，Openship 会打印一条稍后跟踪日志的命令。
+
+<Callout title="在 Git 仓库内部署？" type="info">
+`--folder` 也能直接上传 Git 检出里的文件。不打它时，Git 仓库内的 `openship deploy` 走 Git 流程。Git 之外，`--name` 也会让既有脚本选择文件夹上传。请在应用源码目录里运行：上传临时目录或它的任何上级目录都会被拒绝，以便让暂存归档保持在源码树之外。如果 `TMPDIR` 在你的应用里，请把它设到别处。
+</Callout>
+
+### 再次部署到同一个项目
+
+Openship 按**名称**把文件夹匹配到项目。从同一文件夹再跑一次 `openship deploy --name my-app`，它会更新*那个*项目而不是新建一个——所以重复部署只是发布新版本。
+
+想把这个文件夹钉死到一个确定的项目——哪怕你改名或忘了 `--name` 旗标——用 `openship init` 关联一次：
+
+```bash
+openship init          # 选一个项目与本文件夹关联
+openship deploy --folder # 把这个文件夹上传到已关联的项目
+```
+
+`openship init` 会写一个小小的 `.openship/project.json`，之后的命令就知道这个文件夹属于哪个项目。它关联的是一个**已存在**的项目，所以先创建一个——通过文件夹部署或经控制台——然后运行 `openship init` 把以后的部署钉在它上面。
+
+## 故障排查
+
+<Callout title="选择时提示“That folder looks empty”" type="warn">
+文件夹里的东西全在跳过清单上（比如 `node_modules` 和 `.git`），或者你选了一个没有源码的文件夹。选择真正装着你应用代码的那个——有 `package.json`（或 `go.mod`、`Cargo.toml` 等）的那个。
+</Callout>
+
+<Callout title="浏览器上传找不到你文件夹的路径" type="warn">
+网页浏览器只把文件夹的**名称**给 Openship，不给它在磁盘上的完整位置。表单要求路径时，输入完整绝对路径（如 `/Users/you/projects/my-app`）并点 **Scan**。或者改用桌面应用，它可以直接打开文件夹。
+</Callout>
+
+<Callout title="构建失败了" type="error">
+打开构建页面读最后几行红色文字——那就是真正的原因。首建失败几乎不出这三样：缺构建命令、缺环境变量，或应用监听了错误的端口。解决办法见[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="改为关联仓库，并在每次推送时自动重新部署。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="以安全的方式为应用提供机密与设置。" />
+  <Card title="添加自定义域名" href="/docs/guides/custom-domains" description="把应用放上你自己的 yourname.com 地址，自动配 HTTPS。" />
+</Cards>

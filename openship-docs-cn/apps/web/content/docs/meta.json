@@ -1,0 +1,22 @@
+{
+  "title": "文档",
+  "pages": [
+    "index",
+    "---快速上手---",
+    "getting-started",
+    "---构建与运维---",
+    "guides",
+    "dashboard",
+    "---开发者---",
+    "api",
+    "cli",
+    "mcp",
+    "reference",
+    "---平台---",
+    "architecture",
+    "security",
+    "---帮助---",
+    "troubleshooting"
+  ],
+  "root": true
+}

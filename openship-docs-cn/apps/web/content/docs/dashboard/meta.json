@@ -1,0 +1,14 @@
+{
+  "title": "控制台",
+  "pages": [
+    "index",
+    "projects",
+    "deploy-wizard",
+    "library",
+    "servers",
+    "emails",
+    "backups",
+    "settings",
+    "billing"
+  ]
+}

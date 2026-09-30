@@ -1,0 +1,85 @@
+---
+title: 审计日志
+description: 读取并过滤组织活动。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+审计（audit）API 是你当前活动组织的只读、只追加审计日志信息流：每发生一次重要操作（登录、成员变动、部署、设置修改等）就产生一条事件，按最新排序。在控制台中这是**审计**（Audit）页面；没有专门的 CLI 命令——请通过
+[`openship api`](/docs/cli/access) 访问。
+
+## 列出审计事件
+
+每条事件都限定在你的活动组织内。访问按角色控制：所有者（owner）和管理员（admin）始终可以查看日志，普通成员被拒绝，受限用户需要在组织级的 `audit` 资源上有明确的 `audit:read` 授权。参见[权限与角色](/docs/security/auth)。
+
+### 查询参数
+
+所有参数都是可选的。分页模式只能**二选一**：传 `cursor`（键集分页）*或* `page`/`perPage`（偏移分页）。凡是需要连续拉取多页的场景都推荐游标模式——它在并发写入时不会导致数据行错位；页码模式则支撑控制台的"显示第 1–50 条，共 N 条"计数。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.audit.list();
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+# 游标模式——最新 50 条部署失败事件
+curl -G "$OPENSHIP_URL/api/audit" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  --data-urlencode "cursor=" \
+  --data-urlencode "limit=50" \
+  --data-urlencode "eventType=deployment.failed"
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    cursor: { type: 'string', description: '上一次响应 pageInfo.endCursor 给出的不透明键集游标。只要出现该参数（即使为空）即进入游标模式。' },
+    limit: { type: 'number', description: '游标模式下的页大小。上限 200。', default: '50' },
+    page: { type: 'number', description: '偏移模式下从 1 开始的页码。', default: '1' },
+    perPage: { type: 'number', description: '偏移模式下的页大小。上限 200。', default: '50' },
+    eventType: { type: 'string', description: '按点号命名空间的事件分类过滤，例如 deployment.succeeded、member.invited、settings.updated。' },
+    actorUserId: { type: 'string', description: '只保留单个用户执行的事件。' },
+    resourceType: { type: 'string', description: '按资源类型过滤，例如 project、deployment、server、settings、member、organization。' },
+    resourceId: { type: 'string', description: '只保留单个资源。通常与 resourceType 组合使用。' },
+  }}
+/>
+
+### 响应
+
+每条事件行都带有 `id`、`eventType`、`resourceType`、`resourceId`、`before`/`after` JSON 快照（仅变更事件才有；否则为 null）、`ipAddress`、`userAgent` 和 `createdAt`。各行还会补充一个由 `actorUserId` 解析出的 `actor` 对象（`{ id, email, name }`），系统自动发出的事件则为 `null`。
+
+分页信封取决于所选模式：
+
+- **游标模式** → `{ data, pageInfo: { hasNextPage, endCursor } }`。把 `endCursor` 作为 `cursor` 传入即可获取下一页；没有 `total` 字段。
+- **偏移模式** → `{ data, total, page, perPage }`。
+
+## 错误
+
+<Callout title="403 — 无权限" type="warn">
+你的角色无法读取审计日志。成员默认被拒绝；请管理员在组织的 `audit` 资源上授予 `audit:read`，或用管理员账号查看日志。参见[权限与角色](/docs/security/auth)。
+</Callout>
+
+<Callout title="返回空结果而非报错" type="info">
+过滤条件什么也匹配不到时会返回 `200` 和空的 `data` 数组。请仔细检查 `eventType` 的拼写（必须使用精确的点号命名空间标签），并确认 `resourceId` 属于你的组织。保留期（retention）由组织自行配置（默认 90 天），超出窗口期的旧事件会被清理，不会出现。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取按条件过滤、分页的审计事件。 | `audit.list(input?)` | `GET /api/audit`<br />`audit:read` |
+| 读取可用的审计过滤值。 | `audit.facets(input?)` | `GET /api/audit/facets`<br />`audit:read` |
+| 读取审计保留策略设置。 | `audit.getSettings()` | `GET /api/audit/settings`<br />`audit:read` |
+| 修改审计保留策略设置。 | `audit.updateSettings(input)` | `PATCH /api/audit/settings`<br />`audit:write` |
+
+{/* api-operations:end */}

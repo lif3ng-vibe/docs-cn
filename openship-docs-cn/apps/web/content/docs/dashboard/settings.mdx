@@ -1,0 +1,142 @@
+---
+title: 设置
+description: Settings 一屏——GitHub 连接、部署默认值、令牌、MCP、团队、通知、审计日志、云与实例控制，每个标签页讲透一块。
+---
+
+Settings 集中放置所有不与单个项目绑定的事宜：如何连接
+GitHub、新部署默认落在哪里、与你的 API 通信的令牌（token）和 AI 客户端、团队里有哪些人，以及这套安装本身如何运行和更新。
+
+从控制台左侧导航打开（**Settings** 条目），或直达 **`/settings`**。界面右侧（移动端为一条横向条）是切换各分区的标签导航。每个标签也都能用 `?tab=` 查询参数直接链接——例如 `/settings?tab=team`——便于收藏或分享你指的那个确切位置。
+
+<Callout title="某些标签和分区只在特定配置下出现" type="info">
+**Cloud** 标签在托管的 Openship Cloud 上是隐藏的——它只在自托管和桌面安装上显示。**Audit log** 标签始终列出，但日志本身只对**管理员与 owner**（admins and owners）加载（成员看到的是空流）。在 **Instance** 内，**Updates** 和**数据导出/导入**分区只出现在它们讲得通的地方——即自托管或桌面安装。如果本文描述的某样东西不在你预期的位置，原因就在此。
+</Callout>
+
+## General
+
+首个标签包含语言、界面偏好和自托管的构建偏好。
+
+## Git
+
+**Git** 标签掌管出站源代码管理访问。在自托管实例上，工作区 owner 首先看到
+**Self-hosted GitHub Apps**，可以在那里用 GitHub 的 manifest 流创建 App、注册一个已有的
+GitHub 或 GitHub Enterprise App、管理安装、轮换凭据、验证健康状况，并选择默认源。参见[自托管 GitHub Apps](/docs/guides/self-hosted-github-app)。
+
+其下的 **GitHub** 连接卡片管理单独的本地 `gh`/device/令牌身份以及托管的 Openship App 回退。当存在工作区持有的 App 时，它们的安装、管理和删除控件只保留在源卡片里，因此 **Disconnect** 不会产生误导性地只移除一个不相干的 OAuth 账户。
+
+**GitHub clone credentials** 卡片存储用于私有 clone 的个人令牌回退。在桌面端，它还可以把本地 Git 身份转发给远程构建服务器。
+
+完整的逐条流程参见[从 GitHub 部署](/docs/guides/deploy-from-github)。
+
+### Deploy Defaults
+
+*(仅限自托管与桌面端。)* 选定新部署默认落到哪里——**This Machine**
+（本地 Docker/运行时）、**My Server**（一台已配置的 SSH 服务器）或 **Openship Cloud**。所选目标会在部署选择器里预选中；你仍可以按次覆盖，或选择 **Clear default**（每次询问）。
+
+
+### Build Preferences
+
+*(仅限自托管与桌面端。)* 为新部署选择默认构建策略：**Auto**（按框架智能选择）、
+**Server**（在远端构建）或 **Local**（在本机构建）。按项目覆盖则在各项目自己的设置里。
+
+### Language
+
+选择控制台全局使用的语言。变更立即生效。
+
+## Tokens
+
+让其他东西能代表你行动的凭据。GitHub clone 凭据放在 **Git** 里；本标签放的是 API 访问令牌。
+
+### 个人访问令牌（Personal Access Tokens）
+
+供 API、CLI 和 MCP 客户端使用的 Bearer 令牌。每个令牌**以你的身份行动**——默认携带你角色的权限，除非你收窄它。创建时可以：
+
+- 给它命名（如 "MCP client"）。
+- 设定有效期：**No expiry**、**30 days**、**90 days** 或 **1 year**。
+- 标记为 **Read-only**，阻止所有写入。
+- **Limit to specific resources** 把它限定在你自己角色之下——最适合做一个窄权限的 MCP 令牌。
+
+按 **Create token**，然后立即复制——这是唯一一次显示值的机会。已有令牌列出时带 **read-only** / **scoped** 徽标和一个 **Revoke** 按钮。
+
+<Callout title="现在就复制令牌" type="warn">
+新令牌的值只在创建时显示一次。丢了就无法找回——只能撤销再新建一个。
+</Callout>
+
+## MCP
+
+通过模型上下文协议把 AI 代理（Claude、Cursor、VS Code、Windsurf 等）接上你的 OpenShip API。本标签显示该实例的 **Endpoint**——一个 Streamable-HTTP JSON-RPC URL，通常为
+`https://<your-host>/api/mcp`——外加各客户端的安装片段。
+
+两种认证方式：
+
+- **OAuth**——客户端打开浏览器做授权；你批准访问并选择它能触达的范围。无需复制任何东西。OpenShip 是一个符合标准的 OAuth 2.1 MCP 服务器。
+- **Static token**——对没有 OAuth 能力的客户端，把一个固定的、限定范围的令牌（在 **Tokens** 标签里创建）放进客户端配置。
+
+**Connected clients** 列出每个已授权客户端及其访问级别（read-only / full control）和资源范围，各带一个断开连接的操作。
+
+## Team
+
+谁能访问本组织的项目、部署和服务器。完整的工作流参见
+[团队与成员](/docs/guides/teams-members)。
+
+- **Active members**——所有有访问权的人、其角色，以及 **Remove member** 操作。
+- **Pending invitations**——你已发出但尚未被接受的邀请。
+- **Invite member**——通过邮件发送加入链接。选一个角色：**Member**（对一切可读可写）、**Admin**
+  （Member 加上管理成员和计费）或 **Restricted**（默认无任何访问——你精确指定开放哪些资源）。Restricted 邀请会打开资源选择器。
+
+如果你在个人工作区上，这个标签还会提供 **Create team** 去创建一个独立隔离的团队组织。
+
+## Notifications
+
+决定你会收到哪些通知，以及发到哪去。
+
+- **Delivery channels**——通知发送的目的地。添加 **Email**、**Webhook**、**Slack**、**Discord**
+  或 **Microsoft Teams** 渠道；应用内的控制台铃铛始终开启。出站渠道在验证通过前会被跳过——发送一次测试即可完成验证。
+- **要通知什么**——一张事件 × 渠道的网格；你拨开的每个格子就是一条订阅。事件覆盖整个平台：部署（成功 / 失败 / 取消）、备份（成功 / 失败 /
+  恢复完成）、定时任务、域名到期与验证、团队变更，以及计费/配额告警。
+- **Organization defaults**——新成员加入时应用的订阅。成员可以在自己的范围内按渠道覆盖它。
+
+## Audit log
+
+*(仅限管理员或 owner。)* 组织内每一次变更的持续流——谁做的、改了什么、何时改的。可跨事件、操作者和资源搜索，按事件类型过滤，展开任意条目查看变更的**前后对照**（before/**after**）及操作者详情（姓名、邮箱、IP、user agent）。
+
+## Cloud
+
+*(仅限自托管与桌面端。)* 把本实例连接到 Openship Cloud，以解锁云端部署、托管 SSL 和全球 CDN。按 **Connect to Openship Cloud** 并登录；连接后卡片显示你的云账户，并带 **Disconnect** 选项。也是这条连接让你能把实例迁移到云端——参见[连接 Cloud 与迁移](/docs/guides/cloud-connect-migration)。
+
+## Instance
+
+关于*这套安装*的一切。顶部两张卡片分别显示实例类型（**Desktop**、**Openship
+Cloud** 或 **Self-Hosted**）及其部署模式和版本，以及认证模式（**Zero Auth**、**Cloud
+Auth** 或 **Local Auth**）和登录用户。在零认证的桌面安装上，一条 **Change** 链接可以让你在保留全部项目和历史的前提下添加邮箱 + 密码登录。
+
+### Updates
+
+*(仅限自托管与桌面端。)* 显示当前版本和是否有更新的发行版，带
+**Check now** / **Update now**、一个 **Automatic updates** 开关（默认关闭），以及一个 **Update & security notifications** 开关。OpenShip 只从公开的 GitHub releases *拉取*这份数据——没有任何东西能向你的安装推送更新。更多内容参见[更新 OpenShip](/docs/guides/updating)。
+
+### 导出与导入数据（Export / Import）
+
+*(仅限自托管与桌面端，且仅限实例管理员。)* **Export instance or projects** 会下载一份可移植的 JSON 文件。可以选整个实例，或批量勾选若干项目及单个环境。同一个项目级导出入口在 **Project → Advanced → Export project**，默认勾选该项目的全部环境。
+
+项目导出包含部署记录、服务配置、环境变量、总览分析数据、关联应用、路由规则、
+备份策略与备份目标，以及 Git 凭据。相关的自托管服务器会被推荐并默认包含。你可以选择纳入哪些配置与历史。实例导出与项目导出均把环境变量值、私钥、部署快照、内联 Compose 配置
+和凭据以**未加密的 JSON** 形式写入，没有导出密码。凭据和全部历史默认勾选。可继续使用列出的服务器，或把目标实例连接到同一 Openship Cloud 账户。
+
+**Import data**一次性上传该文件并预览其内容。实例压缩档以**整体替换目标实例**（Replace
+the entire destination instance）模式起步，应用前需确认。它把源端的项目、用户、服务器、凭据、设置和所含历史恢复到目标实例较旧的记录之上。对于项目压缩档，选择要导入当前工作区的环境，审查冲突，并把源服务器映射到目标服务器。匹配到的自托管服务器会带着其现有连接凭据被复用。默认跳过已有项目；**Overwrite matching project records** 会替换选中的项目、移除目标端在这些类别里多出的记录，并尊重源端已清空的凭据。审查界面会显示将移除多少条记录。未纳入的类别和其他项目会被保留。单个项目可以覆盖这个选择。共享的集成与备份
+目标会被复用，除非你明确选择覆盖共享设置。
+
+Cloud 项目要求目标工作区连接到**同一个 Openship Cloud 账户**。Cloud 服务器无法在账户之间转移。对项目导入而言，源控制面主机需要显式的目标映射。映射到不同主机的项目会以停用状态到达、清空在运行的容器引用，随时可迁移或重新部署。
+
+项目导入中，回环（loopback）SSH 地址同样需要显式映射。使用源本地文件夹或另一台备份主机的备份计划会以停用状态到达；重新连接存储、验证之后，再启用这些计划。
+
+导出内容包含控制面元数据。卷内容、数据库数据、源文件夹和主机的 TLS 文件仍留在各自的服务器上。继续使用那台服务器，或用迁移/备份恢复把运行时数据搬走。控制面地址变化时，重新连接本地源文件夹并更新 Git/Webhook（网络回调）回调 URL。导入结果里保留了这些后续注意事项。
+
+直连传输（direct transfer）用于整实例搬运。项目级的挑选请用导出文件，这样在应用之前可以在目标端审查冲突与服务器映射。
+
+<Callout title="导入可能抹掉本实例" type="warn">
+实例压缩档提供合并或整体替换两种方式。替换会
+清空全部目标数据并把你登出。项目压缩档永远不会抹掉实例。只有**实例管理员**（instance administrator）能执行导出或导入。较早的密码保护压缩档仍需要其原始密码。若旧文件不含凭据，请从更新后的源重新导出；
+导入无法恢复文件中不存在的值。导入较新的压缩档之前先更新目标，以便其中所有字段都能被恢复。
+</Callout>

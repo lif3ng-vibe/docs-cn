@@ -1,0 +1,108 @@
+---
+title: SDK 实用工具
+description: 类型化输入、分页、部署辅助工具与 HTTP 传输。
+---
+
+这些实用工具支撑 [API](/docs/api) 中记录的资源操作。
+
+## 类型化输入与结果
+
+方法的输入与结果类型由 `openship` 导出。编写可复用的集成时，可以推导某个具体操作
+的类型：
+
+```ts
+import type { ProjectOperations } from "openship";
+
+type CreateProjectInput = Parameters<ProjectOperations["create"]>[0];
+type Project = Awaited<ReturnType<ProjectOperations["get"]>>;
+
+export async function createProject(input: CreateProjectInput): Promise<Project> {
+  return ship.projects.create(input);
+}
+```
+
+不要导入仓库内部的包。公开包导出了操作类型、契约和 SDK 错误。操作表中的 `?` 表示
+可选参数。
+
+## 分页
+
+`iteratePages()` 可与返回 `{ data, total?, page?, perPage? }` 的命名列表方法配合使用：
+
+```ts
+import { iteratePages } from "openship";
+
+for await (const project of iteratePages((page) => ship.projects.list(page), { perPage: 50 })) {
+  console.log(project.id, project.name);
+}
+```
+
+传入 `signal` 即可停止迭代。返回普通数组的方法不需要这个辅助函数。每一页的访问权限
+都由底层列表操作检查。
+
+## 部署辅助工具
+
+使用 `ship.deployment(id)` 获取一个句柄，或直接传入操作对象：
+
+```ts
+import { createDeploymentHandle, waitForDeployment, consumeDeploymentEvents } from "openship";
+
+const handle = createDeploymentHandle(ship.deployments, "dep_123");
+const status = await handle.status();
+console.log(status.deploymentStatus);
+
+export async function waitForRelease(deploymentId: string) {
+  return waitForDeployment(ship.deployments, deploymentId, { timeoutMs: 120_000 });
+}
+
+export async function printBuildLogs(deploymentId: string, signal: AbortSignal) {
+  return consumeDeploymentEvents(ship.deployments.events(deploymentId, { signal }), (event) => {
+    if (event.log) process.stdout.write(event.log);
+  });
+}
+```
+
+`createDeploymentHandle()` 暴露 `id`、`get`、`status`、`wait`、`events`、`cancel`、
+`respond` 和 `rollback`。它不拥有安装。参见
+[部署结果与决策](/docs/api/deployments#等待决策与取消)。
+
+## Compose 规范化
+
+`normalizeComposeServices(document, baseDirectory)` 把**规范化后的 Compose JSON**
+（例如 `docker compose config --format json` 的输出）转换为 `services.sync()` 所期望
+的输入。
+
+```ts
+import { normalizeComposeServices } from "openship";
+
+const services = normalizeComposeServices(
+  {
+    services: { cache: { image: "redis:7" } },
+  },
+  "/absolute/path/to/project",
+);
+
+await ship.services.sync("proj_123", { services });
+```
+
+它会校验出不受支持的挂载、构建和命名空间设置。调用这个辅助函数之前，请先解析 YAML
+并求值 Compose 插值。参见[服务](/docs/api/services#从-docker-compose-同步)。
+
+## HTTP 传输
+
+只有远程 `OpenshipClient` 暴露 `http`。对于没有命名 SDK 方法的已记录端点，可以使用
+它：
+
+```ts
+import type { OpenshipClient } from "openship";
+
+export async function readImageCatalog(client: OpenshipClient) {
+  return client.http.request("/images");
+}
+```
+
+`http.request<T>(path, init?)` 解析 JSON 响应体；`T` 是你自己的断言，并非运行时校验。
+`http.raw(path, init?)` 返回一个 `Response`。`http.events(path, options?)` 读取 SSE
+流，`http.url(path)` 构造 API URL。这些辅助函数遵循客户端的 URL、凭据和作用域限制。
+它们不会为仅 HTTP 支持的功能添加原生支持。
+
+错误处理参见 [SDK 错误](/docs/api/sdk/errors)。

@@ -1,0 +1,86 @@
+---
+title: 问题与健康
+description: 读取你有权查看的问题、检查工作负载健康，并请求新的检查。
+---
+
+问题（issue）汇总了部署故障、事故、域名失败、组件健康与更新公告。
+结果会过滤为调用方可见的资源。
+
+## 列出问题
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.issues.list({ status: "open" });
+console.log(result.issues, result.counts);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/issues?status=open" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+`status` 可为 `open` 或 `resolved`。结果包含 `issues`、`counts` 与所选 `status`。
+每个问题都包含其严重程度、来源、目标、消息以及受支持的处置动作（如有）。
+计数按 `outage`、`actionRequired`、`advisory` 和 `total` 分组。
+
+## 检查工作负载健康
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const health = await ship.issues.health();
+console.log(health.workloads, health.currentScan);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/issues/health" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+健康快照（health snapshot）包含工作负载观测数据、扫描时间与 watcher 能力。它不会启动
+持续的 watcher。`scanHealth()` 在宿主机支持时请求一次全新的一次性检查；
+它会刷新快照，但不会开启或关闭事故（incident）。除非显式配置，原生调度始终保持禁用。
+
+## 刷新问题来源
+
+`rescan()` 在自托管实例上启动更广泛的重新扫描流水线，要求具有 job-write 权限的实例管理员。
+`rescanStatus()` 读取最近一次扫描的各阶段状态、摘要与失败项。已完成的阶段仍可能报告缺口，
+例如无法到达的服务器或离线的桌面端。
+
+使用 `rescan({ healthOnly: true })` 可运行现有的容器/服务器健康 watcher 并对齐事故，
+而不做组件更新或域名对账。REST 等价形式在 `POST /api/issues/rescan` 请求体中接受
+`{"healthOnly":true}`。省略输入则保持完整的重新扫描行为。如果已有扫描在运行，
+请求会返回那个已有的会话；随后用 `rescanStatus()` 跟踪其进度。
+
+断开连接的桌面端无法建立远程服务器健康状态。"监控"页面会在桌面端重新连接时请求一次新的
+健康检查，而"服务器不可达"事故只有在守护进程应答成功后才会关闭。
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取可见的活跃或已解决问题及其建议操作。 | `issues.list(input?)` | `GET /api/issues`<br />`project:list` |
+| 按严重程度读取问题计数。 | `issues.summary()` | `GET /api/issues/summary`<br />`project:list` |
+| 读取缓存的工作负载健康快照。 | `issues.health()` | `GET /api/issues/health`<br />`project:list` · 自托管 |
+| 在不启用调度器的情况下刷新当前工作负载健康。 | `issues.scanHealth()` | `POST /api/issues/health/scan`<br />`project:list` · 自托管 |
+| 运行适用的问题检查器，或仅运行容器/服务器健康检查。 | `issues.rescan(input?)` | `POST /api/issues/rescan`<br />`job:write` · 自托管 |
+| 读取问题重新扫描的状态。 | `issues.rescanStatus()` | `GET /api/issues/rescan/status`<br />`job:read` · 自托管 |
+
+{/* api-operations:end */}

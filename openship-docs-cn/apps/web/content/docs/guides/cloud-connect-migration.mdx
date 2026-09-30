@@ -1,0 +1,131 @@
+---
+title: 连接 Cloud 与迁移
+description: 把你自己运行的 Openship 连接到 Openship Cloud，把单个项目上移或带回本地，并（在概览层面）把实例开放给整个团队。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Openship 可以运行在两个地方。其一**你自己的实例**——你自己安装并管理的版本。其二 **Openship Cloud**——托管版本，由我们替你运行服务器、SSL 和全球网络。可以想象成一个工坊：你可以在自己的车库里干活，也可以在共享创客空间里租一张装备齐全的工作台。本指南讲的就是把这两者连接起来，并在其间迁移工作。
+
+人们常混淆三件事，先摆清楚：
+
+- **连接（Connecting）**——把你的实例关联到一个 Cloud 账户，让云功能点亮。不迁移任何东西。
+- **提升一个项目（Promoting）**——把某个现有项目交给 Cloud 运行。它会迁移。
+- **团队模式迁移**——把整个单用户实例改造成共享的多用户部署。
+
+<Callout title="先准备好这些">
+- 一个已经跑起来的自托管 Openship 实例（你能看到控制台（dashboard））。**Cloud** 设置标签页只出现在自托管实例上——Cloud 本身无物可连。
+- 你要是**工作区（workspace）所有者**。连接与断开 Cloud 是仅限所有者的操作。
+- 一个 Openship Cloud 账户。在连接步骤弹出的窗口里登录或注册即可，无需提前准备。
+</Callout>
+
+## 把实例连接到 Openship Cloud
+
+这一步把你的实例关联到一个 Cloud 账户。它**不会**迁移任何项目——只是解锁部署到 Cloud 和使用 Cloud 支撑的功能这两个选项。
+
+<Steps>
+
+<Step>
+
+### 打开 Cloud 设置
+
+在控制台进入 **Settings**，从左侧选择 **Cloud** 标签页。你会看到一张 **Connect to Cloud** 卡片，带 **Connect to Openship Cloud** 按钮。
+
+</Step>
+
+<Step>
+
+### 登录并授权
+
+点击 **Connect to Openship Cloud**。会弹出 Openship Cloud 的窗口，先要求登录，再**授权**这次连接——这就是"你允许吗？"的同意环节，和把应用关联到你的 Google 或 GitHub 账号是同一个道理。选择允许。
+
+窗口关闭后，卡片翻转为绿色 **Connected** 徽章，并显示你关联的 Cloud 账户。
+
+</Step>
+
+</Steps>
+
+<Callout title="连接不会迁移任何东西" type="info">
+连接之后，你的项目仍在原处原样运行。连接只是给实例授予了与 Cloud 对话的权限。要真正迁移一个项目，见下一节。
+</Callout>
+
+### 断开连接
+
+在同一张卡片上，**Disconnect** 按钮解除账户关联。Openship 会先请你确认，因为**在你重新连接之前，云部署都会停止工作**，且断开还会连带断掉挂在云连接上的共享 GitHub 连接——之后通过 Cloud 接入的仓库都需要重新连接。
+
+## 把一个项目迁移到 Cloud（或迁回来）
+
+连接之后，你可以把单个自托管项目交给 Cloud 运行——这叫**提升（promote）**。也可以把云项目拉回你自己的实例——**带回本地**。
+
+<Callout title="谁拥有云项目？" type="warn">
+这是重要的边界。**项目一旦落到 Openship Cloud，Cloud 就是它的所有者**——云上的副本才是唯一真实副本。你的实例保留一个指向它的指针，并在它前面充当网关，所以它仍显示在你的控制台里，但真正的项目活在 Cloud 上。带回本地会反转这一关系，让实例重新成为所有者。完整图景参见 [Cloud 作为源](/docs/architecture/cloud-as-source)。
+</Callout>
+
+目前这一操作要在 **CLI** 中执行。两个方向都仅限自托管，且你的实例必须先连接到 Cloud（见上文一节）。
+
+```bash
+# 把项目提升到 Openship Cloud（此后由 Cloud 运行它）
+openship project transfer <project-id> to-cloud
+
+# 把一个云项目带回你自己的实例
+openship project transfer <project-id> to-self-hosted
+```
+
+项目的 id 可用 `openship project list` 查到。它们底层调用的是
+`POST /api/projects/:id/transfer/to-cloud` 和 `.../to-self-hosted`。
+
+## 把实例开放给团队（迁移）
+
+以上操作全都保持你的实例**单用户**——只有你能登录。当你准备好接纳同事，就把整个实例迁移到**多用户模式**。这是一次更大的、一次性的操作，这里只勾勒轮廓——完整流程见 [团队与成员](/docs/guides/teams-members)。
+
+前往 **Settings → Team**。实例还是单用户时，所有者会看到一张 **Team workspace** 卡片，带 **Migrate** 按钮。按下它打开 **Move to multi-user mode** 选择器，共三条路径：
+
+- **迁移到你的服务器**——通过 SSH 把 Openship 部署到你自己拥有的 VPS 上，并把数据迁移过去。无外部依赖。
+- **迁移到 Openship Cloud**——把你的数据推上 Cloud，由我们托管一切。你的本地实例变成一个指向 Cloud 的启动器。（需要上文提到的 Cloud 连接。）
+- **保持本地，经隧道暴露**——数据留在这台机器上；Openship 打开一条公网隧道，只要你的机器在线，同事就能访问。（同样需要 Cloud 连接。）
+
+<Callout title="随时可以切回来" type="info">
+迁移不是陷阱门。无论选哪条路，本地数据都留在磁盘上，你以后可以切回单用户模式。迁往 Cloud 也不会送出你的机密——加密字段会在上传前剥离。
+</Callout>
+
+### 用终端执行同样的迁移
+
+如果想写成脚本，`system migration` 命令对应上述三条路径，外加一条回退：
+
+```bash
+# 迁到自己的服务器（先运行一次只读的就绪检查）
+openship system migration preflight --server-id <id> --slug myteam
+openship system migration start     --server-id <id> --slug myteam
+
+# 迁到 Openship Cloud
+openship system migration start-cloud
+
+# 保持本地，经隧道暴露
+openship system migration start-tunnel --slug myteam
+
+# 撤销以上任一操作，回到单用户
+openship system migration switch-back
+```
+
+## 故障排查
+
+<Callout title="Settings 里没有 Cloud 标签页" type="warn">
+**Cloud** 标签页仅在自托管实例上显示。如果你已经在用 Openship Cloud，就无物可连——云功能默认开启。如果你*确实*在自托管却看不到它，确认你是以工作区**所有者**身份登录的。
+</Callout>
+
+<Callout title="“This organization is not connected to Openship Cloud”" type="error">
+在实例连接之前就运行了 `transfer` 或 Cloud 迁移。先在 **Settings → Cloud** 完成连接（必须是所有者），再重跑命令。
+</Callout>
+
+<Callout title="连接窗口关了，卡片却仍显示“Connect”" type="error">
+登录或授权步骤没有完成。再次点击 **Connect to Openship Cloud**，并在弹窗中完成登录和 **Authorize** 两步。如果浏览器拦截弹窗，请为控制台放行后重试。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="Cloud 作为源" href="/docs/architecture/cloud-as-source" description="为什么云项目由 Cloud 所有，以及你的实例如何代理到它。" />
+  <Card title="Cloud 边界" href="/docs/security/cloud-boundary" description="哪些内容会跨过边界上到 Cloud——哪些永远不会离开你的机器。" />
+  <Card title="团队与成员" href="/docs/guides/teams-members" description="多用户迁移完整流程、角色与邀请。" />
+  <Card title="数据所有权" href="/docs/architecture/data-ownership" description="导出并导入一切，两个方向都没有锁定。" />
+</Cards>

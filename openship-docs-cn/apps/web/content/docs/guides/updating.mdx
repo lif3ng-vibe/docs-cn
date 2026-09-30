@@ -1,0 +1,155 @@
+---
+title: 更新 Openship
+description: 让你的 Openship 保持最新——一键桌面更新器、CLI 更新命令，以及常开服务如何接收新发布。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Openship 的新版本会不时发布——缺陷修复、新功能，偶尔还有安全补丁。更新是你获取它们的方式。可以把它想成手机上的更新按钮：Openship 检查是否有更新的版本，如果有，就把旧的换成新的。
+
+Openship 获取这些更新只有一个来源：项目的 **GitHub 公开发布页**。它**拉取**这些信息——向 GitHub 询问“有没有更新的版本？”。任何东西都不会被推到你的安装里，也没有任何 Openship 运营的服务器能伸进来改动你的应用。何时更新（以及是否更新）始终由你掌控。
+
+<Callout title="值得知道">
+- **自动更新默认关闭**。有更新时 Openship 会告诉你；但不会背着你擅自安装（桌面应用可以，前提是你打开了该开关）。
+- **信息都在哪里**：控制台在 **Settings → Instance → Updates** 之下显示更新状态。
+- 这只对自跑 Openship 的人出现——**桌面应用**和**自托管服务器**。在 Openship Cloud 上没有需要你更新的东西；我们代劳。
+</Callout>
+
+## 更新信息在哪里看
+
+打开 **Settings**（设置）并选择 **Instance**（实例）标签页。滚动到 **Updates**（更新）版块。它显示：
+
+- 你现在用的版本，以及是否存在更新——要么 **“You're on the latest version”**（你已是最新版本），要么 **“Openship _x.y.z_ is available”**（有 Openship _x.y.z_ 可用）。
+- 一个 **Check now**（立即检查）按钮，可以立刻再问一次 GitHub（Openship 自己也会定期检查）。
+- 一个 **View changelog & releases**（查看更新日志与发布）链接，打开 Openship 官网上的产品更新日志。
+- **Automatic updates**（自动更新，仅桌面端）和 **Update & security notifications**（更新与安全通知）的开关。
+
+## 更新
+
+如何更新取决于你如何运行 Openship。选择你的情况。
+
+<Tabs items={["Desktop app", "Self-hosted server (CLI)"]}>
+
+<Tab value="Desktop app">
+
+桌面应用自己会更新——你只要点头同意。
+
+<Steps>
+
+<Step>
+
+### 等待更新通知
+
+新版本发布时，一条通知会从**控制台顶部**滑入：*“Openship _x.y.z_ 可用”*。它就悬在页面正上方，无需你去找。
+
+</Step>
+
+<Step>
+
+### 点击 Update now
+
+点击 **Update now**（立即更新）。通知会变成进度条，显示 **“Downloading Openship _x.y.z_”**，并随着新版本下载给出百分比。
+
+</Step>
+
+<Step>
+
+### 让它重启
+
+下载完成后，进度条显示 **“Installing — Openship will restart”**。应用会用新版本替换自己并自行重新打开。就这样——你已在新版本上了。🎉
+
+</Step>
+
+</Steps>
+
+<Callout title="想全自动化？" type="info">
+在 **Settings → Instance → Updates** 中打开 **Automatic updates**（自动更新），桌面应用就会替你下载并安装新发布，不必等你点击。它默认关闭，何时更动你的应用由你决定。
+</Callout>
+
+</Tab>
+
+<Tab value="Self-hosted server (CLI)">
+
+自托管服务器（用 CLI 安装的）从终端更新。`openship update` 命令会把 CLI——它捆绑了 API 服务器——更新到最新发布。
+
+<Steps>
+
+<Step>
+
+### 运行更新命令
+
+```bash
+openship update
+```
+
+Openship 检查 GitHub，如果有更新的版本就原地自我更新。如果你用的是**安装脚本**（默认方式），它会重新下载经校验和验证的发布包并替换进来——若某次发布需要更新的 Node 运行时，会先刷新运行时。如果你安装的是 **npm 包**，它会用你的包管理器重装（有 **bun** 就用 bun，否则用 **npm**）。如果你已是最新，它只会如实告知然后停下。
+
+</Step>
+
+<Step>
+
+### 在新版本上重启服务
+
+更新只是替换文件，但已在运行的服务器会继续跑旧版本，直到你重启它。把它拉起来：
+
+```bash
+openship up
+```
+
+这会在新发布上重启常驻服务，并自动获取匹配的控制台。
+
+</Step>
+
+</Steps>
+
+<Callout title="只想知道有没有更新？" type="info">
+不做任何改动地检查一下：
+
+```bash
+openship update --check
+```
+
+它会告诉你当前版本以及是否有更新可用，然后退出。什么都不安装。
+</Callout>
+
+装的是 npm 包？需要时可以强制指定包管理器（安装脚本安装会忽略此参数，它们始终从经验证的发布包更新）：
+
+```bash
+openship update --via npm    # 或：--via bun
+```
+
+</Tab>
+
+</Tabs>
+
+## 关于常开服务
+
+如果你用 `openship up` 启动过 Openship，它就以**常驻服务**的形式运行：机器重启后它再次启动，崩溃时也自我重启。这保证你的应用时刻在线。
+
+它**不会**做的是自行变更版本。它会一直跑启动时的版本，因此 `openship update` 之后，你要再运行 `openship up` 让它在新的发布上重启（`openship stop` 则把它停下来）。完整的服务命令见[安装](/docs/getting-started/installation)。
+
+## 故障排查
+
+<Callout title="“Could not reach GitHub to check for updates”" type="warn">
+Openship 直接从 GitHub 拉取更新，所以检查需要联网——而且 GitHub 会限制同一地址的询问频率。稍等片刻再按 **Check now**，或稍后运行 `openship update`。如果一直失败，用你当初的安装方式手动重装（见[安装](/docs/getting-started/installation)）。
+</Callout>
+
+<Callout title="CLI 更新中途失败" type="error">
+`openship update` 要么重新下载经验证的发布包（安装脚本安装），要么用 bun 或 npm 重装全局包。这一步报错时，它会打印出需要手动运行的确切命令——复制并自己执行。然后用 `openship up` 重启。
+</Callout>
+
+<Callout title="更新停止，提及 POSTGRES_PASSWORD 或 BETTER_AUTH_SECRET" type="error">
+Compose 安装的生成机密只保存在 `~/.openship/compose/.env`。如果更新无法读取该文件、而数据库卷仍在，它会**不做任何更改**地停下，而不是生成注定无法生效的值——最常见的原因是用了另一个用户运行（`sudo` 读取的是 `/root/.openship`）。以拥有该安装的用户重新运行，或恢复该文件（旧文件保留在 `.env.bak`）。完整步骤：[故障排查 → openship up 拒绝重新生成机密](/docs/troubleshooting#症状openship-up-拒绝重新生成密钥)。
+</Callout>
+
+<Callout title="我更新了却还看到旧版本" type="warn">
+运行中的服务器还没重启。自托管服务器上重新运行 `openship up` 以在新版本上重启。桌面应用如果没自行重启，就彻底退出后再打开。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="安装" href="/docs/getting-started/installation" description="安装 Openship 的所有方式——以及完整的 openship up / stop 服务命令。" />
+  <Card title="Openship 如何运行你的应用" href="/docs/architecture/runtime-model" description="常驻服务在幕后实际做了什么。" />
+  <Card title="回滚或重新部署" href="/docs/guides/rollback-redeploy" description="撤销一次糟糕的部署，或把同样的代码再发布一遍。" />
+</Cards>

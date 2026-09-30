@@ -1,0 +1,469 @@
+---
+title: 应用目录 JSON
+description: Openship 应用定义的完整字段参考——这份 JSON 能把一组容器变成一键安装，附自动生成的密钥、精心策划的设置表单和一张连接卡片。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**应用**（App）是一个 JSON 文件，把一次部署包装成一键式、聚焦的体验。不用再建项目、为每个容器加服务、手写把它们连起来的镜像和环境变量、跨两个服务生成并配对数据库密码、然后钻进原始的环境变量标签页里改一个设置——你只需点开应用、填一张短表单、部署。
+
+所以应用**不是新的运行时**。它是普通[多服务部署](/docs/guides/compose-multi-service)之上的一层元数据：一个无仓库的 `services` 项目，标记为 `isApp`。底下是同一台引擎，用户的路却短得多。本页记录你能编写的每个字段。要真正提交一个应用，参见[添加应用](/docs/guides/add-an-app)。
+
+加上 `$schema` 一行，编辑器就能自动补全并内联校验：
+
+```json
+{
+  "$schema": "https://openship.io/app.schema.json",
+  "id": "it-tools",
+  "name": "IT-Tools",
+  "description": "A handy collection of developer and sysadmin utilities.",
+  "kind": "template",
+  "logo": "it-tools",
+  "category": "other"
+}
+```
+
+它是 **JSON，不是 JSONC**——不能有注释，不能有尾逗号。
+
+<Callout title="未知键会被忽略，而不是拒绝">
+校验器会剥掉它不认识的键，而不是报错。这是刻意的：正是因此，新的应用定义才能装在旧版 Openship 上，也正是因此，目录的增长永远是增量的。代价是**字段名拼错了会无声失败**——发布的 schema 和服务端都会把它丢弃而不报告。所以留着 `$schema` 那行，让编辑器帮你补全字段名，别凭记忆敲。
+</Callout>
+
+## 两种类型
+
+| `kind` | 作用 |
+|---|---|
+| **`template`** | 实例化条目中定义的 `services`（一个后端加它的数据库、一个 CMS 加它的数据库……），经 compose/services 路径部署。这是常见情形。 |
+| **`flow`** | 开通流程已有专属向导（例如邮件栈）。条目只是通过 `flowHref` 指向那个向导，**不会**实例化服务。 |
+
+## 顶层
+
+<TypeTable
+  type={{
+    id: { type: 'string', description: '稳定的 kebab-case slug。必须与文件名一致，且全局唯一。', required: true },
+    name: { type: 'string', description: '目录中显示的名称。', required: true },
+    description: { type: 'string', description: '目录卡片上的一行简介。', required: true },
+    kind: { type: '"template" | "flow"', description: 'template 实例化服务；flow 指向专属向导。', required: true },
+    logo: { type: 'string', description: 'simpleicons slug，或映射到内置 SVG 的 id。参见添加应用。', required: true },
+    category: { type: '"backend" | "database" | "cms" | "mail" | "analytics" | "automation" | "other"', description: '目录分组。封闭枚举——未知值校验失败。', required: true },
+    tags: { type: 'string[]', description: '自由格式的关键词，用于目录搜索。' },
+    framework: { type: 'string', description: '所建项目的技术栈 slug。template 应用通常为 "docker-compose"。' },
+    services: { type: 'TemplateServiceSpec[]', description: '要运行的容器。template 应用实践中必填。' },
+    configFields: { type: 'AppConfigField[]', description: '机器生成或派生的环境变量。绝不渲染为表单输入。' },
+    flowHref: { type: 'string', description: 'kind:"flow" 专用——专属向导的内部路由。必须以 "/" 开头。' },
+    settings: { type: 'AppSettingGroup[]', description: '精选设置表单，以及安装向导的输入项。' },
+    installLayout: { type: '{ settings: "single" | "split" | "grouped", columns?: 1 | 2 }', description: '可选的安装表单分组与响应式字段列数。参见表单布局。' },
+    management: { type: 'object', description: '覆盖已装应用的管理方式。参见管理。' },
+    prepare: { type: 'PrepareStep[]', description: '启动后在服务容器内运行的命令。' },
+    connection: { type: 'object', description: '安装后的连接卡片。参见连接。' },
+    endpoints: { type: 'Endpoint[]', description: '安装向导如何提供每个端口的暴露选项。' },
+    files: { type: 'FileSpec[]', description: '生成并以绑定挂载放进容器的配置文件。' },
+    provides: { type: 'Provides[]', description: '本应用向其他项目宣称可连接的包。' },
+    requires: { type: 'Requires[]', description: '本应用需要从其他项目获得的连接。' },
+    available: { type: 'boolean', description: 'false 或省略 → 显示为变灰的“即将推出”，不可安装（服务端同样强制）。' },
+    unlisted: { type: 'boolean', description: '不出现在目录网格中，但仍可按 id 完整安装——供经由其他应用的向导抵达的应用使用。自定义上传时忽略（网格是它们唯一的入口）。' },
+    verified: { type: 'boolean', description: '精选目录标记。自定义上传时由服务端强制指定——自己写它没有效果。' },
+    hosting: { type: '"self-hosted" | "experimental"', description: 'experimental → 卡片上带 ⚗ 徽标，向导里也会提示：能跑，但它很重，或上游未达生产级。' },
+    minResources: { type: '{ memoryMb?, cpuCores? }', description: '应用对机器的需求。会对照所选自托管目标作为建议性提示显示。参见主机要求。' },
+    schemaVersion: { type: 'number', description: 'JSON 形态修订号。默认 1。参见稳定性与版本。' },
+    minEngine: { type: 'string (semver)', description: '安装本应用所需的最低 Openship 版本。' },
+    updatedAt: { type: 'string', description: '仅供参考的最近更新时间戳。' },
+    repository: { type: 'string (URL)', description: '上游源码仓库。必须是合法 URL。' },
+  }}
+/>
+
+## 服务
+
+每个条目成为所建项目里的一个容器。
+
+<Callout title="服务名即主机名">
+服务在项目网络上用 `name` 互相访问。名为 `ghost-db` 的服务可以通过主机名 `ghost-db` 访问——这就是为什么 `environment` 里的数据库主机只写纯服务名，从不写 IP 或 localhost 地址。
+</Callout>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '服务名，也是它在项目网络上的主机名。', required: true },
+    image: { type: 'string', description: '要拉取的预构建镜像。请固定版本——未固定的标签在评审时会被拒绝。每个服务在 image | build 中恰好选一个。' },
+    resources: { type: '{ cpuCores, memoryMb, diskMb }', description: '初始可编辑的云服务限额：CPU 至少 0.25，内存取整 MB 至少 128，磁盘取整 MB 至少 64。提供时三个字段都必须给出。' },
+    build: { type: 'ServiceBuild', description: '内联 Docker 构建上下文——用于 Openship 需要 BUILD 而非拉取的服务。与 image 互斥。参见构建镜像。' },
+    ports: { type: 'string[]', description: 'Compose 风格的端口字符串，如 ["2368:2368"]。' },
+    exposedPort: { type: 'number', description: '接收公开路由的容器端口。' },
+    exposed: { type: 'boolean', description: '把本服务标记为获得公开路由的那一个。' },
+    routes: { type: '{ port, slugSuffix? }[]', description: '用于需要多个公开端口的服务。slugSuffix 区分额外的主机名。' },
+    environment: { type: 'Record<string, string>', description: '非机密的环境变量默认值。支持占位符。' },
+    secretEnv: { type: 'string[]', description: '本服务上属于机密的环境变量键——无论值来自 environment 还是 configField，都强制加密、绝不以明文写入。' },
+    volumes: { type: 'string[]', description: 'Compose 风格的卷。命名卷限定在项目范围内。' },
+    dependsOn: { type: 'string[]', description: '本服务要在哪些服务之后启动（填服务名）。' },
+    healthcheck: { type: 'ComposeHealthcheck', description: '{ test, interval, timeout, retries, startPeriod, disable }。disable:true 可关掉镜像自带的健康检查。' },
+    restart: { type: '"no" | "always" | "on-failure" | "unless-stopped"', description: '重启策略。' },
+    command: { type: 'string', description: '覆盖容器命令。' },
+  }}
+/>
+
+### 服务资源默认值
+
+当栈里各组件需要不同规格时，声明 `resources`。在云上，安装器把每份规格保存为该服务正常的资源设置。自托管服务保持不设上限，除非运维另行配置。重新打开或重试失败的安装时，缺失的规格会在一个事务里补齐，同时保留显式设置的服务与项目资源、文件、环境变量和机密。目录更新不会改变已部署应用的规格，也不会改动已固化的部署快照。
+
+在云上，启用的服务共享一个工作区。其 CPU 是各服务限额之和向上取整，内存包含给 Docker 和操作系统预留的 512 MB，磁盘取各服务磁盘请求的最大值，下限 8 GB。源码构建会额外预留资源。Oblien 执行命名空间的每工作区与总量限额；模板无法抬高限额，也不能赠送点数。
+
+Supabase 的规格申请 4 vCPU、8 GB 内存、40 GB 磁盘的工作区，依据其[公开的系统要求](https://supabase.com/docs/guides/self-hosting/docker#system-requirements)。按当前正式目录，它符合 Team 套餐的每工作区限额。已有的分配、更严格的已保存报价或显式的服务覆盖，仍可能导致不同的分配。依赖目录更新之前，请先部署支持资源规格的 API 版本；旧安装器会忽略这个可选字段。
+
+## 构建镜像
+
+多数服务**拉取**预构建的 `image`。有些不行：上游提供的基础镜像还需要打进去额外的包和一个开通用的入口点——Neon 的计算节点是最典型的例子。这类服务改设 `build` 而不是 `image`。它是一个内联的 Docker 构建上下文，Openship 在部署时将其物化，并在部署主机上走常规 compose 构建流水线完成构建。用 build 就无需再覆盖入口点：Dockerfile 自己设置 `ENTRYPOINT`。
+
+每个服务**恰好设置** `image` 或 `build` 之一。两者皆无（没东西可跑）与两者都有（含糊不清）都会被拒绝——`service "<name>" must set exactly one of image|build`。
+
+<TypeTable
+  type={{
+    dockerfile: { type: 'string', description: '完整 Dockerfile 内容，内联书写。', required: true },
+    files: { type: '{ path: string, content: string }[]', description: 'Dockerfile 会 COPY 进来的额外构建上下文文件（脚本、配置）。' },
+  }}
+/>
+
+### COPY 路径要加上服务名前缀
+
+这是作者最先搞错的规则。每个可构建服务都会物化到一个**以服务名命名**的子目录下，同处一个共享构建上下文中，`docker build` 以共享根目录作为上下文运行。因此 COPY/ADD 的源路径相对于根目录，而不是相对于服务自己的子目录：
+
+```dockerfile
+# service "compute", with files: [{ "path": "compute.sh", ... }]
+COPY compute/compute.sh /shell/compute.sh   # ✅ prefixed with the service name
+COPY compute.sh /shell/compute.sh           # ❌ COPY source not found → build fails
+```
+
+`files[].path` 相对于服务自己的子目录；COPY 时写作 `<service-name>/<path>`。
+
+### 取值与构建参数
+
+`{{config:KEY}}` 占位符会在安装时于 `dockerfile` 和每个 `files[].content` 中解析，与 `environment` 值中的解析完全一致——因此生成的机密或安装步骤的答案都能流进构建。
+
+**没有 `args` 映射**。Dockerfile 声明的构建 `ARG` 由项目的构建环境变量供给：运行时把每个环境变量作为 `--build-arg` 传入。把值声明成普通的 `environment` 条目（或 `configField`），再在 Dockerfile 里用 `ARG` 引用即可。
+
+<Callout title="构建发生在部署主机上">
+大的基础镜像在哪里部署就在哪里构建。小主机上，重型构建——Neon 的计算节点要拉取数百 MB 的基础镜像——可能很慢或受内存所限。这个成本是应用固有的，与 Openship 无关。
+</Callout>
+
+## 两套字段体系
+
+最常见的编写错误就是把两者搞混。声明环境变量的地方有**两处**，按*角色*划分：
+
+| | `configFields` | `settings` 且 `installStep: true` |
+|---|---|---|
+| 用途 | **机器**生成或派生的环境变量 | 向导渲染的**人工**输入 |
+| 是否渲染为表单输入？ | **否**——服务端解析 | **是**——文本、下拉、数字…… |
+| 典型用途 | `generate: "secret"` / `"jwt"`、`generateGroup` | 一个名称、一个开关、一个选中的选项 |
+
+要让用户**亲手填写**的，就是 `installStep` 设置——不是 `configField`。`configFields` 只用于运维永远不用敲的值。
+
+## configFields
+
+只放生成或派生的环境变量。每个条目对应某个 `service` 上的一个环境变量 `key`。
+
+<TypeTable
+  type={{
+    key: { type: 'string', description: '本值写入的环境变量键。', required: true },
+    service: { type: 'string', description: '接收它的服务。必须是已声明的服务。', required: true },
+    label: { type: 'string', description: '人类可读标签，用于摘要。', required: true },
+    help: { type: 'string', description: '更长的说明。' },
+    type: { type: '"text" | "password"', description: '展示方式提示。' },
+    default: { type: 'string', description: '未生成任何值时的默认值。' },
+    generate: { type: '"secret" | "jwt"', description: 'secret = 运维永远不用敲的随机值。jwt = 签名密钥（Supabase anon / service_role）。' },
+    generateGroup: { type: 'string', description: '同组的字段拿到同一个生成值——数据库密码两侧一致靠的就是它。' },
+    jwtSecretGroup: { type: 'string', description: 'generate:"jwt" 专用——存放签名密钥的 generateGroup。必须与已声明的 generateGroup 匹配。' },
+    jwtRole: { type: 'string', description: '烙进生成 JWT 的角色声明（role claim）。' },
+    required: { type: 'boolean', description: '必须能解析出一个值。' },
+    secret: { type: 'boolean', description: '加密存储，展示时打码。' },
+  }}
+/>
+
+```json
+"configFields": [
+  { "key": "MYSQL_ROOT_PASSWORD", "service": "ghost-db", "label": "Database password",
+    "generate": "secret", "generateGroup": "ghostdb", "secret": true },
+  { "key": "database__connection__password", "service": "ghost", "label": "Ghost DB password",
+    "generate": "secret", "generateGroup": "ghostdb", "secret": true }
+]
+```
+
+两个字段共用 `generateGroup: "ghostdb"`，因此同一个生成密码写向两侧，两边永远一致。
+
+## settings
+
+分组呈现的精选设置表单。`installStep: true` 的字段还会在安装向导里收集——**这是人工输入的界面**。其余都是第二天（day-2）配置。校验在表单里实时执行，保存时服务端**同样**执行。
+
+组：
+
+<TypeTable
+  type={{
+    id: { type: 'string', description: '稳定的组 id。', required: true },
+    label: { type: 'string', description: '组标题。', required: true },
+    description: { type: 'string', description: '组帮助文字。' },
+    columns: { type: '1 | 2', description: '空间允许时的字段列数。适用于已装设置与分组安装；窄容器里始终纵向堆叠。' },
+    fields: { type: 'AppSettingField[]', description: '本组的字段。', required: true },
+  }}
+/>
+
+字段：
+
+<TypeTable
+  type={{
+    key: { type: 'string', description: '本字段写入的环境变量键。', required: true },
+    service: { type: 'string', description: '写入哪个服务的环境。必须是已声明的服务。', required: true },
+    label: { type: 'string', description: '字段标签。', required: true },
+    type: { type: '"text" | "password" | "boolean" | "select" | "number" | "multiselect" | "radio" | "textarea"', description: '输入类型。', required: true },
+    help: { type: 'string', description: '输入框下方的帮助文字。' },
+    options: { type: '{ value, label }[]', description: 'select、radio 与 multiselect 的选项。' },
+    separator: { type: 'string', description: 'multiselect 专用——选中值如何拼接成环境变量值。' },
+    min: { type: 'number', description: 'type:"number" 的最小值。' },
+    max: { type: 'number', description: 'type:"number" 的最大值。' },
+    step: { type: 'number', description: 'type:"number" 的步长。' },
+    integer: { type: 'boolean', description: '要求整数。' },
+    pattern: { type: 'string', description: '值必须匹配的正则。' },
+    patternError: { type: 'string', description: '正则不匹配时显示的提示。' },
+    default: { type: 'string', description: '预填的值。' },
+    placeholder: { type: 'string', description: '输入框占位符。' },
+    fullWidth: { type: 'boolean', description: '在两列表单里横跨整行。' },
+    secret: { type: 'boolean', description: '加密存储，展示时打码。' },
+    trueValue: { type: 'string', description: 'type:"boolean" 专用——开启时写入的环境变量值（如 "1"、"yes"）。' },
+    falseValue: { type: 'string', description: 'type:"boolean" 专用——关闭时写入的环境变量值。' },
+    requiresRedeploy: { type: 'boolean', description: '修改本字段需要重新部署才能生效；界面会如此提示。' },
+    advanced: { type: 'boolean', description: '折叠进高级区。' },
+    installStep: { type: 'boolean', description: '安装向导中也收集本字段。' },
+    required: { type: 'boolean', description: '没有值就拦下安装或保存。' },
+    showIf: { type: '{ field, service?, equals?, truthy? }', description: '条件显示。仅支持 equals 或 truthy——不支持表达式。' },
+  }}
+/>
+
+### 表单布局
+
+分组与字段宽度由目录控制。控件、间距、颜色和响应式行为由控制台提供，用的是与已装应用设置相同的表单渲染器。字段仍在 `settings` 里只定义一次；只有 `installStep: true` 的字段出现在安装时。
+
+对 Convex 这类紧凑安装，在顶层加上：
+
+```json
+{
+  "installLayout": {
+    "settings": "split"
+  }
+}
+```
+
+`split` 把可编辑的项目名和安装字段放进两张相邻卡片，可用宽度过小时纵向堆叠。字段标签足以标识每个输入，无需额外的卡片标题。适合 Convex 的 Name 与 Instance name 这类小表单。
+
+`single` 把项目名和安装字段合进一张卡片。`grouped` 保留独立的项目名卡片，并把每个可见的设置组连同其标签与描述一起渲染。空组会被略去。不设 `installLayout` 时，维持原有的独立项目名卡片和单张纵向设置卡片。重新打开草稿时，项目名保持隐藏，其余设置占满整宽。
+
+`columns` 默认 `1`。适合并排的字段设为 `2`；可用宽度过小时表单会把它们堆叠，包括控制台导航占去更多空间的时候。分组模式下，组自身的 `columns` 覆盖安装默认值。该组设置在安装之后同样生效。给长文本域这类字段设 `fullWidth: true` 可横跨两列。字段顺序遵循目录；条件显示与高级折叠仍然适用。
+
+这些可选提示会随目录 API 返回，供渲染方使用。它们不改变环境变量值、必填校验或路由，旧客户端可以直接忽略。请在目录 JSON 里使用这些受支持的提示，而不要用 CSS 类或可执行的布局表达式。
+
+## connection
+
+安装后的**连接卡片**：用户需要的网址和密钥，以及向另一个项目的交接。
+
+<TypeTable
+  type={{
+    title: { type: 'string', description: '卡片标题。' },
+    description: { type: 'string', description: '卡片导语。' },
+    outputs: { type: 'Output[]', description: '要展示的值。见下文。', required: true },
+    guide: { type: '{ intro?, useHint?, defaultMode? }', description: '引导文案。defaultMode（"internal" | "public"）预选先展示值的哪种形态。' },
+    firstLogin: { type: '{ username?, password?, note? }', description: '应用自带的静态默认凭据（例如 Grafana 的 admin/admin）。是固定值，不从运行中的服务解析——因此不能放进 outputs。' },
+  }}
+/>
+
+每个输出：
+
+<TypeTable
+  type={{
+    id: { type: 'string', description: '稳定 id。provides.outputRefs 引用它。', required: true },
+    label: { type: 'string', description: '行标签。', required: true },
+    source: { type: 'string', description: '值从哪来。参见输出来源。', required: true },
+    help: { type: 'string', description: '行帮助文字。' },
+    secret: { type: 'boolean', description: '给值打码，提供揭示操作。' },
+    envKey: { type: 'string', description: '把这个值交给另一个项目时预填的环境变量键。' },
+    service: { type: 'string', description: '来源服务别名。内网模式的主机改写以它为准——当 template: 来源无法携带服务时设置它。' },
+    recommended: { type: 'boolean', description: '在“在项目中使用”交接里突出显示本输出。' },
+    sourceLabel: { type: 'string | localized', description: '存在变体时给主值标注的名称。' },
+    variants: { type: '{ id, label, source }[]', description: '同一个值的带标签替代形态——例如公网 URL 与内网 URL。以切换器呈现。' },
+    width: { type: '"full" | "half"', description: 'half 把两个短输出并排在同一行（例如用户名和密码）。' },
+    kind: { type: '"text" | "url"', description: 'url 会添加“在新标签页打开”操作。仅当解析出的值是 http(s) 时生效。' },
+  }}
+/>
+
+### 输出来源
+
+输出的 `source`（以及每个变体的 `source`）必须匹配下面三种形式之一：
+
+| 形式 | 解析为 |
+|---|---|
+| `env:<service>:<KEY>` | 该服务上对应的环境变量值 |
+| `publicUrl:<service>` 或 `publicUrl:<service>:<port>` | 该服务的公开 URL，可指定具体路由 |
+| `template:…` | 组合字符串，内嵌 `{{env:svc:KEY}}` 占位符 |
+
+其他任何写法都过不了校验，且 `<service>` 部分必须是已声明的服务。
+
+## prepare
+
+在服务容器启动**之后于容器内部**运行的命令——绝不是主机 shell。它们的 stdout 可以被捕获并存为环境变量（Convex 这类应用的 admin 密钥就是这么来的）。
+
+<Callout title="必须可以安全重跑">
+prepare 步骤可能在之后的部署中再次运行。请把它写成幂等的，或用 `once` 加闸。
+</Callout>
+
+<TypeTable
+  type={{
+    service: { type: 'string', description: '由哪个服务的容器执行命令。必须是已声明的服务。', required: true },
+    command: { type: 'string', description: '在容器内运行的命令。', required: true },
+    capture: { type: 'string', description: '给捕获的 stdout 起的名字。', required: true },
+    capturePattern: { type: 'string', description: '从嘈杂输出中提取值的正则。' },
+    persistAs: { type: '{ key, secret? }', description: '把捕获值存为这个环境变量键，可选加密。' },
+    once: { type: 'boolean', description: '仅在首次安装时运行，之后的部署不再运行。' },
+    phase: { type: '"pre-deploy" | "post-start" | "post-ready"', description: '何时运行。默认 post-start。' },
+    mustSucceed: { type: 'boolean', description: '步骤出错则部署失败。默认 false = 仅建议。' },
+    readiness: { type: '{ test, interval?, retries? }', description: 'phase:"post-ready" 专用——运行前以 sh -c 每 interval 毫秒轮询 test，最多 retries 次。' },
+    title: { type: 'string | localized', description: '该步骤在安装步进器里的展示文案。' },
+    description: { type: 'string | localized', description: '步进器里更长的展示文案。' },
+    icon: { type: 'string', description: '步进器行的图标 id。' },
+  }}
+/>
+
+<Callout title="phase: pre-deploy 保留未用" type="warn">
+schema 接受 `"pre-deploy"`，但**引擎尚未执行它**。不要依赖它。要在运行前初始化数据库，用 [`files`](#files) 写入 `/docker-entrypoint-initdb.d`，配合 `dependsOn` 和 `healthcheck`。
+</Callout>
+
+## endpoints
+
+安装向导要问你的事——每个端口怎么访问。完全省略 `endpoints` 时，Openship 会为每个暴露服务按其声明的每条路由派生一个公开 `http` 端点。
+
+默认值在每个部署目标上都顺着应用的预期用途：
+
+- 仪表板、API 这类公开 HTTP 端点，默认以**域名**路由起步。
+- 数据库这类裸 TCP 端点，默认**仅内网**，除非其 `scope` 为 `public`。
+- 显式 `defaultMode` 在 `allowedModes` 范围内覆盖这些默认值。用于“仅端口 API”这类取舍。本地或内网 HTTP 端点默认仅端口访问。
+
+云连接只选择域名提供方：已连接时是托管的免费域名，未连接时是自定义域名。它不会把公开界面切成仅端口路由。自定义域名仍需主机名和 DNS 配置。用户可以选择其他允许的模式；草稿里保存的选择优先于全新安装的默认值。
+
+<TypeTable
+  type={{
+    service: { type: 'string', description: '端口属于哪个服务。必须是已声明的服务。', required: true },
+    port: { type: 'number', description: '容器端口。', required: true },
+    label: { type: 'string', description: '向导如何称呼这个端点。', required: true },
+    kind: { type: '"http" | "tcp"', description: 'http 可按域名路由；tcp 是裸端口（如数据库），没有域名。', required: true },
+    required: { type: 'boolean', description: '用户必须为它选择一种暴露方式。' },
+    scope: { type: '"public" | "internal" | "local"', description: '声明可达性意图。HTTP 默认 public，TCP 默认 internal。' },
+    defaultMode: { type: '"domain" | "port" | "publish" | "internal"', description: '预选的路由模式，受 allowedModes 约束。与部署目标无关。' },
+    allowedModes: { type: 'string[]', description: '限定提供哪些暴露方式。' },
+  }}
+/>
+
+## provides 与 requires
+
+项目之间的连接图谱。`provides` 宣称一个可连接的包；`requires` 声明本应用需要**来自**另一个项目的连接——安装向导随后提供同组织范围内的来源选择器，一步接好。仅限同组织，且始终经用户确认。
+
+<TypeTable
+  type={{
+    'provides[].id': { type: 'string', description: '包 id。', required: true },
+    'provides[].outputRefs': { type: 'string[]', description: '要纳入的 connection.outputs 的 id。每个都必须指向真实存在的输出。', required: true },
+    'provides[].category': { type: 'string', description: '包类别，用于匹配。' },
+    'requires[].id': { type: 'string', description: '需求 id。', required: true },
+    'requires[].label': { type: 'string | localized', description: '向导如何称呼这个所需物。', required: true },
+    'requires[].envKey': { type: 'string', description: '选定的连接写入哪个环境变量键。', required: true },
+    'requires[].category': { type: 'string', description: '把候选来源限定在该类别。' },
+    'requires[].mode': { type: '"internal" | "public"', description: '接入来源值的哪种形态。' },
+    'requires[].optional': { type: 'boolean', description: '没有它安装也能继续。' },
+  }}
+/>
+
+## 主机要求
+
+`minResources` 描述应用建议的主机容量。上游文档给出有分量的要求时再声明，比如多服务分析栈需要 8 GB。它不设置容器限额。
+
+```json
+{
+  "minResources": { "memoryMb": 8192, "cpuCores": 4 }
+}
+```
+
+在自托管目标上，安装器和部署预检会把这些建议与目标机 Docker 守护进程的读数（`NCPU`、`MemTotal`）做比较。不足会显示警告，但绝不阻止首次安装或重新部署。读不到容量就视为未知，不推断为不足。10% 的容差考虑的是整机出售时内存取整、操作系统又占去一部分的情况。
+
+在云上，安装器会对照组织套餐核查实际的工作区分配，包括服务覆盖和临时构建资源。装不下时会提供升级。高级安装仍可用来调整配置。部署在排入队列前会再次核查当前套餐，提供方在分配工作区时也会实时执行命名空间容量限制。
+
+[`GET /apps/catalog/{id}/host-fit`](/docs/api/apps) 开放这份预览。传入 `projectId` 可把已有草稿保存的资源设置纳入计算。预览不会修改项目、分配资源，也不会授予部署额度。
+
+## files
+
+部署时生成并以绑定挂载放进容器的配置文件——用于需要配置*文件*而不只是环境变量的应用（比如初始化用的 `.sql`）。支持[占位符](#占位符)。
+
+<TypeTable
+  type={{
+    service: { type: 'string', description: '挂载进哪个服务。必须是已声明的服务。', required: true },
+    path: { type: 'string', description: '容器内的绝对路径。', required: true },
+    content: { type: 'string', description: '文件内容。', required: true },
+  }}
+/>
+
+<Callout title="仅限自托管与桌面" type="info">
+Openship Cloud 不应用 `files`。
+</Callout>
+
+## management
+
+覆盖已装应用的管理方式。
+
+| 取值 | 效果 |
+|---|---|
+| `{ "kind": "schema" }` | 用 `settings` 渲染精选设置表单。 |
+| `{ "kind": "custom", "href": "/emails" }` | 改为把用户送往一个专属界面。 |
+
+省略时 Openship 自行推断：有 `settings` 就 `schema`，否则用原始项目标签页。
+
+## 占位符
+
+安装时解析。可用于 `environment` 值、`files[].content` 和 `connection` 输出：
+
+| 占位符 | 解析为 |
+|---|---|
+| `{{publicUrl:<service>}}` | 该服务的公开 URL。加 `:<port>` 指定具体路由。 |
+| `{{config:<KEY>}}` | 按键取的生成配置值——例如 `generate: "secret"`。 |
+
+## 本地化字符串
+
+若干纯展示字段既接受普通字符串，也接受内联的多语言映射：
+
+```json
+{ "title": { "en": "Creating the admin key", "ar": "إنشاء مفتاح المدير" } }
+```
+
+适用于 `prepare[].title`、`prepare[].description`、`requires[].label`、`connection.firstLogin.username` / `password` / `note`、`connection.guide.intro` / `useHint`、`connection.outputs[].sourceLabel` 和 `variants[].label`。
+
+## 校验
+
+除字段类型之外，还有这些**引用**检查在入口处运行——精选应用与自定义应用一视同仁——悬空引用会立刻失败，而不是拖到部署时：
+
+- 每处 `service` 引用都必须解析到已声明的服务——涉及 `configFields`、`prepare`、`endpoints`、`files`、`settings[].fields` 和 `connection.outputs[].service`。
+- 每处 `connection.outputs[].source` 和 `variants[].source` 都要匹配 `env:<service>:<KEY>`、`publicUrl:<service>[:<port>]` 或 `template:…`。
+- 每条 `provides[].outputRefs` 都要指名一个真实存在的 `connection.outputs[].id`。
+- 每个 `jwtSecretGroup` 都要与已声明的 `generateGroup` 匹配。
+- `flowHref` 以 `/` 开头——绝不可能是外部 URL。
+- `category` 必须是七个允许值之一。
+
+## 稳定性与版本
+
+目录 JSON 是**稳定、带版本的公开 API**。增长是增量且向后兼容的：新的可选字段和新的枚举成员默认沿用既有行为，同一个 schema 版本内字段绝不改作他用或删除。
+
+<TypeTable
+  type={{
+    minEngine: { type: 'string (semver)', description: '核心版本旋钮。安装本应用所需的最低 Openship 版本。把它设为引入该定义当前所用能力的那个发布版本。' },
+    schemaVersion: { type: 'number', description: 'JSON 形态修订号，默认 1。实例会拒绝自己看不懂的更新形态。只有真正破坏形态的变更才提升它。' },
+  }}
+/>
+
+**每个应用一个文件——绝不要编写多个版本**。仓库里永远只有最新的那一份文件。较旧的实例继续用它自己构建时打包的那份副本。当实例比应用的 `minEngine` 更旧时：
+
+- 该应用**已随包附带** → 继续提供打包副本，并可能提示有更新可用；
+- 该应用**是全新面孔** → 目录显示引导性的 *Requires Openship ≥ X* 卡片，客户端与服务端都拒绝安装。绝不会无声无息地消失。
+
+## 另请参阅
+
+- [添加应用](/docs/guides/add-an-app)——如何提交应用，以及如何上传自定义应用
+- [Apps API](/docs/api/apps)——REST 接口面
+- [openship.json](/docs/reference/openship-json)——每仓库的部署配置

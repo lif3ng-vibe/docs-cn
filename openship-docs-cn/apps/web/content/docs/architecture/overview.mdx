@@ -1,0 +1,96 @@
+---
+title: 架构总览
+description: 一张高层级地图，看懂 Openship 如何拼装成一体——你操作的各个界面、驱动一切的 API、平台适配器，以及各共享包。
+---
+
+Openship 是一份代码库，却扮演着好几个角色。不妨把它想象成一家餐厅：有供你下单的柜台（你点击和键入的那些东西），有真正掌勺的后厨（API），还有后厨干活用的各类电器，即平台层（platform layer）。本页就是这张地图，其余架构页会各自深入一块区域。
+
+先在一张图里看全貌：
+
+```
+   You drive Openship three ways
+   ┌───────────┐   ┌───────────┐   ┌───────────┐
+   │ Dashboard │   │    CLI    │   │  Desktop  │
+   │ (Next.js) │   │ (openship)│   │ (Electron)│
+   └─────┬─────┘   └─────┬─────┘   └─────┬─────┘
+         └───────────────┼───────────────┘
+                         │  HTTP, under /api/*
+                   ┌─────▼─────┐
+                   │    API    │   the control plane
+                   │  (Hono)   │   projects · deployments · domains · env · auth
+                   └─────┬─────┘
+                         │  getPlatform()
+                   ┌─────▼──────┐
+                   │  Adapters  │   runtime · routing · SSL · system checks
+                   └─────┬──────┘
+              ┌──────────┼──────────┐
+         ┌────▼───┐  ┌───▼────┐  ┌──▼──────┐
+         │ local  │  │ server │  │  cloud  │   where your app ends up
+         └────────┘  └────────┘  └─────────┘
+```
+
+## 控制面：API
+
+**API** 是大脑——也就是整座系统的控制面（control plane）。它是一个 [Hono](https://hono.dev) 应用（一个小而快的 Web 框架），掌管着所有要紧的东西——项目、部署、域名、环境变量、备份以及权限模型——并把数据存进数据库（参见[数据归属](/docs/architecture/data-ownership)）。
+
+图中的其余部分，要么是与这个 API *对话*的途径，要么是 API *使用*的工具。除 API 外没有任何组件直接写数据库，每个 UI 部件都通过 `/api/*` 下的普通 HTTP 访问它。正因为只有这一扇前门，控制台（dashboard）、CLI 和桌面应用才永远不会彼此打架：它们读写的是同一个源头。
+
+<Callout title="一扇门，多把钥匙">
+API 既接受浏览器会话 Cookie（来自控制台），也接受 Bearer 令牌（来自 CLI 和脚本）。端点相同，规则相同，用哪种都行。鉴权模型参见 [API 总览](/docs/api)。
+</Callout>
+
+## 三种操作入口
+
+三个界面都很薄——只负责渲染界面和发送请求，真正的活儿都在 API 后面干。
+
+- **控制台**——一个 [Next.js](https://nextjs.org) Web 应用，是完整的图形界面，为团队协作而生，本文档里大多数截图展示的就是它。
+- **CLI**——从 npm 安装的 `openship` 命令。它身兼两职：`openship up` 能在你机器上拉起一整套自托管实例——自带 API，并替你取回控制台；而 `openship deploy` 这类日常命令则是一个薄薄的 HTTP 客户端，调用与控制台相同的 API 端点。自托管、写脚本、跑 CI 都很合适。
+- **桌面应用**——一个 [Electron](https://www.electronjs.org) 壳，展示同一个控制台，并在你的机器上运行一份本地 API（仅在其打开期间）。你可以只靠一台笔记本管理一切，不需要常开的服务器；部署会发往你通过 SSH 连接的服务器，或发往 Openship Cloud。
+
+因为它们共享同一个 API，你可以在控制台里发起部署，再用 CLI 查看进度——这是一个系统，不是三个。
+
+## 平台层：适配器
+
+当 API 需要*动手*对外界做点什么——构建镜像、启动容器、接好域名、拿到 SSL 证书——它不会亲自去做，而是交给**平台层**（即 `@repo/adapters` 包）。这就是餐厅比喻里的那些“电器”，三者藏在同一个入口之后：
+
+- **运行时**（runtime）——构建并运行你的应用。共有三种运行时：**Docker**（应用跑在容器里）、**Bare**（应用作为普通进程运行，对小机器和桌面更轻量），以及 **Cloud**（工作转交给 Openship Cloud）。
+- **基础设施**（infra）——路由与证书。自托管实例上，它是一个 OpenResty 边缘（基于 nginx 的服务器）负责路由，外加 certbot 自动签发 Let's Encrypt HTTPS 证书；在 Docker/Compose 安装中，边缘以容器形式跑在 :80/:443 上，由 API 驱动。在云端，则由 Openship Cloud 的边缘接管。
+- **系统**（system）——前置检查与环境准备（装了 Docker 吗？有 git 吗？）。仅限自托管。
+
+启动时，API 会一次性选定合适的组合，其余代码只管调用 `getPlatform()`。一次部署如何落到具体运行时的完整过程，参见[运行时模型](/docs/architecture/runtime-model)。
+
+## 应用的落点
+
+一个项目会部署到三个目标之一，而上面的平台层正是让每个目标得以工作的关键：
+
+- **local**——实例所在的本机。
+- **server**——你通过 SSH 接入的服务器。
+- **cloud**——Openship Cloud 的算力。
+
+目标在每次部署时选定一次并快照固化，因此构建、路由以及日后的任何回滚，对“应用到底住在哪”绝不会有分歧。
+
+## 共享包
+
+Openship 是一个 monorepo。公共逻辑放在 `@repo/*` 包里，供每个应用复用，每样东西只有一份实现，而不是四份各自漂移的副本。
+
+| 包 | 内容 |
+|---|---|
+| `@repo/core` | 纯共享逻辑——类型、技术栈检测、常量、错误类。无副作用。 |
+| `@repo/db` | 全部数据库访问，通过 [Drizzle ORM](https://orm.drizzle.team) 操作 Postgres（零配置安装则用内嵌的 PGlite）。每个查询都经过带类型的仓库层。 |
+| `@repo/adapters` | 上文介绍的平台层：运行时、基础设施与系统。 |
+| `@repo/ui` | 共享的 React 组件库，供控制台与官网/文档站使用。 |
+| `@repo/onboarding` | CLI、控制台与桌面共享的安装与首次运行流程。 |
+
+## 一份代码库，三种角色
+
+同一份代码，可以作为 **Openship Cloud**（托管 SaaS）运行，可以作为你自己服务器上的**自托管**实例运行，也可以作为**桌面**应用运行。启动时的配置决定实例扮演哪种角色、使用哪种运行时（自托管对应 `DEPLOY_MODE=docker` 或 `bare`）。没有任何分叉——云端和你自托管的版本就是同一份源码。
+
+随角色而变的只有一件事：*数据的权威源头在哪*。本地与服务器项目完全存放在你自己实例的数据库里；云项目归 Openship Cloud 所有，你的实例则充当它们前面的网关。这一分野正是接下来两页的主题。
+
+## 相关指南
+
+<Cards>
+  <Card title="运行时模型" href="/docs/architecture/runtime-model" description="一次部署如何落到 Docker、裸进程或云端——路由与 SSL 如何处理。" />
+  <Card title="以云为源" href="/docs/architecture/cloud-as-source" description="为什么云项目归 SaaS 所有，而你的实例是网关而非镜像。" />
+  <Card title="数据归属" href="/docs/architecture/data-ownership" description="什么数据存在哪里，项目如何在自托管与云之间迁移。" />
+</Cards>

@@ -1,0 +1,172 @@
+---
+title: 域名与 TLS
+description: 挂载主机名、验证 DNS 并管理证书。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+域名（domain）把主机名连接到项目，并跟踪 DNS 验证与 TLS 证书。创建或列出域名时，SDK 会把
+项目 ID 作为第一个参数；REST 则把它放在请求体或查询参数中。
+
+## 添加域名
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.domains.create("proj_123", {
+  hostname: "app.example.com",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/domains" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"projectId":"proj_123","hostname":"app.example.com"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    projectId: { type: 'string', description: '要把域名挂载到的项目。', required: true },
+    hostname: { type: 'string', description: '一个主机名，例如 app.example.com 或 *.example.com。泛域名自动使用 DNS-01。', required: true },
+    isPrimary: { type: 'boolean', description: '将此域名设为项目的主域名。要求具体主机名，不能是泛域名。', default: 'false' },
+    sslChallenge: { type: "'http-01' | 'dns-01'", description: '自托管目标使用的证书挑战类型。泛域名总是 dns-01；其他主机名默认 http-01。' },
+    externalIngress: { type: 'boolean', description: 'TLS 在上游终结（Cloudflare Tunnel、负载均衡器等）。Openship Cloud 以 DNS TXT 验证所有权；自托管实例接受运营者配置。Openship 不签发证书。', default: 'false' },
+    includeWww: { type: 'boolean', description: '同时把 www.<hostname> 认领为一个独立的域名——拥有自己的数据行、DNS 记录、验证与证书，创建为指向裸域名的 301。响应在 `www` 中携带其 id（或在 `wwwError` 中说明无法认领的原因），且 `records` 包含其 DNS 记录。', default: 'false' },
+    redirectTo: { type: 'string', description: '返回指向同一项目另一域名的重定向，而不是直接服务应用。必须是该项目自己的主机名；指向自身与循环都会被拒绝。仅限自托管。' },
+    redirectStatus: { type: 'number', description: '与 redirectTo 配合使用的重定向码：301、302、307 或 308。', default: '301' },
+  }}
+/>
+
+<Callout title="添加域名后不会自动上线" type="info">
+添加后，你必须先把自己的 DNS 指向 Openship，然后再进行**验证**。先用 `POST /api/domains/preview`
+（或 `openship domain preview <hostname>`）查看需要在 DNS 提供方那边添加的确切记录。
+</Callout>
+
+## 预览所需的 DNS 记录
+
+无副作用：传入主机名，即可取回应创建的记录。使用 `POST` 只是为了让主机名随请求体传输。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.domains.preview({
+  hostname: "app.example.com",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/domains/preview" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"hostname":"app.example.com"}'
+```
+
+</Tab>
+</Tabs>
+
+响应的 `mode` 告诉你适用哪种配置：`selfhosted`（指向你服务器的一条 A 记录）、`cloud`
+（指向 Openship Cloud 的一条 CNAME）或 `external`（只需一条 TXT 记录——TLS 由你自己在前端处理）。
+
+## 验证域名
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const verification = await ship.domains.verify("dom_123");
+console.log(verification);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/domains/dom_123/verify" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+DNS 就位后，即可进行验证。Openship Cloud 会检查其路由与所有权记录。自托管的验证则在部署服务器上获取或复用证书。使用 external ingress 的域名由其上游代理保留 TLS。
+
+## 泛域名 HTTPS 与手动 TXT
+
+自托管目标上的泛域名与 DNS-01 域名，在控制台、SDK 与 MCP 中使用相同的操作。请先部署并启用项目。使用 external ingress 或已上传证书的域名沿用其既有的 TLS 流程。
+
+```ts
+// "automatic" uses a connected DNS provider. "manual" generates a real ACME TXT.
+const attempt = await ship.domains.startDnsChallenge("dom_123", { mode: "manual" });
+const current = await ship.domains.dnsChallenge("dom_123");
+// Once current.status is "waiting", publish current.record at the DNS provider.
+// Then explicitly ask Openship to check it:
+await ship.domains.checkDnsChallenge("dom_123", { attemptId: attempt.id });
+```
+
+启动与检查都返回 **202** 和 `{ data: attempt }`；它们不会为证书签发而保持 HTTP 请求挂起。持续读取 `GET /api/domains/:id/dns/challenge` 直到结果落定。任何尝试开始之前返回
+`{ data: null }`。一次安全的尝试包含 `id`、`domainId`、`mode`、`status`、
+`record`、`expiresAt`、`logs`、`error`、`createdAt` 与 `updatedAt`。它绝不包含私钥、
+账号凭据或序列化的 ACME 订单。
+
+`preparing`、`checking`、`installing` 与 `cancelling` 代表有工作正在进行。`waiting` 需要运营者的
+TXT 记录；在对方行动之前停止轮询。`completed`、`failed`、`cancelled` 与 `expired` 是已落定的结果。缺失 TXT 或可重试的验证/安装错误会让同一订单保持 `waiting` 并附带错误信息。
+重复启动会复用处于活动状态的尝试；检查与取消都要求当前的 `attemptId`，过期的 ID 会被 **409** 拒绝。已经开动的安装无法取消。
+
+手动续期使用 `startDnsChallenge(id, { mode: "manual", force: true })` 与全新的 TXT 值。
+`cancelDnsChallenge(id, { attemptId })` 会丢弃一次未完成的手动尝试，而不会移除既有 TLS。
+已连接 DNS 提供方的模式会在 SSL 任务启用时自动续期。DNS 名称、记录清理与续期步骤参见
+[泛域名指南](/docs/guides/custom-domains#wildcard-domains)。
+
+## 错误
+
+<Callout title="422 — 验证失败" type="warn">
+DNS 记录尚未生效，或者不匹配。DNS 生效可能需要几分钟到几小时。确认记录与 `preview` 输出完全一致，然后重试。响应中的 `cnameVerified` / `txtVerified` 标志会告诉你哪项检查仍在失败。
+</Callout>
+
+<Callout title="针对单个域名路由的 404" type="error">
+该 `:id` 不属于你的组织（或已被删除）。用 `GET /api/domains`
+列出你的域名，即可获得有效 ID。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 流式读取域名验证进度。 | `domains.verifyStream(id, input?, options?)` | `POST /api/domains/:id/verify/stream`<br />`domain:write` |
+| 按给定过滤条件列出域名。 | `domains.list(id)` | `GET /api/domains`<br />`domain:list` |
+| 使用指定的项目与路由配置挂载一个域名。 | `domains.create(id, input)` | `POST /api/domains`<br />`domain:write` |
+| 读取一条域名记录。 | `domains.get(id)` | `GET /api/domains/:id`<br />`domain:read` |
+| 移除一个域名及其路由绑定。 | `domains.remove(id)` | `DELETE /api/domains/:id`<br />`domain:admin` |
+| 执行域名验证。 | `domains.verify(id, input?)` | `POST /api/domains/:id/verify`<br />`domain:write` |
+| 读取一个域名所需的 DNS 记录。 | `domains.records(id, input?)` | `GET /api/domains/:id/records`<br />`domain:read` |
+| 在应用之前预览 DNS 变更。 | `domains.dnsPlan(id, input?)` | `GET /api/domains/:id/dns/plan`<br />`domain:read` |
+| 应用已授权的 DNS 计划。 | `domains.dnsApply(id, input?)` | `POST /api/domains/:id/dns/apply`<br />`domain:write` |
+| 读取已保存的 DNS 证书尝试、TXT 记录、截止时间与日志。 | `domains.dnsChallenge(id)` | `GET /api/domains/:id/dns/challenge`<br />`domain:read` |
+| 启动自动提供方配置或手动 TXT 挑战；复用处于活动状态的尝试。仅限自托管目标。 | `domains.startDnsChallenge(id, input)` | `POST /api/domains/:id/dns/challenge`<br />`domain:write` |
+| 检查已保存尝试的 TXT、完成 ACME 验证并在服务主机上安装 HTTPS。 | `domains.checkDnsChallenge(id, input)` | `POST /api/domains/:id/dns/challenge/check`<br />`domain:write` |
+| 在安装开始前取消一次手动 DNS 证书尝试；保留既有证书。 | `domains.cancelDnsChallenge(id, input)` | `POST /api/domains/:id/dns/challenge/cancel`<br />`domain:write` |
+| 选择项目的主域名。 | `domains.setPrimary(id)` | `POST /api/domains/:id/primary`<br />`domain:write` |
+| 为一条域名记录请求证书续期。 | `domains.renewSsl(id)` | `POST /api/domains/:id/renew`<br />`domain:write` |
+| 检查该域名当前的证书。 | `domains.verifySsl(id)` | `POST /api/domains/:id/verify-ssl`<br />`domain:write` |
+| 安装指定的证书与私钥。 | `domains.uploadCert(id, input)` | `POST /api/domains/:id/certificate`<br />`domain:write` · 自托管 |
+| 预览域名连接所需的要求。 | `domains.preview(input)` | `POST /api/domains/preview`<br />`domain:read` |
+| 对符合条件的证书请求续期。 | `domains.renewAllSsl()` | `POST /api/domains/renew-all`<br />`domain:write` |
+| 验证调用方可见的待处理域名。 | `domains.verifyPending(input?)` | `POST /api/domains/verify-pending`<br />`domain:write` |
+
+{/* api-operations:end */}

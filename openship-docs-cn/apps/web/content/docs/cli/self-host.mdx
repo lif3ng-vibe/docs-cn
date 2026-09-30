@@ -1,0 +1,49 @@
+---
+title: 服务器与运维
+description: 管理服务器、备份工作流、邮件与实例配置。
+---
+
+这些操作需要与自托管安装实例之间具有已授权的连接。在原生模式下，提供方（provider）与主机权限仍然生效。
+
+## 服务器
+
+```bash
+openship server list
+openship server check srv_123
+```
+
+通过 [server 参考](/docs/cli/reference/server)注册连接、安装组件、设置速率限制（rate limit）并监控服务器。[Servers API](/docs/api/servers) 还提供容器、Git 凭据（credential）与隧道操作。前置要求先从[服务器指南](/docs/guides/custom-servers)看起。
+
+## 备份与恢复
+
+工作流程分为四步：
+
+| 步骤 | 命令 |
+| --- | --- |
+| 配置并验证存储 | [备份目标](/docs/cli/reference/backup/destination) |
+| 选择源、计划与保留策略 | [备份策略](/docs/cli/reference/backup/policy) |
+| 检查执行记录或准备恢复 | [备份运行](/docs/cli/reference/backup/run) |
+| 检查、应用或取消已准备的恢复 | [备份恢复](/docs/cli/reference/backup#openship-backup-restore) |
+
+```bash
+openship backup destination list
+openship backup policy list --project proj_123
+openship backup policy run policy_123
+openship backup run list --project proj_123
+```
+
+准备恢复并不会立即应用它。使用 apply 命令之前，请先检查返回的恢复会话与确认要求。参见[备份与恢复](/docs/guides/backups-restore)。
+
+## 邮件
+
+使用 [mail 命令](/docs/cli/reference/mail)开通（provision）或接入服务器、管理域名与邮箱，并检查投递健康状况。[邮件指南](/docs/guides/email-webmail)涵盖 DNS、中继（relay）配置与网页邮箱（webmail）。邮件命令目前需要 HTTP 上下文。
+
+## 安装设置与数据
+
+实例设置、初始引导、文件系统浏览与数据传输请使用 [system 命令](/docs/cli/reference/system)。设置功能已获得原生 SDK 支持；其余安装与迁移操作需要 HTTP。
+
+迁移安装实例请参考[控制面迁移](/docs/guides/migrate-control-plane)。迁移工作负载请参考[服务器到服务器迁移](/docs/guides/server-to-server-migration)。
+
+## 反向代理
+
+[边缘工作流](/docs/cli/edge)涵盖设置、域名与流量规则。完整选项见 [edge 参考](/docs/cli/reference/edge)。

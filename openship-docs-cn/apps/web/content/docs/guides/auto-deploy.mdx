@@ -1,0 +1,117 @@
+---
+title: 推送时自动部署
+description: 让 Openship 在你每次推送 GitHub 时自动重新构建并发布应用——既可以在控制台操作，也可以用终端。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+应用部署好之后，你肯定不想每改一点东西都手动点一次"部署"。**自动部署**（auto-deploy）就是为此而设：你像平常一样把代码推到 GitHub，Openship 会替你重新构建并发布。可以把它想象成一个门铃——你每推送一次，GitHub 就按一次铃，Openship 通过发布新版本来应答。
+
+这个门铃有个正式名字：**Webhook**（网络回调）。Webhook 就是你一推送，GitHub 立即发给 Openship 的一条小消息，内容是"有新代码来了"——于是 Openship 无需你动手就能开始构建。
+
+<Callout title="先准备好这些">
+- 一个已经**关联 GitHub 仓库**的项目（参见[从 GitHub 部署](/docs/guides/deploy-from-github)）。
+- 一条 GitHub 能触达 Openship 的通路。要么是 **Openship 拥有公网地址**，要么是项目上一个**已验证的域名**用于直接投递。详见下文——Openship 会告诉你适用哪一种。
+</Callout>
+
+## 在控制台开启
+
+<Steps>
+
+<Step>
+
+### 打开项目的 Source 标签页
+
+前往你的项目并打开 **Source** 标签页。在 **Source Repository** 之下可以找到该仓库的部署触发器。
+
+</Step>
+
+<Step>
+
+### 打开 Auto Deploy 开关
+
+找到 **Auto Deploy** 卡片并拨动开关。开启后，卡片显示 **Enabled** 和"推送将自动触发部署"。关闭时显示 **Disabled** 和"部署必须手动发起"。
+
+就这么简单——从此以后，每次向部署分支 `git push` 都会自动重新构建并发布。
+
+</Step>
+
+<Step>
+
+### 如果 Openship 要求设置 Webhook Endpoint
+
+有时 Openship 无法从公网被直接访问（例如你运行在自己的笔记本或私有网络上）。这种情况下，你会看到一条 **Enable auto-deploy** 提示，要求你设置一个 Webhook Endpoint。
+
+解决办法是 **Webhook Endpoint** 卡片。在"Select domain..."菜单里选一个项目的**已验证域名**。此后 GitHub 会把推送事件直接投递到该域名。以后想停用，打开同一菜单并选择 **Clear selection**。
+
+<Callout title="看不到 Webhook Endpoint 卡片？" type="info">
+该卡片只有在项目至少有一个**已验证**域名后才会出现。如果还没有，你只会看到 **Enable auto-deploy** 提示——先绑定并验证一个域名（参见[自定义域名](/docs/guides/custom-domains)），再回来卡片就在了。菜单中只会列出属于本项目且已验证的域名。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 检查状态
+
+**Webhook** 卡片显示 GitHub 是否真的抵达了 Openship：**Active**（或走你选定域名的 **Direct**）表示事件在正常送达；**Inactive** 表示 Webhook 尚未配置或尚未响应。下次推送后，就看这张卡片。
+
+</Step>
+
+</Steps>
+
+## CLI
+
+以上所有操作同样可以在 CLI 中完成。你需要项目的 ID——运行 `openship project list` 查找。
+
+```bash
+# 开启自动部署
+openship project git auto-deploy <project-id> --enable
+
+# 关闭自动部署
+openship project git auto-deploy <project-id> --disable
+
+# 把 Webhook 投递到项目已验证的域名（适用于私有实例）
+openship project git webhook-domain <project-id> deploy.yourapp.com
+
+# 停用该域名
+openship project git webhook-domain <project-id> --clear
+```
+
+## Webhook 是如何接通的（简述）
+
+你无需操心这一步，但了解一下底层实现上发生了什么，就不会觉得神妙莫测。Openship 会为你的部署环境选择最简单可用的投递路径：
+
+- **公网 Openship**——如果你的 Openship API 有公网地址，开启 Auto Deploy 会在你的仓库上注册一个指向 `…/api/webhooks/github` 的 Webhook。GitHub 每次推送都会调用它。
+- **已验证域名**——如果你设置了 Webhook Endpoint，GitHub 会改投到 `https://<your-domain>/_openship/hooks/github`，再由它路由到 Openship。这是私有部署或笔记本安装的选择。
+- **GitHub App**——在 Openship Cloud 或你自托管（self-hosted）的 App 上，推送事件自动通过 App 到达，无需再管理每个仓库的 Webhook。
+
+无论哪种情况，Openship 都会从你刚推送的提交开始一次全新构建——和你手动点 Deploy 得到的构建完全一样。
+
+## 故障排查
+
+<Callout title="Auto Deploy 开关打不开" type="warn">
+你会看到 **Enable auto-deploy** 提示，错误信息为 *"Set a webhook domain or expose this Openship API on a public URL to enable auto-deploy."* 意思是 GitHub 目前还无法触达 Openship。要么把 Openship 放到公网地址上，要么在 Source 标签页设置 **Webhook Endpoint** 域名（见步骤 3）。
+</Callout>
+
+<Callout title="“Domain must be verified before it can receive webhooks”" type="error">
+你选的域名尚未验证，因此 Openship 不会把 Webhook 路由过去。先验证域名（[自定义域名](/docs/guides/custom-domains)），再重新选择。
+</Callout>
+
+<Callout title="“Could not create webhook”" type="error">
+表示 Openship 无法在你的仓库上创建 Webhook——通常是因为你的 GitHub 连接对该仓库没有 **admin** 权限。重新连接 GitHub 并确保该仓库以完整权限纳入，然后再拨一次 Auto Deploy 开关。
+</Callout>
+
+<Callout title="推送了，却没有部署" type="warn">
+检查 Source 标签页上的 **Webhook** 状态卡片。如果显示 **Inactive**，说明投递没有到达 Openship——回到上面的 Webhook Endpoint 一节。另外确认你推送的是项目的**部署分支**；推送到其他分支会被忽略。
+
+如果另一个部署正在运行，新推送会被记为一次 **failed** 投递，原因记录在项目的 Webhook 事件里。等正在进行的部署完成或将其取消，然后从 GitHub 的 Webhook 投递历史中对该失败事件点 **Redeliver**。GitHub 不会自动重投失败事件。Openship 接受对同一失败投递 ID 的重试，并记住该投递已处理过的项目，因此只重试剩余的项目；正在构建或已上线的提交也会被跳过。成功投递依旧保持去重。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="关联仓库并发布——自动部署所依赖的准备工作。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="绑定并验证自己的域名——私有实例的 Webhook 投递需要它。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="为应用提供每次构建所需的机密与设置。" />
+</Cards>

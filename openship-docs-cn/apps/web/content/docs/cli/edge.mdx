@@ -1,0 +1,44 @@
+---
+title: 管理边缘
+description: 搭建反向代理、绑定域名、应用规则并检查流量。
+---
+
+边缘（edge）是 Openship 的反向代理（proxy）与 TLS 层。在自托管安装实例上使用已授权的 HTTP 上下文执行这些命令。路由模型参见[边缘指南](/docs/guides/the-edge)。
+
+## 检查与设置
+
+```bash
+openship edge status
+openship edge up
+```
+
+运行 `openship edge` 会打开交互式面板。`up` 命令用于配置托管边缘；其[参考](/docs/cli/reference/edge#openship-edge-up)列出了目标与安装选项。
+
+如果另一个反向代理占用了 HTTP/HTTPS 端口，请在接管之前先检查它的站点。仅在审阅探测到的配置与选项之后，才使用 `edge takeover` 或 `edge migrate`。工作流程参见[接管已有代理指南](/docs/guides/the-edge#接管一台已在服役的服务器)。
+
+## 域名与规则
+
+```bash
+openship edge domains list
+openship edge rules list
+openship edge sites
+```
+
+| 任务 | 参考 |
+| --- | --- |
+| 添加或移除边缘主机名 | [域名命令](/docs/cli/reference/edge#openship-edge-domains) |
+| 添加或移除访问、重定向或流量规则 | [规则命令](/docs/cli/reference/edge/rules#openship-edge-rules) |
+| 检查项目管理记录之外的站点 | [sites](/docs/cli/reference/edge#openship-edge-sites) |
+| 修复托管边缘配置 | [repair](/docs/cli/reference/edge#openship-edge-repair) |
+
+项目自有的自定义域名也可以用[域名命令](/docs/cli/reference/domain)管理。
+
+## 查看流量
+
+```bash
+openship edge logs
+openship edge traffic
+openship edge analytics
+```
+
+[命令参考](/docs/cli/reference/edge)列出了过滤器、时间窗口与目标选项。证书故障参见 [DNS 与 TLS 故障排查](/docs/troubleshooting/domains-ssl)。

@@ -1,0 +1,21 @@
+---
+title: uninstall
+description: openship uninstall 的命令、参数与选项。
+cliGroup: openship uninstall
+---
+
+示例参见 [CLI 总览](/docs/cli)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship uninstall
+
+将 Openship 从本机移除：先停掉它，再删除其数据（数据库、证书、edge 配置）、镜像以及 ~/.openship。已部署的应用保持运行不受影响。
+
+```text
+openship uninstall [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-y, --yes` | 跳过确认提示（供脚本使用） |
+| `--keep-data` | 保留数据库/证书卷与本机 ~/.openship —— 只移除正在运行的套件 |
+| `--keep-images` | 不删除 Openship 容器镜像 |

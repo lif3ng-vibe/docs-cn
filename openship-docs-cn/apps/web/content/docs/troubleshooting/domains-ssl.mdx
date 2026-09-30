@@ -1,0 +1,174 @@
+---
+title: 域名、DNS 与 SSL
+description: 解决域名验证、DNS 生效、路由缺失、SSL 签发与外部入口的问题。
+---
+
+一个能用的自定义域名需要三件事：DNS 能到达入口、有一条路由指向目标应用、TLS 由服务器或外部代理终结。验证方式取决于项目跑在哪里。本页解释各种失败消息，以及该检查哪个环节。
+
+如果还没添加过域名，先看[自定义域名指南](/docs/guides/custom-domains)——本页是给已经卡住的情况用的。
+
+<Callout title="检查验证模式">
+Openship Cloud 检查一条路由记录和一条归属 TXT 记录；使用外部入口时只检查 TXT 记录。自托管验证通过 ACME 获取或复用有效证书，不比较公网 IP，也不检查归属 TXT 记录。自托管的外部入口接受操作者的配置，把 TLS 留给代理。
+</Callout>
+
+## DNS 与 SSL 都验证通过了，应用却仍返回 404 或 502
+
+DNS 验证和证书签发并不能证明这个域名有可用的上游。对 Compose 项目，打开 **Domains & Routes**，把域名映射到目标服务的容器端口。未映射的项目级域名会被跳过并给出警告，列出可用端口；它绝不能从别的服务继承过期的项目端口。然后重试路由或配置项目的边缘。即使边缘本身健康，也要逐条检查路由警告。
+
+在 Openship 控制面项目上，实例管理员可以用这些修复操作把被接管的控制台路由到其配置的环回端口。该修复会保留控制台服务已有的端口声明。仅有项目成员身份并不能访问保留的主机端口，绑定组织或受限的 API 令牌也无法执行这个实例级操作。
+
+如果安装时把 `OPENSHIP_PUBLIC_URL` 记录成了**外部入口**，启动时会假定已有的代理在终结 TLS。仅这条记录并不会开通 Openship 的边缘。要更换入口的归属者时，用自托管安装流程来配置 Openship 的边缘；如果你已有的代理应继续服务该域名，就保留外部入口。
+
+静态路由需要其当前部署的发布目录绝对路径。容器 ID、镜像标签或产物哈希都不能充当文档根。出现“不存在静态根目录”的警告，意味着该部署的产物或工作负载元数据需要修复，或需要一次新的成功部署。
+
+## 验证一直不通过
+
+<Callout type="error" title="症状 / 现象">
+你点了 **Verify**，它没有变绿。**"Verification failed"** toast 里带着 Openship 返回的原因。在 Openship Cloud 上，DNS 失败会点名一条或两条记录：
+
+- `CNAME record not found for app.example.com`
+- `TXT record _openship-challenge.app.example.com must equal "…"`
+
+（如果 Openship 给不出具体原因，会回退到通用的 *"\{hostname} could not be verified yet."*）
+
+从 API 侧看，`POST /api/domains/:id/verify` 返回 **422** 和失败消息。对 Cloud DNS 检查，`cnameVerified` 和 `txtVerified` 标明是哪条记录没过。在自托管实例上，请从消息里读出证书或服务器连通性故障；这两个标志并不代表独立的 DNS 查询。
+</Callout>
+
+**含义**。Cloud DNS 验证未能确认所请求的路由或归属记录。把消息里点名的每条记录都修好。
+
+| 你看到的消息 | 哪条记录 | 问题所在 |
+|---|---|---|
+| `CNAME record not found for …` | 路由（`CNAME`）——Openship Cloud | `CNAME` 缺失，或没有指向 Cloud 目标。 |
+| `TXT record _openship-challenge.… must equal "…"` | 归属（`TXT`） | `_openship-challenge` TXT 记录缺失，或其值与密钥串不匹配。 |
+
+### 如果是 Cloud 的路由记录没过
+
+**修复方法**
+
+1. 打开项目的 **Domains** 标签页，重新打开该域名的 **DNS Records** 面板（或运行 `openship domain records <domainId>`）。
+2. 把路由那一行和你在注册商那里的记录对比。Cloud 期望一条指向面板所示 **Openship Cloud 目标**的 `CNAME`。
+3. 修正任何不一致——从 Openship 复制值，别手敲。先删除同名下所有旧的冲突记录（残留的 `A`/`CNAME` 是常见原因）。
+4. 等改动生效，再点一次 **Verify**。
+
+<Callout title="自托管：检查证书质询" type="info">
+HTTP-01 要求主机名能通过 80 端口到达服务器的质询端点，包括经由任何代理或 NAT。DNS-01 使用已连接的 DNS 提供商，或 **DNS-verified HTTPS** 里的 **Manual TXT** 流程。两种模式都不会比较主机名的公网 IP 与服务器的 IP。如果 TLS 由另一个代理掌管，就用 **External ingress & TLS**，并配置那个代理转发应用请求。
+</Callout>
+
+## 泛域名或手动 TXT 配置在等待
+
+泛域名证书要求 DNS-01。路由用的 `A` 或 `CNAME` 记录不能替代证书的 `_acme-challenge` TXT 记录。打开域名的 **DNS-verified HTTPS** 面板，可以看到进行中的尝试、它的截止时间以及 **Certificate logs**。
+
+| 状态或消息 | 处理方法 |
+|---|---|
+| 未连接 DNS 提供商 | 在 DNS 面板里选择 **Connect a DNS provider**（**Settings → Credentials** 里也有），或选择 **Manual TXT** 并生成一条 TXT 记录。 |
+| 看不到 TXT 记录 | 名称和值都要对比。如果提供商会自动补上你的主域名，就只填相对部分。保留其他 TXT 值，等待生效，然后 **Check TXT & enable HTTPS**。 |
+| 连接中断 | 重新打开面板或用 **Refresh status**。已受理的操作会在服务器上继续；保存过的尝试可在重启后续跑。 |
+| TXT 质询过期或 CA 订单失效 | 需要时取消旧尝试重来。发布新值；只移除上一次尝试的值。 |
+| 证书颁发机构变了 | 用当前的 HTTPS 设置发起新质询。订单属于创建它的那个颁发机构。 |
+| 服务器连接或证书安装失败 | 先恢复对当前部署服务器的访问，然后在截止时间前重试同一个已保存的质询。已有 TLS 会保留。 |
+
+手动 TXT 配置不会按计划自动重试：它等待操作者发布并检查 DNS。距过期 14 天内，域名详情会请求续期。用 **Renew SSL** 获取并确认新的 TXT 值，或切换到 **Automatic provider** 实现无人值守续期。参见[泛域名配置指南](/docs/guides/custom-domains#wildcard-domains)。
+
+### 如果是 Cloud 的 TXT 归属记录没过
+
+**修复方法**
+
+1. 在注册商处添加（或修正）一条主机名为 `_openship-challenge` 的 **TXT** 记录——Openship 会在 `_openship-challenge.<your-domain>` 查询它。
+2. 把它的值设为 **DNS Records** 面板里的确切字符串。用 **Copy** 按钮；多一个空格或少一个字符都会导致匹配失败。
+3. 保存，等待生效，再点一次 **Verify**。
+
+Cloudflare 用一对双引号包住 TXT 内容，例如 `"ownership-token"`。自动 DNS 配置写入的就是这种形式；再次应用 DNS 方案时，也会修复旧的无引号值。这对引号是 DNS 字符串的定界符，不是归属令牌里多出来的字符。Openship 接受带引号的解析应答，并把同一条 TXT 记录内的分块拼接起来。
+
+## Cloud DNS 没问题，但证书检查失败
+
+Openship Cloud 从云提供商那里获取证书状态。连接 Cloudflare 能自动化 DNS 记录；但并不会把云端的证书签发挪到 Openship API 服务器上。仅有 Cloudflare 的证书通知，并不能确认源站证书或应用路由。
+
+如果响应包含 `CLOUD_DOMAIN_NOT_CONNECTED`，说明提供商那里没有这个域名和项目的路由。检查 **Domains & Routes** 里的服务映射，重试路由，再验证 HTTPS。`CLOUD_DOMAIN_CHANGED` 表示绑定在操作过程中发生了变化；重试前先刷新域名详情。Openship 不会去接管别的项目的路由来修复这种状态。
+
+旧版 Cloud 适配器在读取 `info?.ssl.status` 时可能抛 `undefined is not an object`，即使提供商已签发证书。把 Openship API 更新到能同时接受扁平与嵌套提供商 SSL 状态响应的版本，然后用 **Recheck SSL**。重新检查只是读取已有证书，不会另行申请。
+
+<Callout title="已经验证过了？" type="info">
+对已经验证过的域名再跑一次 Verify，Openship 只会回复 **"Already verified"**，什么也不改——这是预期行为，不是错误。
+</Callout>
+
+## DNS 还没生效
+
+<Callout type="error" title="症状 / 现象">
+记录在注册商那里看着都对，但 Verify 仍然报告路由或 TXT 记录未找到——有时是在你保存后仅仅几分钟。
+</Callout>
+
+**含义**。DNS 不是即时的。保存一条记录后，它要先扩散到全网的缓存里，Openship 的查询才能看到它。正如 DNS Records 面板自己注明的：*"DNS changes can take up to 48 hours to propagate globally."* 通常几分钟就好；偶尔会久得多。
+
+**修复方法**
+
+1. 仔细检查 **Host** 字段没有笔误，同名下也没有残留的冲突记录。
+2. 等。保存记录，给几分钟时间，再点一次 **Verify**——等 DNS 解析通之后再点，是最稳妥的做法。
+3. Openship 默认开启的 **Domain DNS verification** 定时任务每 13 分钟跑一次。待处理域名满 10 分钟后，这个任务会自动重试验证与证书签发。Openship Desktop 里它也会对项目连接的部署服务器运行。点 **Verify** 是更快的手动重试；正常的后台生命周期并不依赖它。手动 TXT 域名不在这个任务的范围内，它们等的是 **Check TXT & enable HTTPS**。
+
+<Callout title="首次部署做了什么" type="info">
+新的自定义域名从 **Pending** 开始。它的部署会准备好路由和 SSL 工具链。DNS-01 证书需要已连接的提供商，或部署之后的手动 TXT 配置。凭据缺失或证书失败仍可在域名详情里处理；它不会抹掉已部署的应用。
+</Callout>
+
+<Callout title="自己确认生效情况" type="info">
+想知道全世界现在看到的是什么，直接查这条记录——例如 `dig TXT _openship-challenge.app.example.com` 或 `dig A app.example.com`。如果你自己的查询还没返回新值，Openship 也不会看到；那是生效延迟，不是 Openship 的问题。
+</Callout>
+
+## SSL 卡在 “Provisioning”（或没有签发证书）
+
+<Callout type="error" title="症状 / 现象">
+域名已是 **Verified**，但 **SSL** 徽标停在 **Provisioning**，没有变到 **Active**——所以 `https://` 还不能用。
+</Callout>
+
+**含义**。在自托管或 Desktop 连接的服务器上，**Verify** 会先拿到证书再报告成功，并把现有路由改写为带 TLS。在 Openship Cloud 上，验证可以在后台启动证书签发。**Provisioning** 意味着签发仍在进行、结果尚未被观察到，或第一次尝试失败了。
+
+**修复方法**
+
+1. 稍等片刻，打开域名的 **⋯** 菜单，点 **Recheck SSL**。这是一个只读检查（不会重新签发证书，也不消耗任何速率限制），证书真正就位后状态就会翻成 **Active**。
+2. 如果 Recheck 报告 *"No valid certificate found for \{hostname} yet. If you just deployed, give Let's Encrypt a moment, then recheck."*——证书确实还没到位。再等一会儿，然后再检查一次。
+3. 同一个域名定时任务会以退避方式重试未完成的签发。想立即重试就点 **Renew SSL**；任何真实的失败原因（DNS、端口被封、速率限制、ACME 故障）都会在这个操作上浮现。
+
+<Callout title="续期证书" type="info">
+证书一旦 **Active**，你通常再也不用碰它。续期针对距过期约两周内的证书：在 Openship Cloud 上，以及在你的代理或边缘（Traefik、Caddy、负载均衡器）掌管 TLS 的自托管环境里，这些都替你处理好了；自托管操作者也可以把定时任务指向续期端点。**Renew SSL** 是证书万一过期时的手动兜底。如果你选了手动 TXT，它会打开 DNS 配置让你放一条新记录；这类证书无法无人值守续期。
+</Callout>
+
+<Callout title="“Recheck / Renew SSL” 报错要求域名先完成验证" type="warn">
+SSL 操作要求域名已**验证**——对未验证域名执行会返回 *"Domain must be verified before SSL can be managed"*。先完成验证（见上文），再管理证书。
+</Callout>
+
+<Callout title="Verify 不应该需要重新部署" type="warn">
+即使域名还在 Pending，首次部署也会准备好 certbot。**Verify** 成功后，证书提供方会把现有路由重新注册为带 TLS，所以不应该需要重新部署。如果当前部署只有在重新部署之后才开始服务 HTTPS，请保留部署日志和 Verify 日志各一份；这表明存在单独的边缘/路由协调失败。
+</Callout>
+
+## 外部入口：你的边缘来终结 TLS
+
+<Callout type="error" title="症状 / 现象">
+你的应用本来就在 Cloudflare Tunnel、负载均衡器或其他处理 HTTPS 的反向代理后面——但 Openship 一直要求 `A`/`CNAME` 记录，还想自己签发证书，而你不想要这些。
+</Callout>
+
+**含义**。标准验证由 Openship 管理证书。用外部代理时，公网 TLS 归那个代理管。外部入口让证书签发退出域名验证；Cloud 仍检查归属，自托管安装则接受操作者的配置。
+
+**修复方法**
+
+1. 添加域名时打开 **External ingress & TLS**。走 API 则在 `POST /api/domains` 上传 `"externalIngress": true`。
+2. 在 **Openship Cloud** 上，添加所要求的 `_openship-challenge` TXT 记录。在**自托管实例**上，不要求也不检查任何 DNS 记录。把 DNS 配置到能到达你的代理，包括 Nginx Proxy Manager 后面 homelab 的内部 DNS；变动的 WAN IP 不会妨碍这种验证模式。
+3. 点 **Verify**。Openship 会确认 *"Domain verified — TLS is handled by your external ingress; no certificate is issued here."* 你的代理必须把请求转发到 Openship 服务器并提供 HTTPS。
+
+<Callout title="SSL 徽标显示什么" type="info">
+外部入口域名的 SSL 状态显示为 **External TLS**。验证不会向 Openship 申请证书；公网证书由你在代理上维护。单独配置的源站证书保护的是代理到服务器之间的连接。
+</Callout>
+
+<Callout title="想清楚再开" type="warn">
+如果你的边缘**并不**处理 HTTPS，就别开 External ingress——否则域名能验证通过，却只能以纯 HTTP 服务，谁也不会发证书。拿不准就关着，让 Openship 签发证书。
+</Callout>
+
+## 还是没解决？
+
+<Callout title="还有一处要查：主机名本身" type="info">
+如果还没走到验证 **Add domain** 就被拒绝，那是主机名没过基本检查——例如 `Domain "app.example.com" is already in use`（它已挂在别处）或 `"…" is not a valid public hostname.`（裸 IP、`localhost`、只有一段的名字，或某一段超过 63 个字符）。免费的 `*.opsh.io` 之类子域名也不在这里添加——它们属于项目的公共端点，不是自定义域名。
+</Callout>
+
+<Cards>
+  <Card title="自定义域名指南" href="/docs/guides/custom-domains" description="从添加、指 DNS、验证到 HTTPS 的完整逐步演示。" />
+  <Card title="Domains API 参考" href="/docs/api/domains" description="所有域名端点、preview/verify 响应，以及 cnameVerified / txtVerified 标志。" />
+  <Card title="项目的 Domains 标签页" href="/docs/dashboard/projects" description="控制台里域名、验证状态和 SSL 徽标的位置。" />
+</Cards>

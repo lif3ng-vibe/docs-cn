@@ -1,0 +1,24 @@
+---
+title: logs
+description: openship logs 的命令、参数与选项。
+cliGroup: openship logs
+---
+
+示例参见[工作流指南](/docs/cli/deploy)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship logs
+
+查看或流式查看某次部署的日志
+
+```text
+openship logs [options] [deploymentId]
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `deploymentId` | 部署 ID（默认取关联项目的最新一次部署） |
+
+| 选项 | 说明 |
+| --- | --- |
+| `-f, --follow` | 通过 SSE 流式查看实时日志，直到部署结束 |
+| `--tail <n>` | 只显示最后 N 行日志（快照模式） |

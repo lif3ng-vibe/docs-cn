@@ -1,0 +1,177 @@
+---
+title: server
+description: openship server 的命令、参数与选项。
+cliGroup: openship server
+---
+
+示例参见[工作流指南](/docs/cli/self-host)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship server
+
+管理自托管的 SSH 服务器
+
+```text
+openship server [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list\|ls`](/docs/cli/reference/server#openship-server-list) | 列出当前组织中的服务器 |
+| [`add [options]`](/docs/cli/reference/server#openship-server-add) | 添加一台新服务器 |
+| [`rm\|remove <id>`](/docs/cli/reference/server#openship-server-rm) | 删除服务器 |
+| [`test-connection\|test [options]`](/docs/cli/reference/server#openship-server-test-connection) | 测试 SSH 连接但不保存 |
+| [`check [options] <serverId>`](/docs/cli/reference/server#openship-server-check) | 对已保存的服务器运行组件健康检查 |
+| [`update [options] <serverId>`](/docs/cli/reference/server#openship-server-update) | 检查并应用原生模块迁移（OpenResty 等） |
+| [`install [options] <serverId>`](/docs/cli/reference/server#openship-server-install) | 在服务器上安装组件 |
+| [`install-session [sessionId]`](/docs/cli/reference/server#openship-server-install-session) | 查看服务器安装会话 |
+| [`install-respond [options] <sessionId>`](/docs/cli/reference/server#openship-server-install-respond) | 响应安装过程中的提示 |
+| [`rate-limit [options] <serverId>`](/docs/cli/reference/server#openship-server-rate-limit) | 读取或更新每台服务器的 OpenResty 速率限制 |
+| [`monitor <serverId>`](/docs/cli/reference/server#openship-server-monitor) | 流式输出实时系统指标（SSE） |
+| [`ssh <serverId>`](/docs/cli/reference/server#openship-server-ssh) | 打开交互式 SSH 终端（即将推出） |
+
+## openship server add
+
+添加一台新服务器
+
+```text
+openship server add [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--host <host>` | SSH 主机 / IP |
+| `--name <name>` | 显示名称 |
+| `--port <port>` | SSH 端口（默认："22"） |
+| `--user <user>` | SSH 用户（默认："root"） |
+| `--auth-method <method>` | 认证方式（password\|key\|agent） |
+| `--password <password>` | SSH 密码（密码认证时使用） |
+| `--key-path <path>` | 私钥路径（密钥认证时使用） |
+| `--key-passphrase <passphrase>` | 私钥口令 |
+| `--jump-host <host>` | SSH 跳板 / 堡垒机 |
+| `--ssh-transport <transport>` | SSH 传输方式（direct\|cloudflare） |
+| `--ssh-args <args>` | SSH 连接调优参数 |
+
+## openship server check
+
+对已保存的服务器运行组件健康检查
+
+```text
+openship server check [options] <serverId>
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-c, --component <name...>` | 限定特定组件 |
+
+## openship server install
+
+在服务器上安装组件
+
+```text
+openship server install [options] <serverId>
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-c, --component <name...>` | 要安装的组件（docker\|git\|edge\|rsync） |
+| `--follow` | 流式查看安装日志（SSE） |
+
+## openship server install-respond
+
+响应安装过程中的提示
+
+```text
+openship server install-respond [options] <sessionId>
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--action <action>` | 提示所提供的操作 ID |
+
+## openship server install-session
+
+查看服务器安装会话
+
+```text
+openship server install-session [options] [sessionId]
+```
+
+## openship server list
+
+列出当前组织中的服务器
+
+```text
+openship server list|ls [options]
+```
+
+## openship server monitor
+
+流式输出实时系统指标（SSE）
+
+```text
+openship server monitor [options] <serverId>
+```
+
+## openship server rate-limit
+
+读取或更新每台服务器的 OpenResty 速率限制
+
+```text
+openship server rate-limit [options] <serverId>
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--rps <n>` | 每秒请求数（0 表示取消限制） |
+| `--burst <n>` | 突发额度 |
+| `--whitelist <cidr...>` | 不受限速的 CIDR 列表 |
+
+## openship server rm
+
+删除服务器
+
+```text
+openship server rm|remove [options] <id>
+```
+
+## openship server ssh
+
+打开交互式 SSH 终端（即将推出）
+
+```text
+openship server ssh [options] <serverId>
+```
+
+## openship server test-connection
+
+测试 SSH 连接但不保存
+
+```text
+openship server test-connection|test [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--host <host>` | SSH 主机 / IP |
+| `--port <port>` | SSH 端口（默认："22"） |
+| `--user <user>` | SSH 用户（默认："root"） |
+| `--auth-method <method>` | 认证方式（password\|key\|agent） |
+| `--password <password>` | SSH 密码 |
+| `--key-path <path>` | 私钥路径 |
+| `--key-passphrase <passphrase>` | 私钥口令 |
+| `--jump-host <host>` | SSH 跳板 / 堡垒机 |
+| `--ssh-transport <transport>` | SSH 传输方式（direct\|cloudflare） |
+| `--ssh-args <args>` | SSH 连接调优参数 |
+
+## openship server update
+
+检查并应用原生模块迁移（OpenResty 等）
+
+```text
+openship server update [options] <serverId>
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `-c, --component <name...>` | 限定特定模块 |
+| `--check` | 只报告偏差；不实际应用 |

@@ -1,0 +1,33 @@
+---
+title: Openship 文档
+description: 使用 Openship 部署应用、管理基础设施并构建集成。
+---
+
+Openship 能从 Git 仓库、本地文件夹、生成的文件和应用模板构建并部署应用。工作负载可以运行在你自己的机器、一台已连接的服务器（server），或 Openship Cloud 上。
+
+## 从这里开始
+
+<Cards>
+  <Card title="部署你的第一个应用" href="/docs/getting-started/quickstart" description="选择一种安装方式，连接你的代码，并完成一次部署（deployment）。" />
+  <Card title="安装 Openship" href="/docs/getting-started/installation" description="配置桌面应用、服务器，或检出开发环境源码。" />
+  <Card title="使用 CLI" href="/docs/cli" description="在终端或 CI 任务中部署和管理项目。" />
+  <Card title="使用 Ship SDK" href="/docs/api/sdk" description="用 JavaScript 或 TypeScript 部署；接入现有 API，或内嵌部署引擎。" />
+</Cards>
+
+## 查找任务
+
+| 任务 | 参阅 |
+| --- | --- |
+| 从 Git 或文件夹部署 | [部署指南](/docs/guides#deploy) |
+| 配置域名、密钥与存储 | [应用配置](/docs/guides#configure) |
+| 查看日志、备份数据或修复故障 | [运维操作](/docs/guides#operate) |
+| 迁移项目或安装 | [迁移指南](/docs/guides#move) |
+| 了解控制台（dashboard） | [控制台指南](/docs/dashboard) |
+| 调用 HTTP 端点 | [API 参考](/docs/api) |
+| 接入 AI 工具 | [MCP 指南](/docs/mcp) |
+
+## 核心概念
+
+**组织**（organization）拥有项目（project），并向其成员授予访问权限。**项目**保存源代码与配置。**部署**是对该项目的一次构建与发布。**服务**（service）是项目内的工作负载，例如一个应用或数据库。
+
+环境、运行时（runtime）、服务器与域名等内容，参见[核心概念](/docs/getting-started/core-concepts)。

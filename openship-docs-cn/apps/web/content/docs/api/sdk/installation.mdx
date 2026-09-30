@@ -1,0 +1,92 @@
+---
+title: 安装 SDK
+description: 从 npm 安装 Ship SDK，并使用其 JavaScript、TypeScript 与 CLI 入口。
+---
+
+要求 **Node.js 22 或更高版本**。已包含 ESM、CommonJS 和 TypeScript 类型声明。
+
+## 从 npm 安装
+
+从 **0.8.0** 开始，`openship` 包同时包含 Ship SDK 和 CLI：
+
+```bash
+npm install openship
+```
+
+如果你的项目装的是旧的仅 CLI 版本，请升级本地依赖：
+
+```bash
+npm install openship@latest
+npm ls openship
+```
+
+0.8.0 之前的版本不包含 SDK 入口。升级包并不会升级远程 OpenShip 服务器；参见
+[服务器兼容性](/docs/api/sdk/compatibility#固定组织作用域)。
+
+## 从源码测试改动
+
+贡献者可以在本地构建并安装包，而无需发布：
+
+1. 在仓库根目录构建公开包：
+
+   ```bash
+   bun install --frozen-lockfile
+   bun run build:sdk
+   ```
+
+2. 创建 tarball。使用 `npm pack` 打印出的文件名：
+
+   ```bash
+   cd packages/openship
+   npm pack
+   ```
+
+3. 在你的 Node 项目中安装该 tarball：
+
+   ```bash
+   npm install /absolute/path/to/openship-0.8.0.tgz
+   ```
+
+请使用 `npm pack` 实际打印出的 tarball 文件名；它跟随检出代码中的包版本。
+
+## 选择导入方式
+
+| 导入路径 | 提供内容 |
+| --- | --- |
+| `openship` | 原生工厂函数、远程客户端、部署辅助工具、公开类型和错误。 |
+| `openship/client` | 远程客户端和 HTTP 辅助工具。 |
+| `openship/native` | 原生工厂函数、身份类型、生命周期选项和作用域受限的操作。 |
+
+<Tabs items={['ES modules', 'CommonJS']}>
+<Tab value="ES modules">
+
+```ts title="imports.mts"
+import { createShip, OpenshipClient } from "openship";
+import type { ScopedShip, ProjectOperations } from "openship";
+```
+
+</Tab>
+<Tab value="CommonJS">
+
+```js title="imports.cjs"
+const { OpenshipClient } = require("openship/client");
+const { createShip } = require("openship/native");
+```
+
+</Tab>
+</Tabs>
+
+导入是被动的。导入不会启动 CLI、打开数据库，也不会创建 worker。
+
+## 在同一安装中使用 CLI
+
+```bash
+npx openship --help
+```
+
+在本地安装该依赖后，应用导入和命令都可以通过 `npx` 或 npm 脚本使用。全局安装的
+CLI 并不能替代你应用的本地依赖。
+
+接下来可以继续阅读[远程设置](/docs/api/sdk/client)、[原生设置](/docs/api/sdk/native)
+或[可运行的示例](/docs/api/sdk/examples)。服务器要求参见
+[兼容性](/docs/api/sdk/compatibility)。

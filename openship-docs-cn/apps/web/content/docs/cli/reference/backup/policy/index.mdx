@@ -1,0 +1,90 @@
+---
+title: backup policy
+description: openship backup policy 的命令、参数与选项。
+cliGroup: openship backup policy
+---
+
+示例请参见[工作流指南](/docs/cli/self-host)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship backup policy
+
+项目的备份策略（备份的定时计划）
+
+```text
+openship backup policy [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list [options]`](/docs/cli/reference/backup/policy#openship-backup-policy-list) | 列出项目的备份策略 |
+| [`create [options]`](/docs/cli/reference/backup/policy#openship-backup-policy-create) | 为项目创建备份策略 |
+| [`run [options] <policyId>`](/docs/cli/reference/backup/policy#openship-backup-policy-run) | 立即触发该策略的备份 |
+| [`update <policyId> <file>`](/docs/cli/reference/backup/policy#openship-backup-policy-update) | 从 JSON 文件更新备份策略 |
+| [`remove\|rm <policyId>`](/docs/cli/reference/backup/policy#openship-backup-policy-remove) | 移除备份策略 |
+
+## openship backup policy create
+
+为项目创建备份策略
+
+```text
+openship backup policy create [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 项目 ID |
+| `--destination <id>` | 备份目标 ID |
+| `--service <id>` | 将策略限定到单个服务 |
+| `--cron <expr>` | cron 定时表达式（例如 '0 3 * * *'） |
+| `--pre-deploy` | 每次部署前也执行该备份 |
+| `--retain-count <n>` | 最多保留 N 次执行 |
+| `--retain-days <n>` | 执行记录保留 N 天 |
+| `--payload-kind <kind>` | 载荷类型（默认 auto） |
+| `--payload-config <json>` | 以 JSON 对象形式给出的载荷配置 |
+| `--pre-hook <cmd>` | 备份前执行的 shell 命令 |
+| `--post-hook <cmd>` | 备份后执行的 shell 命令 |
+| `--disabled` | 以禁用状态创建策略 |
+
+## openship backup policy list
+
+列出项目的备份策略
+
+```text
+openship backup policy list [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 项目 ID |
+
+## openship backup policy remove
+
+移除备份策略
+
+```text
+openship backup policy remove|rm [options] <policyId>
+```
+
+## openship backup policy run
+
+立即触发该策略的备份
+
+```text
+openship backup policy run [options] <policyId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `policyId` | 备份策略 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--follow` | 流式跟随执行直至完成 |
+
+## openship backup policy update
+
+从 JSON 文件更新备份策略
+
+```text
+openship backup policy update [options] <policyId> <file>
+```

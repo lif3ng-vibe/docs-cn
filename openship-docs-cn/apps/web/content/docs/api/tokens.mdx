@@ -1,0 +1,219 @@
+---
+title: 令牌与 MCP 客户端
+description: 创建带作用域的访问令牌并管理 MCP 客户端授权。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+令牌 API 管理向 Openship 证明你身份的凭据：供 CLI 与直接 API 调用使用的
+**个人访问令牌（personal access token，PAT）**，以及 AI 助手经
+OAuth 连接时创建的 **MCP 客户端**绑定。在控制台对应 **Settings → Access** 区域；在终端上对应
+[`openship token`](/docs/cli/access) 命令。每条路由都是自作用域的——你只能查看与管理
+自己的令牌与客户端。
+
+## 创建令牌
+
+铸造一枚新的 PAT，并在 `data.token` 中返回明文机密，**仅有一次**——它静态哈希存储，
+永远无法再次取回。列表响应只显示较短的 `tokenPrefix`。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.tokens.create({
+  name: "deploy-bot",
+  readOnly: false,
+  grants: [
+    {
+      resourceType: "project",
+      resourceId: "proj_123",
+      permissions: ["read", "write"],
+    },
+  ],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/tokens" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"deploy-bot","readOnly":false,"grants":[{"resourceType":"project","resourceId":"proj_123","permissions":["read","write"]}]}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '令牌的人类可读标签（1–100 个字符）。', required: true },
+    readOnly: { type: 'boolean', description: '只读令牌拒绝变更类方法（POST/PUT/PATCH/DELETE）。', default: 'false' },
+    expiresInDays: { type: 'integer', description: '令牌从现在起 N 天后过期（1–365）。省略即永不过期。' },
+    grants: { type: 'TokenGrant[]', description: '资源作用域。存在且非空时，令牌被严格限定到这些资源——甚至低于铸造者自身的角色。每条 grant 必须落在铸造者自己的访问范围之内，否则请求被拒绝。' },
+    fullAccess: { type: 'boolean', description: '刻意铸造一枚 UNSCOPED 令牌，以你自己的完整权限行事。grants 为空或省略时必填；两者同时发送会被拒绝。' },
+  }}
+/>
+
+<Callout title="作用域必须显式声明，不能默认推断" type="warn">
+在 `grants`（有作用域）与 `fullAccess: true`（无作用域）之间**恰好发送一个**。`grants` 为空或省略
+且未带 `fullAccess` 返回 `400 TOKEN_SCOPE_REQUIRED`；两者都发返回
+`400 AMBIGUOUS_TOKEN_SCOPE`。
+
+Openship 过去把空 `grants` 视为完整权限。这使“我不想要任何限制”和“我选择的作用域
+结果为空”变成同一个请求——而它在危险的那种情形下以开放方式失败，因此
+本想限制令牌的调用者可能悄无声息地拿到完整权限。现在意图必须显式。
+</Callout>
+
+`grants` 的每一项都是一个 **TokenGrant**：
+
+<TypeTable
+  type={{
+    resourceType: { type: 'string', description: '之一：project、server、mail_server、backup_destination、billing、audit、github_installation、github_repository。', required: true },
+    resourceId: { type: 'string', description: '资源 id。github_repository 用 "owner/repo"。', required: true },
+    permissions: { type: '("read" | "write" | "admin" | "create")[]', description: '令牌可对该资源执行的操作。"create" 是仅集合级的能力——见下文“仅限它创建的项目”作用域。', required: true },
+  }}
+/>
+
+<Callout title="立即保存机密" type="warn">
+响应的 `data.token`（一个 `opsh_pat_…` 字符串）只显示一次，之后不再出现。`GET /api/tokens` 只
+返回前缀。丢了就撤销该令牌并重新铸造一枚。
+</Callout>
+
+<Callout title="令牌永远不会超出其铸造者" type="info">
+每条 grant 都会在令牌创建之前对照你自身的访问范围验证。未知的 `resourceType`
+返回 `400 INVALID_RESOURCE_TYPE`；授予你自己不具备的访问返回 `403 GRANT_EXCEEDS_ACCESS`。
+</Callout>
+
+### “仅限它创建的项目”作用域
+
+要让一个代理（例如 MCP 客户端）可以**创建新项目并完整管理它自己创建的那些**——
+对其余一切零可见——给它对项目集合的单条 `create` 授权：
+
+```json
+{ "name": "agent", "grants": [{ "resourceType": "project", "resourceId": "*", "permissions": ["create"] }] }
+```
+
+`create` 仅限集合级：它授权 `POST /api/projects` 并让令牌**列出**项目
+（过滤为它自己的），但对任何既有项目**不**授予读/写/管理权限。令牌
+创建的每个项目会自动追加一条 `{ project, <id>, [read, write, admin] }` 授权，因此它完全掌控自己的工作，
+别无其他。在控制台对应 MCP 授权页的 **“Only projects it creates”** 选项。
+
+## 列出令牌
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const tokens = await ship.tokens.list();
+console.log(tokens);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/tokens" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+返回你的令牌，不含任何机密材料——每行带 `id`、`name`、`tokenPrefix`、`readOnly`、
+`scoped`、`expiresAt`、`lastUsedAt`、`revokedAt` 与 `createdAt`。
+
+## 撤销令牌
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.tokens.revoke("pat_123");
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X DELETE "$OPENSHIP_URL/api/tokens/pat_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+<Callout title="404 —— 令牌未找到" type="error">
+该 `:id` 不是你自己的令牌（或已被移除）。用 `GET /api/tokens`
+列出你的令牌以获取有效 ID。
+</Callout>
+
+## MCP 客户端
+
+当 AI 助手经 OAuth 连接 Openship 时，授权同意页会记录该客户端被允许做什么，接着 Openship 为它签发走 **同一条**作用域主体通路（与 PAT 一致）的作用域访问令牌。
+这些路由支撑该流程以及 **Settings → Access → Connected clients** 列表。
+
+### 授权客户端
+
+在令牌签发之前由 OAuth 授权同意页（浏览器 Cookie 会话）调用。它持久化用户选择的只读标志与资源授权作为客户端的绑定。授权按 `⊆` 你的自身范围校验，
+与令牌创建完全一致。再次授权会整体覆盖绑定的授权。
+
+```
+POST /api/tokens/mcp-authorize
+```
+
+<TypeTable
+  type={{
+    clientId: { type: 'string', description: '要绑定的 OAuth 客户端。必填。', required: true },
+    readOnly: { type: 'boolean', description: '将客户端限制为只读访问。', default: 'false' },
+    organizationId: { type: 'string', description: '客户端被限定到的组织。默认为当前组织；其他组织必须是你所属的组织。' },
+    grants: { type: 'TokenGrant[]', description: '资源作用域，形状与令牌 grant 相同。非空时把客户端严格绑定到这些资源。' },
+    fullAccess: { type: 'boolean', description: '刻意记录一条 UNSCOPED 绑定——客户端以你自己的角色行事。grants 为空时必填；两者同时发送会被拒绝。' },
+  }}
+/>
+
+<Callout title="授权同意的错误" type="warn">
+缺少 `clientId` 返回 `400 CLIENT_ID_REQUIRED`；传入你不属于的 `organizationId` 返回
+`403 ORG_NOT_A_MEMBER`。无效或过分宽泛的 grant 与令牌创建一样
+失败（`400 INVALID_RESOURCE_TYPE` / `403 GRANT_EXCEEDS_ACCESS`）。
+
+这里的作用域意图同样必须显式：空 `grants` 而不带 `fullAccess: true` 返回
+`400 TOKEN_SCOPE_REQUIRED`，两者都发返回 `400 AMBIGUOUS_TOKEN_SCOPE`。无作用域绑定会让客户端以你自己的角色行事，因此绝不能靠省略走到那一步。
+</Callout>
+
+### 列出已连接客户端
+
+```
+GET /api/tokens/mcp-clients
+```
+
+每条 OAuth 绑定一个条目，带 `clientId`、`name`、`organizationId`、`organizationName`、
+`readOnly`、`scoped`、`grantCount`、`authorizedAt` 与 `lastUsedAt`。
+
+### 断开客户端
+
+先撤销客户端已被签发的令牌（令其立即失效），再删除作用域绑定、其授权
+与已记录的授权同意，让重连时重新弹出同意。按你维度隔离——跨用户共享的客户端对
+其他人继续有效。
+
+```
+DELETE /api/tokens/mcp-clients/:clientId
+```
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出你的令牌，不暴露其机密。 | `tokens.list()` | `GET /api/tokens`<br />`settings:read` |
+| 创建令牌；其机密只返回一次。 | `tokens.create(input)` | `POST /api/tokens`<br />`settings:write` |
+| 授权或显式重设 MCP 客户端绑定的作用域。 | `tokens.authorizeMcpClient(input)` | `POST /api/tokens/mcp-authorize`<br />`settings:write` |
+| 列出你已授权的 MCP 客户端。 | `tokens.listMcpClients()` | `GET /api/tokens/mcp-clients`<br />`settings:read` |
+| 按令牌 ID 撤销令牌。 | `tokens.revoke(id)` | `DELETE /api/tokens/:id`<br />`settings:write` |
+| 读取一条 MCP 客户端授权。 | `tokens.getMcpClient(id)` | `GET /api/tokens/mcp-clients/:clientId`<br />`settings:read` |
+| 撤销一条 MCP 客户端授权。 | `tokens.disconnectMcpClient(id)` | `DELETE /api/tokens/mcp-clients/:clientId`<br />`settings:write` |
+
+{/* api-operations:end */}

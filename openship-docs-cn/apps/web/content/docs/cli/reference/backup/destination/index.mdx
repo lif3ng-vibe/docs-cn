@@ -1,0 +1,135 @@
+---
+title: backup destination
+description: openship backup destination 的命令、参数与选项。
+cliGroup: openship backup destination
+---
+
+示例请参见[工作流指南](/docs/cli/self-host)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship backup destination
+
+备份目标（backup destination，即存储目标）
+
+```text
+openship backup destination [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list`](/docs/cli/reference/backup/destination#openship-backup-destination-list) | 列出备份目标 |
+| [`create [options]`](/docs/cli/reference/backup/destination#openship-backup-destination-create) | 创建备份目标 |
+| [`preflight <destinationId>`](/docs/cli/reference/backup/destination#openship-backup-destination-preflight) | 验证目标（写入 + 读取 + 删除一个探测对象） |
+| [`get <id>`](/docs/cli/reference/backup/destination#openship-backup-destination-get) | 显示目标信息但不泄露其凭据 |
+| [`usage <id>`](/docs/cli/reference/backup/destination#openship-backup-destination-usage) | 显示某个目标的策略与已存备份用量 |
+| [`update <id> <file>`](/docs/cli/reference/backup/destination#openship-backup-destination-update) | 更新目标的指定字段；未提交的凭据保持不变 |
+| [`remove\|rm <id>`](/docs/cli/reference/backup/destination#openship-backup-destination-remove) | 移除没有活动策略的目标 |
+| [`preflight-draft <file>`](/docs/cli/reference/backup/destination#openship-backup-destination-preflight-draft) | 在保存前测试目标设置 |
+
+## openship backup destination create
+
+创建备份目标
+
+```text
+openship backup destination create [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--name <name>` | 显示名称 |
+| `--kind <kind>` | s3_compatible \| sftp \| openship_server \| local |
+| `--endpoint <url>` | 端点 URL / 绝对路径（local） |
+| `--region <region>` | S3 区域 |
+| `--bucket <bucket>` | S3 存储桶 |
+| `--path-prefix <prefix>` | 键/路径前缀 |
+| `--ssh-host <host>` | SFTP 主机 |
+| `--ssh-port <port>` | SFTP 端口 |
+| `--ssh-user <user>` | SFTP 用户 |
+| `--server <id>` | 服务器 ID（openship_server 类型） |
+| `--access-key-id <id>` | S3 访问密钥 ID |
+| `--secret-access-key <key>` | S3 私有访问密钥 |
+| `--sftp-password <pw>` | SFTP 密码 |
+| `--sftp-private-key <key>` | SFTP 私钥（原始内容） |
+| `--sftp-private-key-file <path>` | 从文件读取 SFTP 私钥 |
+| `--sftp-key-passphrase <pw>` | SFTP 私钥口令 |
+| `--default` | 标记为默认目标 |
+
+## openship backup destination get
+
+显示目标信息但不泄露其凭据
+
+```text
+openship backup destination get [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目标 ID |
+
+## openship backup destination list
+
+列出备份目标
+
+```text
+openship backup destination list [options]
+```
+
+## openship backup destination preflight
+
+验证目标（写入 + 读取 + 删除一个探测对象）
+
+```text
+openship backup destination preflight [options] <destinationId>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `destinationId` | 目标 ID |
+
+## openship backup destination preflight-draft
+
+在保存前测试目标设置
+
+```text
+openship backup destination preflight-draft [options] <file>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `file` | JSON 格式的目标输入；包含 id 字段即可复用已保存的凭据 |
+
+## openship backup destination remove
+
+移除没有活动策略的目标
+
+```text
+openship backup destination remove|rm [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目标 ID |
+
+## openship backup destination update
+
+更新目标的指定字段；未提交的凭据保持不变
+
+```text
+openship backup destination update [options] <id> <file>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目标 ID |
+| `file` | JSON 格式的目标补丁 |
+
+## openship backup destination usage
+
+显示某个目标的策略与已存备份用量
+
+```text
+openship backup destination usage [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目标 ID |

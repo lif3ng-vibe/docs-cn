@@ -1,0 +1,176 @@
+---
+title: app
+description: openship app 的命令、参数与选项。
+cliGroup: openship app
+---
+
+示例请参见[工作流指南](/docs/cli/projects)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship app
+
+浏览、安装并配置目录应用（app catalog）
+
+```text
+openship app [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list\|ls`](/docs/cli/reference/app#openship-app-list) | 列出可用的目录应用 |
+| [`get <id>`](/docs/cli/reference/app#openship-app-get) | 显示应用模板与一份可访问的安装草稿 |
+| [`host-fit [options] <id>`](/docs/cli/reference/app#openship-app-host-fit) | 将应用的前置要求与部署目的地进行匹配检查 |
+| [`install [options] <id>`](/docs/cli/reference/app#openship-app-install) | 创建或更新一份应用安装草稿；用返回的项目 ID 通过 openship deploy 部署 |
+| [`custom`](/docs/cli/reference/app#openship-app-custom) | 管理本组织的自定义应用定义 |
+| [`settings`](/docs/cli/reference/app#openship-app-settings) | 读取并更新已安装应用的精选设置 |
+| [`connection <project>`](/docs/cli/reference/app#openship-app-connection) | 显示解析后的应用连接详情（含凭据）；需要项目写权限 |
+
+## openship app connection
+
+显示解析后的应用连接详情，包括凭据；需要项目写权限
+
+```text
+openship app connection [options] <project>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `project` | 已安装应用的项目 ID |
+
+## openship app custom
+
+管理本组织的自定义应用定义
+
+```text
+openship app custom [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`list\|ls`](/docs/cli/reference/app#openship-app-custom-list) |  |
+| [`add <file>`](/docs/cli/reference/app#openship-app-custom-add) | 校验并保存一份自定义应用定义 |
+| [`remove\|rm <id>`](/docs/cli/reference/app#openship-app-custom-remove) | 移除一份自定义目录定义 |
+
+## openship app custom add
+
+校验并保存一份自定义应用定义
+
+```text
+openship app custom add [options] <file>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `file` | AppTemplate JSON 文件 |
+
+## openship app custom list
+
+使用下方参数执行本命令。
+
+```text
+openship app custom list|ls [options]
+```
+
+## openship app custom remove
+
+移除一份自定义目录定义
+
+```text
+openship app custom remove|rm [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 自定义应用 ID |
+
+## openship app get
+
+显示应用模板与一份可访问的安装草稿
+
+```text
+openship app get [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目录应用 ID |
+
+## openship app host-fit
+
+将应用的前置要求与部署目的地进行匹配检查
+
+```text
+openship app host-fit [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目录应用 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--server <id>` | 已注册服务器的 ID |
+| `--target <target>` | 部署目标，例如 cloud |
+
+## openship app install
+
+创建或更新一份应用安装草稿；用返回的项目 ID 通过 openship deploy 部署
+
+```text
+openship app install [options] <id>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `id` | 目录应用 ID |
+
+| 选项 | 含义 |
+| --- | --- |
+| `--name <name>` | 项目名称 |
+| `--config <file>` | 应用配置值的 JSON 对象 |
+| `--routes <file>` | 端点路由选择的 JSON 数组 |
+
+## openship app list
+
+列出可用的目录应用
+
+```text
+openship app list|ls [options]
+```
+
+## openship app settings
+
+读取并更新已安装应用的精选设置
+
+```text
+openship app settings [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`get <project>`](/docs/cli/reference/app#openship-app-settings-get) |  |
+| [`update <project> <file>`](/docs/cli/reference/app#openship-app-settings-update) |  |
+
+## openship app settings get
+
+使用下方参数执行本命令。
+
+```text
+openship app settings get [options] <project>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `project` | 已安装应用的项目 ID |
+
+## openship app settings update
+
+使用下方参数执行本命令。
+
+```text
+openship app settings update [options] <project> <file>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `project` | 已安装应用的项目 ID |
+| `file` | 包含 &#123;service, key, value&#125; 变更数组的 JSON 对象 |

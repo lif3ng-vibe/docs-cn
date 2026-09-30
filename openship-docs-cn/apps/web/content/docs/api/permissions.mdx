@@ -1,0 +1,309 @@
+---
+title: 成员与权限
+description: 管理组织、成员、邀请与授权。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+权限 API 支撑着 Openship 的团队与访问控制模型：它报告当前组织是否为团队、列出可授权的资源、创建团队组织，并管理按成员维度的**授权**（grant）与邀请，将 `restricted` 成员的可见范围限定到特定项目、服务器或其他资源。在控制台中对应组织的 **Team** 标签页。关于角色与授权如何叠加，参见[认证与访问控制](/docs/security/auth)。
+
+用户授权赋予 `restricted` 成员对特定资源的访问权限。角色本身也自带标准权限。令牌授权与只读限制则是对所有角色的额外约束。一条用户授权是 `(user, resourceType, resourceId, permissions[])`；`resourceId: "*"` 表示作用于整个组织。
+
+## 列出工作区
+
+`GET /api/permissions/workspaces`（SDK：`ship.permissions.listWorkspaces()`）返回工作区名称、`organizationId` 值、slug、团队状态与生效角色，包括没有任何项目的工作区。响应还会标出 `currentOrganizationId`、`boundOrganizationId`、`canSwitchOrganization`
+和 `readOnly`。这是一个成员身份发现操作，所有已认证成员——包括受限与只读凭据——都可以调用。
+
+绑定组织的凭据只能看到自己的工作区。未绑定组织的请求列出该用户的全部成员身份；SDK 或 HTTP 范围被显式固定时，只返回其选定的工作区。
+`canSwitchOrganization` 描述该凭据是否允许切换到其他成员身份。
+响应只包含工作区身份元数据，不含计费凭据或运行时命名空间细节。
+
+通过 MCP 调用时，先用 `{}` 调 `get_permissions_workspaces`，然后在创建应用或 Compose 项目时把选定的 `organizationId` 作为顶层参数传入。参见[MCP 工作区选择](/docs/api/mcp#发现并选择工作区)。
+
+## 创建团队组织
+
+创建一个全新组织，将其标记为团队，并把调用者设为所有者。个人工作区保持个人属性不变——这是获得共享的多人组织的方式。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.createTeamOrg({
+  name: "Acme Platform",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/permissions/create-team-org" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Acme Platform"}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '新团队组织的显示名称。', required: true },
+    slug: { type: 'string', description: 'URL slug。省略时由名称自动推导（小写化、加连字符）。' },
+  }}
+/>
+
+返回 `201` 与 `{ data: { id, name, isTeam: true } }`。
+
+## 列出可授权资源
+
+无副作用的资源选择器载荷，供授权弹窗与邀请流程使用。传入资源 `type`；返回
+`{ id, label, meta? }[]`。`*` 通配符不在列表中——选择器会自行添加。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.listResources({
+  type: "server",
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/permissions/resources?type=server" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+`type=billing` 或 `type=audit` 时唯一条目就是组织级的 `*`。`type=github_repository` 时可用 `&owner=<login>` 限定到某个账号。
+
+## 授权资源
+
+对单个授权元组做幂等 upsert。重复发送相同的 `(userId, resourceType, resourceId)` 会就地替换其 `permissions`。**`permissions` 数组为空即撤销**该授权（Openship 不保留零权限的占位行）。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.upsertGrant({
+  userId: "user_123",
+  resourceType: "project",
+  resourceId: "proj_abc",
+  permissions: ["read", "write"],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/permissions/grants" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"user_123","resourceType":"project","resourceId":"proj_abc","permissions":["read","write"]}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    userId: { type: 'string', description: '被授权的成员。必须已属于当前组织。', required: true },
+    resourceType: { type: 'string', description: 'project | server | mail_server | backup_destination | billing | audit | github_installation | github_repository。', required: true },
+    resourceId: { type: 'string', description: '资源 id，或 "*" 表示组织级。', required: true },
+    permissions: { type: 'string[]', description: 'read、write、admin 中任意组合。空数组撤销授权。', required: true },
+  }}
+/>
+
+返回 `201` 与 `{ data: <grant> }`；当 `permissions` 为空时返回 `{ data: null, revoked: true }`。
+
+## 整体替换成员的授权集
+
+发送该成员**完整**的目标授权集；服务器与现有授权做差异对比——upsert 新增/变更的元组并删除缺失的元组。这是成员授权编辑器唯一的保存路径。零权限条目会被丢弃。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.replaceGrants({
+  userId: "user_123",
+  grants: [
+    {
+      resourceType: "project",
+      resourceId: "proj_abc",
+      permissions: ["read", "write"],
+    },
+    {
+      resourceType: "server",
+      resourceId: "srv_1",
+      permissions: ["read"],
+    },
+  ],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PUT "$OPENSHIP_URL/api/permissions/grants" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId":"user_123",
+    "grants":[
+      {"resourceType":"project","resourceId":"proj_abc","permissions":["read","write"]},
+      {"resourceType":"server","resourceId":"srv_1","permissions":["read"]}
+    ]
+  }'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    userId: { type: 'string', description: '要替换授权集的成员。', required: true },
+    grants: { type: 'Grant[]', description: '完整的目标授权集。任何未列于此处的现有授权都会被移除。', required: true },
+  }}
+/>
+
+`grants` 的每一项都是一个 `Grant` 对象：
+
+<TypeTable
+  type={{
+    resourceType: { type: 'string', description: 'project | server | mail_server | backup_destination | billing | audit | github_installation | github_repository。', required: true },
+    resourceId: { type: 'string', description: '资源 id，或 "*" 表示组织级。', required: true },
+    permissions: { type: 'string[]', description: 'read、write、admin 中任意组合。零权限条目会被丢弃。', required: true },
+  }}
+/>
+
+非通配符、有对应数据库行的资源会校验其是否属于当前组织；外来 id 会被拒绝并返回
+`400 RESOURCE_NOT_IN_ORG`。
+
+## 携带授权邀请成员
+
+在 Better Auth 邀请功能之上封装，并在同一调用中把**待生效**授权存到邀请之上。被邀请人接受后，接受邀请页面调用 `POST /invitations/:id/materialize` 把这些待生效授权转换为真实授权。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.inviteWithGrants({
+  email: "dev@acme.com",
+  role: "restricted",
+  grants: [
+    {
+      resourceType: "project",
+      resourceId: "proj_abc",
+      permissions: ["read", "write"],
+    },
+  ],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/permissions/invite-with-grants" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"dev@acme.com",
+    "role":"restricted",
+    "grants":[{"resourceType":"project","resourceId":"proj_abc","permissions":["read","write"]}]
+  }'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    email: { type: 'string', description: '要邀请的邮箱地址。', required: true },
+    role: { type: '"owner" | "admin" | "member" | "restricted"', description: '被邀请人的组织角色。', default: 'member' },
+    grants: { type: 'Grant[]', description: '要挂到邀请上的待生效授权（与上文 Grant 形状相同）。仅对 restricted 角色的访问生效；对其他角色也会存储但不产生效果。' },
+  }}
+/>
+
+返回 `201` 与 `{ data: { id, email, role, pendingGrantCount } }`。
+
+## 落实邀请中的授权
+
+在 Better Auth 记录接受动作后，由接受邀请页面调用。它会查找该邀请的待生效授权，将其 upsert 为新加入用户的真实授权，并清空待生效行。由邀请本身授权——调用者邮箱必须与邀请一致，且邀请状态必须是 `accepted`。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.permissions.materializeInvitation("inv_123");
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/permissions/invitations/inv_123/materialize" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+返回 `{ data: { materialized: <count> } }`。
+
+## 错误
+
+<Callout title="400 —— 字段缺失或无效" type="warn">
+`POST /grants` 必须提供 `userId`、`resourceType` 和 `resourceId`；`create-team-org` 需要 `name`；`invite-with-grants` 需要 `email`。未知的 `resourceType` 返回
+`code: "INVALID_RESOURCE_TYPE"`。对邀请流程而言，`400` 也可能表示邀请尚未被接受或已过期。
+</Callout>
+
+<Callout title="403 —— 非管理员，或被邀请人不匹配" type="error">
+授权/邀请路由要求调用者在当前组织中是 `admin` 或 `owner`。对
+`/invitations/:id/materialize`，`403` 表示你账号的邮箱与邀请不匹配。
+</Callout>
+
+<Callout title="404 —— 非成员 / 授权未找到" type="error">
+当目标 `userId` 不是当前组织成员时，`POST /grants` 返回 `404`；
+当 id 不属于你的组织时，`DELETE /grants/:id` 返回 `404`（授权按组织维度隔离，因此即使猜到 id 也动不了其他租户的行）。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出可用工作区 ID、名称、角色与凭据范围。 | `permissions.listWorkspaces()` | `GET /api/permissions/workspaces`<br />`permissions:read` |
+| 读取所选组织的权限元数据。 | `permissions.orgMeta()` | `GET /api/permissions/org-meta`<br />`permissions:read` |
+| 列出可用于权限授权的资源。 | `permissions.listResources(input)` | `GET /api/permissions/resources`<br />`permissions:read` |
+| 创建团队组织，调用者为其所有者。 | `permissions.createTeamOrg(input)` | `POST /api/permissions/create-team-org`<br />`permissions:write` |
+| 读取指定主体的授权。 | `permissions.listGrants(input)` | `GET /api/permissions/grants`<br />`permissions:read` |
+| 创建或更新一条资源授权。 | `permissions.upsertGrant(input)` | `POST /api/permissions/grants`<br />`permissions:write` |
+| 整体替换指定主体的授权集。 | `permissions.replaceGrants(input)` | `PUT /api/permissions/grants`<br />`permissions:write` |
+| 列出组织邀请。 | `permissions.listInvitations()` | `GET /api/permissions/invitations`<br />`permissions:read` |
+| 以显式角色与可选授权邀请成员。 | `permissions.inviteWithGrants(input)` | `POST /api/permissions/invite-with-grants`<br />`permissions:write` |
+| 列出组织成员。 | `permissions.listMembers()` | `GET /api/permissions/members`<br />`permissions:read` |
+| 将已接受邀请的授权应用到由此产生的成员身份。 | `permissions.materializeInvitation(id)` | `POST /api/permissions/invitations/:id/materialize`<br />`permissions:write` |
+| 移除一条授权。 | `permissions.deleteGrant(id)` | `DELETE /api/permissions/grants/:id`<br />`permissions:admin` |
+| 接受一条已被授权的邀请。 | `permissions.acceptInvitation(id)` | `POST /api/permissions/invitations/:id/accept`<br />`permissions:write` |
+| 拒绝邀请。 | `permissions.rejectInvitation(id)` | `POST /api/permissions/invitations/:id/reject`<br />`permissions:write` |
+| 取消一条待处理的邀请。 | `permissions.cancelInvitation(id)` | `POST /api/permissions/invitations/:id/cancel`<br />`permissions:write` |
+| 重发一条符合条件的邀请。 | `permissions.resendInvitation(id, input?)` | `POST /api/permissions/invitations/:id/resend`<br />`permissions:write` |
+| 修改成员的组织角色。 | `permissions.setMemberRole(id, input)` | `PATCH /api/permissions/members/:id`<br />`permissions:write` |
+| 移除成员并保留最后一位所有者。 | `permissions.removeMember(id)` | `DELETE /api/permissions/members/:id`<br />`permissions:admin` |
+
+{/* api-operations:end */}

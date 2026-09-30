@@ -1,0 +1,22 @@
+---
+title: reset-admin-password
+description: openship reset-admin-password 的命令、参数与选项。
+cliGroup: openship reset-admin-password
+---
+
+示例参见 [CLI 总览](/docs/cli)。`--json` 等全局选项写在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship reset-admin-password
+
+重置本机（THIS machine）的本地管理员登录（无需登录凭据）
+
+```text
+openship reset-admin-password [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--port <port>` | 运行中服务的 API 端口（默认：本次安装解析到的端口，否则为 4000） |
+| `--email <email>` | 同时设置管理员邮箱 |
+| `--name <name>` | 同时设置管理员显示名称 |
+| `--password <password>` | 新密码（省略时交互提示输入） |

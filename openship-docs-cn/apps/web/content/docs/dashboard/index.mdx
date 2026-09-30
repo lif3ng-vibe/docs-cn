@@ -1,0 +1,108 @@
+---
+title: 控制台
+description: 一次 Openship 控制台（dashboard）之旅——贯穿一切的侧边栏、首页总览，以及各个功能区的导航地图。
+---
+
+控制台（dashboard）是你的大本营。它是一个分为两栏的单一界面：左侧一条贯穿各处的**侧边栏**，右侧一个大
+**主区域**，展示你选中的内容。没有需要翻找的顶部导航栏——想去哪里，入口都在侧边栏里。
+
+本页帮你建立对它的整体认知：侧边栏里每个链接打开什么、首页都在告诉你什么，以及下一步该点哪里。
+
+## 侧边栏
+
+侧边栏是固定在左缘的圆角面板。它在你的移动过程中保持不动，当前所在页面的条目会高亮显示，让你随时清楚自己身处何处。
+
+最顶部是 **Openship** 的标志和名称，外加两个小按钮：
+
+- **主题切换**（太阳 / 月亮）按钮，在整个控制台的范围内切换浅色与深色模式。
+- **折叠**按钮（"Collapse sidebar"），把面板收缩成只剩图标，给主区域留出更多空间。再按一次（"Expand sidebar"）即可恢复标签文字。
+
+### 导航链接
+
+链接被分成带标签的分组——**Main**、**Settings**，以及（在自托管的实例上）**Infrastructure**。
+
+| 分区 | 条目 | 路由 | 内容 |
+|---|---|---|---|
+| Main | **Home** | `/` | 总览页（见下文）——你的项目、快捷链接和最近动态。 |
+| Main | **Projects** | `/projects` | 工作区里的所有项目。点击任意一个打开其详情视图。参见[项目](/docs/dashboard/projects)。 |
+| Main | **Deployments** | `/deployments` | 跨项目全部构建的动态流。参见[回滚与重新部署](/docs/guides/rollback-redeploy)。 |
+| Main | **Backups** | `/backups` | 注册备份写入的存储目标。参见[备份](/docs/dashboard/backups)。 |
+| Settings | **Settings** | `/settings` | 账户、团队、GitHub 连接、令牌和 MCP。参见[设置](/docs/dashboard/settings)。 |
+| Settings | **Billing** | `/billing` | 套餐与用量——在 Openship Cloud（或连接到云端的实例）上显示。参见[计费](/docs/dashboard/billing)。 |
+| Infrastructure | **Servers** | `/servers` | 你自己接入的、可用于部署的机器。参见[服务器](/docs/dashboard/servers)。 |
+| Infrastructure | **Emails** | `/emails` | 自托管的邮件栈和 Zero 网页邮箱。参见[邮件](/docs/dashboard/emails)。 |
+
+<Callout title="部分链接只在特定配置下出现" type="info">
+侧边栏会随你的实例自适应。**Billing** 只在 Openship Cloud 或连接到 Cloud 的自托管实例上显示。**Servers**
+和 **Emails** 只在自托管实例上显示。所以纯云账户和自托管机器看到的列表不完全一致——这是预期行为。
+</Callout>
+
+### 新建项目
+
+导航区正下方是醒目的 **New Project** 按钮。它会带你前往
+[**Library**](/docs/dashboard/library)（`/library`），在那里启动一次部署——可以从 GitHub 仓库、本地文件夹、
+URL 或模板开始。首页上的 "Import Git" 快捷入口指向的也是同一处。
+
+<Callout title="第一次部署？" type="info">
+从[从 GitHub 部署](/docs/guides/deploy-from-github)开始——它逐步带你走完 New Project → Library →
+Deploy 的完整流程。
+</Callout>
+
+### 工作区切换器
+
+底部是 **Account** 区域。如果你属于多个组织，这里就是一个工作区切换器：它显示当前激活组织的名称（下方是
+"N workspaces" 或你的邮箱）。点击它会打开一个标题为 **Switch organization** 的弹窗，选择另一个组织后，
+控制台会以该组织的范围重新加载。当前组织标有 **Current**，旁边是你的角色。
+
+同一个弹窗里还有你的登录身份和 **Log out** 按钮。（在桌面应用上，该按钮显示为 **Back to setup**，
+点击会返回本地设置界面。）
+
+## 首页
+
+点击 **Home**（或 logo）会进入位于 `/` 的总览页。页面以一句问候开头——"Good morning /
+afternoon / evening" 加上你的名字——副标题是 "Here's what's happening across your projects"。主体是两栏布局。
+
+### Your Projects
+
+主面板是 **Your Projects**——当前工作区中的项目，带一个数量统计和一个指向 `/projects` 的 **View all**
+链接。列表最多显示六条；如果项目更多，底部会出现 "View all N projects" 链接。点击任意一行即可打开该项目。
+
+如果你还没有项目，这个面板会变成一张欢迎卡片（"Launch your first project"），带两个按钮——**Create
+project** 和 **Import from GitHub**——两者都会把你带到 Library 开始上手。
+
+### 快捷链接
+
+项目面板下方是一排四张快捷卡片：
+
+| 卡片 | 去向 | 用途 |
+|---|---|---|
+| **Import Git** | `/library` | 从一个仓库开始一个项目。 |
+| **MCP Deploy** | `/settings?tab=mcp` | 连接 AI 代理替你进行部署——参见 [MCP](/docs/mcp)。 |
+| **Settings** | `/settings` | 你的账户与团队。 |
+| **Docs** | 打开文档站 | 本文档，在新标签页中打开。 |
+
+### 动态与最近
+
+右栏是吸附式的（左栏滚动时它跟随你），一目了然地概括工作区状态：
+
+- **Activity**——一块小记分板：项目总数、部署（deployment）总数，以及整体构建**成功率**（健康时呈绿色，
+  需要关注时呈琥珀色或红色）。
+- 一张随状态变化的情境**提示**卡片（"Quick Tip"）——可能是连接 GitHub、创建第一个项目，或者打开项目设置；
+  一旦 GitHub 关联完成，它就改为你已连接的账户。
+- **Recent**——你最近的项目，每个带一个彩色状态圆点、状态标签和距今多久的变更时间。点击其中一个即可直达。
+- 一旦有处于运行状态的项目，还会出现一条 **All systems operational** 提示。
+
+## 控制台导览地图
+
+每个功能区都有自己独立的页面或指南提供细节。以下是接下来的去处：
+
+<Cards>
+  <Card title="项目" href="/docs/dashboard/projects" description="项目列表以及项目详情视图和标签页（URL 为 'runtime' 的那个标签页显示为 Configuration）。" />
+  <Card title="Library" href="/docs/dashboard/library" description="从仓库、本地文件夹、URL 或模板启动一次部署。" />
+  <Card title="部署与回滚" href="/docs/guides/rollback-redeploy" description="重新部署、回滚，以及在构建页面上查看发生了什么。" />
+  <Card title="备份" href="/docs/dashboard/backups" description="把 S3、SFTP、已有服务器或本地磁盘注册为备份目标（backup destination）。" />
+  <Card title="服务器" href="/docs/dashboard/servers" description="接入你自己的机器用于部署（仅自托管）。" />
+  <Card title="邮件与网页邮箱" href="/docs/dashboard/emails" description="自托管邮件栈和 Zero 网页邮箱（仅自托管）。" />
+  <Card title="设置" href="/docs/dashboard/settings" description="账户、团队、GitHub 连接、令牌和 MCP。" />
+  <Card title="计费" href="/docs/dashboard/billing" description="Openship Cloud 上的套餐与用量。" />
+</Cards>

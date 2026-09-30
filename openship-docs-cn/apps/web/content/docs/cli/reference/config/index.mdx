@@ -1,0 +1,45 @@
+---
+title: config
+description: openship config 的命令、参数与选项。
+cliGroup: openship config
+---
+
+示例请参见[工作流指南](/docs/cli/projects)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship config
+
+编写并校验 openship.json（声明式部署配置）
+
+```text
+openship config [options] [command]
+```
+
+| 子命令 | 用途 |
+| --- | --- |
+| [`init [options]`](/docs/cli/reference/config#openship-config-init) | 在当前目录生成 openship.json 脚手架 |
+| [`validate [file]`](/docs/cli/reference/config#openship-config-validate) | 按部署 schema 校验 openship.json |
+
+## openship config init
+
+在当前目录生成 openship.json 脚手架
+
+```text
+openship config init [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--dir <path>` | 写入的目录（默认 "."） |
+| `--force` | 覆盖已存在的 openship.json |
+
+## openship config validate
+
+按部署 schema 校验 openship.json
+
+```text
+openship config validate [options] [file]
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `file` | 配置文件路径（默认 "openship.json"） |

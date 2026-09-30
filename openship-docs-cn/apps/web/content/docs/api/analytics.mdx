@@ -1,0 +1,198 @@
+---
+title: 分析
+description: 读取项目流量、部署统计与资源使用情况。
+---
+
+分析功能报告调用方可访问资源的流量、部署结果与运行时（runtime）用量。
+项目相关方法在 SDK 中传入项目 ID，REST 则使用 `?projectId=`。服务器方法传入服务器 ID。
+
+## 读取请求流量
+
+`overview` 会同时返回累计摘要与时间序列周期。只需要其中之一时，使用 `summary` 或 `periods`。
+`geo` 在可用的前提下额外提供地理、路径与状态码细分。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const traffic = await ship.analytics.overview("proj_123", {
+  from: "2026-09-01T00:00:00Z",
+  to: "2026-09-02T00:00:00Z",
+});
+console.log(traffic.summary, traffic.periods);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/analytics/overview?projectId=proj_123&from=2026-09-01T00:00:00Z&to=2026-09-02T00:00:00Z" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+| 输入 | 适用范围 | 用途 |
+| --- | --- | --- |
+| `domain` | 摘要、周期、overview 与 geo | 将结果限定为单个被跟踪的主机名。 |
+| `from`、`to` | 周期、overview 与 geo | 有序的 ISO 日期范围，最长 366 天。 |
+
+必须提供项目 ID。无法访问或不存在的项目不会出现在结果中。固定的组织范围不会经由所有者的 Cloud 链接转发；参见 [Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+## 读取部署统计
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const stats = await ship.analytics.deploymentStats("proj_123");
+console.log(stats.successfulDeployments, stats.failedDeployments);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/analytics/deployments?projectId=proj_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+统计内容包括总数、成功与失败次数、平均构建时长以及每日计数。
+`dashboard()` 返回调用方所属组织的项目数与部署数。
+
+## 读取运行时用量
+
+`resources` 返回一个汇总值以及按服务的用量、容量、时间戳和 `supported` 标志。
+`usage` 与 `containerInfo` 读取当前活动的运行时，在其不可用时可能返回 `null`。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const usage = await ship.analytics.resources("proj_123");
+console.log(usage.supported, usage.overall, usage.services);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/analytics/resources?projectId=proj_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+需要按时间分桶时，使用 `usageHistory(projectId, { from, to, serviceKey })`。三个过滤器都是可选的；
+结果会报告其 `granularityMinutes` 与所选的 `serviceKey`。
+
+### 实时用量
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+for await (const event of ship.analytics.streamUsage("proj_123", {
+  signal: AbortSignal.timeout(30_000),
+})) {
+  console.log(event);
+}
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -N "$OPENSHIP_URL/api/analytics/usage/stream?projectId=proj_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+REST 端点返回 Server-Sent Events。要求存在一个正在运行容器的活动部署。
+传入中止信号或停止迭代即可关闭 SDK 流。
+
+## 控制路径收集
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.analytics.setPathsCollection("proj_123", { enabled: true });
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/analytics/paths-collection/proj_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":true}'
+```
+
+</Tab>
+</Tabs>
+
+该方法会更改收集设置，需要写权限。其他分析方法只读取数据。
+
+## 服务器分析
+
+服务器分析需要 `server:read` 权限和一个被跟踪的 `domain`。当服务器离线时，持久化的时间桶与每日地理数据仍然可读；实时分析则要求管理 API 可达。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const buckets = await ship.analytics.serverBuckets("srv_123", { domain: "app.example.com" });
+console.log(buckets);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/analytics/server/srv_123?domain=app.example.com" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+| 方法 | 额外输入 | 结果 |
+| --- | --- | --- |
+| `serverBuckets` | 可选 `from`、`to` | 持久化的分钟级时间桶；范围值接受 ISO 时间戳或 epoch 分钟数。 |
+| `serverGeo` | 可选 `day`，格式为 `YYYYMMDD` | 每日国家汇总。 |
+| `serverLive` | 无 | 实时边缘分析。 |
+
+以上每个方法还都需要 `domain`。缺失 domain 会返回 `400`；实时数据源不可达可能返回 `502`。
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 流式读取当前资源用量。 | `analytics.streamUsage(projectId, options?)` | `GET /api/analytics/usage/stream`<br />`analytics:read` |
+| 读取所选范围与周期的摘要统计。 | `analytics.summary(id, input?)` | `GET /api/analytics`<br />`analytics:read` |
+| 列出支持的分析周期。 | `analytics.periods(id, input?)` | `GET /api/analytics/periods`<br />`analytics:read` |
+| 读取聚合流量与应用分析数据。 | `analytics.overview(id, input?)` | `GET /api/analytics/overview`<br />`analytics:read` |
+| 读取地理流量统计。 | `analytics.geo(id, input?)` | `GET /api/analytics/geo`<br />`analytics:read` |
+| 读取部署结果统计。 | `analytics.deploymentStats(id)` | `GET /api/analytics/deployments`<br />`analytics:read` |
+| 读取当前工作负载的资源用量。 | `analytics.usage(id)` | `GET /api/analytics/usage`<br />`analytics:read` |
+| 读取分析的运行时/容器信息。 | `analytics.containerInfo(id)` | `GET /api/analytics/container`<br />`analytics:read` |
+| 读取已配置的资源分配。 | `analytics.resources(id)` | `GET /api/analytics/resources`<br />`analytics:read` |
+| 读取历史资源用量。 | `analytics.usageHistory(id, input?)` | `GET /api/analytics/usage/history`<br />`analytics:read` |
+| 启用或禁用请求路径收集。 | `analytics.setPathsCollection(id, input)` | `POST /api/analytics/paths-collection/:projectId`<br />`project:write` |
+| 读取服务器流量时间桶。 | `analytics.serverBuckets(id, input)` | `GET /api/analytics/server/:serverId`<br />`server:read` |
+| 读取服务器请求的地理统计。 | `analytics.serverGeo(id, input)` | `GET /api/analytics/server/:serverId/geo`<br />`server:read` |
+| 读取当前服务器流量数据。 | `analytics.serverLive(id, input)` | `GET /api/analytics/server/:serverId/live`<br />`server:read` |
+| 读取分析控制台聚合数据。 | `analytics.dashboard()` | `GET /api/analytics/dashboard`<br />`analytics:read` |
+
+{/* api-operations:end */}

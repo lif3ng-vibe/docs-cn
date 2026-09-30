@@ -1,0 +1,115 @@
+---
+title: 你的第一次部署
+description: 手把手逐屏讲解如何用 Openship 把一个真实的 GitHub 应用发布上线——以及"上线"之后实际看到什么。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+你要做的，是把一段托管在 GitHub 上的代码，变成一个人人都能打开的真正网站。可以把它想象成把一封信交给邮局：你把代码交给 Openship，它负责分拣、盖章和投递，从另一头出来的，就是一个可以点开的真实网址。
+
+本页是慢速的友好导览——每一屏都停下来讲清楚它是什么意思。如果你想用几条命令从终端一口气完成全部操作，[快速开始](/docs/getting-started/quickstart)正适合你。
+
+<Callout title="开始之前">
+- Openship 已经启动并运行（你能看到控制台）。如果没有，先看[安装](/docs/getting-started/installation)。
+- 你有一个 **GitHub 仓库**，里面装着一个应用——网站、API，什么都行。
+- 你**不需要** Docker、服务器配置或任何特殊文件。Openship 会通过读取你的仓库自行判断。
+</Callout>
+
+## 逐步导览
+
+<Steps>
+
+<Step>
+
+### 新建一个项目
+
+在控制台中前往 **Library** 页面（点 **New project** 按钮也会来到这里）。页面打开在 **GitHub** 标签上，显示你的仓库列表。
+
+如果是首次使用，Openship 还没有权限读取你的仓库——你看到的将是 **Connect GitHub** 按钮而不是列表。点击它，在弹出的 GitHub 窗口中点同意，列表就会出现。这一步只需做一次。
+
+</Step>
+
+<Step>
+
+### 选择你要的仓库
+
+在列表中找到你的应用并点击。Openship 会读取仓库，判断这是什么类型的应用，然后带你进入设置页面。此刻没有任何要手动填写的内容——只管选仓库就好。
+
+</Step>
+
+<Step>
+
+### 选择它要在哪里运行（这一步你可能看不到）
+
+取决于你运行 Openship 的方式，它可能会先问你一句：**你想把应用部署到哪里**？选项例如你的某台**已连接的服务器**（server），或 **Openship Cloud**（托管选项，由 Openship 替你运行应用）。
+
+如果 Openship 已经知道要把应用送到哪里——可用的目标只有一个，或者你上次已经选过——它会跳过这一屏，直接进入设置。所以从没见过这一屏也不必担心。见到时选一个，按 **Continue** 即可。
+
+<Callout title="技巧" type="info">
+拿不准？默认值就可以。这个选择不是永久的——以后可以移动或重新部署这个应用。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 读懂设置页面
+
+这一页值得慢慢看。Openship 已经通过读取你的代码替你填好了：
+
+- **框架与命令**——它识别出的应用类型，以及将要执行的安装和构建命令。
+- **环境变量**（environment variable）——用来添加应用所需的密钥或设置（比如数据库地址）。应用不需要的话，留空即可。
+- **项目名**——本次部署的一个简短且唯一的名字。
+
+右侧是摘要面板，显示你的仓库、所在分支、应用将获得的网址，以及一个 **Deploy** 按钮。
+
+对大多数应用来说，这里什么都不用改。看到不认识的字段就不动它——识别出的默认值对绝大多数应用都是正确的。
+
+确认无误后，按 **Deploy**。
+
+</Step>
+
+<Step>
+
+### 看着它上线
+
+你会来到构建页面。这里发生着两件事：
+
+- 顶部的**一排步骤**会随着各部分完成逐一点亮。
+- 一个**实时终端**会把构建日志实时流式输出——就像隔着玻璃门看烤箱。
+
+你什么都不用做。完成后，顶部标题会变为 **Deployment Successful**，并出现两个按钮：**Visit Site** 和 **View dashboard**。
+
+</Step>
+
+</Steps>
+
+## "上线"是什么样子
+
+部署完成后，构建页面的部署详情里会显示 **Ready** 状态，同时列出构建所用的分支、框架，以及你的应用现在的**网址**。
+
+按下 **Visit Site**，Openship 会在新标签页打开这个地址——这就是你的应用，真正地出现在了互联网上。🎉
+
+<Callout title="这个网址是哪来的？" type="info">
+Openship 会自动为每个项目分配一个网址——你在设置页面和构建详情里看到的就是它。**Visit Site** 打开的正是它。想用你自己的名字，比如 `yourapp.com`？之后可以绑定自定义域名。
+</Callout>
+
+**View dashboard** 会带你进入该项目页面——这是这个应用的大本营：它的部署记录、日志、环境变量和设置都在这里。
+
+## 故障排查
+
+<Callout title="仓库列表为空 / “Connect GitHub” 按钮反复出现" type="warn">
+GitHub 连接没有完成，或者没有授权 Openship 访问那个仓库。重新连接一次，当 GitHub 询问允许访问**哪些仓库**时，确保你的仓库在列。
+</Callout>
+
+<Callout title="构建失败" type="error">
+读一下构建终端的最后几行——真正的原因就明明白白写在里面。首次失败几乎总是这三种情况之一：缺少构建命令、缺少环境变量，或应用监听了错误的端口。在你的仓库里（或设置页面中）修好，然后重新部署。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="同一流程的速查版——外加如何让每次推送都自动重新部署。" />
+  <Card title="快速开始" href="/docs/getting-started/quickstart" description="用几条命令从终端完成全部操作。" />
+  <Card title="多服务应用" href="/docs/guides/compose-multi-service" description="一次部署一个实际上是多个服务的应用（一个 docker-compose 技术栈）。" />
+</Cards>

@@ -1,0 +1,120 @@
+---
+title: 身份认证
+description: 浏览器会话、OAuth 发现以及认证交接。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+认证（auth）API 负责 Openship 的用户登录与会话保持。这里几乎所有内容都由 [Better Auth](https://better-auth.com) 通过一个通配路由提供——邮箱/密码登录与注册、OAuth、组织/成员/邀请端点，以及 MCP OAuth 授权服务器。少数几个**仅限桌面端**的端点位于其前面，用于引导一个零认证的本地会话，并把云端登录交接给可下载的桌面应用。
+
+本模块几乎完全由控制台（以及桌面模式下的 Electron 宿主）消费——你极少直接调用它。要以编程方式访问 API，请改为签发个人访问令牌（[`openship token create`](/docs/cli/access)）并将其作为 bearer 头使用。完整模型参见 [API 总览](/docs/api)与[认证与会话](/docs/security/auth)。
+
+## Better Auth 通配路由
+
+最后一条路由 `GET|POST /api/auth/*` 会把原始请求转发给 Better Auth 的处理器。普通登录流程所需的一切都在这里——本模块没有单独的 schema，因为请求与响应的形状由 Better Auth 决定。它提供的端点（全部位于 `/api/auth` 下）包括：
+
+- **凭据登录**——`POST /sign-in/email`、`POST /sign-up/email`、`POST /sign-out`、`POST /forget-password`、
+  `POST /reset-password`、`POST /verify-email`。密码为 8–128 个字符；只有在配置了 SMTP 时才会发送重置与验证邮件。
+- **OAuth**——`POST /sign-in/social` 与 `GET /callback/:provider`，面向 GitHub 和 Google（各自仅在配置了对应的客户端 ID/密钥时启用）。
+- **组织**——`/organization/*`：创建、`set-active`、`list`、`invite-member`、`accept-invitation`、
+  `update-member-role`、`remove-member`、`leave` 等。成员列表读取另有额外保护，受限/成员角色无法读取管理员层级的数据。
+- **MCP OAuth 2.1**——`/mcp/authorize`、`/mcp/token`、`/mcp/register`（动态客户端注册）、
+  `/mcp/get-session`，加上 `/.well-known/oauth-authorization-server` 与
+  `/.well-known/oauth-protected-resource` 处的发现端点（也会在原始根路径重新提供）。参见 [MCP API](/docs/api/mcp)。
+
+<Callout title="角色与权限在别处定义" type="info">
+Better Auth 的组织插件只携带角色标签（`owner`、`admin`、`member` 或 `restricted`）。
+其余 API 的实际授权依据资源授权进行解析——参见[权限](/docs/security/permissions)。
+</Callout>
+
+## 获取当前会话
+
+```
+GET /api/auth/get-session
+```
+
+以 JSON 返回活动会话与用户，未认证时返回 `401`。在零认证桌面模式（自托管引导流程、无密码）下，未命中会触发一次内联引导：Openship 开通本地管理员用户、签发会话、在响应上设置 cookie 并返回——从而让控制台的首次导航成功，而不是死循环回 `/login`。
+
+```bash
+curl "$OPENSHIP_URL/api/auth/get-session" \
+  -H "Cookie: openship.session_token=<session>"
+```
+
+## 桌面端会话引导
+
+`GET /api/auth/desktop-login` 为零认证的本地管理员签发一个会话并重定向到控制台。它在自托管引导流程完成后只调用一次；如果实例不处于零认证模式，则重定向到 `/login`。无请求体。
+
+## 云端登录交接（桌面端）
+
+当可下载应用"使用 Cloud"登录时，Electron 宿主运行一个 PKCE 流程，由 API 居中协调。流程顺序为：注册 nonce、打开系统浏览器、轮询，然后领取。
+
+```
+POST /api/auth/desktop-auth-start
+```
+
+由内部共享令牌中间件保护——只有 Electron 宿主可以注册 nonce。内联校验（auth 没有独立的 TypeBox schema 模块）；三个字段都是必填字符串：
+
+<TypeTable
+  type={{
+    nonce: { type: 'string', description: 'Electron 主进程轮询所用的不透明句柄。', required: true },
+    state: { type: 'string', description: 'OAuth state 值，会在云端回调时原样回传。', required: true },
+    code_verifier: { type: 'string', description: 'PKCE code verifier；与云端回调时交换的 code 配对。', required: true },
+  }}
+/>
+
+剩余步骤取查询参数，不取请求体：
+
+- `GET /api/auth/cloud-callback?code=<code>&state=<state>`——云端提供方重定向到这里。带 `state` 时执行桌面端 PKCE 交换并解析挂起的 nonce；不带 `state` 时执行更简单的浏览器交换并直接设置 cookie。`code` 必填。
+- `GET /api/auth/desktop-auth-poll?nonce=<nonce>`——Electron 持续轮询直到状态变为 `resolved`，然后打开领取 URL。`nonce` 必填。
+- `GET /api/auth/desktop-claim?code=<code>`——将一次性领取码换取会话 cookie（为兼容不同版本的 Electron，通过 `Set-Cookie` 头设置）并重定向到控制台。`code` 必填。
+
+## 错误
+
+<Callout title="401 — 未认证" type="warn">
+没有有效会话且实例不处于零认证模式时，`GET /api/auth/get-session` 会返回此错误。请通过控制台登录，或发送有效的会话 cookie / bearer 令牌。
+</Callout>
+
+<Callout title="400 — 缺少 nonce、state 或 code_verifier" type="error">
+`POST /api/auth/desktop-auth-start` 会拒绝缺少三个字段中任意一个的请求体。轮询与领取路由在缺少各自必需的查询参数时同样返回 `400`；一次性领取码被使用或已超时后，领取路由返回 `400 Claim expired`。
+</Callout>
+
+<Callout title="429 — 请求过多" type="warn">
+`POST /api/auth/*` 共享一个每 IP 每分钟 10 次的限流桶。高频猛打登录/注册循环的请求，会在默认 API 速率限制触发之前先被限流。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 通过 Better Auth 处理浏览器会话与身份认证。 | `GET /api/auth/*`<br />`Handler authentication` |
+| 完成浏览器侧的 Cloud 仓库授权；普通 GitHub 登录回调仍由 Better Auth 处理。 | `GET /api/auth/callback/github`<br />`Handler authentication` |
+| 通过 Better Auth 处理登录、账号与会话变更。 | `POST /api/auth/*`<br />`Handler authentication` |
+| 将云端认证 `code` 换取本地会话 cookie。 | `GET /api/auth/cloud-callback`<br />`Handler authentication` |
+| Electron 按 `nonce` 轮询此端点，直到云端登录解析完成。 | `GET /api/auth/desktop-auth-poll`<br />`Handler authentication` |
+| 在系统浏览器打开前注册一个 `(nonce, state, PKCE verifier)` 三元组。 | `POST /api/auth/desktop-auth-start`<br />`Internal operator` |
+| 将一次性领取 `code` 换取会话 cookie，然后重定向。 | `GET /api/auth/desktop-claim`<br />`Handler authentication` |
+| 为零认证的本地管理员签发会话并重定向到控制台。 | `GET /api/auth/desktop-login`<br />`Handler authentication` |
+| 返回当前会话；在零认证桌面模式下，首次访问时会引导出一个会话。 | `GET /api/auth/get-session`<br />`Handler authentication` |
+| 读取团队邀请的安全预览。 | `GET /api/auth/invitation-preview/:id`<br />`Handler authentication` |
+| 读取用于校验 MCP OAuth 令牌的公钥。 | `GET /api/auth/mcp/jwks`<br />`Handler authentication` |
+| 读取某个 MCP OAuth 令牌关联的身份。 | `GET /api/auth/mcp/userinfo`<br />`Handler authentication` |
+| 通过浏览器会话边界接受邀请。 | `POST /api/auth/organization/accept-invitation`<br />`Handler authentication` |
+| 通过浏览器会话边界取消一条待处理邀请。 | `POST /api/auth/organization/cancel-invitation`<br />`Handler authentication` |
+| 通过浏览器会话边界邀请成员。 | `POST /api/auth/organization/invite-member`<br />`Handler authentication` |
+| 退出活动组织。 | `POST /api/auth/organization/leave`<br />`Handler authentication` |
+| 通过浏览器会话边界拒绝一条待处理邀请。 | `POST /api/auth/organization/reject-invitation`<br />`Handler authentication` |
+| 通过浏览器会话边界移除成员。 | `POST /api/auth/organization/remove-member`<br />`Handler authentication` |
+| 通过浏览器会话边界更新成员角色。 | `POST /api/auth/organization/update-member-role`<br />`Handler authentication` |
+| 按照本安装的账号创建策略处理注册。 | `POST /api/auth/sign-up/*`<br />`Handler authentication` |
+| 发现 OAuth 授权服务器。 | `GET /.well-known/oauth-authorization-server`<br />`Public` |
+| 发现 OAuth 授权服务器。 | `GET /.well-known/oauth-authorization-server/api/mcp`<br />`Public` |
+| 发现 OAuth 授权服务器。 | `GET /.well-known/oauth-authorization-server/api/proxy/api/mcp`<br />`Public` |
+| 发现此受保护资源的 OAuth 元数据。 | `GET /.well-known/oauth-protected-resource`<br />`Public` |
+| 发现此受保护资源的 OAuth 元数据。 | `GET /.well-known/oauth-protected-resource/api/mcp`<br />`Public` |
+| 发现此受保护资源的 OAuth 元数据。 | `GET /.well-known/oauth-protected-resource/api/proxy/api/mcp`<br />`Public` |
+| 结束一次已完成的浏览器认证交接。 | `GET /auth/callback/close`<br />`Browser callback` |
+| 使用安装状态完成 GitHub App 的浏览器交接。 | `GET /auth/callback/install`<br />`Browser callback` |
+
+{/* api-operations:end */}

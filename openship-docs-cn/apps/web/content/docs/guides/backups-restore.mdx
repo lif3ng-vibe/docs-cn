@@ -1,0 +1,272 @@
+---
+title: 备份与恢复
+description: 为应用数据保留安全副本，按计划定时备份，出错时回滚恢复——既可以在控制台操作，也可以用终端。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+备份就是把你的数据另存一份在别处，这样当今天的副本丢失或损坏时，你可以退回一份完好的。可以想象成把一份重要文件复印后放到另一个地址的保险柜里——原件烧毁了，复印件还在。
+
+Openship 在这里做两件事。第一，把你的数据复制到你选定的存储处（**备份目标**）。第二，按你设定的时间计划执行（**策略**），让你永远不必记在心上。需要时，它再把副本放回去（**恢复**）。
+
+<Callout title="先准备好这些">
+- Openship 已在运行，并且有一个项目至少包含一个持有数据的服务（service）（比如一个数据库）。
+- 有地方存放这些副本——一个 S3 存储桶、一台 SFTP 服务器、一台已有的服务器，或磁盘上的一个文件夹。我们会在下面的第一步配置它。
+</Callout>
+
+## 第一步——添加一个存放备份的地方
+
+在能备份任何东西之前，Openship 需要知道把副本放到**哪里**。这个地方叫备份目标。你只需在 **Backups** 页面上添加一次，之后每个项目都能使用这些备份目标。
+
+<Steps>
+
+<Step>
+
+### 打开 Backups 页面
+
+在左侧边栏点击 **Backups**。如果还没有任何备份目标，你会看到一个"No backup destinations yet"界面，带 **Add Your First Destination** 按钮；否则点击右上角的 **Add Destination**。
+
+</Step>
+
+<Step>
+
+### 选择存储类型
+
+Openship 会询问这个备份目标属于哪种类型。选择与你实际拥有的一致：
+
+- **S3-compatible**——任何 S3 风格的存储桶（AWS S3、Cloudflare R2、Backblaze B2、Wasabi、MinIO）。
+- **SFTP**——用你提供的新凭据，通过 SSH 向任意主机推送副本。
+- **Existing server**——复用你已添加到 Openship 的某台服务器的 SSH 登录。
+- **Local disk**——写入运行 Openship 的机器上的某个文件夹。（云模式下不可用。）
+
+</Step>
+
+<Step>
+
+### 填写细节
+
+字段随你选择的类型而变化。填写适用的部分：
+
+<Tabs items={['S3-compatible', 'SFTP', 'Existing server', 'Local disk']}>
+<Tab value="S3-compatible">
+
+- **Name**——给你自己看的标签，例如 "Production R2"。
+- **Endpoint**——AWS S3 留空即可。Cloudflare R2 的形式类似
+  `https://<account>.r2.cloudflarestorage.com`。
+- **Region**、**Bucket**，以及可选的 **Path prefix**（存储桶内的一个文件夹）。
+- **Access key ID** 和 **Secret access key**——该存储桶的凭据。
+
+</Tab>
+<Tab value="SFTP">
+
+- **Name**、**Host**、**Port**（默认 `22`）和 **User**。
+- 一个可选的 **Path prefix**——远端主机上写入的文件夹。
+- 用 **Password** 或 **Private key (PEM)**（粘贴密钥）认证。使用密钥时把密码留空。
+
+</Tab>
+<Tab value="Existing server">
+
+- **Name** 和要复用的 **Server**——从 **Servers** 下已保存的服务器里选一台。Openship 会复用那台服务器的 SSH 凭据，因此无需输入新内容。
+- 一个可选的 **Remote path**，指定副本存放位置。
+
+</Tab>
+<Tab value="Local disk">
+
+- **Name** 和一个 **Absolute path**——运行 Openship 的机器上的文件系统路径，例如
+  `/var/backups/openship`。
+
+Openship 以云模式运行时，这种类型不可用。
+
+</Tab>
+</Tabs>
+
+<Callout title="你的机密是安全的" type="info">
+密钥和密码都会**静态加密（encrypted at rest）**——Openship 以打乱后的形式存储，而非明文。以后编辑备份目标时，机密字段会显示为空；留空即表示保留已存储的值。
+</Callout>
+
+点击 **Save destination**。
+
+</Step>
+
+<Step>
+
+### 验证它能用
+
+回到列表页，每个备份目标都有一个 **Verify connection** 按钮（圆圈箭头图标）。点一下——Openship 会写入一个很小的测试文件、读回、再删掉。出现绿色的 **Verified** 徽章说明登录名和地址都正确。在你真正依赖它之前，现在就验证一遍。
+
+</Step>
+
+</Steps>
+
+<Callout title="Tip" type="info">
+你可以把某个备份目标标记为**默认**（星形图标 / **Set as default** 操作）。这是"我最常用这个"的方便标记——创建策略时你仍然要显式选定备份目标。
+</Callout>
+
+## 第二步——设置备份计划
+
+**策略**就是一条规则："把这个数据、备份到那个备份目标、按这个时间计划、保留这么多副本。"策略是**按服务**设置的，位于项目内部。
+
+<Steps>
+
+<Step>
+
+### 打开项目的 Backup 标签页
+
+打开你的项目并进入 **Backup** 标签页。你会看到你的备份目标、项目的**服务**列表，以及近期的备份运行记录。
+
+</Step>
+
+<Step>
+
+### 为一个服务创建策略
+
+找到要保护的服务，点击 **Create policy**。（如果按钮是灰的，说明你还没有备份目标——悬停会提示 "Add a destination first."。回到第一步把它完成。）面板会打开，包含这些选项：
+
+- **Destination**——副本的去处。
+- **Schedule**——选一个预设（**Hourly**、**Daily**、**Weekly**、**Monthly** 或 **Manual only**），或自行输入五段式 cron 表达式。"Manual only"表示永远不会自动执行——只能手动触发。
+- **Retain count**——保留最近 N 次成功的备份（更老的自动清除）。
+- **Retain days**——丢弃超过 N 天的备份。
+- **Pre-deploy trigger**——勾选后，Openship 还会在每次新部署上线前自动备份一次。这是应对坏部署的安全网。
+- **Pre-hook / Post-hook**——可选的 shell 命令。pre-hook 在*执行复制之前*运行（数据库常用 `pg_dump`）；如果失败，本次运行会中止。post-hook 在上传之后运行，用于清理。
+- **Webhook trigger** *（可选，进阶）*——生成一个私有 URL，供外部调度器或 CI `POST` 调用，让其他系统启动这次备份。
+
+点击 **Create policy**。
+
+保留策略在每次备份成功后运行，对项目策略中的每个服务独立执行。受保护的副本不受影响。清理失败会将受影响的记录保留以待重试，也不会使新备份失效。**Backup retention prune** 系统任务提供兜底；新安装的部署将其安排在每小时的第 29 分钟。已有计划仍可在 **Jobs** 中编辑。
+
+</Step>
+
+</Steps>
+
+<Callout title="按服务还是整个项目" type="info">
+控制台是**按服务**设置策略。在终端里你还能创建**项目级**策略，覆盖整个项目——运行 `openship backup policy create` 时省略 `--service` 即可（见下文）。
+</Callout>
+
+## 第三步——立刻执行一次备份
+
+不必干等计划时间。在 **Backup** 标签页上，任何有策略的服务都会显示 **Backup now** 按钮——按下它，备份立即开始。
+
+顶部会出现一张 **Live backup** 卡片，实时显示进度。备份本身在服务器上运行，所以即使你关掉标签页它也会继续。完成后，这次运行会出现在 **Recent backups** 里，带绿色状态和文件大小。
+
+## 第四步——保护某个副本免于删除
+
+保留策略（"保留 N 份"规则）会自动清理旧备份以节省空间。如果你有一份绝不希望被删的副本——比如某次重大变更前最后确认完好的状态——可以对它**加保护**。
+
+在 **Recent backups** 里，每次成功运行旁都有一个小的锁形图标。点击即可 **Protect from retention**；该运行会获得 **Protected** 徽章，清理时会被跳过。再点一次选择 **Allow retention to prune** 解除保护。
+
+## 第五步——恢复一份备份
+
+恢复就是把某个已保存副本放回当前数据的位置。这正是备份的全部意义——但它会**覆盖**现有数据，所以 Openship 会带你一步步谨慎操作。
+
+<Steps>
+
+<Step>
+
+### 启动恢复
+
+在 **Recent backups** 中找到一次成功的运行，点击它的 **Restore** 图标（逆时针圆形箭头）**。Restore backup** 向导随即打开。
+
+</Step>
+
+<Step>
+
+### 检查确认
+
+第一屏显示你要恢复的备份，并警告当前数据将被覆盖。保持 **Protect the latest backup from retention prune** 勾选（默认勾着）——它会保护你要恢复的这份来源备份免于自动清理，让这份已知完好的副本一直留着。点击 **Continue → Prepare**。
+
+<Callout title="想要现在这份数据的副本吗？" type="info">
+恢复会**覆盖**当前数据，而 Openship **不会**先替你把线上状态再备份一份——上面那个"保护"勾选只护住你*恢复来源*的那份备份。如果可能想找回今天的数据，请先运行 **Backup now**（第三步），再开始恢复。
+</Callout>
+
+</Step>
+
+<Step>
+
+### Prepare（一道安全检查）
+
+Openship 从备份目标下载并校验这份备份，确认它真的可用。此步还没有任何破坏性动作——你的服务在此期间正常运行。
+
+</Step>
+
+<Step>
+
+### Confirm
+
+校验通过后，要求你**原样输入服务名**来确认。这是"你真的确定吗？"的一道闸门，因为下一步会永久替换当前数据。输入名称后点击 **Apply restore**。
+
+</Step>
+
+<Step>
+
+### Apply
+
+服务短暂停止，数据换入，随后重新启动。保持窗口开着，直到显示 **Restore complete**。
+
+</Step>
+
+</Steps>
+
+## CLI
+
+以上操作全都可以用 CLI 完成。基础命令是 `openship backup`，有四个子命令组：`destination`、`policy`、`run` 和 `restore`。
+
+```bash
+# 1. 添加一个备份目标（以 S3 兼容为例）并验证
+openship backup destination create \
+  --name "Production R2" --kind s3_compatible \
+  --endpoint https://<account>.r2.cloudflarestorage.com \
+  --bucket my-backups --region auto \
+  --access-key-id <id> --secret-access-key <key>
+
+openship backup destination list
+openship backup destination preflight <destinationId>
+
+# 2. 为某个服务创建每日策略，保留 7 份
+openship backup policy create \
+  --project <projectId> --destination <destinationId> \
+  --service <serviceId> --cron "0 3 * * *" \
+  --retain-count 7 --pre-deploy
+
+# 3. 立即执行并等待完成
+openship backup policy run <policyId> --follow
+
+# 4. 查看运行记录，并保护某一份免于清理
+openship backup run list --project <projectId>
+openship backup run protect <runId>            # 或 --release 解除保护
+
+# 5. 恢复——刻意设计的两步流程
+#    'restore' 先预备并输出 restoreId + 确认令牌……
+openship backup run restore <runId>
+#    ……再用该令牌套用（这一步有破坏性）
+openship backup restore apply <restoreId> --token <confirmationToken> --follow
+```
+
+<Callout title="恢复刻意设计成两步" type="info">
+`backup run restore` 只*预备*恢复并给你一个确认令牌——不会改动任何东西。你必须带着该令牌运行 `backup restore apply`，数据才会真正换入。这与控制台里"输入名称确认"的闸门如出一辙。
+</Callout>
+
+## 故障排查
+
+<Callout title="备份目标验证不过" type="error">
+点击 **Verify connection** 并阅读提示的原因。常见原因是密钥或密码错误、存储桶或路径不存在、主机/端口不可达。修正字段后再次验证——验证不过的备份目标什么都备份不了。
+</Callout>
+
+<Callout title="“Create policy”按钮是灰的" type="warn">
+该服务还没有可发送备份的目标。先到 **Backups** 页面添加并验证至少一个备份目标（第一步），再回到项目的 **Backup** 标签页。
+</Callout>
+
+<Callout title="某次备份运行失败" type="error">
+在 **Recent backups** 里打开这次运行——失败的运行会把错误信息直接显示出来。如果你设置了 **pre-hook**，常见原因是那条命令失败（例如 `pg_dump` 连不上数据库）；pre-hook 失败会刻意中止整个运行，因此绝不会出现只完成一半的副本。
+</Callout>
+
+<Callout title="我想撤销一次恢复" type="warn">
+没有一键撤销——恢复是原地覆盖数据，且 Openship 不会事先自动抓取线上状态。你的安全网是恢复*之前*做的一次备份：如果你先运行过 **Backup now**（或更早的一次运行还保留着你想要的状态），在 **Recent backups** 中打开那条记录，从它**恢复**即可。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="多服务应用" href="/docs/guides/compose-multi-service" description="理解服务——策略逐个备份的应用组成部分。" />
+  <Card title="环境变量" href="/docs/guides/environment-variables" description="以安全的方式为备份钩子提供数据库凭据。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把应用放到你自己的地址上，自动配 HTTPS。" />
+</Cards>

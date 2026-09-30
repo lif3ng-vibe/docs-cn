@@ -1,0 +1,23 @@
+---
+title: init
+description: openship init 的命令、参数与选项。
+cliGroup: openship init
+---
+
+示例请参见[工作流指南](/docs/cli/projects)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship init
+
+将当前目录关联到一个 Openship 项目（.openship/project.json）
+
+```text
+openship init [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--project <id>` | 要关联的项目 ID（跳过选择器） |
+| `--environment <name>` | 默认部署环境（默认："production"） |
+| `--dir <path>` | 要初始化的目录（默认 "."） |
+| `--force` | 覆盖已有的项目关联 |
+| `-y, --yes` | 非交互模式：需要提示时直接失败 |

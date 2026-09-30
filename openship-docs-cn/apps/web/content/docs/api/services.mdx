@@ -1,0 +1,420 @@
+---
+title: 服务
+description: 管理项目服务、容器与环境变量。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**服务**（service）是项目内的一个可运行单元：docker-compose 编排里的一个容器，或 monorepo 中的
+一个子应用。两者存在同一张表里（以 `kind` 区分），因此该 API 覆盖服务的列出与编辑、
+从 `docker-compose` 文件同步服务、启动/停止/重启容器、
+化解 compose 漂移，以及设置按服务维度的环境变量。在控制台上对应一个项目的
+**Services** 标签页；在终端上则对应 [`openship service`](/docs/cli/projects)。
+
+这些操作可在受支持的自托管与 Cloud 服务商上使用。固定的组织
+作用域需要一条兼容的 Cloud 直连；参见 [Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+服务与部署的响应会把非空的 `buildArgs` 值打码为 `••••••••`，与
+`environment` 一样。这同样适用于保留的部署快照与 Compose 漂移预览。空字符串
+保持为空，`null` 仍表示从构建环境继承。写入时，回显掩码表示
+保留该键的存量值；没有存量来源就直接发送的掩码会被丢弃。`buildArgs` 始终是整个 map 的
+替换：省略某个键即移除它，或发送 `{}` 清空整个 map。
+
+对字面量 build args，响应还包含以参数名为键的 `buildArgsFingerprints`。轮换某个字面值之后，把服务写入响应中的指纹与同一服务在部署历史（`meta.composeServices[]`）或构建状态（`composeServices[]`）中的指纹对比。
+指纹相同表示存储的字面值一致；轮换会改变指纹，
+但不会返回任何一侧的值。这些值是按项目、服务名与参数键限定范围的 HMAC-SHA256 值，
+因此无法离线计算，也无法跨服务比较。轮换实例的认证密钥
+同样会改变它们。
+
+指纹描述的是已存储的构建配置，而不是正在运行的容器。继承（`null`）与
+插值得到的参数没有指纹，因为其生效值取决于构建环境。
+快照在内部为回滚保持完整；既有历史在读取时打码，不需要迁移。
+
+源扫描默认同样会打码构建参数。带 `includeEnv: true` 的授权编辑扫描
+才会包含源里的值，以便部署表单能编辑它们；它需要写权限，且对 GitHub 源还需具备读取仓库完整内容的权限。
+
+## 在项目间共享服务
+
+一个服务可以留在其所属项目中，并同时连接到多个其他项目。这复用
+既有实例及其数据。在控制台中，打开该服务并选择 **Use in a project**，或在消费方的 Services 标签页选择 **Add service → Connect existing**。共享服务
+会连同其源项目一起展示；属主可以看到每个服务被哪些项目使用。
+
+用既有的项目连接 API 创建这些链接：
+
+```ts
+const { outputs } = await ship.projects.getAppConnection("source_project");
+const output = outputs.find(item => item.sourceServiceId === "svc_database");
+if (!output?.value) throw new Error("Configure and deploy the source database first.");
+
+await ship.projects.connectBundle("consumer_project", {
+  sourceProjectId: "source_project",
+  items: [{ outputId: output.id, envKey: "DATABASE_URL" }],
+  mode: "internal",
+});
+```
+
+调用者需要对同一组织中两个项目的写权限。私有服务连接
+要求同一服务器上的 Docker 项目。凭据存为机密环境变量，在消费方的常规部署中从源侧刷新。断开连接只移除该项目的链接；
+源服务与其他消费方保留。删除共享服务或其所属项目之前，先断开所有消费方。
+
+## 添加服务
+
+服务行是一个联合类型：`kind: "compose"` 使用容器字段（image、build、ports……），而
+`kind: "monorepo"` 使用子应用构建字段（rootDirectory、framework……）。两组字段都被接受
+且均可选；`kind` 决定哪一组是事实来源。未知键会被拒绝。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.services.create("proj_123", {
+  name: "db",
+  kind: "compose",
+  image: "postgres:16",
+  ports: ["5432:5432"],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/services" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"db","kind":"compose","image":"postgres:16","ports":["5432:5432"]}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    name: { type: 'string', description: '服务名（1–120 个字符）。在编排内唯一。', required: true },
+    kind: { type: '"compose" | "monorepo"', description: '哪一组字段生效。普通 compose 服务可省略。' },
+  }}
+/>
+
+**Compose 字段**（`kind` 为 `compose` 时生效）：
+
+<TypeTable
+  type={{
+    image: { type: 'string', description: '要运行的容器镜像，例如 postgres:16（上限 500）。' },
+    build: { type: 'string', description: 'Docker 构建上下文——docker 从该目录构建。相对 compose 文件所在文件夹，与 compose 的解析方式完全一致（上限 500）。' },
+    dockerfile: { type: 'string', description: '相对构建上下文的 Dockerfile 路径（上限 500）。' },
+    ports: { type: 'string[]', description: '形如 "8080:80" 的端口映射（最多 50 条，每条 ≤100 字符）。' },
+    dependsOn: { type: 'string[]', description: '本服务依赖的服务名（最多 50）。' },
+    environment: { type: 'Record<string, string>', description: '固化进服务的 Compose 环境默认值。更新时该 map 采用合并而非整体替换，且接受 null——参见更新服务。' },
+    volumes: { type: 'string[]', description: '卷映射（最多 50 条，每条 ≤500 字符）。' },
+    command: { type: 'string', description: '覆盖容器命令（上限 1000）。' },
+    advanced: { type: 'object', description: '扩展的 compose 设置。目前是一个 healthcheck 块：{ test, interval, timeout, retries, startPeriod, disable }。未知键会被拒绝。' },
+    exposed: { type: 'boolean', description: '该服务是否有公开路由。' },
+    exposedPort: { type: 'string', description: '要公开暴露的容器端口（上限 50）。' },
+    domain: { type: 'string', description: '该服务的免费子域名标签（上限 255）。' },
+    customDomain: { type: 'string', description: '路由到该服务的自定义域名（上限 255）。' },
+    domainType: { type: '"free" | "custom"', description: '该服务使用哪种域名。' },
+    restart: { type: '"no" | "always" | "on-failure" | "unless-stopped"', description: '容器重启策略。' },
+    enabled: { type: 'boolean', description: '该服务是否纳入部署。' },
+    sortOrder: { type: 'number', description: '显示/排序位置（≥0）。' },
+  }}
+/>
+
+**Monorepo 子应用字段**（`kind` 为 `monorepo` 时生效）：
+
+<TypeTable
+  type={{
+    rootDirectory: { type: 'string', description: '子应用在仓库内的目录（1–200）。kind=monorepo 时服务层必填。' },
+    installCommand: { type: 'string', description: '依赖安装命令（上限 1000）。' },
+    buildCommand: { type: 'string', description: '构建命令（上限 1000）。' },
+    startCommand: { type: 'string', description: '启动命令（上限 1000）。' },
+    outputDirectory: { type: 'string', description: '构建输出目录（上限 200）。' },
+    framework: { type: 'string', description: '受支持的技术栈 id（例如 nextjs、vite、django）。' },
+    packageManager: { type: 'string', description: '受支持的包管理器（例如 npm、pnpm、yarn、bun）。' },
+    buildImage: { type: 'string', description: '覆盖构建镜像（上限 200）。' },
+  }}
+/>
+
+## 更新服务
+
+所有字段均可选——只发送要变更的部分。接受与创建相同的 compose 与 monorepo 字段，
+**唯独不接受 `kind`**：切换一行的 kind 是破坏性操作，应改为删除该服务并
+以新的 kind 重新创建。
+
+有两个字段是**合并**（merge）到存量值上而不是替换它——`environment` 与 `advanced`，
+即该端点以键为单位的 map：
+
+| 你发送 | 结果 |
+| --- | --- |
+| 键不存在 | 保留存量值 |
+| `{"KEY": "value"}` | 只设置该键；其余键不受影响 |
+| `{"KEY": null}` | 移除该键 |
+| `{"environment": null}` | 移除所有变量 |
+| `{"environment": {}}` | 无任何变化 |
+
+读回的环境值以 `••••••••` 打码（`GET /:serviceId` 永不返回明文）。回显哨兵值即
+保持该值不变，或发送真实字符串替换它。**省略键绝不等于删除**——删除必须显式写 `null`。要从外部读取值，请用[揭示环境值](#揭示环境值)。
+
+其余所有字段都会整体替换存量值，包括 `ports`、`volumes`、`dependsOn` 与
+`publicEndpoints`，因此这些字段要发送完整列表。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.services.update("proj_123", "svc_456", {
+  restart: "unless-stopped",
+  enabled: true,
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/projects/proj_123/services/svc_456" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"restart":"unless-stopped","enabled":true}'
+```
+
+</Tab>
+</Tabs>
+
+## 从 docker-compose 同步
+
+显式地用提供的已解析服务整体替换 Compose 服务配置，新增或更新行并移除列表中缺失的服务。CLI 的 `service sync` 命令在提交该请求之前会先读取并校验
+文件。常规重新部署会自动把仓库变更与已保存的覆盖项合并；
+它们不需要这个整体替换操作。
+
+```
+POST /api/projects/:id/services/sync
+```
+
+## 化解 compose 漂移
+
+这些端点用于处理旧版本保存的待审审核。现在常规重新部署会保留
+显式覆盖并自动应用其他源变更，旧审核记录随之清除。接受一条旧版审核会应用源配置，同时保留已保存的环境值。
+
+```
+POST /api/projects/:id/services/:serviceId/drift/accept   # accept source config, preserve saved env
+POST /api/projects/:id/services/:serviceId/drift/keep     # keep your edits, stop flagging
+```
+
+## 容器操作
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.services.restart("proj_123", "svc_123");
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/services/svc_123/restart" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+启动、停止或重启单个服务正在运行的容器。这些操作作用于该服务
+活动部署的容器。
+
+```
+POST /api/projects/:id/services/:serviceId/start
+POST /api/projects/:id/services/:serviceId/stop
+POST /api/projects/:id/services/:serviceId/restart
+```
+
+用 `GET /api/projects/:id/services/containers`（`openship service containers -p my-stack`）列出
+整个编排中正在运行的容器。
+
+## 环境变量
+
+`GET .../environment` 返回生效的已保存配置：共享的项目
+值、Compose 值与服务覆盖。每一行都标注来源，机密
+已打码。默认取活动部署的环境，在首次部署前则取 production。加 `inspectRuntime=true` 即与自有的
+Docker 容器比对；检查失败时响应仍保留已保存的变量。
+
+```ts
+const state = await ship.services.getEnvironment("proj_123", "svc_456", {
+  inspectRuntime: true,
+});
+console.log(state.status, state.changedKeys);
+```
+
+部分编辑用 `PATCH .../env`。在 `upserts` 中只发送要改的覆盖项，
+在 `deletes` 中发送显式移除。既有覆盖必须带读取时返回的 `sourceId`；
+`null` 表示新建一条覆盖。过期的 ID 会返回
+`ENVIRONMENT_CHANGED`，请求不会被应用。
+
+```ts
+const currentEnvironment = await ship.services.getEnvironment("proj_123", "svc_456");
+await ship.services.mergeEnvVars("proj_123", "svc_456", {
+  environment: currentEnvironment.environment,
+  upserts: [{
+    key: "LOG_LEVEL",
+    value: "info",
+    sourceId: currentEnvironment.variables.find(row => row.key === "LOG_LEVEL")?.sourceId ?? null,
+  }],
+  deletes: [],
+});
+```
+
+`GET .../env` 只列出服务覆盖行（机密值打码）。
+`PUT .../env` **整体替换**某个环境的这些覆盖——发送你想保留的每一条
+覆盖。这两个端点都不代表继承而来的 Compose 层或
+共享项目层。
+
+```
+GET /api/projects/:id/services/:serviceId/env
+PUT /api/projects/:id/services/:serviceId/env
+GET /api/projects/:id/services/:serviceId/environment
+PATCH /api/projects/:id/services/:serviceId/env
+```
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.services.setEnvVars("proj_123", "svc_456", {
+  environment: "production",
+  vars: [
+    {
+      key: "DATABASE_URL",
+      value: "postgres://…",
+      isSecret: true,
+    },
+  ],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PUT "$OPENSHIP_URL/api/projects/proj_123/services/svc_456/env" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"environment":"production","vars":[{"key":"DATABASE_URL","value":"postgres://…","isSecret":true}]}'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    environment: { type: '"production" | "preview" | "development"', description: '这些变量作用于哪个环境。', required: true },
+    vars: { type: 'Array<{ key, value, isSecret? }>', description: '完整的变量集合（0–100）。key 1–256 个字符，value ≤10000，isSecret 默认为 false。', required: true },
+  }}
+/>
+
+<Callout title="PUT 是替换，不是合并" type="warn">
+`PUT .../env` 用你发送的内容原样覆盖服务覆盖集。
+只改个别值时请用 `PATCH .../env`，以免无关覆盖被破坏。
+</Callout>
+
+### 揭示环境值
+
+加 `source: "effective"` 可从完整的已保存视图中揭示指定的值。
+做恢复时，用 `source: "runtime"` 并带上运行时检查返回的 `containerId`，以及 `recoverableKeys` 中的名称。恢复范围排除镜像默认值
+与 OpenShip 中已保存的键。它返回值但不落盘；
+用 `mergeEnvVars` 保存选定的恢复值。容器发生变化时返回
+`ENVIRONMENT_RUNTIME_CHANGED`。
+
+控制台使用同一个环境编辑器。导入的 Compose 值立即可见；**演示模式（Demo mode）**
+像 IP 地址那样对它们做模糊处理。已保存的值初始打码，点击行的眼睛图标只揭示该行的值。
+**Show values** 是揭示全部已保存行的显式操作。揭示不会保存或覆盖
+配置。
+
+SDK 与 REST 请求可指定 1–500 个键，每个最长 512 个字符。只返回所请求键中实际存在的那些。读取打码后的配置并不等于获得揭示它的权限。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const environment = await ship.services.revealEnv("proj_123", "svc_456", {
+  keys: ["POSTGRES_PASSWORD"],
+});
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/proj_123/services/svc_456/env-reveal" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"keys":["POSTGRES_PASSWORD"]}'
+```
+
+返回的值在 `environment` 之下。
+
+</Tab>
+</Tabs>
+
+这读取已保存的 Compose 配置，并要求服务写权限。加
+`environment: "production"`、`"preview"` 或 `"development"` 可以改为读取该服务在该
+环境下的变量。
+
+对导入编辑器，可在初始扫描时一并请求值。这样编辑器打开时无需第二次源读取：
+
+| 来源 | SDK | REST API |
+| --- | --- | --- |
+| Git 或本地扫描 | `deployments.prepare({ ...prepareInput, includeEnv: true })` | `POST /api/deployments/prepare` 配合 `includeEnv: true` |
+| 上传的快照 | `sources.scan("session_123", { includeEnv: true })` | `POST /api/projects/folder/scan/session_123` 配合 `{ "includeEnv": true }` |
+| 本地目录 | `projects.scanLocal({ path: "/srv/app", includeEnv: true })` | `POST /api/projects/scan` 配合相同的请求体 |
+
+普通扫描保持打码状态。`includeEnv: true` 要求该扫描的写权限，对 Git 还要求
+整仓内容读取权限。本地路径仅限自托管。演示模式只改变浏览器
+显示，不改变 API 权限或返回的值。
+
+## 错误
+
+<Callout title="400 —— 请求体无效" type="warn">
+载荷未通过校验（未知键、类型错误，或某值超出长度限制）。未知键
+会被直接拒绝——对照上文的表逐一检查字段名。创建时，`kind: "monorepo"` 的服务必须
+携带 `rootDirectory`。
+</Callout>
+
+<Callout title="服务维度路由返回 404" type="error">
+该 `:serviceId` 不属于这个项目（或已被删除），或项目 `:id` 不在你的
+组织。用 `GET /api/projects/:id/services` 列出该项目的服务以获取有效 id。
+</Callout>
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 流式接收服务的日志事件。 | `services.streamLogs(projectId, serviceId, input?, options?)` | `GET /api/projects/:id/services/:serviceId/logs/stream`<br />`project:service:read` |
+| 列出属于某项目的服务。 | `services.list(id)` | `GET /api/projects/:id/services`<br />`project:service:list` |
+| 把一条服务定义加入项目。 | `services.create(id, input)` | `POST /api/projects/:id/services`<br />`project:service:write` |
+| 从 Compose 源同步服务定义。 | `services.sync(id, input)` | `POST /api/projects/:id/services/sync`<br />`project:service:write` |
+| 列出活动中的项目容器。 | `services.activeContainers(id)` | `GET /api/projects/:id/services/containers`<br />`project:read` |
+| 读取一条服务定义及其状态。 | `services.get(parentId, id)` | `GET /api/projects/:id/services/:serviceId`<br />`project:service:read` |
+| 更新服务配置。 | `services.update(parentId, id, input)` | `PATCH /api/projects/:id/services/:serviceId`<br />`project:service:write` |
+| 移除服务及其选定的资源。 | `services.remove(parentId, id)` | `DELETE /api/projects/:id/services/:serviceId`<br />`project:service:admin` |
+| 接受旧版源审核并保留已保存的环境值。 | `services.acceptDrift(parentId, id)` | `POST /api/projects/:id/services/:serviceId/drift/accept`<br />`project:service:write` |
+| 化解漂移时保留当前配置。 | `services.keepDrift(parentId, id)` | `POST /api/projects/:id/services/:serviceId/drift/keep`<br />`project:service:write` |
+| 读取生效的已保存服务环境，可选与 Docker 比对。 | `services.getEnvironment(parentId, id, input?)` | `GET /api/projects/:id/services/:serviceId/environment`<br />`project:service:read` |
+| 保存指定的服务覆盖项，不替换无关值。 | `services.mergeEnvVars(parentId, id, input)` | `PATCH /api/projects/:id/services/:serviceId/env`<br />`project:service:write` |
+| 读取服务环境覆盖项，机密打码。 | `services.listEnvVars(parentId, id, input?)` | `GET /api/projects/:id/services/:serviceId/env`<br />`project:service:read` |
+| 应用服务环境变量变更。 | `services.setEnvVars(parentId, id, input)` | `PUT /api/projects/:id/services/:serviceId/env`<br />`project:service:write` |
+| 揭示经授权的服务环境值。 | `services.revealEnv(parentId, id, input)` | `POST /api/projects/:id/services/:serviceId/env-reveal`<br />`project:service:write` |
+| 用当前镜像替换服务容器来应用已保存的运行时环境，无需重新构建。 | `services.applyEnvironment(parentId, id)` | `POST /api/projects/:id/services/:serviceId/apply-env`<br />`project:service:write` |
+| 读取该服务持久卷的大小。 | `services.volumeSizes(parentId, id)` | `GET /api/projects/:id/services/:serviceId/volume-sizes`<br />`project:service:read` |
+| 启动服务运行时。 | `services.start(parentId, id)` | `POST /api/projects/:id/services/:serviceId/start`<br />`project:service:write` |
+| 停止服务运行时。 | `services.stop(parentId, id)` | `POST /api/projects/:id/services/:serviceId/stop`<br />`project:service:write` |
+| 重启服务运行时。 | `services.restart(parentId, id, input?)` | `POST /api/projects/:id/services/:serviceId/restart`<br />`project:service:write` |
+| 读取近期的服务运行时日志。 | `services.runtimeLogs(parentId, id, input?)` | `GET /api/projects/:id/services/:serviceId/logs`<br />`project:service:read` |
+| 在服务运行时中执行一条经过授权的命令。 | `services.exec(parentId, id, input)` | `POST /api/projects/:id/services/:serviceId/exec`<br />`project:service:write` |
+
+{/* api-operations:end */}

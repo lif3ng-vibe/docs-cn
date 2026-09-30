@@ -1,0 +1,25 @@
+---
+title: api
+description: openship api 的命令、参数与选项。
+cliGroup: openship api
+---
+
+示例请参见[工作流指南](/docs/cli/access)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship api
+
+向任意 Openship API 路由发起经过身份验证的请求（类似 `gh api`）
+
+```text
+openship api [options] <path>
+```
+
+| 参数 | 含义 |
+| --- | --- |
+| `path` | /api 下的路径，例如 /projects 或 /deployments/&lt;id&gt; |
+
+| 选项 | 含义 |
+| --- | --- |
+| `-X, --method <method>` | HTTP 方法（默认 GET；给出 --data 时默认 POST） |
+| `-d, --data <json>` | 以 JSON 字符串形式给出的请求体 |
+| `-q, --query <kv...>` | 查询参数 key=value（可重复） |

@@ -1,0 +1,76 @@
+---
+title: 使用 openship.json 部署
+description: 在仓库中加入声明式的 openship.json，让 Openship 每次都以相同方式构建和部署——向导中如此，push 时的无头部署也如此。
+---
+
+把一个 `openship.json` 提交到仓库根目录，能让你的部署**可复现**：框架、构建命令、环境变量、域名和扩缩容都声明在仓库里，而不是每次都在向导里点出来。思路与 `vercel.json` 或 `railway.toml` 相同。
+
+Openship 仍会自动检测一切——`openship.json` 只是**覆盖**你声明的内容。所以你只需添加想固定的字段。完整的字段列表见[参考文档](/docs/reference/openship-json)。
+
+## 1. 生成初始文件
+
+在仓库根目录下：
+
+```bash
+openship config init
+```
+
+它会写出一个最小化的 `openship.json`，包含 `$schema` 行（用于编辑器自动补全），以及本地能检测到的包管理器/构建命令。打开它并按需添加。
+
+## 2. 声明你的部署
+
+一个典型的服务器应用：
+
+```json
+{
+  "$schema": "https://openship.io/openship.schema.json",
+  "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "port": 3000,
+  "runtime": "docker",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://api.acme.com",
+    "DATABASE_URL": { "value": "postgres://…", "secret": true }
+  },
+  "domains": ["app.acme.com"]
+}
+```
+
+- **密钥**——把值包在 `{ "value": "…", "secret": true }` 里，静态存储时会被加密。
+- **自定义域名**——带点的主机名视为自定义域名；裸标签则是免费子域名。
+- **迁移**——添加 [`releaseCommands`](/docs/reference/openship-json#发布命令)（例如 `["php artisan migrate --force"]`），每次部署执行一次，时机在构建之后、新版本上线之前。这里失败会导致部署失败，旧版本继续提供服务。目前仅支持单应用项目：为项目挂接服务会把它转入 compose 流水线，在那里这些命令只记录日志并被跳过。
+- **省略**检测已经判得对的字段（大多数 `installCommand`、已知框架的 `outputDirectory` 等）。
+
+静态站点则更简单：
+
+```json
+{
+  "$schema": "https://openship.io/openship.schema.json",
+  "framework": "vite",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "productionMode": "static"
+}
+```
+
+## 3. 校验
+
+```bash
+openship config validate
+```
+
+修复所有报告的错误（非法枚举值、超范围端口、格式错误的 service）。警告（例如未知键）不会导致失败。在 CI 中使用 `--json` 获得机器可读输出。
+
+## 4. 部署
+
+像平常一样部署——[从 GitHub](/docs/guides/deploy-from-github)、[本地文件夹](/docs/guides/deploy-local-folder)或 CLI。向导会依据你的 `openship.json` **预填**打开；部署前你仍然可以调整任何内容。
+
+由于 [push 自动部署](/docs/guides/auto-deploy)与无头部署运行同一套解析逻辑，向部署分支 push 时会完全不经向导地遵循 `openship.json`——这正是它的意义：仓库自己描述自己的部署。
+
+<Callout title="优先级">
+检测先运行，随后 `openship.json` 逐字段覆盖。如果某个部署没有取到某个值，请对照[参考文档](/docs/reference/openship-json)确认字段名，并重新运行 `openship config validate`。
+</Callout>
+
+## 多服务与 monorepo
+
+为 compose 项目声明 `services`，或声明 `monorepo` 覆盖检测到的子应用——两者均见[参考文档](/docs/reference/openship-json#servicescompose)。注意 `services` 和 `monorepo` 是单应用配置的替代项，而非附加项。

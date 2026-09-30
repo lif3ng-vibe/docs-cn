@@ -1,0 +1,93 @@
+---
+title: 健康检查
+description: 检查安装可用性与 SDK 协议支持情况。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Health API 是 Openship 外部的任何程序确认实例存活并了解其部署方式的方式——版本、认证模式、
+面向哪个云端（如果有的话）。负载均衡器与 Docker 健康检查请求 `GET /api/health`；
+CLI 与控制台读取 `GET /api/health/env` 来决定显示哪种登录流程。在终端里它对应
+[`openship status`](/docs/cli/run) 命令。两条路由在每个实例上都可用（自托管、桌面版与云）。
+
+## 存活探针
+
+```
+GET /api/health
+```
+
+只要进程还在响应请求，就返回 `200` 和固定的响应体。把它用作容器或负载均衡器的健康检查——
+它不触碰数据库，也永远不需要认证。
+
+```bash
+curl "$OPENSHIP_URL/api/health"
+# → {"status":"ok","timestamp":"2026-07-19T04:29:00.000Z"}
+```
+
+## 部署信息
+
+对实例配置方式的静态、利于缓存的描述。客户端读取它来选择正确的登录流程并访问正确的云端端点——
+控制台使用这些值而不是写死的对照表。依赖数据库的读取项（`teamMode`、迁移相关字段）会在设置表
+在迁移途中不可用时回退到安全默认值，因此该路由始终保持可用。
+
+响应结构如下：
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.system.info();
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/health/env"
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    selfHosted: { type: 'boolean', description: '除非实例运行于云端模式（即自托管或桌面版），否则为 true。' },
+    deployMode: { type: 'string', description: "实例的部署模式，例如 \"server\" 或 \"desktop\"。" },
+    version: { type: 'string', description: '运行中的 API 版本（取自 apps/api/package.json）——控制台据此提示实例过旧。' },
+    authMode: { type: 'string', description: '应使用的登录流程："none"（零认证本地用户）、"cloud"（Openship Cloud 上的外部认证）或 "local"（本地 Better Auth）。' },
+    teamMode: { type: 'string', description: '部署形态；默认为 "single_user"。非默认值表示实例已迁移为多用户部署。' },
+    migrationTargetUrl: { type: 'string | null', description: '团队迁移进行中/完成后启动器应指向的地址；无迁移进行时为 null。' },
+    migrationInProgress: { type: 'boolean', description: '当前正在运行团队迁移。' },
+    cloudAuthUrl: { type: 'string', description: '该实例面向的云端控制台地址（遵循 OPENSHIP_CLOUD_TARGET）。' },
+    cloudApiUrl: { type: 'string', description: '该实例面向的云端 API 地址（遵循 OPENSHIP_CLOUD_TARGET）。' },
+    machineName: { type: 'string', description: '易读的本地机器名。仅桌面版返回，其他情况省略。' },
+    hostDomain: { type: 'string', description: "实例的公开宿主域名。仅在设置了 HOST_DOMAIN 时存在。" },
+  }}
+/>
+
+## 错误
+
+<Callout title="连接被拒绝/超时" type="warn">
+这些路由永远不会返回认证或权限错误——失败意味着进程不可达（主机/端口错误、容器仍在启动，
+或实例已宕机）。`openship status` 会把它报告为 `Cannot reach the API at <url>`。
+确认实例正在运行且 URL 正确，然后重试。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取安装与部署模式信息。 | `system.info()` | `GET /api/health/env`<br />`Public` |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 存活探针——返回 `{ status, timestamp }`。 | 仅 HTTP | `GET /api/health`<br />`Public` |
+
+{/* api-operations:end */}

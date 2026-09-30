@@ -1,0 +1,166 @@
+---
+title: 用户设置
+description: 读取并更新你的构建、部署、路由与 Git 偏好。
+---
+
+用户设置作用于当前认证的用户。没有可供选择的设置 ID。引用服务器时
+会对照当前组织与访问授权检查；不可访问的默认服务器会被隐藏。实例级配置请用[安装设置](/docs/api/system)。
+
+## 读取偏好
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const settings = await ship.settings.get();
+console.log(settings.buildMode, settings.defaultDeployTarget);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl "$OPENSHIP_URL/api/settings" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+</Tab>
+</Tabs>
+
+结果包含构建与路由策略、部署默认值、迁移偏好与 Git 选项。
+`cloneToken` 报告 `hasToken`、`setAt` 与 `asDefault`；它永远不包含令牌值本身。
+
+## 设置构建与路由默认值
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.settings.setBuildMode({ buildMode: "server" });
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/settings/build-mode" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"buildMode":"server"}'
+```
+
+</Tab>
+</Tabs>
+
+| 方法 | 输入 | 取值 |
+| --- | --- | --- |
+| `setBuildMode` | `buildMode` | `auto`、`server` 或 `local`。 |
+| `setRouteStrategy` | `routeStrategy` | `auto`、`loopback-port` 或 `container-ip`。 |
+
+`update({ buildMode })` 同样会创建或更新设置行；它映射到 `PUT /api/settings`。
+路由策略决定边缘如何触达应用。服务商侧的约束依然适用；例如
+Docker Desktop 不支持 container-IP 路由。
+
+## 设置部署目的地
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.settings.setDeployDefaults({
+  defaultDeployTarget: "server",
+  defaultServerId: "srv_123",
+});
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/settings/deploy-defaults" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"defaultDeployTarget":"server","defaultServerId":"srv_123"}'
+```
+
+</Tab>
+</Tabs>
+
+`defaultDeployTarget` 可为 `server`、`cloud` 或 `null`。目标是服务器时要求一个可访问的
+`defaultServerId`。其他目标会清掉该服务器引用。传 `null` 即清除默认值；省略某字段即
+保留其值。`local` 在部署时由项目推导而来，不是可选的默认目的地。
+
+## 管理克隆凭据
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.settings.setCloneCredentials({ token: "ghp_example", asDefault: true });
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/settings/clone-credentials" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"token":"ghp_example","asDefault":true}'
+```
+
+</Tab>
+</Tabs>
+
+请使用你的机密仓库（secret store）中的真实 Git 令牌。令牌加密存储且永不返回。省略 `token` 即
+保持不变；发送 `null` 或空字符串清除之。`asDefault` 控制克隆时是否
+自动使用该令牌。
+
+`setCloneStrategy({ preference })` 接受 `prompt`、`local` 或 `remote-with-token`。
+`setGitForwarding({ enabled })` 控制是否把本地 Git 身份转发到已授权的构建服务器上用于克隆。参见 [Git 认证](/docs/guides/git-authentication)。
+
+## 设置迁移偏好
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+await ship.settings.setTransferPreferences({
+  transferMode: "auto",
+  transferCompression: "zstd",
+});
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X PATCH "$OPENSHIP_URL/api/settings/transfer" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"transferMode":"auto","transferCompression":"zstd"}'
+```
+
+</Tab>
+</Tabs>
+
+两个字段均可选。`transferMode` 接受 `auto`、`stream`、`direct` 或 `rsync`；
+`transferCompression` 接受 `auto`、`zstd`、`gzip` 或 `none`。它们是迁移卷传输的默认值；实际生效的传输方式取决于目标侧的能力。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取当前用户的偏好与默认值。 | `settings.get()` | `GET /api/settings`<br />`settings:read` |
+| 更新用户设置。 | `settings.update(input)` | `PUT /api/settings`<br />`settings:write` |
+| 选择默认的构建执行位置。 | `settings.setBuildMode(input)` | `PATCH /api/settings/build-mode`<br />`settings:write` |
+| 选择默认路由策略。 | `settings.setRouteStrategy(input)` | `PATCH /api/settings/route-strategy`<br />`settings:write` |
+| 设置默认部署目标与资源。 | `settings.setDeployDefaults(input)` | `PATCH /api/settings/deploy-defaults`<br />`settings:write` |
+| 配置用于源克隆的凭据。 | `settings.setCloneCredentials(input)` | `PATCH /api/settings/clone-credentials`<br />`settings:write` |
+| 选择源传输到构建服务器的方式。 | `settings.setCloneStrategy(input)` | `PATCH /api/settings/clone-strategy-preference`<br />`settings:write` |
+| 设置源传输偏好。 | `settings.setTransferPreferences(input)` | `PATCH /api/settings/transfer`<br />`settings:write` |
+| 配置将 Git 身份转发到构建服务器。 | `settings.setGitForwarding(input)` | `PATCH /api/settings/forward-git`<br />`settings:write` |
+
+{/* api-operations:end */}

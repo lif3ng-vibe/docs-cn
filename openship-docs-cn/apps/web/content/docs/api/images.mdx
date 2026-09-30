@@ -1,0 +1,74 @@
+---
+title: 容器镜像
+description: 浏览项目服务可用的容器镜像。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Images API 返回**构建镜像目录**（build-image catalog）——向项目添加服务时从中挑选的现成服务镜像
+（PostgreSQL、Redis 等）精选列表。在控制台中，它对应 **添加服务** 弹窗里的镜像网格；这是一个
+只读查询，因此没有任何可创建或可编辑的内容。
+
+<Callout title="目录来自 Openship Cloud" type="info">
+该模块在任何部署模式（自托管、云、桌面版）都可用，但目录本身由 Openship Cloud 提供。
+在 **SaaS** 实例上使用主目录；在绑定了云账号的 **自托管** 实例上使用你组织的云令牌。
+在 **未** 绑定云账号的自托管实例上，端点返回空列表并附带 `cloudConnected: false` 而不是报错——
+控制台会回退到"自定义镜像"卡片。结果会在内存中缓存几分钟。
+</Callout>
+
+## 列出镜像
+
+返回你组织的目录。两个筛选参数都是可选的，由上游目录执行过滤；省略则返回全部。
+
+```
+GET /api/images
+```
+
+<TypeTable
+  type={{
+    search: { type: 'string', description: '自由文本筛选，与目录条目匹配（查询参数）。', required: false },
+    category: { type: 'string', description: '限定单个分类，例如 "database"、"cache"、"messaging"（查询参数）。', required: false },
+  }}
+/>
+
+```bash
+curl "$OPENSHIP_URL/api/images" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+
+# 带筛选参数：
+curl "$OPENSHIP_URL/api/images?search=postgres&category=database" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN"
+```
+
+响应为 `{ "success": true, "images": [ … ] }`。每个条目描述一个目录镜像；常见字段有
+`id`（你挑选时用的 slug）、`name`（显示名）、`image`（Docker 镜像字符串）、`description`、
+`category`、`logo`、`tags`、`ports` 和 `defaultEnv`（建议的环境变量键）。上游目录返回的
+其他字段按原样透传，以保证向前兼容。
+
+## 错误
+
+<Callout title="空目录且 cloudConnected: false" type="info">
+这不是错误。在未绑定云账号的自托管实例上，响应为
+`{ "success": true, "images": [], "cloudConnected": false }`。绑定一个云账号即可填充目录，
+或直接在服务上使用自定义镜像。
+</Callout>
+
+<Callout title="500 — 列出镜像失败" type="warn">
+上游目录调用失败。响应为 `{ "success": false, "error": "…" }`。稍等片刻后重试；
+获取成功后结果会缓存。
+</Callout>
+
+<Callout title="401 — unauthorized" type="error">
+未提供有效的会话 cookie 或 bearer 令牌。用
+[`openship token create`](/docs/cli/access) 创建令牌，并以 `Authorization: Bearer <token>` 发送。
+</Callout>
+
+## 操作
+
+{/* api-operations:start */}
+
+| 操作 | REST API |
+| --- | --- |
+| 列出可用的构建/服务镜像，可用 `?search=` 与 `?category=` 筛选。 | `GET /api/images`<br />`Authenticated` |
+
+{/* api-operations:end */}

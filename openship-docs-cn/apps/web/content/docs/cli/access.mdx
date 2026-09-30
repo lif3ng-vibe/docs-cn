@@ -1,0 +1,66 @@
+---
+title: 连接与访问
+description: 进行认证、选择安装实例、管理令牌并调用 HTTP 端点。
+---
+
+CLI 将若干命名的**上下文**（context）存储在 `~/.openship/config.json` 中。每个上下文包含一个 API URL、控制台 URL 和个人访问令牌。同一时间只有一个上下文处于激活状态。
+
+## 登录
+
+```bash
+openship login \
+  --api-url https://ship.example.com \
+  --dashboard-url https://ship.example.com \
+  --context production
+```
+
+CLI 会打开控制台的令牌页面并提示输入令牌。在脚本中，可传 `--token "$OPENSHIP_TOKEN"`。登录会在存储令牌之前先验证它，并选定该上下文。本地默认 API 是 `http://localhost:4000`；本地控制台默认是 `http://localhost:3001`。
+
+## 切换上下文
+
+```bash
+openship context list
+openship context use production
+openship status
+```
+
+`context add` 存储端点与令牌但不做验证，需要验证时请使用 `login`。`context rm` 删除一个非激活的上下文。`logout` 清除令牌但保留其端点信息。
+
+```bash
+openship logout --context production
+```
+
+全部选项参见 [context](/docs/cli/reference/context)、[login](/docs/cli/reference/login) 与 [logout](/docs/cli/reference/logout) 参考。
+
+## 创建令牌
+
+为每个令牌选择明确的访问权限：
+
+```bash
+openship token create deploy-bot --grant project:proj_123:read,write
+openship token create report-reader --read-only --expires 30 --full-access
+openship token list
+```
+
+`--grant` 与 `--full-access` 二选一传入；两者都省略会被拒绝。完全访问（full-access）令牌以你本人的权限行事。有范围限制的凭据无法铸造不受限制的凭据。
+
+创建新令牌时请立即复制其密钥；之后再读取时只能看到元数据。按令牌 ID 吊销：
+
+```bash
+openship token revoke pat_123
+```
+
+参见 [token 选项](/docs/cli/reference/token)与[权限范围](/docs/security/permissions)。
+
+## 调用 HTTP 端点
+
+```bash
+openship api /projects
+openship api /domains --query projectId=proj_123
+```
+
+路径相对于 `/api`。使用 `--method` 选择方法，`--data` 提供 JSON 请求体；提供 data 时方法默认为 POST。响应会被打印出来，HTTP 非成功结果会以非零状态码退出。参见[原始 API 选项](/docs/cli/reference/api)与 [HTTP 参考](/docs/api)。
+
+## 原生模式
+
+上下文描述的是远程 HTTP 连接。[原生模式](/docs/cli/native)使用一个显式受信任的配置文件来选择自有安装实例与身份。

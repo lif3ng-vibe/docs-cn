@@ -1,0 +1,89 @@
+---
+title: 结果、错误与流
+description: 处理操作失败、部署结果、分页与取消。
+---
+
+操作可能立即失败，也可能提交了工作但之后以失败告终。要同时处理调用本身和最终的
+部署结果。
+
+## 操作错误
+
+```ts title="operation-errors.mts"
+import { OperationError, type OpenshipClient, type ScopedShip } from "openship";
+
+export async function readProject(ship: OpenshipClient | ScopedShip, projectId: string) {
+  try {
+    return await ship.projects.get(projectId);
+  } catch (error) {
+    if (error instanceof OperationError) {
+      console.error(error.statusCode, error.code, error.message);
+    }
+    throw error;
+  }
+}
+```
+
+`OperationError` 暴露 `statusCode`、`code` 和公开的 `details`。远程的 `ApiError` 还
+暴露 `status` 和 HTTP 响应 `body`。输入校验可能抛出 `ValidationError`；网络、配置
+和中止失败可能是其他错误类型。
+
+| 情况 | 处理方式 |
+| --- | --- |
+| 输入无效 | 修正报告中指出的字段；不要重复提交相同输入。 |
+| 资源缺失或不可访问 | 检查 ID、身份和组织。不可访问的资源可能表现为 `NOT_FOUND`。 |
+| 身份过期或被吊销 | 通过你的宿主或远程登录流程重新认证。 |
+| 不支持固定作用域 | 升级 API；参见[兼容性](/docs/api/sdk/compatibility)。 |
+| 速率限制 | 遵循 API 的重试指引。 |
+| 变更操作的响应丢失 | 重新提交前先检查已存储的状态；变更操作不会自动重试。 |
+
+传输层状态码参见 [HTTP 错误](/docs/api/http#错误结构)。
+
+## 部署结果
+
+`deploy()` 返回 ID。`deployment(id).wait()` 返回一个包含 `status`、`success` 以及任何
+待处理提示或取消的结果。`ready` 和 `no_changes` 是成功的结果。失败或部分失败的部署
+不会因为其日志流结束而变为成功。
+
+对 `action_required` 提示进行显式处理，或者提供一个返回所给操作 ID 之一的
+`onPrompt` 回调。参见[部署决策](/docs/api/deployments#等待决策与取消)。
+
+## 流
+
+流式方法返回异步可迭代对象。传入中止信号或停止迭代即可释放流：
+
+```ts title="stream-logs.mts"
+import { consumeDeploymentEvents, type OpenshipClient, type ScopedShip } from "openship";
+
+export async function watchLogs(
+  ship: OpenshipClient | ScopedShip,
+  deploymentId: string,
+  signal: AbortSignal,
+) {
+  return consumeDeploymentEvents(ship.deployment(deploymentId).events({ signal }), (event) => {
+    if (event.log) process.stdout.write(event.log);
+  });
+}
+```
+
+中止流或等待并不会取消底层工作负载。如需取消，请单独使用 `deployment(id).cancel()`
+请求。目前不支持跨 worker 重启的持久化重放。
+
+## 分页
+
+```ts title="all-projects.mts"
+import { iteratePages, type OpenshipClient, type ScopedShip } from "openship";
+
+export async function allProjects(ship: OpenshipClient | ScopedShip, signal?: AbortSignal) {
+  const ids: string[] = [];
+  for await (const project of iteratePages((page) => ship.projects.list(page), {
+    perPage: 50,
+    signal,
+  })) {
+    ids.push(project.id);
+  }
+  return ids;
+}
+```
+
+`iteratePages` 用于返回包含 `data` 的分页的方法。返回普通数组的方法不使用这个辅助
+函数。每一页都会进行授权检查。

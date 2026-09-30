@@ -1,0 +1,94 @@
+---
+title: GitHub 连接与仓库
+description: 修复过期或未授权的 GitHub 连接、导入不了的私有仓库、本该直接能用的公开仓库，以及从不触发的自动部署 Webhook。
+---
+
+GitHub 问题大多落在这四类里：Openship 读不了你的仓库、**私有**仓库导入不了、本不需要登录的**公开**仓库却一直要你连接，或者推送没有触发部署。本页逐类讲：从你会看到的确切消息到修法。
+
+Openship 可以通过托管版 **Openship GitHub App**、工作区自有的 GitHub App、个人令牌、SSH 密钥或本地的 `gh` 身份访问 GitHub。自动部署所依赖的 Webhook 也由它管理。如果还没连接过，先看[从 GitHub 部署](/docs/guides/deploy-from-github)；连接卡片本身在 [Settings → Git](/docs/dashboard/settings) 里。
+
+## Openship 读不了你的仓库
+
+<Callout type="error" title="现象">
+仓库列表是空的，或某个操作失败并报 **"Not connected to GitHub"**、**"No GitHub access token available. Please connect your GitHub account."**，或一个 `403` 加代码 `GITHUB_TOKEN_REQUIRED`。
+</Callout>
+
+**含义**（说白了）：Openship 拿不到你账号的可用凭据。要么你从未连接过，要么原本可用的令牌已过期或被吊销（你退出了 `gh` 登录、轮换过个人访问令牌，或移除了 App）。Openship 本身没坏——只是没有任何东西可以拿去认证。
+
+**修复方法**：
+
+1. 前往 **Settings → Git**。对工作区自有的 App，检查它的源卡片，确认列出的是目标 GitHub 账号。对本地身份，用 **GitHub** 卡片重新连接。
+2. 如果它*确实*显示已登录但仓库还是加载不出来，按 **Disconnect**，再按 **Connect GitHub** 重新签发一个新令牌。
+3. 在使用 CLI 回退方案的自托管实例上，在运行 Openship 的那台机器的终端里执行 `gh auth login`，然后刷新页面。
+
+<Callout type="info">
+部署流水线会根据构建运行的位置给出更具体的提示。本地构建会要求你 **"Run `gh auth login`, connect Openship Cloud, or set a per-project clone token in Settings."**；远端（server / cloud）构建会要求你 **"Install the Openship GitHub App on this owner, or set a per-project clone token in Settings."**——`gh` CLI 的令牌绝不会被送出那台主机，所以远端构建需要 App 或令牌。在自托管的 **server** 部署上你还有更多选择：打开 **Settings → Clone credentials → "Forward my git identity to build servers"**，让服务器自己登录 GitHub，或在服务器上保存一个令牌/SSH 密钥。完整链路与各方式的启用方法见[私有仓库的 Git 认证](/docs/guides/git-authentication)。
+</Callout>
+
+<Callout type="warn" title="“Openship Cloud is unreachable”">
+如果连接时返回 `503` 和 **"Openship Cloud is unreachable, so GitHub can't be connected right now."**，说明你的自托管实例处于云连接模式但够不到 Openship Cloud。这种模式下 GitHub 连接要经过云端，所以检查你的网络（或云端状态）再重试——Openship 刻意不发给你一条死掉的安装链接。
+</Callout>
+
+## 私有仓库导入不了
+
+<Callout type="error" title="现象">
+选择器里看不到你的私有仓库，或导入时失败并报 **"GitHub App is not installed for this account"**、类似 **"PAT is missing required scope (need one of: repo, public_repo)."** 的 scope 错误，或一个 `409` **"No GitHub App installation token is available for this owner."**
+</Callout>
+
+**含义**：GitHub 只把私有仓库暴露给明确拥有访问权的凭据。Openship 能看到它的前提是 **GitHub App 已装在那个 owner 上且包含该仓库**，或者你给了它一个 scope 正确的**个人访问令牌**。只够公开仓库的令牌，或装 App 时跳过了该仓库，都看不到它。
+
+**修复方法**：
+
+1. **安装 App 或重新授权范围**。在 **Settings → Git** 里，对目标的工作区自有源用 **Install on account**（托管 App 则用 **Install GitHub App**）。当 GitHub 问*授予哪些仓库*时，选 **All repositories**，或确保私有仓库被勾选。
+2. **或者添加个人访问令牌**。在项目的 **Source** 标签页，把令牌粘进 **Clone Token Override** 卡片（或在 **Settings → Git → GitHub clone credentials** 里设一个全局的）。令牌必须带 **`repo`** scope——只有 `public_repo` 只能碰到公开仓库。
+3. 刷新选择器；仓库应该就出现了。
+
+<Callout type="warn" title="你是团队成员，不是所有者">
+除组织所有者外，GitHub 访问对所有人都是**默认拒绝**。如果你是成员，App 也装了，但某个私有仓库看不见或构建不了，那是所有者还没把这个仓库授给你。请他授权（或连接你自己的个人访问令牌）。参见[团队与成员](/docs/guides/teams-members)。
+</Callout>
+
+## 公开仓库一直要求我连接
+
+<Callout type="error" title="现象">
+你把 Openship 指向一个公开的 GitHub 仓库，指望不登录就能部署，但它仍然要你连接 GitHub 账号。
+</Callout>
+
+**含义**：github.com 上的公开仓库*确实*可以在零凭据下读取并部署——Openship 会先匿名探测它。这个探测采取**失败即关**策略：只要仓库没有被明确判定为公开，Openship 就回退到索要凭据。常见原因是仓库其实不是公开的、owner/repo 敲错了，或它不在 github.com 上。
+
+**修复方法**：
+
+1. 在无痕/隐身浏览器窗口（未登录状态）打开该仓库。如果看不到，它就是**私有**的——用上面的私有仓库修法。
+2. 仔细核对 **owner/repo** 的拼写。`https://github.com/owner/repo` 和 `git@github.com:owner/repo.git` 两种写法都认，但仅限 **github.com**——GitLab 和 GitHub Enterprise 主机永远需要凭据。
+3. 如果你*刚刚*把它设为公开，等一分钟再试。Openship 会把“公开”这个判定缓存十分钟左右，探测期间的一次瞬时网络错误也会让那一回改要凭据。
+
+## 自动部署没有触发（Webhook 未送达）
+
+<Callout type="error" title="现象">
+你推送到了 GitHub，但什么都没部署。在 GitHub 的 **Settings → Webhooks → Recent Deliveries** 里，能看到红色的 `401` 响应，或干脆没有任何投递。
+</Callout>
+
+**含义**：自动部署是一个 **Webhook**（网络回调）——你一推送，GitHub 就给 Openship 发一条消息。如果消息没到、被拒收，或到达的是未设置自动部署的分支/项目，就什么都不会发生。按顺序过一遍下面的检查。
+
+**修复方法**：
+
+1. **打开自动部署**。打开项目的 **Source** 标签页。如果 **Auto Deploy** 卡片显示 *Disabled*（"Deployments must be started manually"），把它打开。仓库上的 Webhook 也是这一步注册的。
+2. **检查 Webhook 是否可达**。如果 Source 标签页显示 **"Enable auto-deploy"** 横幅——*"Auto-deploy needs a direct webhook endpoint. Expose this Openship API on a public URL or configure a verified webhook domain for direct delivery."*——那说明你的实例在 `localhost` 或内网里，GitHub 根本够不到它。把 Openship 放到公网 URL 后面，或选一个[已验证的自定义域名](/docs/guides/custom-domains)做直连投递。
+3. **推送你真正部署的那个分支**。只有推送分支与项目的部署分支一致时 Openship 才会重新部署。推到其他分支会被忽略（日志显示 *"No local auto-deploy projects matched"*）。在 Source 标签页确认分支。
+4. **修复被拒的签名**。红色的 `401` 投递带 **"Invalid signature"**、**"Missing x-hub-signature-256 header"** 或 **"No webhook secret configured — signature cannot be verified"**，说明钩子的签名密钥不匹配。把 **Auto Deploy** 关掉再打开以重新注册 Webhook——这会在两侧各生成一个新的按项目密钥。
+
+<Callout type="info" title="一次有意什么都不部署的推送">
+对 monorepo / 多服务项目，Openship 只重建文件有变化的服务。没有触及任何服务根目录下的文件的推送会被按设计跳过（日志记为 *"no affected services"*）——这是智能路由，不是故障。参见 [Compose 与多服务](/docs/guides/compose-multi-service)。
+</Callout>
+
+<Callout type="info" title="重复投递没关系">
+如果某次投递被重试，Openship 会丢弃重复的那次（*"Duplicate delivery ignored"*），这样一次推送不会产生两个部署。无需处理。
+</Callout>
+
+## 还是没解决？
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="从零连接到部署、直到拿到线上 URL 的完整演示。" />
+  <Card title="推送即自动部署" href="/docs/guides/auto-deploy" description="推送 → Webhook → 部署这条链路如何接起来。" />
+  <Card title="GitHub API" href="/docs/api/github" description="连接、仓库浏览和 Webhook 背后的端点。" />
+  <Card title="常见报错" href="/docs/troubleshooting/common-errors" description="与 GitHub 无关的那些报错。" />
+</Cards>

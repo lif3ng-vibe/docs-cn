@@ -1,0 +1,54 @@
+---
+title: 运行并维护 Openship
+description: 启动本地安装实例、检查它并管理其生命周期。
+---
+
+请在运行 Openship 的机器上使用这些命令。要管理现有的远程安装实例，请改为[配置连接上下文](/docs/cli/access)。
+
+## 启动
+
+```bash
+openship
+```
+
+在新机器上，交互式命令会引导你完成安装。在已安装的机器上，它会打开管理面板（admin panel）或恢复中断的安装。
+
+若要直接启动：
+
+```bash
+openship up
+openship status
+openship open
+```
+
+`up` 会安装或启动一个常驻服务。`status` 报告本地服务状态以及激活上下文的 API 健康状况。`open` 打开控制台（dashboard）。需要前台附着进程时使用 `openship up --foreground`。包括 Docker Compose 配置在内的全部启动选项参见[启动选项](/docs/cli/reference/up)。
+
+## 停止与更新
+
+```bash
+openship stop
+openship update
+```
+
+`stop` 会禁用该服务，使其在重启后仍保持停止。`update` 更新 CLI 与随附的服务端。更新生产环境的安装实例之前，请先阅读[更新 Openship](/docs/guides/updating)。
+
+## 诊断问题
+
+```bash
+openship doctor
+```
+
+[doctor 参考](/docs/cli/reference/doctor)说明了健康检查与修复选项。本地管理员账号恢复请使用 [reset-admin-password](/docs/cli/reference/reset-admin-password)。
+
+## 安装命令对比
+
+| 命令 | 用途 |
+| --- | --- |
+| `npm install -g openship` | 全局安装 CLI。 |
+| `npm install openship` | 将 Ship SDK 与 CLI 加入 Node 项目。SDK 导入自 0.8.0 起可用。 |
+| `openship install` | 下载并安装桌面应用。 |
+| `openship install cache` | 检查或管理已缓存的安装下载。 |
+| `openship up` | 以本地服务方式启动 Openship API 与控制台。 |
+| `openship uninstall` | 移除本地安装状态与数据；已部署的应用不受影响，继续运行。 |
+
+在移除或修复安装实例之前，平台要求参见[安装](/docs/getting-started/installation)，命令选项参见[本地安装](/docs/cli/reference#本地安装)。

@@ -1,0 +1,49 @@
+---
+title: Openship CLI
+description: 在终端中部署应用并管理 Openship。
+---
+
+使用 CLI 部署（deploy）代码、查看发布（release）、管理服务，并运维自托管（self-hosted）的安装实例。
+
+## 安装
+
+```bash
+npm install -g openship
+openship --help
+```
+
+需要 Node.js 22 或更高版本。在本地执行 `npm install openship` 后，也可以通过 `npx` 调用该命令。CLI 参考跟随本仓库演进；使用 `--help` 查看你已安装的版本。原生 SDK 模式与 SDK 导入在其正式发布之前，需要使用[预览包](/docs/api/sdk/installation)。
+
+## 连接并部署
+
+启动一个[本地安装](/docs/cli/run)，或连接到现有的安装：
+
+```bash
+openship login \
+  --api-url https://ship.example.com \
+  --dashboard-url https://ship.example.com \
+  --context production
+
+openship project list
+openship init --project proj_123
+openship deploy --watch
+```
+
+`login` 会打开令牌设置页面，要求输入个人访问令牌（personal access token）。`init` 将当前目录关联到某个项目。`deploy --watch` 提交一次部署并跟踪其进度。
+
+## 选择工作流
+
+使用 `openship job`（别名 `jobs`）管理[定时任务](/docs/guides/jobs)、手动运行与日志。
+
+<Cards>
+  <Card title="连接与认证" href="/docs/cli/access" description="管理上下文、令牌与直接发起的 HTTP 请求。" />
+  <Card title="部署并查看发布" href="/docs/cli/deploy" description="部署文件夹或 Git 项目，读取日志，并执行回滚。" />
+  <Card title="管理应用" href="/docs/cli/projects" description="操作项目、服务、域名与目录中的应用。" />
+  <Card title="运维基础设施" href="/docs/cli/self-host" description="管理服务器、备份、邮件与安装设置。" />
+  <Card title="使用原生 SDK 模式" href="/docs/cli/native" description="对显式配置的原生安装运行受支持的命令。" />
+  <Card title="完整命令参考" href="/docs/cli/reference" description="按任务分组收录每一条命令、子命令、参数与选项。" />
+</Cards>
+
+## 脚本与应用代码
+
+使用 `openship --json project list` 获得机器可读的命令输出。CI 配置与退出码处理参见 [automation](/docs/cli/automation)。要从 JavaScript 或 TypeScript 直接调用同样的操作，请使用 [Node.js SDK](/docs/api/sdk)。

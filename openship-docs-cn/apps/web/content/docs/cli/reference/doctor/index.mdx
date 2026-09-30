@@ -1,0 +1,19 @@
+---
+title: doctor
+description: openship doctor 的命令、参数与选项。
+cliGroup: openship doctor
+---
+
+示例请参见 [CLI 总览](/docs/cli)。`--json` 等全局 flag 放在命令之前；参见[全局选项](/docs/cli/reference#全局选项)。
+
+## openship doctor
+
+检查数据库与服务健康状态，并修复损坏的本地数据库
+
+```text
+openship doctor [options]
+```
+
+| 选项 | 含义 |
+| --- | --- |
+| `--fix` | 尝试自动修复数据库（备份 → 自愈 → 重启），全程无交互提示 |

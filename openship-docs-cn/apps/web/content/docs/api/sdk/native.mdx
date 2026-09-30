@@ -1,0 +1,82 @@
+---
+title: 嵌入 OpenShip
+description: 创建原生安装，并通过共享的平台操作进行部署。
+---
+
+当你的 Node 应用自己管理安装时，使用 `createShip()`。它会创建隔离的 worker、存储
+和提供方。原生操作直接调用共享引擎，无需 API HTTP 监听器。
+
+## 创建安装并部署
+
+先[安装 SDK](/docs/api/sdk/installation)，然后把 `OPENSHIP_ENCRYPTION_KEY` 设置为
+一个至少 32 字节的持久密钥。重新打开数据库时要保留该密钥。
+
+```ts title="native.mts"
+import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
+import { createShip, type VerifiedIdentity } from "openship/native";
+
+const encryptionKey = process.env.OPENSHIP_ENCRYPTION_KEY;
+if (!encryptionKey) throw new Error("Set OPENSHIP_ENCRYPTION_KEY");
+const sessions = new Map<string, VerifiedIdentity>();
+const stateDirectory = resolve("./ship-state");
+const ship = await createShip({
+  instanceId: "my-product",
+  stateDirectory,
+  storage: { driver: "pglite", dataDir: resolve(stateDirectory, "database") },
+  encryptionKey,
+  runtime: "bare",
+  routing: "none",
+  policy: { allowHostExecution: true },
+  administration: true,
+  identity: { resolve: async (assertion: string) => sessions.get(assertion) ?? null },
+});
+
+try {
+  if (!ship.operator) throw new Error("Host administration is required for this example");
+  const person = await ship.operator.ensureIdentity({
+    issuer: "my-product",
+    subject: "customer-123",
+    email: "customer@example.com",
+  });
+  const assertion = randomUUID();
+  sessions.set(assertion, { user: person.user, sessionId: assertion });
+  await ship.start();
+  const customer = await ship.scope({
+    identity: assertion,
+    organizationId: person.personalOrganizationId,
+  });
+  const submitted = await customer.deploy({
+    name: "generated-app",
+    source: { type: "files", files: { "index.html": "<h1>Hello</h1>" } },
+  });
+  const outcome = await customer
+    .deployment(submitted.deployment_id)
+    .wait({ timeoutMs: 60_000 });
+  if (!outcome.success) throw new Error(outcome.message ?? outcome.status);
+  console.log(submitted.project_id, outcome.status);
+} finally {
+  await ship.close({ mode: "drain" });
+}
+```
+
+这里使用了一个演示用的会话映射。嵌入方应用应当通过自己的认证服务验证断言
+（assertion）；参见[身份与作用域](/docs/api/sdk/identity)。
+
+## 运行时选择
+
+| 选择 | 行为 |
+| --- | --- |
+| `bare` 搭配 `routing: "none"` | 构建和管理本地工作负载，而无需设置托管路由。静态发布没有公开 URL。 |
+| `bare` 或 `docker` 搭配托管路由 | 使用现有的本地运行时和边缘提供方。主机设置需要显式的执行策略。 |
+| 已注册的服务器或 Cloud 提供方 | 使用已配置的基础设施及其能力检查。参见[兼容性](/docs/api/sdk/compatibility)。 |
+
+`allowHostExecution: true` 允许在主机上构建。组织作用域为操作授权；它们不会沙箱化
+生成的应用代码。请选择适合你的应用所接受工作负载的提供方。
+
+## 继续阅读
+
+- [生命周期与配置](/docs/api/sdk/lifecycle)：存储、密钥、启动与关闭。
+- [用户与组织](/docs/api/sdk/identity)：已验证身份与租户作用域。
+- [可运行的示例](/docs/api/sdk/examples)：部署两次、重新打开状态并删除项目。
+- [操作员参考](/docs/api/sdk/operator)：可信的安装管理。

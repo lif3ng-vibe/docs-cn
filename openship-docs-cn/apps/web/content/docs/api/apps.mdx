@@ -1,0 +1,284 @@
+---
+title: 应用目录
+description: 浏览模板、准备安装并配置应用。
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+一个**应用**（app）是一个 JSON 定义，可一键将一组容器安装为一个项目——镜像、连线、生成的密钥、精选设置表单和连接卡片都已在其中描述清楚。
+本 API 覆盖浏览目录、安装、添加你组织自己的自定义应用，以及随后读取或更新已安装的应用。
+
+在控制台（dashboard）中，它对应**应用**（Apps）标签页。定义格式见[应用目录 JSON 参考](/docs/reference/app-catalog)，创作工作流见[添加应用](/docs/guides/add-an-app)。
+
+这些操作在受支持的自托管与 Cloud 提供方上均可用。固定的组织范围需要直连一套兼容的 Cloud 连接；参见 [Cloud 兼容性](/docs/api/sdk/compatibility#cloud)。
+
+## 列出目录
+
+```
+GET /api/apps/catalog
+```
+
+运行时目录由三层叠加而成：构建时**打包内置**的副本、从 Openship 仓库实时拉取的精选目录（10 分钟 TTL 刷新，stale-while-revalidate 策略），再加上你组织的自定义应用。拉取失败或实例离线时，会继续提供上次成功获取的副本，因此叠加层永远不会破坏目录。
+
+<Callout title="叠加层的信任模型" type="info">
+叠加层通过 HTTPS 从 Openship 自己的仓库拉取——由仓库方精选维护，该渠道**没有签名**机制，也没有任何用户上传——并且**每一条目在驱动安装前都会经过形状校验**，使用与内置集合相同的严格校验器。你组织的自定义应用则是另一个单独的、永远不经验证的渠道。
+</Callout>
+
+由于叠加层可能**领先于你的实例**，条目带有兼容性标志：
+
+<TypeTable
+  type={{
+    available: { type: 'boolean', description: 'false → 显示为“即将推出”且不可安装。在服务端强制执行，而不只在 UI 层面。' },
+    verified: { type: 'boolean', description: '经过精选与审核。自定义应用永远为 false——信任基于来源建立，绝不会从 JSON 中读取。' },
+    custom: { type: 'boolean', description: '组织上传的应用为 true。' },
+    updateAvailable: { type: 'boolean', description: '上游存在更新的定义，但需要更新的 Openship，因此当前仍提供内置副本。依然可安装。' },
+    requiresUpdate: { type: '{ minVersion?: string }', description: '该应用在此实例上没有可运行的副本。返回引导式占位条目而非定义本身，并拒绝安装。' },
+  }}
+/>
+
+每个条目还带有 `hosting`（`"experimental"` 表示该技术栈可以运行但在上游较重或尚未达到生产级），少数声明了要求的应用还有 `minResources`——即宿主机最低要求，可在安装前通过 [host-fit 检查](#检查目标)确认。标记为 `unlisted` 的应用有意不出现在此列表中：它们仍可按 id 安装，经由其他应用的向导进入。
+
+## 获取单个应用
+
+```
+GET /api/apps/catalog/:id
+```
+
+返回完整定义——服务、配置字段、端点、设置、连接方式。精选应用优先于自定义应用：自定义应用永远无法遮蔽已验证的 id（上传时同样强制执行）。
+
+这里**只有配置元数据，绝无密钥**——生成的值在安装时才生成，因此此刻没有任何敏感内容可返回。
+
+响应在 `data` 之外还带有 `draft`：同一应用的、属于本组织的**尚未发布、从未部署过**的草稿（如果存在）。
+
+<Callout title="安装会采用未发布的草稿" type="warn">
+对同名应用的安装请求会**采用该草稿**，而不是从零开始。因此客户端必须渲染草稿中存储的配置，而不是应用的默认值——否则“安装”操作会悄悄改变操作者上次设置的内容。
+</Callout>
+
+## 检查目标
+
+```
+GET /api/apps/catalog/:id/host-fit?deployTarget=server&serverId=<id>
+```
+
+在自托管目标上，该方法将机器情况与应用定义的 [`minResources`](/docs/reference/app-catalog) 建议值进行比较。在 Openship Cloud 上，它会根据当前套餐预览工作区的资源分配。传入 `projectId` 可将草稿中保存的资源设置一并纳入；要求拥有该项目的访问权限。
+
+<TypeTable
+  type={{
+    minResources: { type: '{ memoryMb?, cpuCores? } | null', description: '定义中声明的宿主机建议值，或为 null。Cloud 分配的检查独立于此字段进行。' },
+    capacity: { type: '{ cpuCores, memoryMb, source }', description: '机器上报的信息。source 为 "docker" | "local" | "unknown"；"unknown" 表示无法测得。' },
+    fit: { type: '{ ok, memory?, cpu? }', description: '仅在实际测得不足时才为 ok:false。每个出现的维度都带有 { needed, available }。' },
+    cloud: { type: '{ resources, status, message? }', description: '在 Cloud 上：计算得出的 CPU、内存与磁盘分配，附带 ready、upgrade 或 unavailable 状态。upgrade 会附带套餐不足的具体情况。仅是预览，并非容量预留。' },
+  }}
+/>
+
+```json
+{
+  "data": {
+    "minResources": { "memoryMb": 8192, "cpuCores": 4 },
+    "capacity": { "cpuCores": 2, "memoryMb": 2048, "source": "docker" },
+    "fit": {
+      "ok": false,
+      "memory": { "needed": 8192, "available": 2048 },
+      "cpu": { "needed": 4, "available": 2 }
+    }
+  }
+}
+```
+
+<Callout title="自托管建议仅供参考" type="info">
+实测到的资源不足永远不会阻塞自托管安装或重新部署。部署进入队列前会再次检查 Cloud 套餐额度，提供方在分配资源时也会实时检查命名空间容量。参见[主机要求](/docs/reference/app-catalog)。
+</Callout>
+
+服务器 ID 必须在当前组织内可访问。无法探测的 Cloud 目标与机器可能报告 `capacity.source: "unknown"` 且 `fit.ok: true`；这表示没有可用的实测容量比较，并不代表宿主机容量已得到验证。
+
+## 安装应用
+
+对于 `template` 类型的应用，安装会创建或更新一个项目草稿并返回 `projectId`。为该项目提交一次[部署](/docs/api/deployments)即可运行它。`flow` 类型的应用则返回 `flowHref`，用于其设置向导。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const result = await ship.apps.install({
+  templateId: "ghost",
+  name: "my-blog",
+  routes: [
+    {
+      service: "ghost",
+      port: 2368,
+      mode: "custom",
+      customDomain: "blog.acme.com",
+    },
+  ],
+});
+console.log(result);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/apps" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "templateId": "ghost",
+    "name": "my-blog",
+    "routes": [
+      { "service": "ghost", "port": 2368, "mode": "custom", "customDomain": "blog.acme.com" }
+    ]
+  }'
+```
+
+</Tab>
+</Tabs>
+
+<TypeTable
+  type={{
+    templateId: { type: 'string', description: '要安装的目录应用 id。', required: true },
+    name: { type: 'string', description: '项目名称。默认值来自应用定义。' },
+    config: { type: 'Record<string, string>', description: '应用 configFields 的取值，以环境变量键为键。生成的密钥由服务端填入。' },
+    routes: { type: 'RouteChoice[]', description: '你决定公开的每个端点各一条记录。最多 40 条。' },
+  }}
+/>
+
+每个 `routes` 条目：
+
+<TypeTable
+  type={{
+    service: { type: 'string', description: '应用定义中的服务名称。', required: true },
+    port: { type: 'integer', description: '此选项所路由的容器端口（1–65535）。', required: true },
+    mode: { type: '"port" | "free" | "custom"', description: 'port = 无公开路由，只发布宿主机端口。free = 托管的 *.opsh.io 子域名（需要 Openship Cloud）。custom = 你自己拥有的主机名。', required: true },
+    domain: { type: 'string', description: 'free 模式：子域名 slug。省略则使用应用的默认标签。' },
+    customDomain: { type: 'string', description: 'custom 模式：你自己拥有的主机名。此模式下必填。' },
+  }}
+/>
+
+<Callout title="没有 routes 就没有域名" type="warn">
+公开主机名**只**来自 `routes`。没有条目的服务就**没有公开路由**——绝不会替你凭空发明主机名。完全省略 `routes` 时，应用仅以端口方式安装，对于数据库或内部工具来说，这完全是合理的结果。
+</Callout>
+
+## 自定义应用
+
+```
+POST   /api/apps/custom
+GET    /api/apps/custom
+DELETE /api/apps/custom/:appId
+```
+
+`POST` 接受完整的[应用定义](/docs/reference/app-catalog)作为请求体。此处对请求体只做一道把关——“必须是一个 JSON 对象”——权威校验在服务内部运行，采用与精选目录**相同的严格检查**，包括形状以及所有引用一致性规则。
+
+会强制执行四点约束：
+
+- **永远未经验证**。`verified` 与 `available` 由服务器设置，声明 `"verified": true` 的文件会被忽略。
+- **`kind` 只能是 `template`**。flow 类型的应用会被拒绝。
+- **`id` 不能遮蔽内置应用**。
+- **校验错误会连同出错详情一起返回**——当定义针对的目录 `schemaVersion` 新于实例支持的版本时，还会返回一条独立的错误消息。
+
+自定义应用通过普通的服务流水线安装，与你自行部署的任何项目一样受相同的容器内边界约束——不引入任何新特权。
+
+## 精选设置
+
+```
+GET   /api/projects/:id/app-settings
+PATCH /api/projects/:id/app-settings
+```
+
+`GET` 返回应用的设置 schema 及当前取值，客户端无需了解应用本身即可渲染表单。`PATCH` 执行一次安全的环境变量合并——只有你发送的键会被改动：
+
+<TypeTable
+  type={{
+    changes: { type: '{ service, key, value }[]', description: '要应用的设置。service 为 docker 服务/别名，key 为精选设置的环境变量键。' },
+  }}
+/>
+
+空字符串的语义因字段类型而异，当表单重复提交未被修改的输入时这一点很重要：
+
+| 字段 | `value: ""` 的含义 |
+|---|---|
+| 非密钥 | 清除覆盖值，恢复为应用默认值 |
+| 密钥 | 保持已存储的值**不变** |
+
+定义中标记为 `requiresRedeploy` 的字段只在重新部署后才会生效；响应中和控制台都会标明这一点。
+
+## 连接详情
+
+```
+GET /api/projects/:id/app-connection
+```
+
+将应用的连接输出对齐到正在运行的服务——公开 URL、生成的密钥、拼装好的连接字符串——并返回可直接使用的结果，包括所有带标签的[变体](/docs/reference/app-catalog#connection)，例如公开访问版本与内网访问版本。
+
+<Callout title="该路由刻意要求 project:write" type="warn">
+它会返回**完全解密的**凭据——服务角色 JWT、内嵌在 `postgres://…` URL 中的数据库密码——这些会绕过数据库的行级安全。环境变量列表在 `project:read` 权限下可以掩码密钥；而此接口做不到，因此它被有意放在读取层级之上。只读授权或 `project:read` 的 MCP 令牌绝不允许窃取实时凭据。请将该响应当作密钥材料对待。
+</Callout>
+
+## MCP 暴露
+
+本模块中的每条路由也都作为 [MCP](/docs/api/mcp) 工具暴露，AI 智能体可以借此浏览目录、安装应用，并读取其设置与连接详情。工具暴露采用**自愿加入的白名单**机制——只有其 spec 声明了 `mcp` 块的路由才会成为工具——模块级硬拒绝列表只包含 `tokens`、`auth` 和 `mcp`。`apps` 不在其中。
+
+每次 MCP 调用都会**重新检查调用方的权限**，因此[操作表](#操作)中的权限标注原样适用。实际含义如下：
+
+| 智能体令牌 | 可以做什么 |
+|---|---|
+| 只读（`project:list` / `project:read`） | 浏览目录，读取已安装应用的设置 schema |
+| `project:write` | 还可以**安装应用**并**读取解密后的连接凭据** |
+
+<Callout title="刻意限定智能体令牌的权限" type="warn">
+由于 `app-connection` 是一个工具且会返回实时凭据，拥有 `project:write` 的智能体令牌就能读取已安装应用的数据库密码与服务角色密钥。如果你打算把令牌交给只是需要查看情况的智能体，请签发一个只读令牌。
+</Callout>
+
+## 错误
+
+<Callout title="400 — 拒绝安装" type="warn">
+安装会校验应用与你的路由选择，并在消息中给出原因。常见原因：应用仍被标记为即将推出（`available: false`）；需要更新的 Openship（`requiresUpdate`，以 *Requires Openship ≥ X* 的形式报告）；应用 id 未知；某个 `routes` 条目指向应用未声明的服务，或指向该服务不提供的端口；两个 `routes` 条目指向同一服务与同一端口；或发送了 `mode: "custom"` 却缺少 `customDomain`。缺少 `templateId` 同样会被拒绝。
+</Callout>
+
+<Callout title="400 — 应用定义无效（自定义上传）" type="warn">
+上传的 JSON 未通过严格 schema 校验，消息中带有出错详情——非法枚举、缺少必填字段，或悬空引用（例如某个 `service` 没有任何已声明的服务与之匹配）。三个非形状类拒绝各有独立消息：`flow` 应用、遮蔽内置应用的 `id`，以及针对比本实例支持的目录 `schemaVersion` 更新版本的定义。
+</Callout>
+
+<Callout title="400 — 设置被拒绝" type="warn">
+来自 `PATCH /app-settings`：项目不是应用或未声明任何设置（*This app has no configurable settings*）；某条修改指定了应用未定义的键（*Unknown setting: service.KEY*）；`required` 字段被清空；取值未通过 `pattern` 或数值边界检查；或指定的服务在该项目中不存在。
+</Callout>
+
+<Callout title="403 — 需要 Openship Cloud" type="error">
+某条 `routes` 条目在未连接到 Openship Cloud 的实例上使用了 `mode: "free"`（托管的 `*.opsh.io` 子域名）。这些错误带有 `CLOUD_REQUIRED_*` 代码，客户端可据此呈现连接引导而不是死路一条。请改用 `mode: "custom"` 加你自己的主机名，或用 `mode: "port"` 表示不设公开路由。
+</Callout>
+
+<Callout title="404 — 未知应用" type="error">
+当 id 既不是精选应用也不是你组织的自定义应用时，`GET /api/apps/catalog/:id` 返回 `{ "error": "Unknown app" }`。可用 `GET /api/apps/catalog` 列出有效 id。
+</Callout>
+
+## 相关指南
+
+- [应用目录 JSON](/docs/reference/app-catalog) —— 应用定义中的每个字段
+- [添加应用](/docs/guides/add-an-app) —— 提交精选应用，或上传自定义应用
+- [服务 API](/docs/api/services) —— 已安装应用所由构成的服务
+- [项目 API](/docs/api/projects) —— 应用安装到的项目
+
+## 操作
+
+{/* api-operations:start */}
+
+### 连接、存储与应用
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 读取已安装目录应用的精选设置。 | `projects.getAppSettings(id)` | `GET /api/projects/:id/app-settings`<br />`project:read` |
+| 提交精选应用设置的更改。 | `projects.updateAppSettings(id, input)` | `PATCH /api/projects/:id/app-settings`<br />`project:write` |
+| 读取应用连接详情；其中可能包含凭据，需要写权限。 | `projects.getAppConnection(id)` | `GET /api/projects/:id/app-connection`<br />`project:write` |
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 列出可用的应用模板。 | `apps.listCatalog()` | `GET /api/apps/catalog`<br />`project:list` |
+| 列出组织的自定义应用定义。 | `apps.listCustom()` | `GET /api/apps/custom`<br />`project:list` |
+| 校验并保存一个自定义应用定义。 | `apps.saveCustom(input)` | `POST /api/apps/custom`<br />`project:write` |
+| 创建或更新安装草稿并返回其项目。 | `apps.install(input)` | `POST /api/apps`<br />`project:write` |
+| 读取模板及其可访问的安装草稿。 | `apps.getCatalogEntry(id)` | `GET /api/apps/catalog/:id`<br />`project:list` |
+| 预览宿主机建议或 Cloud 套餐适配情况，可包含草稿保存的资源设置。 | `apps.hostFit(id, input?)` | `GET /api/apps/catalog/:id/host-fit`<br />`project:list` |
+| 移除一个自定义目录定义。 | `apps.removeCustom(id)` | `DELETE /api/apps/custom/:appId`<br />`project:write` |
+
+{/* api-operations:end */}

@@ -1,0 +1,148 @@
+---
+title: 部署向导
+description: 在这一屏选择应用的运行位置、检查检测到的构建配置，并看着它上线。
+---
+
+部署向导（deploy wizard）是你在 [Library](/docs/dashboard/library) 中选定源（GitHub 仓库、本地文件夹、上传的文件夹或模板）之后进入的界面。它的任务就是回答三个问题并动手干活：**该部署到哪里？**、**检测到的构建配置看着对吗？** 以及**上线了吗？**
+
+向导位于 `/deploy/<source>`。当你按下 **Deploy**，它会把工作交接给 `/build/<id>` 的实时构建界面，那里持续流出日志直到你的应用上线。
+
+<Callout title="桌面端与浏览器端的差异">
+最开始的 **Deploy target** 一屏只出现在**桌面应用**里，那时你可以在自己的服务器、Openship Cloud 和本机之间做选择。在浏览器中打开的自托管或云端控制台上，向导会直接跳到 **Config**。
+</Callout>
+
+## 第 1 屏——部署目标（仅桌面应用）
+
+这是"你想让它跑在哪？"的一屏。标题为 **"Where do you want to deploy?"**，每个可部署的位置各对应一张卡片。
+
+### 目标卡片
+
+| 卡片 | 含义 |
+|---|---|
+| **Your server**（按名称显示） | 通过 SSH 部署到某台已连接的服务器。只有一台时按名称显示；多台则折叠成一张 **Your servers** 卡片，展开后出现选择器。 |
+| **Openship Cloud** | 部署到托管的云基础设施——无需设置服务器。如果你尚未连接 Cloud，该卡片会说明这一点，并在你继续时引导你完成连接。 |
+
+如果你以自托管方式运行 OpenShip，卡片下方还有一个 **Add your own server** 按钮。它会在向导内直接打开**添加服务器**表单（名称、IP 地址、端口、用户名和认证方式——密码、SSH 密钥或 agent）；保存后新服务器会自动被选中，你不会丢失所在位置。完整流程参见[自定义服务器](/docs/guides/custom-servers)。
+
+<Callout title="在自己的机器上构建或运行" type="info">
+这个选择器里没有单独的"本地机器"目标卡片——两张卡片就是你的服务器和 Openship Cloud。在自己的电脑上执行**构建**是作为 **This Machine** 构建选项单独提供的（见下文 *Advanced*），当你有一台性能不错的笔记本和一台小 VPS 时，这是最快的路径。
+</Callout>
+
+### Power——云资源档位
+
+当**Openship Cloud** 被选中时，右侧会出现 **Power** 面板。你在这里为应用选择运行机型的规格：
+
+| 档位 | 适合 | 资源 |
+|---|---|---|
+| **Micro** | 业余项目、低流量 | 0.25 vCPU · 256 MB RAM · 4 GB disk |
+| **Low**（默认） | 小应用、轻量 API | 0.5 vCPU · 512 MB RAM · 8 GB disk |
+| **Medium** | 大多数生产应用 | 1 vCPU · 1 GB RAM · 16 GB disk |
+| **High** | 重负载、快速构建 | 2 vCPU · 2 GB RAM · 32 GB disk |
+| **Custom** | 自己动手调 | 打开对话框设置 vCPU、RAM（MB）和磁盘（GB） |
+
+<Callout title="静态站点不需要档位" type="info">
+如果项目只是一堆静态文件（没有常驻服务器），就没有机器规格可言——摘要会显示一个 **Static** 芯片，而非资源档位。
+</Callout>
+
+### Advanced（服务器目标）
+
+选定某台服务器后会出现 **Advanced** 区（默认折叠——多数人从不展开）。它的摘要行显示当前的构建位置；展开后包括：
+
+- **Runtime**——应用在服务器上的隔离方式。
+  - **Sandboxed**（推荐）——在隔离容器中运行；即便被攻破也触及不到宿主机。开销极小。
+  - **Direct**——直接在宿主机上运行。开销最低，但一旦被攻破即拥有完整的宿主机访问权。选择它会显示一条安全提示（在小机器上还会附一条内存方面的提示）。
+- **Build location**——**This Machine**（本地构建，再传输产物——在强悍的机器上更快）或 **Remote**（在部署目标上构建——本机性能受限时最佳）。
+- **Clone location**——用于沙箱化/compose 服务器部署：**On your device** /
+  **On Openship**（先 clone 再上传；到处可用）或 **On the server**（在服务器上 clone，不上传；大仓库首选）。
+
+<Callout title="转发 git 身份现在是一个全局设置，不再是每次部署的复选框" type="info">
+旧的逐次部署 "Forward my git credentials" 开关已移到一个面向操作者的总开关——
+**Settings → Clone credentials → "Forward my git identity to build servers."** 打开一次之后，每次服务器 clone 都通过 SSH 使用你本地的 `gh`（服务器上不存任何东西）。完整的 clone 凭据链参见[私有仓库的 Git 认证](/docs/guides/git-authentication)。
+</Callout>
+
+### 设为默认并继续
+
+勾选 **"Save as my default for every deployment"** 即可记住这个目标（和服务器），供下次使用——之后你可以在 Settings 里修改，或在本次选择器中按次修改。按 **Continue** 进入 Config。
+
+<Callout title="回到这里很快">
+部署过一次之后，向导会记住你上一次的选择，直接落在 **Config**，顶部有一条紧凑的 **Build & deploy** 摘要栏。点击该栏（带一支铅笔图标）即可重新打开这个选择器做一次性修改。
+</Callout>
+
+## 第 2 屏——Config
+
+这一屏用于确认 OpenShip 检测到的内容，并设置它猜不出来的部分。主栏放设置项；右侧的吸附边栏放仓库信息、域名、**Deploy** 按钮和一张构建摘要。对大多数应用而言，检测到的默认值就是对的，你可以直接按 **Deploy**。
+
+### 主栏
+
+这里渲染什么，取决于 OpenShip 检测到的项目类型：
+
+- **App**——框架选择器和构建设置（install 命令、build 命令、输出目录）。
+- **Docker**——单一 Dockerfile 项目；你主要确认端口。
+- **Services**（Docker Compose）——解析出的各个服务及其共享环境。参见[用 Compose 跑多服务](/docs/guides/compose-multi-service)。
+- **Monorepo**——一个工作区表头，每个子应用一张卡片。
+
+再往下，多数流程还会显示 **Environment Variables**（可折叠——参见[环境变量](/docs/guides/environment-variables)）、**Project Name** 字段，以及（当检测到路由规则时）一个高级 **Routing** 区。
+
+### 边栏
+
+**Repository**——显示 `owner/repo` 和一个分支下拉框。溢出菜单提供 **Copy clone token**（一条携带短时令牌、拿来即可运行的 `git clone`，用于 GitHub-App/Cloud 仓库）。本地文件夹源以 `local` 作为 owner 显示，没有溢出菜单——没有可 clone 的远端仓库。
+
+**Domain**——**Domain** 卡片下的一行或多行域名（按 `+` 即 **Add domain**）。每行要么是你实例基础域名上的**免费子域名**（subdomain），要么是**自定义域名**（custom domain），外加暴露的**端口**（服务器应用）或**静态路径**（静态应用）。要用 HTTPS 把应用挂到自己的地址上，参见[自定义域名](/docs/guides/custom-domains)。
+
+<Callout title="免费域名与服务需要 Cloud" type="warn">
+免费的 `.<your-base-domain>` 子域名经由 Openship Cloud 路由。如果你在**自己的服务器**上使用免费域名部署（或在 Compose 服务上暴露一个），向导会要求你先连接 Openship Cloud 或改用自定义域名。自定义域名无需 Cloud 即可使用。
+</Callout>
+
+**Deploy Summary**——边栏底部的只读回顾卡。对应用类项目，它列出**域名**、**Build Location**（Local Machine / Openship Cloud / Server）、**Framework**，以及检测到的 **Install** / **Build** / **Output** 命令。对 Docker/Compose 项目，则显示 **Runtime**/**Stack** 和 **Port**。
+
+### Deploy 按钮
+
+边栏中的主按钮。显示为 **Deploy**（带火箭图标），启动期间切换为 **Deploying…**。按下它即开始构建并跳转到实时构建界面。
+
+在构建开始之前，有几个检查可能打断流程——它们都不是报错，只是向导在索要它需要的那一样东西：
+
+- 在**尚未连接 Cloud** 的情况下部署**到 Openship Cloud** → 引导你去连接。
+- 在**自己的服务器上使用免费域名**（包括 Compose 服务）→ 引导你去开通 Cloud 或改用自定义域名。
+- **带端口但无公开域名的 Compose 服务** → 显示"没有公开可达的服务"警告，附 **Review Services** / **Deploy Anyway**。
+- **无法 clone 私有仓库**（没有 `gh`、没有 GitHub App、没有令牌） → 弹出凭据对话框，可选择安装 App、粘贴令牌或改为本地构建。
+
+<Callout title="只改配置不部署">
+当你从项目的 **Configuration** 标签（经由 *Edit*）进入这一屏时，按钮改为 **Save changes** 而非 **Deploy**——它把配置写回项目并返回那个标签。之后的部署就是项目上单独的 **Redeploy** 操作。参见[重新部署与回滚](/docs/guides/rollback-redeploy)。
+</Callout>
+
+## 实时构建界面
+
+按下 **Deploy** 后你会来到 `/build/<id>`——注视部署进程的一屏。它由三部分组成。
+
+### 标题与进度
+
+标题反映实时状态：**Deploying...**，随后是 **Deployment Successful**、**Deployment Ready With Warnings**、**Deployment Failed** 或 **Deployment Cancelled**。其下，一条横向**步骤追踪条**（step tracker）随每个阶段完成而点亮（clone、build、deploy 等），当前步骤带旋转指示器，失败则标红。
+
+### Build Terminal
+
+一个实时终端，逐行流出构建输出——像隔着玻璃看烤箱。你在这里读到的是真正发生的事。服务器应用部署成功后，同一面板会切换为 **Production Logs**，让你观察运行中的应用；部署失败则会加一条 "See logs for issue details" 提示。更多内容参见[日志与监控](/docs/guides/logs-monitoring)。
+
+### 部署详情与操作
+
+右侧边栏总结这次部署：**Status**、**Instance**（Openship Cloud /
+Server / 本机）、**Build**（本地 / 云端 / 服务器构建）、**Build time**、
+**Framework**、**Branch** 和 **Domain**。其下的操作按钮随状态变化：
+
+| 状态 | 按钮 |
+|---|---|
+| 构建中 / 部署中 | **Stop Deployment** |
+| 失败或已取消 | **Redeploy**；若项目已存在则还有 **Go to project** |
+| 已就绪 | **Open Dashboard**——页眉里另有 **View dashboard** 和 **Visit Site** |
+
+<Callout title="如果构建失败" type="error">
+阅读 Build Terminal 里最后几行——那才是真正的原因。多数首次失败是缺 build 命令、缺环境变量，或应用监听了错误的端口。修好之后按 **Redeploy**。参见[故障排查 → 部署](/docs/troubleshooting/deployments)。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="从仓库一步步走进这个向导的路径。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把应用挂到自己的地址上，自动配 HTTPS。" />
+  <Card title="自定义服务器" href="/docs/guides/custom-servers" description="通过 SSH 接入自己的机器作为部署目标。" />
+  <Card title="休眠模式与资源" href="/docs/guides/sleep-mode-resources" description="部署之后调节云资源档位与休眠行为。" />
+</Cards>

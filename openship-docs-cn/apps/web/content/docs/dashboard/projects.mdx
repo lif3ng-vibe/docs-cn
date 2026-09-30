@@ -1,0 +1,95 @@
+---
+title: 项目
+description: 项目列表与九个标签页的项目详情页——你在这里找到部署过的每一个应用，并管理它的域名、部署、配置、日志和备份。
+---
+
+一个**项目**（project）就是一个 OpenShip 知道如何构建和运行的应用。这里是所有已部署应用的集合，你可以钻进其中任何一个调整它的运行方式。共有两个界面：**Projects 列表**（一眼看全）和**项目详情**页（单个项目，九个标签页）。
+
+## Projects 列表
+
+从左侧导航打开 **Projects**。这个界面是一份可直接浏览的清单，列出工作区内的每个项目——每个项目占一行。
+
+每行从左到右依次显示：应用图标（其 favicon 或框架 logo）、**名称**及其在运行的版本徽标、主**域名**、检测到的**框架**、托管位置（**Cloud**、按名称显示的某台 **Server**，或 **Local**）、来源（GitHub 仓库或本地文件夹）、构建形态（**Services**、**Static** 或 **Standalone**）、距上次变更多久，以及一个**状态胶囊**（Live、Building、Failed、Draft 等）。点击行内任意位置即可打开该项目。
+
+### 新建项目
+
+**Create Project** 按钮（右上角）会把你带到 **Library**，在那里选择一个 GitHub 仓库、本地文件夹或模板进行部署。参见[从 GitHub 部署](/docs/guides/deploy-from-github)与[部署本地文件夹](/docs/guides/deploy-local-folder)。
+
+### 搜索
+
+当项目超过三个时，列表上方会出现一个搜索框。随输入即时按**名称**、**slug** 和**框架**过滤。
+
+### 按部署目标过滤
+
+当你的项目分布在多个部署目标上时，右栏会出现一张 **Filter by target** 卡片。它按运行位置对项目分组——**All projects**、**Openship Cloud**、每台已连接**服务器**（按其名称）和 **Local**——每项旁带计数。如果你还没有托管在服务器上的项目，该栏会改为显示 **Connect a server** 引导（参见[自定义服务器](/docs/guides/custom-servers)）。
+
+## 项目详情页
+
+点击一个项目会打开其详情页，默认落在 **Overview** 标签。每个标签的布局一致：顶部是面包屑（**Dashboard / _项目名_ / _标签页_**）和标签标题，主栏是标签内容，右侧是吸附栏，内含项目卡片和标签导航。
+
+右栏的**项目卡片**显示当前**状态**、**Production** URL（或 **Local** 地址）以及通往在站点的跳转链接，还有 **Last Deploy** 时间。当项目拥有多个域名时，域名切换器可以让你选择卡片和 Overview 分析数据反映哪个域名。
+
+### 环境切换器
+
+右上角的胶囊显示当前**环境**（environment）——例如 **Production**——及其 git 分支。点击它可在环境之间切换，或用旁边的 **+** 按钮从某个分支拉起一个新环境——选好分支后，OpenShip 会创建与之匹配的环境（`main` 或 `master` 分支对应 production，其余为预览环境）。**Manual environment** 允许你自己命名。完整演示：[预览环境](/docs/guides/preview-environments)。
+
+<Callout title="项目操作去哪儿了？" type="info">
+切换器旁的三点（**⋮**）菜单是**帮助菜单**——Contact Support、Report Issue、Send Feedback、Documentation、Join Community。真正改变项目状态的操作（暂停/启用、删除项目）在 **Advanced** 标签里，下文有述。
+</Callout>
+
+## 九个标签页
+
+每个标签在 `/projects/{id}/…` 下都有自己的 URL，可以直接链接过去。**仅服务型**（services-only）项目（多个 compose 服务、没有单一 app）会隐藏 **Configuration** 标签，因为每个服务都在 **Services** 下自带构建配置。
+
+### Overview
+
+`…/overview`——项目的首页。展示所选域名的实时分析数据，外加两张摘要卡：**Infrastructure**（在哪里、以何种方式运行）和 **Source & CI/CD**（已连接的仓库与部署设置）。从未成功部署过的项目在这里显示一块聚焦的"准备部署"界面。参见[日志与监控](/docs/guides/logs-monitoring)。
+
+### Services
+
+`…/services`——面向多服务（docker-compose / monorepo）项目。列出每个服务，可对其分别执行启动、停止、重启和配置。参见[Compose 与多服务](/docs/guides/compose-multi-service)。
+
+### Domains
+
+`…/domains`——给项目挂上网址、预览所需的 DNS 记录、做验证，并管理 SSL。参见[自定义域名](/docs/guides/custom-domains)与[Domains API](/docs/api/domains)。
+
+### Deployments
+
+`…/deployments`——完整的部署历史。该项目的每一次构建及其状态，以及**重新部署**（redeploy）最新版本或**回滚**（rollback）到较早版本的控制项。参见[回滚与重新部署](/docs/guides/rollback-redeploy)。
+
+### Source
+
+`…/source`——已连接的 git 仓库：从哪个仓库、哪个分支部署，最近的提交，以及每次推送时触发重建的**自动部署**（auto-deploy）开关。上传/本地项目在这里显示为"连接仓库"引导。参见[推送即自动部署](/docs/guides/auto-deploy)。
+
+### Configuration
+
+`…/runtime`——界面中显示为 **Configuration**。单一应用项目如何构建和运行的只读摘要：框架、包管理器、运行时隔离、端口，以及安装 / 构建 / 输出 / 根目录设置。**Edit** 按钮会重新打开部署向导来修改其中任何一项。项目的**环境变量**（environment variables）也在这里编辑。参见[环境变量](/docs/guides/environment-variables)与[休眠模式与资源](/docs/guides/sleep-mode-resources)。
+
+<Callout title="旧链接依然有效" type="info">
+Configuration 标签的路由 ID 是 `runtime`。更早的 `…/settings` 和 `…/build` URL 会重定向到这里，正如 `…/general` 映射到 Overview、`…/git` 映射到 Source 一样。
+</Callout>
+
+### Logs
+
+`…/logs`——项目的实时输出。在 **Terminal** 视图（流式运行时日志）和 **Server** / **Requests** 视图（HTTP 请求日志）之间切换。在多服务项目上，你可以选择查看哪个服务的日志。参见[日志与监控](/docs/guides/logs-monitoring)。
+
+### Backup
+
+`…/backup`——安排与管理备份：选择一个备份**目标**（destination），为每个服务设定备份**策略**（policy），并浏览**最近运行**以执行恢复，或将某个快照保护起来免遭清理。参见[备份与恢复](/docs/guides/backups-restore)。
+
+### Advanced
+
+`…/advanced`——项目级操作与危险区。打开后首先是**路由规则**（route rules）编辑器，随后是 **Project Info** 摘要和 **Project Status** 卡片，其上的 **Disable** / **Enable** 按钮用于暂停或恢复项目。
+
+**路由规则**为某个域名或路径前缀应用边缘策略，在 OpenResty 边缘（自托管）执行：按客户端的**速率限制**（requests/sec + burst）、**封禁**（IP、CIDR、国家、user-agent、空 user-agent）、**访问**允许/拒绝清单与 HTTP 方法允许清单，以及**防盗链**保护（允许的 referer）。变更实时推送到边缘——无需 reload 或重新部署。
+
+底部红色的 **Danger Zone** 放着 **Delete Project**。完整删除会永久移除该项目的部署记录、域名、环境变量和分析数据。在**自托管**实例上你还会得到一个**仅移除记录**（record-only）选项：丢弃 OpenShip 对该项目的记录，但**保留在运行的工作负载、其数据以及服务器上的 manifest**——以后可以重新导入。（Cloud 项目始终是完整删除。）
+
+## 相关指南
+
+<Cards>
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="连接仓库并将其上线。" />
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="把自己的域名指向项目，自动配 HTTPS。" />
+  <Card title="预览环境" href="/docs/guides/preview-environments" description="从切换器为每个分支拉起一个环境。" />
+  <Card title="回滚与重新部署" href="/docs/guides/rollback-redeploy" description="再发一次最新构建，或回滚到较早版本。" />
+</Cards>

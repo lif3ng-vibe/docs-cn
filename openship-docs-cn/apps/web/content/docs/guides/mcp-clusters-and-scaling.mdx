@@ -1,0 +1,216 @@
+---
+title: 通过 MCP 进行集群与扩缩容
+description: 通过现有引擎工作流连接服务器、扩缩容应用与数据库、共享文件并恢复数据。
+---
+
+Openship 的 MCP 工具与控制台（dashboard）和 SDK 使用相同的 HTTP 路由、授权与引擎操作。获取 `cluster-and-scale` 提示可获得一份按顺序编排的工作流；用 `tools/list` 可查看你的实例上可用的确切输入 schema。[生成的目录](/docs/api/mcp-tools)列出了每个工具，并解释了仅限 HTTP 的路由。
+
+## 支持的功能
+
+| 能力 | 当前行为 |
+| --- | --- |
+| 私有网络 | 注册并验证已有的提供方/私有网络，或准备并应用由 Openship 托管的 WireGuard 网络。 |
+| 计算集群 | 将已注册的服务器编组到私有网络上，配置带有修订（revision）校验。 |
+| 服务器安装 | 持久化的前置检查、安装、加入所选主机、网络验证、重试以及移除自有运行时。 |
+| 应用扩缩容 | 为单个应用或 worker 设置 1–100 个副本，无需重新构建镜像。支持项目自有的共享文件。 |
+| 共享文件 | 保留两到三份独立副本、跨服务器挂载、扩容、安排外部备份，以及恢复到新卷。 |
+| 恢复 | 检查日志与观测到的 pod、重试失败的安装、重新部署或回滚保留的应用镜像，并按依赖顺序移除资源。 |
+| 托管数据库 | PostgreSQL 副本、Redis 分片、备份、恢复与导入到新数据库，还包括 PostgreSQL 17 升级到 18 的升级副本，以及显式的连接替换。 |
+| 策略驱动的自动扩缩容 | **未实现**。CPU/流量阈值、自动节点置备和持续运行的自动扩缩容控制器均不可用。 |
+| 在线变更 worker | **未实现**。变更集群成员需要先移除其运行时。 |
+| Compose 应用扩缩容 | **此集群应用路径不支持**。节点本地 bind mount 与 Docker 私有链接也需要单独迁移。托管数据库有各自的生命周期。 |
+
+Kubernetes 可以在准备好的集群内替换失败的应用 pod。该恢复行为不会开通新服务器，也不会实现 Openship 的自动扩缩容策略。
+
+## 前提条件与工作区
+
+使用自托管或桌面版 Openship 控制器，并已注册可通过 SSH 访问的 Linux 服务器。网络与运行时变更需要服务器舰队管理权限以及对每台所选服务器的访问权限。仅授予一台服务器的授权并不能授权整个集群的操作。这些工具在托管版 Cloud 控制器上不可用；桌面控制器仍可管理远程服务器。
+
+先调用 `get_permissions_workspaces`。在**每次**工具调用的顶层传入所选的 `organizationId`。绑定到某组织的凭据无法选择其他工作区。私有网络 ID、计算集群 ID、运行时 ID、项目 ID 和部署 ID 标识的是不同的资源。
+
+若从源码构建，请配置所有集群节点都能使用的镜像仓库与[镜像仓库凭据](/docs/api/credentials)。构建服务器必须能够推送镜像，每个节点必须能够拉取镜像。
+
+## 1. 检查或准备私有网络
+
+从 `get_system_networks_capabilities`、`get_system_servers`、`get_system_networks` 和 `get_system_compute_clusters` 开始。优先复用已有的合适资源。
+
+对于**已有的私有网络**，对每台服务器调用 `post_system_servers_by_id_network_inspect`。在 `post_system_networks` 中使用真实的私有 IP、网卡名与 MTU；注册网络并不会在云提供方那里创建它，也不会打开提供方的防火墙。使用其当前修订号验证返回的网络：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "post_system_networks_by_id_verify",
+    "arguments": {
+      "organizationId": "org_example",
+      "id": "network_from_create",
+      "body": { "revision": 1 }
+    }
+  }
+}
+```
+
+轮询 `get_system_networks_by_id` 直到验证结束。检查其时间戳与逐主机/对端报告；之前一次成功的报告并不等于持续监控。
+
+对于**托管的 WireGuard**，调用 `post_system_networks_preparations`，提供新的 UUID `requestId`、名称和所选成员。轮询 `get_system_networks_preparations_by_preparationId`。就绪后，依据其 `operationId` 调用 `get_system_networks_operations_by_operationId`，检查生成的计划、主机变更、防火墙要求和 `planHash`。
+
+使用该操作 ID 和完全一致的 `planHash` 调用 `post_system_networks_operations_by_operationId_apply`。其 schema 中列出了支持的 apply/resume/rollback 动作。轮询该操作直到其结束；请求被接受并不代表网络已经建成。对 k3s 而言，连接策略必须允许每个所选成员之间双向访问。
+
+如果准备工作需要更换成员或权限，请使用其成员移除/连接编辑工具并携带当前 `sequence`。跟踪任何返回的替代准备或清理操作。响应丢失后复用同一 `requestId` 可以恢复同一意图；变更意图则需要新的请求 ID。
+
+`/api/system/clusters` 路由是私有网络的兼容别名。MCP 仅暴露一套规范的 `/api/system/networks` 工具。
+
+## 2. 创建计算集群并安装 k3s
+
+在准备好的网络上创建计算集群：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "post_system_compute_clusters",
+    "arguments": {
+      "organizationId": "org_example",
+      "body": {
+        "requestId": "123e4567-e89b-42d3-a456-426614174000",
+        "name": "Production apps",
+        "networkId": "network_from_create",
+        "serverIds": ["server_a", "server_b"]
+      }
+    }
+  }
+}
+```
+
+使用返回的集群 ID 和修订号开始安装：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "post_system_compute_clusters_by_id_runtime",
+    "arguments": {
+      "organizationId": "org_example",
+      "id": "cluster_from_create",
+      "body": {
+        "revision": 1,
+        "requestId": "123e4567-e89b-42d3-a456-426614174001"
+      }
+    }
+  }
+}
+```
+
+轮询 `get_system_compute_clusters_by_id_runtime`。响应包含 `status`、`sequence`、`generation`、逐主机的步骤/日志、`error` 和 `verifiedAt`。只有在 `ready` 之后才继续部署。安装会先校验主机身份与前置条件，再校验节点就绪状态、pod 流量、服务路由和内部 DNS。
+
+如果安装变为 `failed` 或 `interrupted`，检查保存的错误、修复前置条件，然后携带**最新的** `sequence` 调用 `post_system_compute_clusters_by_id_runtime_retry`。重试会保留已保存的版本和操作意图。响应丢失时先轮询再重试；不要仅仅因为第一次 HTTP 响应被中断就再启动一次安装。
+
+## 3. 先选目标，再部署
+
+通过常规的[部署流程](/docs/guides/deploy-from-github)创建或选择单个应用。其实例必须可以安全地在另一台服务器上替换。读取 `get_projects_by_id_cluster` 获取其当前 `updatedAt`，然后选择目标：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "patch_projects_by_id_cluster",
+    "arguments": {
+      "organizationId": "org_example",
+      "id": "project_id",
+      "body": {
+        "clusterId": "cluster_from_create",
+        "stateless": true,
+        "expectedUpdatedAt": "2026-09-26T12:00:00.000Z",
+        "config": {
+          "replicas": 1,
+          "imageRepository": "registry.example.com/apps/web"
+        }
+      }
+    }
+  }
+}
+```
+
+用刚返回的值替换示例中的时间戳。保存目标并不会部署或迁移持久化数据。用 `body.projectId` 启动 `post_deployments_build_access`。轮询 `get_deployments_by_id` 并读取 `get_deployments_by_id_logs`。如果有工作在等待决策，检查 `get_deployments_by_id_pending`，且只回答该运行实际给出的决策。
+
+部署完成后检查 `get_projects_by_id_cluster`。确认观测到的 ready/available pod，而不仅仅是配置的副本数。`status:null` 且带有 `error` 表示控制器无法观测到该工作负载。检查 `get_projects_by_id_pending_actions` 与域名工具，排查独立的路由或 TLS 阻塞。控制器 SSH 失败本身并不能证明公开的应用已宕机。
+
+## 4. 扩容与缩容
+
+每次变更前先读取集群工作负载状态。将其 `activeDeploymentId` 和 `updatedAt` 作为前置条件回传：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "post_projects_by_id_cluster_scale",
+    "arguments": {
+      "organizationId": "org_example",
+      "id": "project_id",
+      "body": {
+        "replicas": 3,
+        "expectedDeploymentId": "active_deployment_id",
+        "expectedUpdatedAt": "2026-09-26T12:05:00.000Z"
+      }
+    }
+  }
+}
+```
+
+响应中包含新的 `deploymentId`。扩缩容会基于当前不可变的镜像执行一次配置部署，不会重新构建源码。轮询该部署，然后验证观测到的副本数和应用路由。缩容时用更小的数量重复同一流程；不接受 0 副本。
+
+`409` 表示已保存的项目、当前部署或其他操作发生了变化。读取最新状态并重新审视计划的变更。不要丢弃并发保护，也不要不断重发过期的参数。
+
+## 5. 恢复与清理
+
+| 情形 | 下一步操作 |
+| --- | --- |
+| 网络准备/应用失败 | 阅读保存的主机错误和该操作允许的 resume/rollback 选项。使用其当前 sequence/plan hash。 |
+| k3s 安装/移除失败 | 阅读运行时进度，修复报告的问题，并携带最新 sequence 重试。 |
+| 应用部署/扩缩容失败 | 阅读部署日志和待决事项；确认上一个活跃发布。视情况重新部署或使用保留镜像回滚。 |
+| 运行时观测失败 | 修复控制器到服务器的连通性后重新读取。不要为了消除观测错误而重置正常工作的基础设施。 |
+| 需要回滚 | 先阅读 `get_deployments_by_id_restore_plan`。对保留的发布调用 `post_deployments_by_id_rollback`，然后在项目历史中跟踪新创建的回滚部署。 |
+| 共享存储安装失败 | 检查保存的步骤和错误，修复报告的问题，然后携带当前 sequence 重试。重新连接并不会重试一次变更操作。 |
+| 全部移除 | 断开并移除依赖的应用、数据库和共享卷；移除空的共享存储，然后依次移除自有运行时、空计算集群和不再使用的网络。 |
+
+移除运行时使用 `delete_system_compute_clusters_by_id_runtime` 并携带 `body.sequence`；**DELETE 工具可能需要 JSON 请求体**。轮询直到 `removed`。集群/网络的删除使用其当前 `revision`。托管网络必须通过经过审核的移除计划来移除。当自有工作负载、保留的数据库数据或外部资源仍依赖该运行时时，依赖检查会拒绝删除。
+
+## 共享文件与恢复归档
+
+服务器安装完成后，使用 `post_system_compute_clusters_by_id_storage`，提供稳定的请求 ID、至少两台独立的服务器和经过审核的空目录。轮询 `get_system_compute_clusters_by_id_storage` 直到就绪。如果安装被中断，用重试工具并携带其当前 sequence。配置一个外部备份目标（backup destination），把恢复点保存在集群之外。
+
+项目选择该集群后，通过 `post_projects_by_id_cluster_volumes` 创建卷。把卷的名称和挂载路径加入项目的 `config.mounts` 并部署。用 `get_projects_by_id_cluster_volumes` 查看观测到的副本与挂载健康状况。扩容卷使用其当前 `resourceVersion`；不支持收缩卷。
+
+用 `post_projects_by_id_cluster_volumes_backup` 创建外部备份，或通过 `patch_projects_by_id_cluster_volumes_backups` 安排每小时/每日备份。通过 `get_projects_by_id_cluster_volumes_backups` 查看是否完成。删除源卷之后这些归档仍然可以找到。恢复到一个新卷，检查恢复出的文件，然后显式将其挂载到新的应用部署。
+
+移除卷之前先断开挂载并重新部署。移除空的共享存储会保留外部归档。删除归档是独立操作，需要其确切的名称。当一致性文件备份有要求时，暂停应用写入。
+
+## 数据库与备份工作流
+
+托管 PostgreSQL/Redis 操作请获取 `cluster-database` 提示。数据库副本与应用副本相互独立。数据库变更使用 `expectedSequence`；创建使用稳定的 UUID `requestId`。连接变更会保存环境变量值，应用这些值需要单独重新部署应用。
+
+PostgreSQL 和 Redis 备份使用符合条件的 S3 备份目标。在用 `restoreFrom.databaseId` 和 `restoreFrom.backupName` 创建**新**数据库之前，先确认原生备份已完成。Redis 快照的一致性以分片为单位，而不是跨整个集群的事务。变更 Redis 分片数量需要一份经过验证的近期备份，并在审视变更后传 `confirmRedisRebalance: true`。
+
+`get_projects_by_id_cluster_databases_imports` 列出该项目符合条件的既有 Docker PostgreSQL 和 Redis 备份。用 `importFrom.runId`、`importFrom.artifactName` 和就绪的 `clusterId` 创建新数据库。可以在应用仍运行在 Docker 上时先将其准备妥当（staged）；之后再为应用选择同一集群。
+
+升级 PostgreSQL 17 到 18 时，用 `copyFrom.databaseId` 及其最新 `expectedSequence` 创建一个单独的数据库。原数据库保持可用。在替换应用连接之前，先验证新数据库中的数据。替换托管绑定需要在 `replace` 中提供源 ID 和 sequence，以及目标的当前 sequence。需要显式重新部署才能应用新的环境变量。
+
+最终切换之前，暂停源端写入并创建一个新的恢复点。备份或升级副本快照之后的写入不会被自动复制。
+
+对于普通的项目/服务卷备份，获取 `backup-and-restore` 提示并遵循[备份指南](/docs/guides/backups-restore)。完整的 MCP 流程覆盖目标预检、策略、手动运行、保留策略保护、恢复准备、显式应用和状态查询。一个批次可以返回多个 `runIds`；每次运行都必须完成。准备恢复绝不意味着数据已经应用。
+
+## 验证边界
+
+扩缩容发布门禁在一次性基础设施上设有应用、共享存储和数据库三条独立验证路径。应用路径会驱动 MCP 请求穿过认证、引擎、镜像仓库、Kubernetes 和 OpenShip Edge。存储路径使用 Linux/systemd/SSH 主机进行安装、共享写入、备份/恢复和磁盘复制重建。数据库测试则演练真实的操作符、数据、副本/分片变更、恢复、Docker 导入和升级副本。
+
+最新的原生存储与数据库验证路径尚未完成本地验收。专项检查和较早一次应用路径通过并不能证明已达到生产就绪。测试夹具也无法证明提供方防火墙、每一种 Linux 发行版、真实的 WireGuard 置备、ACME 或生产故障域。发布之前请先运行原生发布任务和基础设施验收。

@@ -1,0 +1,102 @@
+---
+title: 常见报错
+description: 你真正会碰到的 API 错误码与消息——各自的含义，以及修法。
+---
+
+出问题时，Openship API 返回的是一个小 JSON 对象，而不是一整墙堆栈跟踪。它总带有一条人类可读的 `error` 消息；对值得程序化处理的那类失败，还有一个稳定的机器 `code`。校验失败会附带一个 `details` 映射，指明具体哪些字段有问题。
+
+```json
+{ "error": "This access token is read-only", "code": "TOKEN_READ_ONLY" }
+```
+
+所以看到报错时，你手里有两样东西可用：**code**（在下面的表里查）和 **HTTP 状态码**（你的客户端报出的数字——`401`、`403`、`429` 等等）。消息告诉你发生了什么；code 告诉你该用哪种修法。
+
+## 报错对照表
+
+找到你拿到的那个 code（或状态码）。并非每个错误都带 code——通用的 `500` 和 `429` 速率限制响应就没有，这两类请按状态码对号。
+
+| Code / 消息 | 含义 | 处理方法 |
+|---|---|---|
+| **`VALIDATION_ERROR`** (400) — "Validation error" | 你的请求体或查询参数与该端点期望的不符。响应中的 `details` 映射会列出每个有问题的字段及其原因。 | 读 `details`，改正所列字段后重发。这是客户端一侧的错误——原样重发同样的内容没有用。 |
+| **`INVALID_TOKEN`** (401) — "Invalid or expired access token" | `Authorization: Bearer` 令牌不被识别——可能敲错了、已被吊销，或该令牌已不对应真实用户。 | 用 [`openship token create`](/docs/cli/access) 新建一个令牌来用。确认你完整复制了 `opsh_pat_…` 的值。 |
+| **`BEARER_NOT_ALLOWED_FROM_BROWSER`** (401) — "Access tokens are not allowed from browser origins" | 你从一个被当作浏览器前端的受信来源发送了 Bearer 令牌。Bearer 认证只用于 CLI 和服务器到服务器调用；这道拦截是为了防止被窃取的会话令牌绕过 cookie 防线被重放。 | 在终端或后端里用令牌，不要在浏览器里用。在控制台里你根本不需要令牌——它会自动用你的会话 cookie 完成认证。 |
+| **`UNAUTHORIZED`** (401) — "Unauthorized" *（普通形态不带 code）* | 既没有有效会话也没有有效令牌——你就是没登录。 | 在控制台里重新登录。走 API/CLI 时，发送 `Authorization: Bearer <token>`。认证模型参见 [API 总览](/docs/api)。 |
+| **`TOKEN_ORG_SCOPE`** (403) — "This access token is scoped to a different organization" | 你的令牌绑定在一个组织上，但你发送的 `X-Organization-Id` 头指定的是另一个组织。 | 去掉 `X-Organization-Id` 头，或改用属于目标组织的令牌。（MCP 里的措辞是 "This authorization is scoped to a different organization"。） |
+| **`TOKEN_READ_ONLY`** (403) — "This access token is read-only" | 一个只读令牌被用于了变更类请求（`POST`、`PUT`、`PATCH` 或 `DELETE`）。 | 写操作改用读写令牌，或把调用改成读（`GET`）。（MCP 里的措辞是 "This MCP authorization is read-only"。） |
+| **`FORBIDDEN`** (403) — "Forbidden" | 你已通过认证，但你在这个组织里的角色或授权不允许该操作。 | 向组织所有者/管理员申请合适的角色，或查看[权限与角色](/docs/security/permissions)了解每个操作需要什么。 |
+| **`NOT_FOUND`** (404) — "`<resource>` not found" | 你请求的东西不存在——或者它存在但不在你的组织里（Openship 会返回 404，而不是泄露那是别人的资源）。 | 仔细核对 id。列出该类资源（如 `GET /api/projects`）拿到你的组织内有效的 id。 |
+| **`CONFLICT`** (409) — 例如 "Project '…' already exists"、"Domain '…' is already in use" | 你的组织里已有同名的东西——项目名或 slug、域名/主机名，或环境名。 | 换一个名字、slug 或主机名，或者直接复用已存在的资源，而不是重复创建。 |
+| **Rate limited** (429) — "Too many requests" *（无 code）* | 你用尽了某个速率限制配额。Openship 以滚动分钟为周期限制整个 `/api` 面。 | 遵守 `Retry-After` 响应头（秒数）并退避——不要疯狂重试。各策略的配额见[速率限制](/docs/api/http#速率限制)。 |
+| **`AUTH_UNAVAILABLE`** (503) — "Authentication service unavailable" | 校验你的会话时抛了异常——认证后端的数据库不可达、会话解密失败或类似问题。重点在于这*不会*被当作“无会话”处理——Openship 选择失败关闭，而不是放行。 | 属于暂时性故障——稍等片刻再重试。若持续出现，检查你实例的数据库与 API 日志。 |
+| **Internal server error** (500) — "Internal server error" *（无 code）* | 服务器上出现未处理的错误。没有机器码，因为这不是预期内的失败。 | 在 API 服务器日志里找 `[UNHANDLED ERROR]` 条目——真正的原因在那里。如果是自托管，就从这行日志查起。 |
+
+## 你最先会碰到的几种
+
+下面把最常见的几种展开讲，修复一步一步来。
+
+### "Access tokens are not allowed from browser origins"
+
+<Callout type="error">
+你的 API 调用返回 `401`，`code` 为 `"BEARER_NOT_ALLOWED_FROM_BROWSER"`。
+</Callout>
+
+**含义**：你从浏览器（或 Openship 信任为浏览器前端的来源）发送了 `Authorization: Bearer` 令牌。Bearer 令牌是给 CLI 和服务器到服务器调用用的——控制台本就不该携带它，所以 Openship 会拒绝，以防被窃取的会话令牌被重放。
+
+**修复方法**：
+
+1. 如果你在对接 API 开发，把调用挪到终端或后端服务里——任何不是浏览器来源的地方都行。
+2. 如果你是在浏览器里手动调 API 来模拟控制台的行为，其实不需要令牌：控制台会自动用它的 `httpOnly` 会话 cookie 完成认证。
+3. 令牌只给机器用，用 [`openship token create`](/docs/cli/access) 生成。
+
+### "This access token is read-only" / "scoped to a different organization"
+
+<Callout type="error">
+写操作返回 `403`，`code` 为 `"TOKEN_READ_ONLY"`；或任何调用返回 `403`，`code` 为 `"TOKEN_ORG_SCOPE"`。
+</Callout>
+
+**含义**：令牌在创建时可以被收窄。**只读**令牌会拒绝 `POST`/`PUT`/`PATCH`/`DELETE`；**限定组织**的令牌会拒绝作用于其绑定组织之外的任何组织（当你的 `X-Organization-Id` 头指定了别的组织时就会触发）。
+
+<Callout type="info">
+**修法**：`TOKEN_READ_ONLY` 就创建读写令牌，或者确认这个调用真的需要是写操作。`TOKEN_ORG_SCOPE` 就去掉 `X-Organization-Id` 头（令牌本身已知道自己的组织），或改用为目标组织签发的令牌。
+</Callout>
+
+### "Validation error"
+
+<Callout type="error">
+某个请求返回 `400`，`code` 为 `"VALIDATION_ERROR"`，并带有一个 `details` 对象。
+</Callout>
+
+**含义**：请求体或查询参数不符合该端点的 schema。这一定是客户端一侧的问题——`details` 映射会精确指出哪些字段没过、为什么没过。
+
+**修复方法**：
+
+1. 读 `details` 映射——键是字段名，每个值列出该字段的问题。
+2. 只改这些字段（必填字段缺失、类型不对、取值越界）。
+3. 重发。原样重试同样的内容只会同样失败。
+
+### "Too many requests"
+
+<Callout type="error">
+某个请求返回 `429`，响应体为 `{"error":"Too many requests"}`。
+</Callout>
+
+**含义**：你用尽了当前滚动分钟内的一个速率限制配额。未认证流量按 IP 限制；已认证流量有更大的按用户配额；少数几组路由（登录、Webhook、MCP）有各自的策略。
+
+<Callout type="info">
+**修复方法**：读 `Retry-After` 响应头（距窗口重置的秒数），等这么久再重试。每个响应还带有 `X-RateLimit-Limit`、`X-RateLimit-Remaining` 和 `X-RateLimit-Reset`，让你在撞墙之前掌握节奏。各策略的限制列在 [API 总览](/docs/api/http#速率限制)里。
+</Callout>
+
+<Callout type="warn" title="自托管部署在代理后面？">
+如果你收到 `400` 和 "Missing client IP — request must come through the proxy"，说明实例无法算出来访者的 IP，也就没法做按 IP 限制。这意味着请求没有经过设置转发 IP 头的反向代理就直接到达了 API。让流量走你的代理（标准拓扑中是 openresty），不要直连 API 端口。
+</Callout>
+
+## 构建与部署故障
+
+上面的 code 都是关于 API 请求本身的。如果失败的是一次**部署**——构建界面变红、应用起不来、端口被占用——那是另一组症状。
+
+<Cards>
+  <Card title="部署故障排查" href="/docs/troubleshooting/deployments" description="构建失败、端口不对、缺环境变量，以及其他部署期问题。" />
+  <Card title="API 总览" href="/docs/api" description="完整的认证模型、权限、速率限制和错误结构。" />
+  <Card title="令牌与访问" href="/docs/cli/access" description="创建、限定范围并吊销 API 所用的个人访问令牌。" />
+  <Card title="权限与角色" href="/docs/security/permissions" description="owner、admin、member 与 restricted 角色各自能做什么。" />
+</Cards>

@@ -1,0 +1,122 @@
+---
+title: API 总览
+description: 通过 Node.js SDK 或 REST API 控制 Openship。
+---
+
+在应用或脚本中创建项目、部署代码并运维你的安装。每种资源都有一个参考页：包含共享行为与字段，
+并配有 **SDK** 和 **REST API** 两个示例标签页。
+
+## 从这里开始
+
+| 你的应用需要…… | 使用 |
+| --- | --- |
+| 控制一个已有的自托管或云端安装 | [远端 SDK 客户端](/docs/api/sdk/client)或 [REST API](/docs/api/http) |
+| 在 Node 应用内运行 Openship | [原生 SDK](/docs/api/sdk/native) |
+| 在终端或 CI 中运行命令 | [CLI](/docs/cli) |
+
+SDK 随 `openship` 0.8.0 及以后版本提供。从 `npm install openship` 和
+[SDK 指南](/docs/api/sdk)开始。
+
+## 发起请求
+
+使用一个可以读取你组织内项目的令牌。SDK 返回应用层结果；
+REST 返回该端点的 JSON 响应。
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts title="list-projects.mts"
+import { OpenshipClient } from "openship";
+
+const token = process.env.OPENSHIP_TOKEN;
+const organizationId = process.env.OPENSHIP_ORGANIZATION_ID;
+if (!token || !organizationId) throw new Error("Set a token and organization ID");
+
+const ship = new OpenshipClient({
+  baseUrl: "https://ship.example.com",
+  token,
+  organizationId,
+});
+
+const projects = await ship.projects.list({ page: 1, perPage: 20 });
+console.log(projects.data);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+export OPENSHIP_URL="https://ship.example.com"
+export OPENSHIP_ORGANIZATION_ID="org_123"
+# 将 OPENSHIP_TOKEN 设置为你的个人访问令牌。
+
+curl "$OPENSHIP_URL/api/projects?page=1&perPage=20" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "X-Organization-Id: $OPENSHIP_ORGANIZATION_ID" \
+  -H "X-Openship-Scope: fixed"
+```
+
+</Tab>
+</Tabs>
+
+### 示例约定
+
+资源示例中的 `ship` 指代已配置的远端客户端或[原生用户作用域](/docs/api/sdk/identity)。
+把 `proj_123` 之类的 ID 换成你自己的。REST 示例使用上面的地址与令牌；令牌的组织绑定
+作用于每一个请求。要让组织固定而不依赖默认值，请附带上文所示的两个作用域请求头。
+[旧版本 API 必须支持固定作用域](/docs/api/sdk/compatibility#固定组织作用域)。
+
+具名 SDK 方法会在适用时解包响应信封。例如，`projects.get(id)` 直接返回一个项目，
+而其 REST 端点返回 `{ data: project }`。ID 在 SDK 中可能是方法参数，在 REST 中则是 URL、
+查询或请求体字段；代码标签页展示了这一映射。
+
+## 应用
+
+| 资源 | 用途 |
+| --- | --- |
+| [项目](/docs/api/projects) | 配置、环境、连接与存储绑定 |
+| [源文件](/docs/api/sources) | 生成的代码、文件夹上传与源检测 |
+| [部署](/docs/api/deployments) | 构建、进度、决策、取消与回滚 |
+| [服务](/docs/api/services) | 项目内的容器与服务 |
+| [应用目录](/docs/api/apps) | 模板与应用设置 |
+| [GitHub](/docs/api/github) | 账号、仓库与 GitHub App 源 |
+
+## 网络
+
+| 资源 | 用途 |
+| --- | --- |
+| [域名与 TLS](/docs/api/domains) | 主机名、DNS 验证与证书 |
+| [DNS 提供方](/docs/api/dns) | DNS 凭据与区域检查 |
+| [Webhooks](/docs/api/webhooks) | 入站操作与提供方投递 |
+| [边缘管理](/docs/api/edge) | 发现并导入已有的边缘站点 |
+| [服务器终端](/docs/api/terminal)/[服务终端](/docs/api/service-terminal) | 交互式 WebSocket 会话 |
+
+## 运维
+
+| 资源 | 用途 |
+| --- | --- |
+| [分析](/docs/api/analytics) | 流量与资源使用 |
+| [问题与健康](/docs/api/issues) | 问题、健康快照与重新扫描 |
+| [更新](/docs/api/updates) | 可用版本与更新部署 |
+| [任务](/docs/api/jobs) | 命令、计划与运行历史 |
+| [备份](/docs/api/backups)/[备份目标](/docs/api/backup-destinations) | 保留策略、归档与恢复 |
+| [通知](/docs/api/notifications) | 渠道、订阅与投递 |
+| [公告](/docs/api/notices) | 公开的安装公告 |
+| [审计日志](/docs/api/audit) | 组织活动 |
+
+## 访问与基础设施
+
+| 资源 | 用途 |
+| --- | --- |
+| [令牌](/docs/api/tokens)/[权限](/docs/api/permissions) | 凭据、成员、邀请与授权 |
+| [提供方凭据](/docs/api/credentials) | 镜像仓库与 DNS 提供方密钥 |
+| [用户设置](/docs/api/settings) | 构建、部署、路由与 Git 默认值 |
+| [服务器](/docs/api/servers)/[安装设置](/docs/api/system) | 宿主机、组件、安装与管理 |
+| [健康检查](/docs/api/health)/[容器镜像](/docs/api/images) | 安装元数据与镜像目录 |
+| [邮件](/docs/api/mail) | 自托管邮件服务 |
+| [迁移](/docs/api/migration)/[数据传输](/docs/api/data-transfer) | 服务器收编、搬迁、导入与导出 |
+| [云](/docs/api/cloud)/[计费](/docs/api/billing) | 云连接、套餐与用量 |
+| [认证](/docs/api/auth)/[MCP](/docs/api/mcp) | 浏览器登录与智能体协议 |
+
+传输细节参见 [HTTP 基础](/docs/api/http)。错误、提供方以及当前的原生/云端限制，
+参见 [SDK 错误](/docs/api/sdk/errors)与[兼容性](/docs/api/sdk/compatibility)。

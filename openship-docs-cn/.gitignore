@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.source/
+.turbo/
+out/
+dist/
+*.tsbuildinfo
+.next-env.d.ts
+.npmrc
+.anchor-baseline/
+.anchor-maps/

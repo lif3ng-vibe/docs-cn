@@ -1,0 +1,146 @@
+---
+title: 源文件
+description: 暂存生成的文件或目录，检查源内容并部署。
+---
+
+源会话（session）会保管上传的应用文件，直到部署完成。SDK 接受一个目录或一份
+内存中的文件映射。REST 则通过一个短效上传会话接受压缩归档。
+
+## 部署生成的文件
+
+SDK 的 `deploy()` 助手把暂存、探测、项目选择与部署提交整合在一起。
+当你的应用或 AI 工作流产出文件时用它：
+
+```ts
+const submitted = await ship.deploy({
+  name: "generated-site",
+  source: {
+    type: "files",
+    files: { "index.html": "<h1>Hello from Openship</h1>" },
+  },
+});
+
+const outcome = await ship.deployment(submitted.deployment_id).wait({ timeoutMs: 120_000 });
+if (!outcome.success) throw new Error(outcome.message ?? outcome.status);
+```
+
+文件键是相对路径；值可以是字符串或 `Uint8Array` 数据。目录形式用
+`{ type: "directory", path: "/absolute/path/to/site" }`。使用远程客户端时，文件在
+调用方机器上打包。原生目录必须位于允许的 `policy.sourceRoots` 条目之内。
+
+| `deploy()` 选项 | 用途 |
+| --- | --- |
+| `source` | 必填的文件映射或绝对目录路径。 |
+| `name` | 建议的项目名。 |
+| `projectId` | 部署到某个既有且已授权的项目。 |
+| `environment` | `production` 或 `preview`。 |
+| `serverId` | 已授权的目标服务器；省略时使用已配置的目标。 |
+| `serviceIds` | 选定的、已探测到的服务。 |
+| `onStep` | 源工作流进度回调。 |
+| `signal` | 中止支持的源工作；已提交的部署需要显式取消。 |
+
+结果包含 `deployment_id`、`project_id` 与可选的 `configDiagnostics`。提交与
+就绪是两回事。参见[部署结果](/docs/api/deployments#等待决策与取消)。
+
+## 上传源文件夹
+
+使用自定义上传器时，先开会话：
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const session = await ship.sources.open({ name: "my-site" });
+console.log(session.sessionId, session.upload);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/folder/session" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-site"}'
+```
+
+</Tab>
+</Tabs>
+
+响应包含 `sessionId`、`expiresAt` 与 `upload` 指引：
+
+| 上传字段 | 用途 |
+| --- | --- |
+| `absoluteUrl`、`method` | 归档上传目的地与 HTTP 方法。 |
+| `headers` | 必需的上传请求头。 |
+| `requiresAuth` | 仅在需要时才发送你的 bearer 凭据。 |
+| `withCredentials` | 浏览器上传是否需要携带凭据。 |
+
+把 gzip 压缩的 tar 归档发送到返回的 URL。务必使用提供的指引，因为上传目的地会随部署模式而不同。自托管中继是
+`POST /api/projects/folder/upload/:sessionId`，上传上限 300 MB。
+
+SDK 也可以替你完成会话创建与上传两步：
+
+```ts
+const staged = await ship.sources.stage({
+  name: "my-site",
+  source: { type: "directory", path: "/absolute/path/to/site" },
+});
+console.log(staged.sessionId, staged.expiresAt);
+```
+
+目录打包会排除 `.git`、`node_modules` 与 `.DS_Store`。它强制路径、条目与大小
+限制，并拒绝逃逸的符号链接与特殊文件。SDK 不依赖系统的 `tar` 可执行文件。
+
+## 检查已上传的源
+
+<Tabs items={['SDK', 'REST API']} groupId="api-transport" persist>
+<Tab value="SDK">
+
+```ts
+const scan = await ship.sources.scan("session_123", { includeEnv: true });
+console.log(scan.stack, scan.buildCommand, scan.configDiagnostics);
+```
+
+</Tab>
+<Tab value="REST API">
+
+```bash
+curl -X POST "$OPENSHIP_URL/api/projects/folder/scan/session_123" \
+  -H "Authorization: Bearer $OPENSHIP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"includeEnv":true}'
+```
+
+</Tab>
+</Tabs>
+
+探测会返回技术栈、包管理器、命令、输出路径、服务定义及任何
+配置诊断。提交部署之前先检查错误。环境值
+默认打码。上例用 `includeEnv: true` 请求扫描响应中可编辑的值；
+参见[揭示环境值](/docs/api/services#揭示环境值)。
+
+要完成自定义流程，先用 `projects.ensure()` 记录选定的配置，再带 `projectId` 与 `uploadSessionId` 调用
+`deployments.buildAccess()`。共享字段记录在
+[projects](/docs/api/projects) 与 [deployments](/docs/api/deployments#deploy-wizard-buildaccess) 中。
+
+## 操作一览
+
+{/* api-operations:start */}
+
+### 资源方法
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 打包并暂存生成的文件或一个允许的目录。 | `sources.stage(input, options?)` | [上传工作流](/docs/api/sources#上传源文件夹) |
+| 打开文件夹上传会话并返回其上传指引。 | `sources.open(input?)` | `POST /api/projects/folder/session`<br />`project:write` |
+| 从暂存的源会话探测构建配置。 | `sources.scan(id, options?)` | `POST /api/projects/folder/scan/:sessionId`<br />`project:write` |
+| 在授权之后揭示显式请求的源值。 | `sources.reveal(id, input)` | `POST /api/projects/folder/scan/:sessionId/env-reveal`<br />`project:write` |
+
+### HTTP 端点
+
+| 操作 | SDK | REST API |
+| --- | --- | --- |
+| 上传 gzip 压缩的 tar 包（自托管中继，300 MB 上限）。 | 仅 HTTP | `POST /api/projects/folder/upload/:sessionId`<br />`project:write` · 自托管 |
+
+{/* api-operations:end */}

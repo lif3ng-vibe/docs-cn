@@ -1,0 +1,229 @@
+---
+title: 邮件与 Webmail
+description: 用 Openship 运行你自己的自托管邮件服务器和 Webmail 应用——开通、管理域名与邮箱，并把收件箱搬进浏览器。
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+大多数人的邮箱都是租来的——Gmail、Outlook 之类。Openship 让你把整座邮局都自己开起来：在你自己的机器上跑一台真正的邮件服务器，用自己的域名收发邮件，甚至在浏览器里给你一个 Webmail 收件箱。这就是租一个邮政信箱和拥有整栋楼的差别。
+
+而且不止限于一台。每台邮件服务器运行在自己的主机上（每台服务器一套邮件配置），Openship 把它们都收进一个 **Mail servers**（邮件服务器）列表——想开几台开几台，并从一个地方切换。只有一台时直接进入其管理面板；超过一台后先落在列表上。
+
+这是个大型、动手性强的功能，因此本指南只停留在地图层面：每个界面做什么、按什么顺序走。那些棘手的环节——确切的 DNS 记录和反向 DNS 设置——会在它们出现的地方点出，因为向导会带着你实时完成。
+
+<Callout title="仅限自托管" type="warn">
+邮件功能完全属于**自托管的 Openship**。只有当你在自己的基础设施上运行 Openship 时，侧边栏才出现 **Emails**（邮件）入口——它不是托管云的一部分。看不到它，说明你在托管套餐上。自托管参见[安装](/docs/getting-started/installation)。
+</Callout>
+
+<Callout title="前置要求">
+- Openship 自托管运行，且至少有一台**已连接的服务器**（推荐一台干净的 Ubuntu 或 Debian 机器）。还没有的话见[连接你自己的服务器](/docs/guides/custom-servers)。
+- 一个你掌控、可编辑 DNS 记录的**域名**。
+- 为出站邮件**开放 25 端口**——一些托管商默认封锁，开始前先确认。
+- 能访问你的 **VPS 提供商面板**（为了后面的反向 DNS 步骤）。
+</Callout>
+
+你会频繁见到的几个词：
+
+- **邮件服务器**——真正收发邮件的软件。Openship 替你安装一套知名套件（Postfix、Dovecot 和反垃圾邮件工具）。
+- **邮箱**——一个邮件账户，如 `you@yourdomain.com`，有自己的密码和收件箱。
+- **DNS 记录**——你域名的公开设置，告诉互联网其他角落你的邮件住在哪里。
+- **Webmail**——在浏览器中打开的邮件应用，无需再配置单独的邮件客户端。
+
+## 步骤 1 — 开通一台邮件服务器
+
+<Steps>
+
+<Step>
+
+### 打开 Emails 页面
+
+在侧边栏点击 **Emails**（邮件）。尚未配置邮件服务器时，你会直接落在 **Mail Server Setup**（邮件服务器设置）表单上。如果你已运行**多台**邮件服务器，会先看到它们的列表——点击 **Add mail server**（添加邮件服务器）再开一台。（只有一台时，Openship 直接打开其管理面板；用那里的 **Add mail server** 按钮再设置一台。）
+
+</Step>
+
+<Step>
+
+### 选择服务器和域名
+
+选择邮件套件运行在哪台已连接的服务器上。只有一台时 Openship 会替你选好。
+
+然后填两样东西：
+
+- **Domain**（域名）——你的裸域名，如 `example.com`（不带 `https://`，不带路径）。Openship 会显示你的邮件服务器将驻留在 `mail.example.com`。
+- **Admin Password**（管理员密码）——第一个邮箱 `postmaster@yourdomain` 的密码。设置完成后用它登录。懒得想一个？点击 **Generate**（生成）得到一个强随机密码，然后抄到安全的地方。
+
+右侧面板准确列出将要安装的内容——邮件套件、自动 **Let's Encrypt** SSL 证书、你需要的 DNS 记录以及管理面板——外加前置条件（一个可管 DNS 的域名、开放的 25 端口、一台干净的机器）。
+
+</Step>
+
+<Step>
+
+### 按 Start Setup 并看着它跑
+
+点击 **Start Setup**（开始设置）。Openship 连上你的服务器，一步步执行安装（系统更新、邮件套件、SSL 等），实时流式输出日志——就像隔着玻璃门看着烤箱。运行期间你什么都不用做。
+
+进行到一半时，它会两次停下来等你。这两次停顿就是接下来两步。
+
+</Step>
+
+<Step>
+
+### 发布你的 DNS 记录
+
+安装停下并显示横幅：**Publish DNS records before continuing**（继续之前先发布 DNS 记录）。横幅下方是一组卡片——每条记录一张（MX、SPF、DKIM、DMARC 之类）——各带 **Copy value**（复制值）按钮。
+
+前往管理你域名 DNS 的地方，逐条添加记录，然后回来点击 **I've set the records - continue**（记录已设置——继续）。
+
+<Callout title="为什么这很重要" type="info">
+没有这些记录，邮件投递就会中断——Gmail 和 Outlook 正是靠它们判定你的邮件是真邮件而非垃圾。如果你的 DNS 托管在受支持的提供商，横幅还会提供 **Auto-configure DNS**（自动配置 DNS），替你推送记录。否则请手动照抄。想温和地了解 DNS，见[自定义域名](/docs/guides/custom-domains)。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 设置反向 DNS（PTR）
+
+接着是第二条横幅：**Set reverse DNS (PTR) before continuing**（继续之前先设置反向 DNS）。这条不一样——你要在 **VPS 提供商的面板**（Hostinger、DigitalOcean、AWS 等）里设置，而**不是**在 DNS 服务商那里。
+
+横幅会显示你服务器的 IP 地址和要指向的值（`mail.yourdomain`）。在彼处设置，等几分钟生效，然后点击 **I've set the PTRs - continue**（PTR 已设置——继续）。
+
+<Callout title="一句话说清反向 DNS" type="info">
+正常 DNS 把名字变成 IP 地址；反向 DNS（一条 **PTR** 记录）把 IP 变回名字。大型邮件提供商拒绝反向 DNS 不匹配的服务器发来的邮件——所以这一步不可省略。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 完成
+
+Openship 完成 SSL 步骤，页面翻到**管理面板**。你的邮件服务器上线了。它还会主动提议发送一封快速欢迎测试邮件，让你确认邮件在流通。
+
+</Step>
+
+</Steps>
+
+<Callout title="已经有 Openship 建过的邮件服务器？" type="info">
+如果你之前建过而 Openship 弄丢了记录（比如你换了台电脑），不必重装。在设置表单上点击 **Already have a mail server? Adopt it**（已有邮件服务器？接管它），选择服务器并点击 **Scan server**（扫描服务器）。发现邮件套件后点击 **Adopt**（接管）——它会被带回控制台，你的邮箱和数据原封不动。
+</Callout>
+
+## 步骤 2 — 管理域名与邮箱
+
+服务器开通后，**Emails** 页面变成其管理面板——你运营邮件服务器的大本营。它分为若干标签页：
+
+- **Overview**（总览）——主机名、Webmail 按钮、邮件统计（域名、邮箱、存储）和快捷链接。
+- **Domains**（域名）——添加你想收邮件的额外域名。新域名在其 MX 记录指向这台服务器后即可收信。
+- **Mailboxes**（邮箱）——在域名下创建邮件账户。每个都是一份登录（`name@domain`），有独立的密码和配额。以后修改 `postmaster` 密码也在这里。
+- **Aliases**（别名）——转发地址，以及一个域名上其余所有地址的兜底（catch-all）。
+- **Notifications**（通知）——当邮件到达这些地址时，在通知渠道（Slack、Telegram、Discord、Webhook）里收到提示。
+- **Sending**（发送）——出站邮件如何离开：直发，或经提供商中继。**Send test email**（发送测试邮件）也在这里。
+- **DNS**——每个域名所需全部记录的参考副本，带一个检查记录是否真正发布的 **Verify**（验证）按钮。
+- **Health**（健康）——每个邮件进程的实时状态，自动刷新。
+- **Backup**（备份）——把邮件服务器（账户、消息、密钥）快照到你的某个备份目标。
+- **Advanced**（高级）——手工配置邮件客户端用的 IMAP/SMTP 连接设置，以及重启套件、重跑向导等高阶操作。
+
+<Callout title="添加第二个域名" type="info">
+在 **Domains** 标签页添加域名时，Openship 会生成其 DNS 记录（包括一把新 DKIM 密钥）。在依赖该域名收发邮件之前，先在你的 DNS 服务商处发布这些记录——**DNS** 标签页会显示它们并可以验证。
+</Callout>
+
+## 步骤 3 — 部署 Webmail 应用
+
+邮件服务器本身没有网页——你得用邮件客户端连它。Openship 还可以部署 **Zero**——一个 Webmail 应用，让你（和你的用户）直接在浏览器里获得收件箱。
+
+<Steps>
+
+<Step>
+
+### 从 Overview 标签页开始
+
+在管理面板的 **Overview** 标签页，找到邮件服务器卡片并点击 **Deploy webmail**（部署 Webmail）。这会打开 **Deploy webmail** 页面。
+
+</Step>
+
+<Step>
+
+### 选择它跑在哪里、用哪个地址
+
+两个选择：
+
+- **Deploy to**（部署到）——Webmail 应用应该跑在哪里。可以放在**这台邮件服务器**、**你的另一台服务器**，或（如果有提供）托管的 **Opshcloud** 选项。
+- **Domain**（域名）——人们打开以进入收件箱的网址。默认为 `mail.yourdomain`。无论选哪个，其 DNS 都必须指向部署目标——屏幕提示会说明你所选选项的要求。
+
+右侧的摘要面板会复述你的目标和域名。
+
+</Step>
+
+<Step>
+
+### 按 Deploy webmail
+
+点击 **Deploy webmail**。Openship 会替你创建一个项目和一次部署，并把你带到标准的**构建页面**，实时流式输出日志——与[部署任何应用](/docs/guides/deploy-from-github)时看到的是同一个页面。完成后，Overview 卡片上的按钮变为 **Open webmail**（打开 Webmail），在新标签页里打开收件箱。
+
+</Step>
+
+</Steps>
+
+<Callout title="从 Openship 0.6.1 或更早版本升级 Webmail" type="warn">
+Webmail 以前以预构建包的形式发布，而不是一个应用，那些旧安装无法重新部署——只能被替换。Overview 卡片会显示 **Replace webmail**（替换 Webmail）链接，且在按钮起作用之前，部署页面会说明将会移除什么：旧 Webmail 的项目、容器和登录会话。你的邮箱、域名和所有消息都留在邮件服务器上，不受影响——大家只需重新登录新收件箱。
+</Callout>
+
+## CLI
+
+开通流程同样可以在 CLI 完成（Webmail 部署目前仅限控制台）。每个 `mail` 命令都仅限自托管。
+
+```bash
+# 在服务器上为你的域名开始安装（实时流式输出）
+openship mail setup <serverId> --domain example.com
+
+# 当因 DNS 暂停时：发布记录，然后确认并继续
+openship mail dns-ack <serverId>
+openship mail setup <serverId> --domain example.com --start-step <n>
+
+# 当因反向 DNS 暂停时：设置 PTR，然后确认并继续
+openship mail ptr-ack <serverId>
+openship mail setup <serverId> --domain example.com --start-step <n>
+
+# 随时查看进展
+openship mail status <serverId>
+
+# 重新接管已有安装（在弄丢控制台记录之后）
+openship mail scan <serverId>
+openship mail adopt <serverId>
+```
+
+<Callout title="技巧" type="info">
+安装暂停时，CLI 会打印出继续所需的确切 `--start-step` 编号。把它抄进下一条 `mail setup` 命令，安装就会从上次中断处接着进行。
+</Callout>
+
+## 故障排查
+
+<Callout title="侧边栏看不到“Emails”入口" type="warn">
+只有自托管才有邮件功能。它只在 Openship 运行于你自己的基础设施上时出现。托管/云套餐上有意隐藏。
+</Callout>
+
+<Callout title="“Check Port 25”步骤警告 25 端口被封锁" type="warn">
+这一步只是检查，不是高墙——即使警告，安装也会继续。直连 MX 发信需要出站 25 端口。很多托管商默认封锁，包括 AWS。你可以先完成设置，然后在 **Sending** 标签页把发信经由 SMTP 提供商中继（Amazon SES 等），再用 **Sending → Send test email** 确认邮件流通。
+</Callout>
+
+<Callout title="“Verify Public Mail Ports” 警告 TCP 25，但 465/587/993 都开着" type="warn">
+在单服务器安装上，探测从被测的同一台机器发起。出站 25 端口限制可能让 `mail.example.com:25` 超时，即使守护进程在非回环接口上监听。如果三个客户端端口都完成 TCP 握手而只有 TCP 25 超时，设置会带着警告继续。连接被拒、路由错误、缺失或仅回环的监听、以及客户端端口失败仍然会让设置停止。
+
+健康状态会把入站 SMTP 保持为**未验证**。请从一台独立主机检查 TCP 25，或从其他邮件服务发一封测试信：客户端端口开放并不能证明其他邮件服务器能连到你的入站 SMTP。如果收信失败，检查主机和提供商防火墙中的入站 TCP 25。**Sending** 中配置的中继只处理出站邮件。
+</Callout>
+
+<Callout title="邮件能发出却进了垃圾箱" type="warn">
+对全新域名来说这很正常——头一两天提供商会持谨慎态度。确保你的 DNS 记录（SPF、DKIM、DMARC）和反向 DNS（PTR）都已发布并验证：用 **DNS** 标签页的 **Verify** 按钮和 **Health** 标签页。把早期测试邮件标记为“不是垃圾邮件”可以加快进程。
+</Callout>
+
+<Callout title="某条记录一直验证不通过" type="error">
+DNS 变更可能需要几分钟（有时更久）才传播开。给它点时间，然后在 **DNS** 标签页重新检查。再核对你粘贴的值是否一字不差、是否加对了域名。
+</Callout>
+
+## 相关指南
+
+<Cards>
+  <Card title="自定义域名" href="/docs/guides/custom-domains" description="DNS 和自动 HTTPS 如何为你的应用工作——邮件 DNS 步骤的有用背景。" />
+  <Card title="从 GitHub 部署" href="/docs/guides/deploy-from-github" description="了解部署 Webmail 时落在的那个构建页面。" />
+  <Card title="连接你自己的服务器" href="/docs/guides/custom-servers" description="通过 SSH 把跑邮件套件的机器加进来。" />
+</Cards>
