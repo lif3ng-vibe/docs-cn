@@ -1,0 +1,54 @@
+---
+title: OpenRig 文档
+description: OpenRig 中文文档（非官方翻译）：让 Claude Code、Codex 与 Pi 作为一个持久的团队协作。
+template: splash
+hero:
+  tagline: 一次对话，背后是一整个团队。主导智能体听取你的想法与反馈，把工作分派给专家（智能体），跟踪进度并把答案带回给你。
+  actions:
+    - text: 快速上手
+      link: /reference/getting-started/
+      icon: right-arrow
+    - text: GitHub 仓库
+      link: https://github.com/mvschwarz/openrig
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+OpenRig 是一个多智能体协作框架（multi-agent harness），让 Claude Code、Codex 与
+Pi 作为一个系统协同工作——适合跨越数周甚至数月的项目。所有智能体都在你自己
+的账户与终端里运行，自托管（self-hosted），数据不出本机。
+
+<CardGrid stagger>
+	<Card title="快速上手">
+		从一个仓库和一处改动开始：预置模板提供「成果负责人 + 独立检查者」的双席位
+		团队，用你已有的账户即可启动。
+	</Card>
+	<Card title="遇到问题？">
+		`rig` 开不动、智能体不回话、权限弹窗不断——先查帮助页：`help` 是唯一持续
+		维护的排障入口。
+	</Card>
+	<Card title="深入架构">
+		架构实录（as-built）逐模块记录已交付系统的真实形态：守护进程核心、协作
+		原语、生命周期、UI 呈现面。
+	</Card>
+	<Card title="追新版动态">
+		发布说明逐版本记录用户可感知的变化、运维注意项与已知限制。
+	</Card>
+</CardGrid>
+
+## 阅读路线
+
+1. [快速上手](/reference/getting-started/)——准备环境、启动双席位团队、下发达成
+   目标（outcome）。
+2. [帮助](/reference/help/)——排障与求援的标准路径。
+3. [智能体启动指南](/reference/agent-startup-guide/)——智能体被启动后如何获得
+   上下文与身份。
+4. [规格文档](/reference/agent-state-taxonomy/)——状态分类学（taxonomy）、
+   AgentSpec、RigSpec、边类型（edge types）与 RigBundle 各有专篇。
+
+:::note[非官方翻译声明]
+本站是对 [mvschwarz/openrig](https://github.com/mvschwarz/openrig) 仓库 `docs/`
+目录的社区中文翻译（快照版本 0.6.2），与上游英文文档可能存在滞后；一切以
+[官方文档](https://openrig.dev/)与上游仓库为准。翻译问题欢迎在镜像仓库提 issue。
+:::

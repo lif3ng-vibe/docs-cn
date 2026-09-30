@@ -33,6 +33,7 @@ jobs:
             ai-coding-dictionary-docs-cn/package-lock.json
             ai-memory-docs-cn/package-lock.json
             ai-memory-docs-en/package-lock.json
+            openrig-docs-cn/package-lock.json
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -90,6 +91,20 @@ jobs:
           npm ci
           npm run build
 
+      # openrig 是标准 Starlight + npm；正文 md/mdx 内链 ](/…) 与 index.mdx hero 的
+      # YAML link: '/… 都需 CI 临时加 base 前缀（组件链接 Astro 会自动加，正文不会）。
+      - name: Build openrig-docs-cn
+        working-directory: openrig-docs-cn
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/openrig/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/openrig/|g' {} +
+          find src/content/docs -name '*.mdx' -exec sed -i 's|\](/|\](/docs-cn/openrig/|g' {} +
+          find src/content/docs -name '*.mdx' -exec sed -i "s|link: '/|link: '/docs-cn/openrig/|g" {} +
+          npm ci
+          npm run build
+
       # nimbus 是 pnpm monorepo：先装 workspace，再两段构建（框架包 → www 站点）。
       # 与其他站不同，无需 sed 内链——nimbus 框架的 authored-links 会按 base
       # 自动给正文内链加前缀；DOCS_SITE/DOCS_BASE 由 apps/www/astro.config.ts 读取。
@@ -117,6 +132,7 @@ jobs:
           mv ai-coding-dictionary-docs-cn/dist _site/ai-coding-dictionary
           mv ai-memory-docs-cn/dist _site/ai-memory
           mv ai-memory-docs-en/dist _site/ai-memory-en
+          mv openrig-docs-cn/dist _site/openrig
           mv nimbus-docs-cn/apps/www/dist _site/nimbus
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll

@@ -41,5 +41,12 @@
     "desc": "Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。",
     "orig": "https://nimbus-docs.com",
     "repo": "https://github.com/cloudflare/nimbus"
+  },
+  {
+    "name": "OpenRig",
+    "slug": "openrig",
+    "desc": "多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。",
+    "orig": "https://openrig.dev/",
+    "repo": "https://github.com/mvschwarz/openrig"
   }
 ]
