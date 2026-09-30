@@ -115,6 +115,20 @@ jobs:
           npm ci
           npm run build
 
+      # nimbus 是 pnpm monorepo：先装 workspace，再两段构建（框架包 → www 站点）。
+      # 与其他站不同，无需 sed 内链——nimbus 框架的 authored-links 会按 base
+      # 自动给正文内链加前缀；DOCS_SITE/DOCS_BASE 由 apps/www/astro.config.ts 读取。
+      - name: Build nimbus-docs-cn
+        working-directory: nimbus-docs-cn
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/nimbus/
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm --filter @cloudflare/nimbus-docs build
+          pnpm --filter @nimbus/www build
+
       # openship 是 pnpm monorepo（fumadocs + Next.js 16）。
       # 与其他站不同，无需 sed：Next 按 NEXT_BASE_PATH 自动给资源与内链加前缀，
       # canonical/sitemap 由 NEXT_PUBLIC_SITE_URL 注入。产物 out/ 在仓库根层。
