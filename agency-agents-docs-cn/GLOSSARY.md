@@ -49,6 +49,7 @@
 | escalation path | 上报路径 |
 | when in doubt | 拿不准时 |
 | tone | 语气 |
+| Instructions Reference | 说明参考 |
 | blocker | 阻塞项 |
 | nit | 细枝末节问题（nit） |
 
