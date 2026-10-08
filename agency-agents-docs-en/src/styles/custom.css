@@ -1,0 +1,19 @@
+/* CJK 字体栈：拉丁字体之后追加中文 fallback，视觉不变、中文不缺字 */
+:root {
+  --sl-font:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
+  --sl-font-mono:
+    ui-monospace,
+    'SF Mono',
+    'Cascadia Code',
+    Consolas,
+    'Noto Sans Mono CJK SC',
+    'Microsoft YaHei Mono',
+    monospace;
+}
