@@ -1,0 +1,267 @@
+---
+title: Baseten
+description: 了解如何在 AI SDK 中使用 Baseten 的模型。
+---
+
+# Baseten 提供商
+
+[Baseten](https://baseten.co/) 是一个推理平台，通过其 [API](https://docs.baseten.co/overview) 提供前沿、企业级开源 AI 模型的托管服务。
+
+## 安装
+
+Baseten 提供商包含在 `@ai-sdk/baseten` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/baseten" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/baseten` 导入默认提供商实例 `baseten`：
+
+```ts
+import { baseten } from '@ai-sdk/baseten';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/baseten` 导入 `createBaseten`，
+并使用你的设置创建提供商实例：
+
+```ts
+import { createBaseten } from '@ai-sdk/baseten';
+
+const baseten = createBaseten({
+  apiKey: process.env.BASETEN_API_KEY ?? '',
+});
+```
+
+你可以使用以下可选设置来定制 Baseten 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://inference.baseten.co/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认值为
+  `BASETEN_API_KEY` 环境变量。建议用 `export` 设置该环境变量，这样就无需每次都带上该字段。
+  你可以在[这里](https://app.baseten.co/settings/api_keys)获取你的 Baseten API 密钥。
+
+- **modelURL** _string_
+
+  特定模型（chat 或 embeddings）的自定义模型 URL。如果未提供，
+  将使用默认的 Model API。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **performanceClient** _PerformanceClient constructor_
+
+  选择启用 Baseten 原生性能客户端（针对嵌入模型），以获得客户端侧
+  批处理与请求对冲（request hedging）能力。传入你自己安装的
+  `@basetenlabs/performance-client` 中的 `PerformanceClient` 构造函数。
+  省略时，嵌入请求使用普通 HTTP。参见
+  [原生性能客户端（可选）](#原生性能客户端可选)。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## Model APIs
+
+你可以使用提供商实例选择 [Baseten 模型](https://www.baseten.co/products/model-apis/)。
+第一个参数是模型 id，例如 `'moonshotai/Kimi-K2-Instruct-0905'`：Model API 下完整支持的模型列表可在[这里](https://docs.baseten.co/development/model-apis/overview#supported-models)查看。
+
+```ts
+const model = baseten('moonshotai/Kimi-K2-Instruct-0905');
+```
+
+### 示例
+
+你可以使用 Baseten 语言模型和 `generateText` 函数生成文本：
+
+```ts
+import { baseten } from '@ai-sdk/baseten';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: baseten('moonshotai/Kimi-K2-Instruct-0905'),
+  prompt: 'What is the meaning of life? Answer in one sentence.',
+});
+```
+
+Baseten 语言模型也可以用于 `streamText` 函数
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+## 专用模型
+
+Baseten 为 chat 模型和嵌入模型都支持专用模型 URL。创建提供商时你必须指定 `modelURL`：
+
+### OpenAI 兼容端点（`/sync/v1`）
+
+适用于通过 Baseten 的 OpenAI 兼容端点部署的模型：
+
+```ts
+import { createBaseten } from '@ai-sdk/baseten';
+
+const baseten = createBaseten({
+  modelURL: 'https://model-{MODEL_ID}.api.baseten.co/sync/v1',
+});
+// No modelId is needed because we specified modelURL
+const model = baseten();
+const { text } = await generateText({
+  model: model,
+  prompt: 'Say hello from a Baseten chat model!',
+});
+```
+
+### `/predict` 端点
+
+`/predict` 端点目前不支持 chat 模型。chat 功能必须使用 `/sync/v1` 端点。
+
+## 嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 Baseten 嵌入 API 的模型。Baseten Embeddings Inference 部署与 OpenAI 兼容，因此嵌入请求默认使用普通 HTTP，无需额外依赖。
+
+<Note>
+  **重要**：嵌入模型需要带有自定义
+  `modelURL` 的专用部署。与 chat 模型不同，嵌入模型无法使用 Baseten 的默认
+  Model API，必须指定专用模型端点。
+</Note>
+
+```ts
+import { createBaseten } from '@ai-sdk/baseten';
+import { embed, embedMany } from 'ai';
+
+const baseten = createBaseten({
+  modelURL: 'https://model-{MODEL_ID}.api.baseten.co/sync',
+});
+
+const embeddingModel = baseten.embeddingModel();
+
+// Single embedding
+const { embedding } = await embed({
+  model: embeddingModel,
+  value: 'sunny day at the beach',
+});
+
+// Batch embeddings
+const { embeddings } = await embedMany({
+  model: embeddingModel,
+  values: [
+    'sunny day at the beach',
+    'rainy afternoon in the city',
+    'snowy mountain peak',
+  ],
+});
+```
+
+每个请求最多发送 128 个值。`embedMany` 会把更大的输入拆分为
+该大小的分块并行执行，因此你可以传入任意数量的值。
+
+### 嵌入的端点支持
+
+**支持**：
+
+- `/sync` 端点（会自动追加 `/v1/embeddings`）
+- `/sync/v1` 端点
+
+**不支持**：
+
+- `/predict` 端点
+
+### 原生性能客户端（可选）
+
+Baseten 还发布了 `@basetenlabs/performance-client`，这是一个原生客户端，
+在你部署已有的服务端动态批处理之上，额外提供客户端侧批处理与请求对冲能力。
+它默认**不会**被安装：它是一个原生插件（native addon），无法在边缘（edge）运行时中加载，
+打包器也无法解析其平台二进制文件。
+
+要使用它，请自行安装并传入构造函数：
+
+```bash
+npm i @basetenlabs/performance-client
+```
+
+```ts
+import { createBaseten } from '@ai-sdk/baseten';
+import { PerformanceClient } from '@basetenlabs/performance-client';
+
+const baseten = createBaseten({
+  modelURL:
+    'https://model-{MODEL_ID}.api.baseten.co/environments/production/sync',
+  performanceClient: PerformanceClient,
+});
+```
+
+启用后，客户端会自行处理批处理，因此所有值会在单次调用中发送，
+而不是按 128 拆分。
+
+## 错误处理
+
+Baseten 提供商为常见 API 错误内置了错误处理：
+
+```ts
+import { baseten } from '@ai-sdk/baseten';
+import { generateText } from 'ai';
+
+try {
+  const { text } = await generateText({
+    model: baseten('moonshotai/Kimi-K2-Instruct-0905'),
+    prompt: 'Hello, world!',
+  });
+} catch (error) {
+  console.error('Baseten API error:', error.message);
+}
+```
+
+### 常见错误场景
+
+```ts
+// Embeddings require a modelURL
+try {
+  baseten.embeddingModel();
+} catch (error) {
+  // Error: "No model URL provided for embeddings. Please set modelURL option for embeddings."
+}
+
+// /predict endpoints are not supported for chat models
+try {
+  const baseten = createBaseten({
+    modelURL:
+      'https://model-{MODEL_ID}.api.baseten.co/environments/production/predict',
+  });
+  baseten(); // This will throw an error
+} catch (error) {
+  // Error: "Not supported. You must use a /sync/v1 endpoint for chat models."
+}
+
+// /sync/v1 endpoints are now supported for embeddings
+const baseten = createBaseten({
+  modelURL:
+    'https://model-{MODEL_ID}.api.baseten.co/environments/production/sync/v1',
+});
+const embeddingModel = baseten.embeddingModel(); // This works fine!
+
+// /predict endpoints are not supported for embeddings
+try {
+  const baseten = createBaseten({
+    modelURL:
+      'https://model-{MODEL_ID}.api.baseten.co/environments/production/predict',
+  });
+  baseten.embeddingModel(); // This will throw an error
+} catch (error) {
+  // Error: "Not supported. You must use a /sync or /sync/v1 endpoint for embeddings."
+}
+
+// Image models are not supported
+try {
+  baseten.imageModel('test-model');
+} catch (error) {
+  // Error: NoSuchModelError for imageModel
+}
+```
+
+<Note>
+  有关 Baseten 模型与部署选项的更多信息，请参见
+  [Baseten 文档](https://docs.baseten.co/)。
+</Note>

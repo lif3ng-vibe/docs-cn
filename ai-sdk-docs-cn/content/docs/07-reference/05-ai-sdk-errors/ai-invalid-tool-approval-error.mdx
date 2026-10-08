@@ -1,0 +1,24 @@
+---
+title: AI_InvalidToolApprovalError
+description: 了解如何修复 AI_InvalidToolApprovalError
+---
+
+# AI_InvalidToolApprovalError
+
+当工具批准（tool approval）响应引用了未知的 `approvalId` 时会引发此错误。消息历史中找不到匹配的 `tool-approval-request`。
+
+## 属性
+
+- `approvalId`：未找到的批准 ID
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_InvalidToolApprovalError` 的实例：
+
+```typescript
+import { InvalidToolApprovalError } from 'ai';
+
+if (InvalidToolApprovalError.isInstance(error)) {
+  // Handle the error
+}
+```

@@ -1,0 +1,25 @@
+---
+title: AI_InvalidMessageRoleError
+description: 了解如何解决 AI_InvalidMessageRoleError
+---
+
+# AI_InvalidMessageRoleError
+
+此错误在提供了无效的消息角色时发生。
+
+## 属性
+
+- `role`：无效的角色值
+- `message`：错误消息（可选，根据 `role` 自动生成）
+
+## 排查此错误
+
+可以使用以下方式检查错误是否为 `AI_InvalidMessageRoleError` 的实例：
+
+```typescript
+import { InvalidMessageRoleError } from 'ai';
+
+if (InvalidMessageRoleError.isInstance(error)) {
+  // Handle the error
+}
+```

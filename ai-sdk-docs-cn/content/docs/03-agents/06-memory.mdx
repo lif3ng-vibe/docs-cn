@@ -1,0 +1,270 @@
+---
+title: 记忆
+description: 使用提供商定义的工具、记忆提供商或自定义工具，为你的智能体（agent）添加持久记忆。
+---
+
+# Memory
+
+借助记忆（memory），你的智能体可以保存信息并在之后回忆起来。没有记忆，每次对话都从零开始；有了记忆，你的智能体会随时间积累上下文，回顾之前的交互，并适应用户。
+
+## 三种方式
+
+你可以通过三种方式为智能体添加记忆，各有不同的权衡取舍：
+
+| 方式                                              | 工作量   | 灵活性       | 提供商锁定             |
+| ------------------------------------------------- | -------- | ------------ | ---------------------- |
+| [提供商定义的工具](#提供商定义的工具)             | 低       | 中           | 是                     |
+| [记忆提供商](#记忆提供商)                         | 低       | 低           | 取决于记忆提供商       |
+| [自定义工具](#自定义工具)                         | 高       | 高           | 否                     |
+
+## 提供商定义的工具
+
+[提供商定义的工具（provider-defined tools）](/docs/foundations/tools#工具类型)是由提供商指定工具的 `inputSchema` 与 `description`，而由你提供 `execute` 函数的工具。模型经过训练学会了使用这些工具，因此与自定义工具相比可能获得更好的表现。
+
+### Anthropic Memory Tool
+
+[Anthropic Memory Tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool) 为 Claude 提供了一个结构化接口，用于管理 `/memories` 目录。Claude 会在开始任务之前读取它的记忆，在工作过程中创建和更新文件，并在未来的对话中引用这些内容。
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { ToolLoopAgent } from 'ai';
+
+const memory = anthropic.tools.memory_20250818({
+  execute: async action => {
+    // `action` contains `command`, `path`, and other fields
+    // depending on the command (view, create, str_replace,
+    // insert, delete, rename).
+    // Implement your storage backend here.
+    // Return the result as a string.
+  },
+});
+
+const agent = new ToolLoopAgent({
+  model: 'anthropic/claude-haiku-5.5',
+  tools: { memory },
+});
+
+const result = await agent.generate({
+  prompt: 'Remember that my favorite editor is Neovim',
+});
+```
+
+该工具接收结构化命令（`view`、`create`、`str_replace`、`insert`、`delete`、`rename`），每个命令都带有一个限定在 `/memories` 之下的 `path`。你的 `execute` 函数负责把这些命令映射到你的存储后端（文件系统、数据库或任何其他持久化层）。
+
+**何时使用**：当你希望以最小的实现成本获得记忆，并且已经在使用 Anthropic 模型时。代价是提供商锁定——该工具只能与 Claude 配合使用。
+
+## 记忆提供商
+
+另一种方式是使用内置了记忆的提供商。这些提供商包装外部记忆服务，并通过 AI SDK 的标准接口将其暴露出来。记忆的存储、检索和注入都在透明中进行，你无需自己定义任何工具。
+
+### Letta
+
+[Letta](https://letta.com) 为智能体提供持久的长期记忆。你在 Letta 平台（云端或自托管）上创建智能体，在那里配置它的记忆，然后使用 AI SDK 提供商与之交互。Letta 的智能体运行时会处理记忆管理（核心记忆、归档记忆、召回）。
+
+```bash
+pnpm add @letta-ai/vercel-ai-sdk-provider
+```
+
+```ts
+import { lettaCloud } from '@letta-ai/vercel-ai-sdk-provider';
+import { ToolLoopAgent } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: lettaCloud(),
+  providerOptions: {
+    letta: {
+      agent: { id: 'your-agent-id' },
+    },
+  },
+});
+
+const result = await agent.generate({
+  prompt: 'Remember that my favorite editor is Neovim',
+});
+```
+
+你还可以将 Letta 内置的记忆工具与自定义工具搭配使用：
+
+```ts
+import { lettaCloud } from '@letta-ai/vercel-ai-sdk-provider';
+import { ToolLoopAgent } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: lettaCloud(),
+  tools: {
+    core_memory_append: lettaCloud.tool('core_memory_append'),
+    memory_insert: lettaCloud.tool('memory_insert'),
+    memory_replace: lettaCloud.tool('memory_replace'),
+  },
+  providerOptions: {
+    letta: {
+      agent: { id: 'your-agent-id' },
+    },
+  },
+});
+
+const stream = agent.stream({
+  prompt: 'What do you remember about me?',
+});
+```
+
+完整的设置与配置请参阅 [Letta provider 文档](/providers/community-providers/letta)。
+
+### Mem0
+
+[Mem0](https://mem0.ai) 在任何受支持的 LLM 提供商之上添加一层记忆。它会自动从对话中提取记忆并存储，然后在未来的提示词（prompt）中检索相关的记忆。
+
+```bash
+pnpm add @mem0/vercel-ai-provider
+```
+
+```ts
+import { createMem0 } from '@mem0/vercel-ai-provider';
+import { ToolLoopAgent } from 'ai';
+
+const mem0 = createMem0({
+  provider: 'openai',
+  mem0ApiKey: process.env.MEM0_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const agent = new ToolLoopAgent({
+  model: mem0('gpt-6-astra', { user_id: 'user-123' }),
+});
+
+const { text } = await agent.generate({
+  prompt: 'Remember that my favorite editor is Neovim',
+});
+```
+
+Mem0 可横跨多个 LLM 提供商使用（OpenAI、Anthropic、Google、Groq、Cohere）。你也可以显式地管理记忆：
+
+```ts
+import { addMemories, retrieveMemories } from '@mem0/vercel-ai-provider';
+
+await addMemories(messages, { user_id: 'user-123' });
+const context = await retrieveMemories(prompt, { user_id: 'user-123' });
+```
+
+完整的设置与配置请参阅 [Mem0 provider 文档](/providers/community-providers/mem0)。
+
+### Supermemory
+
+[Supermemory](https://supermemory.ai) 是一个长期记忆平台，能为你的 AI 应用添加持久、自我成长的记忆。它提供的工具通过语义搜索自动处理记忆的保存与检索。
+
+```bash
+pnpm add @supermemory/tools
+```
+
+```ts
+__PROVIDER_IMPORT__;
+import { supermemoryTools } from '@supermemory/tools/ai-sdk';
+import { ToolLoopAgent } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: supermemoryTools(process.env.SUPERMEMORY_API_KEY!),
+});
+
+const result = await agent.generate({
+  prompt: 'Remember that my favorite editor is Neovim',
+});
+```
+
+Supermemory 可与任何 AI SDK 提供商配合使用。这些工具为模型提供 `addMemory` 与 `searchMemories` 操作，负责存储和检索。
+
+完整的设置与配置请参阅 [Supermemory provider 文档](/providers/community-providers/supermemory)。
+
+### Hindsight
+
+[Hindsight](/providers/community-providers/hindsight) 通过五个工具为智能体提供持久记忆：`retain`、`recall`、`reflect`、`getMentalModel` 与 `getDocument`。它可以用 Docker 自托管，也可以作为云服务使用。
+
+```bash
+pnpm add @vectorize-io/hindsight-ai-sdk @vectorize-io/hindsight-client
+```
+
+```ts
+__PROVIDER_IMPORT__;
+import { HindsightClient } from '@vectorize-io/hindsight-client';
+import { createHindsightTools } from '@vectorize-io/hindsight-ai-sdk';
+import { ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const client = new HindsightClient({ baseUrl: process.env.HINDSIGHT_API_URL });
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: createHindsightTools({ client, bankId: 'user-123' }),
+  instructions: 'You are a helpful assistant with long-term memory.',
+});
+
+const result = await agent.generate({
+  prompt: 'Remember that my favorite editor is Neovim',
+});
+```
+
+`bankId` 用于标识记忆库，通常就是用户 ID。在多用户应用中，请在你的请求处理器内调用 `createHindsightTools`，让每个请求都拿到正确的 bank。Hindsight 可与任何 AI SDK 提供商配合使用。
+
+完整的设置与配置请参阅 [Hindsight provider 文档](/providers/community-providers/hindsight)。
+
+### MongoDB
+
+[`@mongodb-developer/vercel-ai-memory`](https://www.npmjs.com/package/@mongodb-developer/vercel-ai-memory) 提供基于 MongoDB Atlas 的持久记忆，分为五个结构化层级：**Session**、**Semantic**、**Procedural**、**Episodic** 与 **Scratchpad**。检索由 Atlas Vector Search 提供支持，可使用任何 AI SDK 嵌入（embedding）模型，并具备自动索引创建和按类型划分的保留策略。
+
+```bash
+pnpm add @mongodb-developer/vercel-ai-memory
+```
+
+该集成面向 AI SDK v6，因为它依赖 `ModelMessage`、`ToolLoopAgent` 与 `isLoopFinished()` 等 v6 API：
+
+```json
+{
+  "peerDependencies": {
+    "ai": "^6.0.0",
+    "mongodb": "^6.0.0",
+    "zod": "^3.0.0"
+  }
+}
+```
+
+```ts
+import { createMongoDBMemory } from '@mongodb-developer/vercel-ai-memory';
+import { openai } from '@ai-sdk/openai';
+import { ToolLoopAgent, isLoopFinished } from 'ai';
+
+// Create the memory instance once at module/server level
+const mongodbMemory = createMongoDBMemory({
+  uri: process.env.MONGODB_URI!,
+  embedder: openai.embedding('text-embedding-3-small'),
+});
+
+// Scope to a user and session per request
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  tools: mongodbMemory({ userId: 'alice', sessionId: 'sess-001' }),
+  stopWhen: isLoopFinished(),
+});
+
+const result = await agent.generate({
+  prompt: 'My name is Alice and I love hiking. Remember that.',
+});
+```
+
+`isLoopFinished()` 让智能体持续运行，直到工具循环自然结束；当记忆工具需要在最终响应之前进行读写时，这很有用。
+
+会话记忆支持两种模式：**工具驱动**（由 LLM 决定何时读写——适合原型）与 **Hook 驱动**（运行时通过 `prepareCall` + `onEnd` Hook 持久化每一轮——推荐用于生产环境）。其他记忆层级（semantic、procedural、episodic、scratchpad）始终由 LLM 控制，并且按设计是选择性的。
+
+MongoDB 记忆可与任何 AI SDK 模型和嵌入提供商配合使用，除 MongoDB Atlas 之外没有厂商锁定。
+
+**何时使用记忆提供商**：当你想要记忆能力、又不想自行搭建任何存储基础设施时，这些提供商非常合适。代价是提供商掌控记忆行为，你对存了什么内容、如何检索的能见度较低。你还会引入对外部服务的依赖。
+
+## 自定义工具
+
+从头构建自己的记忆工具是最灵活的方式。你可以完全控制存储格式、接口和检索逻辑。这需要最多的前期投入，但让你完全掌控记忆的工作方式，没有提供商锁定，也没有外部依赖。
+
+有两种常见模式：
+
+- **结构化操作**：你定义显式的操作（`view`、`create`、`update`、`search`），并自行处理结构化输入。由于每个操作都由你控制，因此天然安全。
+- **基于 Bash**：你为模型提供一个沙箱化的 bash 环境，让它组合 shell 命令（`cat`、`grep`、`sed`、`echo`）来灵活地访问记忆。更强大，但为了安全需要做命令校验。
+
+关于实现一个带 bash 接口、基于 AST 的命令校验和文件系统持久化的自定义记忆工具的完整演练，请参阅 **[构建自定义记忆工具](/cookbook/guides/custom-memory-tool)** 菜谱。

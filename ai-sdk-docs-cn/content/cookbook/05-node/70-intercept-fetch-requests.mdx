@@ -1,0 +1,42 @@
+---
+title: 拦截 Fetch 请求
+description: 了解如何使用 AI SDK 和 Node 拦截 fetch 请求
+tags: ['node']
+---
+
+# Intercepting Fetch Requests
+
+许多提供商支持在其工厂函数中通过 `fetch` 参数设置自定义 `fetch` 函数。
+
+自定义 `fetch` 函数可用于在请求发送到提供商 API 之前拦截并修改请求，也可在响应返回给调用方之前拦截并修改响应。
+
+拦截请求的用例包括：
+
+- 记录请求与响应日志
+- 添加鉴权请求头
+- 修改请求体
+- 缓存响应
+- 使用自定义 HTTP 客户端
+
+## 示例
+
+```ts file='index.ts' highlight="5-13"
+import { generateText, createGateway } from 'ai';
+
+const gateway = createGateway({
+  // example fetch wrapper that logs the input to the API call:
+  fetch: async (url, options) => {
+    console.log('URL', url);
+    console.log('Headers', JSON.stringify(options!.headers, null, 2));
+    console.log(
+      `Body ${JSON.stringify(JSON.parse(options!.body! as string), null, 2)}`,
+    );
+    return await fetch(url, options);
+  },
+});
+
+const { text } = await generateText({
+  model: gateway('openai/gpt-6-astra'),
+  prompt: 'Why is the sky blue?',
+});
+```

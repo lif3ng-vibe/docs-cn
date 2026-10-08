@@ -1,0 +1,288 @@
+---
+title: 配置调用选项
+description: 传递类型安全的运行时输入，动态配置智能体（agent）的行为。
+---
+
+# Configuring Call Options
+
+调用选项（call options）让你能够向智能体传递类型安全的结构化输入。你可以利用它们根据具体请求动态修改任何智能体设置。
+
+## 为什么要使用调用选项？
+
+当你需要智能体的行为随运行时输入而变化时：
+
+- **注入动态上下文** - 将检索到的文档、用户偏好或会话数据注入到提示词（prompt）中
+- **动态选择模型** - 根据请求复杂度选择更快或更强大的模型
+- **按请求配置工具** - 将用户位置传递给搜索工具，或调整工具行为
+- **自定义提供商选项** - 设置推理力度、temperature 或其他提供商特定设置
+
+如果没有调用选项，你就得创建多个智能体，或者在智能体之外处理配置逻辑。
+
+## 工作原理
+
+分三步定义调用选项：
+
+1. **定义 schema** - 使用 `callOptionsSchema` 声明你接受哪些输入
+2. **用 `prepareCall` 进行配置** - 利用这些输入修改智能体设置
+3. **在运行时传入选项** - 调用 `generate()` 或 `stream()` 时提供选项
+
+## 基本示例
+
+在运行时为智能体的提示词添加用户上下文：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const supportAgent = new ToolLoopAgent({
+  model: __MODEL__,
+  callOptionsSchema: z.object({
+    userId: z.string(),
+    accountType: z.enum(['free', 'pro', 'enterprise']),
+  }),
+  instructions: 'You are a helpful customer support agent.',
+  prepareCall: ({ options, ...settings }) => ({
+    ...settings,
+    instructions:
+      settings.instructions +
+      `\nUser context:
+- Account type: ${options.accountType}
+- User ID: ${options.userId}
+
+Adjust your response based on the user's account level.`,
+  }),
+});
+
+// Call the agent with specific user context
+const result = await supportAgent.generate({
+  prompt: 'How do I upgrade my account?',
+  options: {
+    userId: 'user_123',
+    accountType: 'free',
+  },
+});
+```
+
+此时 `options` 参数成为必填项且会进行类型检查。如果你没有提供它或传入了错误的类型，TypeScript 会报错。
+
+## 修改智能体设置
+
+使用 `prepareCall` 可以修改任何智能体设置。返回的对象会替换本次调用的设置，因此请展开传入的设置，只覆盖你想修改的部分。
+
+### 动态模型选择
+
+根据请求特征选择模型：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__, // Default model
+  callOptionsSchema: z.object({
+    complexity: z.enum(['simple', 'complex']),
+  }),
+  prepareCall: ({ options, ...settings }) => ({
+    ...settings,
+    model:
+      options.complexity === 'simple'
+        ? 'openai/gpt-6-luna'
+        : 'openai/gpt-6-astra',
+  }),
+});
+
+// Use faster model for simple queries
+await agent.generate({
+  prompt: 'What is 2+2?',
+  options: { complexity: 'simple' },
+});
+
+// Use more capable model for complex reasoning
+await agent.generate({
+  prompt: 'Explain quantum entanglement',
+  options: { complexity: 'complex' },
+});
+```
+
+### 动态工具配置
+
+根据运行时输入配置工具：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const newsAgent = new ToolLoopAgent({
+  model: __MODEL__,
+  callOptionsSchema: z.object({
+    userCity: z.string().optional(),
+    userRegion: z.string().optional(),
+  }),
+  tools: {
+    web_search: openai.tools.webSearch(),
+  },
+  prepareCall: ({ options, ...settings }) => ({
+    ...settings,
+    tools: {
+      web_search: openai.tools.webSearch({
+        searchContextSize: 'low',
+        userLocation: {
+          type: 'approximate',
+          city: options.userCity,
+          region: options.userRegion,
+          country: 'US',
+        },
+      }),
+    },
+  }),
+});
+
+await newsAgent.generate({
+  prompt: 'What are the top local news stories?',
+  options: {
+    userCity: 'San Francisco',
+    userRegion: 'California',
+  },
+});
+```
+
+### 提供商特定选项
+
+动态配置提供商设置：
+
+```ts
+import { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import { ToolLoopAgent } from 'ai';
+import { z } from 'zod';
+
+const agent = new ToolLoopAgent({
+  model: 'openai/gpt-6-astra',
+  callOptionsSchema: z.object({
+    taskDifficulty: z.enum(['low', 'medium', 'high']),
+  }),
+  prepareCall: ({ options, ...settings }) => ({
+    ...settings,
+    providerOptions: {
+      openai: {
+        reasoningEffort: options.taskDifficulty,
+      } satisfies OpenAILanguageModelResponsesOptions,
+    },
+  }),
+});
+
+await agent.generate({
+  prompt: 'Analyze this complex scenario...',
+  options: { taskDifficulty: 'high' },
+});
+```
+
+## 高级模式
+
+### 检索增强生成（RAG）
+
+获取相关上下文并注入到你的提示词中：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const ragAgent = new ToolLoopAgent({
+  model: __MODEL__,
+  callOptionsSchema: z.object({
+    query: z.string(),
+  }),
+  prepareCall: async ({ options, ...settings }) => {
+    // Fetch relevant documents (this can be async)
+    const documents = await vectorSearch(options.query);
+
+    return {
+      ...settings,
+      instructions: `Answer questions using the following context:
+
+${documents.map(doc => doc.content).join('\n\n')}`,
+    };
+  },
+});
+
+await ragAgent.generate({
+  prompt: 'What is our refund policy?',
+  options: { query: 'refund policy' },
+});
+```
+
+`prepareCall` 函数可以是异步的，让你能够在配置智能体之前先获取数据。
+
+### 组合多项修改
+
+同时修改多个设置：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  callOptionsSchema: z.object({
+    userRole: z.enum(['admin', 'user']),
+    urgency: z.enum(['low', 'high']),
+  }),
+  tools: {
+    readDatabase: readDatabaseTool,
+    writeDatabase: writeDatabaseTool,
+  },
+  prepareCall: ({ options, ...settings }) => ({
+    ...settings,
+    // Upgrade model for urgent requests
+    model: options.urgency === 'high' ? __MODEL__ : settings.model,
+    // Limit tools based on user role
+    activeTools:
+      options.userRole === 'admin'
+        ? ['readDatabase', 'writeDatabase']
+        : ['readDatabase'],
+    // Adjust instructions
+    instructions: `You are a ${options.userRole} assistant.
+${options.userRole === 'admin' ? 'You have full database access.' : 'You have read-only access.'}`,
+  }),
+});
+
+await agent.generate({
+  prompt: 'Update the user record',
+  options: {
+    userRole: 'admin',
+    urgency: 'high',
+  },
+});
+```
+
+## 在 createAgentUIStreamResponse 中使用
+
+通过 API 路由将调用选项传递给你的智能体：
+
+```ts filename="app/api/chat/route.ts"
+import { createAgentUIStreamResponse } from 'ai';
+import { myAgent } from '@/ai/agents/my-agent';
+
+export async function POST(request: Request) {
+  const { messages, userId, accountType } = await request.json();
+
+  return createAgentUIStreamResponse({
+    agent: myAgent,
+    messages,
+    options: {
+      userId,
+      accountType,
+    },
+  });
+}
+```
+
+## 下一步
+
+- 了解[循环控制](/docs/agents/loop-control)，管理执行流程
+- 探索[工作流模式](/docs/agents/workflows)，处理复杂的多步流程

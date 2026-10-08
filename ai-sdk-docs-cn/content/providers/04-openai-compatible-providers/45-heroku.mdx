@@ -1,0 +1,110 @@
+---
+title: Heroku
+description: 在 AI SDK 中使用 Heroku 的 OpenAI 兼容 API。
+---
+
+# Heroku 提供商
+
+[Heroku](https://heroku.com/) 是一个云平台，可用于部署和运行应用，包括具有 OpenAI API 兼容性的 AI 模型。
+你可以部署 OpenAI API 兼容的模型，并将其与 AI SDK 一起使用。
+
+## 设置
+
+Heroku 提供商（provider）与 OpenAI API 兼容，因此通过 `@ai-sdk/openai-compatible` 模块提供。
+安装方式如下：
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+### Heroku 设置
+
+1. 在 Heroku 中创建一个测试应用，将 `your-app-name` 替换为唯一的应用名称：
+
+```bash
+export APP_NAME=your-app-name
+heroku create $APP_NAME
+```
+
+2. 使用 claude-3-5-haiku 进行推理：
+
+```bash
+heroku ai:models:create -a $APP_NAME claude-3-5-haiku
+```
+
+3. 导出变量：
+
+```bash
+export INFERENCE_KEY=$(heroku config:get INFERENCE_KEY -a $APP_NAME)
+export INFERENCE_MODEL_ID=$(heroku config:get INFERENCE_MODEL_ID -a $APP_NAME)
+export INFERENCE_URL=$(heroku config:get INFERENCE_URL -a $APP_NAME)
+```
+
+## 提供商实例
+
+要使用 Heroku，可以用 `@ai-sdk/openai-compatible` 中的 `createOpenAICompatible` 函数创建一个自定义提供商实例：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const heroku = createOpenAICompatible({
+  name: 'heroku',
+  baseURL: process.env.INFERENCE_URL + '/v1',
+  apiKey: process.env.INFERENCE_KEY,
+});
+```
+
+请确保在环境变量中设置好 `INFERENCE_KEY`、`INFERENCE_MODEL_ID` 和 `INFERENCE_URL`。
+
+## 语言模型
+
+你可以使用提供商实例创建 Heroku 模型。
+第一个参数是所服务模型的名称，例如 `claude-3-5-haiku`。
+
+```ts
+const model = heroku('claude-3-5-haiku');
+```
+
+### 示例
+
+你可以使用 `generateText` 函数，用 Heroku 的语言模型生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const heroku = createOpenAICompatible({
+  name: 'heroku',
+  baseURL: process.env.INFERENCE_URL + '/v1',
+  apiKey: process.env.INFERENCE_KEY,
+});
+
+const { text } = await generateText({
+  model: heroku('claude-3-5-haiku'),
+  prompt: 'Tell me about yourself in one sentence',
+});
+
+console.log(text);
+```
+
+Heroku 语言模型也可以通过 `streamText` 函数以流式方式生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { streamText } from 'ai';
+
+const heroku = createOpenAICompatible({
+  name: 'heroku',
+  baseURL: process.env.INFERENCE_URL + '/v1',
+  apiKey: process.env.INFERENCE_KEY,
+});
+
+const result = streamText({
+  model: heroku('claude-3-5-haiku'),
+  prompt: 'Tell me about yourself in one sentence',
+});
+
+for await (const message of result.textStream) {
+  console.log(message);
+}
+```
+
+Heroku 语言模型还支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 生成结构化数据。

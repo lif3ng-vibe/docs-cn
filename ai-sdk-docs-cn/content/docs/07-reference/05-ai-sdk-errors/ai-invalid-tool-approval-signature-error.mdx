@@ -1,0 +1,31 @@
+---
+title: AI_InvalidToolApprovalSignatureError
+description: 了解如何修复 AI_InvalidToolApprovalSignatureError
+---
+
+# AI_InvalidToolApprovalSignatureError
+
+当配置了 `experimental_toolApprovalSecret`，且从消息历史中重放的工具批准缺少 HMAC 签名或签名无效时会引发此错误。服务器会在工具执行前拒绝该批准。
+
+常见原因：
+
+- 批准由客户端伪造（不存在签名）
+- 工具参数在批准签名后被修改
+- 服务器密钥在签发与验证之间发生了变化（例如密钥轮换时没有重叠期）
+
+## 属性
+
+- `approvalId`：未通过验证的批准 ID
+- `toolCallId`：该批准对应的工具调用 ID
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_InvalidToolApprovalSignatureError` 的实例：
+
+```typescript
+import { InvalidToolApprovalSignatureError } from 'ai';
+
+if (InvalidToolApprovalSignatureError.isInstance(error)) {
+  // Handle the error
+}
+```

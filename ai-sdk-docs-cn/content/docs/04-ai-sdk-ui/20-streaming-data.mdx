@@ -1,0 +1,405 @@
+---
+title: 流式传输自定义数据
+description: 了解如何将自定义数据从服务器流式传输到客户端。
+---
+
+# Streaming Custom Data
+
+在模型响应之外附带发送额外数据往往很有用。
+例如，你可能希望发送状态信息、存储消息后的消息 id，
+或者对语言模型所引用内容的引用。
+
+AI SDK 提供了几个辅助函数，让你能把附加数据流式传输到客户端，
+并挂载到 `UIMessage` 的部分（parts）数组上：
+
+- `createUIMessageStream`：创建一个数据流
+- `createUIMessageStreamResponse`：创建一个以流发送数据的响应对象
+- `pipeUIMessageStreamToResponse`：把数据流管道输出到服务器响应对象
+
+数据会以服务器发送事件（Server-Sent Events）的形式作为响应流的一部分进行流式传输。
+
+## 设置类型安全的数据流式传输
+
+首先，为获得类型安全，请定义带有数据部分 schema 的自定义消息类型：
+
+```tsx filename="ai/types.ts"
+import { UIMessage } from 'ai';
+
+// Define your custom message type with data part schemas
+export type MyUIMessage = UIMessage<
+  never, // metadata type
+  {
+    weather: {
+      city: string;
+      weather?: string;
+      status: 'loading' | 'success';
+    };
+    notification: {
+      message: string;
+      level: 'info' | 'warning' | 'error';
+    };
+  } // data parts type
+>;
+```
+
+## 从服务器流式传输数据
+
+在服务器端的 Route Handler 中，你可以创建一个 `UIMessageStream`，然后把它传递给 `createUIMessageStreamResponse`：
+
+```tsx filename="route.ts"
+import { openai } from '@ai-sdk/openai';
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import type { MyUIMessage } from '@/ai/types';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const stream = createUIMessageStream<MyUIMessage>({
+    execute: ({ writer }) => {
+      // 1. Start the assistant message before writing any message parts.
+      writer.write({ type: 'start' });
+
+      // 2. Send initial status (transient - won't be added to message history)
+      writer.write({
+        type: 'data-notification',
+        data: { message: 'Processing your request...', level: 'info' },
+        transient: true, // This part won't be added to message history
+      });
+
+      // 3. Send sources (useful for RAG use cases)
+      writer.write({
+        type: 'source',
+        value: {
+          type: 'source',
+          sourceType: 'url',
+          id: 'source-1',
+          url: 'https://weather.com',
+          title: 'Weather Data Source',
+        },
+      });
+
+      // 4. Send data parts with loading state
+      writer.write({
+        type: 'data-weather',
+        id: 'weather-1',
+        data: { city: 'San Francisco', status: 'loading' },
+      });
+
+      const result = streamText({
+        model: __MODEL__,
+        messages: await convertToModelMessages(messages),
+        onEnd() {
+          // 5. Update the same data part (reconciliation)
+          writer.write({
+            type: 'data-weather',
+            id: 'weather-1', // Same ID = update existing part
+            data: {
+              city: 'San Francisco',
+              weather: 'sunny',
+              status: 'success',
+            },
+          });
+
+          // 6. Send completion notification (transient)
+          writer.write({
+            type: 'data-notification',
+            data: { message: 'Request completed', level: 'info' },
+            transient: true, // Won't be added to message history
+          });
+        },
+      });
+
+      writer.merge(
+        toUIMessageStream({ stream: result.stream, sendStart: false }),
+      );
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
+}
+```
+
+<Note>
+  你也可以从自定义后端（例如 Python / FastAPI）发送流数据，
+  具体请参阅 [UI 消息流协议](/docs/ai-sdk-ui/stream-protocol#数据流协议)。
+</Note>
+
+## 可流式传输的数据类型
+
+### 数据部分（持久化）
+
+常规数据部分会加入消息历史，并出现在 `message.parts` 中：
+
+```tsx
+writer.write({
+  type: 'data-weather',
+  id: 'weather-1', // Optional: enables reconciliation
+  data: { city: 'San Francisco', status: 'loading' },
+});
+```
+
+### 来源
+
+来源（source）适用于 RAG 实现，当你想展示引用了哪些文档或 URL 时非常有用：
+
+```tsx
+writer.write({
+  type: 'source',
+  value: {
+    type: 'source',
+    sourceType: 'url',
+    id: 'source-1',
+    url: 'https://example.com',
+    title: 'Example Source',
+  },
+});
+```
+
+### 瞬态数据部分（临时）
+
+瞬态（transient）部分会发送到客户端，但不会加入消息历史。它们只能通过 useChat 的 `onData` 处理器访问：
+
+```tsx
+// server
+writer.write({
+  type: 'data-notification',
+  data: { message: 'Processing...', level: 'info' },
+  transient: true, // Won't be added to message history
+});
+
+// client
+const [notification, setNotification] = useState();
+
+const { messages } = useChat({
+  onData: ({ data, type }) => {
+    if (type === 'data-notification') {
+      setNotification({ message: data.message, level: data.level });
+    }
+  },
+});
+```
+
+## 数据部分协调
+
+当你以相同的 ID 写入某个数据部分时，客户端会自动协调（reconcile）并更新该部分。这带来了一些强大的动态体验，例如：
+
+- **协同工件**——实时更新代码、文档或设计
+- **渐进式数据加载**——展示逐渐转变为最终结果的加载状态
+- **实时状态更新**——更新进度条、计数器或状态指示器
+- **交互式组件**——构建随用户交互而演化的 UI 元素
+
+协调会自动发生——只需在写入流时使用相同的 `id` 即可。
+
+## 在客户端处理数据
+
+### 使用 onData 回调
+
+`onData` 回调对于处理流式数据至关重要，尤其是瞬态部分：
+
+```tsx filename="page.tsx"
+import { useChat } from '@ai-sdk/react';
+import type { MyUIMessage } from '@/ai/types';
+
+const { messages } = useChat<MyUIMessage>({
+  api: '/api/chat',
+  onData: dataPart => {
+    // Handle all data parts as they arrive (including transient parts)
+    console.log('Received data part:', dataPart);
+
+    // Handle different data part types
+    if (dataPart.type === 'data-weather') {
+      console.log('Weather update:', dataPart.data);
+    }
+
+    // Handle transient notifications (ONLY available here, not in message.parts)
+    if (dataPart.type === 'data-notification') {
+      showToast(dataPart.data.message, dataPart.data.level);
+    }
+  },
+});
+```
+
+**重要提示**：瞬态数据部分**只能**通过 `onData` 回调访问。由于不会加入消息历史，它们不会出现在 `message.parts` 数组中。
+
+### 渲染持久化数据部分
+
+你可以从消息部分数组中筛选并渲染数据部分：
+
+```tsx filename="page.tsx"
+const result = (
+  <>
+    {messages?.map(message => (
+      <div key={message.id}>
+        {/* Render weather data parts */}
+        {message.parts
+          .filter(part => part.type === 'data-weather')
+          .map((part, index) => (
+            <div key={index} className="weather-widget">
+              {part.data.status === 'loading' ? (
+                <>Getting weather for {part.data.city}...</>
+              ) : (
+                <>
+                  Weather in {part.data.city}: {part.data.weather}
+                </>
+              )}
+            </div>
+          ))}
+
+        {/* Render text content */}
+        {message.parts
+          .filter(part => part.type === 'text')
+          .map((part, index) => (
+            <div key={index}>{part.text}</div>
+          ))}
+
+        {/* Render sources */}
+        {message.parts
+          .filter(part => part.type === 'source')
+          .map((part, index) => (
+            <div key={index} className="source">
+              Source: <a href={part.url}>{part.title}</a>
+            </div>
+          ))}
+      </div>
+    ))}
+  </>
+);
+```
+
+### 完整示例
+
+```tsx filename="page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+import type { MyUIMessage } from '@/ai/types';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+
+  const { messages, sendMessage } = useChat<MyUIMessage>({
+    api: '/api/chat',
+    onData: dataPart => {
+      // Handle transient notifications
+      if (dataPart.type === 'data-notification') {
+        console.log('Notification:', dataPart.data.message);
+      }
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage({ text: input });
+    setInput('');
+  };
+
+  return (
+    <>
+      {messages?.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+
+          {/* Render weather data */}
+          {message.parts
+            .filter(part => part.type === 'data-weather')
+            .map((part, index) => (
+              <span key={index} className="weather-update">
+                {part.data.status === 'loading' ? (
+                  <>Getting weather for {part.data.city}...</>
+                ) : (
+                  <>
+                    Weather in {part.data.city}: {part.data.weather}
+                  </>
+                )}
+              </span>
+            ))}
+
+          {/* Render text content */}
+          {message.parts
+            .filter(part => part.type === 'text')
+            .map((part, index) => (
+              <div key={index}>{part.text}</div>
+            ))}
+        </div>
+      ))}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Ask about the weather..."
+        />
+        <button type="submit">Send</button>
+      </form>
+    </>
+  );
+}
+```
+
+## 使用场景
+
+- **RAG 应用**——流式传输来源与检索到的文档
+- **实时状态**——展示加载状态与进度更新
+- **协作工具**——向共享工件流式传输实时更新
+- **统计分析**——发送用量数据而不打乱消息历史
+- **通知**——显示临时提醒与状态消息
+
+## 消息元数据与数据部分
+
+[消息元数据](/docs/ai-sdk-ui/message-metadata)和数据部分都可以随消息一起发送附加信息，但它们的用途不同：
+
+### 消息元数据
+
+消息元数据最适合**描述消息整体的消息级信息**：
+
+- 通过 `message.metadata` 附加在消息级别
+- 通过 `toUIMessageStream` 的 `messageMetadata` 回调发送
+- 适用于：时间戳、模型信息、token 用量、用户上下文
+- 借助自定义元数据类型实现类型安全
+
+```ts
+// Server: Send metadata about the message
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream({
+    stream: result.stream,
+    messageMetadata: ({ part }) => {
+      if (part.type === 'finish') {
+        return {
+          model: part.response.modelId,
+          totalTokens: part.totalUsage.totalTokens,
+          createdAt: Date.now(),
+        };
+      }
+    },
+  }),
+});
+```
+
+### 数据部分
+
+数据部分最适合流式传输**动态的任意数据**：
+
+- 通过 `message.parts` 加入消息部分数组
+- 使用 `createUIMessageStream` 和 `writer.write()` 流式传输
+- 可以用相同的 ID 进行协调/更新
+- 支持不持久化的瞬态部分
+- 适用于：动态内容、加载状态、交互式组件
+
+```ts
+// Server: Stream data as part of message content
+writer.write({
+  type: 'data-weather',
+  id: 'weather-1',
+  data: { city: 'San Francisco', status: 'loading' },
+});
+```
+
+有关消息元数据的更多细节，请参阅[消息元数据文档](/docs/ai-sdk-ui/message-metadata)。

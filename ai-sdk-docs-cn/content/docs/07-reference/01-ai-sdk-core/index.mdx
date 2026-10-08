@@ -1,0 +1,261 @@
+---
+title: AI SDK Core
+description: AI SDK Core 的参考文档
+collapsed: true
+---
+
+# AI SDK Core
+
+[AI SDK Core](/docs/ai-sdk-core) 是一组函数，让你能够与语言模型及其他 AI 模型交互。
+这些函数设计得易用且灵活，让你可以从语言模型和其他 AI 模型生成文本、结构化数据与嵌入（embedding）。
+
+AI SDK Core 包含以下主要函数：
+
+<IndexCards
+  cards={[
+    {
+      title: 'generateText()',
+      description: '从语言模型生成文本并调用工具。',
+      href: '/docs/reference/ai-sdk-core/generate-text',
+    },
+    {
+      title: 'streamText()',
+      description: '从语言模型流式生成文本并调用工具。',
+      href: '/docs/reference/ai-sdk-core/stream-text',
+    },
+    {
+      title: 'Output',
+      description: 'generateText 和 streamText 的结构化输出类型。',
+      href: '/docs/reference/ai-sdk-core/output',
+    },
+    {
+      title: 'embed()',
+      description:
+        '使用嵌入模型为单个值生成嵌入（embedding）。',
+      href: '/docs/reference/ai-sdk-core/embed',
+    },
+    {
+      title: 'embedMany()',
+      description:
+        '使用嵌入模型为多个值生成嵌入（批量嵌入）。',
+      href: '/docs/reference/ai-sdk-core/embed-many',
+    },
+    {
+      title: 'generateImage()',
+      description:
+        '使用图像模型根据给定提示词（prompt）生成图像。',
+      href: '/docs/reference/ai-sdk-core/generate-image',
+    },
+    {
+      title: 'experimental_generateVideo()',
+      description:
+        '使用视频模型根据给定提示词生成视频。',
+      href: '/docs/reference/ai-sdk-core/generate-video',
+    },
+    {
+      title: 'experimental_startBatch()',
+      description: '启动一个异步文本生成批次。',
+      href: '/docs/reference/ai-sdk-core/start-batch',
+    },
+    {
+      title: 'experimental_getBatchStatus()',
+      description: '查询异步批次的状态。',
+      href: '/docs/reference/ai-sdk-core/get-batch-status',
+    },
+    {
+      title: 'experimental_getBatchResults()',
+      description: '获取异步批次的最终结果。',
+      href: '/docs/reference/ai-sdk-core/get-batch-results',
+    },
+    {
+      title: 'experimental_cancelBatch()',
+      description: '请求取消一个异步批次。',
+      href: '/docs/reference/ai-sdk-core/cancel-batch',
+    },
+    {
+      title: 'experimental_listBatches()',
+      description: '列出异步批次及其最新状态。',
+      href: '/docs/reference/ai-sdk-core/list-batches',
+    },
+    {
+      title: 'transcribe()',
+      description: '从音频文件生成转写文本。',
+      href: '/docs/reference/ai-sdk-core/transcribe',
+    },
+    {
+      title: 'experimental_streamTranscribe()',
+      description: '从实时原始音频流式生成转写文本。',
+      href: '/docs/reference/ai-sdk-core/stream-transcribe',
+    },
+    {
+      title: 'experimental_streamTranslate()',
+      description: '从实时原始音频流式生成语音到语音的翻译。',
+      href: '/docs/reference/ai-sdk-core/stream-translate',
+    },
+    {
+      title: 'generateSpeech()',
+      description: '从文本生成语音音频。',
+      href: '/docs/reference/ai-sdk-core/generate-speech',
+    },
+    {
+      title: 'uploadFile()',
+      description: '将文件上传到提供商并获取提供商引用。',
+      href: '/docs/reference/ai-sdk-core/upload-file',
+    },
+    {
+      title: 'uploadSkill()',
+      description: '将技能上传到提供商并获取提供商引用。',
+      href: '/docs/reference/ai-sdk-core/upload-skill',
+    },
+  ]}
+/>
+
+它还包含以下辅助函数：
+
+<IndexCards
+  cards={[
+    {
+      title: 'toolSearch()',
+      description:
+        '搜索延迟加载的工具并按需加载其定义。',
+      href: '/docs/reference/ai-sdk-core/tool-search',
+    },
+    {
+      title: 'tool()',
+      description: '工具的类型推断辅助函数。',
+      href: '/docs/reference/ai-sdk-core/tool',
+    },
+    {
+      title: 'experimental_getRealtimeToolDefinitions()',
+      description: '将 AI SDK 工具转换为实时工具定义。',
+      href: '/docs/reference/ai-sdk-core/get-realtime-tool-definitions',
+    },
+    {
+      title: 'Experimental_SandboxSession',
+      description:
+        '传递给工具执行的实验性执行环境接口。',
+      href: '/docs/reference/ai-sdk-core/sandbox',
+    },
+    {
+      title: 'experimental_filterActiveTools()',
+      description: '将工具集过滤为仅包含当前活跃的工具。',
+      href: '/docs/reference/ai-sdk-core/filter-active-tools',
+    },
+    {
+      title: 'createMCPClient()',
+      description: '创建用于连接 MCP 服务器的客户端。',
+      href: '/docs/reference/ai-sdk-core/create-mcp-client',
+    },
+    {
+      title: 'MCP Events',
+      description:
+        '实验性事件方法、webhook 投递与订阅类型。',
+      href: '/docs/reference/ai-sdk-core/mcp-events',
+    },
+    {
+      title: 'MCP Apps',
+      description:
+        '用于渲染交互式 MCP 工具 UI 以及过滤应用可见工具的辅助方法。',
+      href: '/docs/reference/ai-sdk-core/mcp-apps',
+    },
+    {
+      title: 'jsonSchema()',
+      description: '创建 AI SDK 兼容的 JSON schema 对象。',
+      href: '/docs/reference/ai-sdk-core/json-schema',
+    },
+    {
+      title: 'zodSchema()',
+      description: '创建 AI SDK 兼容的 Zod schema 对象。',
+      href: '/docs/reference/ai-sdk-core/zod-schema',
+    },
+    {
+      title: 'createProviderRegistry()',
+      description:
+        '创建一个注册表，用于使用来自多个提供商的模型。',
+      href: '/docs/reference/ai-sdk-core/provider-registry',
+    },
+    {
+      title: 'cosineSimilarity()',
+      description:
+        '计算两个向量（例如嵌入）之间的余弦相似度。',
+      href: '/docs/reference/ai-sdk-core/cosine-similarity',
+    },
+    {
+      title: 'simulateReadableStream()',
+      description:
+        '创建一个以可配置延迟发出值的 ReadableStream。',
+      href: '/docs/reference/ai-sdk-core/simulate-readable-stream',
+    },
+    {
+      title: 'wrapLanguageModel()',
+      description: '用中间件包装一个语言模型。',
+      href: '/docs/reference/ai-sdk-core/wrap-language-model',
+    },
+    {
+      title: 'wrapImageModel()',
+      description: '用中间件包装一个图像模型。',
+      href: '/docs/reference/ai-sdk-core/wrap-image-model',
+    },
+    {
+      title: 'extractReasoningMiddleware()',
+      description:
+        '从生成的文本中提取推理内容，并将其作为结果上的 `reasoning` 属性暴露出来。',
+      href: '/docs/reference/ai-sdk-core/extract-reasoning-middleware',
+    },
+    {
+      title: 'extractJsonMiddleware()',
+      description:
+        '通过剥离 markdown 代码围栏从文本内容中提取 JSON。',
+      href: '/docs/reference/ai-sdk-core/extract-json-middleware',
+    },
+    {
+      title: 'isStepCount()',
+      description:
+        '创建一个在达到指定步骤数后触发的停止条件。',
+      href: '/docs/reference/ai-sdk-core/is-step-count',
+    },
+    {
+      title: 'hasToolCall()',
+      description:
+        '创建一个在任一指定工具被调用时触发的停止条件。',
+      href: '/docs/reference/ai-sdk-core/has-tool-call',
+    },
+    {
+      title: 'isLoopFinished()',
+      description:
+        '创建一个让智能体（agent）循环一直运行到自然结束的停止条件。',
+      href: '/docs/reference/ai-sdk-core/loop-finished',
+    },
+    {
+      title: 'simulateStreamingMiddleware()',
+      description:
+        '用非流式语言模型的响应模拟流式行为。',
+      href: '/docs/reference/ai-sdk-core/simulate-streaming-middleware',
+    },
+    {
+      title: 'defaultSettingsMiddleware()',
+      description: '为语言模型应用默认设置。',
+      href: '/docs/reference/ai-sdk-core/default-settings-middleware',
+    },
+    {
+      title: 'defaultInstructionsMiddleware()',
+      description: '为语言模型应用默认指令。',
+      href: '/docs/reference/ai-sdk-core/default-instructions-middleware',
+    },
+    {
+      title: 'smoothStream()',
+      description: '平滑文本与推理内容的流式输出。',
+      href: '/docs/reference/ai-sdk-core/smooth-stream',
+    },
+    {
+      title: 'generateId()',
+      description: '生成唯一 ID 的辅助函数',
+      href: '/docs/reference/ai-sdk-core/generate-id',
+    },
+    {
+      title: 'createIdGenerator()',
+      description: '创建一个 ID 生成器',
+      href: '/docs/reference/ai-sdk-core/create-id-generator',
+    },
+  ]}
+/>

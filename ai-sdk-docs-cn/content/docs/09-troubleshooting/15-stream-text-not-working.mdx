@@ -1,0 +1,33 @@
+---
+title: streamText 静默失败
+description: 排查 streamText 函数无法正常工作相关的问题。
+---
+
+# `streamText` 无法正常工作
+
+## 问题
+
+我在使用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 函数，但它无法正常工作。
+它不抛出任何错误，流中只包含错误部分。
+
+## 背景
+
+`streamText` 会立即开始流式传输，以便无需等待模型即可发送数据。
+错误会成为流的一部分而不会被抛出，以防服务器崩溃等情况发生。
+
+## 解决方案
+
+要记录错误，你可以提供一个 `onError` 回调，它会在错误发生时被触发。
+
+```tsx highlight="7-9"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  onError({ error }) {
+    console.error(error); // your error logging logic here
+  },
+});
+```

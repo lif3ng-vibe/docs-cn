@@ -1,0 +1,277 @@
+---
+title: Helicone
+description: 以最少的配置，使用 Helicone 监控并优化你的 AI SDK 应用
+---
+
+# Helicone 可观测性
+
+[Helicone](https://helicone.ai) 是一个开源的 LLM 可观测性平台，帮助你监控、分析并优化 AI 应用。内置的可观测性会自动追踪每一次请求，无需额外的埋点即可提供关于性能、成本、用户行为与模型使用情况的全面洞察。
+
+## 安装
+
+Helicone 提供商包含在 `@helicone/ai-sdk-provider` 包中，使用以下命令安装：
+
+<InstallPackages packages="@helicone/ai-sdk-provider" />
+
+设置 Helicone：
+
+1. 在 [helicone.ai](https://helicone.ai) 注册 Helicone 账户
+2. 在 [Helicone Dashboard](https://us.helicone.ai/settings/api-keys) 获取你的 API key
+3. 将 API key 设置为环境变量：
+   ```bash filename=".env"
+   HELICONE_API_KEY=your-helicone-api-key
+   ```
+4. 在应用中使用 Helicone：
+
+   ```javascript
+   import { createHelicone } from '@helicone/ai-sdk-provider';
+   import { generateText } from 'ai';
+
+   const helicone = createHelicone({
+     apiKey: process.env.HELICONE_API_KEY,
+   });
+
+   // Use the provider with any supported model: https://helicone.ai/models
+   const result = await generateText({
+     model: helicone('claude-4.5-haiku'),
+     prompt: 'Hello world',
+   });
+
+   console.log(result.text);
+   ```
+
+完成了！现在你的请求会通过 Helicone 自动记录并被监控，获得开箱即用的可观测性。
+
+[→ 了解更多关于 Helicone AI Gateway 的内容](https://docs.helicone.ai)
+
+## 核心可观测性特性
+
+Helicone 无需任何额外埋点，即可为你的 AI 应用提供全面的可观测性：
+
+**自动请求追踪**
+
+- 每次请求都会自动记录完整的请求/响应数据
+- 实时追踪延迟、token、成本与模型性能
+- 无需配置 OpenTelemetry，也无需其他额外配置
+
+**分析仪表盘**
+
+- 查看所有 AI 请求的指标：成本、延迟、token 用量与错误率
+- 按用户、会话、模型或自定义属性过滤
+- 识别性能瓶颈并优化模型选择
+
+**用户与会话分析**
+
+- 追踪单个用户的行为与使用模式
+- 通过会话追踪监控对话流程
+- 分析用户参与度与功能采用情况
+
+**成本监控**
+
+- 按请求、用户、功能或模型实时追踪成本
+- 预算告警与成本优化洞察
+- 对比不同模型与提供商之间的成本
+
+**调试与故障排查**
+
+- 每次调用都记录完整的请求/响应日志
+- 带有详细上下文的错误追踪
+- 搜索并过滤请求，快速定位问题
+
+[→ 了解更多关于 Helicone 可观测性的内容](https://docs.helicone.ai)
+
+## 可观测性配置
+
+### 用户追踪
+
+追踪单个用户的行为，并分析其在应用中的使用模式。这有助于你了解哪些用户最活跃、识别高价值用户，并监控每位用户的成本：
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await generateText({
+  model: helicone('gpt-6-luna', {
+    extraBody: {
+      helicone: {
+        userId: 'user@example.com',
+      },
+    },
+  }),
+  prompt: 'Hello world',
+});
+```
+
+**你可以追踪的内容**：
+
+- 每位用户的请求总数
+- 每位用户的成本
+- 每位用户的平均延迟
+- 按用户群体划分的最常见用例
+
+[→ 了解更多关于用户指标的内容](https://docs.helicone.ai/features/advanced-usage/user-metrics)
+
+### 自定义属性
+
+添加结构化元数据，以便按功能、环境或任何自定义维度对请求进行细分与分析。这让你可以在分析仪表盘中进行强大的过滤并获得洞察：
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await generateText({
+  model: helicone('gpt-6-luna', {
+    extraBody: {
+      helicone: {
+        properties: {
+          feature: 'translation',
+          source: 'mobile-app',
+          language: 'French',
+          environment: 'production',
+        },
+      },
+    },
+  }),
+  prompt: 'Translate this text to French',
+});
+```
+
+**自定义属性的用例**：
+
+- 对比不同功能或环境之间的性能
+- 按产品区域或客户层级追踪成本
+- 找出哪些功能带来的 AI 使用量最多
+- 通过打实验标签，对不同提示词（prompt）或模型进行 A/B 测试
+
+[→ 了解更多关于自定义属性的内容](https://docs.helicone.ai/features/advanced-usage/custom-properties)
+
+### 会话追踪
+
+将相关请求归入同一会话，以分析对话流程与多轮交互。这对于理解用户旅程和调试复杂对话至关重要：
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await generateText({
+  model: helicone('gpt-6-luna', {
+    extraBody: {
+      helicone: {
+        sessionId: 'convo-123',
+        sessionName: 'Travel Planning',
+        sessionPath: '/chats/travel',
+      },
+    },
+  }),
+  prompt: 'Tell me more about that',
+});
+```
+
+**会话追踪的优势**：
+
+- 在单条时间线中查看完整的对话历史
+- 计算每个会话/对话的总成本
+- 衡量会话时长与消息数量
+- 找出用户在多轮对话中的流失位置
+- 通过重放完整的对话流程来调试问题
+
+[→ 了解更多关于会话的内容](https://docs.helicone.ai/features/sessions)
+
+## 高级可观测性特性
+
+### 标签与组织
+
+添加标签，以便在分析仪表盘中组织和过滤请求：
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await generateText({
+  model: helicone('gpt-6-luna', {
+    extraBody: {
+      helicone: {
+        tags: ['customer-support', 'urgent'],
+        properties: {
+          ticketId: 'TICKET-789',
+          priority: 'high',
+          department: 'support',
+        },
+      },
+    },
+  }),
+  prompt: 'Help resolve this customer issue',
+});
+```
+
+**标签带来的洞察**：
+
+- 按标签过滤和分组请求
+- 追踪不同类别之间的性能
+- 识别带标签请求中的规律
+- 围绕特定标签构建自定义仪表盘
+
+[→ 了解更多关于 Helicone 特性的内容](https://docs.helicone.ai)
+
+### 流式响应追踪
+
+以完整的可观测性监控流式响应，包括首 token 时间与总流式时长：
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { streamText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await streamText({
+  model: helicone('gpt-6-luna', {
+    extraBody: {
+      helicone: {
+        userId: 'user@example.com',
+        sessionId: 'stream-session-123',
+        tags: ['streaming', 'content-generation'],
+      },
+    },
+  }),
+  prompt: 'Write a short story about AI',
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+**追踪的流式指标**：
+
+- 首 token 时间（TTFT）
+- 总流式时长
+- 每秒 token 数
+- 即使是流式请求也会记录完整的请求/响应日志
+- 面向实时应用的用户体验指标
+- 流式响应同样追踪所有元数据（会话、用户、标签）
+
+## 资源
+
+- [Helicone 文档](https://docs.helicone.ai)
+- [AI SDK Provider 包](https://github.com/Helicone/ai-sdk-provider)
+- [Helicone GitHub 仓库](https://github.com/Helicone/helicone)
+- [Discord 社区](https://discord.gg/7aSCGCGUeu)
+- [支持的模型](https://helicone.ai/models)

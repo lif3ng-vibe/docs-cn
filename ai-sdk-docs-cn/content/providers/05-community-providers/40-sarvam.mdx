@@ -1,0 +1,124 @@
+---
+title: 'Sarvam'
+description: '了解如何在 AI SDK 中使用 Sarvam AI 提供商。'
+---
+
+# Sarvam 提供商
+
+Sarvam AI 提供商是一个为集成 AI SDK 而开发的库。该库为你的应用带来语音转写（STT）能力，让你可以无缝地处理音频与文本数据。
+
+## 安装
+
+Sarvam 提供商通过 `sarvam-ai-provider` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="sarvam-ai-provider" />
+
+## 提供商实例
+
+首先，在 [Sarvam 控制台](https://dashboard.sarvam.ai/auth/signin)获取你的 **Sarvam API Key**。
+
+然后在你的应用中初始化 `Sarvam`：
+
+```ts
+import { createSarvam } from 'sarvam-ai-provider';
+
+const sarvam = createSarvam({
+  headers: {
+    'api-subscription-key': 'YOUR_API_KEY',
+  },
+});
+```
+
+<Note>
+  `api-subscription-key` 需要通过请求头传入。出于安全考虑，建议将
+  `YOUR_API_KEY` 放在环境变量中。
+</Note>
+
+- 将语音转写为文本
+
+```ts
+import { transcribe } from 'ai';
+import { readFile } from 'fs/promises';
+
+await transcribe({
+  model: sarvam.transcription('saarika:v2'),
+  audio: await readFile('./src/transcript-test.mp3'),
+  providerOptions: {
+    sarvam: {
+      language_code: 'en-IN',
+    },
+  },
+});
+```
+
+## 特性
+
+### 修改参数
+
+- 修改 language_code
+
+```ts
+providerOptions: {
+    sarvam: {
+      language_code: 'en-IN',
+    },
+  },
+```
+
+<Note>
+  `language_code` 指定输入音频的语言，是实现准确转写的必要条件。• 对
+  `saarika:v1` 模型为必填（该模型不支持 `unknown`）。• 对 `saarika:v2`
+  模型为可选。• 当语言未知时可使用 `unknown`，此时 API
+  会自动检测语言。可选值：`unknown`、`hi-IN`、`bn-IN`、`kn-IN`、
+  `ml-IN`、`mr-IN`、`od-IN`、`pa-IN`、`ta-IN`、`te-IN`、`en-IN`、`gu-IN`。
+</Note>
+
+- with_timestamps?
+
+```ts
+providerOptions: {
+  sarvam: {
+    with_timestamps: true,
+  },
+},
+```
+
+<Note>
+  `with_timestamps` 指定是否为每个词/token 包含开始/结束时间戳。• 类型：boolean
+  • 为 true 时，每个词/token 都会包含开始/结束时间戳。• 默认值：false
+</Note>
+
+- with_diarization?
+
+```ts
+providerOptions: {
+  sarvam: {
+    with_diarization: true,
+  },
+},
+```
+
+<Note>
+  `with_diarization` 启用说话人分离（diarization，Beta）。• 类型：boolean • 为
+  true 时，启用说话人分离。• 默认值：false
+</Note>
+
+- num_speakers?
+
+```ts
+providerOptions: {
+  sarvam: {
+    with_diarization: true,
+    num_speakers: 2,
+  },
+},
+```
+
+<Note>
+  `num_speakers` 设置要检测的不同说话人数量（仅在 `with_diarization` 为 true
+  时生效）。• 类型：number | null • 要检测的不同说话人数量。• 默认值：null
+</Note>
+
+## 参考链接
+
+- [Sarvam API 文档](https://docs.sarvam.ai/api-reference-docs/endpoints/speech-to-text)

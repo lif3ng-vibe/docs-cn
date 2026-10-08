@@ -1,0 +1,120 @@
+---
+title: uploadFile
+description: uploadFile 的 API 参考。
+---
+
+# `uploadFile()`
+
+将文件上传到提供商，并返回一个结果，其 `providerReference`（`ProviderReference`）可用于后续 API 调用，例如作为传给 `generateText` 或 `streamText` 的消息内容部分。
+
+```ts
+import { uploadFile } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import fs from 'node:fs';
+
+const { providerReference } = await uploadFile({
+  api: openai.files(),
+  data: fs.readFileSync('./photo.png'),
+  filename: 'photo.png',
+});
+```
+
+## 导入
+
+<Snippet text={`import { uploadFile } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'api',
+      type: 'FilesV4 | ProviderV4',
+      description:
+        '用于上传的文件 API 接口。可以是 `FilesV4` 实例（如 `openai.files()`），也可以直接传提供商实例（如 `openai`），此时会自动调用 `.files()`。',
+    },
+    {
+      name: 'data',
+      type: 'DataContent | { type: "stream"; stream: ReadableStream<Uint8Array> }',
+      description:
+        '要上传的文件数据。可以是 `Uint8Array`、base64 编码字符串、`ArrayBuffer`、`Buffer`，或用于支持流式上传的提供商的带标签 `{ type: "stream", stream }` 形式（直接发送、不经缓冲；不支持的提供商会抛出 `UnsupportedFunctionalityError` 拒绝）。提供商消费该流——任何上传失败（包括发起请求前的校验失败）都会取消该流，且流不可复用。不支持 URL——请先获取内容再传入字节。',
+    },
+    {
+      name: 'mediaType',
+      type: 'string',
+      isOptional: true,
+      description:
+        '文件的 IANA 媒体类型（如 `image/png`、`application/pdf`）。未提供时会从文件字节自动检测；流数据无法探测，默认为 `application/octet-stream`。',
+    },
+    {
+      name: 'filename',
+      type: 'string',
+      isOptional: true,
+      description: '上传文件的文件名。基于 multipart 的提供商在省略时默认为 `"blob"`。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '用于取消上传的信号。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description: '随请求一起发送的额外 HTTP 请求头。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description:
+        '额外的提供商特定选项。例如 OpenAI 接受一个 `purpose` 字段，默认为 `"assistants"`。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'providerReference',
+      type: 'ProviderReference',
+      description:
+        '一个 `Record<string, string>`，将提供商名称映射到该提供商的文件标识符。在消息内容部分中作为 `data` 或 `image` 字段传入。',
+    },
+    {
+      name: 'byteSize',
+      type: 'number',
+      isOptional: true,
+      description: '上传文件的大小（字节）（如果提供商有报告）。',
+    },
+    {
+      name: 'createdAt',
+      type: 'Date',
+      isOptional: true,
+      description: '文件创建时间（如果提供商有报告）。',
+    },
+    {
+      name: 'expiresAt',
+      type: 'Date',
+      isOptional: true,
+      description:
+        '提供商将删除文件的时间（保留期到期，例如来自请求的上传 TTL）（如果提供商有报告）。',
+    },
+    {
+      name: 'providerMetadata',
+      type: 'ProviderMetadata',
+      isOptional: true,
+      description: '上传返回的额外提供商特定元数据。',
+    },
+    {
+      name: 'warnings',
+      type: 'Warning[]',
+      description: '来自提供商的警告（例如不支持的设置）。',
+    },
+  ]}
+/>

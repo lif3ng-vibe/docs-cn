@@ -1,0 +1,94 @@
+---
+title: jsonSchema
+description: 用于创建 JSON schema 的辅助函数
+---
+
+# `jsonSchema()`
+
+`jsonSchema` 是一个辅助函数，用于创建与 AI SDK 兼容的 JSON schema 对象。
+它以 JSON schema 和可选的校验函数作为输入，并且可以带类型。
+
+可以用它来[生成结构化数据](/docs/ai-sdk-core/generating-structured-data)，或在[工具](/docs/ai-sdk-core/tools-and-tool-calling)中使用。
+
+`jsonSchema` 是 Zod schema 之外的一种替代方案，在动态场景
+（例如使用 OpenAPI 定义）或使用其他校验库时提供了灵活性。
+
+```ts
+import { jsonSchema } from 'ai';
+
+const mySchema = jsonSchema<{
+  recipe: {
+    name: string;
+    ingredients: { name: string; amount: string }[];
+    steps: string[];
+  };
+}>({
+  type: 'object',
+  properties: {
+    recipe: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        ingredients: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              amount: { type: 'string' },
+            },
+            required: ['name', 'amount'],
+          },
+        },
+        steps: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+      },
+      required: ['name', 'ingredients', 'steps'],
+    },
+  },
+  required: ['recipe'],
+});
+```
+
+## 导入
+
+<Snippet text={`import { jsonSchema } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'schema',
+      type: 'JSONSchema7',
+      description: 'JSON schema 定义。',
+    },
+    {
+      name: 'options',
+      type: 'SchemaOptions',
+      description: 'JSON schema 的附加选项。',
+      properties: [
+        {
+          type: 'SchemaOptions',
+          parameters: [
+            {
+              name: 'validate',
+              isOptional: true,
+              type: '(value: unknown) => { success: true; value: OBJECT } | { success: false; error: Error };',
+              description:
+                '针对 JSON schema 校验值的函数。如果值有效，函数应返回一个对象，其 `success` 属性为 `true`，`value` 属性为校验通过的值。如果值无效，函数应返回一个对象，其 `success` 属性为 `false`，`error` 属性为错误。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+一个与 AI SDK 兼容的 JSON schema 对象。

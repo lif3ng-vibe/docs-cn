@@ -1,0 +1,24 @@
+---
+title: AI_LoadAPIKeyError
+description: 了解如何修复 AI_LoadAPIKeyError
+---
+
+# AI_LoadAPIKeyError
+
+当 API 密钥未成功加载时会引发此错误。
+
+## 属性
+
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_LoadAPIKeyError` 的实例：
+
+```typescript
+import { LoadAPIKeyError } from 'ai';
+
+if (LoadAPIKeyError.isInstance(error)) {
+  // Handle the error
+}
+```

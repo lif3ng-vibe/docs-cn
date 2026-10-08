@@ -1,0 +1,522 @@
+---
+title: Next.js Pages Router
+description: 了解如何使用 AI SDK 和 Next.js Pages Router 构建你的第一个智能体。
+---
+
+# Next.js Pages Router 快速上手
+
+AI SDK 是一个强大的 TypeScript 库，旨在帮助开发者构建 AI 驱动的应用程序。
+
+在本快速上手教程中，你将构建一个带流式聊天界面的简单智能体。在此过程中，你将学到在自己的项目中使用 AI SDK 所必需的关键概念与技术。
+
+如果你不熟悉[提示词工程（Prompt Engineering）](/docs/advanced/prompt-engineering)和 [HTTP 流式（HTTP Streaming）](/docs/foundations/streaming)的概念，可以先选读这两篇文档。
+
+## 前置条件
+
+要完成本快速上手教程，你需要：
+
+- 本地开发机器上已安装 Node.js 22+ 和 pnpm。
+- 一个 [ Vercel AI Gateway ](https://vercel.com/ai-gateway) API 密钥。
+
+如果你还没有获取 Vercel AI Gateway API 密钥，可以在 Vercel 网站上[注册](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai&title=Go+to+AI+Gateway)获取。
+
+## 设置你的应用
+
+首先创建一个新的 Next.js 应用。该命令会创建一个名为 `my-ai-app` 的新目录，并在其中搭建一个基础的 Next.js 应用。
+
+<Note>
+  当提示是否使用 App Router 时，请务必选择 no。如果你在找 Next.js App Router 的快速上手指南，可以[点此](/docs/getting-started/nextjs-app-router)查阅。
+</Note>
+
+<Snippet text="pnpm create next-app@latest my-ai-app" />
+
+进入新创建的目录：
+
+<Snippet text="cd my-ai-app" />
+
+### 安装依赖
+
+安装 `ai` 和 `@ai-sdk/react`，即 AI SDK 包与 AI SDK 的 React Hook。AI SDK 的 [ Vercel AI Gateway 提供商 ](/providers/ai-sdk-providers/ai-gateway)随 `ai` 包一同提供。你还将安装 `zod`，一个用于定义工具输入的 schema 校验库。
+
+<Note>
+  本指南使用 Vercel AI Gateway 提供商，以便用一个 API 密钥访问来自不同提供商的数百个模型；你也可以通过安装其包切换到任何其他提供商或模型。查看可用的 [AI SDK 提供商](/providers/ai-sdk-providers)了解更多信息。
+</Note>
+
+<InstallPackages packages="ai @ai-sdk/react zod" />
+
+### 配置 AI Gateway API 密钥
+
+在项目根目录创建一个 `.env.local` 文件，并添加你的 AI Gateway API 密钥。该密钥用于向 Vercel AI Gateway 验证你的应用身份。
+
+<Snippet text="touch .env.local" />
+
+编辑 `.env.local` 文件：
+
+```env filename=".env.local"
+AI_GATEWAY_API_KEY=xxxxxxxxx
+```
+
+将 `xxxxxxxxx` 替换为你真实的 Vercel AI Gateway API 密钥。
+
+<Note className="mb-4">
+  AI SDK 的 Vercel AI Gateway 提供商默认会使用 `AI_GATEWAY_API_KEY` 环境变量。
+</Note>
+
+## 创建 Route Handler
+
+<Note>
+  只要你使用的是 Next.js 13 及以上版本，就可以在 Pages Router 的同时使用 Route Handler（基于 App Router）。推荐这样做，以便使用 Web API 的接口/签名，并更好地支持流式。
+</Note>
+
+创建一个 Route Handler（`app/api/chat/route.ts`）并添加以下代码：
+
+```tsx filename="app/api/chat/route.ts"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+我们来看看这段代码中发生了什么：
+
+1. 定义一个异步的 `POST` 请求处理器，并从请求体中提取 `messages`。`messages` 变量包含你与聊天机器人之间的对话历史，为聊天机器人提供生成下一轮回复所需的上下文。`messages` 的类型是 UIMessage，专为在应用 UI 中使用而设计——它们包含完整的消息历史以及时间戳等相关元数据。
+2. 调用从 `ai` 包导入的 [`streamText`](/docs/reference/ai-sdk-core/stream-text)。该函数接受一个配置对象，其中包含 `model` 提供商和 `messages`（在步骤 1 中定义）。你还可以传入其他[设置](/docs/ai-sdk-core/settings)来进一步自定义模型的行为。`messages` 键期望一个 `ModelMessage[]` 数组。该类型与 `UIMessage` 的不同之处在于，它不包含时间戳或发送者信息等元数据。为了在这两种类型之间转换，我们使用 `convertToModelMessages` 函数，它会剥离 UI 特有的元数据，并将 `UIMessage[]` 数组转换为模型期望的 `ModelMessage[]` 格式。
+3. `streamText` 函数返回一个 [`StreamTextResult`](/docs/reference/ai-sdk-core/stream-text#result-object)。将其 `stream` 传给 `toUIMessageStream`，并用 `createUIMessageStreamResponse` 返回，以创建流式响应对象。
+4. 最后，将结果返回给客户端进行流式输出。
+
+此 Route Handler 会在 `/api/chat` 创建一个 POST 请求端点。
+
+## 选择提供商
+
+AI SDK 通过[官方](/providers/ai-sdk-providers)、[OpenAI 兼容](/providers/openai-compatible-providers)和[社区](/providers/community-providers)包支持数十个模型提供商。
+
+本快速上手使用 [Vercel AI Gateway](https://vercel.com/ai-gateway) 提供商，它是默认的[全局提供商](/docs/ai-sdk-core/provider-management#全局提供商配置)。这意味着你可以在模型配置中用一个简单的字符串来访问模型：
+
+```ts
+model: __MODEL__;
+```
+
+你也可以用另外两种等价的方式显式导入并使用网关提供商：
+
+```ts
+// Option 1: Import from 'ai' package (included by default)
+import { gateway } from 'ai';
+model: gateway('anthropic/claude-sonnet-5.5');
+
+// Option 2: Install and import from '@ai-sdk/gateway' package
+import { gateway } from '@ai-sdk/gateway';
+model: gateway('anthropic/claude-sonnet-5.5');
+```
+
+### 使用其他提供商
+
+要使用其他提供商，安装其包并创建提供商实例。例如，直接使用 OpenAI：
+
+<InstallPackages packages="@ai-sdk/openai" />
+
+```ts
+import { openai } from '@ai-sdk/openai';
+
+model: openai('gpt-6-astra');
+```
+
+#### 更新全局提供商
+
+你可以更改默认的全局提供商，让字符串形式的模型引用在整个应用中都使用你偏好的提供商。了解更多关于[提供商管理](/docs/ai-sdk-core/provider-management#全局提供商配置)的信息。
+
+请选择最符合你管理应用内提供商需求的方式。
+
+## 搭建 UI
+
+现在你有了一个可以查询 LLM 的 API 路由，接下来设置前端。AI SDK 的 [ UI ](/docs/ai-sdk-ui) 包将聊天界面的复杂性抽象为一个 Hook，即 [`useChat`](/docs/reference/ai-sdk-ui/use-chat)。
+
+用以下代码更新你的根页面（`pages/index.tsx`），以显示聊天消息列表并提供用户消息输入框：
+
+```tsx filename="pages/index.tsx"
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+该页面使用了 `useChat` Hook，它默认会使用你之前创建的 `POST` API 路由（`/api/chat`）。该 Hook 提供了处理用户输入和表单提交的函数与状态。`useChat` Hook 提供了多个工具函数和状态变量：
+
+- `messages`——当前的聊天消息（一个包含 `id`、`role` 和 `parts` 属性的对象数组）。
+- `sendMessage`——向聊天 API 发送消息的函数。
+
+该组件使用本地状态（`useState`）管理输入框的值，并通过调用 `sendMessage` 发送输入文本、随后清空输入框来处理表单提交。
+
+LLM 的响应通过消息的 `parts` 数组访问。每条消息都包含一个有序的 `parts` 数组，代表模型在响应中生成的一切。这些部分可以包括纯文本、推理 token 等，稍后你会看到更多。`parts` 数组保留了模型输出的先后顺序，让你可以按生成顺序显示或处理每个部分。
+
+## 运行你的应用
+
+至此，你已经构建好了聊天机器人所需的一切！要启动应用，请使用以下命令：
+
+<Snippet text="pnpm run dev" />
+
+打开浏览器访问 http://localhost:3000。你应该会看到一个输入框。输入一条消息试试，看看 AI 聊天机器人实时回应！借助 AI SDK，用 Next.js 构建 AI 聊天界面既快速又简单。
+
+## 用工具增强你的聊天机器人
+
+尽管大语言模型（LLM）拥有强大的生成能力，但它们在离散任务（如数学计算）以及与外部世界交互（如获取天气）方面表现欠佳。这正是[工具](/docs/ai-sdk-core/tools-and-tool-calling)的用武之地。
+
+工具是 LLM 可以调用的动作。这些动作的结果可以被报告给 LLM，供其在下一次响应中纳入考量。
+
+例如，如果用户询问当前天气，没有工具时，模型只能基于训练数据提供一般性信息；但有了天气工具，它就可以获取并提供最新的、针对特定地点的天气信息。
+
+### 更新你的 Route Handler
+
+我们先为你的聊天机器人添加一个天气工具。更新你的 Route Handler（`app/api/chat/route.ts`）：
+
+```tsx filename="app/api/chat/route.ts" highlight="1-8,18-32"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+在这段更新后的代码中：
+
+1. 你从 `ai` 包导入了 `tool` 函数，并从 `zod` 导入了 `z` 用于 schema 校验。
+2. 你定义了一个包含 `weather` 工具的 `tools` 对象。该工具：
+   - 带有描述（description），帮助模型理解何时使用它。
+   - 使用 Zod schema 定义了 `inputSchema`，指定执行该工具需要一个 `location` 字符串。模型会尝试从对话上下文中提取该输入；如果提取不到，它会向用户询问缺失的信息。
+   - 定义了一个 `execute` 函数，模拟获取天气数据（此处返回一个随机温度）。这是一个运行在服务器上的异步函数，因此你完全可以改为从外部 API 获取真实数据。
+
+现在，你的聊天机器人可以"获取"用户所问任何地点的天气信息了。当模型判断需要使用天气工具时，它会生成一个携带必要输入的工具调用；随后 `execute` 函数会自动运行，工具输出会作为 `tool` 消息加入 `messages`。
+
+试试问一句"纽约的天气怎么样？"，看看模型如何使用新工具。
+
+注意到 UI 中的空白响应了吗？这是因为模型没有生成文本响应，而是生成了一个工具调用。你可以在客户端通过 `message.parts` 数组中的 `tool-weather` 部分访问该工具调用及其后续的工具结果。
+
+<Note>
+  工具部分的名称始终为 `tool-{toolName}`，其中 `{toolName}` 是你在定义工具时使用的键。在本例中，由于我们将工具定义为 `weather`，因此该部分的类型是 `tool-weather`。
+</Note>
+
+### 更新 UI
+
+要在 UI 中显示工具调用，更新你的 `pages/index.tsx` 文件：
+
+```tsx filename="pages/index.tsx" highlight="16-21"
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+              case 'tool-weather':
+                return (
+                  <pre key={`${message.id}-${i}`}>
+                    {JSON.stringify(part, null, 2)}
+                  </pre>
+                );
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+通过这一修改，你的 UI 可以处理不同的消息部分：文本部分照旧显示文本内容；天气工具调用则显示工具调用及其结果的 JSON 表示。
+
+现在，当你询问天气时，你会在聊天界面中看到工具调用及其结果。
+
+## 启用多步工具调用
+
+你可能已经注意到：尽管工具现在已经显示在聊天界面中，模型并没有使用这些信息来回答你最初的问题。这是因为模型一旦生成了工具调用，从技术上讲它就已完成了一次生成。
+
+要解决这个问题，你可以使用 `stopWhen` 启用多步工具调用。默认情况下，`stopWhen` 被设为 `isStepCount(1)`，即在有工具结果时，生成会在第一步之后停止。通过修改这个条件，你可以让模型自动将工具结果发回给自己，触发额外生成，直至满足你设定的停止条件。在本例中，你希望模型继续生成，以便利用天气工具的结果来回答最初的问题。
+
+### 更新你的 Route Handler
+
+修改你的 `app/api/chat/route.ts` 文件，加入 `stopWhen` 条件：
+
+```tsx filename="app/api/chat/route.ts"  highlight="19"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  isStepCount,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    stopWhen: isStepCount(5),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+回到浏览器，询问某个地点的天气。现在你应该会看到模型利用天气工具的结果来回答你的问题。
+
+通过设置 `stopWhen: isStepCount(5)`，你允许模型在任意一次生成中使用最多 5 个"步骤"。这带来了更复杂的交互能力，并允许模型在需要时跨多个步骤收集和处理信息。你可以通过添加一个将温度从华氏转换为摄氏的工具来体验这一点。
+
+### 添加另一个工具
+
+更新你的 `app/api/chat/route.ts` 文件，添加一个将温度从华氏转换为摄氏的新工具：
+
+```tsx filename="app/api/chat/route.ts" highlight="34-47"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  isStepCount,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    stopWhen: isStepCount(5),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+      convertFahrenheitToCelsius: tool({
+        description: 'Convert a temperature in fahrenheit to celsius',
+        inputSchema: z.object({
+          temperature: z
+            .number()
+            .describe('The temperature in fahrenheit to convert'),
+        }),
+        execute: async ({ temperature }) => {
+          const celsius = Math.round((temperature - 32) * (5 / 9));
+          return {
+            celsius,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+### 更新你的前端
+
+更新你的 `pages/index.tsx` 文件，以渲染新的温度转换工具：
+
+```tsx filename="pages/index.tsx" highlight="17"
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+              case 'tool-weather':
+              case 'tool-convertFahrenheitToCelsius':
+                return (
+                  <pre key={`${message.id}-${i}`}>
+                    {JSON.stringify(part, null, 2)}
+                  </pre>
+                );
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+这一修改处理了新的 `tool-convertFahrenheitToCelsius` 部分类型，将温度转换工具的调用与结果显示在 UI 中。
+
+现在，当你询问"纽约的天气是多少摄氏度？"时，你会看到一次更完整的交互：
+
+1. 模型会为纽约调用天气工具。
+2. 你会看到工具输出被显示出来。
+3. 随后它会调用温度转换工具，把温度从华氏转换为摄氏。
+4. 模型接着会利用该信息，给出一段关于纽约天气的自然语言回复。
+
+这种多步方式让模型能够收集信息并据此提供更准确、更贴合上下文的回复，使你的聊天机器人实用得多。
+
+这个简单的例子展示了工具如何扩展模型的能力。你可以创建更复杂的工具，与真实的 API、数据库或其他外部系统集成，让模型实时访问并处理真实世界的数据。工具弥合了模型知识截止时间与当前信息之间的差距。
+
+## 下一步
+
+你已经用 AI SDK 构建了一个 AI 聊天机器人！接下来有几条路径可以探索：
+
+- 想深入了解 AI SDK，请通读[文档](/docs)。
+- 如果想通过指南深入学习，请查看 [RAG（检索增强生成）](/cookbook/guides/rag-chatbot)和[多模态聊天机器人](/cookbook/guides/multi-modal-chatbot)指南。
+- 想快速启动你的第一个 AI 项目，可以浏览可用的[模板](https://vercel.com/templates?type=ai)。

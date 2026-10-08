@@ -1,0 +1,72 @@
+---
+title: 检索增强生成（RAG）
+description: 了解如何在 Node 中结合 AI SDK 使用检索增强生成（RAG）
+tags: ['node']
+---
+
+# Retrieval Augmented Generation
+
+检索增强生成（Retrieval Augmented Generation，RAG）是一种通过在生成过程中为语言模型提供来自外部来源的相关信息，从而增强其能力的技术。
+这种方式使模型能够访问并整合其原始训练数据中可能不具备的最新知识或特定知识。
+
+本示例使用[下面这篇文章](https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt)作为输入（`essay.txt`）。示例使用一个简单的内存向量数据库来存储和检索相关信息。你也可以查看我们的[知识库智能体（agent）示例](/cookbook/node/knowledge-base-agent)，它使用 Upstash Search 来生成嵌入（embedding）并管理知识库。
+
+如果想深入了解，请参阅 [RAG 聊天机器人指南](/cookbook/guides/rag-chatbot)，它将向你展示如何使用 [Next.js](https://nextjs.org)、[Drizzle ORM](https://orm.drizzle.team/) 和 [Postgres](https://postgresql.org) 构建一个 RAG 聊天机器人。
+
+```ts
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import { cosineSimilarity, embed, embedMany, generateText } from 'ai';
+
+dotenv.config();
+
+async function main() {
+  const db: { embedding: number[]; value: string }[] = [];
+
+  const essay = fs.readFileSync(path.join(__dirname, 'essay.txt'), 'utf8');
+  const chunks = essay
+    .split('.')
+    .map(chunk => chunk.trim())
+    .filter(chunk => chunk.length > 0 && chunk !== '\n');
+
+  const { embeddings } = await embedMany({
+    model: 'openai/text-embedding-3-small',
+    values: chunks,
+  });
+  embeddings.forEach((e, i) => {
+    db.push({
+      embedding: e,
+      value: chunks[i],
+    });
+  });
+
+  const input =
+    'What were the two main things the author worked on before college?';
+
+  const { embedding } = await embed({
+    model: 'openai/text-embedding-3-small',
+    value: input,
+  });
+  const context = db
+    .map(item => ({
+      document: item,
+      similarity: cosineSimilarity(embedding, item.embedding),
+    }))
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 3)
+    .map(r => r.document.value)
+    .join('\n');
+
+  const { text } = await generateText({
+    model: 'openai/gpt-6-astra',
+    prompt: `Answer the following question based only on the provided context:
+             ${context}
+
+             Question: ${input}`,
+  });
+  console.log(text);
+}
+
+main().catch(console.error);
+```

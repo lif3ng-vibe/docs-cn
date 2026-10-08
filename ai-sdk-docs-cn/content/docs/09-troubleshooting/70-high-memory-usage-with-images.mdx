@@ -1,0 +1,111 @@
+---
+title: 处理大量图像时的内存占用过高
+description: 排查在 generateText 或 streamText 中使用大量图像时内存占用过高的问题
+---
+
+# High memory usage when processing many images
+
+## 问题
+
+在 `generateText` 或 `streamText` 中使用大量图像时（例如在循环或批处理中），你可能会注意到：
+
+- 内存占用持续增长且不下降
+- 应用最终内存耗尽
+- 即使经过垃圾回收，内存也未释放
+
+在使用 `experimental_download` 处理来自 URL 的图像，或在提示词（prompt）中发送 base64 编码的图像时，这一现象尤其明显。
+
+## 背景
+
+当通过 `include` 选项启用时，AI SDK 会把完整的请求消息以及请求体和响应体一并包含在步骤结果中。处理图像时，请求消息和请求体可能包含 base64 编码的图像数据，其体量可能非常大（单张图像 base64 编码后可达 1MB 以上）。如果你处理大量图像并保留对结果的引用，这些数据就会在内存中不断累积。
+
+例如，处理 100 张每张 500KB 的图像，会在内存中包含约 50MB 以上的请求体数据。
+
+## 解决方案
+
+使用 `include` 选项禁用对请求消息和/或请求体与响应体的包含：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe this image' },
+        { type: 'file', mediaType: 'image', data: imageUrl },
+      ],
+    },
+  ],
+  // Request and response bodies are excluded by default.
+  include: {
+    requestBody: false,
+    responseBody: false,
+  },
+});
+```
+
+### 选项
+
+`include` 选项接受：
+
+- `requestBody`：设为 `true` 时在步骤结果中包含请求体。base64 编码的图像通常就存储在请求体中。默认值：`false`。`generateText` 与 `streamText` 均可用。
+- `requestMessages`：设为 `true` 时在步骤结果中包含请求消息。请求消息可能包含图像、文件等大体积消息内容。默认值：`false`。`generateText` 与 `streamText` 均可用。
+- `rawChunks`：设为 `true` 时在流中包含原始提供商数据块。默认值：`false`。仅在 `streamText` 中可用。
+- `responseBody`：设为 `true` 时在步骤结果中包含响应体。默认值：`false`。仅在 `generateText` 中可用。
+
+### 适用场景
+
+- **批量处理图像**：在循环中处理大量图像时
+- **长时间运行的智能体（agent）**：智能体在其生命周期内可能处理大量图像时
+- **内存受限的环境**：在内存有限的环境中运行时
+
+### 取舍
+
+禁用请求体/响应体包含后：
+
+- 你将无法访问 `result.request.body` 或 `result.response.body`
+- 除非启用 `requestMessages`，否则你将无法访问 `result.request.messages`
+- 由于无法检查原始请求/响应，调试可能变得更困难
+- 如果你需要这些请求体/响应体用于日志记录或调试，可以考虑在下一次迭代之前先提取所需数据
+
+## 示例：处理多张图像
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const imageUrls = [
+  /* array of image URLs */
+];
+const results = [];
+
+for (const imageUrl of imageUrls) {
+  const result = await generateText({
+    model: openai('gpt-6-astra'),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe this image' },
+          { type: 'file', mediaType: 'image', data: imageUrl },
+        ],
+      },
+    ],
+    include: {
+      requestBody: false,
+    },
+  });
+
+  // Only store the text result, not the full result object
+  results.push(result.text);
+}
+```
+
+## 了解更多
+
+- [`generateText` API 参考](/docs/reference/ai-sdk-core/generate-text)
+- [`streamText` API 参考](/docs/reference/ai-sdk-core/stream-text)

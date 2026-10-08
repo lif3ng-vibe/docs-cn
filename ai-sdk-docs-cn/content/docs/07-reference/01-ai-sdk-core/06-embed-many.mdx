@@ -1,0 +1,315 @@
+---
+title: embedMany
+description: embedMany 的 API 参考。
+---
+
+# `embedMany()`
+
+使用嵌入（embedding）模型为多个值生成嵌入。
+
+当模型对单次调用可处理的嵌入数量或 UTF-8 输入字节数有限制时，`embedMany` 会自动将大请求拆分为更小的块。提供商可以使用保守的字节预算，使请求保持在聚合 token 限制以下，而无需在 AI SDK core 包中加入分词器。超过字节预算的单个值会单独发送一次调用，因为拆分它会改变最终得到的嵌入。
+
+```ts
+import { embedMany } from 'ai';
+
+const { embeddings } = await embedMany({
+  model: 'openai/text-embedding-3-small',
+  values: [
+    'sunny day at the beach',
+    'rainy afternoon in the city',
+    'snowy night in the mountains',
+  ],
+});
+```
+
+## 导入
+
+<Snippet text={`import { embedMany } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'EmbeddingModel',
+      description:
+        "要使用的嵌入模型。示例：openai.embeddingModel('text-embedding-3-small')",
+    },
+    {
+      name: 'values',
+      type: 'Array<string>',
+      description: '要生成嵌入的值。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description: '最大重试次数。设为 0 可禁用重试。默认：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '可选的中止信号，可用于取消本次调用。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description:
+        '随请求一起发送的额外 HTTP 请求头。仅适用于基于 HTTP 的提供商。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '透传给提供商的特定选项。',
+    },
+    {
+      name: 'maxParallelCalls',
+      type: 'number',
+      isOptional: true,
+      description:
+        '当请求被拆分为多次模型调用时的最大并发请求数。当分块生效且模型支持并行调用时必须大于 0；无效值会抛出 AI_InvalidArgumentError。默认：Infinity。',
+    },
+    {
+      name: 'runtimeContext',
+      type: 'RUNTIME_CONTEXT',
+      isOptional: true,
+      description:
+        '传递给生命周期回调的用户自定义运行时上下文。默认为空对象。遥测（telemetry）集成只接收通过 telemetry.includeRuntimeContext 显式包含的顶层属性。',
+    },
+    {
+      name: 'telemetry',
+      type: 'TelemetryOptions<RUNTIME_CONTEXT>',
+      isOptional: true,
+      description: '遥测配置。',
+      properties: [
+        {
+          type: 'TelemetryOptions',
+          parameters: [
+            {
+              name: 'isEnabled',
+              type: 'boolean',
+              isOptional: true,
+              description:
+                '启用或禁用遥测。默认启用。设为 `false` 可选择退出。',
+            },
+            {
+              name: 'recordInputs',
+              type: 'boolean',
+              isOptional: true,
+              description: '启用或禁用输入记录。默认启用。',
+            },
+            {
+              name: 'recordOutputs',
+              type: 'boolean',
+              isOptional: true,
+              description: '启用或禁用输出记录。默认启用。',
+            },
+            {
+              name: 'functionId',
+              type: 'string',
+              isOptional: true,
+              description: '此函数的标识符。用于按函数分组遥测数据。',
+            },
+            {
+              name: 'includeRuntimeContext',
+              type: '{ [KEY in keyof RUNTIME_CONTEXT]?: boolean }',
+              isOptional: true,
+              description:
+                '要包含在遥测中的顶层运行时上下文属性。只有设为 true 的属性才会被包含。默认排除所有属性。用户回调仍会收到完整上下文。',
+            },
+            {
+              name: 'integrations',
+              isOptional: true,
+              type: 'Telemetry | Telemetry[]',
+              description:
+                '接收生命周期事件的每次调用遥测集成。提供时会替换全局注册的集成（仅对本次调用生效）。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onStart',
+      type: '(event: EmbedStartEvent<RUNTIME_CONTEXT>) => PromiseLike<void> | void',
+      isOptional: true,
+      description:
+        'embedMany 操作开始时、嵌入模型被调用之前触发的回调。此回调中抛出的错误会被静默捕获，不会中断嵌入流程。',
+      properties: [
+        {
+          type: 'EmbedStartEvent<RUNTIME_CONTEXT>',
+          parameters: [
+            {
+              name: 'runtimeContext',
+              type: 'RUNTIME_CONTEXT',
+              description: '提供给该操作的完整且未过滤的运行时上下文。',
+            },
+            {
+              name: 'callId',
+              type: 'string',
+              description: '本次 embedMany 调用的唯一标识符。',
+            },
+            {
+              name: 'operationId',
+              type: 'string',
+              description: "标识操作类型（'ai.embedMany'）。",
+            },
+            {
+              name: 'model',
+              type: '{ provider: string; modelId: string }',
+              description: '正在使用的嵌入模型。',
+            },
+            {
+              name: 'value',
+              type: 'string | Array<string>',
+              description: '正在生成嵌入的值（embedMany 为字符串数组）。',
+            },
+            {
+              name: 'maxRetries',
+              type: 'number',
+              description: '失败请求的最大重试次数。',
+            },
+            {
+              name: 'abortSignal',
+              type: 'AbortSignal | undefined',
+              description: '用于取消操作的中止信号。',
+            },
+            {
+              name: 'headers',
+              type: 'Record<string, string | undefined> | undefined',
+              description: '随请求发送的额外 HTTP 请求头。',
+            },
+            {
+              name: 'providerOptions',
+              type: 'ProviderOptions | undefined',
+              description: '额外的提供商特定选项。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onEnd',
+      type: '(event: EmbedEndEvent<RUNTIME_CONTEXT>) => PromiseLike<void> | void',
+      isOptional: true,
+      description:
+        'embedMany 操作完成时、所有嵌入模型调用返回之后触发的回调。此回调中抛出的错误会被静默捕获，不会中断嵌入流程。',
+      properties: [
+        {
+          type: 'EmbedEndEvent<RUNTIME_CONTEXT>',
+          parameters: [
+            {
+              name: 'runtimeContext',
+              type: 'RUNTIME_CONTEXT',
+              description: '提供给该操作的完整且未过滤的运行时上下文。',
+            },
+            {
+              name: 'callId',
+              type: 'string',
+              description: '本次 embedMany 调用的唯一标识符。',
+            },
+            {
+              name: 'operationId',
+              type: 'string',
+              description: "标识操作类型（'ai.embedMany'）。",
+            },
+            {
+              name: 'model',
+              type: '{ provider: string; modelId: string }',
+              description: '所使用的嵌入模型。',
+            },
+            {
+              name: 'value',
+              type: 'string | Array<string>',
+              description: '已生成嵌入的值（embedMany 为字符串数组）。',
+            },
+            {
+              name: 'embedding',
+              type: 'Embedding | Array<Embedding>',
+              description: '得到的嵌入向量（embedMany 为嵌入数组）。',
+            },
+            {
+              name: 'usage',
+              type: 'EmbeddingModelUsage',
+              description: '嵌入操作的 token 用量。',
+            },
+            {
+              name: 'warnings',
+              type: 'Array<Warning>',
+              description: '来自嵌入模型的警告。',
+            },
+            {
+              name: 'providerMetadata',
+              type: 'ProviderMetadata | undefined',
+              description: '可选的提供商特定元数据。',
+            },
+            {
+              name: 'response',
+              type: 'Array<{ headers?: Record<string, string>; body?: unknown } | undefined>',
+              description:
+                '每次嵌入调用的响应数据。若请求被拆分为多个块，可能会有多个响应。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'values',
+      type: 'Array<string>',
+      description: '已生成嵌入的值。',
+    },
+    {
+      name: 'embeddings',
+      type: 'number[][]',
+      description: '嵌入结果。顺序与 values 相同。',
+    },
+    {
+      name: 'usage',
+      type: 'EmbeddingModelUsage',
+      description: '生成嵌入所消耗的 token 用量。',
+      properties: [
+        {
+          type: 'EmbeddingModelUsage',
+          parameters: [
+            {
+              name: 'tokens',
+              type: 'number',
+              description: '输入 token 的总数。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'warnings',
+      type: 'Warning[]',
+      description: '来自模型提供商的警告（例如不支持的设置）。',
+    },
+    {
+      name: 'providerMetadata',
+      type: 'ProviderMetadata | undefined',
+      isOptional: true,
+      description:
+        '来自提供商的可选元数据。外层键是提供商名称，内层值是元数据。具体细节取决于提供商。',
+    },
+    {
+      name: 'responses',
+      type: 'Array<{ headers?: Record<string, string>; body?: unknown } | undefined>',
+      isOptional: true,
+      description:
+        '来自每个分块请求的可选原始响应数据。若请求被拆分为多个块，可能会有多个响应。',
+    },
+  ]}
+/>

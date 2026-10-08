@@ -1,0 +1,9 @@
+streamText | streamText | streamtext
+`streamText()` | `streamText()` | streamtext
+Import | 导入 | 导入
+API Signature | API 签名 | api-签名
+Parameters | 参数 | 参数
+Returns | 返回值 | 返回值
+Types | 类型 | 类型
+`ActiveTools` | `ActiveTools` | activetools
+Examples | 示例 | 示例

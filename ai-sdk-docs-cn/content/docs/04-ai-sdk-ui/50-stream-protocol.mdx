@@ -1,0 +1,582 @@
+---
+title: 流协议
+description: 进一步了解 AI SDK 支持的流协议。
+---
+
+# Stream Protocols
+
+`useChat` 和 `useCompletion` 等 AI SDK UI 函数同时支持文本流和数据流。
+流式协议（stream protocol）定义了在 HTTP 协议之上如何把数据流式传输到前端。
+
+本页介绍这两种协议，以及如何在后端和前端使用它们。
+
+你可以利用这些信息为你的用例开发自定义后端和前端，例如
+提供用其他语言（如 Python）实现的兼容 API 端点。
+
+例如，这里有一个使用 [FastAPI](https://github.com/vercel/ai/tree/main/examples/next-fastapi) 作为后端的示例。
+
+## 文本流协议
+
+文本流包含纯文本的块，这些块被流式传输到前端。
+每个块随后被追加在一起，形成完整的文本响应。
+
+`useChat`、`useCompletion` 和 `useObject` 都支持文本流。
+要启用文本流式传输，可在 `useChat` 中使用 `TextStreamChatTransport`，或在
+`useCompletion` 中把 `streamProtocol` 选项设为 `text`。
+
+你可以在后端用 `streamText` 生成文本流。
+把结果的 `stream` 传给 `toTextStream`，再用
+`createTextStreamResponse` 返回，即可创建流式 HTTP 响应。
+
+<Note>
+  文本流只支持基本的文本数据。如果你需要流式传输其他类型
+  的数据（例如工具调用），请使用数据流。
+</Note>
+
+### 文本流示例
+
+下面是一个使用文本流协议的 Next.js 示例：
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { TextStreamChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({
+    transport: new TextStreamChatTransport({ api: '/api/chat' }),
+  });
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+```ts filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createTextStreamResponse,
+  streamText,
+  toTextStream,
+  UIMessage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## 数据流协议
+
+数据流遵循 AI SDK 提供的一种用于向前端发送信息的特殊协议。
+
+数据流协议采用 Server-Sent Events（SSE）格式，以获得更好的标准化、通过 ping 实现的保活、重连能力，以及更好的缓存处理。
+
+<Note>
+  当你从自定义后端提供数据流时，需要把
+  `x-vercel-ai-ui-message-stream` 请求头设置为 `v1`。
+</Note>
+
+目前支持以下流部分：
+
+### 消息开始部分
+
+表示一条带有元数据的新消息的开始。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"start","messageId":"..."}
+
+```
+
+### 文本部分
+
+文本内容以 start/delta/end 模式流式传输，每个文本块都有唯一 ID。
+
+#### 文本开始部分
+
+表示一个文本块的开始。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"text-start","id":"msg_68679a454370819ca74c8eb3d04379630dd1afb72306ca5d"}
+
+```
+
+#### 文本增量部分
+
+包含该文本块的增量文本内容。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"text-delta","id":"msg_68679a454370819ca74c8eb3d04379630dd1afb72306ca5d","delta":"Hello"}
+
+```
+
+#### 文本结束部分
+
+表示一个文本块的完成。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"text-end","id":"msg_68679a454370819ca74c8eb3d04379630dd1afb72306ca5d"}
+
+```
+
+### 推理部分
+
+推理内容以 start/delta/end 模式流式传输，每个推理块都有唯一 ID。
+
+#### 推理开始部分
+
+表示一个推理块的开始。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"reasoning-start","id":"reasoning_123"}
+
+```
+
+#### 推理增量部分
+
+包含该推理块的增量推理内容。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"reasoning-delta","id":"reasoning_123","delta":"This is some reasoning"}
+
+```
+
+#### 推理结束部分
+
+表示一个推理块的完成。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"reasoning-end","id":"reasoning_123"}
+
+```
+
+### 推理文件部分
+
+推理文件部分包含对作为推理产物生成的文件的引用，例如推理过程中产生的图像。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"reasoning-file","url":"data:image/png;base64,iVBOR...","mediaType":"image/png"}
+
+```
+
+### 来源部分
+
+来源部分提供对外部内容来源的引用。
+
+#### 来源 URL 部分
+
+对外部 URL 的引用。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"source-url","sourceId":"https://example.com","url":"https://example.com"}
+
+```
+
+#### 来源文档部分
+
+对文档或文件的引用。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"source-document","sourceId":"https://example.com","mediaType":"file","title":"Title"}
+
+```
+
+### 文件部分
+
+文件部分包含对文件的引用及其媒体类型。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"file","url":"https://example.com/file.png","mediaType":"image/png"}
+
+```
+
+### 自定义部分
+
+自定义部分表示不适合标准部分类型的提供商特定内容。`kind` 字段以 `{provider}.{provider-type}` 格式标识具体的自定义内容类型。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"custom","kind":"openai.compaction","providerMetadata":{"openai":{"itemId":"cmp_123"}}}
+
+```
+
+### 数据部分
+
+自定义数据部分支持流式传输任意结构化数据，并针对类型做专门处理。
+
+格式：带 JSON 对象的 Server-Sent Event，其中类型带有自定义后缀
+
+示例：
+
+```
+data: {"type":"data-weather","data":{"location":"SF","temperature":100}}
+
+```
+
+`data-*` 类型模式让你可以定义前端能够专门处理的自定义数据类型。
+
+### 错误部分
+
+错误部分在收到时会被追加到消息中。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"error","errorText":"error message"}
+
+```
+
+### 工具输入开始部分
+
+表示工具输入流式传输的开始。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-input-start","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar","toolName":"getWeatherInformation"}
+
+```
+
+### 工具输入增量部分
+
+工具输入生成过程中的增量块。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-input-delta","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar","inputTextDelta":"San Francisco"}
+
+```
+
+### 工具输入就绪部分
+
+表示工具输入已完成并可以执行。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-input-available","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar","toolName":"getWeatherInformation","input":{"city":"San Francisco"}}
+
+```
+
+### 工具审批请求部分
+
+表示某个工具调用需要审批，或记录审批决定是自动做出的。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-approval-request","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar","approvalId":"approval_123","approvalDescriptor":{"scope":"account:delete"},"reason":"Requires operator review"}
+
+```
+
+省略 `isAutomatic` 时，该请求期待客户端给出明确的审批响应。
+`reason` 是可选的，用于说明工具调用为何需要审批。
+`approvalDescriptor` 是可选的、对审批而言不透明的元数据。
+当流被处理为 UI 消息后，可以通过
+`part.approval.descriptor` 访问它，并会在后续的审批状态中保留。
+
+### 工具审批响应部分
+
+记录某个工具调用的审批决定。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-approval-response","approvalId":"approval_123","approved":false,"reason":"User denied the request"}
+
+```
+
+对于由提供商执行的工具，响应还可以包含 `providerExecuted: true`。
+
+### 工具输出就绪部分
+
+包含工具执行的结果。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-output-available","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar","output":{"city":"San Francisco","weather":"sunny"}}
+
+```
+
+### 工具输出拒绝部分
+
+表示在审批流程完成后工具执行被拒绝。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"tool-output-denied","toolCallId":"call_fJdQDqnXeGxTmr4E3YPSR7Ar"}
+
+```
+
+### 步骤开始部分
+
+表示一个步骤开始的部分。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"start-step"}
+
+```
+
+### 步骤完成部分
+
+表示一个步骤（即后端的一次 LLM API 调用）已完成的部分。
+
+要正确处理多个拼接在一起的助手调用（例如在后端调用工具的同时在 `useChat` 中使用步骤），该部分是必需的。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"finish-step"}
+
+```
+
+### 步骤重置部分
+
+移除自最近的 `start-step` 部分以来收到的所有消息部分。如果
+没有步骤边界，则移除当前消息中的所有部分。当某个流式步骤需要重试、
+且必须在发送替代输出之前使失败尝试的部分输出失效时，
+这很有用。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"reset-step"}
+
+```
+
+### 消息完成部分
+
+表示一条消息完成的部分。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"finish"}
+
+```
+
+### 中止部分
+
+表示流已被中止。
+
+格式：带 JSON 对象的 Server-Sent Event
+
+示例：
+
+```
+data: {"type":"abort","reason":"user cancelled"}
+
+```
+
+### 流终止
+
+流以一个特殊的 `[DONE]` 标记结束。
+
+格式：字面量 `[DONE]` 的 Server-Sent Event
+
+示例：
+
+```
+data: [DONE]
+
+```
+
+前端的 `useChat` 和 `useCompletion`
+都支持数据流协议，并且默认使用它。
+`useCompletion` 只支持 `text` 和 `data` 流部分。
+
+在后端，你可以把 `streamText` 的结果流传给 `toUIMessageStream`，再用 `createUIMessageStreamResponse` 返回。
+
+### UI 消息流示例
+
+下面是一个使用 UI 消息流协议的 Next.js 示例：
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+```ts filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```

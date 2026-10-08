@@ -1,0 +1,69 @@
+---
+title: 生成文本
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）生成文本。
+tags: ['rsc']
+---
+
+# Generate Text
+
+<Note>
+  本示例使用 React 服务器组件（RSC）。如果你想改用客户端渲染和 Hook，请参阅[使用
+  useState 的"生成文本"示例](/examples/next-pages/basics/generating-text)。
+</Note>
+
+有时你需要基于提示词（prompt）生成文本。例如，你可能想针对某个问题生成回答，或对一段文本进行总结。`generateText` 函数可用于基于输入的提示词生成文本。
+
+<Browser>
+  <TextGeneration />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，点击按钮时会调用 `getAnswer` 函数。`getAnswer` 函数会调用 `ai` 模块中的 `generateText` 函数，进而基于输入的提示词生成文本。
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { getAnswer } from './actions';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [generation, setGeneration] = useState<string>('');
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const { text } = await getAnswer('Why is the sky blue?');
+          setGeneration(text);
+        }}
+      >
+        Answer
+      </button>
+      <div>{generation}</div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+在服务器端，我们需要实现 `getAnswer` 函数，它会调用 `ai` 模块中的 `generateText` 函数。`generateText` 函数将基于输入的提示词生成文本。
+
+```typescript filename='app/actions.ts'
+'use server';
+
+import { generateText } from 'ai';
+
+export async function getAnswer(question: string) {
+  const { text, finishReason, usage } = await generateText({
+    model: 'openai/gpt-6-astra',
+    prompt: question,
+  });
+
+  return { text, finishReason, usage };
+}
+```

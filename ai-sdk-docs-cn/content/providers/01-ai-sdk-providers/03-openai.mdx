@@ -1,0 +1,3512 @@
+---
+title: OpenAI
+description: 了解如何在 AI SDK 中使用 OpenAI 提供商。
+---
+
+# OpenAI 提供商
+
+[OpenAI](https://openai.com/) 提供商为 OpenAI responses、chat 和 completion API 提供语言模型支持，并为 OpenAI embeddings API 提供嵌入（embedding）模型支持。
+
+## 安装
+
+OpenAI 提供商通过 `@ai-sdk/openai` 模块提供。你可以使用以下命令安装：
+
+<InstallPackages packages="@ai-sdk/openai" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/openai` 导入默认提供商实例 `openai`：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+```
+
+如需自定义配置，可以从 `@ai-sdk/openai` 导入 `createOpenAI`，并使用你的设置创建提供商实例：
+
+```ts
+import { createOpenAI } from '@ai-sdk/openai';
+
+const openai = createOpenAI({
+  // custom settings, e.g.
+  headers: {
+    'header-name': 'header-value',
+  },
+});
+```
+
+你可以使用以下可选设置来自定义 OpenAI 提供商实例：
+
+- **batchResultDownloads** _object_
+
+  用于下载 JSON Lines 批处理结果的设置。
+  - **maxLineBytes** _number_
+
+    每行的最大 UTF-8 字节数，不含 LF 分隔符。默认为 64 MiB（67,108,864 字节）。必须是正的安全整数。超限的行会抛出 `DownloadError` 并取消下载。
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认取 `OPENAI_BASE_URL` 环境变量，其次为
+  `https://api.openai.com/v1`。
+  默认的 OpenAI 模型工厂（`openai('model-id')`）使用 Responses API。如果你的自定义 base URL 仅支持 Chat Completions API，请改用 `openai.chat('model-id')` 创建聊天模型，或使用
+  [OpenAI 兼容提供商](/providers/openai-compatible-providers)。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认取 `OPENAI_API_KEY` 环境变量。
+
+- **name** _string_
+
+  提供商名称。使用 OpenAI 兼容提供商时可以设置此项，以更改模型的提供商属性。默认为 `openai`。
+
+- **organization** _string_
+
+  OpenAI 组织。
+
+- **project** _string_
+
+  OpenAI 项目。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作拦截请求的中间件，
+  或用于提供自定义 fetch 实现（例如测试场景）。
+
+## 语言模型
+
+OpenAI 提供商实例是一个函数，调用它即可创建语言模型：
+
+```ts
+const model = openai('gpt-6-astra');
+```
+
+它会根据模型 id 自动选择正确的 API。
+你也可以在第二个参数中传入附加设置：
+
+```ts
+const model = openai('gpt-6-astra', {
+  // additional settings
+});
+```
+
+可用选项取决于为该模型自动选择的 API（见下文）。
+如果你想显式选择特定的模型 API，可以使用 `.responses`、`.chat` 或 `.completion`。
+
+<Note>
+  自 AI SDK 5 起，默认调用 OpenAI responses API（除非你
+  指定了例如 'openai.chat'）
+</Note>
+
+### 示例
+
+你可以使用 OpenAI 语言模型通过 `generateText` 函数生成文本：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+OpenAI 语言模型也可以用于 `streamText` 函数，
+并通过 [`Output`](/docs/reference/ai-sdk-core/output) 支持结构化数据生成
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### Responses 模型
+
+你可以使用 `openai(modelId)` 或 `openai.responses(modelId)` 工厂方法调用 OpenAI responses API。它是 OpenAI 提供商使用的默认 API（自 AI SDK 5 起）。
+
+```ts
+const model = openai('gpt-6-astra');
+```
+
+进一步配置可通过 OpenAI 提供商选项完成。
+你可以使用 `OpenAILanguageModelResponsesOptions` 类型校验提供商选项。
+
+```ts
+import { openai, OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'), // or openai.responses('gpt-6-astra')
+  providerOptions: {
+    openai: {
+      parallelToolCalls: false,
+      store: false,
+      user: 'user_123',
+      // ...
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+  // ...
+});
+```
+
+可用的提供商选项如下：
+
+- **parallelToolCalls** _boolean_
+  是否使用并行工具调用。默认为 `true`。
+
+- **store** _boolean_
+
+  是否存储本次生成。默认为 `true`。
+
+- **passThroughUnsupportedFiles** _boolean_
+
+  是否将非图像文件类型作为通用输入文件透传。默认为 `false`，即内联文件输入仅限图像和 PDF。当目标 OpenAI Responses 模型支持更多文件媒体类型时启用此项。
+
+- **maxToolCalls** _integer_
+  一次响应中可处理的内置工具调用总次数上限。
+  此上限作用于所有内置工具调用，而非单个工具。
+  模型后续的工具调用尝试将被忽略。
+
+- **metadata** _Record&lt;string, string&gt;_
+  与本次生成一同存储的附加元数据。
+
+- **conversation** _string_
+  要继续的 OpenAI Conversation 的 ID。
+  你必须先通过 [OpenAI API](https://platform.openai.com/docs/api-reference/conversations/create) 创建对话。
+  不能与 `previousResponseId` 同时使用。
+  默认为 `undefined`。
+
+- **previousResponseId** _string_
+  上一次响应的 ID。可用于继续对话。默认为 `undefined`。
+
+- **instructions** _string_
+  模型的指令。
+  在使用 `previousResponseId` 选项继续对话时，可用于更改系统消息或开发者消息。
+  默认为 `undefined`。
+
+- **logprobs** _boolean | number_
+  返回 token 的对数概率。包含 logprobs 会增加响应体积并可能拖慢响应时间，但有助于更好地理解模型行为。设为 `true` 返回已生成 token 的对数概率；设为数字（1-20）返回已生成 token 中前 n 个的对数概率。
+
+- **user** _string_
+  代表你的最终用户的唯一标识符，可帮助 OpenAI 监控和检测滥用行为。默认为 `undefined`。
+
+- **reasoningEffort** _'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'_
+  推理（reasoning）模型的推理力度。默认为 `medium`。如果你通过 `providerOptions` 设置了 `reasoningEffort` 选项，此模型设置将被忽略。
+
+<Note>
+  支持的推理力度因模型而异。GPT-5.6、GPT-6 Sol 和 GPT-6 Luna
+  支持 `'none'`、`'low'`、`'medium'`、`'high'`、`'xhigh'` 和 `'max'`。GPT-6
+  Astra 和 GPT-6.1 Sol 不支持 `'none'`。
+</Note>
+
+<Note type="warning">
+  GPT-6 及更高版本的模型不支持 `temperature`、`topP`、`logprobs` 或
+  旧版 `promptCacheRetention` 选项。提供商会移除这些设置
+  并返回警告。GPT-6 的工具调用请使用 Responses API。
+</Note>
+
+- **reasoningEffortUpdate** _'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'_
+  从当前响应开始更新 GPT-6 及更高版本模型的推理力度，且不改变请求级力度。与
+  `previousResponseId` 搭配使用可保留原始提示词前缀以便缓存。
+  配置更新要求标准单智能体模式，且不能
+  与自动压缩或自动截断同时使用。
+
+  对于请求级和消息级更新，SDK 都会根据所选模型校验力度取值。例如，GPT-6 Sol 和 Luna 支持 `none`，
+  而 GPT-6 Astra 不支持。
+
+- **reasoningMode** _'standard' | 'pro'_
+  控制 GPT-5.6 在返回最终答案前投入多少模型算力。默认为 `'standard'`。对于质量比延迟和 token 用量更重要的困难任务，可使用 `'pro'`。
+
+- **reasoningContext** _'auto' | 'current_turn' | 'all_turns'_
+  控制 GPT-5.6 可以复用哪些可用的推理条目。`'auto'` 使用模型默认行为，`'current_turn'` 排除更早轮次的推理，`'all_turns'` 使兼容的更早推理可用。生效的上下文会通过 `providerMetadata.openai.reasoningContext` 返回。
+
+- **reasoningSummary** _'auto' | 'detailed' | null_
+  控制模型是否返回其推理过程。设为 `'auto'` 返回精简摘要，`'detailed'` 返回更全面的推理，`null` 则省略推理摘要。当 `reasoningEffort` 设置为 `'none'` 以外的值时，默认为 `'detailed'`；否则不返回推理摘要。启用后，推理摘要在流中以 `'reasoning'` 类型事件出现，在非流式响应中位于 `reasoning` 字段。
+
+- **strictJsonSchema** _boolean_
+  是否使用严格的 JSON schema 校验。默认为 `true`。
+
+<Note type="warning">
+  OpenAI 结构化输出存在若干
+  [限制](https://openai.com/index/introducing-structured-outputs-in-the-api)，
+  尤其是在[受支持的
+  schema](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas)
+  方面，因此需要显式开启。例如，可选的 schema 属性不被
+  支持。你需要将 Zod 的 `.nullish()` 和 `.optional()` 改为
+  `.nullable()`。
+</Note>
+
+- **serviceTier** _'auto' | 'flex' | 'priority' | 'fast' | 'ultrafast' | 'default'_
+  请求的服务层级。设为 'flex' 可便宜 50%，代价是延迟增加（适用于 o3、o4-mini 和 gpt-5 模型）。
+  设为 'priority' 可通过企业（Enterprise）权限获得更快处理（适用于 gpt-4、gpt-5、gpt-5-mini、o3、o4-mini；不支持 gpt-5-nano）。
+  'fast' 是 'priority' 层级的较新名称，两者可互换，gpt-5.6 及更早版本的响应
+  对二者都报告 `serviceTier: 'priority'`。
+  设为 'ultrafast' 可使用需访问控制的 Ultrafast 处理（仅适用于 gpt-5.6-sol）。
+
+  默认为 'auto'。
+
+- **textVerbosity** _'low' | 'medium' | 'high'_
+  控制模型响应的详尽程度。值越低响应越简洁，
+  值越高响应越详尽。默认为 `'medium'`。
+
+- **include** _Array&lt;string&gt;_
+  指定要包含在响应中的附加内容。支持的值：
+  `['file_search_call.results']` 表示在响应中包含文件搜索结果。
+  `['message.output_text.logprobs']` 表示返回 logprobs。
+  默认为 `undefined`。
+
+- **truncation** _string_
+  模型响应使用的截断策略。
+  - auto：如果此响应的输入超过模型的上下文窗口大小，模型会从对话开头丢弃条目来截断响应以适配上下文窗口。
+  - disabled（默认）：如果输入大小将超过模型的上下文窗口大小，请求会因 400 错误而失败。
+
+- **promptCacheKey** _string_
+  用于手动控制提示词缓存的缓存键。OpenAI 用它为相似请求缓存响应，以优化缓存命中率。
+
+- **promptCacheOptions** _object_
+  为 GPT-5.6 及更高版本的模型配置提示词缓存。`mode` 可为 `'implicit'` 或 `'explicit'`，`ttl` 目前仅支持 `'30m'`。在显式模式下，只有标记了提示词缓存断点的内容块会被缓存。
+
+- **promptCacheRetention** _'in_memory' | '24h'_
+  GPT-5.6 之前模型的旧版保留策略。设为 `'24h'` 可在受支持模型上启用扩展提示词缓存。对于 GPT-5.6 及更高版本的模型，请改用 `promptCacheOptions.ttl`。
+
+- **safetyIdentifier** _string_
+  一个稳定标识符，用于帮助检测你的应用中可能违反 OpenAI 使用政策的用户。该 ID 应为能唯一标识每个用户的字符串。
+
+- **systemMessageMode** _'system' | 'developer' | 'remove'_
+  控制请求中系统消息的角色。默认（省略时）对支持推理的模型，`system` 消息会自动转换为 `developer` 消息。将 `systemMessageMode` 设为 `system` 会将系统消息作为系统级指令传递；`developer` 将其作为开发者消息传递；`remove` 则从请求中省略系统消息。
+
+- **forceReasoning** _boolean_
+  强制将此模型视为推理模型。这适用于"隐身"推理模型（例如通过自定义 baseURL 接入），其模型 ID 不在 SDK 的允许清单中。启用后，SDK 会应用推理模型参数兼容规则，并将 `systemMessageMode` 默认为 `developer`（除非另行覆盖）。
+
+- **contextManagement** _Array&lt;object&gt;_
+  启用服务器端上下文管理（压缩）。配置后，当 token 用量超过指定阈值时，服务器会自动压缩对话上下文。数组中每个对象应包含：
+  - `type`: `'compaction'`
+  - `compactThreshold`: _number_ —— 触发压缩的 token 数
+
+- **compactionTrigger** _boolean_
+  请求显式的服务器端压缩。设为 `true` 时，提供商会在 Responses 输入末尾追加一个 `{ type: 'compaction_trigger' }` 条目。是否支持取决于所配置的 Responses 兼容端点和模型。
+
+OpenAI responses 提供商还会返回特定于提供商的元数据：
+
+对于 Responses 模型，你可以使用 `OpenaiResponsesProviderMetadata` 为该元数据标注类型：
+
+```ts
+import { openai, type OpenaiResponsesProviderMetadata } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+});
+
+const providerMetadata = result.providerMetadata as
+  | OpenaiResponsesProviderMetadata
+  | undefined;
+
+const { responseId, logprobs, serviceTier, reasoningContext } =
+  providerMetadata?.openai ?? {};
+
+// responseId can be used to continue a conversation (previousResponseId).
+console.log(responseId);
+```
+
+可能返回的 OpenAI 专属元数据如下：
+
+- **responseId** _string | null | undefined_
+  响应的 ID。可用于继续对话。
+- **logprobs** _(可选)_
+  输出 token 的对数概率（启用时）。
+- **serviceTier** _(可选)_
+  API 返回的服务层级信息。
+- **reasoningContext** _(可选)_
+  GPT-5.6 返回的生效持久化推理上下文（`'current_turn'` 或 `'all_turns'`）。
+
+#### 对话中途调整推理力度
+
+对于困难工作你可以提高推理力度，对于常规追问则可以降低，同时保留对话前缀以便提示词缓存：
+
+- 用请求级 `reasoning` 设定初始力度，并在整个对话中保持该设置
+  不变。
+- 之后的调整，在下一条用户消息前添加消息级 `reasoningEffortUpdate`，遵循
+  [OpenAI 的配置更新指南](https://developers.openai.com/api/docs/guides/reasoning#change-reasoning-mid-conversation)。
+
+新力度会持续生效，直到另一次更新改变它。在 `messages` 中发送对话
+历史时，要将较早的力度更新与其他消息一并包含。
+
+一次更新表示为一条携带
+`providerOptions.openai.reasoningEffortUpdate` 的空系统消息。
+
+你**必须**设置 `allowSystemInMessages: true` 才允许这些受信任的系统消息。
+
+在此示例中，对话以 low 力度开始，在追问时切换到
+high 力度。两次请求都保持 `reasoning: 'low'`。
+
+```ts
+import {
+  openai,
+  type OpenAIResponsesSystemMessageOptions,
+} from '@ai-sdk/openai';
+import { generateText, type ModelMessage } from 'ai';
+
+const messages: ModelMessage[] = [
+  { role: 'user', content: 'Draft a migration plan.' },
+];
+
+const first = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  reasoning: 'low',
+  messages,
+});
+
+messages.push(...first.responseMessages);
+messages.push(
+  {
+    role: 'system',
+    content: '',
+    providerOptions: {
+      openai: {
+        reasoningEffortUpdate: 'high',
+      } satisfies OpenAIResponsesSystemMessageOptions,
+    },
+  },
+  { role: 'user', content: 'Analyze the failure modes.' },
+);
+
+const second = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  reasoning: 'low',
+  allowSystemInMessages: true,
+  messages,
+});
+
+messages.push(...second.responseMessages);
+```
+
+<Note>
+  OpenAI Responses 提供商会将每条消息级力度更新作为
+  `configuration_update` 输入条目发送。
+</Note>
+
+消息级更新也适用于 `streamText` 和 `previousResponseId`。
+
+##### 限制
+
+力度更新在具备以下设置的 GPT-6 系列模型上受支持：
+
+| 设置                | 要求的值                |
+| ------------------- | ---------------------- |
+| `reasoningMode`     | `'standard'`（默认） |
+| `contextManagement` | 省略                |
+| `truncation`        | `'disabled'`（默认） |
+
+- 每次更新**必须**精确使用 `content: ''`。
+- 更新不能连续出现，即使力度相同。这同样适用于
+  previousResponseId 或 conversation 引用历史的边界处。
+
+违反这些限制的请求会被拒绝。
+
+<Note>
+  即使 `systemMessageMode` 设置为
+  `remove`，力度更新消息也会被发送。
+</Note>
+
+##### 压缩
+
+**力度更新与通过
+`providerOptions.openai.contextManagement` 进行的自动压缩、或通过 OpenAI
+`/responses/compact` 端点进行的压缩互不兼容**。
+
+要压缩包含力度更新的对话，请将[显式
+压缩](#显式压缩)与
+`providerOptions.openai.compactionTrigger` 搭配使用。
+
+压缩后，在下一条用户消息前添加一条新的力度更新，
+[遵循 OpenAI 的建议](https://developers.openai.com/api/docs/guides/reasoning#change-reasoning-mid-conversation)。保持请求级 `reasoning` 不变。
+
+##### 请求级更新选项
+
+请求级 `providerOptions.openai.reasoningEffortUpdate` 选项是一种
+便捷方式，会在输入前预置一次配置更新。使用
+消息级更新时，请省略此选项。
+
+对于不支持的模型或配置，请求级选项仍会警告并省略更新。
+
+#### 推理输出
+
+对于 `gpt-6-astra` 等推理模型，你可以启用推理摘要来查看模型的思考过程。不同模型支持不同的摘要器——例如 `o4-mini` 支持详细摘要。设置 `reasoningSummary: "auto"` 可自动获得可用的最丰富层级。当 `reasoningEffort` 设置为 `'none'` 以外的值时，OpenAI Responses 提供商将 `reasoningSummary` 默认为 `'detailed'`；设置 `reasoningSummary: null` 可省略推理摘要。
+
+```ts highlight="10-14,17-23"
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me about the Mission burrito debate in San Francisco.',
+  providerOptions: {
+    openai: {
+      reasoningSummary: 'detailed', // 'auto' for condensed or 'detailed' for comprehensive
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    console.log(`Reasoning: ${part.textDelta}`);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+对于使用 `generateText` 的非流式调用，推理摘要在响应的 `reasoning` 字段中可用：
+
+```ts highlight="8-9,13"
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me about the Mission burrito debate in San Francisco.',
+  providerOptions: {
+    openai: {
+      reasoningSummary: 'auto',
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+console.log('Reasoning:', result.reasoning);
+```
+
+了解更多推理摘要相关内容，请参阅 [OpenAI 文档](https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries)。
+
+#### WebSocket 传输
+
+OpenAI 的 [WebSocket API](https://developers.openai.com/api/docs/guides/websocket-mode) 会保持一条持久连接，在包含大量工具调用的智能体工作流中可显著
+降低首字节时间（TTFB）。
+建立初始连接后，后续请求完全跳过 TCP/TLS/HTTP 协商。
+
+[`ai-sdk-openai-websocket-fetch`](https://www.npmjs.com/package/ai-sdk-openai-websocket-fetch)
+包提供了一个可即插即用的 `fetch` 替代实现，将流式请求
+路由到一条持久的 WebSocket 连接上。
+
+<InstallPackages packages="ai-sdk-openai-websocket-fetch" />
+
+通过 `fetch` 选项将 WebSocket fetch 传给 `createOpenAI`：
+
+```ts highlight="2,6-7,15"
+import { createOpenAI } from '@ai-sdk/openai';
+import { createWebSocketFetch } from 'ai-sdk-openai-websocket-fetch';
+import { streamText } from 'ai';
+
+// Create a WebSocket-backed fetch instance
+const wsFetch = createWebSocketFetch();
+const openai = createOpenAI({ fetch: wsFetch });
+
+const result = streamText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Hello!',
+  tools: {
+    // ...
+  },
+  onFinish: () => wsFetch.close(), // close the WebSocket when done
+});
+```
+
+第一个请求会较慢，因为它需要建立 WebSocket 连接
+（DNS + TCP + TLS + WebSocket 升级）。此后，多步
+工具调用循环中的后续步骤会复用已打开的连接，使每一步的 TTFB
+更低。
+
+<Note>
+  WebSocket 传输仅将发往 OpenAI Responses
+  API（`POST /responses` 且 `stream: true`）的流式请求路由到 WebSocket。所有其他
+  请求（非流式、嵌入等）会回退到标准
+  `fetch` 实现。
+</Note>
+
+你可以在[演示应用](https://github.com/vercel-labs/ai-sdk-openai-websocket)中查看 HTTP 与 WebSocket 流式性能的实时并排对比。
+
+#### 详尽度控制
+
+你可以使用 `textVerbosity` 参数控制模型响应的长度与细节：
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a poem about a boy and his first pet dog.',
+  providerOptions: {
+    openai: {
+      textVerbosity: 'low', // 'low' for concise, 'medium' (default), or 'high' for verbose
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+`textVerbosity` 参数在不改变底层提示词的情况下调节输出长度：
+
+- `'low'`：生成简洁、精炼的响应
+- `'medium'`：细节均衡（默认）
+- `'high'`：细节全面的详尽响应
+
+#### 命名空间化的函数调用
+
+OpenAI 支持将相关的函数工具分组成
+[命名空间](https://developers.openai.com/api/docs/guides/function-calling#defining-namespaces)。
+当 Responses API 返回带有 `namespace` 的 `function_call` 时，OpenAI 提供商
+会在生成的 `tool-call` 部件上以
+`providerMetadata.openai.namespace` 暴露该值。
+
+```ts
+for (const part of result.content) {
+  if (part.type === 'tool-call') {
+    console.log(part.providerMetadata?.openai?.namespace);
+  }
+}
+```
+
+使用 `streamText` 时，命名空间在 `tool-input-end` 事件和
+最终的 `tool-call` 事件上可用：
+
+```ts
+for await (const part of result.stream) {
+  if (part.type === 'tool-input-end' || part.type === 'tool-call') {
+    console.log(part.providerMetadata?.openai?.namespace);
+  }
+}
+```
+
+如果你为后续轮次持久化或重建消息，请保留工具调用部件上的 OpenAI 提供商
+元数据。SDK 使用 `providerMetadata.openai.namespace` 或
+`providerOptions.openai.namespace` 在后续请求中把命名空间
+回传给 OpenAI。
+
+#### 异步工具调用
+
+GPT-6 Astra 及更高版本的 Responses 模型支持
+[异步工具调用](https://developers.openai.com/api/docs/guides/async-tool-calling)。
+异步工具让模型在发出调用后继续生成独立输出，
+而不必等待其结果。你的应用仍会执行该
+工具，并在稍后的请求中使用原始工具调用 ID 提交其结果。
+
+通过 `providerOptions.openai.async` 在函数工具上启用异步调用：
+
+```ts
+import { openai, type OpenAIToolOptions } from '@ai-sdk/openai';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  tools: {
+    getWeather: tool({
+      description: 'Get the weather for a city.',
+      inputSchema: z.object({ city: z.string() }),
+      outputSchema: z.object({
+        city: z.string(),
+        temperatureC: z.number(),
+      }),
+      providerOptions: {
+        openai: { async: true } satisfies OpenAIToolOptions,
+      },
+    }),
+  },
+  prompt:
+    'Start the weather lookup for Paris, then list three general packing essentials without waiting.',
+});
+```
+
+生成的工具调用会以 `providerMetadata.openai.async` 暴露提供商标记。可将 `providerMetadata.openai.responseId` 用作
+下一个请求的 `previousResponseId`，并在携带原始
+`toolCallId` 的工具消息中提交结果。
+
+使用 `streamText` 时，OpenAI 可以在已完成的
+`tool-call` 部件之后继续流式输出文本。使用工具的 `onInputAvailable` 回调，在该部件
+到达时立即开始工作。如果 `execute` 返回同一个已在运行的 promise，工具
+执行会与模型流的其余部分并行。当任务
+应超出当前生成的生命周期并在稍后请求中提交结果时，可省略 `execute`。
+
+异步调用适用于直接调用的函数工具和自定义工具。它不
+适用于托管工具，也不应与程序化工具调用组合使用。
+
+#### 程序化工具调用
+
+OpenAI Programmatic Tool Calling 让受支持的 Responses 模型生成并运行
+托管 JavaScript，以协调客户端函数工具。先通过 `openai.tools.programmaticToolCalling()` 添加托管工具，再用 `allowedCallers` 为每个符合条件的函数
+开启程序化调用。
+
+```ts
+import { openai, type OpenAIToolOptions } from '@ai-sdk/openai';
+import { generateText, isStepCount, tool } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  stopWhen: isStepCount(10),
+  prompt: 'Compare inventory with demand for sku_123.',
+  tools: {
+    program: openai.tools.programmaticToolCalling(),
+    getInventory: tool({
+      description: 'Get available inventory for a SKU.',
+      inputSchema: z.object({ sku: z.string() }),
+      execute: async ({ sku }) => ({ sku, availableUnits: 42 }),
+      providerOptions: {
+        openai: {
+          allowedCallers: ['programmatic'],
+          outputSchema: {
+            type: 'object',
+            properties: {
+              sku: { type: 'string' },
+              availableUnits: { type: 'number' },
+            },
+            required: ['sku', 'availableUnits'],
+            additionalProperties: false,
+          },
+        } satisfies OpenAIToolOptions,
+      },
+    }),
+  },
+});
+```
+
+`allowedCallers` 支持：
+
+- `['direct']`（或省略）：仅允许模型的直接工具调用
+- `['programmatic']`：仅允许来自托管 JavaScript 的调用
+- `['direct', 'programmatic']`：两种调用方式皆可
+
+使用 `outputSchema` 描述该函数返回的 JSON 值。此 schema
+会作为 `output_schema` 发送给 OpenAI，使生成的 JavaScript 能安全使用
+返回的字段。它不会替代该工具的 AI SDK 输出校验或执行
+逻辑。
+
+提供商会在 `generateText` 和 `streamText` 的工具循环中保留程序代码、重放指纹、程序输出和嵌套
+函数调用者元数据，
+包括 `store: false` 的无状态请求。程序化调用
+目前支持 AI SDK 函数工具；在此集成中，其他 OpenAI 工具类型仍
+仅限直接调用。
+
+请将生成的程序和工具参数视为不可信内容。在每个工具内部实施鉴权与
+审批，避免对有副作用的工具进行程序化访问（除非操作是幂等的），并设置明确的步骤上限。
+
+#### 网络搜索工具
+
+OpenAI responses API 通过 `openai.tools.webSearch` 工具支持网络搜索。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'What happened in San Francisco last week?',
+  tools: {
+    web_search: openai.tools.webSearch({
+      // optional configuration:
+      externalWebAccess: true,
+      searchContextSize: 'high',
+      userLocation: {
+        type: 'approximate',
+        city: 'San Francisco',
+        region: 'California',
+      },
+      filters: {
+        allowedDomains: ['sfchronicle.com', 'sfgate.com'],
+        blockedDomains: ['example.com'],
+      },
+    }),
+  },
+  // Force web search tool (optional):
+  toolChoice: { type: 'tool', toolName: 'web_search' },
+});
+
+// URL sources directly from `results`
+const sources = result.sources;
+
+// Or access sources from tool results
+for (const toolResult of result.toolResults) {
+  if (toolResult.toolName === 'web_search') {
+    console.log('Query:', toolResult.output.action.query);
+    console.log('Sources:', toolResult.output.sources);
+    // `sources` is an array of object: { type: 'url', url: string }
+  }
+}
+```
+
+网络搜索工具支持以下配置选项：
+
+- **externalWebAccess** _boolean_ - 是否使用外部网络访问来抓取实时内容。默认为 `true`。
+- **searchContextSize** _'low' | 'medium' | 'high'_ - 控制搜索使用的上下文数量。值越高结果越全面，但延迟和成本可能更高。
+- **userLocation** - 可选的位置信息，用于提供与地理位置相关的结果。包含 `type`（始终为 `'approximate'`）、`country`、`city`、`region` 和 `timezone`。
+- **filters** - 可选的过滤配置，用于限制搜索结果。
+  - **allowedDomains** _string[]_ - 搜索允许的域名，最多 100 个。
+  - **blockedDomains** _string[]_ - 搜索屏蔽的域名，最多 100 个。
+
+域名过滤器中省略 http 或 https 前缀。已配置域名的子域名会自动被包含或排除。
+
+有关配置选项的详细信息，请参阅 [OpenAI 网络搜索工具文档](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses)。
+
+#### 文件搜索工具
+
+OpenAI responses API 通过 `openai.tools.fileSearch` 工具支持文件搜索。
+
+你可以将 `toolChoice` 参数设置为 `{ type: 'tool', toolName: 'file_search' }`，强制使用文件搜索工具。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'What does the document say about user authentication?',
+  tools: {
+    file_search: openai.tools.fileSearch({
+      vectorStoreIds: ['vs_123'],
+      // configuration below is optional:
+      maxNumResults: 5,
+      filters: {
+        key: 'author',
+        type: 'eq',
+        value: 'Jane Smith',
+      },
+      ranking: {
+        ranker: 'auto',
+        scoreThreshold: 0.5,
+      },
+    }),
+  },
+  providerOptions: {
+    openai: {
+      // optional: include results
+      include: ['file_search_call.results'],
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+文件搜索工具支持比较过滤器和复合过滤器：
+
+**比较过滤器** - 按单个属性过滤：
+
+- `eq` - 等于
+- `ne` - 不等于
+- `gt` - 大于
+- `gte` - 大于或等于
+- `lt` - 小于
+- `lte` - 小于或等于
+- `in` - 值在数组中
+- `nin` - 值不在数组中
+
+```ts
+// Single comparison filter
+filters: { key: 'year', type: 'gte', value: 2023 }
+
+// Filter with array values
+filters: { key: 'status', type: 'in', value: ['published', 'reviewed'] }
+```
+
+**复合过滤器** - 使用 `and` 或 `or` 组合多个过滤器：
+
+```ts
+// Compound filter with AND
+filters: {
+  type: 'and',
+  filters: [
+    { key: 'author', type: 'eq', value: 'Jane Smith' },
+    { key: 'year', type: 'gte', value: 2023 },
+  ],
+}
+
+// Compound filter with OR
+filters: {
+  type: 'or',
+  filters: [
+    { key: 'department', type: 'eq', value: 'Engineering' },
+    { key: 'department', type: 'eq', value: 'Research' },
+  ],
+}
+```
+
+#### 图像生成工具
+
+OpenAI 的 Responses API 以提供商自定义工具的形式支持多模态图像生成。
+可用性仅限于特定模型（例如 `gpt-5` 变体）。
+
+你可以在 `generateText` 或 `streamText` 中使用图像工具：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt:
+    'Generate an image of an echidna swimming across the Mozambique channel.',
+  tools: {
+    image_generation: openai.tools.imageGeneration({ outputFormat: 'webp' }),
+  },
+});
+
+for (const toolResult of result.staticToolResults) {
+  if (toolResult.toolName === 'image_generation') {
+    const base64Image = toolResult.output.result;
+  }
+}
+```
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai('gpt-6-astra'),
+  prompt:
+    'Generate an image of an echidna swimming across the Mozambique channel.',
+  tools: {
+    image_generation: openai.tools.imageGeneration({
+      outputFormat: 'webp',
+      quality: 'low',
+    }),
+  },
+});
+
+for await (const part of result.stream) {
+  if (part.type == 'tool-result' && !part.dynamic) {
+    const base64Image = part.output.result;
+  }
+}
+```
+
+<Note>
+  当你设置 `store: false` 时，之前生成的图像将无法
+  被模型访问。建议在使用图像生成工具时不要
+  设置 `store: false`。
+</Note>
+
+要使用 `xhigh` 或 `max` 质量，请选择 `gpt-image-2.5-flare` 或
+`gpt-image-2.5-sunburst` 作为图像生成工具的模型：
+
+```ts
+openai.tools.imageGeneration({
+  model: 'gpt-image-2.5-flare',
+  quality: 'xhigh',
+});
+```
+
+关于模型可用性、图像质量控制、受支持的尺寸以及工具专属参数的完整细节，
+请参阅 OpenAI 文档：
+
+- 图像生成概览与模型：[OpenAI Image Generation](https://platform.openai.com/docs/guides/image-generation)
+- 图像生成工具参数（背景、尺寸、质量、格式等）：[Image Generation Tool Options](https://platform.openai.com/docs/guides/tools-image-generation#tool-options)
+
+#### 代码解释器工具
+
+OpenAI responses API 通过 `openai.tools.codeInterpreter` 工具支持代码解释器工具。
+它允许模型编写并执行 Python 代码。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write and run Python code to calculate the factorial of 10',
+  tools: {
+    code_interpreter: openai.tools.codeInterpreter({
+      // optional configuration:
+      container: {
+        fileIds: ['file-123', 'file-456'], // optional file IDs to make available
+      },
+    }),
+  },
+});
+```
+
+代码解释器工具可通过以下方式配置：
+
+- **container**：容器 ID 字符串，或包含 `fileIds` 的对象，用于指定代码解释器可以使用的已上传文件
+
+<Note>
+  在处理 Code Interpreter 生成的文件时，可以同时从[文本
+  部件中的批注](#文本部件中的类型化-providermetadata)和[源文档
+  部件中的 `providerMetadata`](#源文档部件中的类型化-providermetadata)获取参考
+  信息。
+</Note>
+
+#### MCP 工具
+
+OpenAI responses API 通过 `openai.tools.mcp` 工具支持连接到 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器。这允许模型调用远程 MCP 服务器或服务连接器暴露的工具。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Search the web for the latest news about AI developments',
+  tools: {
+    mcp: openai.tools.mcp({
+      serverLabel: 'web-search',
+      serverUrl: 'https://mcp.exa.ai/mcp',
+      serverDescription: 'A web-search API for AI agents',
+    }),
+  },
+});
+```
+
+MCP 工具可通过以下方式配置：
+
+- **serverLabel** _string_（必需）
+
+  用于标识 MCP 服务器的标签。工具调用中会使用此标签来区分多个 MCP 服务器。
+
+- **serverUrl** _string_（未提供 `connectorId` 时必需）
+
+  MCP 服务器的 URL。`serverUrl` 与 `connectorId` 必须提供其一。
+
+- **connectorId** _string_（未提供 `serverUrl` 时必需）
+
+  服务连接器的标识符。`serverUrl` 与 `connectorId` 必须提供其一。
+
+- **serverDescription** _string_（可选）
+
+  MCP 服务器的可选描述，可帮助模型理解其用途。
+
+- **allowedTools** _string[] | object_（可选）
+
+  控制 MCP 服务器上哪些工具可用。可以是：
+  - 工具名数组：`['tool1', 'tool2']`
+  - 带过滤器的对象：
+    ```ts
+    {
+      readOnly: true, // Only allow read-only tools
+      toolNames: ['tool1', 'tool2'] // Specific tool names
+    }
+    ```
+
+- **authorization** _string_（可选）
+
+  用于向 MCP 服务器或连接器鉴权的 OAuth 访问令牌。
+
+- **headers** _Record&lt;string, string&gt;_（可选）
+
+  发往 MCP 服务器的请求中包含的可选 HTTP 请求头。
+
+- **requireApproval** _'always' | 'never' | object_（可选）
+
+  控制哪些 MCP 工具调用在执行前需要用户批准。可以是：
+  - `'always'`：所有 MCP 工具调用都需要批准
+  - `'never'`：无需批准（默认）
+  - 带过滤器的对象：
+    ```ts
+    {
+      never: {
+        toolNames: ['safe_tool', 'another_safe_tool']; // Skip approval for these tools
+      }
+    }
+    ```
+
+  当需要批准时，模型会返回一个 `tool-approval-request` 内容部件，你可以用它提示用户进行批准。实现审批工作流的更多细节请参见 [Human in the Loop](/cookbook/next/human-in-the-loop)。
+
+<Note>
+  未设置 `requireApproval` 时，工具调用默认获得批准。请务必
+  只连接你信任并愿意共享数据的可信 MCP 服务器。
+</Note>
+
+<Note>
+  OpenAI MCP 工具与 [MCP 工具](/docs/ai-sdk-core/mcp-tools)中介绍的通用
+  MCP 客户端方式不同。OpenAI MCP 工具是
+  一个内置的提供商自定义工具，允许 OpenAI 模型直接连接
+  到 MCP 服务器，而通用 MCP 客户端需要你先将 MCP 工具
+  转换为 AI SDK 工具。
+</Note>
+
+#### 计算机工具
+
+OpenAI Responses API 通过
+`openai.tools.computer` 支持 GA 版计算机工具。模型返回一组有序的浏览器或
+桌面操作供你的应用执行，而你的应用返回
+一张更新后的截图。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText, isStepCount } from 'ai';
+import { captureScreenshot, executeComputerAction } from '@/utils/computer-use';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  tools: {
+    computer: openai.tools.computer({
+      needsApproval: ({ pendingSafetyChecks }) =>
+        pendingSafetyChecks.length > 0,
+
+      execute: async ({ actions, pendingSafetyChecks }) => {
+        for (const action of actions) {
+          await executeComputerAction(action);
+        }
+
+        return {
+          output: {
+            type: 'computer_screenshot',
+            imageUrl: `data:image/png;base64,${await captureScreenshot()}`,
+            detail: 'original',
+          },
+          acknowledgedSafetyChecks: pendingSafetyChecks,
+        };
+      },
+    }),
+  },
+  prompt: 'Open the settings page and enable dark mode.',
+  stopWhen: isStepCount(10),
+});
+```
+
+execute 回调会接收：
+
+- **actions** - 由 `click`、`double_click`、`drag`、
+  `keypress`、`move`、`screenshot`、`scroll`、`type` 和 `wait` 操作组成的有序数组。
+  在截取下一张截图前按顺序执行每一个操作。
+- **pendingSafetyChecks** - OpenAI 返回的安全检查。继续之前请先
+  审阅这些检查，并将已接受的检查包含在
+  `acknowledgedSafetyChecks` 中。
+- **status** - 计算机调用的状态。
+
+操作联合类型同时以 `OpenAIComputerAction` 导出。各操作的专属
+字段如下：
+
+| 操作           | 字段                                               |
+| -------------- | ---------------------------------------------------- |
+| `click`        | `button`、`x`、`y`、可选 `keys`                  |
+| `double_click` | `x`、`y`、可选 `keys`                            |
+| `drag`         | 包含 `{ x, y }` 点的 `path`、可选 `keys` |
+| `keypress`     | `keys`                                               |
+| `move`         | `x`、`y`、可选 `keys`                            |
+| `screenshot`   | 无附加字段                                 |
+| `scroll`       | `x`、`y`、`scrollX`、`scrollY`、可选 `keys`      |
+| `type`         | `text`                                               |
+| `wait`         | 无附加字段                                 |
+
+安全检查使用导出的 `OpenAIComputerSafetyCheck` 类型。
+
+返回 `computer_screenshot` 时可以使用以下二者之一：
+
+- **imageUrl** - 完整限定的 URL 或图像 data URL。
+- **fileId** - 已上传截图文件的 ID。
+
+`detail` 可为 `auto`、`low`、`high` 或 `original`。`original` 保留
+截取时的分辨率，在需要精确坐标时
+推荐使用。
+
+使用 `store`、`previousResponseId` 或
+OpenAI 对话时，计算机调用和 `computer_call_output` 截图结果会贯穿多步
+生成被保留。你也可以设置 `store: false`；提供商会
+将完整的调用与截图结果序列化到每个后续请求中。
+
+<Note type="warning">
+  请在隔离的浏览器或 VM 中运行计算机操作。限制可访问的域名、
+  账号、凭据、环境变量和文件系统访问。将
+  屏幕上的内容视为不可信的提示词注入输入，在产生实际影响的操作之前要求确认，并避免在截图中暴露敏感
+  信息。
+</Note>
+
+#### 本地 Shell 工具
+
+OpenAI responses API 通过 `openai.tools.localShell` 工具为 Codex 模型提供本地 shell 工具支持。
+本地 shell 是一个允许智能体在你或用户提供的机器上本地运行 shell 命令的工具。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-5-codex'),
+  tools: {
+    local_shell: openai.tools.localShell({
+      execute: async ({ action }) => {
+        // ... your implementation, e.g. sandbox access ...
+        return { output: stdout };
+      },
+    }),
+  },
+  prompt: 'List the files in my home directory.',
+  stopWhen: isStepCount(2),
+});
+```
+
+#### Shell 工具
+
+OpenAI Responses API 通过 `openai.tools.shell` 工具支持 shell 工具。
+shell 工具允许运行 bash 命令并与命令行交互。
+由模型提出 shell 命令；你的集成负责执行它们并返回输出。
+
+<Note type="warning">
+  运行任意 shell 命令可能有危险。在将命令转发给系统 shell 之前，请务必进行沙箱化执行或
+  添加严格的允许/拒绝清单。
+</Note>
+
+shell 工具支持三种环境模式，用于控制命令在哪里执行：
+
+##### 本地执行（默认）
+
+未指定 `environment`（或使用 `type: 'local'`）时，命令通过你的 `execute` 回调在本地执行：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    shell: openai.tools.shell({
+      execute: async ({ action }) => {
+        // ... your implementation, e.g. sandbox access ...
+        return { output: results };
+      },
+    }),
+  },
+  prompt: 'List the files in the current directory and show disk usage.',
+});
+```
+
+##### 托管容器（auto）
+
+将 `environment.type` 设置为 `'containerAuto'`，即可在 OpenAI 托管的容器中运行命令。无需 `execute` 回调 —— OpenAI 在服务端处理执行：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    shell: openai.tools.shell({
+      environment: {
+        type: 'containerAuto',
+        // optional configuration:
+        memoryLimit: '4g',
+        fileIds: ['file-abc123'],
+        networkPolicy: {
+          type: 'allowlist',
+          allowedDomains: ['example.com'],
+        },
+      },
+    }),
+  },
+  prompt: 'Install numpy and compute the eigenvalues of a 3x3 matrix.',
+});
+```
+
+`containerAuto` 环境支持：
+
+- **fileIds** _string[]_ - 在容器中可用的文件 ID
+- **memoryLimit** _'1g' | '4g' | '16g' | '64g'_ - 容器的内存限制
+- **networkPolicy** - 网络访问策略：
+  - `{ type: 'disabled' }` —— 无网络访问
+  - `{ type: 'allowlist', allowedDomains: string[], domainSecrets?: Array<{ domain, name, value }> }` —— 允许特定域名，可附带密钥
+
+##### 引用现有容器
+
+将 `environment.type` 设置为 `'containerReference'`，即可通过 ID 使用现有容器：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    shell: openai.tools.shell({
+      environment: {
+        type: 'containerReference',
+        containerId: 'cntr_abc123',
+      },
+    }),
+  },
+  prompt: 'Check the status of running processes.',
+});
+```
+
+##### execute 回调
+
+本地执行（默认或 `type: 'local'`）时，你的 execute 函数必须返回一个输出数组，包含每条命令的结果：
+
+- **stdout** _string_ - 命令的标准输出
+- **stderr** _string_ - 命令的标准错误
+- **outcome** - `{ type: 'timeout' }` 或 `{ type: 'exit', exitCode: number }`
+
+##### Skills
+
+[Skills](https://platform.openai.com/docs/guides/tools-skills) 是带 `SKILL.md` 清单的版本化文件包，可扩展 shell 工具的能力。它们既可以挂载到 `containerAuto` 环境，也可以挂载到 `local` 环境。
+
+**容器 skills** 支持两种格式 —— 引用式（针对已上传到 OpenAI 的 skills）或内联式（base64 编码的 zip）：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    shell: openai.tools.shell({
+      environment: {
+        type: 'containerAuto',
+        skills: [
+          // By reference:
+          { type: 'skillReference', skillId: 'skill_abc123' },
+          // Or inline:
+          {
+            type: 'inline',
+            name: 'my-skill',
+            description: 'What this skill does',
+            source: {
+              type: 'base64',
+              mediaType: 'application/zip',
+              data: readFileSync('./my-skill.zip').toString('base64'),
+            },
+          },
+        ],
+      },
+    }),
+  },
+  prompt: 'Use the skill to solve this problem.',
+});
+```
+
+**本地 skills** 指向磁盘上一个包含 `SKILL.md` 文件的目录：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    shell: openai.tools.shell({
+      execute: async ({ action }) => {
+        // ... your local execution implementation ...
+        return { output: results };
+      },
+      environment: {
+        type: 'local',
+        skills: [
+          {
+            name: 'my-skill',
+            description: 'What this skill does',
+            path: resolve('path/to/skill-directory'),
+          },
+        ],
+      },
+    }),
+  },
+  prompt: 'Use the skill to solve this problem.',
+  stopWhen: isStepCount(5),
+});
+```
+
+创建 skills 的更多细节请参阅 [OpenAI Skills 文档](https://platform.openai.com/docs/guides/tools-skills)。
+
+#### 应用补丁工具
+
+OpenAI Responses API 通过 `openai.tools.applyPatch` 工具为 GPT-5.1 模型支持应用补丁工具。
+应用补丁工具让模型使用结构化 diff 在你的代码库中创建、更新和删除文件。
+模型不只是建议编辑，而是发出补丁操作，由你的应用应用并回报结果，
+从而支持迭代的、多步的代码编辑工作流。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  tools: {
+    apply_patch: openai.tools.applyPatch({
+      execute: async ({ callId, operation }) => {
+        // ... your implementation for applying the diffs.
+        return { status: 'completed' };
+      },
+    }),
+  },
+  prompt: 'Create a python file that calculates the factorial of a number',
+  stopWhen: isStepCount(5),
+});
+```
+
+你的 execute 函数必须返回：
+
+- **status** _'completed' | 'failed'_ - 补丁是否应用成功
+- **output** _string_（可选）- 人类可读的日志文本（例如结果或错误信息）
+
+#### 工具搜索
+
+工具搜索让模型能够按需动态搜索工具并将其加载进上下文，
+而不是预先加载所有工具定义。当你拥有大量工具时，这可以降低 token 用量、成本和延迟。
+在工具的 `providerOptions` 中用 `deferLoading: true`
+标记你希望可被搜索的工具。
+
+有两种执行模式：
+
+- **服务器执行**（托管）：OpenAI 在请求中声明的延迟加载工具中进行搜索，并在同一响应中返回已加载的子集。无需额外的往返。
+- **客户端执行**：模型发出 `tool_search_call`，由你的应用执行查找，你再通过 `execute` 回调返回匹配的工具。
+
+##### 服务器执行（托管）的工具搜索
+
+当候选工具在请求时已确定时，可使用托管工具搜索。
+无参添加 `openai.tools.toolSearch()`，并用 `deferLoading: true` 标记你的工具：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText, tool, isStepCount } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'What is the weather in San Francisco?',
+  stopWhen: isStepCount(10),
+  tools: {
+    toolSearch: openai.tools.toolSearch(),
+
+    get_weather: tool({
+      description: 'Get the current weather at a specific location',
+      inputSchema: z.object({
+        location: z.string(),
+        unit: z.enum(['celsius', 'fahrenheit']),
+      }),
+      execute: async ({ location, unit }) => ({
+        location,
+        temperature: unit === 'celsius' ? 18 : 64,
+      }),
+      providerOptions: {
+        openai: { deferLoading: true },
+      },
+    }),
+
+    search_files: tool({
+      description: 'Search through files in the workspace',
+      inputSchema: z.object({ query: z.string() }),
+      execute: async ({ query }) => ({
+        results: [`Found 3 files matching "${query}"`],
+      }),
+      providerOptions: {
+        openai: { deferLoading: true },
+      },
+    }),
+  },
+});
+```
+
+在托管模式下，模型在内部搜索延迟加载的工具，加载相关工具并
+继续调用它们 —— 全部在单个响应内完成。`tool_search_call` 与
+`tool_search_output` 条目会出现在响应中，带有 `execution: 'server'` 和 `call_id: null`。
+
+##### 命名空间
+
+使用 `providerOptions.openai.namespace` 为 OpenAI 将相关的函数工具分组。
+SDK 会让每个工具仍可作为普通 AI SDK 工具执行，但会在请求中将分组
+工具序列化为 OpenAI `namespace` 条目：
+
+```ts
+const crmNamespace = {
+  name: 'crm',
+  description: 'CRM tools for customer lookup and order management.',
+};
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'List open orders for customer cust_123.',
+  tools: {
+    toolSearch: openai.tools.toolSearch(),
+
+    get_customer_profile: tool({
+      description: 'Fetch a customer profile by customer ID.',
+      inputSchema: z.object({ customer_id: z.string() }),
+      execute: async ({ customer_id }) => ({ customer_id }),
+      providerOptions: {
+        openai: { namespace: crmNamespace },
+      },
+    }),
+
+    list_open_orders: tool({
+      description: 'List open orders for a customer ID.',
+      inputSchema: z.object({ customer_id: z.string() }),
+      execute: async ({ customer_id }) => ({ customer_id, orders: [] }),
+      providerOptions: {
+        openai: {
+          namespace: crmNamespace,
+          deferLoading: true,
+        },
+      },
+    }),
+  },
+});
+```
+
+同一命名空间内的工具必须使用相同的命名空间 `name` 和 `description`。
+要获得最佳的工具搜索效果，请保持命名空间描述简洁，并把详细的
+使用说明放在各个函数工具上。
+
+##### 客户端执行的工具搜索
+
+当工具发现依赖于运行时状态时——例如
+工具因租户、项目或外部系统而异——可使用客户端执行的工具搜索。传入 `execution: 'client'` 以及
+`description`、`parameters` schema 和 `execute` 回调：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText, tool, isStepCount } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'What is the weather in San Francisco?',
+  stopWhen: isStepCount(10),
+  tools: {
+    toolSearch: openai.tools.toolSearch({
+      execution: 'client',
+      description: 'Search for available tools based on what the user needs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          goal: {
+            type: 'string',
+            description: 'What the user is trying to accomplish',
+          },
+        },
+        required: ['goal'],
+        additionalProperties: false,
+      },
+      execute: async ({ arguments: args }) => {
+        // Your custom tool discovery logic here.
+        // Return the tools that match the search goal.
+        return {
+          tools: [
+            {
+              type: 'function',
+              name: 'get_weather',
+              description: 'Get the current weather at a specific location',
+              deferLoading: true,
+              parameters: {
+                type: 'object',
+                properties: {
+                  location: { type: 'string' },
+                },
+                required: ['location'],
+                additionalProperties: false,
+              },
+            },
+          ],
+        };
+      },
+    }),
+
+    get_weather: tool({
+      description: 'Get the current weather at a specific location',
+      inputSchema: z.object({ location: z.string() }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 64,
+        condition: 'Partly cloudy',
+      }),
+      providerOptions: {
+        openai: { deferLoading: true },
+      },
+    }),
+  },
+});
+```
+
+在客户端模式下，流程分为两步：
+
+1. **第 1 步**：模型发出 `tool_search_call`，带有 `execution: 'client'` 和非空的 `call_id`。SDK 用搜索参数调用你的 `execute` 回调。你的回调返回发现的工具。
+2. **第 2 步**：SDK 将 `tool_search_output`（携带匹配的 `call_id`）发回给模型。模型现在可以像普通函数调用一样调用已加载的工具。
+
+更多细节请参阅 [OpenAI Tool Search 文档](https://platform.openai.com/docs/guides/tools-tool-search)。
+
+#### 自定义工具
+
+OpenAI Responses API 通过 `openai.tools.customTool` 工具支持
+[自定义工具](https://developers.openai.com/api/docs/guides/function-calling/#custom-tools)。
+自定义工具返回原始字符串而非 JSON，可选择性地受语法约束
+（regex 或 Lark 语法）。这使它们适合生成结构化文本，例如
+SQL 查询、代码片段，或任何必须匹配特定模式的输出。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-sol'),
+  tools: {
+    write_sql: openai.tools.customTool({
+      description: 'Write a SQL SELECT query to answer the user question.',
+      format: {
+        type: 'grammar',
+        syntax: 'regex',
+        definition: 'SELECT .+',
+      },
+      execute: async input => {
+        // input is a raw string matching the grammar, e.g. "SELECT * FROM users WHERE age > 25"
+        const rows = await db.query(input);
+        return JSON.stringify(rows);
+      },
+    }),
+  },
+  toolChoice: 'required',
+  prompt: 'Write a SQL query to get all users older than 25.',
+  stopWhen: isStepCount(3),
+});
+```
+
+自定义工具同样适用于 `streamText`：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai.responses('gpt-6-sol'),
+  tools: {
+    write_sql: openai.tools.customTool({
+      description: 'Write a SQL SELECT query to answer the user question.',
+      format: {
+        type: 'grammar',
+        syntax: 'regex',
+        definition: 'SELECT .+',
+      },
+    }),
+  },
+  toolChoice: 'required',
+  prompt: 'Write a SQL query to get all users older than 25.',
+});
+
+for await (const chunk of result.stream) {
+  if (chunk.type === 'tool-call') {
+    console.log(`Tool: ${chunk.toolName}`);
+    console.log(`Input: ${chunk.input}`);
+  }
+}
+```
+
+自定义工具可通过以下方式配置：
+
+- **description** _string_（可选）- 工具用途的描述，帮助模型理解何时使用它。
+- **format** _object_（可选）- 输出格式约束。无约束的文本输出可省略。
+  - **type** _'grammar' | 'text'_ - 格式类型。受限输出使用 `'grammar'`，显式无约束文本使用 `'text'`。
+  - **syntax** _'regex' | 'lark'_ -（仅限 grammar）语法类型。正则表达式模式使用 `'regex'`，[Lark 解析器语法](https://lark-parser.readthedocs.io/)使用 `'lark'`。
+  - **definition** _string_ -（仅限 grammar）语法定义字符串（regex 模式或 Lark 语法）。
+- **execute** _function_（可选）- 接收原始字符串输入并返回字符串结果的异步函数。启用多轮工具调用。
+
+#### 限制可调用的工具
+
+`allowedTools` 提供商选项限制模型可以调用你声明的哪些工具，
+同时仍向 OpenAI 发送完整的 `tools` 列表。由于工具列表在
+各请求之间保持字节级一致，提示词缓存得以保留 —— 这与 `activeTools` 不同，后者会从
+请求中移除工具，并且每当允许清单变化时就使缓存失效。
+
+`allowedTools` 仅受 Responses API 支持，并且它会覆盖请求级的 `toolChoice`。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  tools: {
+    weather: weatherTool,
+    cityAttractions: cityAttractionsTool,
+    search: openai.tools.webSearch(),
+  },
+  providerOptions: {
+    openai: {
+      allowedTools: { toolNames: ['weather', 'search'], mode: 'auto' },
+    },
+  },
+  prompt: 'What is the weather in San Francisco?',
+});
+```
+
+- **toolNames** _string[]_ - 模型可以调用的工具，按你在 `tools` 中声明的名称命名。对于
+  提供商自定义工具，你也可以使用 OpenAI 规范名称（例如 `web_search`）。
+- **mode** _'auto' | 'required'_（可选）- `'auto'`（默认）让模型从允许的
+  工具中自行选择，或以消息作答；`'required'` 强制它至少调用其中一个。
+
+函数工具和提供商自定义工具都可以加入允许清单，包括网络搜索、文件搜索、
+图像生成、代码解释器、计算机、应用补丁、shell、程序化工具调用、自定义
+工具以及 MCP 服务器。
+
+如果某个名称既匹配你声明的工具，又匹配另一个工具的 OpenAI 规范名称，则以你用该名称
+声明的工具为准，并通过警告报告这一歧义。如果多个工具共享同一个
+规范名称 —— 例如两个 MCP 服务器 —— 该名称即存在歧义，因此会在发出警告后被丢弃；
+请改为按你声明的名称命名这些工具。
+
+<Note>
+  有三类工具无法加入允许清单，因为 OpenAI 的 `allowed_tools`
+  只能看到预加载的工具列表：[工具搜索工具](#工具搜索)、
+  标记了 `deferLoading` 的工具，以及归入命名空间的工具。在 `allowedTools` 中
+  指定其中之一会将其从允许清单中移除并发出
+  警告；如果这导致没有任何工具，请求会以错误失败，
+  而不是静默地不发送任何限制。
+</Note>
+
+<Note>
+  MCP 服务器作为整体加入允许清单：该条目携带服务器标签，
+  因此该服务器上的每个工具都可调用。要限制模型可以
+  调用服务器上的哪些工具，请使用 MCP 工具自身的 `allowedTools` 参数。
+</Note>
+
+#### 图像输入
+
+OpenAI Responses API 为相应模型支持图像输入。
+你可以使用 `file` 类型配合 `image` 媒体类型，将图像文件作为消息内容的一部分传入：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Please describe the image.',
+        },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: readFileSync('./data/image.png'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+模型将可以访问该图像，并回答与它相关的问题。
+图像应通过 `data` 字段传入。
+
+你也可以传入来自 OpenAI Files API 的 file-id。
+
+```ts
+{
+  type: 'file',
+  mediaType: 'image',
+  data: 'file-8EFBcWHsQxZV7YGezBC1fq'
+}
+```
+
+你也可以传入图像的 URL。
+
+```ts
+{
+  type: 'file',
+  mediaType: 'image',
+  data: 'https://sample.edu/image.png',
+}
+```
+
+#### PDF 输入
+
+OpenAI Responses API 支持读取 PDF 文件。
+你可以使用 `file` 类型将 PDF 文件作为消息内容的一部分传入：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'What is an embedding model?',
+        },
+        {
+          type: 'file',
+          data: readFileSync('./data/ai.pdf'),
+          mediaType: 'application/pdf',
+          filename: 'ai.pdf', // optional
+        },
+      ],
+    },
+  ],
+});
+```
+
+你也可以传入来自 OpenAI Files API 的 file-id。
+
+```ts
+{
+  type: 'file',
+  data: 'file-8EFBcWHsQxZV7YGezBC1fq',
+  mediaType: 'application/pdf',
+}
+```
+
+你也可以传入 PDF 的 URL。
+
+```ts
+{
+  type: 'file',
+  data: 'https://sample.edu/example.pdf',
+  mediaType: 'application/pdf',
+  filename: 'ai.pdf', // optional
+}
+```
+
+模型将可以访问 PDF 文件的内容，
+并回答与它相关的问题。
+PDF 文件应通过 `data` 字段传入，
+且 `mediaType` 应设置为 `'application/pdf'`。
+
+#### 结构化输出
+
+OpenAI Responses API 支持结构化输出。你可以将 `generateText` 或 `streamText` 与 [`Output`](/docs/reference/ai-sdk-core/output) 搭配使用来强制结构化输出。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(
+          z.object({
+            name: z.string(),
+            amount: z.string(),
+          }),
+        ),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+```
+
+#### 文本部件中的类型化 providerMetadata
+
+使用 OpenAI Responses API 时，SDK 会通过 `providerMetadata` 将 OpenAI 专属元数据附加到输出部件上。
+
+这些元数据可在客户端用于诸如渲染引用或下载 Code Interpreter 生成文件之类的任务。
+为了对这些元数据进行类型安全的处理，AI SDK 导出了专用的 TypeScript 类型。
+
+对于文本部件，当 `part.type === 'text'` 时，`providerMetadata` 以 `OpenaiResponsesTextProviderMetadata` 的形式提供。
+
+该元数据包含以下字段：
+
+- `itemId`
+  Responses API 中输出条目的 ID。
+- `annotations`（可选）
+  模型生成的批注（annotation）对象数组。
+  如果没有批注，此属性本身也可能被省略（`undefined`）。
+
+  `annotations` 中的每个元素都是带必需 `type` 字段的可辨识联合。受支持的类型包括例如：
+  - `url_citation`
+  - `file_citation`
+  - `container_file_citation`
+  - `file_path`
+
+  这些批注与 Responses API 定义的批注对象直接对应，可用于内联引用渲染或输出分析。
+  详情请参阅 OpenAI 官方文档：
+  [Responses API – output text annotations](https://platform.openai.com/docs/api-reference/responses/object?lang=javascript#responses-object-output-output_message-content-output_text-annotations)。
+
+```ts
+import {
+  openai,
+  type OpenaiResponsesTextProviderMetadata,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt:
+    'Create a program that generates five random numbers between 1 and 100 with two decimal places, and show me the execution results. Also save the result to a file.',
+  tools: {
+    code_interpreter: openai.tools.codeInterpreter(),
+    web_search: openai.tools.webSearch(),
+    file_search: openai.tools.fileSearch({ vectorStoreIds: ['vs_1234'] }), // requires a configured vector store
+  },
+});
+
+for (const part of result.content) {
+  if (part.type === 'text') {
+    const providerMetadata = part.providerMetadata as
+      | OpenaiResponsesTextProviderMetadata
+      | undefined;
+    if (!providerMetadata) continue;
+    const { itemId: _itemId, annotations } = providerMetadata.openai;
+
+    if (!annotations) continue;
+    for (const annotation of annotations) {
+      switch (annotation.type) {
+        case 'url_citation':
+          // url_citation is returned from web_search and provides:
+          // properties: type, url, title, start_index and end_index
+          break;
+        case 'file_citation':
+          // file_citation is returned from file_search and provides:
+          // properties: type, file_id, filename and index
+          break;
+        case 'container_file_citation':
+          // container_file_citation is returned from code_interpreter and provides:
+          // properties: type, container_id, file_id, filename, start_index and end_index
+          break;
+        case 'file_path':
+          // file_path provides:
+          // properties: type, file_id and index
+          break;
+        default: {
+          const _exhaustiveCheck: never = annotation;
+          throw new Error(
+            `Unhandled annotation: ${JSON.stringify(_exhaustiveCheck)}`,
+          );
+        }
+      }
+    }
+  }
+}
+```
+
+<Note>
+  在为 Code Interpreter 生成的文件实现下载时，
+  可以使用 `providerMetadata` 中的 `container_id` 和 `file_id`
+  来获取文件内容。详情请参阅 [Retrieve container file
+  content](https://platform.openai.com/docs/api-reference/container-files/retrieveContainerFileContent)
+  API。
+</Note>
+
+#### 推理部件中的类型化 providerMetadata
+
+使用 OpenAI Responses API 时，推理输出部件可以包含提供商元数据。
+要以类型安全的方式处理这些元数据，请使用 `OpenaiResponsesReasoningProviderMetadata`。
+
+对于推理部件，当 `part.type === 'reasoning'` 时，`providerMetadata` 以 `OpenaiResponsesReasoningProviderMetadata` 的形式提供。
+
+该元数据包含以下字段：
+
+- `itemId`  
+  Responses API 中推理条目的 ID。
+- `reasoningEncryptedContent`（可选）  
+  加密的推理内容（仅当通过 `include: ['reasoning.encrypted_content']` 请求时返回）。
+
+```ts
+import {
+  openai,
+  type OpenaiResponsesReasoningProviderMetadata,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'How many "r"s are in the word "strawberry"?',
+  providerOptions: {
+    openai: {
+      store: false,
+      include: ['reasoning.encrypted_content'],
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+for (const part of result.content) {
+  if (part.type === 'reasoning') {
+    const providerMetadata = part.providerMetadata as
+      | OpenaiResponsesReasoningProviderMetadata
+      | undefined;
+
+    const { itemId, reasoningEncryptedContent } =
+      providerMetadata?.openai ?? {};
+    console.log(itemId, reasoningEncryptedContent);
+  }
+}
+```
+
+#### 源文档部件中的类型化 providerMetadata
+
+对于源文档部件，当 `part.type === 'source'` 且 `sourceType === 'document'` 时，`providerMetadata` 以 `OpenaiResponsesSourceDocumentProviderMetadata` 的形式提供。
+
+该元数据同样是带必需 `type` 字段的可辨识联合。受支持的类型包括：
+
+- `file_citation`
+- `container_file_citation`
+- `file_path`
+
+每种类型都包含处理所引用资源所需的标识符，例如 `fileId` 和 `containerId`。
+
+```ts
+import {
+  openai,
+  type OpenaiResponsesSourceDocumentProviderMetadata,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt:
+    'Create a program that generates five random numbers between 1 and 100 with two decimal places, and show me the execution results. Also save the result to a file.',
+  tools: {
+    code_interpreter: openai.tools.codeInterpreter(),
+    web_search: openai.tools.webSearch(),
+    file_search: openai.tools.fileSearch({ vectorStoreIds: ['vs_1234'] }), // requires a configured vector store
+  },
+});
+
+for (const part of result.content) {
+  if (part.type === 'source') {
+    if (part.sourceType === 'document') {
+      const providerMetadata = part.providerMetadata as
+        | OpenaiResponsesSourceDocumentProviderMetadata
+        | undefined;
+      if (!providerMetadata) continue;
+      const annotation = providerMetadata.openai;
+      switch (annotation.type) {
+        case 'file_citation':
+          // file_citation is returned from file_search and provides:
+          // properties: type, fileId and index
+          // The filename can be accessed via part.filename.
+          break;
+        case 'container_file_citation':
+          // container_file_citation is returned from code_interpreter and provides:
+          // properties: type, containerId and fileId
+          // The filename can be accessed via part.filename.
+          break;
+        case 'file_path':
+          // file_path provides:
+          // properties: type, fileId and index
+          break;
+        default: {
+          const _exhaustiveCheck: never = annotation;
+          throw new Error(
+            `Unhandled annotation: ${JSON.stringify(_exhaustiveCheck)}`,
+          );
+        }
+      }
+    }
+  }
+}
+```
+
+<Note>
+  文本部件中的批注遵循 OpenAI Responses API 规范，
+  因此使用 snake_case 属性（如 `file_id`、`container_id`）。
+  相比之下，源文档部件的 `providerMetadata` 会被
+  SDK 归一化为 camelCase（如 `fileId`、`containerId`）。依赖于
+  原始文本内容的字段（如 `start_index` 和 `end_index`）会被省略，
+  `filename` 等在 source 对象上直接可得的字段同样会被省略。
+</Note>
+
+#### 压缩
+
+OpenAI Responses API 支持服务器端上下文压缩。启用后，当 token 用量超过配置的阈值时，服务器会自动压缩对话上下文。这对于长时间运行的对话或智能体循环非常有用——你无需手动管理上下文即可保持在 token 限制之内。
+
+服务器返回的压缩条目是不透明且加密的 —— 它以更少的 token 将关键的先前状态和推理带入下一轮。AI SDK 会自动处理这一过程：压缩条目作为带有特殊 `providerMetadata` 的文本部件返回，而在后续请求中传回时，它们会作为压缩输入条目发送。
+
+```ts highlight="7-11"
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  messages: conversationHistory,
+  providerOptions: {
+    openai: {
+      store: false,
+      contextManagement: [{ type: 'compaction', compactThreshold: 50000 }],
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+**配置**
+
+- **type** —— 必须为 `'compaction'`
+- **compactThreshold** —— 触发压缩的 token 数。当渲染后的输入 token 数超过该阈值时，服务器会在继续推理前执行一次压缩。
+
+<Note>
+  当你在请求上设置 `store: false` 时，服务器端压缩对 ZDR 友好。
+</Note>
+
+##### 显式压缩
+
+对于支持显式压缩的 Responses 兼容端点，设置
+`compactionTrigger: true`。提供商会将所需的
+`{ type: 'compaction_trigger' }` 请求控制在所有已转换消息
+和输入条目之后追加。
+
+```ts highlight="9"
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-5.3-codex'),
+  messages: conversationHistory,
+  providerOptions: {
+    openai: {
+      store: false,
+      compactionTrigger: true,
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+这与配置自动的、基于阈值的压缩的 `contextManagement` 不同。省略或为 `false` 时，
+`compactionTrigger` 不会添加输入条目。产生的压缩输出使用既有的
+`openai.compaction` 自定义部件表示。端点与模型的支持程度
+可能不同。
+
+##### 在流中检测压缩
+
+使用 `streamText` 时，你可以通过检查 `text-start` 和 `text-end` 事件上的 `providerMetadata` 来检测压缩：
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai.responses('gpt-6-astra'),
+  messages: conversationHistory,
+  providerOptions: {
+    openai: {
+      store: false,
+      contextManagement: [{ type: 'compaction', compactThreshold: 50000 }],
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+for await (const part of result.stream) {
+  switch (part.type) {
+    case 'text-start': {
+      const isCompaction = part.providerMetadata?.openai?.type === 'compaction';
+      if (isCompaction) {
+        // ... your logic
+      }
+      break;
+    }
+    case 'text-end': {
+      const isCompaction = part.providerMetadata?.openai?.type === 'compaction';
+      if (isCompaction) {
+        // ... your logic
+      }
+      break;
+    }
+    case 'text-delta': {
+      process.stdout.write(part.text);
+      break;
+    }
+  }
+}
+```
+
+##### UI 应用中的压缩
+
+使用 `useChat` 或其他 UI Hook 时，压缩条目表现为带有 `providerMetadata` 的文本部件。你可以在 UI 中检测并以不同样式呈现它们：
+
+```tsx
+{
+  message.parts.map((part, index) => {
+    if (part.type === 'text') {
+      const isCompaction =
+        (part.providerMetadata?.openai as { type?: string } | undefined)
+          ?.type === 'compaction';
+
+      if (isCompaction) {
+        return (
+          <div
+            key={index}
+            className="bg-yellow-100 border-l-4 border-yellow-500 p-2"
+          >
+            <span className="font-bold">[Context Compacted]</span>
+            <p className="text-sm text-yellow-700">
+              The server compressed the conversation context to reduce token
+              usage.
+            </p>
+          </div>
+        );
+      }
+      return <div key={index}>{part.text}</div>;
+    }
+  });
+}
+```
+
+该元数据包含以下字段：
+
+- **type** —— 始终为 `'compaction'`
+- **itemId** _string_ —— Responses API 中压缩条目的 ID
+- **encryptedContent** _string_（可选）—— 加密的压缩状态。当该消息被包含在后续请求中时，会自动发回给 API。
+
+### Batch
+
+<Note type="warning">
+  Batch 支持为实验性功能，API 可能在补丁版本中变更。
+</Note>
+
+OpenAI 提供商通过 [Batch
+API](https://developers.openai.com/api/docs/guides/batch) 支持异步文本生成。将 OpenAI
+提供商传给 AI SDK 的 [Batch](/docs/ai-sdk-core/batch) API，即可获得
+包括轮询、持久化和结果处理在内的完整工作流。
+
+每个请求指定其 `type` 和 `model`。OpenAI 要求批次中的每个文本
+请求使用相同的模型，模型不一致时会在提交前抛出异常。
+
+#### Webhooks
+
+<Note>
+  OpenAI Batch API 不支持按批次配置 webhook。当你提供
+  `webhookUrl` 时，提供商会返回一个不支持警告，并在没有 webhook 的情况下启动批次。
+</Note>
+
+### 聊天模型
+
+你可以使用 `.chat()` 工厂方法创建调用 [OpenAI chat API](https://platform.openai.com/docs/api-reference/chat) 的模型。
+第一个参数是模型 id，例如 `gpt-6-astra`。
+OpenAI 聊天模型支持工具调用，部分模型具备多模态能力。
+当自定义 `baseURL` 指向实现 Chat Completions 但未实现 Responses API 的 OpenAI 兼容端点时，请使用此工厂。
+
+```ts
+const model = openai.chat('gpt-6-astra');
+```
+
+OpenAI 聊天模型还支持一些不属于[标准调用设置](/docs/ai-sdk-core/settings)的模型专属提供商选项。
+你可以在 `providerOptions` 参数中传入它们：
+
+```ts
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+
+const model = openai.chat('gpt-5');
+
+await generateText({
+  model,
+  providerOptions: {
+    openai: {
+      logitBias: {
+        // optional likelihood for specific tokens
+        '50256': -100,
+      },
+      user: 'test-user', // optional unique user identifier
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+```
+
+OpenAI 聊天模型可用的可选提供商选项如下：
+
+- **logitBias** _Record&lt;number, number&gt;_
+
+  修改指定 token 出现在补全中的可能性。
+
+  接受一个 JSON 对象，将 token（以其在
+  GPT 分词器中的 token ID 指定）映射到 -100 到 100 之间的关联偏置值。你
+  可以使用分词器工具将文本转换为 token ID。从数学上讲，
+  偏置会在采样前加到模型生成的 logits 上。
+  具体效果因模型而异，但 -1 到 1 之间的值应
+  会降低或提高被选中的可能性；-100 或 100 之类的值
+  应会导致相关 token 被禁止或被排他性地选中。
+
+  例如，你可以传入 `{"50256": -100}` 来阻止该 token 被生成。
+
+- **logprobs** _boolean | number_
+
+  返回 token 的对数概率。包含 logprobs 会增加
+  响应体积并可能拖慢响应时间。不过，它有助于
+  更好地理解模型行为。
+
+  设为 true 将返回已生成
+  token 的对数概率。
+
+  设为数字将返回已生成 token 中前 n 个的
+  对数概率。
+
+- **parallelToolCalls** _boolean_
+
+  是否在工具使用期间启用并行函数调用。默认为 `true`。
+
+- **user** _string_
+
+  代表你的最终用户的唯一标识符，可帮助 OpenAI
+  监控和检测滥用行为。[了解更多](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids)。
+
+- **reasoningEffort** _'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'_
+
+  推理模型的推理力度。默认为 `medium`。如果你使用
+  `providerOptions` 设置了 `reasoningEffort` 选项，此
+  模型设置将被忽略。
+
+  支持的推理力度因模型而异。GPT-5.6 支持 `'none'`、`'low'`、`'medium'`、`'high'`、`'xhigh'` 和 `'max'`。
+
+- **maxCompletionTokens** _number_
+
+  可生成的补全 token 数上限。对推理模型很有用。
+
+- **store** _boolean_
+
+  是否在 Responses API 中启用持久化。
+
+- **metadata** _Record&lt;string, string&gt;_
+
+  与请求关联的元数据。
+
+- **prediction** _Record&lt;string, any&gt;_
+
+  预测模式的参数。
+
+- **serviceTier** _'auto' | 'flex' | 'priority' | 'fast' | 'ultrafast' | 'default'_
+
+  请求的服务层级。设为 'flex' 可便宜 50%，代价是延迟增加（适用于 o3、o4-mini 和 gpt-5 模型）。
+  设为 'priority' 可通过企业（Enterprise）权限获得更快处理（适用于 gpt-4、gpt-5、gpt-5-mini、o3、o4-mini；不支持 gpt-5-nano）。
+  'fast' 是 'priority' 层级的较新名称，两者可互换，gpt-5.6 及更早版本的响应
+  对二者都报告 `serviceTier: 'priority'`。
+  设为 'ultrafast' 可使用需访问控制的 Ultrafast 处理（仅适用于 gpt-5.6-sol）。
+
+  默认为 'auto'。
+
+- **strictJsonSchema** _boolean_
+
+  是否使用严格的 JSON schema 校验。
+  默认为 `true`。
+
+- **textVerbosity** _'low' | 'medium' | 'high'_
+
+  控制模型响应的详尽程度。值越低响应越简洁，值越高响应越详尽。
+
+- **promptCacheKey** _string_
+
+  用于手动控制提示词缓存的缓存键。OpenAI 用它为相似请求缓存响应，以优化缓存命中率。
+
+- **promptCacheOptions** _object_
+
+  为 GPT-5.6 及更高版本的模型配置提示词缓存。`mode` 可为 `'implicit'` 或 `'explicit'`，`ttl` 目前仅支持 `'30m'`。在显式模式下，只有标记了提示词缓存断点的内容块会被缓存。
+
+- **promptCacheRetention** _'in_memory' | '24h'_
+
+  GPT-5.6 之前模型的旧版保留策略。设为 `'24h'` 可在受支持模型上启用扩展提示词缓存。对于 GPT-5.6 及更高版本的模型，请改用 `promptCacheOptions.ttl`。
+
+- **safetyIdentifier** _string_
+
+  一个稳定标识符，用于帮助检测你的应用中可能违反 OpenAI 使用政策的用户。该 ID 应为能唯一标识每个用户的字符串。
+
+- **systemMessageMode** _'system' | 'developer' | 'remove'_
+
+  为此模型覆盖系统消息模式。未指定时，模式会根据模型自动确定。`system` 对系统消息使用 'system' 角色（大多数模型的默认值）；`developer` 使用 'developer' 角色（推理模型使用）；`remove` 则完全移除系统消息。
+
+- **forceReasoning** _boolean_
+
+  强制将此模型视为推理模型。这适用于"隐身"推理模型（例如通过自定义 baseURL 接入），其模型 ID 不在 SDK 的允许清单中。启用后，SDK 会应用推理模型参数兼容规则，并将 `systemMessageMode` 默认为 `developer`（除非另行覆盖）。
+
+#### 推理
+
+OpenAI 推出了 `o1`、`o3` 和 `o4` 系列[推理模型](https://platform.openai.com/docs/guides/reasoning)。
+目前，`o4-mini`、`o3`、`o3-mini` 和 `o1` 可通过 chat 和 responses 两种 API 使用。模型
+`gpt-5.1-codex-mini` 仅可通过 [responses API](#responses-模型)使用。
+
+推理模型目前只生成文本，存在若干限制，并且仅支持通过 `generateText` 和 `streamText` 使用。
+
+它们支持附加设置和响应元数据：
+
+- 你可以使用 `providerOptions` 设置
+  - `reasoningEffort` 选项（或等效的 `reasoningEffort` 模型设置），它决定模型执行的推理量。
+
+- 你可以使用响应的 `usage` 通过 `usage.outputTokenDetails.reasoningTokens` 访问模型生成的推理 token 数量。
+
+```ts highlight="4,7-11,15"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'low',
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+
+console.log(text);
+console.log('Reasoning tokens:', usage.outputTokenDetails.reasoningTokens);
+```
+
+<Note>
+  在受支持时，系统消息会自动转换为 OpenAI 开发者消息（适用于
+  推理模型）。
+</Note>
+
+- 你可以通过 providerOptions 的 `systemMessageMode` 控制系统消息的处理方式：
+  - `developer`：将提示词视为开发者消息（推理模型的默认值）。
+  - `system`：将系统消息保留为系统级指令。
+  - `remove`：从消息中移除系统消息。
+
+```ts highlight="12"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  messages: [
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: 'Tell me a joke.' },
+  ],
+  providerOptions: {
+    openai: {
+      systemMessageMode: 'system',
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+```
+
+<Note>
+  推理模型在生成响应前需要额外的运行时推理来完成其
+  推理阶段。与其他模型相比，这会带来更长的延迟。
+</Note>
+
+<Note>
+  对于推理模型，`maxOutputTokens` 会自动映射为 `max_completion_tokens`。
+</Note>
+
+#### 严格结构化输出
+
+严格结构化输出默认启用。
+你可以将 `strictJsonSchema` 选项设置为 `false` 来禁用它。
+
+```ts highlight="7"
+import { openai, OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  providerOptions: {
+    openai: {
+      strictJsonSchema: false,
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+  output: Output.object({
+    schema: z.object({
+      name: z.string(),
+      ingredients: z.array(
+        z.object({
+          name: z.string(),
+          amount: z.string(),
+        }),
+      ),
+      steps: z.array(z.string()),
+    }),
+    schemaName: 'recipe',
+    schemaDescription: 'A recipe for lasagna.',
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+
+console.log(JSON.stringify(result.output, null, 2));
+```
+
+<Note type="warning">
+  OpenAI 结构化输出存在若干
+  [限制](https://openai.com/index/introducing-structured-outputs-in-the-api)，
+  尤其是在[受支持的 schema](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas)
+  方面，因此需要显式开启。
+
+例如，可选的 schema 属性不被支持。
+你需要将 Zod 的 `.nullish()` 和 `.optional()` 改为 `.nullable()`。
+
+</Note>
+
+#### Logprobs
+
+OpenAI 为 completion/chat 模型提供 logprobs 信息。
+你可以在 `providerMetadata` 对象中访问它。
+
+```ts highlight="11"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.chat('gpt-5'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  providerOptions: {
+    openai: {
+      // this can also be a number,
+      // refer to logprobs provider options section for more
+      logprobs: true,
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+
+const openaiMetadata = (await result.providerMetadata)?.openai;
+
+const logprobs = openaiMetadata?.logprobs;
+```
+
+#### 图像支持
+
+OpenAI Chat API 为相应模型支持图像输入。
+你可以使用 `file` 类型配合 `image` 媒体类型，将图像文件作为消息内容的一部分传入：
+
+```ts
+const result = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Please describe the image.',
+        },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: readFileSync('./data/image.png'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+模型将可以访问该图像，并回答与它相关的问题。
+图像应通过 `data` 字段传入。
+
+你也可以传入图像的 URL。
+
+```ts
+{
+  type: 'file',
+  mediaType: 'image',
+  data: 'https://sample.edu/image.png',
+}
+```
+
+#### PDF 支持
+
+OpenAI Chat API 支持读取 PDF 文件。
+你可以使用 `file` 类型将 PDF 文件作为消息内容的一部分传入：
+
+```ts
+const result = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'What is an embedding model?',
+        },
+        {
+          type: 'file',
+          data: readFileSync('./data/ai.pdf'),
+          mediaType: 'application/pdf',
+          filename: 'ai.pdf', // optional
+        },
+      ],
+    },
+  ],
+});
+```
+
+模型将可以访问 PDF 文件的内容，
+并回答与它相关的问题。
+PDF 文件应通过 `data` 字段传入，
+且 `mediaType` 应设置为 `'application/pdf'`。
+
+你也可以传入来自 OpenAI Files API 的 file-id。
+
+```ts
+{
+  type: 'file',
+  data: 'file-8EFBcWHsQxZV7YGezBC1fq',
+  mediaType: 'application/pdf',
+}
+```
+
+你也可以传入 PDF 的 URL。
+
+```ts
+{
+  type: 'file',
+  data: 'https://sample.edu/example.pdf',
+  mediaType: 'application/pdf',
+  filename: 'ai.pdf', // optional
+}
+```
+
+#### 预测输出
+
+OpenAI 为 `gpt-4o` 和 `gpt-4o-mini` 支持[预测输出](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs)。
+预测输出允许你指定一段供模型修改的基础文本，从而帮助降低延迟。
+你可以在 `providerOptions.openai` 对象中添加 `prediction` 选项来启用预测输出：
+
+```ts highlight="15-18"
+const result = streamText({
+  model: openai.chat('gpt-4o'),
+  messages: [
+    {
+      role: 'user',
+      content: 'Replace the Username property with an Email property.',
+    },
+    {
+      role: 'user',
+      content: existingCode,
+    },
+  ],
+  providerOptions: {
+    openai: {
+      prediction: {
+        type: 'content',
+        content: existingCode,
+      },
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+```
+
+OpenAI 为预测输出提供用量信息（`acceptedPredictionTokens` 和 `rejectedPredictionTokens`）。
+你可以在 `providerMetadata` 对象中访问它。
+
+```ts highlight="3-4"
+const openaiMetadata = (await result.providerMetadata)?.openai;
+
+const acceptedPredictionTokens = openaiMetadata?.acceptedPredictionTokens;
+const rejectedPredictionTokens = openaiMetadata?.rejectedPredictionTokens;
+```
+
+<Note type="warning">
+  OpenAI 预测输出存在若干
+  [限制](https://platform.openai.com/docs/guides/predicted-outputs#limitations)，
+  例如不支持的 API 参数，以及不支持工具调用。
+</Note>
+
+#### 图像细节
+
+你可以使用 `openai` 提供商选项将[图像输入细节](https://platform.openai.com/docs/guides/images-vision?api-mode=responses#specify-image-input-detail-level)设置为 `high`、`low`、`original` 或 `auto`：
+
+```ts highlight="13-16"
+const result = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: 'https://github.com/vercel/ai/blob/main/examples/ai-functions/data/comic-cat.png?raw=true',
+
+          // OpenAI specific options - image detail:
+          providerOptions: {
+            openai: { imageDetail: 'low' },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+对于 GPT-5.6，`original` 会保留输入尺寸，不按补丁预算或像素尺寸上限进行缩放。`auto` 与省略细节设置的行为与 `original` 相同，对于大图像可能增加输入 token 用量。
+
+<Note type="warning">
+  由于 `UIMessage` 类型（`useChat` 等 AI SDK UI Hook 所使用）不
+  支持 `providerOptions` 属性，你可以先使用 `convertToModelMessages`
+  转换，再把消息传给 `generateText` 或
+  `streamText` 等函数。关于 `providerOptions` 用法的更多细节，请参见
+  [此处](/docs/foundations/prompts#提供商选项)。
+</Note>
+
+#### 蒸馏
+
+OpenAI 为部分模型支持模型蒸馏。
+如果你想存储一次生成以用于蒸馏过程，可以在 `providerOptions.openai` 对象中添加 `store` 选项。
+这会将该生成保存到 OpenAI 平台，供后续蒸馏使用。
+
+```typescript highlight="9-16"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+import 'dotenv/config';
+
+async function main() {
+  const { text, usage } = await generateText({
+    model: openai.chat('gpt-4o-mini'),
+    prompt: 'Who worked on the original macintosh?',
+    providerOptions: {
+      openai: {
+        store: true,
+        metadata: {
+          custom: 'value',
+        },
+      } satisfies OpenAILanguageModelChatOptions,
+    },
+  });
+
+  console.log(text);
+  console.log();
+  console.log('Usage:', usage);
+}
+
+main().catch(console.error);
+```
+
+#### 提示词缓存
+
+OpenAI 为包括 `gpt-4o` 和 `gpt-4o-mini` 在内的受支持模型推出了[提示词缓存](https://platform.openai.com/docs/guides/prompt-caching)（Prompt Caching）。
+
+- 当提示词达到 1024 token 或更长时，这些模型会自动启用提示词缓存，无
+  需显式开启。
+- 你可以使用响应的 `usage` 通过 `usage.inputTokenDetails.cacheReadTokens` 访问命中缓存的提示词 token 数量。
+- 对于 GPT-5.6 及更高版本的模型，`usage.inputTokenDetails.cacheWriteTokens` 报告写入缓存的 token。
+- 对于 GPT-5.6 及更高版本的模型，`promptCacheOptions.ttl` 设置 30 分钟的最小缓存生存期。更早的模型通常将内存中的前缀保留 5-10 分钟不活跃时间，最长一小时。
+
+```ts highlight="9"
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: openai.chat('gpt-6-luna'),
+  prompt: `A 1024-token or longer prompt...`,
+});
+
+console.log('Cached tokens:', usage.inputTokenDetails.cacheReadTokens);
+```
+
+要提高缓存命中率，你可以使用 `promptCacheKey` 选项手动控制缓存：
+
+```ts highlight="7-11"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  prompt: `A 1024-token or longer prompt...`,
+  providerOptions: {
+    openai: {
+      promptCacheKey: 'my-custom-cache-key-123',
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+
+console.log('Cached tokens:', usage.inputTokenDetails.cacheReadTokens);
+```
+
+GPT-5.6 及更高版本的模型支持在文本、图像和文件内容块上设置显式缓存断点。设置请求级缓存键，并用 `promptCacheBreakpoint` 标记每个可复用前缀的结尾：
+
+```ts highlight="9-12,20-28"
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { usage } = await generateText({
+  model: openai('gpt-6-astra'),
+  providerOptions: {
+    openai: {
+      promptCacheKey: 'tenant:acme:support-v1',
+      promptCacheOptions: { mode: 'explicit', ttl: '30m' },
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: `A stable prefix of at least 1024 tokens...`,
+          providerOptions: {
+            openai: {
+              promptCacheBreakpoint: { mode: 'explicit' },
+            },
+          },
+        },
+        { type: 'text', text: 'What should I do next?' },
+      ],
+    },
+  ],
+});
+
+console.log('Cache reads:', usage.inputTokenDetails.cacheReadTokens);
+console.log('Cache writes:', usage.inputTokenDetails.cacheWriteTokens);
+```
+
+在 `'implicit'` 模式下，OpenAI 会在最新消息上放置自动断点，同时也会尊重显式断点。在 `'explicit'` 模式下，只有被标记的内容块才有资格被缓存；不含任何显式断点的请求不会使用提示词缓存。
+
+对于 GPT-5.6 之前支持扩展缓存的模型，你可以让缓存前缀保持最长 24 小时有效：
+
+```ts highlight="7-12"
+import { openai, type OpenAILanguageModelChatOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  prompt: `A 1024-token or longer prompt...`,
+  providerOptions: {
+    openai: {
+      promptCacheKey: 'my-custom-cache-key-123',
+      promptCacheRetention: '24h',
+    } satisfies OpenAILanguageModelChatOptions,
+  },
+});
+
+console.log('Cached tokens:', usage.inputTokenDetails.cacheReadTokens);
+```
+
+#### 音频输入
+
+使用 `gpt-4o-audio-preview` 模型，你可以向模型传入音频文件。
+
+<Note type="warning">
+  `gpt-4o-audio-preview` 模型目前处于预览阶段，且至少需要
+  部分音频输入。它无法处理非音频数据。
+</Note>
+
+```ts highlight="12-14"
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.chat('gpt-4o-audio-preview'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is the audio saying?' },
+        {
+          type: 'file',
+          mediaType: 'audio/mpeg',
+          data: readFileSync('./data/galileo.mp3'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+### 补全模型
+
+你可以使用 `.completion()` 工厂方法创建调用 [OpenAI completions API](https://platform.openai.com/docs/api-reference/completions) 的模型。
+第一个参数是模型 id。
+目前仅支持 `gpt-3.5-turbo-instruct`。
+
+```ts
+const model = openai.completion('gpt-3.5-turbo-instruct');
+```
+
+OpenAI 补全模型还支持一些不属于[标准调用设置](/docs/ai-sdk-core/settings)的模型专属设置。
+你可以在选项参数中传入它们：
+
+```ts
+const model = openai.completion('gpt-3.5-turbo-instruct');
+
+await model.doGenerate({
+  providerOptions: {
+    openai: {
+      echo: true, // optional, echo the prompt in addition to the completion
+      logitBias: {
+        // optional likelihood for specific tokens
+        '50256': -100,
+      },
+      suffix: 'some text', // optional suffix that comes after a completion of inserted text
+      user: 'test-user', // optional unique user identifier
+    } satisfies OpenAILanguageModelCompletionOptions,
+  },
+});
+```
+
+OpenAI 补全模型可用的可选提供商选项如下：
+
+- **echo**：_boolean_
+
+  在补全之外回显提示词。
+
+- **logitBias** _Record&lt;number, number&gt;_
+
+  修改指定 token 出现在补全中的可能性。
+
+  接受一个 JSON 对象，将 token（以其在
+  GPT 分词器中的 token ID 指定）映射到 -100 到 100 之间的关联偏置值。你
+  可以使用分词器工具将文本转换为 token ID。从数学上讲，
+  偏置会在采样前加到模型生成的 logits 上。
+  具体效果因模型而异，但 -1 到 1 之间的值应
+  会降低或提高被选中的可能性；-100 或 100 之类的值
+  应会导致相关 token 被禁止或被排他性地选中。
+
+  例如，你可以传入 `{"50256": -100}` 来阻止 &lt;|endoftext|&gt;
+  token 被生成。
+
+- **logprobs** _boolean | number_
+
+  返回 token 的对数概率。包含 logprobs 会增加
+  响应体积并可能拖慢响应时间。不过，它有助于
+  更好地理解模型行为。
+
+  设为 true 将返回已生成
+  token 的对数概率。
+
+  设为数字将返回已生成 token 中前 n 个的
+  对数概率。
+
+- **suffix** _string_
+
+  插入文本补全之后附带的后缀。
+
+- **user** _string_
+
+  代表你的最终用户的唯一标识符，可帮助 OpenAI
+  监控和检测滥用行为。[了解更多](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids)。
+
+### 模型能力
+
+| 模型                  | 图像输入    | 音频输入    | 对象生成          | 工具使用   |
+| --------------------- | ----------- | ----------- | ----------------- | ---------- |
+| `gpt-6-astra`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-6.1-sol`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-6-luna`          | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-6-sol`           | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.6`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.6-luna`        | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.6-sol`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.6-terra`       | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.5`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.4-pro`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.4`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.4-mini`        | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.4-nano`        | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.3-chat-latest` | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.2-pro`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.2-chat-latest` | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.2`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.1-codex-mini`  | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.1-codex`       | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.1-chat-latest` | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5.1`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5-pro`           | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5`               | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5-mini`          | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5-nano`          | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5-codex`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-5-chat-latest`   | <Check />   | <Cross />   | <Cross />         | <Cross />  |
+| `gpt-4.1`             | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-4.1-mini`        | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-4.1-nano`        | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-4o`              | <Check />   | <Cross />   | <Check />         | <Check />  |
+| `gpt-4o-mini`         | <Check />   | <Cross />   | <Check />         | <Check />  |
+
+<Note>
+  上表列出了热门模型。完整可用模型列表请参阅 [OpenAI
+  文档](https://platform.openai.com/docs/models)。上表列出了热门模型。如有需要，你也可以将任何可用的
+  提供商模型 ID 以字符串形式传入。
+</Note>
+
+## 实时模型
+
+<Note type="warning">Realtime 是实验性功能。</Note>
+
+[OpenAI Realtime](https://platform.openai.com/docs/guides/realtime)
+和 [OpenAI Live](https://developers.openai.com/api/docs/guides/live) 模型都使用 `.experimental_realtime()`。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+
+const model = openai.experimental_realtime('gpt-realtime');
+const liveModel = openai.experimental_realtime('gpt-live-1');
+
+// Select the API explicitly for an early-access or otherwise unknown model ID.
+const earlyAccessModel = openai.experimental_realtime('not-yet-released', {
+  api: 'live',
+});
+```
+
+仅限 OpenAI 的 `api` 选项接受 `'live'` 或 `'realtime'`，其优先级
+高于模型 ID 选择。不指定时，已知的 `gpt-live-1` ID 使用 Live，其他
+ID 保持 Realtime 默认。请求失败后提供商会保持所用 API 不变。两种模型实现都使用现有的实验性 realtime 接口。
+
+Live 支持**经由应用自有中继并带客户端委托的浏览器 WSS 会话**，
+浏览器运行时使用 `experimental_useRealtime`，并可选
+浏览器直连 WebRTC。智能体与工具执行由你的应用负责；Live
+委托不会调用 `onToolCall`。对于底层服务器适配器，可用 `liveModel.getServerWebSocketConfig()` 获取仅限服务器的连接
+设置，并用
+`liveModel.serializeClientEvent()` 序列化命令。用
+`liveModel.createServerEventParser()` 为每条连接创建一个解析器，把传入的 JSON 交给返回的
+函数。它返回归一化事件数组，并将每个原始事件保留在
+`raw` 中。
+
+对于基于 token 的 **Realtime API** 会话，可在你的
+服务器上用 `openai.experimental_realtime.getToken()` 创建短期 token：
+
+```ts
+const token = await openai.experimental_realtime.getToken({
+  model: 'gpt-realtime',
+});
+```
+
+Live 不使用 Realtime 的 client-secret 签发。对已知的
+Live 模型或在 `api: 'live'` 下调用 `getToken`，会在签发请求前直接拒绝。Live 的 WebSocket
+连接在受信任的服务器上鉴权；请勿将提供商 API 密钥放入
+浏览器代码。API 选择器选择的是协议，而非同一模型的另一种鉴权
+能力。
+
+浏览器对应用自有中继的鉴权与 OpenAI
+鉴权相互独立。请用你应用的会话或短期
+凭据保护该中继；仅靠来源检查不是用户鉴权。该中继在上游使用其
+服务器持有的 OpenAI 密钥。选择 Live 模型并不会使 Realtime
+的 client-secret 端点与 Live API 兼容。
+
+对于浏览器直连的 Live WebRTC，一个经过鉴权的应用端点使用服务器的项目密钥，通过 `liveModel.doCreateWebRTCSession({ sdp, sessionConfig, abortSignal })`
+执行 SDP 交换。浏览器收到的是
+会话连接应答，而非项目密钥或 Realtime client secret。该
+设置端点仍需要应用鉴权。`api.session` 的设置契约和可运行示例请参见
+[`experimental_useRealtime` 参考](/docs/reference/ai-sdk-ui/use-realtime)。
+
+### Live 会话选项
+
+通过 `sessionConfig.providerOptions.openai` 配置 Live 专属设置，
+类型为 `Experimental_OpenAIRealtimeModelLiveOptions`。例如：
+
+```ts
+import type { Experimental_OpenAIRealtimeModelLiveOptions as OpenAIRealtimeModelLiveOptions } from '@ai-sdk/openai';
+
+const sessionConfig = {
+  instructions: 'Be concise. Delegate questions that need research or tools.',
+  providerOptions: {
+    openai: {
+      delegation: { type: 'client' },
+    } satisfies OpenAIRealtimeModelLiveOptions,
+  },
+};
+```
+
+- `delegation`：应用自有工作使用 `{ type: 'client' }`。省略或
+  `null` 同样选择客户端模式。不支持其他委托模式。
+- `input`：developer、user 或 assistant 角色的先前文本消息。
+- `voice`：经过授权的自定义音色引用 `{ id }`，与
+  普通 `sessionConfig.voice` 字符串互斥。
+- `store`：请求提供商侧的会话存储；可用性取决于
+  OpenAI 项目配置。
+- `client.dataChannel`：WebRTC 启动许可策略，包含
+  `allowedClientEvents` 和 `allowedServerEvents`。请在应用服务器上设置，
+  不要依据看似可信的浏览器输入。省略时保留提供商默认值；
+  `[]` 表示全部禁止，`'all'` 表示全部允许。响应事件选择器使用
+  `{ type: 'response.event', responseEvent: 'response.completed' }` 来选择
+  原生嵌套事件，这些事件仍是原始 `custom` 事件而非受管 SDK
+  响应。对你应用启用的会话功能，要保持就绪状态、错误和终结用量的可观测性。
+
+初始 WebSocket 配置通过 `session-start` 发送；WebRTC 则在
+SDP 设置期间启动会话，并通过 SDP 协商音频格式。Live 的启动设置不可
+变更：`session-update` 会被拒绝。远端输入处理使用 `input-audio-mute` 和
+`input-audio-unmute`；这些命令不会释放
+本地麦克风。应用上下文通过
+`context-append` 返回，使用来自 `delegation-created` 的不透明 `delegationId`，无委托的上下文则
+用 `null`。其 `providerOptions.openai.channel`
+接受 `instructions`、`thinking`（默认）或 `commentary`。
+
+要优雅关闭，请在发送 `session-close` 前安装 `session-closed` 监听器；
+该事件会确认最终音量用量。`session-usage` 包含的是累计秒数，
+因此应替换先前的快照而不是累加。
+
+浏览器集成请参见
+[`experimental_useRealtime` 参考](/docs/reference/ai-sdk-ui/use-realtime#持续对话)。
+它涵盖 JSON/PCM16 WebSocket 中继运行时、可选的 WebRTC 设置与许可
+策略、麦克风与播放的所有权、`session.delegations`、用于
+应用上下文的 `sendEvent`，以及用于有界收尾的 `close()`。生产环境
+中继请使用 `wss:`。持续对话语义并不意味着浏览器支持每种
+提供商编解码器或传输方式。[Realtime 指南](/docs/ai-sdk-core/realtime)介绍的是
+旧版基于 token 的回合制会话。
+
+## 嵌入模型
+
+你可以使用 `.embedding()` 工厂方法创建调用 [OpenAI embeddings API](https://platform.openai.com/docs/api-reference/embeddings)
+的模型。
+
+```ts
+const model = openai.embedding('text-embedding-3-large');
+```
+
+OpenAI 嵌入模型支持若干附加提供商选项。
+你可以在选项参数中传入它们：
+
+```ts
+import { openai, type OpenAIEmbeddingModelOptions } from '@ai-sdk/openai';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: openai.embedding('text-embedding-3-large'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    openai: {
+      dimensions: 512, // optional, number of dimensions for the embedding
+      user: 'test-user', // optional unique user identifier
+    } satisfies OpenAIEmbeddingModelOptions,
+  },
+});
+```
+
+OpenAI 嵌入模型可用的可选提供商选项如下：
+
+- **dimensions**：_number_
+
+  结果输出嵌入应具有的维度数量。
+  仅在 text-embedding-3 及更高版本模型上受支持。
+
+- **user** _string_
+
+  代表你的最终用户的唯一标识符，可帮助 OpenAI
+  监控和检测滥用行为。[了解更多](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids)。
+
+### 模型能力
+
+| 模型                     | 默认维度           | 自定义维度        |
+| ------------------------ | ------------------ | ----------------- |
+| `text-embedding-3-large` | 3072               | <Check />         |
+| `text-embedding-3-small` | 1536               | <Check />         |
+| `text-embedding-ada-002` | 1536               | <Cross />         |
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建调用 [OpenAI 图像生成 API](https://platform.openai.com/docs/api-reference/images)
+的模型。
+
+```ts
+const model = openai.image('gpt-image-2.5-sunburst');
+```
+
+<Note>
+  Dall-E 模型不支持 `aspectRatio` 参数。请改用 `size`
+  参数。
+</Note>
+
+### 图像编辑
+
+OpenAI 的 `gpt-image-*` 模型支持强大的图像编辑能力。通过 `prompt.images` 传入输入图像，即可变换、合并或编辑已有图像。
+
+#### 基本图像编辑
+
+使用文本提示词变换已有图像：
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: openai.image('gpt-image-2.5-sunburst'),
+  prompt: {
+    text: 'Turn the cat into a dog but retain the style of the original image',
+    images: [imageBuffer],
+  },
+});
+```
+
+#### 使用蒙版修补
+
+使用蒙版编辑图像的特定部分。蒙版中的透明区域指示应编辑图像的位置：
+
+```ts
+const image = readFileSync('./input-image.png');
+const mask = readFileSync('./mask.png'); // Transparent areas = edit regions
+
+const { images } = await generateImage({
+  model: openai.image('gpt-image-2.5-sunburst'),
+  prompt: {
+    text: 'A sunlit indoor lounge area with a pool containing a flamingo',
+    images: [image],
+    mask: mask,
+  },
+});
+```
+
+#### 背景移除
+
+在支持透明背景的模型上将 `background` 设置为 `transparent`，即可移除图像的背景：
+
+```ts
+import { openai, type OpenAIImageModelEditOptions } from '@ai-sdk/openai';
+import { generateImage } from 'ai';
+
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: openai.image('gpt-image-1.5'),
+  prompt: {
+    text: 'do not change anything',
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    openai: {
+      background: 'transparent',
+      outputFormat: 'png',
+    } satisfies OpenAIImageModelEditOptions,
+  },
+});
+```
+
+#### 多图像合并
+
+将多张参考图像合并为单一输出。`gpt-image-*` 模型最多支持 16 张输入图像：
+
+```ts
+const cat = readFileSync('./cat.png');
+const dog = readFileSync('./dog.png');
+const owl = readFileSync('./owl.png');
+const bear = readFileSync('./bear.png');
+
+const { images } = await generateImage({
+  model: openai.image('gpt-image-2.5-sunburst'),
+  prompt: {
+    text: 'Combine these animals into a group photo, retaining the original style',
+    images: [cat, dog, owl, bear],
+  },
+});
+```
+
+<Note>
+  输入图像可以是 `Buffer`、`ArrayBuffer`、`Uint8Array` 或
+  base64 编码的字符串。对于 `gpt-image-*` 模型，每张图像应为小于 50MB 的
+  `png`、`webp` 或 `jpg` 文件。
+</Note>
+
+### 模型能力
+
+| 模型                     | 尺寸                                   |
+| ------------------------ | -------------------------------------- |
+| `gpt-image-2.5-flare`    | 标准预设与自定义尺寸 |
+| `gpt-image-2.5-sunburst` | 标准预设与自定义尺寸 |
+| `gpt-image-2`            | 1024x1024, 1536x1024, 1024x1536        |
+| `gpt-image-1.5`          | 1024x1024, 1536x1024, 1024x1536        |
+| `gpt-image-1-mini`       | 1024x1024, 1536x1024, 1024x1536        |
+| `gpt-image-1`            | 1024x1024, 1536x1024, 1024x1536        |
+| `dall-e-3`               | 1024x1024, 1792x1024, 1024x1792        |
+| `dall-e-2`               | 256x256, 512x512, 1024x1024            |
+
+快速、通用的图像生成请使用 `gpt-image-2.5-flare`；
+当编辑精度和指令遵循是
+优先考量时，使用 `gpt-image-2.5-sunburst`。两个模型都接受自定义 `WIDTHxHEIGHT` 尺寸，其边长
+须为 16 的倍数，宽高比从 1:3 到 3:1，任何一边不超过
+3840 像素，总面积介于 655,360 到 8,294,400 像素之间。
+高于 2560x1440 的分辨率为实验性。
+
+你可以向图像模型传入可选的 `providerOptions`。这些选项易被 OpenAI 变更，且因模型而异。例如，`gpt-image-*` 模型支持 `quality` 选项：
+
+```ts
+import { openai, type OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
+import { generateImage } from 'ai';
+
+const { image, providerMetadata } = await generateImage({
+  model: openai.image('gpt-image-2.5-flare'),
+  prompt: 'A salamander at sunrise in a forest pond in the Seychelles.',
+  providerOptions: {
+    openai: { quality: 'high' } satisfies OpenAIImageModelGenerationOptions,
+  },
+});
+```
+
+`gpt-image-2.5-flare` 和 `gpt-image-2.5-sunburst` 模型在图像生成与编辑中同样支持
+`quality: 'xhigh'` 和 `quality: 'max'`：
+
+```ts
+const { image } = await generateImage({
+  model: openai.image('gpt-image-2.5-sunburst'),
+  prompt: 'A salamander at sunrise in a forest pond in the Seychelles.',
+  providerOptions: {
+    openai: { quality: 'max' } satisfies OpenAIImageModelGenerationOptions,
+  },
+});
+```
+
+关于 `generateImage()` 的更多内容请参见[图像生成](/docs/ai-sdk-core/image-generation)。
+
+OpenAI 的图像模型会在响应中返回附加元数据，可通过
+`providerMetadata.openai` 访问。可用的 OpenAI 专属元数据
+如下：
+
+- **images** _Array&lt;object&gt;_
+
+  图像专属元数据数组。每个图像对象可能包含：
+  - `revisedPrompt` _string_ - 实际用于生成图像的修订后提示词（OpenAI 可能出于安全或清晰度修改你的提示词）
+  - `created` _number_ - 图像创建时间的 Unix 时间戳（秒）
+  - `size` _string_ - 生成图像的尺寸。为 `1024x1024`、`1024x1536` 或 `1536x1024` 之一
+  - `quality` _string_ - 生成图像的质量。为 `low`、`medium`、`high`、`xhigh` 或 `max` 之一
+  - `background` _string_ - 图像生成使用的背景参数。为 `transparent` 或 `opaque`
+  - `outputFormat` _string_ - 生成图像的输出格式。为 `png`、`webp` 或 `jpeg` 之一
+
+有关可用 OpenAI 图像模型选项的更多信息，请参阅 [OpenAI API 参考](https://platform.openai.com/docs/api-reference/images/create)。
+
+## 语音转写模型
+
+你可以使用 `.transcription()` 工厂方法创建调用 [OpenAI transcription API](https://platform.openai.com/docs/api-reference/audio/transcribe)
+的模型。
+
+第一个参数是模型 id，例如 `gpt-4o-transcribe`。
+
+```ts
+const model = openai.transcription('gpt-4o-transcribe');
+```
+
+你也可以使用 `providerOptions` 参数传入附加的提供商专属选项。例如，以 ISO-639-1 格式（如 `en`）提供输入语言可以改善准确率和延迟。
+
+```ts highlight="6"
+import { transcribe } from 'ai';
+import { openai, type OpenAITranscriptionModelOptions } from '@ai-sdk/openai';
+
+const result = await transcribe({
+  model: openai.transcription('gpt-4o-transcribe'),
+  audio: new Uint8Array([1, 2, 3, 4]),
+  providerOptions: {
+    openai: { language: 'en' } satisfies OpenAITranscriptionModelOptions,
+  },
+});
+```
+
+要获取词级时间戳，请指定粒度：
+
+```ts highlight="8-9"
+import { transcribe } from 'ai';
+import { openai, type OpenAITranscriptionModelOptions } from '@ai-sdk/openai';
+
+const result = await transcribe({
+  model: openai.transcription('whisper-1'),
+  audio: new Uint8Array([1, 2, 3, 4]),
+  providerOptions: {
+    openai: {
+      //timestampGranularities: ['word'],
+      timestampGranularities: ['segment'],
+    } satisfies OpenAITranscriptionModelOptions,
+  },
+});
+
+// Access word-level timestamps
+console.log(result.segments); // Array of segments with startSecond/endSecond
+```
+
+`gpt-4o-transcribe-diarize` 可以识别录音中的说话人。它默认使用
+`diarized_json` 响应格式和自动分块：
+
+```ts
+import { transcribe } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await transcribe({
+  model: openai.transcription('gpt-4o-transcribe-diarize'),
+  audio: new Uint8Array([1, 2, 3, 4]),
+});
+
+console.log(result.providerMetadata.openai.segments);
+```
+
+可用的提供商选项如下：
+
+- **timestampGranularities** _string[]_
+  转写结果中时间戳的粒度。
+  默认为 `['segment']`。
+  可选值为 `['word']`、`['segment']` 和 `['word', 'segment']`。
+  注意：分段（segment）时间戳不会带来额外延迟，但生成词（word）时间戳会产生额外延迟。
+
+- **language** _string_
+  输入音频的语言。以 ISO-639-1 格式（如 'en'）提供输入语言可以改善准确率和延迟。
+  可选。
+
+- **prompt** _string_
+  可选文本，用于引导模型的风格或延续上一段音频。提示词应与音频语言一致。
+  可选。
+
+- **temperature** _number_
+  采样温度，介于 0 和 1 之间。0.8 等较高值会让输出更随机，0.2 等较低值会让输出更聚焦、更确定。设为 0 时，模型会利用对数概率自动升高温度，直到触及特定阈值。
+  默认为 0。
+  可选。
+
+- **include** _string[]_
+  要包含在转写响应中的附加信息。
+
+- **responseFormat** _'json' | 'verbose_json' | 'diarized_json'_
+  转写响应的格式。`gpt-4o-transcribe-diarize` 默认为 `diarized_json`。
+
+- **chunkingStrategy** _'auto' | object_
+  控制音频如何被切分为块。`gpt-4o-transcribe-diarize` 默认为 `'auto'`；提供此选项可覆盖默认值。对象形式配置 OpenAI 服务器端 VAD，包含 `type: 'server_vad'` 以及可选的 `threshold`、`prefixPaddingMs` 和 `silenceDurationMs` 字段。
+
+- **streaming** _object_
+  `gpt-realtime-whisper` 等流式转写模型的选项。
+  与 `experimental_streamTranscribe` 搭配使用。
+  - **delay** _'minimal' | 'low' | 'medium' | 'high' | 'xhigh'_
+    实时转写的延迟/准确率权衡。
+
+  - **include** _string[]_
+    要包含在实时转写事件中的附加字段，例如 `item.input_audio_transcription.logprobs`。
+
+### 模型能力
+
+| 模型                        | 转写          | 流式      | 时长      | 分段      | 语言      |
+| --------------------------- | ------------- | --------- | --------- | --------- | --------- |
+| `whisper-1`                 | <Check />     | <Cross /> | <Check /> | <Check /> | <Check /> |
+| `gpt-4o-mini-transcribe`    | <Check />     | <Cross /> | <Cross /> | <Cross /> | <Cross /> |
+| `gpt-4o-transcribe`         | <Check />     | <Cross /> | <Cross /> | <Cross /> | <Cross /> |
+| `gpt-4o-transcribe-diarize` | <Check />     | <Cross /> | <Check /> | <Check /> | <Cross /> |
+| `gpt-realtime-whisper`      | <Cross />     | <Check /> | <Cross /> | <Cross /> | <Cross /> |
+
+## 翻译模型
+
+<Note type="warning">语音翻译是实验性功能。</Note>
+
+你可以使用 `.translation()` 工厂方法创建通过 OpenAI Realtime
+translations WebSocket 翻译实时语音的模型。翻译
+模型仅支持流式，需与
+[`experimental_streamTranslate`](/docs/reference/ai-sdk-core/stream-translate) 搭配使用。
+
+第一个参数是模型 id，例如 `gpt-realtime-translate`。
+
+```ts
+const model = openai.translation('gpt-realtime-translate');
+```
+
+```ts
+import { experimental_streamTranslate as streamTranslate } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = streamTranslate({
+  model: openai.translation('gpt-realtime-translate'),
+  audio: audioStream, // ReadableStream<Uint8Array | string>
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  targetLanguage: 'es',
+});
+
+for await (const part of result.fullStream) {
+  if (part.type === 'output-text-delta') {
+    process.stdout.write(part.delta);
+  }
+}
+```
+
+OpenAI Realtime 翻译 API 会自动检测源语言
+（不支持 `sourceLanguage`），接受 24kHz 16 位 PCM 输入，并始终
+输出 24kHz 16 位 PCM 音频（不支持 `outputAudioFormat`）。
+不受支持的源设置和输出设置会以调用警告的形式呈现。
+
+### 模型能力
+
+| 模型                     | 翻译音频          | 翻译文本          | 源转写            |
+| ------------------------ | ---------------- | --------------- | ----------------- |
+| `gpt-realtime-translate` | <Check />        | <Check />       | <Check />         |
+
+## 语音模型
+
+你可以使用 `.speech()` 工厂方法创建调用 [OpenAI speech API](https://platform.openai.com/docs/api-reference/audio/speech)
+的模型。
+
+第一个参数是模型 id，例如 `gpt-4o-mini-tts`。
+
+```ts
+const model = openai.speech('gpt-4o-mini-tts');
+```
+
+`voice` 参数可设置为 OpenAI 的任一可用音色：`alloy`、`ash`、`coral`、`echo`、`fable`、`onyx`、`nova`、`sage` 或 `shimmer`。
+
+```ts highlight="6"
+import { generateSpeech } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  voice: 'alloy', // OpenAI voice ID
+});
+```
+
+你也可以使用 `providerOptions` 参数传入附加的提供商专属选项：
+
+```ts highlight="7-9"
+import { generateSpeech } from 'ai';
+import { openai, type OpenAISpeechModelOptions } from '@ai-sdk/openai';
+
+const result = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  voice: 'alloy',
+  providerOptions: {
+    openai: {
+      speed: 1.2,
+    } satisfies OpenAISpeechModelOptions,
+  },
+});
+```
+
+- **instructions** _string_
+  通过附加指令控制生成音频的音色，例如 "Speak in a slow and steady tone"。
+  不适用于 `tts-1` 或 `tts-1-hd`。
+  可选。
+
+- **speed** _number_
+  生成音频的语速。
+  取值范围 0.25 到 4.0。
+  默认为 1.0。
+  可选。
+
+### 模型能力
+
+| 模型              | 指令支持     |
+| ----------------- | ------------ |
+| `tts-1`           | <Check />    |
+| `tts-1-hd`        | <Check />    |
+| `gpt-4o-mini-tts` | <Check />    |
+
+## 决策模型
+
+使用 `openai.decisionModel(modelId)` 创建实验性决策模型。
+它使用原生 [Decisions API](https://developers.openai.com/api/docs/guides/decisions)
+以 `gpt-6-luna` 回答 Choice、Score 和 Boolean 问题。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { experimental_decide } from 'ai';
+
+const { answers } = await experimental_decide({
+  model: openai.decisionModel('gpt-6-luna'),
+  state: 'I was charged twice.',
+  questions: {
+    requestsRefund: {
+      type: 'boolean',
+      instructions: 'Is the customer requesting money back?',
+    },
+    department: {
+      type: 'choice',
+      instructions: 'Which team should handle this?',
+      criteria: { billing: 'Charges and refunds', support: 'Other requests' },
+    },
+  },
+});
+```
+
+Score 是在有序评分表上的概率加权小数位置，从
+零开始。Choice 标签按原样返回。Choice 和 Score 答案
+包含概率分布。Boolean 问题使用 API 的谓词（predicate）
+原语并返回 P(true)。请在应用代码中应用阈值，例如
+`answers.requestsRefund.probability >= 0.5`。
+
+结构化的状态、指令和判据描述会序列化为 JSON
+文本。Score 层级会收到从零开始的索引标签。非空的 Boolean 判据会
+以 `Criteria for true:` 和 `Criteria for false:` 追加到谓词指令中。
+字符串判据原样传递；结构化判据序列化为 JSON 文本。
+
+该工厂会遵循 `createOpenAI` 设置，包括自定义 fetch 和 base URL。
+将 `providerOptions.openai.safetyIdentifier` 设为不透明的最终用户标识符，
+用于安全监控（最长 128 个字符）。例如：
+
+```ts
+providerOptions: {
+  openai: { safetyIdentifier: 'user-123' } satisfies OpenAIDecisionModelOptions,
+}
+```
+
+使用上述类型时，请从 `@ai-sdk/openai` 导入 `OpenAIDecisionModelOptions`。
+其他 OpenAI 选项不受支持，并会产生警告。原生置信度
+值可在 `providerMetadata.openai.confidence` 中获取，按问题 ID 作为键。
+输入和输出 token 计数可在 `usage` 中获取。完整的原生 token 用量
+（包括缓存、推理和总计数）保留在
+`providerMetadata.openai.usage` 中。响应头、返回的模型 ID 以及
+原始响应体都会保留。如果 OpenAI 拒绝某个问题，整个调用
+会抛出 `InvalidResponseDataError`，并在 `error.data` 中包含问题名称和原始响应。
+无效答案也会使整个决策失败。
+参见 [Decisions](/docs/ai-sdk-core/decisions)。
+
+决策模型也可以通过 `customProvider` 别名或
+`createProviderRegistry().decisionModel('provider:model')` 访问。直接使用字符串 ID
+时默认走 Gateway，或走显式配置的带
+`decisionModel` 方法的默认提供商。参见
+[模型别名与注册表](/docs/ai-sdk-core/decisions#模型别名与注册表)。

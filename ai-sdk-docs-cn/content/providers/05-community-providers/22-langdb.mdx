@@ -1,0 +1,124 @@
+---
+title: LangDB
+description: 了解如何在 AI SDK 中使用 LangDB
+---
+
+# LangDB
+
+<Note type="warning">
+  该社区提供商尚未兼容 AI SDK 5。请等待提供商更新，或考虑使用
+  [兼容 AI SDK 5 的提供商](/providers/ai-sdk-providers)。
+</Note>
+
+[LangDB](https://langdb.ai) 是一个用 Rust 构建的高性能企业级 AI 网关，用于治理、保护并优化 AI 流量。
+
+LangDB 提供 OpenAI 兼容 API，开发者只需修改两行代码即可接入多个 LLM。借助 LangDB，你可以：
+
+- 访问所有主流 LLM
+- 与 Langchain、Vercel AI SDK、CrewAI 等任意框架即插即用，轻松上手。
+- 简化链路追踪与成本优化功能的实现，让运维更加顺畅。
+- 基于预定义参数将请求动态路由到最合适的 LLM。
+
+## 安装
+
+LangDB 提供商通过 `@langdb/vercel-provider` 模块提供，可通过以下方式安装：
+
+<InstallPackages packages="@langdb/vercel-provider" />
+
+## 提供商实例
+
+使用 `createLangDB` 函数创建 LangDB 提供商实例：
+
+```tsx
+import { createLangDB } from '@langdb/vercel-provider';
+
+const langdb = createLangDB({
+  apiKey: process.env.LANGDB_API_KEY, // Required
+  projectId: 'your-project-id', // Required
+  threadId: uuidv4(), // Optional
+  runId: uuidv4(), // Optional
+  label: 'code-agent', // Optional
+  headers: { 'Custom-Header': 'value' }, // Optional
+});
+```
+
+你可以在 [LangDB 仪表盘](https://app.langdb.ai)找到你的 LangDB API key。
+
+## 示例
+
+你可以搭配 `generateText` 或 `streamText` 函数使用 LangDB：
+
+### `generateText`
+
+```tsx
+import { createLangDB } from '@langdb/vercel-provider';
+import { generateText } from 'ai';
+
+const langdb = createLangDB({
+  apiKey: process.env.LANGDB_API_KEY,
+  projectId: 'your-project-id',
+});
+
+export async function generateTextExample() {
+  const { text } = await generateText({
+    model: langdb('openai/gpt-4o-mini'),
+    prompt: 'Write a Python function that sorts a list:',
+  });
+
+  console.log(text);
+}
+```
+
+### generateImage
+
+```tsx
+import { createLangDB } from '@langdb/vercel-provider';
+import { generateImage } from 'ai';
+import fs from 'fs';
+import path from 'path';
+
+const langdb = createLangDB({
+  apiKey: process.env.LANGDB_API_KEY,
+  projectId: 'your-project-id',
+});
+
+export async function generateImageExample() {
+  const { images } = await generateImage({
+    model: langdb.image('openai/dall-e-3'),
+    prompt: 'A delighted resplendent quetzal mid-flight amidst raindrops',
+  });
+
+  const imagePath = path.join(__dirname, 'generated-image.png');
+  fs.writeFileSync(imagePath, images[0].uint8Array);
+  console.log(`Image saved to: ${imagePath}`);
+}
+```
+
+### embed
+
+```tsx
+import { createLangDB } from '@langdb/vercel-provider';
+import { embed } from 'ai';
+
+const langdb = createLangDB({
+  apiKey: process.env.LANGDB_API_KEY,
+  projectId: 'your-project-id',
+});
+
+export async function generateEmbeddings() {
+  const { embedding } = await embed({
+    model: langdb.embeddingModel('text-embedding-3-small'),
+    value: 'sunny day at the beach',
+  });
+
+  console.log('Embedding:', embedding);
+}
+```
+
+## 支持的模型
+
+LangDB 支持 250 多个模型，可无缝使用各类 AI 能力。
+
+详情请查看[模型列表](https://app.langdb.ai/models)。
+
+更多信息请访问 [LangDB 文档](https://docs.langdb.ai/)。

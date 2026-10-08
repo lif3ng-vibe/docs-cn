@@ -1,0 +1,118 @@
+---
+title: Anthropic Vertex
+description: 了解如何在 AI SDK 中使用 Anthropic Vertex 提供商。
+---
+
+# AnthropicVertex 提供商
+
+<Note>
+  面向 Google Vertex 的 Anthropic 同样受到 [AI SDK Google Vertex 提供商](/providers/ai-sdk-providers/google-vertex)的支持。
+</Note>
+
+<Note type="warning">
+  该社区提供商尚未兼容 AI SDK 5。请等待该提供商更新，或考虑使用[兼容 AI SDK 5 的提供商](/providers/ai-sdk-providers)。
+</Note>
+
+[nalaso/anthropic-vertex-ai](https://github.com/nalaso/anthropic-vertex-ai) 是一个社区提供商，它通过 Vertex AI 使用 Anthropic 模型，为 AI SDK 提供语言模型支持。
+
+## 设置
+
+AnthropicVertex 提供商（provider）位于 `anthropic-vertex-ai` 模块中。安装方式如下：
+
+<InstallPackages packages="anthropic-vertex-ai" />
+
+## 提供商实例
+
+你可以从 `anthropic-vertex-ai` 导入默认的提供商实例 `anthropicVertex`：
+
+```ts
+import { anthropicVertex } from 'anthropic-vertex-ai';
+```
+
+如果你需要自定义配置，可以从 `anthropic-vertex-ai` 导入 `createAnthropicVertex`，并使用你的设置创建提供商实例：
+
+```ts
+import { createAnthropicVertex } from 'anthropic-vertex-ai';
+
+const anthropicVertex = createAnthropicVertex({
+  region: 'us-central1',
+  projectId: 'your-project-id',
+  // other options
+});
+```
+
+你可以使用以下可选设置来自定义 AnthropicVertex 提供商实例：
+
+- **region** _string_
+
+  你的 Google Vertex 区域。默认取 `GOOGLE_VERTEX_REGION` 环境变量。
+
+- **projectId** _string_
+
+  你的 Google Vertex 项目 ID。默认取 `GOOGLE_VERTEX_PROJECT_ID` 环境变量。
+
+- **googleAuth** _GoogleAuth_
+
+  可选。google-auth-library 提供的鉴权选项。
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。默认前缀为 `https://{region}-aiplatform.googleapis.com/v1`。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  包含在请求中的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 fetch 实现。你可以将其用作拦截请求的中间件（middleware），或为测试等场景提供自定义 fetch 实现。
+
+## 语言模型
+
+你可以使用提供商实例创建通过 Vertex AI 调用 Anthropic API 的模型。
+第一个参数是模型 ID，例如 `claude-3-sonnet@20240229`：
+
+```ts
+const model = anthropicVertex('claude-3-sonnet@20240229');
+```
+
+### 示例：生成文本
+
+你可以使用 `generateText` 函数，用 AnthropicVertex 语言模型生成文本：
+
+```ts
+import { anthropicVertex } from 'anthropic-vertex-ai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: anthropicVertex('claude-3-sonnet@20240229'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+AnthropicVertex 语言模型也可以用于 `streamText` 函数，并支持通过 [`Output`](/docs/reference/ai-sdk-core/output)
+生成结构化数据（更多信息请参阅 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### 模型能力
+
+| 模型                         | 图像输入 | 对象生成 | 工具使用 | 工具流式传输 |
+| ---------------------------- | ----------- | ----------------- | ---------- | -------------- |
+| `claude-3-5-sonnet@20240620` | <Check />   | <Check />         | <Check />  | <Check />      |
+| `claude-3-opus@20240229`     | <Check />   | <Check />         | <Check />  | <Check />      |
+| `claude-3-sonnet@20240229`   | <Check />   | <Check />         | <Check />  | <Check />      |
+| `claude-3-haiku@20240307`    | <Check />   | <Check />         | <Check />  | <Check />      |
+
+## 环境变量
+
+要使用 AnthropicVertex 提供商，你需要设置以下环境变量：
+
+- `GOOGLE_VERTEX_REGION`：你的 Google Vertex 区域（例如 'us-central1'）
+- `GOOGLE_VERTEX_PROJECT_ID`：你的 Google Cloud 项目 ID
+
+请确保在你的环境中或项目根目录的 `.env` 文件中设置这些变量。
+
+## 鉴权
+
+AnthropicVertex 提供商使用 Google Cloud 鉴权。请确保已正确配置你的 Google Cloud 凭据。你可以使用服务账号密钥文件或默认应用凭据。
+
+有关配置鉴权的更多信息，请参阅 [Google Cloud 鉴权指南](https://cloud.google.com/docs/authentication)。

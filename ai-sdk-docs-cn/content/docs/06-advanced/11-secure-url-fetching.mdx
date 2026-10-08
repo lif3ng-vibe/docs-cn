@@ -1,0 +1,104 @@
+---
+title: 安全的 URL 获取
+description: AI SDK 如何保护对模型提供商返回 URL 的服务器端获取，以及如何进一步加固你的部署。
+---
+
+# Secure URL Fetching
+
+许多提供商会在**响应体中返回 URL**——待下载的生成图像、音频或视频，或是用于检查任务状态的轮询 URL。AI SDK 会在服务器端获取这些 URL 并把结果返回给你的代码。由于该 URL 来自外部服务，恶意或被入侵的提供商（或任何能够篡改响应的人）都可能把它指向内部地址，例如云元数据端点（`http://169.254.169.254/…`）、私有主机（`http://10.0.0.5/…`）或 `localhost`。
+
+为了防止这种情况，SDK 会在获取每个来自响应的 URL 之前对其进行校验。这一过程在提供商包内部自动完成——你无需进行任何配置。
+
+对于需要鉴权的任务状态轮询，提供商可以基于配置的 API 端点构造首个 URL。SDK 在初始请求中信任该配置的源（origin），但会手动跟踪并校验离开该源的每一次重定向。MiniMax、Kling AI 和 ByteDance 的视频轮询都使用这条受保护的路径。
+
+## SDK 防范的威胁
+
+当 SDK 获取来自提供商响应的 URL 时，它会：
+
+- **拒绝私有、回环和链路本地目标**——包括 IPv4（`10/8`、`172.16/12`、`192.168/16`、`127/8`、`169.254/16`、CGNAT、组播等）及对应的 IPv6 范围，还有 `localhost` 和 `.local`。非 `http(s)` 协议同样会被拒绝。
+- **重新校验每一次重定向跳转**——初始通过校验但随后重定向到内部地址的 URL 会被拦截；重定向永远不会被盲目跟随。
+- **在 Node.js 上于连接时校验 DNS**——每个解析出的地址都会被检查，并且 socket 会被固定到已校验的 DNS 结果上，这样 DNS 重绑定就无法在校验与连接之间引入其他地址。
+- **剥离有风险的请求头**——代理转发、云元数据和 cookie 相关请求头会在请求发出前被移除。
+- **跨源丢弃凭据**——调用方请求头（`Authorization`、`Cookie` 以及提供商特定的 API 密钥请求头）不会发送到与提供商不同源的主机；跨源重定向会丢弃除 user-agent 之外的所有这些请求头。
+
+被拦截的 URL 会以 `DownloadError` 的形式抛出。
+
+## 直接获取不受信任的 URL
+
+对于使用 `@ai-sdk/provider-utils` 的自定义集成，当 URL 来自响应或其他不受信任的输入时，请使用 `fetchUntrustedUrl`。它会校验 URL 和重定向，并在首个请求中扣留凭据和未知的自定义请求头，除非该 URL 匹配已配置的源：
+
+```ts
+import { fetchUntrustedUrl } from '@ai-sdk/provider-utils';
+
+const response = await fetchUntrustedUrl({
+  url: result.downloadUrl,
+  headers: {
+    authorization: `Bearer ${apiKey}`,
+    accept: 'image/*',
+  },
+  credentialedOrigin: providerBaseURL,
+});
+```
+
+在这里，只有当初始 URL 与 `providerBaseURL` 同源时才会发送 `Authorization`。否则，仅发送 `Accept`、`Range` 和 `User-Agent` 等白名单内的元数据请求头。跨源重定向会丢弃除 `User-Agent` 之外的所有调用方请求头，并且凭据绝不会在后续跳转中重新附加。
+
+`credentialedOrigin` 必须来自你的配置，绝不能来自响应 URL。它不会关闭 URL 校验。对于已配置的私有端点，还需传入 `trustedOrigin`；如果省略 `credentialedOrigin`，`fetchUntrustedUrl` 会将 `trustedOrigin` 用作允许接收凭据的源。额外的协议元数据可以通过 `untrustedFirstHopHeaders: ['x-protocol-version']` 放行。只列出可安全披露给任何目标的请求头；凭据请使用已配置的源。
+
+现有的 `fetchWithValidatedRedirects` 辅助函数保持其首个请求的原有行为：它会清理有风险的请求头，但仍会转发鉴权和自定义请求头。切换到 `fetchUntrustedUrl` 可以启用首个请求的凭据隔离。现有的 `getFromApi` 调用同样保持其行为；在携带凭据获取来自响应的 URL 时，请传入 `credentialedOrigin`。
+
+## 自托管与本地端点
+
+与**你所配置**的提供商端点同源的 URL（例如指向自托管或 `localhost` 部署的自定义 `baseURL`）可以豁免这些检查——它们指向的正是你告知 SDK 要通信的主机。这也适用于任务状态轮询。任何离开该源的重定向在发送重定向请求之前仍会被校验。
+
+## 跨运行时的 DNS 校验
+
+在 Node.js 上，默认的带校验下载 fetch 使用 `node:dns` 和一个 `undici` connector 钩子在连接时校验每个解析出的地址。该 connector 严格使用这些结果，从而封堵了主机名解析到私有 IP 和 DNS 重绑定两种绕过方式。
+
+包装或替换全局 `fetch` 并不会关闭这层保护：Node.js 默认的下载传输与全局 `fetch` 相互独立。
+
+Bun、Deno、Cloudflare Workers 以及框架的边缘（Edge）运行时使用其平台自带的 fetch，即使它们暴露了 Node 兼容的 `process` 对象。
+
+如果你显式注入自定义 `fetch`，则由它负责进行同等的 DNS 校验和连接固定。其他运行时不会暴露 Node 的 DNS/socket 钩子，因此部署在这些运行时上的服务器应将网络出站限制为私有、回环、链路本地和云元数据地址段。
+
+## 加固你的部署
+
+如果你的服务器会获取提供商提供的 URL，并且你想封堵 DNS 层面的缺口，请采用以下方法之一（最好两者都用）：
+
+### 1. 在网络层限制出站流量
+
+禁止你服务器的网络出站流量访问 `169.254.0.0/16`、RFC-1918 地址段和回环地址。这是最可靠的控制手段，且不依赖应用代码。
+
+### 2. 加固注入的 `fetch`
+
+Node.js 默认实现已经做了连接固定。如果你显式注入自定义 `fetch`，请用一个 `undici` `Agent` 支撑它，让其 `connect.lookup` 校验解析出的 IP，并且只允许 socket 连接到安全地址——从而同时封堵主机名解析到私有 IP 和 DNS 重绑定两个时间窗口：
+
+```ts
+import { Agent, fetch as undiciFetch } from 'undici';
+import { lookup } from 'node:dns';
+
+// Your own check that returns true for private/loopback/link-local addresses.
+declare function isUnsafeAddress(ip: string): boolean;
+
+const safeLookup: typeof lookup = (hostname, options, callback) => {
+  lookup(hostname, options as any, (err, address, family) => {
+    if (!err && typeof address === 'string' && isUnsafeAddress(address)) {
+      callback(new Error(`Refusing to connect to ${address}`), '', 0);
+      return;
+    }
+    (callback as any)(err, address, family);
+  });
+};
+
+const safeDispatcher = new Agent({ connect: { lookup: safeLookup } });
+
+const safeFetch: typeof fetch = (input, init) =>
+  undiciFetch(input, { ...init, dispatcher: safeDispatcher }) as any;
+```
+
+```ts
+import { createFal } from '@ai-sdk/fal';
+
+const fal = createFal({ fetch: safeFetch });
+```
+
+SDK 的 URL 校验与你自定义 fetch 的连接时固定是互补的——两者都要保留。

@@ -1,0 +1,82 @@
+---
+title: 缺失工具结果错误
+description: 如何修复使用 AI SDK 时出现的 "Tool results are missing for tool calls" 错误。
+---
+
+# Missing Tool Results Error
+
+## 问题
+
+你会遇到 `AI_MissingToolResultsError` 错误，其消息类似于：
+
+> Tool results are missing for tool calls: ...
+
+## 原因
+
+当上一轮存在尚未处理的工具调用（tool call）时，你又尝试向大语言模型（LLM）发送新消息，就会出现此错误。
+
+AI SDK 的核心逻辑会在继续之前校验会话历史中的所有 `tool-call` 部分都已被处理。"已处理"通常指：
+
+1. 工具已被执行，并且 `tool-result` 已加入历史记录。
+2. 或者，该工具调用已触发 `tool-approval-response`（如果使用工具审批）。
+
+如果发现某个工具调用没有对应的结果或审批响应，就会抛出此错误，以避免向模型发送无效的会话历史。
+
+## 解决方案
+
+确保会话历史中的每个工具调用都得到妥善处理。
+
+### 1. 提供工具结果
+
+对于标准工具调用，确保你提供了工具执行的输出。
+
+```typescript
+const messages = [
+  { role: 'user', content: 'What is the weather in NY?' },
+  {
+    role: 'assistant',
+    content: [
+      {
+        type: 'tool-call',
+        toolCallId: 'call_123',
+        toolName: 'getWeather',
+        args: { location: 'New York' },
+      },
+    ],
+  },
+  // You MUST include this tool message with the result:
+  {
+    role: 'tool',
+    content: [
+      {
+        type: 'tool-result',
+        toolCallId: 'call_123',
+        toolName: 'getWeather',
+        result: 'Sunny, 25°C',
+      },
+    ],
+  },
+  // Now you can add a new user message
+  { role: 'user', content: 'And in London?' },
+];
+```
+
+### 2. 处理工具审批
+
+如果你在使用工具审批工作流，确保包含 `tool-approval-response`。
+
+```typescript
+const messages = [
+  // ... assistant requests tool execution (needs approval)
+  {
+    role: 'tool',
+    content: [
+      {
+        type: 'tool-approval-response',
+        approvalId: 'approval_123',
+        approved: true, // or false
+      },
+    ],
+  },
+];
+```

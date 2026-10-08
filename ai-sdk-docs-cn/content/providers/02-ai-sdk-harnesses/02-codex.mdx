@@ -1,0 +1,188 @@
+---
+title: Codex
+description: 了解如何使用 Codex harness 适配器。
+---
+
+# Codex Harness
+
+Codex harness 适配器将 `HarnessAgent` 连接到 Codex app-server。该适配器在沙箱内运行一个桥接进程，并通过沙箱暴露的 WebSocket 将 Codex 线程事件流式传回宿主。
+
+<Note>
+  Harness 包目前处于**实验性**阶段。随着这一早期 API 的进一步打磨，各版本之间可能出现破坏性变更。
+</Note>
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/harness @ai-sdk/harness-codex @ai-sdk/sandbox-vercel" />
+
+首次会话启动时，适配器会在沙箱内自举 Codex 桥接依赖。
+
+## 导入
+
+```ts
+import { codex, createCodex } from '@ai-sdk/harness-codex';
+```
+
+`codex` 等价于使用默认配置的 `createCodex()`。
+
+## 基本用法
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { codex } from '@ai-sdk/harness-codex';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+
+const agent = new HarnessAgent({
+  harness: codex,
+  model: 'gpt-5.6-luna',
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+
+let exitCode = 0;
+try {
+  const result = await agent.stream({
+    session,
+    prompt: 'Check the test failures and fix the production code.',
+  });
+
+  for await (const part of result.stream) {
+    if (part.type === 'text-delta') {
+      process.stdout.write(part.text);
+    }
+  }
+} catch (err) {
+  exitCode = 1;
+  console.error(err);
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+  process.exit(exitCode);
+}
+```
+
+要使用该智能体（agent），请确保环境变量中包含用于 Vercel Sandbox 的 `VERCEL_OIDC_TOKEN`，以及[身份验证](#身份验证)一节中列出的任一 Codex 变量。
+
+## 适配器设置
+
+使用 `createCodex()` 配置运行时：
+
+```ts
+const harness = createCodex({
+  reasoningEffort: 'high',
+  webSearch: true,
+  codexConfig: {
+    model_verbosity: 'low',
+  },
+});
+```
+
+设置项：
+
+- `auth`：身份验证模式（`auto`、`direct` 或 `ai-gateway`）或隔离的身份验证环境。
+- `credentialForwarding`：可选的同步或异步回调，在 harness 适配器将每个凭据转发进沙箱进程之前对其进行定制。它会收到本应转发的凭据值（真实凭据或掩码值）以及用于暴露该凭据的环境变量名。该回调只控制转发进沙箱进程的值，不会限制 harness 适配器能在宿主进程中发现、读取或以其他方式访问哪些凭据。
+- `codexConfig`：额外的原生 Codex 配置。值按原样透传，因此请使用 Codex `config.toml` 参考中的 snake_case 键。适配器托管值优先于冲突条目。
+- `mcpServers`：以服务器名为键的 MCP 服务器定义。
+- `reasoningEffort`：`low`、`medium`、`high`、`xhigh` 或 `max`。
+- `webSearch`：允许实时网络搜索。
+- `port`：覆盖桥接端口。
+- `startupTimeoutMs`：等待桥接启动的最长时间。
+- `reconnect`：已建立的桥接 WebSocket 连接断开后的重连时机。`maxElapsedMs` 控制总重试窗口（包括建立连接与退避延迟），默认为 30 秒。`initialDelayMs` 默认为 50 毫秒，`maxDelayMs` 默认为 2 秒。这些重试采用指数退避，与 `startupTimeoutMs` 相互独立。当沙箱、桥接进程或桥接端点永久不可用时，重试无法恢复。
+- `mintBridgeToken`：同步函数，接收沙箱 id 并返回桥接身份验证令牌。默认情况下，适配器会生成随机的 32 字节令牌。自定义实现必须返回足够保密的令牌。
+
+## 内置工具过滤
+
+Codex 针对 `bash`、`webSearch`、`apply_patch` 与 `view_image` 支持 `activeTools` 和 `inactiveTools`。宿主工具在发送给 Codex 前会被过滤。原生 Codex 配置可分别禁用 `bash`、`view_image` 与 `webSearch`。当 `bash`、`apply_patch` 与 `view_image` 全部处于非活跃状态时，适配器会禁用 Codex 环境并显式禁用 `bash` 与 `view_image`。当 `apply_patch` 非活跃而 `bash` 或 `view_image` 仍活跃时，适配器会安装一个拒绝补丁执行的 Codex `PreToolUse` 钩子。在每次回合开始前，适配器会检查 Codex 是否已加载并信任该钩子，未通过则使该回合失败。把 `webSearch` 放入 `activeTools` 本身并不会启用它；需在 `createCodex()` 上设置 `webSearch: true` 才允许实时搜索。
+
+```ts
+const agent = new HarnessAgent({
+  harness: createCodex(),
+  sandbox: createVercelSandbox({ runtime: 'node24', ports: [4000] }),
+  inactiveTools: ['apply_patch'],
+});
+```
+
+## 结构化输出
+
+Codex 支持基于 schema 的 [`HarnessAgent` 结构化输出](/docs/ai-sdk-harnesses/harness-agent#生成结构化输出)。适配器通过 Codex app-server 的 `turn/start` `outputSchema` 参数传入 JSON Schema。
+
+## 身份验证
+
+`auth` 设置决定如何从宿主环境解析凭据：
+
+- `auto`（默认）：可用时使用 AI Gateway 凭据，否则回退到直连 OpenAI 凭据。
+- `direct`：使用 OpenAI 凭据。
+- `ai-gateway`：使用 AI Gateway 凭据。
+
+当沙箱支持附加式请求变换时，桥接收到的是占位符，适配器会将凭据注入匹配的出站请求。不具备该能力的沙箱仍采用直接凭据转发。
+
+支持的环境变量：
+
+- `VERCEL_OIDC_TOKEN`
+- `AI_GATEWAY_API_KEY`
+- `AI_GATEWAY_BASE_URL`
+- `OPENAI_API_KEY`
+- `CODEX_API_KEY`
+- `OPENAI_BASE_URL`
+- `OPENAI_ORGANIZATION`
+- `OPENAI_PROJECT`
+
+如果未设置任何适用的凭据环境变量，除非选择了 AI Gateway 身份验证，否则适配器会尝试从宿主系统解析原生订阅。
+
+在不希望自动检测时，可选择特定的身份验证模式：
+
+```ts
+const directHarness = createCodex({ auth: 'direct' });
+const gatewayHarness = createCodex({ auth: 'ai-gateway' });
+```
+
+传入一个身份验证环境，即可在不读取 `process.env` 的情况下使用以编程方式解析的凭据：
+
+```ts
+const harness = createCodex({
+  auth: { OPENAI_API_KEY: await resolveOpenAIToken() },
+});
+```
+
+所提供的记录会替代宿主环境用于身份验证发现。只有可识别的身份验证变量会被转发。
+
+对于 OpenAI 兼容端点，请选择 `direct` 并设置 `OPENAI_BASE_URL`。
+
+## 沙箱
+
+Codex 需要至少暴露一个端口的网络沙箱，例如 `@ai-sdk/sandbox-vercel`：
+
+```ts
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+```
+
+## 内置工具
+
+适配器通过 `agent.tools` 暴露以下 Codex 内置工具：
+
+- `bash` 与 `webSearch` 使用通用的跨 harness 工具名。
+- `apply_patch` 接受 Codex 的自由格式补丁字符串。
+- `view_image` 接受本地图像 `path`，以及可选的 `detail` 与 `environment_id` 字段。
+
+Codex 文件变更也可能以动态 `fileChange` 工具部件的形式出现，因为某些 Codex 文件修改并非源自可见的可供模型调用的工具。
+
+## 已知限制
+
+Codex 目前不支持内置工具审批请求。此适配器请使用 `permissionMode: 'allow-all'`。宿主执行的 AI SDK 工具审批仍然有效。
+
+当 app-server 必须冷恢复（cold-resume）某个线程时，Codex 不会为 `apply_patch` 与 `view_image` 提供原始事件，因此这些工具调用及其结果无法在该恢复的线程上呈现。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)

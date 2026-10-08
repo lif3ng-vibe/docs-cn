@@ -1,0 +1,167 @@
+---
+title: fx
+description: 了解如何使用 fx harness 适配器。
+---
+
+# fx Harness
+
+fx harness 适配器通过 Agent Client Protocol（ACP）将 `HarnessAgent` 连接到
+[fx](https://fx.sh)。适配器将安装、会话、流式、工具与生命周期管理委托给
+`@ai-sdk/harness-acp`。
+
+<Note>
+  Harness 包目前处于**实验性**阶段。随着这一早期 API 的进一步打磨，各版本之间可能出现破坏性变更。
+</Note>
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/harness @ai-sdk/harness-fx @ai-sdk/sandbox-vercel" />
+
+ACP harness 会在首个会话启动时在沙箱内运行
+[官方 fx 安装程序](https://fx.sh/docs/getting-started/installation)。该安装程序会跟踪最新的 fx 发布版本，并把可执行文件安装到 ACP 实现的私有 home 目录中。
+
+## 导入
+
+```ts
+import { createFx, fx } from '@ai-sdk/harness-fx';
+```
+
+`fx` 等价于使用默认配置的 `createFx()`。
+
+## 基本用法
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { fx } from '@ai-sdk/harness-fx';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+
+const agent = new HarnessAgent({
+  harness: fx,
+  model: 'openai/gpt-5.6-luna',
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+
+let exitCode = 0;
+try {
+  const result = await agent.stream({
+    session,
+    prompt: 'Check the test failures and fix the production code.',
+  });
+
+  for await (const part of result.stream) {
+    if (part.type === 'text-delta') {
+      process.stdout.write(part.text);
+    }
+  }
+} catch (err) {
+  exitCode = 1;
+  console.error(err);
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+  process.exit(exitCode);
+}
+```
+
+## 适配器设置
+
+使用 `createFx()` 配置运行时：
+
+```ts
+const harness = createFx({
+  auth: 'ai-gateway',
+  port: 4001,
+  startupTimeoutMs: 180_000,
+});
+```
+
+配置项：
+
+- `auth`：选择 `auto`、`direct` 或 `ai-gateway` 身份验证模式，也可以传入一个用于编程解析凭据的身份验证环境。fx 始终通过 Vercel AI Gateway 发送模型请求，因此 `direct` 与 `ai-gateway` 的区别只在于 harness 将网关凭据传入沙箱的方式。
+- `credentialForwarding`：可选的同步或异步回调，在 harness 适配器将每个凭据转发进沙箱进程之前对其进行定制。它会收到本应转发的凭据值（真实凭据或掩码值）以及用于暴露该凭据的环境变量名。该回调只控制转发进沙箱进程的值，不会限制 harness 适配器能在宿主进程中发现、读取或以其他方式访问哪些凭据。
+- `mcpServers`：以服务器名为键的 MCP 服务器定义。fx ACP 会话只使用由 ACP 客户端提供的服务器。
+- `port`：覆盖 ACP 桥接端口。
+- `portEndpoint`：当沙箱会话无法直接暴露端口时，ACP 桥接所用的宿主端点。
+- `startupTimeoutMs`：等待 ACP 桥接启动的最长时间。
+- `reconnect`：已建立的桥接 WebSocket 连接断开后的重连时机。`maxElapsedMs` 控制总的重试窗口（包括连接建立与退避延迟），默认为 30 秒；`initialDelayMs` 默认为 50 毫秒，`maxDelayMs` 默认为 2 秒。这些重试采用指数退避，与 `startupTimeoutMs` 相互独立。当沙箱、桥接进程或桥接端点永久不可用时，重试无法恢复。
+- `mintBridgeToken`：同步函数，接收沙箱 id 并返回 ACP 桥接身份验证 token。默认情况下，适配器会生成一个随机的 32 字节 token。
+
+适配器会固定安装来源、可执行文件、启动命令与 ACP 版本。这些实现细节无法通过
+`createFx()` 覆盖。
+
+## 身份验证
+
+fx 使用 [Vercel AI Gateway 身份验证](https://fx.sh/docs/getting-started/authentication)。请设置以下环境变量之一：
+
+- `VERCEL_OIDC_TOKEN`
+- `AI_GATEWAY_API_KEY`
+
+如果没有设置适用的凭据环境变量，除非选择了 AI Gateway 身份验证，否则适配器会尝试从宿主系统解析原生订阅（subscription）。
+
+当两者都可用时，fx 优先使用 `VERCEL_OIDC_TOKEN`。当沙箱支持请求变换时，适配器只把所选凭据代理给配置的网关来源。其他沙箱则保留直接的凭据转发。
+
+当宿主在运行时才解析凭据、而不是通过 `process.env` 暴露它们时，可以传入身份验证环境：
+
+```ts
+const gatewayHarness = createFx({
+  auth: {
+    AI_GATEWAY_API_KEY: await resolveGatewayToken(),
+    AI_GATEWAY_BASE_URL: 'https://ai-gateway.vercel.sh',
+  },
+});
+```
+
+所提供的记录会取代宿主环境用于身份验证发现。适配器不会把它的凭据加入 `process.env`，也不会把它们的值包含在持久化的 ACP 生命周期身份中。
+
+以下两种身份验证配置都能到达 AI Gateway：
+
+```ts
+const directHarness = createFx({ auth: 'direct' });
+const gatewayHarness = createFx({ auth: 'ai-gateway' });
+```
+
+## 沙箱
+
+fx 通过 `@ai-sdk/harness-acp` 在沙箱内运行。它要求网络沙箱至少暴露一个端口：
+
+```ts
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+```
+
+首个会话需要网络出站（egress）能力来下载 fx。后续的模型与 Web 请求同样需要网络访问。
+
+## 内置工具
+
+适配器将 `glob_files`、`grep_files` 与 `web_search` 映射为通用的 `glob`、`grep` 与 `webSearch` harness 工具名。
+
+其他工具仍以其原生 fx 名称可用，包括
+`list_files`、`read_file`、`write_file`、`edit_file`、文件修改与元数据工具、`terminal`、`semantic_search`、`web_fetch`、技能工具、子智能体（subagent）、MCP
+发现工具、`ask_user_question`、`vision` 与 `read_tool_result`。
+
+适配器将 `allow-reads` 与 `allow-edits` 映射到 fx 的 `ask` ACP 模式，将 `allow-all` 映射到 fx 的 `code` ACP 模式。`allow-edits` 的映射是保守的，因为 fx 没有提供一种既允许文件修改、又仍要求对终端命令进行审批的模式。fx 可能会在内部处理安全操作或应用自己的权限策略，而不发送 ACP 权限请求。
+
+## 已知限制
+
+- fx 的 ACP v1 工具更新会省略编程工具名与原始输入（请求权限时除外）。原生工具仍会执行，但普通的原生工具事件并不总能与带类型的内置工具名关联起来。
+- ACP v1 不暴露模型步骤边界或按步骤的用量。当 fx 未提供总量时，适配器会推断边界并报告未知的按步骤用量。
+- ACP v1 没有可移植的手动压缩（compaction）或回合中途转向（steering）API。
+- ACP v1 没有可移植的内置工具过滤 API。支持过滤宿主工具，但过滤 fx 内置工具会抛出不支持能力（unsupported-capability）错误。
+- fx ACP 不暴露结构化输出的元数据映射，因此不支持基于 schema 的结构化输出。
+- 自定义 `headers` 不受原生支持，只能通过沙箱外部的请求变换来应用。因此当提供的是不具备该能力的沙箱时，自定义 `headers` 无法传入，会被忽略。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)
+- [Agent Client Protocol](/providers/ai-sdk-harnesses/acp)

@@ -1,0 +1,155 @@
+---
+title: OpenCode
+description: 了解如何使用 OpenCode 提供商通过统一接口访问多个 AI 模型。
+---
+
+# OpenCode 提供商
+
+[ai-sdk-provider-opencode-sdk](https://github.com/ben-vargas/ai-sdk-provider-opencode-sdk) 社区提供商让你能够通过 [OpenCode SDK](https://www.npmjs.com/package/@opencode-ai/sdk) 使用多个 AI 提供商（Anthropic、OpenAI、Google）。OpenCode 是一个基于终端的 AI 编程助手，为各种 AI 模型提供统一接口。
+
+## 版本兼容性
+
+| 提供商版本 | AI SDK 版本 | NPM Tag     | 状态   |
+| ---------- | ----------- | ----------- | ------ |
+| 1.x        | v6          | `latest`    | 稳定   |
+| 0.x        | v5          | `ai-sdk-v5` | 维护中 |
+
+```bash
+# AI SDK v6 (default)
+npm install ai-sdk-provider-opencode-sdk ai
+
+# AI SDK v5
+npm install ai-sdk-provider-opencode-sdk@ai-sdk-v5 ai@^5.0.0
+```
+
+## 安装
+
+<InstallPackages packages="ai-sdk-provider-opencode-sdk" />
+
+## 提供商实例
+
+你可以从 `ai-sdk-provider-opencode-sdk` 导入默认提供商实例 `opencode`：
+
+```ts
+import { opencode } from 'ai-sdk-provider-opencode-sdk';
+```
+
+如果需要自定义配置，可以导入 `createOpencode`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createOpencode } from 'ai-sdk-provider-opencode-sdk';
+
+const opencode = createOpencode({
+  autoStartServer: true,
+  serverTimeout: 10000,
+  defaultSettings: {
+    agent: 'build',
+  },
+});
+```
+
+提供商设置：
+
+- **hostname** _string_ - 服务器主机名（默认：`127.0.0.1`）。
+- **port** _number_ - 服务器端口（默认：`4096`）。
+- **autoStartServer** _boolean_ - 自动启动 OpenCode 服务器（默认：`true`）。
+- **serverTimeout** _number_ - 服务器启动超时时间，单位毫秒（默认：`10000`）。
+- **defaultSettings** _object_ - 应用于所有模型调用的默认设置。
+
+## 语言模型
+
+模型使用 `providerID/modelID` 格式指定：
+
+```ts
+const model = opencode('anthropic/claude-sonnet-4-5-20250929');
+```
+
+**模型快捷方式**（导出为 `OpencodeModels`）：
+
+```ts
+import { OpencodeModels } from 'ai-sdk-provider-opencode-sdk';
+
+// Anthropic Claude
+opencode(OpencodeModels['claude-opus-4-5']); // anthropic/claude-opus-4-5-20251101
+opencode(OpencodeModels['claude-sonnet-4-5']); // anthropic/claude-sonnet-4-5-20250929
+opencode(OpencodeModels['claude-haiku-4-5']); // anthropic/claude-haiku-4-5-20251001
+
+// OpenAI GPT
+opencode(OpencodeModels['gpt-4o']); // openai/gpt-4o
+opencode(OpencodeModels['gpt-4o-mini']); // openai/gpt-4o-mini
+
+// Google Gemini
+opencode(OpencodeModels['gemini-3.1-pro-preview']); // google/gemini-3.1-pro-preview
+opencode(OpencodeModels['gemini-2.5-pro']); // google/gemini-2.5-pro
+opencode(OpencodeModels['gemini-2.5-flash']); // google/gemini-2.5-flash
+opencode(OpencodeModels['gemini-2.0-flash']); // google/gemini-2.0-flash
+```
+
+你也可以使用完整的模型标识符：
+
+```ts
+opencode('openai/gpt-5.1-codex');
+opencode('openai/gpt-5.1-codex-max');
+opencode('google/gemini-3.1-pro-preview');
+```
+
+### 示例
+
+```ts
+import { opencode } from 'ai-sdk-provider-opencode-sdk';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: opencode('anthropic/claude-sonnet-4-5-20250929'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+### 模型设置
+
+```ts
+const model = opencode('anthropic/claude-opus-4-5-20251101', {
+  agent: 'build', // 'build' | 'plan' | 'general' | 'explore'
+  sessionTitle: 'My Task',
+  systemPrompt: 'You are a helpful assistant.',
+});
+```
+
+### 模型能力
+
+| 提供商    | 图像输入  | 对象生成  | 工具使用   | 工具流式   |
+| --------- | --------- | --------- | ---------- | ---------- |
+| Anthropic | <Check /> | <Check /> | <Cross />  | <Cross />  |
+| OpenAI    | <Check /> | <Check /> | <Cross />  | <Cross />  |
+| Google    | <Check /> | <Check /> | <Cross />  | <Cross />  |
+
+<Note>
+  Tool Usage 与 Tool Streaming 显示 ❌ 是因为该提供商不支持 AI SDK 自定义工具
+  （传给 `generateText`/`streamText` 的 Zod schema）。自定义工具定义会被显式忽略。
+  OpenCode 在服务器端执行工具，可通过流式事件观察到。图像输入仅支持 data URL
+  与 base64。对象生成使用基于提示词的 JSON 模式。
+</Note>
+
+## 服务器管理
+
+OpenCode 作为一个受管服务器运行。使用完毕后请务必释放（dispose）提供商：
+
+```ts
+import { opencode } from 'ai-sdk-provider-opencode-sdk';
+
+// After you're done
+await opencode.dispose();
+
+// Or if you need direct access to the client manager:
+// await opencode.getClientManager().dispose();
+```
+
+客户端管理器会在进程退出时（SIGINT、SIGTERM）自动清理。
+
+## 环境要求
+
+- Node.js 22 或更高版本
+- 已安装 OpenCode CLI（`npm install -g opencode`）
+- 在 OpenCode 中配置好提供商凭证（Anthropic、OpenAI 或 Google 的 API key）
+
+更多细节请参阅[提供商文档](https://github.com/ben-vargas/ai-sdk-provider-opencode-sdk)。

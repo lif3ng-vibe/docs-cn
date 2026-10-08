@@ -1,0 +1,74 @@
+---
+title: Dify
+description: 了解如何在 AI SDK 中使用 Dify 提供商。
+---
+
+# Dify 提供商
+
+**[Dify 提供商](https://github.com/warmwind/dify-ai-provider)** 让你可以借助 AI SDK 轻松将 Dify 的应用工作流集成到你的应用中。
+
+## 安装
+
+Dify 提供商包含在 `dify-ai-provider` 模块中。可通过以下方式安装：
+
+```bash
+npm install dify-ai-provider
+
+# pnpm
+pnpm add dify-ai-provider
+
+# yarn
+yarn add dify-ai-provider
+```
+
+## 提供商实例
+
+你可以从 `dify-ai-provider` 导入 `difyProvider` 来创建提供商实例：
+
+```ts
+import { difyProvider } from 'dify-ai-provider';
+```
+
+## 示例
+
+### 使用 dify.ai
+
+```ts
+import { generateText } from 'ai';
+import { difyProvider } from 'dify-ai-provider';
+
+const dify = difyProvider('dify-application-id', {
+  responseMode: 'blocking',
+  apiKey: 'dify-api-key',
+});
+
+const { text, providerMetadata } = await generateText({
+  model: dify,
+  messages: [{ role: 'user', content: 'Hello, how are you today?' }],
+  headers: { 'user-id': 'test-user' },
+});
+
+const { conversationId, messageId } = providerMetadata.difyWorkflowData;
+console.log(text);
+console.log('conversationId', conversationId);
+console.log('messageId', messageId);
+```
+
+### 使用自托管 Dify
+
+```typescript
+import { createDifyProvider } from 'dify-ai-provider';
+
+const difyProvider = createDifyProvider({
+  baseURL: 'your-base-url',
+});
+
+const dify = difyProvider('dify-application-id', {
+  responseMode: 'blocking',
+  apiKey: 'dify-api-key',
+});
+```
+
+## 文档
+
+更多详细信息请参阅 **[Dify 提供商文档](https://github.com/warmwind/dify-ai-provider)**。

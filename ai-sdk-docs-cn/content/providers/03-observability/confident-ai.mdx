@@ -1,0 +1,177 @@
+---
+title: Confident AI
+description: 使用 Confident AI 追踪并监控你的 AI SDK 应用
+---
+
+# Confident AI 可观测性
+
+[Confident AI](https://confident-ai.com/) 是一个 LLM 可观测性与评估平台，面向在开发与生产环境中构建可靠 AI 应用的团队。
+
+[`confident-trace`](https://github.com/confident-ai/confident-trace) 是 Confident AI 原生面向 OpenTelemetry 的追踪 SDK，它可以在不改动你调用的情况下追踪 AI SDK 应用——每一次 `generateText` 与 `streamText` 调用都会以一条追踪（trace）的形式出现在 [Observatory](https://www.confident-ai.com/docs/llm-tracing/introduction) 中，带有智能体（agent）、步骤、模型与工具 span，让你看清应用选择了哪些工具、每次模型调用花费多少，并对结果运行评估。
+
+Confident AI 与 AI SDK 集成后可提供：
+
+- 拥有完整智能体、步骤、模型与工具层级的[追踪](https://www.confident-ai.com/docs/llm-tracing/introduction)
+- 每次模型调用的 [token 用量与成本](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost)
+- 把一次对话的各个回合归组为一个单元的 [Threads](https://www.confident-ai.com/docs/llm-tracing/features/threads)
+- 在数据写入（ingest）时就对追踪进行打分的[在线评估](https://www.confident-ai.com/docs/llm-tracing/online-evals)
+
+## 安装
+
+追踪要求 Node.js 22 或更高版本，以及 AI SDK `>=7.0.93 <8`。
+
+### 1. 安装 confident-trace
+
+```bash
+npm install confident-trace @ai-sdk/otel
+```
+
+### 2. 设置你的 API key
+
+注册或登录 [Confident AI](https://app.confident-ai.com) 以获取项目 API key，然后将其设置为环境变量：
+
+```bash filename=".env"
+CONFIDENT_API_KEY="YOUR-PROJECT-API-KEY"
+```
+
+<Note>
+  欧盟地区的用户请设置
+  `CONFIDENT_OTEL_ENDPOINT="https://eu.otel.confident-ai.com/v1/traces"`
+</Note>
+
+### 3. 注册遥测集成
+
+`createVercelAITracer()` 函数返回一个 tracer，把 AI SDK span 映射到
+Confident AI 的 span 类型。将其传给 `OpenTelemetry`，并在应用启动时、任何 AI SDK 调用之前注册一次。`init()` 会设置把 span 传送到你项目的导出器：
+
+```ts filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { init } from 'confident-trace';
+import { createVercelAITracer } from 'confident-trace/vercel-ai';
+
+export function register() {
+  init();
+  registerTelemetry(new OpenTelemetry({ tracer: createVercelAITracer() }));
+}
+```
+
+在 Next.js 中，把它放在项目根目录的 `instrumentation.ts` 中——Next.js 会替你调用
+`register()`。对于不使用 Next.js 的 Node.js 应用，在你的入口文件顶层运行同样的两行代码：
+
+```ts filename="index.ts"
+import { generateText, registerTelemetry } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { init } from 'confident-trace';
+import { createVercelAITracer } from 'confident-trace/vercel-ai';
+
+const runtime = init();
+registerTelemetry(new OpenTelemetry({ tracer: createVercelAITracer() }));
+
+try {
+  const { text } = await generateText({
+    model: openai('gpt-6-astra'),
+    prompt: 'How do you make the best coffee?',
+  });
+  console.log(text);
+} finally {
+  await runtime.shutdown();
+}
+```
+
+你的 AI SDK 调用保持原样。每个 span 都带有 `Vercel AI SDK` 集成标签，嵌套在调用发生时处于活跃状态的 span 之下，并捕获：
+
+- **智能体与步骤 span**——整个 `generateText` 或 `streamText` 调用一个 span，多步运行中的每个步骤也各有一个 span。
+- **模型调用**——[LLM span](https://www.confident-ai.com/docs/llm-tracing/features/span-types#llm-spans)包含模型名称、[token 用量](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost)、完成原因以及归一化的输入/输出消息，包括模型请求的工具调用。
+- **工具调用**——[工具 span](https://www.confident-ai.com/docs/llm-tracing/features/span-types#tool-spans)包含工具名称、其输入与结果，嵌套在执行它们的步骤之下。
+- **内容**——提示词与响应文本，默认无大小限制地捕获（除非你自行配置限制），并受[内容策略](https://www.confident-ai.com/docs/llm-tracing/features/masking)约束。
+
+<Note>
+  推理（reasoning）与二进制内容部分会被标记但不会导出；原始请求头、任意 SDK 元数据与异常消息会被排除。嵌入（embedding）、重排序（reranking）以及图像与音频 API 不在此集成的范围内。
+</Note>
+
+<Note>
+  只初始化一次，只关闭一次。在长期运行的服务器中，在启动时调用 `init()`，并在优雅停机期间、待处理（in-flight）请求与流结束后调用 `runtime.shutdown()`——绝不要在每个请求中都调用。在无服务器函数中，改为在处理函数末尾、待所有流结束后调用 `runtime.flush()`，以便在函数冻结前导出 span。
+</Note>
+
+## 高级特性
+
+### 在线评估
+
+你可以在 Confident AI 的[工作流页面](https://www.confident-ai.com/docs/llm-tracing/workflows)上配置传入追踪的处理方式。
+
+![Confident AI 工作流页面](https://confident-docs.s3.us-east-1.amazonaws.com/confident-trace-workflows.png)
+
+以下是你可以配置的工作流：
+
+- **评估规则**——用[指标集合](https://www.confident-ai.com/docs/metrics/metric-collections)评估传入的追踪。
+- **分类器**——按问题、情感或你定义的任何维度为追踪打标签，便于后续分组或过滤。
+- **队列写入**——把生产环境的追踪路由到批注（annotation）队列，供内部审核团队人工批注。
+- **数据集写入**——把生产环境的追踪写入数据集，作为测试用例复用，并随时间迭代结果、持续改进。
+
+你可以根据需要，针对追踪、span、线程（thread）等不同数据模型分别创建自定义工作流。
+
+要手动评估某个组件或追踪，可通过 `updateTrace` 传入一个指标集合——参见[在线评估](https://www.confident-ai.com/docs/llm-tracing/online-evals)。
+
+### 追踪属性
+
+使用[追踪上下文](https://www.confident-ai.com/docs/llm-tracing/features/trace-context)在调用开始前附加你已知的属性。它不会创建额外的 span——`generateText()` 启动的追踪会继承你传入的所有内容：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { traceContext } from 'confident-trace';
+
+const { text } = await traceContext(
+  {
+    tags: ['support'],
+    metadata: { release: '2026-09' },
+    userId: 'user-456',
+    environment: 'production',
+  },
+  () =>
+    generateText({
+      model: openai('gpt-6-astra'),
+      prompt: 'How do you make the best coffee?',
+    }),
+);
+```
+
+### 将追踪归组到 Threads
+
+`confident-trace` 提供一个 `turn()` 方法，可用于把连续的 AI SDK 调用归组为一个回合。在后续回合中复用同一个线程 ID，即可把它们归组到一个线程中，在 Confident AI 上查看与评估：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { turn, updateTrace } from 'confident-trace';
+
+async function chat(prompt: string, threadId: string) {
+  return turn({ name: 'chat', threadId }, async () => {
+    const { text } = await generateText({
+      model: openai('gpt-6-astra'),
+      prompt,
+    });
+    updateTrace({ input: prompt, output: text });
+    return text;
+  });
+}
+```
+
+## 故障排查
+
+- **完全没有追踪**：确认 `registerTelemetry()` 在第一次 AI SDK 调用之前运行。在 Next.js 中，这意味着要放在项目根目录的 `instrumentation.ts` 里，而不是某个 route 内。不注册任何遥测集成会完全禁用 AI SDK 遥测。
+- **追踪在运行中途停止**：进程在导出队列清空之前退出了。在退出时调用 `runtime.shutdown()`，或在无服务器处理函数末尾调用 `runtime.flush()`。
+- **流式调用不完整**：在 flush 或关闭之前，先完成流的消费或中止它。
+- **追踪缺少内容**：检查 AI SDK 的 `recordInputs` 与 `recordOutputs`，以及 `init()` 上的 `captureContent`。
+
+其他问题请参阅 [Confident AI 的故障排查指南](https://www.confident-ai.com/docs/llm-tracing/troubleshooting)。
+
+## 了解更多
+
+- [Confident AI 上的 AI 可观测性](https://www.confident-ai.com/docs/llm-tracing/introduction)
+- [完整的 AI SDK 集成指南](https://www.confident-ai.com/docs/integrations/third-party/vercel-ai-sdk)
+- [在线评估](https://www.confident-ai.com/docs/llm-tracing/online-evals)
+- [集成需要帮助？与真人聊聊。](https://www.confident-ai.com/book-a-demo)
+- [AI SDK 遥测文档](/docs/ai-sdk-core/telemetry)

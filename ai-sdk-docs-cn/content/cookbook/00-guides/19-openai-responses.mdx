@@ -1,0 +1,269 @@
+---
+title: OpenAI Responses API
+description: 使用 AI SDK 上手 OpenAI Responses API。
+tags: ['getting-started', 'agents']
+---
+
+# Get started with OpenAI Responses API
+
+随着 [OpenAI responses API 的发布](https://openai.com/index/new-tools-for-building-agents/)，现在是开始构建 AI 应用的最佳时机，尤其是那些需要对世界有更深入理解的应用。
+
+[AI SDK](/) 是一个强大的 TypeScript 工具包，可用于结合大语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。
+
+## OpenAI Responses API
+
+OpenAI 最近发布了 Responses API，这是一种在 OpenAI 平台上构建应用的全新方式。新 API 提供了持久化聊天历史的能力、用于为 LLM 响应接地的网页搜索工具、用于查找相关文件的文件搜索工具，以及用于构建能够与计算机交互并操作计算机的智能体（agent）的 computer use 工具。我们来探索如何在 AI SDK 中使用 Responses API。
+
+## 使用 AI SDK 上手
+
+AI SDK 是一个 TypeScript 工具包，旨在帮助开发者使用 React、Next.js、Vue、Svelte、Node.js 等构建 AI 应用。把 LLM 集成到应用中很复杂，而且高度依赖于你所使用的具体模型提供商（provider）。
+
+AI SDK 抽象掉了模型提供商之间的差异，省去了构建聊天机器人的样板代码，并让你超越纯文本输出，生成丰富的交互式组件。
+
+AI SDK 的核心是 [AI SDK Core](/docs/ai-sdk-core/overview)，它提供统一的 API 来调用任何 LLM。下面的代码片段就是使用 AI SDK 通过新的 Responses API 调用 GPT-6 Astra 所需的全部代码：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'Explain the concept of quantum entanglement.',
+});
+```
+
+### 生成结构化数据
+
+文本生成虽然有用，但你可能还想生成结构化的 JSON 数据。例如，你可能想从文本中提取信息、对数据进行分类，或生成合成数据。AI SDK Core 提供了带 `Output` 的 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 和 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 来生成结构化数据，让你可以把模型输出约束到特定的 schema。
+
+```ts
+import { generateText, Output } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(
+          z.object({ name: z.string(), amount: z.string() }),
+        ),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+```
+
+这段代码会生成一个符合指定 zod schema 的类型安全的菜谱。
+
+### 在 AI SDK 中使用工具
+
+Responses API 开箱即用地支持工具调用，使其能够与外部系统交互并执行离散任务。以下是在 AI SDK 中使用工具调用的示例：
+
+```ts
+import { generateText, isStepCount, tool } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'What is the weather like today in San Francisco?',
+  tools: {
+    getWeather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+  },
+  stopWhen: isStepCount(5), // enable multi-step 'agentic' LLM calls
+});
+```
+
+这个示例展示了 `stopWhen` 如何把单次 LLM 调用变成一个智能体。`stopWhen: isStepCount(5)` 参数让模型能够自主调用工具、分析结果，并按需发起额外的工具调用——把原本简单的一次性补全变成一个智能体，它可以把多个操作串联起来完成复杂任务。
+
+### 网页搜索工具
+
+Responses API 引入了一个用于给响应接地的内置工具 `webSearch`。借助该工具，模型可以访问互联网，为其响应查找相关信息。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'What happened in San Francisco last week?',
+  tools: {
+    web_search_preview: openai.tools.webSearchPreview(),
+  },
+});
+
+console.log(result.text);
+console.log(result.sources);
+```
+
+`webSearch` 工具还允许你指定针对查询的元数据，用于提高搜索结果的质量。
+
+```ts
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'What happened in San Francisco last week?',
+  tools: {
+    web_search_preview: openai.tools.webSearchPreview({
+      searchContextSize: 'high',
+      userLocation: {
+        type: 'approximate',
+        city: 'San Francisco',
+        region: 'California',
+      },
+    }),
+  },
+});
+
+console.log(result.text);
+console.log(result.sources);
+```
+
+### MCP 工具
+
+Responses API 还支持连接到[模型上下文协议（MCP）](https://modelcontextprotocol.io/)服务器。这让模型能够调用远程 MCP 服务器或服务连接器暴露的工具。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'Search the web for the latest NYC mayoral election results',
+  tools: {
+    mcp: openai.tools.mcp({
+      serverLabel: 'web-search',
+      serverUrl: 'https://mcp.exa.ai/mcp',
+      serverDescription: 'A web-search API for AI agents',
+    }),
+  },
+});
+
+console.log(result.text);
+```
+
+有关配置 MCP 工具的更多细节（包括身份验证、工具过滤和连接器支持），请参阅 [OpenAI 提供商文档](/providers/ai-sdk-providers/openai#mcp-工具)。
+
+## 使用持久化
+
+借助 Responses API，你可以让聊天历史在多次请求之间由 OpenAI 持久保存。这样你只需发送用户的最后一条消息，OpenAI 就能访问完整的聊天历史。
+
+使用持久化有两种方式：
+
+### 通过 previousResponseId
+
+```tsx filename="app/api/chat/route.ts"
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result1 = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+
+const result2 = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'Summarize in 2 sentences',
+  providerOptions: {
+    openai: {
+      previousResponseId: result1.providerMetadata?.openai.responseId as string,
+    },
+  },
+});
+```
+
+### 通过 Conversations
+
+你可以使用 [Conversation API](https://platform.openai.com/docs/api-reference/conversations/create) 创建一个对话。
+
+创建对话后，你可以继续使用它：
+
+```tsx filename="app/api/chat/route.ts"
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai.responses('gpt-6-luna'),
+  prompt: 'Summarize in 2 sentences',
+  providerOptions: {
+    openai: {
+      // The Conversation ID created via the OpenAI API to continue
+      conversation: 'conv_123',
+    },
+  },
+});
+```
+
+## 从 Completions API 迁移
+
+从 OpenAI Chat Completions API 迁移到 Responses API 非常简单。要显式选择每个 API，把你的提供商实例从 `openai.chat(modelId)` 改为 `openai.responses(modelId)` 即可。Responses API 也是 `openai(modelId)` 的默认选择：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+// Chat Completions API
+const { text } = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  prompt: 'Explain the concept of quantum entanglement.',
+});
+
+// Responses API
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'Explain the concept of quantum entanglement.',
+});
+```
+
+使用 Responses API 时，之前在模型提供商实例上指定的提供商特定选项，现在移到了 `providerOptions` 对象中：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+// Chat Completions API
+const { text } = await generateText({
+  model: openai.chat('gpt-6-astra'),
+  prompt: 'Explain the concept of quantum entanglement.',
+  providerOptions: {
+    openai: {
+      parallelToolCalls: false,
+    },
+  },
+});
+
+// Responses API
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  prompt: 'Explain the concept of quantum entanglement.',
+  providerOptions: {
+    openai: {
+      parallelToolCalls: false,
+    },
+  },
+});
+```
+
+## 开始使用
+
+准备好开始了吗？以下是深入的方式：
+
+1. 阅读 [ai-sdk.dev/docs](/docs) 上的文档，了解 AI SDK 的全部能力。
+2. 查看 [ai-sdk.dev/examples](/examples) 上的实用示例，看看 SDK 的实际表现，为你的项目获取灵感。
+3. 通过 [ai-sdk.dev/docs/guides](/cookbook/guides) 上的进阶指南深入探索，主题包括检索增强生成（RAG）和多模态聊天等。
+4. 查看 [vercel.com/templates?type=ai](https://vercel.com/templates?type=ai) 上可直接部署的 AI 模板。

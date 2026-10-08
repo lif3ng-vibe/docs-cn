@@ -1,0 +1,403 @@
+---
+title: 图像生成
+description: 了解如何使用 AI SDK 生成图像。
+---
+
+# Image Generation
+
+AI SDK 提供 [`generateImage`](/docs/reference/ai-sdk-core/generate-image)
+函数，使用图像模型根据给定的提示词（prompt）生成图像。
+
+```tsx
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+});
+```
+
+你可以通过 `base64` 或 `uint8Array` 属性访问图像数据：
+
+```tsx
+const base64 = image.base64; // base64 image data
+const uint8Array = image.uint8Array; // Uint8Array image data
+```
+
+## 设置
+
+### 尺寸与纵横比
+
+根据模型的不同，你可以指定尺寸或纵横比。
+
+##### 尺寸
+
+尺寸以 `{width}x{height}` 格式的字符串指定。
+模型仅支持少数几种尺寸，且支持的尺寸因模型和提供商而异。
+
+```tsx highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  size: '1024x1024',
+});
+```
+
+##### 纵横比
+
+纵横比以 `{width}:{height}` 格式的字符串指定。
+模型仅支持少数几种纵横比，且支持的纵横比因模型和提供商而异。
+
+```tsx highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  aspectRatio: '16:9',
+});
+```
+
+### 生成多张图像
+
+`generateImage` 还支持一次生成多张图像：
+
+```tsx highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { images } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  n: 4, // number of images to generate
+});
+```
+
+<Note>
+  `generateImage` 会按需自动多次调用模型（并行调用），以生成所请求数量的图像。
+</Note>
+
+每个图像模型对单次 API 调用可生成的图像数量都有内部上限。当你使用 `n` 参数请求多张图像时，AI SDK 会自动以合适的批量对请求分组来管理这一限制。默认情况下，SDK 使用提供商文档记载的上限（例如，DALL-E 3 每次调用只能生成 1 张图像，而 DALL-E 2 支持最多 10 张）。
+
+如有需要，你可以在生成图像时使用 `maxImagesPerCall` 设置覆盖这一行为。在使用默认批量大小可能不合适的新模型或自定义模型时，这尤其有用：
+
+```tsx
+const { images } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  maxImagesPerCall: 5, // Override the default batch size
+  n: 10, // Will make 2 calls of 5 images each
+});
+```
+
+### 检查图像编辑支持
+
+图像模型实例可以声明自己是否支持参考图像文件和遮罩（mask）。在分发图像编辑请求之前，请先检查这些能力：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+
+const model = openai.image('gpt-image-1');
+const needsMask = true;
+
+if ((await model.supportsFileInputs) !== true) {
+  throw new Error(
+    'The selected model does not advertise image editing support.',
+  );
+}
+
+if (needsMask && (await model.supportsMaskInputs) !== true) {
+  throw new Error('The selected model does not advertise mask support.');
+}
+```
+
+`supportsFileInputs` 和 `supportsMaskInputs` 可以是 `true`、`false` 或 `undefined`（未知），提供商可能异步地暴露其中任何一种取值。为编辑任务选择模型时，只有 `true` 才能视为已确认的支持。文件支持与遮罩支持是相互独立的，因为有些模型接受参考图像但不接受遮罩。
+
+这些能力描述的是对 SDK 标准化图像与遮罩输入的支持情况，包括提供商的请求映射。模型名称与某个受支持的系列相似并不足以证明支持。模型仍可能需要提供商特有的选项，或对输入格式与数量施加限制。
+
+AI SDK 不会依据这些能力自动拒绝编辑输入。当支持为 false 或未知时，应用可以自行决定是拒绝请求、请用户选择另一个模型，还是使用回退（fallback）。
+
+### 提供种子（seed）
+
+你可以向 `generateImage` 函数提供种子（seed）来控制图像生成过程的输出。
+如果模型支持，相同的种子将始终生成相同的图像。
+
+```tsx highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  seed: 1234567890,
+});
+```
+
+### 提供商特定设置
+
+图像模型通常有提供商级别甚至模型级别的特定设置。
+你可以使用 `providerOptions` 参数将这些设置传给 `generateImage` 函数。
+提供商的选项（下例中的 `openai`）会成为请求体的属性。
+
+```tsx highlight={"8-13"}
+import { generateImage } from 'ai';
+import { openai, type OpenAIImageModelGenerationOptions } from '@ai-sdk/openai';
+
+const { image } = await generateImage({
+  model: openai.image('dall-e-3'),
+  prompt: 'Santa Claus driving a Cadillac',
+  size: '1024x1024',
+  providerOptions: {
+    openai: {
+      style: 'vivid',
+      quality: 'hd',
+    } satisfies OpenAIImageModelGenerationOptions,
+  },
+});
+```
+
+### 中止信号与超时
+
+`generateImage` 接受类型为
+[`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
+的可选参数 `abortSignal`，可用于中止图像生成过程或设置超时。
+
+```ts highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  abortSignal: AbortSignal.timeout(1000), // Abort after 1 second
+});
+```
+
+### 自定义请求头
+
+`generateImage` 接受类型为 `Record<string, string>` 的可选参数 `headers`，
+用于向图像生成请求添加自定义请求头。
+
+```ts highlight={"7"}
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { image } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+  headers: { 'X-Custom-Header': 'custom-value' },
+});
+```
+
+### 警告
+
+如果模型返回警告（例如针对不支持的参数），可以在响应的 `warnings` 属性中获取。
+
+```tsx
+const { image, warnings } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'Santa Claus driving a Cadillac',
+});
+```
+
+### 提供商元数据
+
+一些提供商会为单张图像暴露元数据。它可以直接在生成的图像上获取：
+
+```tsx
+const prompt = 'Santa Claus driving a Cadillac';
+
+const { image } = await generateImage({
+  model: openai.image('dall-e-3'),
+  prompt,
+});
+
+const revisedPrompt = image.providerMetadata?.openai?.revisedPrompt;
+
+console.log({
+  prompt,
+  revisedPrompt,
+});
+```
+
+`image.providerMetadata` 的外层键是提供商名称，内层的值是该图像的元数据。
+
+### 底层调用
+
+当一个请求被拆分为多个提供商调用时，`calls` 会保留每次调用的图像、提供商元数据、响应元数据、警告和用量。`images` 和 `usage` 仍然分别是便捷的扁平视图与聚合视图。
+
+```ts
+const { calls } = await generateImage({
+  model,
+  prompt: 'Santa Claus driving a Cadillac',
+  n: 4,
+  maxImagesPerCall: 1,
+});
+
+for (const call of calls) {
+  console.log(call.providerMetadata, call.usage);
+}
+```
+
+### 错误处理
+
+当 `generateImage` 无法生成有效图像时，会抛出 [`AI_NoImageGeneratedError`](/docs/reference/ai-sdk-errors/ai-no-image-generated-error)。
+在抛出此错误之前，未分类的空图像响应会依据 `maxRetries` 进行重试。
+提供商可以通过 `isRetryable: false` 将终态的空响应（例如审核拦截）归类为不可重试；这类响应不会被重试。
+
+此错误在 AI 提供商未能生成图像时发生。可能的原因包括：
+
+- 模型未能生成响应
+- 模型生成了无法解析的响应
+
+该错误会保留以下信息，帮助你记录问题：
+
+- `calls`：底层图像模型调用的结果，包括生成的图像、提供商元数据、响应元数据、警告和用量。
+- `responses`：关于图像模型响应的元数据，包括时间戳、模型和请求头。
+- `cause`：错误原因。可用于更细粒度的错误处理
+
+```ts
+import { generateImage, NoImageGeneratedError } from 'ai';
+
+try {
+  await generateImage({ model, prompt });
+} catch (error) {
+  if (NoImageGeneratedError.isInstance(error)) {
+    console.log('NoImageGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Responses:', error.responses);
+
+    for (const call of error.calls ?? []) {
+      console.log('Provider metadata:', call.providerMetadata);
+      console.log('Warnings:', call.warnings);
+      console.log('Usage:', call.usage);
+    }
+  }
+}
+```
+
+## 图像中间件
+
+你可以使用 `wrapImageModel` 和
+`ImageModelV4Middleware` 增强图像模型，例如设置默认值或实现日志记录。
+
+下面是一个在未提供尺寸时设置默认尺寸的示例：
+
+```ts
+import { generateImage, wrapImageModel } from 'ai';
+__PROVIDER_IMPORT__;
+
+const model = wrapImageModel({
+  model: __IMAGE_MODEL__,
+  middleware: {
+    specificationVersion: 'v4',
+    transformParams: async ({ params }) => ({
+      ...params,
+      size: params.size ?? '1024x1024',
+    }),
+  },
+});
+
+const { image } = await generateImage({
+  model,
+  prompt: 'Santa Claus driving a Cadillac',
+});
+```
+
+## 使用语言模型生成图像
+
+一些语言模型（例如 Google 的 `gemini-3.1-flash-image-preview`）支持包括图像在内的多模态输出。
+使用这类模型时，可以通过响应的 `files` 属性访问生成的图像。
+
+```ts
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: google('gemini-3.1-flash-image-preview'),
+  prompt: 'Generate an image of a comic cat',
+});
+
+for (const file of result.files) {
+  if (file.mediaType.startsWith('image/')) {
+    // The file object provides multiple data formats:
+    // Access images as base64 string, Uint8Array binary data, or check type
+    // - file.base64: string (data URL format)
+    // - file.uint8Array: Uint8Array (binary data)
+    // - file.mediaType: string (e.g. "image/png")
+  }
+}
+```
+
+## 图像模型
+
+| 提供商                                                                          | 模型                                                         | 支持的尺寸（`宽 x 高`）或纵横比（`宽 : 高`）                                                                                                                         |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [xAI Grok](/providers/ai-sdk-providers/xai#图像模型)                        | `grok-imagine-image`                                         | `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`, `2:1`, `1:2`, `19.5:9`, `9:19.5`, `20:9`, `9:20`, `auto`                                                         |
+| [OpenAI](/providers/ai-sdk-providers/openai#图像模型)                       | `gpt-image-2.5-flare`                                        | 1024x1024, 1536x1024, 1024x1536, custom                                                                                                                             |
+| [OpenAI](/providers/ai-sdk-providers/openai#图像模型)                       | `gpt-image-2.5-sunburst`                                     | 1024x1024, 1536x1024, 1024x1536, custom                                                                                                                             |
+| [OpenAI](/providers/ai-sdk-providers/openai#图像模型)                       | `gpt-image-2`                                                | 1024x1024, 1536x1024, 1024x1536                                                                                                                                     |
+| [OpenAI](/providers/ai-sdk-providers/openai#图像模型)                       | `dall-e-3`                                                   | 1024x1024, 1792x1024, 1024x1792                                                                                                                                     |
+| [OpenAI](/providers/ai-sdk-providers/openai#图像模型)                       | `dall-e-2`                                                   | 256x256, 512x512, 1024x1024                                                                                                                                         |
+| [Amazon Bedrock](/providers/ai-sdk-providers/amazon-bedrock#图像模型)       | `amazon.nova-canvas-v1:0`                                    | 320-4096 (multiples of 16), 1:4 to 4:1, max 4.2M pixels                                                                                                             |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/flux/dev`                                            | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/flux-lora`                                           | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/fast-sdxl`                                           | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/flux-pro/v1.1-ultra`                                 | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/ideogram/v2`                                         | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/recraft-v3`                                          | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/stable-diffusion-3.5-large`                          | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Fal](/providers/ai-sdk-providers/fal#图像模型)                             | `fal-ai/hyper-sdxl`                                          | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `stabilityai/sd3.5`                                          | 1:1, 16:9, 1:9, 3:2, 2:3, 4:5, 5:4, 9:16, 9:21                                                                                                                      |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `black-forest-labs/FLUX-1.1-pro`                             | 256-1440 (multiples of 32)                                                                                                                                          |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `black-forest-labs/FLUX-1-schnell`                           | 256-1440 (multiples of 32)                                                                                                                                          |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `black-forest-labs/FLUX-1-dev`                               | 256-1440 (multiples of 32)                                                                                                                                          |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `black-forest-labs/FLUX-pro`                                 | 256-1440 (multiples of 32)                                                                                                                                          |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `stabilityai/sd3.5-medium`                                   | 1:1, 16:9, 1:9, 3:2, 2:3, 4:5, 5:4, 9:16, 9:21                                                                                                                      |
+| [DeepInfra](/providers/ai-sdk-providers/deepinfra#图像模型)                 | `stabilityai/sdxl-turbo`                                     | 1:1, 16:9, 1:9, 3:2, 2:3, 4:5, 5:4, 9:16, 9:21                                                                                                                      |
+| [Replicate](/providers/ai-sdk-providers/replicate)                              | `black-forest-labs/flux-schnell`                             | 1:1, 2:3, 3:2, 4:5, 5:4, 16:9, 9:16, 9:21, 21:9                                                                                                                     |
+| [Replicate](/providers/ai-sdk-providers/replicate)                              | `recraft-ai/recraft-v3`                                      | 1024x1024, 1365x1024, 1024x1365, 1536x1024, 1024x1536, 1820x1024, 1024x1820, 1024x2048, 2048x1024, 1434x1024, 1024x1434, 1024x1280, 1280x1024, 1024x1707, 1707x1024 |
+| [Google](/providers/ai-sdk-providers/google#图像模型)                       | `gemini-2.5-flash-image`                                     | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google](/providers/ai-sdk-providers/google#图像模型)                       | `gemini-3-pro-image-preview`                                 | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google](/providers/ai-sdk-providers/google#图像模型)                       | `gemini-3.1-flash-image-preview`                             | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google](/providers/ai-sdk-providers/google#图像模型)                       | `gemini-nano-banana-2.1`                                     | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9, 1:8, 8:1, 1:4, 4:1                                                                                             |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#图像模型)         | `gemini-2.5-flash-image`                                     | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#图像模型)         | `gemini-3-pro-image-preview`                                 | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#图像模型)         | `gemini-3.1-flash-image-preview`                             | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9                                                                                                                 |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#图像模型)         | `gemini-nano-banana-2.1`                                     | 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9, 1:8, 8:1, 1:4, 4:1                                                                                             |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/flux-1-dev-fp8`                   | 1:1, 2:3, 3:2, 4:5, 5:4, 16:9, 9:16, 9:21, 21:9                                                                                                                     |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/flux-1-schnell-fp8`               | 1:1, 2:3, 3:2, 4:5, 5:4, 16:9, 9:16, 9:21, 21:9                                                                                                                     |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/playground-v2-5-1024px-aesthetic` | 640x1536, 768x1344, 832x1216, 896x1152, 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640                                                                           |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/japanese-stable-diffusion-xl`     | 640x1536, 768x1344, 832x1216, 896x1152, 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640                                                                           |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/playground-v2-1024px-aesthetic`   | 640x1536, 768x1344, 832x1216, 896x1152, 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640                                                                           |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/SSD-1B`                           | 640x1536, 768x1344, 832x1216, 896x1152, 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640                                                                           |
+| [Fireworks](/providers/ai-sdk-providers/fireworks#图像模型)                 | `accounts/fireworks/models/stable-diffusion-xl-1024-v1-0`    | 640x1536, 768x1344, 832x1216, 896x1152, 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640                                                                           |
+| [Luma](/providers/ai-sdk-providers/luma#图像模型)                           | `photon-1`                                                   | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Luma](/providers/ai-sdk-providers/luma#图像模型)                           | `photon-flash-1`                                             | 1:1, 3:4, 4:3, 9:16, 16:9, 9:21, 21:9                                                                                                                               |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `stabilityai/stable-diffusion-xl-base-1.0`                   | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-dev`                               | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-dev-lora`                          | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-schnell`                           | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-canny`                             | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-depth`                             | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-redux`                             | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1.1-pro`                             | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-pro`                               | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Together.ai](/providers/ai-sdk-providers/togetherai#图像模型)              | `black-forest-labs/FLUX.1-schnell-Free`                      | 512x512, 768x768, 1024x1024                                                                                                                                         |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-2-pro`                                                 | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-2-max`                                                 | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-2-flex`                                                | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-2-klein-9b`                                            | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-2-klein-4b`                                            | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-kontext-pro`                                           | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-kontext-max`                                           | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-pro-1.1-ultra`                                         | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-pro-1.1`                                               | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+| [Black Forest Labs](/providers/ai-sdk-providers/black-forest-labs#图像模型) | `flux-pro-1.0-fill`                                          | From 3:7 (portrait) to 7:3 (landscape)                                                                                                                              |
+
+以上只是 AI SDK 提供商所支持图像模型的一小部分。更多信息请参阅各提供商的文档。

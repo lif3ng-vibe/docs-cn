@@ -1,0 +1,203 @@
+---
+title: createAgentUIStreamResponse
+description: createAgentUIStreamResponse 工具的 API 参考。
+---
+
+# `createAgentUIStreamResponse`
+
+`createAgentUIStreamResponse` 函数执行一个[智能体（Agent）](/docs/reference/ai-sdk-core/agent)，将其流式输出作为 UI 消息流运行，并返回一个 HTTP [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) 对象，其响应体就是实时流式传输的 UI 消息输出。它专为交付实时智能体结果的 API 路由设计，例如聊天端点或流式工具调用操作。
+
+## 导入
+
+<Snippet
+  text={`import { createAgentUIStreamResponse } from "ai"`}
+  prompt={false}
+/>
+
+## 用法
+
+```ts
+import { ToolLoopAgent, createAgentUIStreamResponse } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  instructions: 'You are a helpful assistant.',
+  tools: { weather: weatherTool, calculator: calculatorTool },
+});
+
+export async function POST(request: Request) {
+  const { messages } = await request.json();
+
+  return createAgentUIStreamResponse({
+    agent,
+    uiMessages: messages,
+    abortSignal: request.signal, // optional: aborts when the client disconnects
+    // experimental_sandbox, // optional: passed through to tool execution
+    // ...other UIMessageStreamOptions like sendSources, experimental_transform, etc.
+  });
+}
+```
+
+## 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'agent',
+      type: 'Agent',
+      isRequired: true,
+      description:
+        '要从中流式输出响应的智能体实例。必须实现 `.stream({ prompt, ... })` 并定义 `tools` 属性。',
+    },
+    {
+      name: 'uiMessages',
+      type: 'unknown[]',
+      isRequired: true,
+      description:
+        '提供给智能体的输入 UI 消息数组（例如用户消息和助手消息）。',
+    },
+    {
+      name: 'convertDataPart',
+      type: '(part: DataUIPart) => TextPart | FilePart | undefined',
+      isRequired: false,
+      description:
+        '将自定义 UI 数据部分（data part）转换为文本或文件部分以供模型使用。当该回调被省略或返回 undefined 时，数据部分将被忽略。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isRequired: false,
+      description:
+        '可选的中止信号，用于取消流式输出，例如客户端断开连接时。应为 [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) 实例。',
+    },
+    {
+      name: 'timeout',
+      type: 'number | { totalMs?: number }',
+      isRequired: false,
+      description:
+        '以毫秒为单位的超时时间。可以指定为数字，或带有 totalMs 属性的对象。若调用耗时超过指定的超时时间，则会被中止。可与 abortSignal 同时使用。',
+    },
+    {
+      name: 'experimental_sandbox',
+      type: 'Experimental_SandboxSession',
+      isRequired: false,
+      description:
+        '可选的实验性沙箱环境，会传递给工具执行。工具可以从其执行上下文中访问它。',
+    },
+    {
+      name: 'options',
+      type: 'CALL_OPTIONS',
+      isRequired: false,
+      description:
+        '可选的智能体调用选项，适用于带泛型参数 `CALL_OPTIONS` 的智能体。',
+    },
+    {
+      name: 'experimental_transform',
+      type: 'StreamTextTransform | StreamTextTransform[]',
+      isRequired: false,
+      description:
+        '可选的流转换，用于对文本输出进行后处理——与更底层的流式 API 中相同。',
+    },
+    {
+      name: 'onStepEnd',
+      type: 'GenerateTextOnStepEndCallback',
+      isRequired: false,
+      description:
+        '在每个智能体步骤（LLM/工具调用）完成后调用的回调。可用于跟踪 token 用量或记录中间步骤。',
+    },
+    {
+      name: 'onStepFinish',
+      type: 'GenerateTextOnStepFinishCallback',
+      isRequired: false,
+      description:
+        '已弃用。请改用 `onStepEnd`。该别名仅在未提供 `onStepEnd` 时作为回退使用。',
+    },
+    {
+      name: 'onUIMessageStepEnd',
+      type: 'UIMessageStreamOnStepEndCallback',
+      isRequired: false,
+      description:
+        '在每个 UI 消息步骤组装完成后调用的回调。它接收 `messages`、`isContinuation` 和累积的 `responseMessage`，用于中间持久化。',
+    },
+    {
+      name: '...UIMessageStreamOptions',
+      type: 'UIMessageStreamOptions',
+      isRequired: false,
+      description:
+        '其他 UI 消息输出选项，包括消息 ID、元数据、最终回调、来源（source）和推理（reasoning）。',
+    },
+    {
+      name: 'headers',
+      type: 'HeadersInit',
+      isRequired: false,
+      description: '包含在 Response 对象中的可选 HTTP 请求头。',
+    },
+    {
+      name: 'status',
+      type: 'number',
+      isRequired: false,
+      description: '可选的 HTTP 状态码。',
+    },
+    {
+      name: 'statusText',
+      type: 'string',
+      isRequired: false,
+      description: '可选的 HTTP 状态文本。',
+    },
+    {
+      name: 'consumeSseStream',
+      type: '(options: { stream: ReadableStream<string> }) => PromiseLike<void> | void',
+      isRequired: false,
+      description:
+        '可选的 SSE 流消费函数。提供此函数时，它会以 SSE 流为参数被调用，由其负责消费。',
+    },
+  ]}
+/>
+
+## 返回值
+
+返回一个 `Promise<Response>`，其 `body` 是来自智能体的流式 UI 消息输出。可将其用作无服务器、Next.js、Express、Hono 或边缘运行时环境中 API/服务器处理函数的返回值。
+
+可使用 `onUIMessageStepEnd` 在每个智能体步骤之后持久化累积的 UI 响应。该回调会在对应的 `finish-step` 分块继续之前被等待完成。请使用幂等写入，并将模型输出、推理内容、工具输入和工具输出作为敏感对话数据加以保护。现有的 `onStepEnd` 回调仍然是底层生成回调，用于获取用量、结束原因和原始步骤细节。
+
+## 示例：Next.js API Route Handler
+
+```ts
+import { createAgentUIStreamResponse } from 'ai';
+import { MyCustomAgent } from '@/agent/my-custom-agent';
+
+export async function POST(request: Request) {
+  const { messages } = await request.json();
+
+  return createAgentUIStreamResponse({
+    agent: MyCustomAgent,
+    uiMessages: messages,
+    // experimental_sandbox, // optional
+    sendSources: true, // (optional)
+    // headers, status, abortSignal, and other UIMessageStreamOptions also supported
+  });
+}
+```
+
+## 工作原理
+
+- 1. **UI 消息校验**：根据智能体指定的工具和要求，校验传入的 `uiMessages` 数组。
+- 2. **模型消息转换**：将校验后的 UI 消息转换为智能体所需的内部模型消息格式。
+- 3. **流式输出智能体结果**：调用智能体的 `.stream({ prompt, ... })` 获得分块流（步骤/UI 消息），并透传 `experimental_sandbox` 等选项。
+- 4. **创建 HTTP 响应**：将输出流包装为可读的 HTTP `Response` 对象，向客户端流式传输 UI 消息分块。
+
+## 说明
+
+- 你的智能体**必须**实现 `.stream({ prompt, ... })` 并定义 `tools` 属性（即使只是 `{}`），才能与此函数配合使用。
+- **仅限服务端**：此 API 只应在后端/服务器端上下文中调用（API 路由、边缘/无服务器/服务器 Route Handler 等）。不可在浏览器中使用。
+- 当你的智能体工具在执行期间需要实验性沙箱环境时，请传入 `experimental_sandbox`。
+- 还有更多选项（`headers`、`status`、UI 流选项、转换等）可用于高级场景。
+- 此功能基于 [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)，因此你的平台/客户端必须支持 HTTP 流式消费。
+
+## 另请参阅
+
+- [`Agent`](/docs/reference/ai-sdk-core/agent)
+- [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent)
+- [`UIMessage`](/docs/reference/ai-sdk-core/ui-message)
+- [`createAgentUIStream`](/docs/reference/ai-sdk-core/create-agent-ui-stream)

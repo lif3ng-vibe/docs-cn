@@ -1,0 +1,78 @@
+---
+title: useChat 中助手消息重复
+description: 排查 useChat 搭配 streamText 使用时助手消息重复的问题
+---
+
+# Repeated assistant messages in useChat
+
+## 问题
+
+在服务器端将 `useChat` 与 `streamText` 一起使用时，助手的消息会在 UI 中出现重复——同时显示上一条消息和新消息，或者同一条消息显示多次。使用工具调用或复杂的消息流转时可能出现这种情况。
+
+```tsx
+// Server-side code that may experience assistant message duplication on the client
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-luna',
+    messages: await convertToModelMessages(messages),
+    tools: {
+      weather: {
+        description: 'Get the weather for a location',
+        inputSchema: z.object({
+          location: z.string(),
+        }),
+        execute: async ({ location }) => {
+          return { temperature: 72, condition: 'sunny' };
+        },
+      },
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+## 背景
+
+出现重复的原因是 UI 消息流会为每条新消息生成新的消息 ID。
+
+## 解决方案
+
+使用 `originalMessages` 选项将原始消息数组传递给 `toUIMessageStream`。传入 `originalMessages` 后，该辅助函数可以复用现有的消息 ID 而不是生成新的 ID，从而确保客户端正确更新已有消息，而不是创建重复消息。
+
+```tsx
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-luna',
+    messages: await convertToModelMessages(messages),
+    tools: {
+      weather: {
+        description: 'Get the weather for a location',
+        inputSchema: z.object({
+          location: z.string(),
+        }),
+        execute: async ({ location }) => {
+          return { temperature: 72, condition: 'sunny' };
+        },
+      },
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages, // Pass the original messages here
+      generateMessageId: generateId,
+      onEnd: ({ messages }) => {
+        saveChat({ id, messages });
+      },
+    }),
+  });
+}
+```

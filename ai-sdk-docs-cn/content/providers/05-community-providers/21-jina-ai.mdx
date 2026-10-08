@@ -1,0 +1,185 @@
+---
+title: Jina AI
+description: 了解如何使用 Jina AI 提供商。
+---
+
+# Jina AI 提供商
+
+[patelvivekdev/jina-ai-provider](https://github.com/patelvivekdev/jina-ai-provider) 是一个社区提供商，它使用 [Jina AI](https://jina.ai) 为 AI SDK 提供文本与多模态嵌入（embedding）支持。
+
+## 安装
+
+Jina 提供商包含在 `jina-ai-provider` 模块中，可通过以下方式安装：
+
+<InstallPackages packages="jina-ai-provider" />
+
+## 提供商实例
+
+你可以从 `jina-ai-provider` 导入默认的提供商实例 `jina`：
+
+```ts
+import { jina } from 'jina-ai-provider';
+```
+
+如果需要自定义配置，可以从 `jina-ai-provider` 导入 `createJina`，并使用你的设置创建提供商实例：
+
+```ts
+import { createJina } from 'jina-ai-provider';
+
+const customJina = createJina({
+  // custom settings
+});
+```
+
+你可以使用以下可选设置来自定义 Jina 提供商实例：
+
+- **baseURL** _string_
+
+  Jina API 的基础 URL。
+  默认前缀为 `https://api.jina.ai/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。
+  默认取 `JINA_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认为全局 `fetch` 函数。
+  可以将其用作中间件来拦截请求，
+  或提供自定义 fetch 实现（例如用于测试）。
+
+## 文本嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 Jina 文本嵌入 API 的模型。
+
+```ts
+import { jina } from 'jina-ai-provider';
+
+const embeddingModel = jina.embeddingModel('jina-embeddings-v3');
+```
+
+你可以搭配 `embed` 或 `embedMany` 函数使用 Jina 嵌入模型来生成嵌入：
+
+```ts
+import { jina } from 'jina-ai-provider';
+import { embedMany } from 'ai';
+
+const embeddingModel = jina.embeddingModel('jina-embeddings-v3');
+
+export const generateEmbeddings = async (
+  value: string,
+): Promise<Array<{ embedding: number[]; content: string }>> => {
+  const chunks = value.split('\n');
+
+  const { embeddings } = await embedMany({
+    model: embeddingModel,
+    values: chunks,
+    providerOptions: {
+      jina: {
+        inputType: 'retrieval.passage',
+      },
+    },
+  });
+
+  return embeddings.map((embedding, index) => ({
+    content: chunks[index]!,
+    embedding,
+  }));
+};
+```
+
+## 多模态嵌入
+
+你可以使用 `.multiModalEmbeddingModel()` 工厂方法创建调用 Jina 多模态（文本 + 图像）嵌入 API 的模型。
+
+```ts
+import { jina, type MultimodalEmbeddingInput } from 'jina-ai-provider';
+import { embedMany } from 'ai';
+
+const multimodalModel = jina.multiModalEmbeddingModel('jina-clip-v2');
+
+export const generateMultimodalEmbeddings = async () => {
+  const values: MultimodalEmbeddingInput[] = [
+    { text: 'A beautiful sunset over the beach' },
+    { image: 'https://i.ibb.co/r5w8hG8/beach2.jpg' },
+  ];
+
+  const { embeddings } = await embedMany<MultimodalEmbeddingInput>({
+    model: multimodalModel,
+    values,
+  });
+
+  return embeddings.map((embedding, index) => ({
+    content: values[index]!,
+    embedding,
+  }));
+};
+```
+
+<Note type="tip">
+  使用多模态嵌入时，可通过 `MultimodalEmbeddingInput` 类型确保类型安全。
+  你可以将 Base64 编码的图像以 Data URL 格式
+  `data:[mediatype];base64,<data>` 传给 `image` 属性。
+</Note>
+
+## 提供商选项
+
+通过 `providerOptions.jina` 传入 Jina 嵌入选项。支持以下选项：
+
+- **inputType** _'text-matching' | 'retrieval.query' | 'retrieval.passage' | 'separation' | 'classification'_
+
+  预期的下游应用场景，帮助模型生成更好的嵌入。默认为 `'retrieval.passage'`。
+  - `'retrieval.query'`：输入为搜索查询。
+  - `'retrieval.passage'`：输入为文档/段落。
+  - `'text-matching'`：用于语义文本相似度任务。
+  - `'classification'`：用于分类任务。
+  - `'separation'`：用于聚类任务。
+
+- **outputDimension** _number_
+
+  输出嵌入的维度数。有效范围请查看模型文档。
+  - `jina-embeddings-v3`：最小 32，最大 1024。
+  - `jina-clip-v2`：最小 64，最大 1024。
+  - `jina-clip-v1`：固定 768。
+
+- **embeddingType** _'float' | 'binary' | 'ubinary' | 'base64'_
+
+  返回嵌入的数据类型。
+
+- **normalized** _boolean_
+
+  是否对嵌入做 L2 归一化。默认为 `true`。
+
+- **truncate** _boolean_
+
+  是否截断超出模型上下文上限的输入而非报错。默认为 `false`。
+
+- **lateChunking** _boolean_
+
+  自动将长输入切分为 1024 token 的块。仅适用于文本嵌入模型。
+
+## 模型能力
+
+| 模型                 | 上下文长度（token）    | 嵌入维度            | 模态          |
+| -------------------- | ----------------------- | ------------------- | ------------- |
+| `jina-embeddings-v3` | 8,192                   | 1024                | 文本          |
+| `jina-clip-v2`       | 8,192                   | 1024                | 文本 + 图像   |
+| `jina-clip-v1`       | 8,192                   | 768                 | 文本 + 图像   |
+
+## 支持的输入格式
+
+### 文本嵌入
+
+- 字符串数组，例如：`const strings = ['text1', 'text2']`
+
+### 多模态嵌入
+
+- 文本对象：`const text = [{ text: 'Your text here' }]`
+- 图像对象：`const image = [{ image: 'https://example.com/image.jpg' }]` 或 Base64 数据 URL
+- 混合数组：`const mixed = [{ text: 'object text' }, { image: 'image-url' }, { image: 'data:image/jpeg;base64,...' }]`

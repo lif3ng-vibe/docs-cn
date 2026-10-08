@@ -1,0 +1,189 @@
+---
+title: 语音生成
+description: 了解如何使用 AI SDK 从文本生成语音。
+---
+
+# Speech
+
+AI SDK 提供 [`generateSpeech`](/docs/reference/ai-sdk-core/generate-speech)
+函数，用于使用语音模型从文本生成语音。
+
+```ts
+import { generateSpeech } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  voice: 'alloy',
+});
+```
+
+## 遥测
+
+`generateSpeech` 接受标准的 `telemetry` 选项。已注册的集成会收到开始、结束和
+错误事件，其中包含提供商与模型、源文本、生成的音频字节长度、媒体类型与格式、
+警告、响应元数据、提供商元数据，以及提供商有上报时的用量。原始生成的音频
+不包含在遥测事件中。
+
+```ts highlight="5-7"
+const result = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello from the AI SDK!',
+  telemetry: {
+    functionId: 'speak-greeting',
+  },
+});
+```
+
+当不希望遥测集成记录文本或输出元数据时，请使用 `recordInputs: false` 或
+`recordOutputs: false`。
+
+访问生成的音频：
+
+```ts
+const audioData = result.audio.uint8Array; // audio data as Uint8Array
+// or
+const audioBase64 = result.audio.base64; // audio data as base64 string
+```
+
+## 设置
+
+### 提供商特定设置
+
+你可以使用 `providerOptions` 参数设置模型特定的设置。
+
+```ts highlight="7-11"
+import { generateSpeech } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const audio = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  providerOptions: {
+    openai: {
+      // ...
+    },
+  },
+});
+```
+
+### 中止信号与超时
+
+`generateSpeech` 接受一个可选的 `abortSignal` 参数，类型为
+[`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)，
+你可以用它中止语音生成过程或设置超时。
+
+```ts highlight="7"
+import { openai } from '@ai-sdk/openai';
+import { generateSpeech } from 'ai';
+
+const audio = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  abortSignal: AbortSignal.timeout(1000), // Abort after 1 second
+});
+```
+
+### 自定义请求头
+
+`generateSpeech` 接受一个可选的 `headers` 参数，类型为 `Record<string, string>`，
+你可以用它向语音生成请求添加自定义请求头。
+
+```ts highlight="7"
+import { openai } from '@ai-sdk/openai';
+import { generateSpeech } from 'ai';
+
+const audio = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+  headers: { 'X-Custom-Header': 'custom-value' },
+});
+```
+
+### 警告
+
+警告（例如不支持的参数）可通过 `warnings` 属性获取。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateSpeech } from 'ai';
+
+const audio = await generateSpeech({
+  model: openai.speech('gpt-4o-mini-tts'),
+  text: 'Hello, world!',
+});
+
+const warnings = audio.warnings;
+```
+
+### 错误处理
+
+当 `generateSpeech` 无法生成有效音频时，会抛出 [`AI_NoSpeechGeneratedError`](/docs/reference/ai-sdk-errors/ai-no-speech-generated-error)。
+
+此错误可能由以下任一原因引起：
+
+- 模型未能生成响应
+- 模型生成的响应无法被解析
+
+该错误会保留以下信息，帮助你记录问题：
+
+- `responses`：语音模型响应的元数据，包括时间戳、模型和请求头。
+- `cause`：错误的原因。你可以用它进行更细致的错误处理。
+
+```ts
+import { generateSpeech, NoSpeechGeneratedError } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+try {
+  await generateSpeech({
+    model: openai.speech('gpt-4o-mini-tts'),
+    text: 'Hello, world!',
+  });
+} catch (error) {
+  if (NoSpeechGeneratedError.isInstance(error)) {
+    console.log('AI_NoSpeechGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Responses:', error.responses);
+  }
+}
+```
+
+## 语音模型
+
+| 提供商                                                                   | 模型                                |
+| ------------------------------------------------------------------------ | ----------------------------------- |
+| [OpenAI](/providers/ai-sdk-providers/openai#语音模型)               | `tts-1`                             |
+| [OpenAI](/providers/ai-sdk-providers/openai#语音模型)               | `tts-1-hd`                          |
+| [OpenAI](/providers/ai-sdk-providers/openai#语音模型)               | `gpt-4o-mini-tts`                   |
+| [Mistral](/providers/ai-sdk-providers/mistral#语音模型)             | `voxtral-mini-tts-2603`             |
+| [Azure Speech](/providers/ai-sdk-providers/azure#mai-voice)              | `mai-voice-2.1-flash`               |
+| [Azure Speech](/providers/ai-sdk-providers/azure#mai-voice)              | `mai-voice-2.1`                     |
+| [Azure Speech](/providers/ai-sdk-providers/azure#mai-voice)              | `mai-voice-2-flash`                 |
+| [Azure Speech](/providers/ai-sdk-providers/azure#mai-voice)              | `mai-voice-2`                       |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_v3`                         |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_multilingual_v2`            |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_flash_v2_5`                 |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_flash_v2`                   |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_turbo_v2_5`                 |
+| [ElevenLabs](/providers/ai-sdk-providers/elevenlabs#语音模型)       | `eleven_turbo_v2`                   |
+| [Hume](/providers/ai-sdk-providers/hume#语音模型)                   | `default`                           |
+| [Google](/providers/ai-sdk-providers/google#语音模型)               | `gemini-2.5-flash-preview-tts`      |
+| [Google](/providers/ai-sdk-providers/google#语音模型)               | `gemini-2.5-pro-preview-tts`        |
+| [Google](/providers/ai-sdk-providers/google#语音模型)               | `gemini-3.1-flash-tts-preview`      |
+| [Google](/providers/ai-sdk-providers/google#语音模型)               | `gemini-3.8-flash-tts`              |
+| [Google](/providers/ai-sdk-providers/google#语音模型)               | `gemini-3.8-flash-lite-tts`         |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#语音模型) | `gemini-2.5-flash-tts`              |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#语音模型) | `gemini-2.5-pro-tts`                |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#语音模型) | `gemini-2.5-flash-lite-preview-tts` |
+| [Google Vertex](/providers/ai-sdk-providers/google-vertex#语音模型) | `gemini-3.1-flash-tts-preview`      |
+| [xAI](/providers/ai-sdk-providers/xai#语音模型)                     | `default`                           |
+| [Cartesia](/providers/ai-sdk-providers/cartesia#语音模型)           | `sonic-3.5`                         |
+| [Cartesia](/providers/ai-sdk-providers/cartesia#语音模型)           | `sonic-3`                           |
+| [Cartesia](/providers/ai-sdk-providers/cartesia#语音模型)           | `sonic-2`                           |
+| [Cartesia](/providers/ai-sdk-providers/cartesia#语音模型)           | `sonic-turbo`                       |
+| [Fish Audio](/providers/ai-sdk-providers/fish-audio#语音模型)       | `s1`                                |
+| [Fish Audio](/providers/ai-sdk-providers/fish-audio#语音模型)       | `s2-pro`                            |
+| [Fish Audio](/providers/ai-sdk-providers/fish-audio#语音模型)       | `s2.1-pro`                          |
+
+以上仅是 AI SDK 各提供商所支持的语音模型中的一小部分。更多模型请参阅相应提供商的文档。

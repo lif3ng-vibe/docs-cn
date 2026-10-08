@@ -1,0 +1,268 @@
+---
+title: Replicate
+description: 了解如何在 AI SDK 中使用 Replicate 的模型。
+---
+
+# Replicate 提供商
+
+[Replicate](https://replicate.com/) 是一个运行开源 AI 模型的平台。
+它是运行图像生成模型的热门选择。
+
+## 安装
+
+Replicate 提供商包含在 `@ai-sdk/replicate` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/replicate" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/replicate` 导入默认提供商实例 `replicate`：
+
+```ts
+import { replicate } from '@ai-sdk/replicate';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/replicate` 导入 `createReplicate`，
+并使用你的设置创建提供商实例：
+
+```ts
+import { createReplicate } from '@ai-sdk/replicate';
+
+const replicate = createReplicate({
+  apiToken: process.env.REPLICATE_API_TOKEN ?? '',
+});
+```
+
+你可以使用以下可选设置来定制 Replicate 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.replicate.com/v1`。
+
+- **apiToken** _string_
+
+  通过 `Authorization` 请求头发送的 API token。默认取
+  `REPLICATE_API_TOKEN` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建 Replicate 图像模型。
+有关使用 AI SDK 进行图像生成的更多信息，请参见 [generateImage()](/docs/reference/ai-sdk-core/generate-image)。
+
+<Note>
+  各模型对 `size` 和其他参数的支持情况不一。受支持的选项以及可通过
+  `providerOptions.replicate` 传入的额外参数，请查看
+  [Replicate](https://replicate.com/explore) 上该模型的文档。
+</Note>
+
+### 支持的图像模型
+
+Replicate 提供商目前支持以下图像模型：
+
+**文生图模型：**
+
+- [black-forest-labs/flux-1.1-pro-ultra](https://replicate.com/black-forest-labs/flux-1.1-pro-ultra)
+- [black-forest-labs/flux-1.1-pro](https://replicate.com/black-forest-labs/flux-1.1-pro)
+- [black-forest-labs/flux-dev](https://replicate.com/black-forest-labs/flux-dev)
+- [black-forest-labs/flux-pro](https://replicate.com/black-forest-labs/flux-pro)
+- [black-forest-labs/flux-schnell](https://replicate.com/black-forest-labs/flux-schnell)
+- [bytedance/sdxl-lightning-4step](https://replicate.com/bytedance/sdxl-lightning-4step)
+- [fofr/aura-flow](https://replicate.com/fofr/aura-flow)
+- [fofr/latent-consistency-model](https://replicate.com/fofr/latent-consistency-model)
+- [fofr/realvisxl-v3-multi-controlnet-lora](https://replicate.com/fofr/realvisxl-v3-multi-controlnet-lora)
+- [fofr/sdxl-emoji](https://replicate.com/fofr/sdxl-emoji)
+- [fofr/sdxl-multi-controlnet-lora](https://replicate.com/fofr/sdxl-multi-controlnet-lora)
+- [ideogram-ai/ideogram-v2-turbo](https://replicate.com/ideogram-ai/ideogram-v2-turbo)
+- [ideogram-ai/ideogram-v2](https://replicate.com/ideogram-ai/ideogram-v2)
+- [lucataco/dreamshaper-xl-turbo](https://replicate.com/lucataco/dreamshaper-xl-turbo)
+- [lucataco/open-dalle-v1.1](https://replicate.com/lucataco/open-dalle-v1.1)
+- [lucataco/realvisxl-v2.0](https://replicate.com/lucataco/realvisxl-v2.0)
+- [lucataco/realvisxl2-lcm](https://replicate.com/lucataco/realvisxl2-lcm)
+- [luma/photon-flash](https://replicate.com/luma/photon-flash)
+- [luma/photon](https://replicate.com/luma/photon)
+- [nvidia/sana](https://replicate.com/nvidia/sana)
+- [playgroundai/playground-v2.5-1024px-aesthetic](https://replicate.com/playgroundai/playground-v2.5-1024px-aesthetic)
+- [recraft-ai/recraft-v3-svg](https://replicate.com/recraft-ai/recraft-v3-svg)
+- [recraft-ai/recraft-v3](https://replicate.com/recraft-ai/recraft-v3)
+- [stability-ai/stable-diffusion-3.5-large-turbo](https://replicate.com/stability-ai/stable-diffusion-3.5-large-turbo)
+- [stability-ai/stable-diffusion-3.5-large](https://replicate.com/stability-ai/stable-diffusion-3.5-large)
+- [stability-ai/stable-diffusion-3.5-medium](https://replicate.com/stability-ai/stable-diffusion-3.5-medium)
+- [tstramer/material-diffusion](https://replicate.com/tstramer/material-diffusion)
+
+**局部重绘与图像编辑模型：**
+
+- [black-forest-labs/flux-fill-pro](https://replicate.com/black-forest-labs/flux-fill-pro)
+- [black-forest-labs/flux-fill-dev](https://replicate.com/black-forest-labs/flux-fill-dev)
+
+**Flux-2 模型**（多参考图像生成）：
+
+这些模型支持最多 8 张输入参考图像，用于风格迁移与组合生成：
+
+- [black-forest-labs/flux-2-pro](https://replicate.com/black-forest-labs/flux-2-pro)
+- [black-forest-labs/flux-2-dev](https://replicate.com/black-forest-labs/flux-2-dev)
+
+你也可以使用[版本化模型](https://replicate.com/docs/topics/models/versions)。
+版本化模型的 ID 是 Replicate 模型 ID 后跟一个冒号和版本 ID（`$modelId:$versionId`），例如
+`bytedance/sdxl-lightning-4step:5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637`。
+
+<Note>
+  如有需要，你也可以将任何可用的 Replicate 模型 ID 以字符串形式传入。
+</Note>
+
+### 基本用法
+
+```ts
+import { replicate } from '@ai-sdk/replicate';
+import { generateImage } from 'ai';
+import { writeFile } from 'node:fs/promises';
+
+const { image } = await generateImage({
+  model: replicate.image('black-forest-labs/flux-schnell'),
+  prompt: 'The Loch Ness Monster getting a manicure',
+  aspectRatio: '16:9',
+});
+
+await writeFile('image.webp', image.uint8Array);
+
+console.log('Image saved as image.webp');
+```
+
+### 模型特定选项
+
+```ts highlight="9-11"
+import { replicate, type ReplicateImageModelOptions } from '@ai-sdk/replicate';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: replicate.image('recraft-ai/recraft-v3'),
+  prompt: 'The Loch Ness Monster getting a manicure',
+  size: '1365x1024',
+  providerOptions: {
+    replicate: {
+      style: 'realistic_image',
+    } satisfies ReplicateImageModelOptions,
+  },
+});
+```
+
+### 版本化模型
+
+```ts
+import { replicate } from '@ai-sdk/replicate';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: replicate.image(
+    'bytedance/sdxl-lightning-4step:5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637',
+  ),
+  prompt: 'The Loch Ness Monster getting a manicure',
+});
+```
+
+### 图像编辑
+
+Replicate 通过多种模型支持图像编辑。通过 `prompt.images` 传入输入图像，即可对现有图像进行变换或编辑。
+
+#### 基本图像编辑
+
+使用文本提示词变换现有图像：
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: replicate.image('black-forest-labs/flux-fill-dev'),
+  prompt: {
+    text: 'Turn the cat into a golden retriever dog',
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    replicate: {
+      guidance_scale: 7.5,
+      num_inference_steps: 30,
+    } satisfies ReplicateImageModelOptions,
+  },
+});
+```
+
+#### 使用遮罩进行局部重绘
+
+使用遮罩编辑图像的特定部分。对于 FLUX Fill 模型，遮罩中的白色区域表示需要编辑的部分：
+
+```ts
+const image = readFileSync('./input-image.png');
+const mask = readFileSync('./mask.png'); // White = inpaint, black = keep
+
+const { images } = await generateImage({
+  model: replicate.image('black-forest-labs/flux-fill-pro'),
+  prompt: {
+    text: 'A sunlit indoor lounge area with a pool containing a flamingo',
+    images: [image],
+    mask: mask,
+  },
+  providerOptions: {
+    replicate: {
+      guidance_scale: 7.5,
+      num_inference_steps: 30,
+    } satisfies ReplicateImageModelOptions,
+  },
+});
+```
+
+#### 多参考图像生成（Flux-2）
+
+Flux-2 模型支持最多 8 张输入参考图像，用于风格迁移、组合生成和多主体生成：
+
+```ts
+import { replicate } from '@ai-sdk/replicate';
+import { generateImage } from 'ai';
+
+const reference1 = readFileSync('./style-reference.png');
+const reference2 = readFileSync('./subject-reference.png');
+
+const { images } = await generateImage({
+  model: replicate.image('black-forest-labs/flux-2-pro'),
+  prompt: {
+    text: 'Combine the style and subjects from the reference images',
+    images: [reference1, reference2],
+  },
+});
+```
+
+<Note>
+  Flux-2 模型内部使用不同的输入格式（`input_image`、
+  `input_image_2` 等），这会自动处理。注意 Flux-2 模型
+  不支持基于遮罩的局部重绘。
+</Note>
+
+<Note>
+  输入图像可以是 `Buffer`、`ArrayBuffer`、`Uint8Array` 或
+  base64 编码的字符串。不同的 Replicate 模型有不同的参数
+  名称和能力——详情请查看
+  [Replicate](https://replicate.com/explore) 上该模型的文档。
+</Note>
+
+### 提供商选项
+
+图像生成的常用提供商选项：
+
+- **maxWaitTimeInSeconds** _number_ - 同步模式下等待预测完成的最长时间（秒）。默认情况下，Replicate 使用 60 秒超时的[同步模式](https://replicate.com/docs/topics/predictions/create-a-prediction#timeout-duration)。设为正数可使用自定义时长（例如 `120` 表示 2 分钟）。未指定时使用默认的 60 秒等待。
+- **pollIntervalMillis** _number_ - 预测未在同步等待时长内完成时，轮询尝试之间的间隔（毫秒）。默认为 500 毫秒。
+- **maxPollAttempts** _number_ - 放弃前的最大轮询次数。默认为 240 次。
+- **guidance_scale** _number_ - 免分类器引导（classifier-free guidance）的引导强度。值越高，输出与提示词越贴合。
+- **num_inference_steps** _number_ - 去噪步数。步数越多 = 质量越高但速度越慢。
+- **negative_prompt** _string_ - 用于指导生成中要避免什么的负向提示词。
+- **output_format** _'png' | 'jpg' | 'webp'_ - 输出图像格式。
+- **output_quality** _number (1-100)_ - 输出图像质量。仅适用于 jpg 和 webp。
+- **strength** _number (0-1)_ - img2img 的变换强度。值越低，保留的原图内容越多。
+
+更多细节请参见 [Replicate 模型页面](https://replicate.com/explore)。

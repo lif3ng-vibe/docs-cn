@@ -1,0 +1,69 @@
+---
+title: getMutableAIState
+description: AI SDK RSC 中 getMutableAIState 函数的参考文档
+---
+
+# `getMutableAIState`
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+获取 AI 状态的可变副本。可以用它在服务器端更新状态。
+
+## 导入
+
+<Snippet
+  text={`import { getMutableAIState } from "@ai-sdk/rsc"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'key',
+      isOptional: true,
+      type: 'string',
+      description:
+        '返回 AI 状态中指定键对应的值（前提是它是对象）。',
+    },
+  ]}
+/>
+
+### 返回值
+
+可变的 AI 状态。
+
+### 方法
+
+<PropertiesTable
+  content={[
+    {
+      name: 'update',
+      type: '(newState: any) => void',
+      description: '用新状态更新 AI 状态。',
+    },
+    {
+      name: 'done',
+      type: '(newState: any) => void',
+      description:
+        '用新状态更新 AI 状态，将其标记为已完成并关闭流。',
+    },
+  ]}
+/>
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title: '学习如何在 Next.js 中持久化并恢复 AI 状态与 UI 状态',
+      link: '/examples/next-app/state-management/save-and-restore-states',
+    },
+  ]}
+/>

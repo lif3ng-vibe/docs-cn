@@ -1,0 +1,211 @@
+---
+title: Arize AX
+description: 使用 Arize AX 追踪、监控并评估 LLM 应用
+---
+
+# Arize AX 可观测性
+
+[Arize AX](https://arize.com/docs/ax) 是一个企业级的可观测性、评估与实验平台，专为智能体（agent）与复杂 AI 系统打造。它帮助团队严谨地开发和改进真实场景中的 AI 应用。
+
+<Note>
+  你也可以在
+  [Arize AX
+  文档](https://arize.com/docs/ax/integrations/ts-js-agent-frameworks/vercel)中找到本指南。
+</Note>
+
+## 安装
+
+Arize AX 提供一流的 OpenTelemetry 集成，在 Next.js 与 Node.js 环境中均可直接与 AI SDK 配合使用。
+
+<Note>
+  Arize AX 提供
+  [OpenInferenceSimpleSpanProcessor](https://github.com/Arize-ai/openinference/blob/main/js/packages/openinference-vercel/src/OpenInferenceSpanProcessor.ts#L32)
+  与
+  [OpenInferenceBatchSpanProcessor](https://github.com/Arize-ai/openinference/blob/main/js/packages/openinference-vercel/src/OpenInferenceSpanProcessor.ts#L86)。
+  下方所有示例既可以搭配 simple 处理器，也可以搭配 batch 处理器使用。有关 simple / batch span 处理器的更多信息，请参阅我们的
+  [文档](https://arize.com/docs/ax/observe/tracing/configure/batch-vs-simple-span-processor#batch-vs-simple-span-processor)。
+</Note>
+
+### Next.js
+
+在 Next.js 应用中，可以配合 `@vercel/otel` 的 `registerOtel` 使用任一 OpenInference span 处理器。
+
+首先，安装 AI SDK、OpenTelemetry 与 OpenInference 所需的依赖。
+
+```bash
+npm install ai @ai-sdk/openai @ai-sdk/otel @vercel/otel @arizeai/openinference-vercel @opentelemetry/exporter-trace-otlp-proto
+```
+
+然后，在你的 `instrumentation.ts` 文件中加入以下内容，包括 AI SDK 遥测（telemetry）集成注册：
+
+```typescript filename="instrumentation"
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { registerOTel } from '@vercel/otel';
+import {
+  isOpenInferenceSpan,
+  OpenInferenceSimpleSpanProcessor,
+} from '@arizeai/openinference-vercel';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+
+registerTelemetry(new LegacyOpenTelemetry());
+
+export function register() {
+  registerOTel({
+    attributes: {
+      model_id: 'my-ai-app',
+      model_version: '1.0.0',
+    },
+    spanProcessors: [
+      new OpenInferenceSimpleSpanProcessor({
+        exporter: new OTLPTraceExporter({
+          url: 'https://otlp.arize.com/v1/traces',
+          headers: {
+            space_id: process.env.ARIZE_SPACE_ID,
+            api_key: process.env.ARIZE_API_KEY,
+          },
+        }),
+        // Optionally add a span filter to only include AI related spans
+        spanFilter: isOpenInferenceSpan,
+      }),
+    ],
+  });
+}
+```
+
+span 会出现在 Arize AX 中，归属于上面 `model_id` 字段所指定的项目。
+
+集成注册完成后，所有 AI SDK 调用都会自动发出遥测数据：
+
+```typescript
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Please write a haiku.',
+});
+```
+
+### Node.js
+
+在 Node.js 中，你可以使用 `NodeSDK` 或 `NodeTraceProvider`。
+
+#### NodeSDK
+
+首先，安装 AI SDK、OpenTelemetry 与 OpenInference 所需的依赖。
+
+```bash
+npm install ai @ai-sdk/openai @ai-sdk/otel @opentelemetry/sdk-node @arizeai/openinference-vercel @opentelemetry/exporter-trace-otlp-proto @opentelemetry/resources
+```
+
+然后，在你的 instrumentation.ts 文件中加入以下内容：
+
+```typescript
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import {
+  isOpenInferenceSpan,
+  OpenInferenceSimpleSpanProcessor,
+} from '@arizeai/openinference-vercel';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+
+const sdk = new NodeSDK({
+  resource: resourceFromAttributes({
+    model_id: 'my-ai-app',
+    model_version: '1.0.0',
+  }),
+  spanProcessors: [
+    new OpenInferenceSimpleSpanProcessor({
+      exporter: new OTLPTraceExporter({
+        url: 'https://otlp.arize.com/v1/traces',
+        headers: {
+          space_id: process.env.ARIZE_SPACE_ID,
+          api_key: process.env.ARIZE_API_KEY,
+        },
+      }),
+      spanFilter: isOpenInferenceSpan,
+    }),
+  ],
+});
+
+sdk.start();
+registerTelemetry(new LegacyOpenTelemetry());
+```
+
+span 会出现在 Arize AX 中，归属于上面 `model_id` 字段所指定的项目。
+
+集成注册完成后，所有 AI SDK 调用都会自动发出遥测数据：
+
+```typescript
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Please write a haiku.',
+});
+```
+
+#### NodeTraceProvider
+
+首先，安装 AI SDK、OpenTelemetry 与 OpenInference 所需的依赖。
+
+```bash
+npm install ai @ai-sdk/openai @ai-sdk/otel @opentelemetry/sdk-trace-node @arizeai/openinference-vercel @opentelemetry/exporter-trace-otlp-proto @opentelemetry/resources
+```
+
+然后，在你的 instrumentation.ts 文件中加入以下内容：
+
+```typescript
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import {
+  isOpenInferenceSpan,
+  OpenInferenceSimpleSpanProcessor,
+} from '@arizeai/openinference-vercel';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+
+const provider = new NodeTracerProvider({
+  resource: resourceFromAttributes({
+    model_id: 'my-ai-app',
+    model_version: '1.0.0',
+  }),
+  spanProcessors: [
+    new OpenInferenceSimpleSpanProcessor({
+      exporter: new OTLPTraceExporter({
+        url: 'https://otlp.arize.com/v1/traces',
+        headers: {
+          space_id: process.env.ARIZE_SPACE_ID,
+          api_key: process.env.ARIZE_API_KEY,
+        },
+      }),
+      spanFilter: isOpenInferenceSpan,
+    }),
+  ],
+});
+provider.register();
+registerTelemetry(new LegacyOpenTelemetry());
+```
+
+span 会出现在 Arize AX 中，归属于上面 `model_id` 字段所指定的项目。
+
+集成注册完成后，所有 AI SDK 调用都会自动发出遥测数据：
+
+```typescript
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Please write a haiku.',
+});
+```
+
+## 资源
+
+将 span 发送到你的 Arize AX 项目后，可以了解其他功能：
+
+- 在[提示词演练场](https://arize.com/docs/ax/prompts/prompt-playground)中重跑 span，以迭代并比较提示词与参数
+- 将 span 添加到[数据集](https://arize.com/docs/ax/develop/datasets)中，用于评估与开发工作流
+- 对传入的 span 持续运行[在线评估](https://arize.com/docs/ax/evaluate/online-evals)，以了解应用性能
+
+AX 提供一个用于管理数据集与评估的 [TypeScript 客户端](https://www.npmjs.com/package/@arizeai/ax-client)。

@@ -1,0 +1,41 @@
+---
+title: 使用图像提示词进行流式生成
+description: 了解如何在 Node 中结合 AI SDK 使用图像提示词进行文本流式生成
+tags: ['node', 'streaming', 'multimodal']
+---
+
+# Stream Text with Image Prompt
+
+视觉语言模型可以在分析文本提示词（prompt）的同时分析图像，从而生成关于视觉内容的响应。这种多模态（multimodal）方式支持丰富的交互：你可以就图像提问、请求描述或分析视觉细节。图像与文本输入的结合使得视觉问答、图像分析等更复杂的 AI 应用成为可能。
+
+```ts
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import fs from 'node:fs';
+
+async function main() {
+  const result = streamText({
+    model: __MODEL__,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Describe the image in detail.' },
+          {
+            type: 'file',
+            mediaType: 'image',
+            data: fs.readFileSync('./data/comic-cat.png'),
+          },
+        ],
+      },
+    ],
+  });
+
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
+  }
+}
+
+main().catch(console.error);
+```

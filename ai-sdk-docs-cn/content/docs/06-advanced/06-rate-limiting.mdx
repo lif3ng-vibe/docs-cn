@@ -1,0 +1,59 @@
+---
+title: 速率限制
+description: 学习如何为你的应用添加速率限制。
+---
+
+# Rate Limiting
+
+速率限制（rate limiting）帮助你保护 API 免受滥用。它通过为客户端在指定时间段内可发起的请求数量设置上限来发挥作用。这一简单技术如同守门人，防止过度使用导致服务性能下降并产生不必要的成本。
+
+## 使用 Upstash Redis 和 Upstash Ratelimit 进行速率限制
+
+在本示例中，你将使用 [Upstash Redis](https://upstash.com/redis) 和 [Upstash Ratelimit](https://github.com/upstash/ratelimit) 来保护一个 API 端点。
+
+```tsx filename='app/api/generate/route.ts'
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+import { NextRequest } from 'next/server';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+// Create Rate limit
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.fixedWindow(5, '30s'),
+});
+
+export async function POST(req: NextRequest) {
+  // call ratelimit with request ip
+  const ip = req.ip ?? 'ip';
+  const { success, remaining } = await ratelimit.limit(ip);
+
+  // block the request if unsuccessful
+  if (!success) {
+    return new Response('Ratelimited!', { status: 429 });
+  }
+
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+## 简化 API 防护
+
+借助 Upstash Redis 和 Upstash Ratelimit，你可以轻松保护 API 免受此类攻击。要进一步了解 Ratelimit 的工作原理以及如何按需进行配置，请参阅 [Ratelimit 文档](https://upstash.com/docs/oss/sdks/ts/ratelimit/overview)。

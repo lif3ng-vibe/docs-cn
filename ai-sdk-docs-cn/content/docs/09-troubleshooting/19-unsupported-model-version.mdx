@@ -1,0 +1,50 @@
+---
+title: 模型版本不受支持的错误
+description: 排查迁移到 AI SDK 5 时的 AI_UnsupportedModelVersionError
+---
+
+# Unsupported model version error
+
+## 问题
+
+迁移到 AI SDK 5 时，你可能会遇到一个错误，提示你的模型使用了不受支持的版本：
+
+```
+AI_UnsupportedModelVersionError: Unsupported model version v1 for provider "ollama.chat" and model "gamma3:4b".
+AI SDK 5 only supports models that implement specification version "v2".
+```
+
+这个错误的原因是你所使用的提供商（provider）包实现的是较旧的（v1）模型规范。
+
+## 背景
+
+AI SDK 5 要求所有提供商包实现规范版本 "v2"。当你升级到 AI SDK 5 但没有把提供商包更新到兼容版本时，它们会继续使用较旧的 "v1" 规范，从而引发此错误。
+
+## 解决方案
+
+### 将提供商包更新到与 AI SDK 5 兼容的版本
+
+把所有 `@ai-sdk/*` 提供商包更新到兼容版本 `2.0.0` 或更高。这些版本实现了 AI SDK 5 所要求的 v2 规范。
+
+```bash
+pnpm install ai@latest @ai-sdk/openai@latest @ai-sdk/anthropic@latest
+```
+
+要与 AI SDK 5 兼容，你需要：
+
+- `ai` 包：`5.0.0` 或更高
+- `@ai-sdk/*` 包：`2.0.0` 或更高（例如 `@ai-sdk/openai`、`@ai-sdk/anthropic`、`@ai-sdk/google`）
+- `@ai-sdk/provider` 包：`2.0.0` 或更高
+- `zod` 包：`4.1.8` 或更高
+
+### 检查提供商兼容性
+
+如果你使用的是第三方或自定义提供商，请确认它已更新以支持 AI SDK 5。并非所有提供商都已提供兼容 v2 的版本。
+
+检查某个提供商是否支持 AI SDK 5 的方法：
+
+1. 查看该提供商 package.json 中 `@ai-sdk/provider` peer 依赖版本是否为 `2.0.0` 或更高
+2. 查阅该提供商的 changelog 或迁移指南
+3. 查看该提供商的代码仓库是否声明支持 AI SDK 5
+
+关于迁移到 AI SDK 5 的更多信息，请参阅 [AI SDK 5.0 迁移指南](/docs/migration-guides/migration-guide-5-0)。

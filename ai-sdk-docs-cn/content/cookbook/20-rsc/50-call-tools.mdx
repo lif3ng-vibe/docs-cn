@@ -1,0 +1,131 @@
+---
+title: 调用工具
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）调用工具。
+tags: ['rsc', 'tool use']
+---
+
+# Call Tools
+
+一些模型允许开发者提供一份可在生成过程中随时调用的工具列表。这对于扩展语言模型的能力很有用，可以让模型借助逻辑或数据与模型之外的系统交互。
+
+<Browser>
+  <ChatGeneration
+    history={[
+      { role: 'User', content: '最近怎么样？' },
+      { role: 'Assistant', content: '一切都好，有什么可以帮你？' },
+    ]}
+    inputMessage={{
+      role: 'User',
+      content: '24 摄氏度等于多少华氏度？',
+    }}
+    outputMessage={{
+      role: 'Assistant',
+      content: '24°C 等于 75.20°F',
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来创建一个用户与模型之间的简单对话，并放置一个调用 `continueConversation` 的按钮。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { Message, continueConversation } from './actions';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [conversation, setConversation] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>('');
+
+  return (
+    <div>
+      <div>
+        {conversation.map((message, index) => (
+          <div key={index}>
+            {message.role}: {message.content}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button
+          onClick={async () => {
+            const { messages } = await continueConversation([
+              ...conversation,
+              { role: 'user', content: input },
+            ]);
+
+            setConversation(messages);
+          }}
+        >
+          Send Message
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+接下来，我们实现 `continueConversation` action，它使用 `generateText` 生成对用户问题的响应。我们将使用 [`tools`](/docs/reference/ai-sdk-core/generate-text#tools) 参数来指定一个名为 `celsiusToFahrenheit` 的自定义函数，用于将用户输入的摄氏度值转换为华氏度。
+
+我们将使用 zod 来指定 `celsiusToFahrenheit` 函数参数的 schema。
+
+```tsx filename='app/actions.ts'
+'use server';
+
+import { generateText } from 'ai';
+import { z } from 'zod';
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export async function continueConversation(history: Message[]) {
+  'use server';
+
+  const { text, toolResults } = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a friendly assistant!',
+    messages: history,
+    tools: {
+      celsiusToFahrenheit: {
+        description: 'Converts celsius to fahrenheit',
+        inputSchema: z.object({
+          value: z.string().describe('The value in celsius'),
+        }),
+        execute: async ({ value }) => {
+          const celsius = parseFloat(value);
+          const fahrenheit = celsius * (9 / 5) + 32;
+          return `${celsius}°C is ${fahrenheit.toFixed(2)}°F`;
+        },
+      },
+    },
+  });
+
+  return {
+    messages: [
+      ...history,
+      {
+        role: 'assistant' as const,
+        content:
+          text || toolResults.map(toolResult => toolResult.result).join('\n'),
+      },
+    ],
+  };
+}
+```

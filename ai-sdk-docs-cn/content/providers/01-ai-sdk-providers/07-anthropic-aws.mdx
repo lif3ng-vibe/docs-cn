@@ -1,0 +1,138 @@
+---
+title: Claude Platform on AWS
+description: 了解如何使用 Claude Platform on AWS 提供商。
+---
+
+# Claude Platform on AWS 提供商
+
+面向 [AI SDK](/docs) 的 Claude Platform on AWS 提供商让你可以访问托管在 AWS 环境中的 Anthropic Messages API。该技术栈由 Anthropic 运营，因此你能获得与第一方 [Anthropic 提供商](/providers/ai-sdk-providers/anthropic) 相同的 API 面与功能集——包括流式、提示词缓存、工具使用、计算机使用、Agent Skills 以及 `anthropic-beta` 请求头——同时使用 AWS 原生身份验证和 AWS Marketplace 计费。
+
+它在两个重要方面与 [Amazon Bedrock](/providers/ai-sdk-providers/amazon-bedrock) 不同：Claude Platform on AWS 直接使用 Anthropic 的 Messages API（而非 Bedrock 的 `Converse`/`InvokeModel`），并且新功能在第一方 Claude API 上发布的当天即可使用（没有 AWS 集成延迟）。
+
+## 安装
+
+Claude Platform on AWS 提供商包含在 `@ai-sdk/anthropic-aws` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/anthropic-aws" />
+
+### 前置条件
+
+在使用该提供商之前，你的 AWS 账户必须已通过 AWS Marketplace 订阅 Claude Platform on AWS，并且账户上必须启用出站 Web 身份联合（outbound web identity federation）（这是一次性设置步骤）：
+
+```bash
+aws iam enable-outbound-web-identity-federation
+```
+
+否则，每个请求都会返回 `Outbound web identity federation is disabled for your account`。这是最常见的设置错误。
+
+你还需要 workspace ID。订阅时，AWS 会在所选区域为你的账户预置一个初始工作区（workspace）。你可以在 Claude Console 的 **Workspaces** 下找到该 ID（从 AWS Console 通过 Claude Platform on AWS 服务页面进入）。
+
+### 身份验证
+
+该提供商支持两种身份验证方式：
+
+#### 使用 AWS SigV4（生产环境推荐）
+
+SigV4 与你现有的 AWS IAM 策略、角色和审计集成。可使用 AWS 默认凭证提供程序链支持的任何方式配置 AWS 凭证——环境变量、共享凭证文件、Web 身份（IRSA）、ECS 容器凭证或 EC2 实例元数据。
+
+```bash
+AWS_REGION=us-west-2
+ANTHROPIC_AWS_WORKSPACE_ID=wrkspc_…
+AWS_ACCESS_KEY_ID=…
+AWS_SECRET_ACCESS_KEY=…
+# AWS_SESSION_TOKEN=…  # only for temporary credentials (SSO, STS, assumed role)
+```
+
+然后使用默认的提供商实例：
+
+```ts
+import { anthropicAws } from '@ai-sdk/anthropic-aws';
+```
+
+或者显式实例化：
+
+```ts
+import { createAnthropicAws } from '@ai-sdk/anthropic-aws';
+
+const anthropicAws = createAnthropicAws({
+  region: 'us-west-2',
+  workspaceId: 'wrkspc_…',
+});
+```
+
+对于动态凭证（例如在请求时担任角色）：
+
+```ts
+const anthropicAws = createAnthropicAws({
+  region: 'us-west-2',
+  workspaceId: 'wrkspc_…',
+  credentialProvider: async () => fetchCredentialsFromSTS(),
+});
+```
+
+#### 使用 API 密钥
+
+对于更简单的集成路径（本地开发、脚本、从第一方 Claude API 迁移），你可以使用 API 密钥而非 SigV4 进行身份验证。Claude Platform on AWS 的 API 密钥由你的 Anthropic 客户代表提供。
+
+```bash
+ANTHROPIC_AWS_API_KEY=sk-…
+```
+
+设置了 `apiKey` 时，它的优先级高于环境中的任何 SigV4 凭证。
+
+```ts
+import { createAnthropicAws } from '@ai-sdk/anthropic-aws';
+
+const anthropicAws = createAnthropicAws({
+  region: 'us-west-2',
+  workspaceId: 'wrkspc_…',
+  apiKey: 'sk-…',
+});
+```
+
+### 提供商设置
+
+| 设置                 | 说明                                                                                                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `region`             | Claude Platform on AWS 端点所在的 AWS 区域。省略时读取 `AWS_REGION`。必填——没有回退默认值。                                                                       |
+| `workspaceId`        | 此 AWS 账户的 Anthropic workspace ID。每次请求都通过 `anthropic-workspace-id` 请求头发送。省略时读取 `ANTHROPIC_AWS_WORKSPACE_ID`。                                |
+| `apiKey`             | 用于 `x-api-key` 身份验证的 API 密钥。提供时将替代 SigV4 使用。省略时读取 `ANTHROPIC_AWS_API_KEY`。                                                                |
+| `accessKeyId`        | SigV4 使用的 AWS access key ID。读取 `AWS_ACCESS_KEY_ID`。                                                                                                       |
+| `secretAccessKey`    | SigV4 使用的 AWS secret access key。读取 `AWS_SECRET_ACCESS_KEY`。                                                                                               |
+| `sessionToken`       | SigV4 使用的 AWS session token（仅限临时凭证）。读取 `AWS_SESSION_TOKEN`。                                                                                       |
+| `baseURL`            | 覆盖基础 URL。默认为 `https://aws-external-anthropic.{region}.api.aws/v1`。                                                                                      |
+| `headers`            | 每个请求都要包含的自定义请求头。                                                                                                                                 |
+| `fetch`              | 用于测试或中间件的自定义 fetch 实现。                                                                                                                            |
+| `credentialProvider` | 返回动态 AWS 凭证的函数。会覆盖 `accessKeyId`、`secretAccessKey` 和 `sessionToken`。                                                                              |
+
+## 语言模型
+
+你可以使用提供商实例创建调用 AWS 上 Anthropic Messages API 的模型：
+
+```ts
+import { anthropicAws } from '@ai-sdk/anthropic-aws';
+
+const model = anthropicAws('claude-sonnet-5-5');
+```
+
+模型 ID 与第一方 Anthropic API 完全一致。语言模型选项、提示词缓存、计算机使用、网页搜索、代码执行和 Agent Skills 的完整列表参见 [Anthropic 提供商文档](/providers/ai-sdk-providers/anthropic#语言模型)。由于 Claude Platform on AWS 直接使用 Anthropic 的运行时，这些功能在这里的工作方式完全相同。
+
+### 示例
+
+```ts
+import { anthropicAws } from '@ai-sdk/anthropic-aws';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: anthropicAws('claude-sonnet-5-5'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+## IAM 权限
+
+你的 IAM 主体需要有权限调用工作区上的 Claude Platform on AWS 操作。AWS 提供了三种托管策略：
+
+- `AnthropicFullAccess`——在所有资源上授予 `aws-external-anthropic:*`。
+- `AnthropicInferenceAccess`——在所有工作区上授予读取操作以及 `CreateInference`、`CreateBatchInference`、`CancelBatchInference`、`DeleteBatchInference` 和 `CountTokens`。**这是调用模型的最低要求**。
+- `AnthropicReadOnlyAccess`——在所有工作区上授予 `Get*`、`List*` 和 `CallWithBearerToken`。不足以进行推理。

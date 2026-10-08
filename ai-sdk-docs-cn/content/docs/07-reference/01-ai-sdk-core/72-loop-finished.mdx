@@ -1,0 +1,83 @@
+---
+title: isLoopFinished
+description: isLoopFinished 的 API 参考。
+---
+
+# `isLoopFinished()`
+
+创建一个永不触发的停止条件，让智能体（agent）循环一直运行直到自然结束（即模型不再发起工具调用）。
+
+默认情况下，`ToolLoopAgent` 使用 `isStepCount(20)` 作为安全措施，以防止可能导致过多 API 调用和成本的失控循环。如果你确信你的智能体会自然终止，或者你不太在意成本，`isLoopFinished()` 会移除该限制，让智能体一直运行直到模型真正完成。
+
+```ts
+import { ToolLoopAgent, isLoopFinished } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  stopWhen: isLoopFinished(),
+});
+
+const result = await agent.generate({
+  prompt: 'Analyze this dataset and create a summary report',
+});
+```
+
+## 导入
+
+<Snippet text={`import { isLoopFinished } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+此函数不接受任何参数。
+
+### 返回值
+
+一个始终返回 `false` 的 `StopCondition` 函数，即它永远不会触发停止条件。智能体循环只会通过其自然终止条件停止：
+
+- 模型不再发起工具调用，或
+- 调用了没有 `execute` 函数的工具，或
+- 工具调用需要审批
+
+## 示例
+
+### 基本用法
+
+让智能体一直运行直到完成：
+
+```ts
+import { ToolLoopAgent, isLoopFinished } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: yourModel,
+  tools: yourTools,
+  stopWhen: isLoopFinished(),
+});
+```
+
+### 与其他条件组合
+
+你可以将 `isLoopFinished()` 与其他条件组合。由于 `isLoopFinished()` 永不触发，其他条件仍然生效：
+
+```ts
+import { ToolLoopAgent, isLoopFinished, hasToolCall } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: yourModel,
+  tools: yourTools,
+  stopWhen: [isLoopFinished(), hasToolCall('finalAnswer')],
+});
+```
+
+实际上，在这种场景下这没有太大意义，因为你可以直接省略 `isLoopFinished()`。
+
+## 另请参阅
+
+- [`isStepCount()`](/docs/reference/ai-sdk-core/is-step-count)
+- [`hasToolCall()`](/docs/reference/ai-sdk-core/has-tool-call)
+- [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent)

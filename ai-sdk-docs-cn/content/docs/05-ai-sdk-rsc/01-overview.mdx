@@ -1,0 +1,44 @@
+---
+title: 概述
+description: AI SDK RSC 概述。
+---
+
+# AI SDK RSC
+
+<Note type="warning">
+  AI SDK RSC 目前仍处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，
+  请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+<Note>
+  `@ai-sdk/rsc` 包与支持 React 服务器组件的框架兼容。
+</Note>
+
+[React 服务器组件](https://nextjs.org/docs/app/building-your-application/rendering/server-components)（RSC）让你可以编写能在服务器上渲染并流式传输到客户端的 UI。RSC 带来了 [ Server Actions ](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#with-client-components)——一种直接从客户端调用服务器端代码的新方式，就像调用任何其他函数一样，并具备端到端的类型安全。这一组合为构建 AI 应用开辟了一条新路径，让大语言模型（LLM）能够直接从服务器生成 UI 并流式传输到客户端。
+
+## AI SDK RSC 函数
+
+AI SDK RSC 提供了多种函数，帮助你使用 React 服务器组件构建 AI 原生应用。这些函数：
+
+1. 为构建生成式 UI 应用提供抽象。
+   - [`streamUI`](/docs/reference/ai-sdk-rsc/stream-ui)：调用一个模型，并允许它以 React 服务器组件作出响应。
+   - [`useUIState`](/docs/reference/ai-sdk-rsc/use-ui-state)：返回当前的 UI 状态以及更新 UI 状态的函数（类似于 React 的 `useState`）。UI 状态是 AI 状态的视觉呈现。
+   - [`useAIState`](/docs/reference/ai-sdk-rsc/use-ai-state)：返回当前的 AI 状态以及更新 AI 状态的函数（类似于 React 的 `useState`）。AI 状态用于存放与 AI 模型共享的上下文和信息，例如系统消息、函数响应以及其他相关数据。
+   - [`useActions`](/docs/reference/ai-sdk-rsc/use-actions)：让你能在客户端访问你的 Server Action。这对于构建需要用户与服务器交互的界面特别有用。
+   - [`createAI`](/docs/reference/ai-sdk-rsc/create-ai)：创建一个客户端-服务器上下文提供者，可用于包装应用树的部分内容，从而轻松管理应用的 UI 状态与 AI 状态。
+2. 简化服务器与客户端之间可流式传输值的处理。
+   - [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value)：创建一个把值从服务器发送到客户端的流。该值可以是任何可序列化的数据。
+   - [`readStreamableValue`](/docs/reference/ai-sdk-rsc/read-streamable-value)：在客户端读取最初用 `createStreamableValue` 创建的可流式传输值。
+   - [`createStreamableUI`](/docs/reference/ai-sdk-rsc/create-streamable-ui)：创建一个把 UI 从服务器发送到客户端的流。
+   - [`useStreamableValue`](/docs/reference/ai-sdk-rsc/use-streamable-value)：接受一个用 `createStreamableValue` 创建的可流式传输值，并返回当前值、错误与挂起状态。
+
+## 模板
+
+查看以下模板，了解 AI SDK RSC 的实际应用。
+
+<Templates type="generative-ui" />
+
+## API 参考
+
+请查看 [AI SDK RSC API 参考](/docs/reference/ai-sdk-rsc)以了解每个函数的更多细节。

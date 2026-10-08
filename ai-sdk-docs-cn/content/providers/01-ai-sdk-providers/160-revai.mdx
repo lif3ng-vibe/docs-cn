@@ -1,0 +1,206 @@
+---
+title: Rev.ai
+description: 了解如何在 AI SDK 中使用 Rev.ai 提供商。
+---
+
+# Rev.ai 提供商
+
+[Rev.ai](https://www.rev.ai/) 提供商为 Rev.ai 语音转写 API 提供语音转写模型支持。
+
+## 安装
+
+Rev.ai 提供商包含在 `@ai-sdk/revai` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/revai" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/revai` 导入默认提供商实例 `revai`：
+
+```ts
+import { revai } from '@ai-sdk/revai';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/revai` 导入 `createRevai`，并使用你的设置创建提供商实例：
+
+```ts
+import { createRevai } from '@ai-sdk/revai';
+
+const revai = createRevai({
+  // custom settings, e.g.
+  fetch: customFetch,
+});
+```
+
+你可以使用以下可选设置来定制 Rev.ai 提供商实例：
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认值为 `REVAI_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作中间件来拦截请求，
+  或在测试等场景下提供自定义 fetch 实现。
+
+## 语音转写模型
+
+你可以使用 `.transcription()` 工厂方法创建调用 [Rev.ai 语音转写 API](https://www.rev.ai/docs/api/transcription) 的模型。
+
+第一个参数是模型 id，例如 `machine`。
+
+```ts
+const model = revai.transcription('machine');
+```
+
+你还可以通过 `providerOptions` 参数传入更多提供商特有的选项。例如，如果事先知道输入语言，以 ISO-639-1 格式（例如 `en`）提供语言信息有时可以提升转写效果。
+
+```ts highlight="7"
+import { transcribe } from 'ai';
+import { revai } from '@ai-sdk/revai';
+import { type RevaiTranscriptionModelOptions } from '@ai-sdk/revai';
+import { readFile } from 'fs/promises';
+
+const result = await transcribe({
+  model: revai.transcription('machine'),
+  audio: await readFile('audio.mp3'),
+  providerOptions: {
+    revai: { language: 'en' } satisfies RevaiTranscriptionModelOptions,
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **metadata** _string_
+
+  可选的元数据字符串，用于关联该转写任务。
+
+- **notification_config** _object_
+
+  任务完成时 webhook 通知的配置。
+  - **url** _string_ - 接收通知的 URL。
+  - **auth_headers** _object_ - 通知请求的可选鉴权请求头。
+    - **Authorization** _string_ - Authorization 请求头的值。
+
+- **delete_after_seconds** _integer_
+
+  多少秒后该任务将被自动删除。
+
+- **verbatim** _boolean_
+
+  是否在转写结果中包含填充词与口误起头（false start）。
+
+- **rush** _boolean_
+
+  [HIPAA 不支持] 是否为该任务加速处理。仅人工转写员选项可用。
+
+- **test_mode** _boolean_
+
+  是否以测试模式运行该任务。默认值为 `false`。
+
+- **segments_to_transcribe** _Array_
+
+  要转写的音频片段。
+  - **start** _number_ - 片段开始时间（秒）。
+  - **end** _number_ - 片段结束时间（秒）。
+
+- **speaker_names** _Array_
+
+  要分配给转写结果中说话人的名称。
+  - **display_name** _string_ - 说话人的显示名称。
+
+- **skip_diarization** _boolean_
+
+  是否跳过说话人分离（speaker diarization）。默认值为 `false`。
+
+- **skip_postprocessing** _boolean_
+
+  是否跳过后处理步骤。仅英语和西班牙语可用。默认值为 `false`。
+
+- **skip_punctuation** _boolean_
+
+  是否跳过为转写结果添加标点。默认值为 `false`。
+
+- **remove_disfluencies** _boolean_
+
+  是否从转写结果中移除不流畅词（如 um、uh 等）。默认值为 `false`。
+
+- **remove_atmospherics** _boolean_
+
+  是否从转写结果中移除环境音（如 `<laugh>`、`<affirmative>`）。默认值为 `false`。
+
+- **filter_profanity** _boolean_
+
+  是否过滤转写结果中的脏话，将其替换为星号（保留首尾字符）。默认值为 `false`。
+
+- **speaker_channels_count** _integer_
+
+  音频中的说话人声道数量。仅英语、西班牙语和法语可用。
+
+- **speakers_count** _integer_
+
+  音频中预期的说话人数量。仅英语、西班牙语和法语可用。
+
+- **diarization_type** _string_
+
+  要使用的说话人分离类型。可能的取值："standard"（默认）、"premium"。
+
+- **custom_vocabulary_id** _string_
+
+  转写时使用的自定义词表 ID，通过 Custom Vocabularies API 提交。
+
+- **custom_vocabularies** _Array_
+
+  转写时使用的自定义词表。
+
+- **strict_custom_vocabulary** _boolean_
+
+  是否严格强制使用自定义词表。
+
+- **summarization_config** _object_
+
+  生成转写摘要的配置。
+  - **model** _string_ - 用于摘要的模型。可能的取值："standard"（默认）、"premium"。
+  - **type** _string_ - 摘要格式。可能的取值："paragraph"（默认）、"bullets"。
+  - **prompt** _string_ - 摘要的自定义提示词（与 type 互斥）。
+
+- **translation_config** _object_
+
+  翻译转写结果的配置。
+  - **target_languages** _Array_ - 翻译的目标语言。每一项都是一个对象，包含：
+    - **language** _string_ - 语言代码。可能的取值："en", "en-us", "en-gb", "ar", "pt", "pt-br", "pt-pt", "fr", "fr-ca", "es", "es-es", "es-la", "it", "ja", "ko", "de", "ru"。
+  - **model** _string_ - 用于翻译的模型。可能的取值："standard"（默认）、"premium"。
+
+- **language** _string_
+
+  音频内容的语言，以 ISO 639-1 语言代码提供，部分例外允许带区域限定的代码（例如 "en-us"）。默认值为 "en"。
+
+- **forced_alignment** _boolean_
+
+  是否执行强制对齐（forced alignment），它可以为逐词时间戳提供更高的精度。
+  默认值为 `false`。
+
+  当前支持的语言：
+  - 英语（en, en-us, en-gb）
+  - 法语（fr）
+  - 意大利语（it）
+  - 德语（de）
+  - 西班牙语（es）
+
+  注意：该选项在低成本环境中不可用。
+
+### 模型能力
+
+| 模型       | 语音转写  | 时长      | 分段      | 语言      |
+| ---------- | --------- | --------- | --------- | --------- |
+| `machine`  | <Check /> | <Check /> | <Check /> | <Check /> |
+| `low_cost` | <Check /> | <Check /> | <Check /> | <Check /> |
+| `fusion`   | <Check /> | <Check /> | <Check /> | <Check /> |

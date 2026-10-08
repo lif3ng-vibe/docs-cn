@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lif3ng-vibe.github.io/docs-cn/ai-sdk/sitemap.xml

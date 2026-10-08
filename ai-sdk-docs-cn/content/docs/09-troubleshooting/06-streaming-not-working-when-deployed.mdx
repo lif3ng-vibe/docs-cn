@@ -1,0 +1,32 @@
+---
+title: 部署后流式输出不工作
+description: 排查已部署应用中的流式输出问题。
+---
+
+# Streaming Not Working When Deployed
+
+## 问题
+
+使用 AI SDK 的流式输出在我的本地开发环境中正常工作。
+但在部署之后，已部署的应用中流式输出不生效。
+响应不再以流式返回，而是等待一段时间后一次性返回完整响应。
+
+## 原因
+
+这个问题的成因多种多样，取决于部署环境。
+
+## 解决方案
+
+你可以尝试以下方法：
+
+- 添加 `'Transfer-Encoding': 'chunked'` 和/或 `Connection: 'keep-alive'` 请求头
+
+  ```tsx
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Transfer-Encoding': 'chunked',
+      Connection: 'keep-alive',
+    },
+  });
+  ```

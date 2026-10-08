@@ -1,0 +1,340 @@
+---
+title: GPT-5 快速上手
+description: 使用 AI SDK 快速上手 GPT-5。
+tags: ['getting-started']
+---
+
+# OpenAI GPT-5 快速上手
+
+随着 [OpenAI GPT-5 模型的发布](https://openai.com/index/introducing-gpt-5)，现在是开始构建具备冗长度控制、网络搜索和原生多模态理解等高级能力的 AI 应用的最佳时机。
+
+[AI SDK](/) 是一个强大的 TypeScript 工具包，用于结合 OpenAI GPT-5 这样的大型语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。
+
+<Note>
+  本指南介绍 GPT-5 特有的行为。如需当前模型和示例，请参阅 [OpenAI 提供商文档](/providers/ai-sdk-providers/openai)。
+</Note>
+
+## OpenAI GPT-5
+
+OpenAI 的 GPT-5 引入了多项强大的新功能，包括用于定制响应长度的冗长度控制、集成的网络搜索能力、用于提升透明度的推理摘要，以及对文本、图像、音频和 PDF 的原生支持。该模型提供三个变体：`gpt-5`、处理更快、更具成本效益的 `gpt-5-mini`，以及面向极致高效场景的 `gpt-5-nano`。
+
+### GPT-5 的提示词工程
+
+以下是进行有效提示的关键策略：
+
+#### 核心原则
+
+1. **精准明确**：避免相互矛盾或含糊的指令。GPT-5 在清晰、明确的指引下表现最佳。
+2. **使用结构化提示词**：利用类 XML 标签来组织指令的不同部分，以获得更好的清晰度。
+3. **自然语言效果最好**：在保持精确的同时，像向一位熟练的同事解释那样撰写提示词。
+
+#### 提示技巧
+
+**1. 智能体工作流控制**
+
+- 调整 `reasoningEffort` 参数以校准模型自主性
+- 设置清晰的停止条件并明确工具调用预算
+- 就探索深度和坚持程度提供指引
+
+```ts
+// Example with reasoning effort control
+const result = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'Analyze this complex dataset and provide insights.',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'high', // Increases autonomous exploration
+    },
+  },
+});
+```
+
+**2. 结构化提示词格式**
+使用类 XML 标签来组织你的提示词：
+
+```
+<context_gathering>
+Goal: Extract key performance metrics from the report
+Method: Focus on quantitative data and year-over-year comparisons
+Early stop criteria: Stop after finding 5 key metrics
+</context_gathering>
+
+<task>
+Analyze the attached financial report and identify the most important metrics.
+</task>
+```
+
+**3. 工具调用最佳实践**
+
+- 使用工具前言（preamble）提供清晰的前置计划
+- 为不同工具定义安全与不安全操作的边界
+- 创建关于工具调用进度的结构化更新
+
+**4. 冗长度控制**
+
+- 使用 `textVerbosity` 参数以编程方式控制响应长度
+- 在特定上下文需要时用自然语言覆盖
+- 在简洁与完整之间取得平衡
+
+**5. 优化工作流**
+
+- 从清晰、简单的提示词开始
+- 测试并找出含糊或易混淆之处
+- 通过消除矛盾进行迭代改进
+- 对于复杂提示词，考虑使用 OpenAI 的 Prompt Optimizer 工具
+- 记录成功的模式以便复用
+
+## AI SDK 快速上手
+
+AI SDK 是一款 TypeScript 工具包，旨在帮助开发者使用 React、Next.js、Vue、Svelte、Node.js 等构建 AI 驱动的应用。将 LLM 集成到应用中相当复杂，且高度依赖于你所使用的具体模型提供商（provider）。
+
+AI SDK 抽象掉了不同模型提供商之间的差异，消除了构建聊天机器人的样板代码，并让你能够超越纯文本输出，生成丰富、可交互的组件。
+
+AI SDK 的核心是 [AI SDK Core](/docs/ai-sdk-core/overview)，它提供了调用任意 LLM 的统一 API。使用 AI SDK 调用 OpenAI GPT-5 只需要下面这段代码：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'Explain the concept of quantum entanglement.',
+});
+```
+
+### 生成结构化数据
+
+虽然文本生成很有用，但你可能还想生成结构化的 JSON 数据。例如，你可能想从文本中提取信息、对数据进行分类，或生成合成数据。AI SDK Core 提供了 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 和 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 搭配 `Output` 来生成结构化数据，让你能够将模型输出约束到特定的 schema。
+
+```ts
+import { generateText, Output } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: openai('gpt-5'),
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(
+          z.object({ name: z.string(), amount: z.string() }),
+        ),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+```
+
+这段代码会生成一个符合指定 zod schema 的类型安全菜谱。
+
+### 冗长度控制
+
+GPT-5 的新功能之一是冗长度控制，让你无需修改提示词即可调整响应长度：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+// Concise response
+const { text: conciseText } = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'Explain quantum computing.',
+  providerOptions: {
+    openai: {
+      textVerbosity: 'low', // Produces terse, minimal responses
+    },
+  },
+});
+
+// Detailed response
+const { text: detailedText } = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'Explain quantum computing.',
+  providerOptions: {
+    openai: {
+      textVerbosity: 'high', // Produces comprehensive, detailed responses
+    },
+  },
+});
+```
+
+### 网络搜索
+
+GPT-5 可以通过集成的网络搜索工具访问实时信息：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'What are the latest developments in AI this week?',
+  tools: {
+    web_search: openai.tools.webSearch({
+      searchContextSize: 'high',
+    }),
+  },
+});
+
+// Access URL sources
+const sources = result.sources;
+```
+
+### 推理摘要
+
+要透明地了解 GPT-5 的思考过程，可以启用推理摘要：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai('gpt-5'),
+  prompt:
+    'Solve this logic puzzle: If all roses are flowers and some flowers fade quickly, do all roses fade quickly?',
+  providerOptions: {
+    openai: {
+      reasoningSummary: 'detailed', // 'auto' for condensed or 'detailed' for comprehensive
+    },
+  },
+});
+
+// Stream reasoning and text separately
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    console.log(part.textDelta);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+### 在 AI SDK 中使用工具
+
+GPT-5 开箱即支持工具调用，使其能够与外部系统交互并执行离散任务。下面是在 AI SDK 中使用工具调用的示例：
+
+```ts
+import { generateText, tool } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const { toolResults } = await generateText({
+  model: openai('gpt-5'),
+  prompt: 'What is the weather like today in San Francisco?',
+  tools: {
+    getWeather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+  },
+});
+```
+
+### 构建交互式界面
+
+AI SDK Core 可以与 AI SDK 的另一个强大组件 [AI SDK UI](/docs/ai-sdk-ui/overview) 搭配使用，简化使用 Next.js、Nuxt、SvelteKit 等流行框架构建聊天、补全和助手界面的过程。
+
+AI SDK UI 提供了强大的抽象，简化了在前端管理聊天流和 UI 更新的复杂任务，让你能够更高效地开发生动的 AI 驱动界面。
+
+通过三个主要 Hook——[`useChat`](/docs/reference/ai-sdk-ui/use-chat)、[`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 和 [`useObject`](/docs/reference/ai-sdk-ui/use-object)——你可以在应用中集成实时聊天、文本补全、流式 JSON 和交互式助手功能。
+
+让我们来探索如何结合 [Next.js](https://nextjs.org)、AI SDK 与 OpenAI GPT-5 构建一个聊天机器人：
+
+在新建的 Next.js 应用中，先安装 AI SDK 和 OpenAI 提供商：
+
+<Snippet text="pnpm install ai @ai-sdk/openai @ai-sdk/react" />
+
+然后，为聊天端点创建一个 Route Handler：
+
+```tsx filename="app/api/chat/route.ts"
+import { openai } from '@ai-sdk/openai';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+
+// Allow responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: openai('gpt-5'),
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+最后，更新根页面（`app/page.tsx`）以使用 `useChat` Hook：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({});
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) => {
+            if (part.type === 'text') {
+              return <span key={index}>{part.text}</span>;
+            }
+            return null;
+          })}
+        </div>
+      ))}
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (input.trim()) {
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }}
+      >
+        <input
+          name="prompt"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+        />
+        <button type="submit">Submit</button>
+      </form>
+    </>
+  );
+}
+```
+
+根页面（`app/page.tsx`）上的 useChat Hook 会在用户提交消息时向你的 AI 提供商端点（`app/api/chat/route.ts`）发起请求。随后消息会显示在聊天 UI 中。
+
+## 开始使用
+
+准备好开始了吗？以下是深入的方法：
+
+1. 浏览 [ai-sdk.dev/docs](/docs) 上的文档，了解 AI SDK 的全部能力。
+2. 查看 [ai-sdk.dev/cookbook](/cookbook) 上的实际示例，看看 SDK 的实际运用，并为自己的项目获取灵感。
+3. 通过 [ai-sdk.dev/cookbook/guides](/cookbook/guides) 上的进阶指南深入学习检索增强生成（RAG）和多模态聊天等主题。
+4. 查看 [vercel.com/templates?type=ai](https://vercel.com/templates?type=ai) 上开箱即用的 AI 模板。

@@ -1,0 +1,127 @@
+---
+title: Nest.js
+description: 学习如何在 Nest.js 服务器中使用 AI SDK
+tags: ['api servers', 'streaming']
+---
+
+# Nest.js
+
+你可以在 [Nest.js](https://nestjs.com/) 服务器中使用 AI SDK 生成文本和对象，并将它们流式传输到客户端。
+
+## 示例
+
+以下示例展示如何实现一个 Nest.js 控制器，使用 AI SDK 向客户端流式传输文本和对象。
+
+**完整示例**：[github.com/vercel/ai/examples/nest](https://github.com/vercel/ai/tree/main/examples/nest)
+
+### UI 消息流
+
+你可以使用 `pipeUIMessageStreamToResponse` 辅助函数，将流数据通过管道传输到服务器响应。
+
+```ts filename='app.controller.ts'
+import { Controller, Post, Res } from '@nestjs/common';
+import {
+  pipeUIMessageStreamToResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+import { Response } from 'express';
+
+@Controller()
+export class AppController {
+  @Post('/')
+  async root(@Res() res: Response) {
+    const result = streamText({
+      model: 'openai/gpt-6-astra',
+      prompt: 'Invent a new holiday and describe its traditions.',
+    });
+
+    pipeUIMessageStreamToResponse({
+      response: res,
+      stream: toUIMessageStream({ stream: result.stream }),
+    });
+  }
+}
+```
+
+### 发送自定义数据
+
+`createUIMessageStream` 和 `pipeUIMessageStreamToResponse` 可用于向客户端发送自定义数据。
+
+```ts filename='app.controller.ts'
+import { Controller, Post, Res } from '@nestjs/common';
+import {
+  createUIMessageStream,
+  streamText,
+  pipeUIMessageStreamToResponse,
+  toUIMessageStream,
+} from 'ai';
+import { Response } from 'express';
+
+@Controller()
+export class AppController {
+  @Post('/stream-data')
+  async streamData(@Res() response: Response) {
+    const stream = createUIMessageStream({
+      execute: ({ writer }) => {
+        // write some data
+        writer.write({ type: 'start' });
+
+        writer.write({
+          type: 'data-custom',
+          data: {
+            custom: 'Hello, world!',
+          },
+        });
+
+        const result = streamText({
+          model: 'openai/gpt-6-astra',
+          prompt: 'Invent a new holiday and describe its traditions.',
+        });
+        writer.merge(
+          toUIMessageStream({
+            stream: result.stream,
+            sendStart: false,
+            onError: error => {
+              // Error messages are masked by default for security reasons.
+              // If you want to expose the error message to the client, you can do so here:
+              return error instanceof Error ? error.message : String(error);
+            },
+          }),
+        );
+      },
+    });
+    pipeUIMessageStreamToResponse({ stream, response });
+  }
+}
+```
+
+### 文本流
+
+你可以将 `pipeTextStreamToResponse` 辅助函数与 `toTextStream` 结合使用，把文本流通过管道传输到响应。
+
+```ts filename='app.controller.ts'
+import { Controller, Post, Res } from '@nestjs/common';
+import { pipeTextStreamToResponse, streamText, toTextStream } from 'ai';
+import { Response } from 'express';
+
+@Controller()
+export class AppController {
+  @Post()
+  async example(@Res() res: Response) {
+    const result = streamText({
+      model: 'openai/gpt-6-astra',
+      prompt: 'Invent a new holiday and describe its traditions.',
+    });
+
+    pipeTextStreamToResponse({
+      response: res,
+      stream: toTextStream({ stream: result.stream }),
+    });
+  }
+}
+```
+
+## 故障排查
+
+- [经过代理](/docs/troubleshooting/streaming-not-working-when-proxied)时流式传输不工作

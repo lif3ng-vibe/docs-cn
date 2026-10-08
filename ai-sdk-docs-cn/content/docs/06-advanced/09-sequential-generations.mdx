@@ -1,0 +1,55 @@
+---
+title: 顺序生成
+description: 学习如何使用 AI SDK 实现顺序生成（"链"）
+---
+
+# Sequential Generations
+
+在使用 AI SDK 时，你可能想创建由多段生成组成的序列（通常称为"链"（chain）或"管道"（pipe）），其中上一步的输出成为下一步的输入。这对于创建更复杂的 AI 驱动工作流，或将大型任务拆分为更小、更易管理的步骤非常有用。
+
+## 示例
+
+在顺序链中，一段生成的输出直接用作下一段生成的输入。这让你可以创建一系列相互依赖的生成，其中每一步都在上一步的基础上构建。
+
+下面是一个实现顺序操作的示例：
+
+```typescript
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+async function sequentialActions() {
+  // Generate blog post ideas
+  const ideasGeneration = await generateText({
+    model: __MODEL__,
+    prompt: 'Generate 10 ideas for a blog post about making spaghetti.',
+  });
+
+  console.log('Generated Ideas:\n', ideasGeneration);
+
+  // Pick the best idea
+  const bestIdeaGeneration = await generateText({
+    model: __MODEL__,
+    prompt: `Here are some blog post ideas about making spaghetti:
+${ideasGeneration}
+
+Pick the best idea from the list above and explain why it's the best.`,
+  });
+
+  console.log('\nBest Idea:\n', bestIdeaGeneration);
+
+  // Generate an outline
+  const outlineGeneration = await generateText({
+    model: __MODEL__,
+    prompt: `We've chosen the following blog post idea about making spaghetti:
+${bestIdeaGeneration}
+
+Create a detailed outline for a blog post based on this idea.`,
+  });
+
+  console.log('\nBlog Post Outline:\n', outlineGeneration);
+}
+
+sequentialActions().catch(console.error);
+```
+
+在这个例子中，我们先为一篇博客文章生成点子，然后挑选最佳点子，最后基于该点子创建大纲。每一步都将上一步的输出作为下一段生成的输入。

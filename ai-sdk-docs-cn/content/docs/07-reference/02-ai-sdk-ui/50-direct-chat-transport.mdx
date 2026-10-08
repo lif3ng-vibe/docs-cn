@@ -1,0 +1,346 @@
+---
+title: DirectChatTransport
+description: DirectChatTransport 类的 API 参考。
+---
+
+# `DirectChatTransport`
+
+一种在进程内直接与 [Agent](/docs/reference/ai-sdk-core/agent) 通信、而不经过 HTTP 的 transport。适用于：
+
+- 服务器端渲染场景
+- 无网络的测试
+- 单进程应用
+
+与向 API 端点发送 HTTP 请求的 `DefaultChatTransport` 不同，`DirectChatTransport` 直接调用智能体的 `stream()` 方法，并将结果转换为 UI 消息流。
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  instructions: 'You are a helpful assistant.',
+});
+
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DirectChatTransport({ agent }),
+  });
+
+  // ... render chat UI
+}
+```
+
+## 导入
+
+<Snippet text={`import { DirectChatTransport } from "ai"`} prompt={false} />
+
+## 构造函数
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'agent',
+      type: 'Agent',
+      isRequired: true,
+      description:
+        '用于生成响应的 Agent 实例。智能体会在每条消息上以 `stream()` 被调用。',
+    },
+    {
+      name: 'options',
+      type: 'CALL_OPTIONS',
+      isOptional: true,
+      description:
+        '调用智能体时传递给它的选项。这些是创建智能体时定义的、特定于该智能体的选项。',
+    },
+    {
+      name: 'originalMessages',
+      type: 'UIMessage[]',
+      isOptional: true,
+      description:
+        '原始消息。如果提供，则假定处于持久化模式，并为响应消息提供一个消息 ID（通过 `generateMessageId` 生成；若最后一条消息是助手消息，则复用其 ID）。',
+    },
+    {
+      name: 'generateMessageId',
+      type: 'IdGenerator',
+      isOptional: true,
+      description:
+        '为响应消息生成消息 ID。若未提供，响应消息将不设置消息 ID（除非提供了原始消息且最后一条消息是助手消息）。',
+    },
+    {
+      name: 'messageMetadata',
+      type: '(options: { part: TextStreamPart }) => METADATA | undefined',
+      isOptional: true,
+      description:
+        '提取将要发送到客户端的消息元数据。在 `start` 与 `finish` 事件上被调用。',
+    },
+    {
+      name: 'onStepEnd',
+      type: 'UIMessageStreamOnStepEndCallback',
+      isOptional: true,
+      description:
+        '在每个步骤被转换为 UI 消息片段之后调用。接收 messages、isContinuation 以及累积的 responseMessage（包括步骤元数据），可用于检查或持久化。',
+    },
+    {
+      name: 'onStepFinish',
+      type: 'UIMessageStreamOnStepFinishCallback',
+      isOptional: true,
+      description: 'onStepEnd 的已弃用别名。',
+    },
+    {
+      name: 'sendReasoning',
+      type: 'boolean',
+      isOptional: true,
+      description: '是否将推理片段发送到客户端。默认为 true。',
+    },
+    {
+      name: 'sendSources',
+      type: 'boolean',
+      isOptional: true,
+      description: '是否将来源片段发送到客户端。默认为 false。',
+    },
+    {
+      name: 'sendFinish',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '是否将 finish 事件发送到客户端。如果你还在使用会发送额外数据的其他 streamText 调用，请设为 false。默认为 true。',
+    },
+    {
+      name: 'sendStart',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '是否将消息开始事件发送到客户端。如果你还在使用其他 streamText 调用且消息开始事件已发送，请设为 false。默认为 true。',
+    },
+    {
+      name: 'onError',
+      type: '(error: unknown) => string',
+      isOptional: true,
+      description:
+        "处理错误，例如记录日志。默认为 `() => 'An error occurred.'`。返回要包含在数据流中的错误消息。",
+    },
+  ]}
+/>
+
+## 方法
+
+### `sendMessages()`
+
+将消息发送给智能体并返回流式响应。此方法会校验 UI 消息并将其转换为模型消息，调用智能体的 `stream()` 方法，并将结果作为 UI 消息流返回。
+
+```ts
+const stream = await transport.sendMessages({
+  chatId: 'chat-123',
+  trigger: 'submit-message',
+  messages: [...],
+  abortSignal: controller.signal,
+});
+```
+
+<PropertiesTable
+  content={[
+    {
+      name: 'chatId',
+      type: 'string',
+      description: '聊天会话的唯一标识符。',
+    },
+    {
+      name: 'trigger',
+      type: "'submit-message' | 'regenerate-message'",
+      description:
+        '消息提交的类型——新消息或重新生成。',
+    },
+    {
+      name: 'messageId',
+      type: 'string | undefined',
+      description:
+        '要重新生成的消息的 ID，新消息时为 undefined。',
+    },
+    {
+      name: 'messages',
+      type: 'UIMessage[]',
+      description:
+        '表示对话历史的 UI 消息数组。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal | undefined',
+      description: '需要时用于中止请求的信号。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string> | Headers',
+      isOptional: true,
+      description: '附加请求头（被 DirectChatTransport 忽略）。',
+    },
+    {
+      name: 'body',
+      type: 'object',
+      isOptional: true,
+      description:
+        '附加的 body 属性（被 DirectChatTransport 忽略）。',
+    },
+    {
+      name: 'metadata',
+      type: 'unknown',
+      isOptional: true,
+      description: '自定义元数据（被 DirectChatTransport 忽略）。',
+    },
+  ]}
+/>
+
+#### 返回值
+
+返回 `Promise<ReadableStream<UIMessageChunk>>`——一个可由聊天 UI 处理的 UI 消息块流。
+
+### `reconnectToStream()`
+
+Direct transport 不支持重连，因为不存在可重连的持久化服务器端流。
+
+#### 返回值
+
+始终返回 `Promise<null>`。
+
+## 示例
+
+### 基本用法
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  instructions: 'You are a helpful assistant.',
+});
+
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DirectChatTransport({ agent }),
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+      <button onClick={() => sendMessage({ text: 'Hello!' })}>Send</button>
+    </div>
+  );
+}
+```
+
+### 携带智能体工具
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent, tool } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const weatherTool = tool({
+  description: 'Get the current weather',
+  inputSchema: z.object({
+    location: z.string().describe('The city and state'),
+  }),
+  execute: async ({ location }) => {
+    return `The weather in ${location} is sunny and 72°F.`;
+  },
+});
+
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  instructions: 'You are a helpful assistant with access to weather data.',
+  tools: { weather: weatherTool },
+});
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat({
+    transport: new DirectChatTransport({ agent }),
+  });
+
+  // ... render chat UI with tool results
+}
+```
+
+### 携带自定义智能体选项
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new ToolLoopAgent<{ userId: string }>({
+  model: openai('gpt-6-astra'),
+  prepareCall: ({ options, ...rest }) => ({
+    ...rest,
+    providerOptions: {
+      openai: { user: options.userId },
+    },
+  }),
+});
+
+export default function Chat({ userId }: { userId: string }) {
+  const { messages, sendMessage } = useChat({
+    transport: new DirectChatTransport({
+      agent,
+      options: { userId },
+    }),
+  });
+
+  // ... render chat UI
+}
+```
+
+### 携带推理
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const agent = new ToolLoopAgent({
+  model: openai('o1-preview'),
+});
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat({
+    transport: new DirectChatTransport({
+      agent,
+      sendReasoning: true,
+    }),
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.parts.map((part, index) => {
+            if (part.type === 'text') {
+              return <p key={index}>{part.text}</p>;
+            }
+            if (part.type === 'reasoning') {
+              return (
+                <pre key={index} style={{ opacity: 0.6 }}>
+                  {part.text}
+                </pre>
+              );
+            }
+            return null;
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+```

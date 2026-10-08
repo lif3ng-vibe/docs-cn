@@ -1,0 +1,138 @@
+---
+title: hasToolCall
+description: hasToolCall 的 API 参考。
+---
+
+# `hasToolCall()`
+
+创建一个停止条件，当任一指定工具在最近一个步骤中被调用时停止。
+
+此函数与 `generateText` 和 `streamText` 中的 `stopWhen` 配合使用，用于根据指定工具之一是否已被调用，控制工具调用循环何时停止。
+
+```ts
+import { generateText, hasToolCall } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: {
+    weather: weatherTool,
+    finalAnswer: finalAnswerTool,
+  },
+  // Stop when the finalAnswer tool is called
+  stopWhen: hasToolCall('finalAnswer'),
+});
+```
+
+## 导入
+
+<Snippet text={`import { hasToolCall } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: '...toolNames',
+      type: 'string[]',
+      description:
+        '一个或多个工具名。当其中任何一个在最近一个步骤中被调用时，停止条件触发。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个 `StopCondition` 函数，当任一指定工具在最近一个步骤中被调用时返回 `true`。该函数可与 `generateText` 和 `streamText` 中的 `stopWhen` 参数配合使用。
+
+## 示例
+
+### 基本用法
+
+在特定工具被调用时停止：
+
+```ts
+import { generateText, hasToolCall } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: {
+    submitAnswer: submitAnswerTool,
+    search: searchTool,
+  },
+  stopWhen: hasToolCall('submitAnswer'),
+});
+```
+
+### 匹配多个工具
+
+当多个工具中的任何一个在最近一个步骤中被调用时停止：
+
+```ts
+import { generateText, hasToolCall } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: {
+    weather: weatherTool,
+    search: searchTool,
+    finalAnswer: finalAnswerTool,
+  },
+  stopWhen: hasToolCall('weather', 'finalAnswer'),
+});
+```
+
+### 与其他条件组合
+
+你可以在数组中组合多个停止条件：
+
+```ts
+import { generateText, hasToolCall, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: {
+    weather: weatherTool,
+    search: searchTool,
+    finalAnswer: finalAnswerTool,
+  },
+  // Stop when weather tool is called OR finalAnswer is called OR after 5 steps
+  stopWhen: [
+    hasToolCall('weather'),
+    hasToolCall('finalAnswer'),
+    isStepCount(5),
+  ],
+});
+```
+
+### 智能体模式
+
+运行直到提供最终答案的智能体（agent）的常见模式：
+
+```ts
+import { generateText, hasToolCall } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: {
+    search: searchTool,
+    calculate: calculateTool,
+    finalAnswer: {
+      description: 'Provide the final answer to the user',
+      inputSchema: z.object({
+        answer: z.string(),
+      }),
+      execute: async ({ answer }) => answer,
+    },
+  },
+  stopWhen: hasToolCall('finalAnswer'),
+});
+```
+
+## 另请参阅
+
+- [`isStepCount()`](/docs/reference/ai-sdk-core/is-step-count)
+- [`generateText()`](/docs/reference/ai-sdk-core/generate-text)
+- [`streamText()`](/docs/reference/ai-sdk-core/stream-text)

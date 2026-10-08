@@ -1,0 +1,48 @@
+---
+title: 结构化输出下的工具调用
+description: 排查工具调用与结构化输出生成结合使用时的问题
+---
+
+# Tool calling with structured outputs
+
+## 问题
+
+你可能希望将工具调用与结构化输出生成结合使用。
+
+## 背景
+
+要在结构化输出中使用工具调用，请使用带有 `output` 选项的 `generateText` 或 `streamText`。
+
+**重要提示**：在工具调用中使用 `output` 时，结构化输出生成会计入执行流程中的额外一个步骤。
+
+## 解决方案
+
+在工具调用中使用 `output` 时，请调整 `stopWhen` 条件，以计入结构化输出生成所需的额外步骤：
+
+```tsx
+const result = await generateText({
+  model: __MODEL__,
+  output: Output.object({
+    schema: z.object({
+      summary: z.string(),
+      sentiment: z.enum(['positive', 'neutral', 'negative']),
+    }),
+  }),
+  tools: {
+    analyze: tool({
+      description: 'Analyze data',
+      inputSchema: z.object({
+        data: z.string(),
+      }),
+      execute: async ({ data }) => {
+        return { result: 'analyzed' };
+      }),
+    },
+  },
+  // Add at least 1 to your intended step count to account for structured output
+  stopWhen: isStepCount(3), // Now accounts for: tool call + tool result + structured output
+  prompt: 'Analyze the data and provide a summary',
+});
+```
+
+有关在 `generateText` 和 `streamText` 中使用结构化输出的更多信息，请参阅[生成结构化数据](/docs/ai-sdk-core/generating-structured-data#生成结构化输出)。

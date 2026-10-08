@@ -1,0 +1,89 @@
+---
+title: createStreamableUI
+description: 来自 AI SDK RSC 的 createStreamableUI 函数参考
+---
+
+# `createStreamableUI`
+
+<Note type="warning">
+  AI SDK RSC 目前为实验性功能。我们建议在生产环境中使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指引，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+创建一个从服务器向客户端发送 UI 的流。在客户端，它可以作为普通的 React 节点渲染。
+
+## 导入
+
+<Snippet
+  text={`import { createStreamableUI } from "@ai-sdk/rsc"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'initialValue',
+      type: 'ReactNode',
+      isOptional: true,
+      description: '可流式 UI 的初始值。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'value',
+      type: 'ReactNode',
+      description:
+        '可流式 UI 的值。可以从 Server Action 返回并由客户端接收。',
+    },
+  ]}
+/>
+
+### 方法
+
+<PropertiesTable
+  content={[
+    {
+      name: 'update',
+      type: '(ReactNode) => void',
+      description:
+        '更新当前的 UI 节点。它接受一个新的 UI 节点并替换旧的节点。',
+    },
+    {
+      name: 'append',
+      type: '(ReactNode) => void',
+      description:
+        '将一个新的 UI 节点追加到旧节点的末尾。一旦追加了新的 UI 节点，之前的 UI 节点就无法再更新了。',
+    },
+    {
+      name: 'done',
+      type: '(ReactNode | null) => void',
+      description:
+        '将 UI 节点标记为已最终完成并关闭流。调用之后，UI 节点无法再更新或追加。始终必须调用此方法，否则响应会一直停留在加载状态。',
+    },
+    {
+      name: 'error',
+      type: '(any) => StreamableUIWrapper',
+      description:
+        '发出 UI 流中出现错误的信号。它会在客户端被抛出，并由最近的错误边界（error boundary）组件捕获。',
+    },
+  ]}
+/>
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title: '在工具调用期间渲染 React 组件',
+      link: '/examples/next-app/tools/render-interface-during-tool-call',
+    },
+  ]}
+/>

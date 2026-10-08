@@ -1,0 +1,200 @@
+---
+title: DevTools
+description: 使用 DevTools 调试和检查 AI SDK 应用
+---
+
+# DevTools
+
+<Note type="warning">
+  AI SDK DevTools 仅用于本地开发。请勿在
+  生产环境中使用。
+</Note>
+
+AI SDK DevTools 让你完整掌握使用 [`generateText`](/docs/reference/ai-sdk-core/generate-text)、[`streamText`](/docs/reference/ai-sdk-core/stream-text) 和 [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent) 的 AI SDK 调用。它帮助你通过基于 Web 的 UI 调试和检查 LLM 请求、响应、工具调用和多步交互。
+
+DevTools 由两部分组成：
+
+1. **遥测集成**：通过[遥测](/docs/ai-sdk-core/telemetry)系统捕获 AI SDK 调用的运行（run）与步骤
+2. **查看器**：用于检查所捕获数据的 Web UI
+
+## 安装
+
+安装 DevTools 包：
+
+```bash
+pnpm add @ai-sdk/devtools
+```
+
+## 要求
+
+- AI SDK v7（`ai@latest`）
+- Node.js 兼容的运行时
+
+## 使用 DevTools
+
+### 注册集成
+
+全局注册 `DevToolsTelemetry`，使其捕获所有 AI SDK 调用：
+
+```ts
+import { registerTelemetry } from 'ai';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+
+registerTelemetry(DevToolsTelemetry());
+```
+
+注册集成后遥测会自动启用——无需逐次调用配置：
+
+```ts
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'What cities are in the United States?',
+});
+```
+
+你也可以不全局注册，而是将集成传给单个调用：
+
+```ts highlight="7-9"
+import { streamText } from 'ai';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+
+const result = streamText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Hello!',
+  telemetry: {
+    integrations: [DevToolsTelemetry()],
+  },
+});
+```
+
+### 启动查看器
+
+启动 DevTools 查看器：
+
+```bash
+npx @ai-sdk/devtools@latest
+```
+
+打开 [http://localhost:4983](http://localhost:4983) 查看你的 AI SDK 交互。
+
+### 选择查看器主题
+
+查看器默认使用深色主题。使用查看器顶栏中的主题按钮
+可在深色与浅色主题之间切换。你的选择会存储在
+浏览器中，并在下次以同一来源打开查看器时恢复。
+
+### 在 monorepo 中使用
+
+如果你使用 monorepo 结构（例如 Turborepo、Nx），请从运行 AI SDK 代码的同一工作区启动 DevTools。
+
+例如，如果你的 API 位于 `apps/api`，请运行：
+
+```bash
+cd apps/api
+npx @ai-sdk/devtools@latest
+```
+
+显式的 `@latest` 标签确保 `npx` 安装一份可执行副本
+而不是选择一个其二进制文件未链接到工作区的传递依赖。
+
+## 捕获的数据
+
+DevTools 从你的 AI SDK 调用中捕获以下信息：
+
+- **输入参数与提示词**：查看发送给 LLM 的完整输入
+- **输出内容与工具调用**：检查生成的文本、工具调用和工具结果
+- **媒体预览**：查看提示词、工具输入和工具输出中包含的图像、音频和视频
+- **token 用量与耗时**：监控资源消耗与性能
+- **原始提供商数据**：在启用正文保留时访问提供商请求与响应载荷
+
+### 媒体预览
+
+DevTools 能够识别当前的 `file` 内容部分，以及已弃用的
+`image-*`、`file-*` 和 `media` 工具结果别名。内联的图像、音频和
+视频数据会被直接预览，同时捕获的 JSON 形状和元数据
+仍可供检查。查看器对每个值最多显示 8 个预览，
+最多遍历 12 层嵌套，并内嵌最大 5
+MiB 的内联预览。较长的 JSON 字符串会在查看器中被截断，以避免重复显示大的
+base64 载荷。可识别的含媒体字段中的二进制值会持久化
+为 base64，因此仍可预览；无关的二进制值保持其
+常规 JSON 表示。
+
+例如，工具可以通过 `toModelOutput` 返回媒体：
+
+```ts
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const captureScreenshot = tool({
+  inputSchema: z.object({}),
+  execute: async () => ({
+    base64: await captureScreenshotAsBase64(),
+  }),
+  toModelOutput: ({ output }) => ({
+    type: 'content',
+    value: [
+      {
+        type: 'file',
+        filename: 'screenshot.png',
+        mediaType: 'image/png',
+        data: { type: 'data', data: output.base64 },
+      },
+    ],
+  }),
+});
+```
+
+远程 `http` 和 `https` 媒体不会自动加载。在查看器中选择 **Load
+preview** 即可以匿名 CORS 且不带 referrer 的方式获取。
+跨源浏览器凭据会被省略，但同源浏览器
+凭据仍可能被浏览器包含。包含内嵌
+用户名或密码的 URL 会被拒绝。不受支持的媒体、提供商引用、
+格式错误的值、不安全的 URL scheme，以及超过预览上限的
+内联值，都会保留其 JSON 与元数据回退显示，而不带内嵌预览。
+
+遥测会自动启用，但 AI SDK 7 默认在步骤结果中排除原始请求与响应正文。要让 DevTools 在 `generateText` 中获取它们，请在调用上启用正文保留：
+
+```ts highlight="4-7"
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Hello!',
+  include: {
+    requestBody: true,
+    responseBody: true,
+  },
+});
+```
+
+`ToolLoopAgent` 在其构造函数中接受相同的 `include` 设置。对于 `streamText` 和 `ToolLoopAgent.stream()`，只能保留请求正文；请使用 `include: { requestBody: true }`。
+
+### 运行与步骤
+
+DevTools 将捕获的数据组织为运行（run）与步骤（step）：
+
+- **运行**：一次完整的多步 AI 交互，按初始提示词分组
+- **步骤**：一次运行中的单个 LLM 调用（例如一次 `generateText` 或 `streamText` 调用）
+
+多步交互（例如由工具调用或智能体循环产生的交互）会被归组为包含多个步骤的单次运行。嵌套的子智能体调用会链接到其父运行，便于追踪完整的执行树。
+
+## 工作原理
+
+`DevToolsTelemetry` 集成挂接到 AI SDK [遥测](/docs/ai-sdk-core/telemetry)生命周期，捕获所有 `generateText`、`streamText`、`generateObject` 和 `streamObject` 调用。捕获的数据本地存储在一个 JSON 文件（`.devtools/generations.json`）中，并通过使用 Hono 和 React 构建的 Web UI 提供。
+
+<Note type="warning">
+  该集成会自动将 `.devtools` 添加到你的 `.gitignore` 文件。
+  请确认 `.devtools` 在你的 `.gitignore` 中，以确保不会把
+  敏感的 AI 交互数据提交到仓库。
+</Note>
+
+## 安全注意事项
+
+DevTools 将所有 AI 交互以明文文件形式本地存储，包括：
+
+- 用户提示词和消息
+- LLM 响应
+- 工具调用参数与结果
+- 启用正文保留时的 API 请求与响应数据
+
+**只应在本地开发环境中使用 DevTools**。请勿在生产环境或处理敏感数据时启用 DevTools。

@@ -1,0 +1,25 @@
+---
+title: AI_ToolCallNotFoundForApprovalError
+description: 了解如何修复 AI_ToolCallNotFoundForApprovalError
+---
+
+# AI_ToolCallNotFoundForApprovalError
+
+当某个工具批准请求引用了未找到的工具调用时，会发生此错误。这种情况可能出现在处理由提供商发出的批准请求时（例如 MCP 流程），此时被引用的工具调用 ID 并不存在。
+
+## 属性
+
+- `toolCallId`：未找到的工具调用 ID
+- `approvalId`：批准请求的 ID
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_ToolCallNotFoundForApprovalError` 的实例：
+
+```typescript
+import { ToolCallNotFoundForApprovalError } from 'ai';
+
+if (ToolCallNotFoundForApprovalError.isInstance(error)) {
+  // Handle the error
+}
+```

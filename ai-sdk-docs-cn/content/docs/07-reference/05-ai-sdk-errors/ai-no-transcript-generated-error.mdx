@@ -1,0 +1,24 @@
+---
+title: AI_NoTranscriptGeneratedError
+description: 了解如何修复 AI_NoTranscriptGeneratedError
+---
+
+# AI_NoTranscriptGeneratedError
+
+此错误在无法从输入生成转写文本（transcript）时发生。
+
+## 属性
+
+- `responses`：语音转写模型响应元数据数组（构造函数中必填）
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoTranscriptGeneratedError` 的实例：
+
+```typescript
+import { NoTranscriptGeneratedError } from 'ai';
+
+if (NoTranscriptGeneratedError.isInstance(error)) {
+  // Handle the error
+}
+```

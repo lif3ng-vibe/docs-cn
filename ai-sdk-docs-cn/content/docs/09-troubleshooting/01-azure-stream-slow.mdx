@@ -1,0 +1,31 @@
+---
+title: Azure OpenAI 流式响应缓慢
+description: 了解如何排查 Azure OpenAI 流式响应缓慢的问题。
+---
+
+# Azure OpenAI Slow To Stream
+
+## 问题
+
+使用 Azure 上托管的 OpenAI 时，流式响应缓慢且分块很大。
+
+## 原因
+
+这是 Microsoft Azure 的问题。一些用户反馈了以下解决办法：
+
+- **更新内容过滤设置**：
+  在 [Azure AI Studio](https://ai.azure.com/) 中，进入 "Shared resources" > "Content filters"，新建一个内容过滤器，并将 "Output filter" 下的 "Streaming mode (Preview)" 从 "Default" 改为 "Asynchronous Filter"。
+
+## 解决方案
+
+你可以使用 [`smoothStream` 转换器](/docs/ai-sdk-core/generating-text#smoothing-streams)逐词进行流式输出。
+
+```tsx highlight="6"
+import { smoothStream, streamText } from 'ai';
+
+const result = streamText({
+  model,
+  prompt,
+  experimental_transform: smoothStream(),
+});
+```

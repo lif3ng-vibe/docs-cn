@@ -1,0 +1,503 @@
+---
+title: useChat
+description: useChat Hook 的 API 参考。
+---
+
+# `useChat()`
+
+让你能够轻松地为聊天机器人应用创建对话式用户界面。它支持从你的 AI 提供商流式传输聊天消息、管理聊天状态，并在收到新消息时自动更新 UI。
+
+<Note>
+  `useChat` API 在 AI SDK 5.0 中进行了重大更新。它现在采用基于
+  transport 的架构，不再在内部管理输入状态。详情请参阅
+  [迁移指南](/docs/migration-guides/migration-guide-5-0#usechat-变更)。
+</Note>
+
+## 导入
+
+<Tabs items={['React', 'Svelte', 'Vue', 'Angular']}>
+  <Tab>
+    <Snippet
+      text="import { useChat } from '@ai-sdk/react'"
+      dark
+      prompt={false}
+    />
+  </Tab>
+  <Tab>
+    <Snippet text="import { Chat } from '@ai-sdk/svelte'" dark prompt={false} />
+  </Tab>
+  <Tab>
+    <Snippet text="import { useChat } from '@ai-sdk/vue'" dark prompt={false} />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="import { Chat } from '@ai-sdk/angular'"
+      dark
+      prompt={false}
+    />
+  </Tab>
+</Tabs>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'chat',
+      type: 'Chat<UIMessage>',
+      isOptional: true,
+      description:
+        '要使用的现有 Chat 实例。如果提供了该参数，其他参数将被忽略。',
+    },
+    {
+      name: 'transport',
+      type: 'ChatTransport',
+      isOptional: true,
+      description:
+        '用于发送消息的 transport。默认为使用 `/api/chat` 端点的 DefaultChatTransport。',
+      properties: [
+        {
+          type: 'DefaultChatTransport',
+          parameters: [
+            {
+              name: 'api',
+              type: "string = '/api/chat'",
+              isOptional: true,
+              description: '聊天请求的 API 端点。',
+            },
+            {
+              name: 'credentials',
+              type: 'RequestCredentials',
+              isOptional: true,
+              description: 'fetch 请求的凭据模式。',
+            },
+            {
+              name: 'headers',
+              type: 'Record<string, string> | Headers',
+              isOptional: true,
+              description: '随请求发送的 HTTP 请求头。',
+            },
+            {
+              name: 'body',
+              type: 'object',
+              isOptional: true,
+              description: '随请求发送的额外 body 对象。',
+            },
+            {
+              name: 'fetch',
+              type: 'FetchFunction',
+              isOptional: true,
+              description:
+                '自定义 fetch 实现。你可以将其用作拦截请求的中间件，或提供自定义 fetch 实现（例如用于测试）。',
+            },
+            {
+              name: 'prepareSendMessagesRequest',
+              type: 'PrepareSendMessagesRequest',
+              isOptional: true,
+              description:
+                '用于在聊天 API 调用前自定义请求的函数。',
+              properties: [
+                {
+                  type: 'PrepareSendMessagesRequest',
+                  parameters: [
+                    {
+                      name: 'options',
+                      type: 'PrepareSendMessageRequestOptions',
+                      description: '准备请求所需的选项',
+                      properties: [
+                        {
+                          type: 'PrepareSendMessageRequestOptions',
+                          parameters: [
+                            {
+                              name: 'id',
+                              type: 'string',
+                              description: '聊天 ID',
+                            },
+                            {
+                              name: 'messages',
+                              type: 'UIMessage[]',
+                              description: '聊天中的当前消息',
+                            },
+                            {
+                              name: 'requestMetadata',
+                              type: 'unknown',
+                              description: '请求元数据',
+                            },
+                            {
+                              name: 'body',
+                              type: 'Record<string, any> | undefined',
+                              description: '请求 body',
+                            },
+                            {
+                              name: 'credentials',
+                              type: 'RequestCredentials | undefined',
+                              description: '请求凭据',
+                            },
+                            {
+                              name: 'headers',
+                              type: 'HeadersInit | undefined',
+                              description: '请求头',
+                            },
+                            {
+                              name: 'api',
+                              type: 'string',
+                              description: `请求使用的 API 端点。如果未指定，默认为 transport 的 API 端点：/api/chat。`,
+                            },
+                            {
+                              name: 'trigger',
+                              type: "'submit-message' | 'regenerate-message'",
+                              description: '请求的触发方式',
+                            },
+                            {
+                              name: 'messageId',
+                              type: 'string | undefined',
+                              description: '消息 ID（如适用）',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'prepareReconnectToStreamRequest',
+              type: 'PrepareReconnectToStreamRequest',
+              isOptional: true,
+              description:
+                '用于在重连 API 调用前自定义请求的函数。',
+              properties: [
+                {
+                  type: 'PrepareReconnectToStreamRequest',
+                  parameters: [
+                    {
+                      name: 'options',
+                      type: 'PrepareReconnectToStreamRequestOptions',
+                      description:
+                        '准备重连请求所需的选项',
+                      properties: [
+                        {
+                          type: 'PrepareReconnectToStreamRequestOptions',
+                          parameters: [
+                            {
+                              name: 'id',
+                              type: 'string',
+                              description: '聊天 ID',
+                            },
+                            {
+                              name: 'requestMetadata',
+                              type: 'unknown',
+                              description: '请求元数据',
+                            },
+                            {
+                              name: 'body',
+                              type: 'Record<string, any> | undefined',
+                              description: '请求 body',
+                            },
+                            {
+                              name: 'credentials',
+                              type: 'RequestCredentials | undefined',
+                              description: '请求凭据',
+                            },
+                            {
+                              name: 'headers',
+                              type: 'HeadersInit | undefined',
+                              description: '请求头',
+                            },
+                            {
+                              name: 'api',
+                              type: 'string',
+                              description: `请求使用的 API 端点。如果未指定，默认为 transport 的 API 端点与聊天 ID 的组合：/api/chat/{chatId}/stream。`,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'id',
+      type: 'string',
+      isOptional: true,
+      description:
+        '聊天的唯一标识符。如果未提供，将随机生成一个。',
+    },
+    {
+      name: 'messages',
+      type: 'UIMessage[]',
+      isOptional: true,
+      description: '用于填充对话的初始聊天消息。',
+    },
+    {
+      name: 'messageMetadataSchema',
+      type: 'FlexibleSchema',
+      isOptional: true,
+      description: '用于校验消息元数据的 schema。',
+    },
+    {
+      name: 'dataPartSchemas',
+      type: 'UIDataTypesToSchemas',
+      isOptional: true,
+      description: '用于校验消息中数据部分（data part）的 schema。',
+    },
+    {
+      name: 'generateId',
+      type: 'IdGenerator',
+      isOptional: true,
+      description:
+        '为消息和聊天生成唯一 ID 的函数。如果未提供，将使用 AI SDK 默认的 generateId。',
+    },
+    {
+      name: 'onToolCall',
+      type: '({toolCall: ToolCall}) => void | Promise<void>',
+      isOptional: true,
+      description:
+        '可选的回调函数，在收到工具调用时被调用。你必须调用 addToolOutput 来提供工具结果。',
+    },
+    {
+      name: 'sendAutomaticallyWhen',
+      type: '(options: { messages: UIMessage[] }) => boolean | PromiseLike<boolean>',
+      isOptional: true,
+      description:
+        '如果提供了该函数，当流结束或添加了工具调用时会调用它，以判断是否应重新提交当前消息。对于常见场景，你可以使用 lastAssistantMessageIsCompleteWithToolCalls 辅助函数。',
+    },
+    {
+      name: 'onFinish',
+      type: '(options: OnFinishOptions) => void',
+      isOptional: true,
+      description: '在助手响应流式传输结束时调用。',
+      properties: [
+        {
+          type: 'OnFinishOptions',
+          parameters: [
+            {
+              name: 'message',
+              type: 'UIMessage',
+              description: '响应消息。',
+            },
+            {
+              name: 'messages',
+              type: 'UIMessage[]',
+              description: '包括响应消息在内的所有消息',
+            },
+            {
+              name: 'isAbort',
+              type: 'boolean',
+              description:
+                '当请求被客户端中止时为 true。',
+            },
+            {
+              name: 'isDisconnect',
+              type: 'boolean',
+              description:
+                '如果服务器已断开连接（例如由于网络错误）则为 true。',
+            },
+            {
+              name: 'isError',
+              type: 'boolean',
+              description: `如果流式传输期间的错误导致响应提前停止则为 true。`,
+            },
+            {
+              name: 'finishReason',
+              type: "'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other'",
+              isOptional: true,
+              description:
+                '模型完成响应生成的原因。如果模型未提供结束原因则为 undefined。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onError',
+      type: '(error: Error) => void',
+      isOptional: true,
+      description:
+        '遇到错误时调用的回调函数。',
+    },
+    {
+      name: 'onData',
+      type: '(dataPart: DataUIPart) => void',
+      isOptional: true,
+      description:
+        '可选的回调函数，在收到数据部分（data part）时调用。',
+    },
+    {
+      name: 'throttle',
+      type: 'number',
+      isOptional: true,
+      description:
+        '仅限 React 和 Vue。响应式聊天消息更新的自定义节流等待时间（毫秒）。正值可降低 UI 更新频率，但不会延迟流处理或回调，并且在进入 ready 或 error 状态前会先发布最新消息。默认为 undefined，即禁用节流。',
+    },
+    {
+      name: 'resume',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '是否恢复进行中的聊天生成流。默认为 false。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'id',
+      type: 'string',
+      description: '聊天的 id。',
+    },
+    {
+      name: 'messages',
+      type: 'UIMessage[]',
+      description: '当前的聊天消息数组。',
+      properties: [
+        {
+          type: 'UIMessage',
+          parameters: [
+            {
+              name: 'id',
+              type: 'string',
+              description: '消息的唯一标识符。',
+            },
+            {
+              name: 'role',
+              type: "'system' | 'user' | 'assistant'",
+              description: '消息的角色。',
+            },
+            {
+              name: 'parts',
+              type: 'UIMessagePart[]',
+              description:
+                '消息的组成部分。在 UI 中渲染消息时使用它。',
+            },
+            {
+              name: 'metadata',
+              type: 'unknown',
+              isOptional: true,
+              description: '消息的元数据。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'status',
+      type: "'submitted' | 'streaming' | 'ready' | 'error'",
+      description:
+        '聊天的当前状态："ready"（空闲）、"submitted"（请求已发送）、"streaming"（正在接收响应）或 "error"（请求失败）。',
+    },
+    {
+      name: 'error',
+      type: 'Error | undefined',
+      description: '发生错误时的错误对象。',
+    },
+    {
+      name: 'sendMessage',
+      type: '(message?: { text: string; files?: FileList | FileUIPart[]; metadata?; messageId?: string } | CreateUIMessage, options?: ChatRequestOptions) => Promise<void>',
+      description:
+        '向聊天发送新消息的函数。这会触发一次 API 调用以生成助手响应。如果提供了 messageId，该消息将被替换（适用于编辑场景）。使用 CreateUIMessage 进行替换时，需提供其 id 以便为替换后的消息分配新 ID。如果未提供消息，则重新提交当前消息（在添加工具输出后很有用）。',
+      properties: [
+        {
+          type: 'ChatRequestOptions',
+          parameters: [
+            {
+              name: 'headers',
+              type: 'Record<string, string> | Headers',
+              isOptional: true,
+              description:
+                '应传递给 API 端点的额外请求头。',
+            },
+            {
+              name: 'body',
+              type: 'object',
+              isOptional: true,
+              description:
+                '应发送到 API 端点的额外 body JSON 属性。',
+            },
+            {
+              name: 'metadata',
+              type: 'unknown',
+              isOptional: true,
+              description: '应发送到 API 端点的额外数据。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'regenerate',
+      type: '(options?: { messageId?: string } & ChatRequestOptions) => Promise<void>',
+      description:
+        '重新生成最后一条助手消息或指定消息的函数。如果未提供 messageId，则重新生成最后一条助手消息。接受 ChatRequestOptions 以设置 headers、body 和 metadata。',
+    },
+    {
+      name: 'stop',
+      type: '() => void',
+      description:
+        '中止助手当前流式响应的函数。',
+    },
+    {
+      name: 'clearError',
+      type: '() => void',
+      description: '清除错误状态。',
+    },
+    {
+      name: 'resumeStream',
+      type: '() => void',
+      description:
+        '恢复被中断的流式响应的函数。在流式传输期间发生网络错误时很有用。',
+    },
+    {
+      name: 'addToolOutput',
+      type: '(options: { tool: string; toolCallId: string; output: unknown } | { tool: string; toolCallId: string; state: "output-error", errorText: string }) => void',
+      description:
+        '向聊天添加工具结果的函数。这会用工具结果更新聊天消息。如果配置了 sendAutomaticallyWhen，可能会触发自动提交。',
+    },
+    {
+      name: 'addToolApprovalResponse',
+      type: '(options: { id: string; approved: boolean; reason?: string }) => void | PromiseLike<void>',
+      description:
+        '响应工具审批请求的函数。id 应与工具调用中的审批 id 匹配。如果配置了 sendAutomaticallyWhen，可能会触发自动提交。',
+    },
+    {
+      name: 'addToolResult',
+      type: '(options: { tool: string; toolCallId: string; output: unknown } | { tool: string; toolCallId: string; state: "output-error", errorText: string }) => void',
+      description: '已弃用。请改用 addToolOutput。',
+    },
+    {
+      name: 'setMessages',
+      type: '(messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])) => void',
+      description:
+        '在不触发 API 调用的情况下在本地更新消息状态的函数。适用于乐观更新。',
+    },
+  ]}
+/>
+
+## React 渲染与共享 Chat 实例
+
+在 React 中，`messages`、`status` 和 `error` 描述的是当前渲染对应的快照。
+底层的 `Chat` 会随着流分块的处理而更新。React 可能会批量处理更新，
+而 `throttle` 可以延迟消息渲染，但不会延迟流处理或回调。
+状态与错误更新会附带最新消息，因此已完成或已失败的响应会以其最终消息快照渲染。
+
+每次 `useChat({ chat })` 调用都会独立订阅。共享同一个 `Chat`
+的消费者在使用不同节流间隔时，可能显示不同的消息快照。
+函数式 `setMessages` 更新器接收的是 Chat 的最新消息，这些消息可能比
+当前渲染中的消息更新。
+
+## 了解更多
+
+- [聊天机器人](/docs/ai-sdk-ui/chatbot)
+- [带工具的聊天机器人](/docs/ai-sdk-ui/chatbot-tool-usage)
+- [UIMessage](/docs/reference/ai-sdk-core/ui-message)

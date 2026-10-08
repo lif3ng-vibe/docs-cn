@@ -1,0 +1,399 @@
+---
+title: Laminar
+description: 使用 Laminar 监控你的 AI SDK 应用
+---
+
+# Laminar 可观测性
+
+[Laminar](https://laminar.sh) 是一个[开源](https://github.com/lmnr-ai/lmnr)、Otel 原生的可观测性平台，专为智能体（agent）打造。
+
+Laminar 特性：
+
+- [兼容 AI SDK 等框架的追踪](https://laminar.sh/docs/tracing/introduction)，
+- [关于智能体行为的信号与告警](https://laminar.sh/docs/signals/introduction)，
+- [评估](https://laminar.sh/docs/evaluations/introduction)，
+- [智能体调试器](https://laminar.sh/docs/debugger/introduction)
+
+<Note>
+  本指南的另一个版本可在 [Laminar
+  文档](https://laminar.sh/docs/tracing/integrations/vercel-ai-sdk)中查看。
+</Note>
+
+## 安装
+
+你可以让编程智能体（agent）来安装 Laminar，也可以手动安装。
+
+### 用编程智能体安装
+
+复制下面的提示词（prompt）并粘贴给你的编程智能体，即可全自动完成集成。
+
+```markdown
+1. Run `npx lmnr-cli setup` at the project root to get started with Laminar. This command will authenticate the user, save a new project API key to .env, and install the Laminar skill.
+2. Instrument this project with Laminar using the installed skill or the docs:
+   https://laminar.sh/docs/tracing/integrations/vercel-ai-sdk
+3. Run a traced path inside your application.
+4. Verify instrumentation:
+   `lmnr-cli sql query "SELECT * FROM traces ORDER BY start_time DESC LIMIT 1" --json`
+```
+
+### 手动安装
+
+要手动设置 Laminar，先安装 `@lmnr-ai/lmnr` 包。
+
+<InstallPackages packages="@lmnr-ai/lmnr" />
+
+### 获取项目 API key 并设置环境变量
+
+然后，在 [Laminar](https://laminar.sh) 注册，或自托管一个实例（[github](https://github.com/lmnr-ai/lmnr)），并创建一个新项目。
+
+运行 `npx lmnr-cli@latest setup`。它会：
+
+- 为你的设备完成 Laminar 认证，
+- 创建新的项目 API key，并以 `LMNR_PROJECT_API_KEY` 保存到 .env，
+- 安装 Laminar skill，供你的编程智能体在用 Laminar SDK 埋点智能体时使用
+
+## Next.js
+
+### 初始化追踪
+
+在 Next.js 中，Laminar 的初始化与 AI SDK 遥测（telemetry）集成都应放在 `instrumentation.{ts,js}` 中完成：
+
+```javascript
+export async function register() {
+  // prevent this from running in the edge runtime
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { registerTelemetry } = await import('ai');
+    const { LaminarAiSdkTelemetry } = await import('@lmnr-ai/lmnr');
+
+    registerTelemetry(new LaminarAiSdkTelemetry());
+  }
+}
+```
+
+### 把 @lmnr-ai/lmnr 加入 next.config
+
+在你的 `next.config.js`（`.ts` / `.mjs`）中添加以下几行：
+
+```javascript
+const nextConfig = {
+  serverExternalPackages: ['@lmnr-ai/lmnr'],
+};
+
+export default nextConfig;
+```
+
+这是因为 Laminar 依赖 OpenTelemetry，而后者使用了部分 Node.js 特有的功能，需要告知 Next.js。更多信息见 [Next.js 文档](https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages)。
+
+### 追踪 AI SDK 调用
+
+集成注册完成后，每次 AI SDK 调用都会自动捕获遥测数据：
+
+```javascript
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'What is Laminar flow?',
+});
+```
+
+这会为 `ai.generateText` 创建 span。Laminar 会收集并展示以下信息：
+
+- LLM 调用的输入与输出
+- 开始与结束时间
+- 时长 / 延迟
+- 所用的提供商与模型
+- 输入与输出 token 数
+- 输入与输出价格
+- 额外的元数据与 span 属性
+
+### 较旧版本的 Next.js
+
+如果你使用的 Next.js 版本满足 13.4 ≤ Next.js < 15，还需要启用实验性的 instrumentation hook。将以下内容放入 `next.config.js`：
+
+```javascript
+module.exports = {
+  experimental: {
+    instrumentationHook: true,
+  },
+};
+```
+
+更多信息请参阅 Laminar 的 [AI SDK 集成指南](https://laminar.sh/docs/tracing/integrations/vercel-ai-sdk)与 Next.js 的 [instrumentation 文档](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation)。你也可以在文档中了解如何为 Next.js 启用所有追踪数据。
+
+### 与 `@vercel/otel` 一起使用
+
+Laminar 可以与 `@vercel/otel` 共存，并追踪 AI SDK 调用。Laminar 的默认设置会确保：
+
+- 常规的 Next.js 追踪数据通过 `@vercel/otel` 发送到你在 Vercel 中配置的遥测后端，
+- AI SDK 以及其他 LLM 或浏览器智能体的追踪数据通过 Laminar 发送。
+
+```javascript
+import { registerOTel } from '@vercel/otel';
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { registerTelemetry } = await import('ai');
+    const { initializeLaminarInstrumentations, LaminarAiSdkTelemetry } =
+      await import('@lmnr-ai/lmnr');
+
+    // Next.js telemetry
+    registerOTel({
+      serviceName: 'my-service',
+      instrumentations: initializeLaminarInstrumentations(),
+    });
+
+    // Laminar AI SDK telemetry
+    registerTelemetry(new LaminarAiSdkTelemetry());
+  }
+}
+```
+
+如果想通过 Laminar 追踪所有 Next.js 追踪数据，可参考更高级配置的示例[仓库](https://github.com/lmnr-ai/lmnr-ts/tree/main/examples/nextjs)。
+
+### 与 `@sentry/node` 一起使用
+
+Laminar 可以与 `@sentry/node` 共存，并追踪 AI SDK 调用。请确保在 `Sentry.init` **之后**初始化 Laminar。
+
+这会确保：
+
+- Sentry 埋点覆盖的内容发送到你的 Sentry 后端，
+- AI SDK 以及其他 LLM 或浏览器智能体的追踪数据通过 Laminar 发送。
+
+```javascript
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { registerTelemetry } = await import('ai');
+    const Sentry = await import('@sentry/node');
+    const { LaminarAiSdkTelemetry } = await import('@lmnr-ai/lmnr');
+
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+    });
+
+    // Make sure to initialize Laminar **after** `Sentry.init`
+    registerTelemetry(new LaminarAiSdkTelemetry());
+  }
+}
+```
+
+## Node.js
+
+### 初始化追踪
+
+然后，在你的应用中初始化追踪：
+
+```javascript
+import { registerTelemetry } from 'ai';
+import { LaminarAiSdkTelemetry } from '@lmnr-ai/lmnr';
+
+registerTelemetry(new LaminarAiSdkTelemetry());
+```
+
+这只需在应用中执行一次，应尽早完成，但要在其他追踪库（如 `@sentry/node`）初始化_之后_。
+
+更多信息见 Laminar [文档](https://laminar.sh/docs/tracing/introduction)。
+
+### 追踪 AI SDK 调用
+
+集成注册完成后，每次 AI SDK 调用都会自动捕获遥测数据：
+
+```javascript
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'What is Laminar flow?',
+});
+```
+
+这会为 `ai.generateText` 创建 span。Laminar 会收集并展示以下信息：
+
+- LLM 调用的输入与输出
+- 开始与结束时间
+- 时长 / 延迟
+- 所用的提供商与模型
+- 输入与输出 token 数
+- 输入与输出价格
+- 额外的元数据与 span 属性
+
+### 与 `@sentry/node` 一起使用
+
+Laminar 可以配合 `@sentry/node` 追踪 AI SDK 调用。请确保在 `Sentry.init` **之后**初始化 Laminar：
+
+```javascript
+const { LaminarAiSdkTelemetry } = await import('@lmnr-ai/lmnr');
+const Sentry = await import('@sentry/node');
+const { registerTelemetry } = await import('ai');
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+});
+
+registerTelemetry(new LaminarAiSdkTelemetry());
+```
+
+这会确保：
+
+- Sentry 埋点覆盖的内容发送到你的 Sentry 后端，
+- AI SDK 以及其他 LLM 或浏览器智能体的追踪数据通过 Laminar 发送。
+
+这两个库都支持额外的高级配置，但推荐使用上面的默认设置。
+
+## 额外配置
+
+### Laminar 选项
+
+`LaminarAiSdkTelemetry` 可以向 Laminar.initialize() 传入选项。对于自托管用户：
+
+```javascript
+import { registerTelemetry } from 'ai';
+import { LaminarAiSdkTelemetry } from '@lmnr-ai/lmnr';
+
+registerTelemetry(
+  new LaminarAiSdkTelemetry({
+    laminarOptions: {
+      projectApiKey: process.env.LMNR_PROJECT_API_KEY,
+      baseUrl: 'http://localhost',
+      httpPort: 8000,
+      grpcPort: 8001,
+    },
+  }),
+);
+```
+
+### 不记录输入或输出
+
+默认情况下，Laminar 集成会记录所有输入与输出，但你可以在构造函数选项中将其关闭。
+
+```javascript
+import { registerTelemetry } from 'ai';
+import { LaminarAiSdkTelemetry } from '@lmnr-ai/lmnr';
+
+registerTelemetry(
+  new LaminarAiSdkTelemetry({
+    recordInputs: false, // default true
+    recordOutputs: false, // default true
+  }),
+);
+```
+
+### 为每个智能体步骤添加 span
+
+AI SDK 遥测集成为每个智能体步骤发出 step span。默认情况下，Laminar 会忽略这些 span。你可以在构造函数选项中配置此行为。
+
+```javascript
+import { registerTelemetry } from 'ai';
+import { LaminarAiSdkTelemetry } from '@lmnr-ai/lmnr';
+
+registerTelemetry(
+  new LaminarAiSdkTelemetry({
+    createStepSpan: true, // default false
+  }),
+);
+```
+
+### Span 名称
+
+如果想覆盖默认的 span 名称，可以在 `telemetry` 选项中设置 `functionId`。
+
+```javascript
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: `Write a poem about Laminar flow.`,
+  telemetry: {
+    functionId: 'poem-writer',
+  },
+});
+```
+
+### 嵌套 span
+
+如果不仅想追踪 AI SDK 调用，还想追踪应用中的其他函数，可以使用 Laminar 的 `observe` 包装器。
+
+```javascript highlight="3"
+import { observe } from '@lmnr-ai/lmnr';
+
+const result = await observe({ name: 'my-function' }, async () => {
+  // ... some work
+  await generateText({
+    //...
+  });
+  // ... some work
+});
+```
+
+这会创建一个名为 "my-function" 的 span 并追踪该函数调用。在其内部，你可以看到嵌套的 `ai.generateText` span。
+
+要追踪被 `observe` 包装的函数的输入参数，请把它们作为额外参数传给包装器。函数的返回值会从包装器返回，并被记录为该 span 的输出。
+
+```javascript
+const result = await observe(
+  { name: 'poem writer' },
+  async (topic: string, mood: string) => {
+    const { text } = await generateText({
+      model: openai('gpt-6-luna'),
+      prompt: `Write a poem about ${topic} in ${mood} mood.`,
+    });
+    return text;
+  },
+  'Laminar flow',
+  'happy',
+);
+```
+
+### 元数据
+
+在 Laminar 中，元数据设置在 trace 层级。元数据由键值对组成，可用于过滤追踪数据。
+
+```javascript
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: `Write a poem about Laminar flow.`,
+  telemetry: {
+    metadata: {
+      'my-key': 'my-value',
+      'another-key': 'another-value',
+    },
+  },
+});
+```
+
+它会被转换为 Laminar 的 [metadata](https://laminar.sh/docs/tracing/structure/metadata) 并存储在 trace 中。
+
+### 标签
+
+保留元数据键之一是 `tags`，可用于为 span 添加[标签](https://laminar.sh/docs/tracing/structure/tags)。
+
+标签随后可用于在 Laminar 中过滤追踪数据。
+
+```javascript
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: `Write a poem about Laminar flow.`,
+  telemetry: {
+    metadata: {
+      tags: ['fallback-model', 'api-handler'],
+    },
+  },
+});
+```
+
+### Session ID 与 User ID
+
+Laminar 中的 trace 可以归组到[会话](https://laminar.sh/docs/tracing/structure/sessions)，也可以按[用户 ID](https://laminar.sh/docs/tracing/structure/user-id) 归组。这些同样是保留元数据键。
+
+```javascript
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: `Write a poem about Laminar flow.`,
+  telemetry: {
+    metadata: {
+      sessionId: 'session-123',
+      userId: 'user-123',
+    },
+  },
+});
+```

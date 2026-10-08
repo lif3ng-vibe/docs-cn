@@ -1,0 +1,103 @@
+---
+title: Clarifai
+description: 在 AI SDK 中使用 Clarifai 的 OpenAI 兼容 API。
+---
+
+# Clarifai 提供商
+
+[Clarifai](https://docs.clarifai.com/getting-started/quickstart) 是一个用于构建、部署和扩展 AI 应用的平台。它为计算机视觉、自然语言处理和生成式 AI 提供了一整套工具与 API。Clarifai 通过其全栈 AI 开发平台提供 OpenAI 兼容 API，让你能够借助 AI SDK 轻松集成强大的 AI 能力。
+
+## 设置
+
+Clarifai 提供商（provider）与 OpenAI API 兼容，因此通过 `@ai-sdk/openai-compatible` 模块提供。安装方式如下：
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+## 提供商实例
+
+要使用 Clarifai，可以用 `@ai-sdk/openai-compatible` 中的 `createOpenAICompatible` 函数创建一个自定义提供商实例：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const clarifai = createOpenAICompatible({
+  name: 'clarifai',
+  baseURL: 'https://api.clarifai.com/v2/ext/openai/v1',
+  apiKey: process.env.CLARIFAI_PAT,
+});
+```
+
+<Note>
+  你可以在 Clarifai 的[账户设置](https://clarifai.com/settings/security)中创建个人访问令牌（PAT）来获取 API key。请务必将你的 PAT 设置到 `CLARIFAI_PAT` 环境变量中。
+
+新用户可以在 [Clarifai](https://clarifai.com/signup) 注册免费账户以快速上手。
+
+</Note>
+
+## 语言模型
+
+你可以使用该提供商实例与 Clarifai 上提供的各种大语言模型（LLM）交互。例如，使用 [DeepSeek-R1](https://clarifai.com/deepseek-ai/deepseek-chat/models/DeepSeek-R1-0528-Qwen3-8B) 这一强大的开源语言模型：
+
+```ts
+const model = clarifai.chatModel(
+  'https://clarifai.com/deepseek-ai/deepseek-chat/models/DeepSeek-R1-0528-Qwen3-8B',
+);
+```
+
+### 示例 - 生成文本
+
+你可以使用 `generateText` 函数，用 Clarifai 的语言模型生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const clarifai = createOpenAICompatible({
+  name: 'clarifai',
+  baseURL: 'https://api.clarifai.com/v2/ext/openai/v1',
+  apiKey: process.env.CLARIFAI_PAT,
+});
+
+const model = clarifai.chatModel(
+  'https://clarifai.com/deepseek-ai/deepseek-chat/models/DeepSeek-R1-0528-Qwen3-8B',
+);
+
+const { text, usage, finishReason } = await generateText({
+  model,
+  prompt: 'What is photosynthesis?',
+});
+
+console.log(text);
+console.log('Token usage:', usage);
+console.log('Finish reason:', finishReason);
+```
+
+### 示例 - 流式生成文本
+
+你也可以使用 `streamText` 函数以流式方式接收 Clarifai 模型的文本响应：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { streamText } from 'ai';
+
+const clarifai = createOpenAICompatible({
+  name: 'clarifai',
+  baseURL: 'https://api.clarifai.com/v2/ext/openai/v1',
+  apiKey: process.env.CLARIFAI_PAT,
+});
+
+const model = clarifai.chatModel(
+  'https://clarifai.com/deepseek-ai/deepseek-chat/models/DeepSeek-R1-0528-Qwen3-8B',
+);
+
+const result = streamText({
+  model,
+  prompt: 'What is photosynthesis?',
+});
+
+for await (const message of result.textStream) {
+  console.log(message);
+}
+```
+
+完整可用模型列表请参阅 [Clarifai 模型库（Model Gallery）](https://clarifai.com/explore)。

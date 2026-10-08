@@ -1,0 +1,104 @@
+---
+title: 读取 UIMessage 流
+description: 了解如何读取 UIMessage 流。
+---
+
+# Reading UI Message Streams
+
+`UIMessage` 流不仅在传统聊天场景中有用。你可以把它用于终端 UI、客户端上的自定义流处理，或 React 服务器组件（RSC）。
+
+`readUIMessageStream` 辅助函数会把 `UIMessageChunk` 对象流转换为 `UIMessage` 对象的 `AsyncIterableStream`，让你能在消息构建的过程中进行处理。
+
+## 基本用法
+
+```tsx
+import { readUIMessageStream, streamText, toUIMessageStream } from 'ai';
+__PROVIDER_IMPORT__;
+
+async function main() {
+  const result = streamText({
+    model: __MODEL__,
+    prompt: 'Write a short story about a robot.',
+  });
+
+  for await (const uiMessage of readUIMessageStream({
+    stream: toUIMessageStream({ stream: result.stream }),
+  })) {
+    console.log('Current message state:', uiMessage);
+  }
+}
+```
+
+## 工具调用集成
+
+处理包含工具调用的流式响应：
+
+```tsx
+import { readUIMessageStream, streamText, toUIMessageStream, tool } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+async function handleToolCalls() {
+  const result = streamText({
+    model: __MODEL__,
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: ({ location }) => ({
+          location,
+          temperature: 72 + Math.floor(Math.random() * 21) - 10,
+        }),
+      }),
+    },
+    prompt: 'What is the weather in Tokyo?',
+  });
+
+  for await (const uiMessage of readUIMessageStream({
+    stream: toUIMessageStream({ stream: result.stream }),
+  })) {
+    // Handle different part types
+    uiMessage.parts.forEach(part => {
+      switch (part.type) {
+        case 'text':
+          console.log('Text:', part.text);
+          break;
+        case 'tool-call':
+          console.log('Tool called:', part.toolName, 'with args:', part.args);
+          break;
+        case 'tool-result':
+          console.log('Tool result:', part.result);
+          break;
+      }
+    });
+  }
+}
+```
+
+## 恢复对话
+
+从之前的消息状态恢复流式传输：
+
+```tsx
+import { readUIMessageStream, streamText, toUIMessageStream } from 'ai';
+__PROVIDER_IMPORT__;
+
+async function resumeConversation(lastMessage: UIMessage) {
+  const result = streamText({
+    model: __MODEL__,
+    messages: [
+      { role: 'user', content: 'Continue our previous conversation.' },
+    ],
+  });
+
+  // Resume from the last message
+  for await (const uiMessage of readUIMessageStream({
+    stream: toUIMessageStream({ stream: result.stream }),
+    message: lastMessage, // Resume from this message
+  })) {
+    console.log('Resumed message:', uiMessage);
+  }
+}
+```

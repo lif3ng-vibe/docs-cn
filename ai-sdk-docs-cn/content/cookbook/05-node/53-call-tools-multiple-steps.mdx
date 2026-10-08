@@ -1,0 +1,36 @@
+---
+title: 多步调用工具
+description: 了解如何结合 AI SDK 与 Node 进行多步工具调用
+tags: ['node', 'tool use', 'agent']
+---
+
+# Call Tools in Multiple Steps
+
+模型调用工具是为了获取信息或执行模型本身无法直接完成的操作。
+当工具结果（tool result）可用后，模型便可以利用它们生成下一条响应。
+
+你可以在 `generateText` 中通过 `stopWhen` 定义停止条件，从而启用多步工具调用。
+这样你就可以定义智能体（agent）在模型生成工具调用时的停止条件。
+
+```ts highlight={"7"}
+import { generateText, tool, isStepCount } from 'ai';
+import { z } from 'zod';
+
+const { text, steps } = await generateText({
+  model: 'openai/gpt-6-astra',
+  stopWhen: isStepCount(5),
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }: { location: string }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+  },
+  prompt: 'What is the weather in San Francisco?',
+});
+```

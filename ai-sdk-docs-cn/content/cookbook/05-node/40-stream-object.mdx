@@ -1,0 +1,38 @@
+---
+title: 流式生成对象
+description: 了解如何在 Node 中结合 AI SDK 流式生成结构化数据
+tags: ['node', 'streaming', 'structured data']
+---
+
+# Stream Object
+
+对象生成有时需要较长时间才能完成，
+尤其是当 schema 很大的时候。
+
+在生成式 UI（Generative UI）场景中，将对象实时流式（streaming）传输到客户端会很有用，
+可以在对象生成的同时渲染 UI。
+你可以将 `streamText` 与 `Output.object` 结合使用来生成部分对象流。
+
+```ts file='index.ts'
+import { streamText, Output } from 'ai';
+import { z } from 'zod';
+
+const { partialOutputStream } = streamText({
+  model: 'openai/gpt-6-astra',
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+
+for await (const partialObject of partialOutputStream) {
+  console.clear();
+  console.log(partialObject);
+}
+```

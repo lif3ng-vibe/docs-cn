@@ -1,0 +1,75 @@
+---
+title: InferUITool
+description: InferUITool 的 API 参考。
+---
+
+# InferUITool
+
+推断工具的输入与输出类型。
+
+在处理单个工具时，此类型辅助工具可确保 `UIMessage` 中工具输入与输出的类型安全。
+
+## 导入
+
+```tsx
+import { InferUITool } from 'ai';
+```
+
+## API 签名
+
+### 类型参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'TOOL',
+      type: 'Tool',
+      description: '要推断类型的工具。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个包含该工具推断出的输入与输出类型的类型。
+
+结果类型的形状为：
+
+```typescript
+{
+  input: InferToolInput<TOOL>;
+  output: InferToolOutput<TOOL>;
+}
+```
+
+## 示例
+
+### 基本用法
+
+```tsx
+import { InferUITool } from 'ai';
+import { z } from 'zod';
+
+const weatherTool = {
+  description: 'Get the current weather',
+  inputSchema: z.object({
+    location: z.string().describe('The city and state'),
+  }),
+  execute: async ({ location }) => {
+    return `The weather in ${location} is sunny.`;
+  },
+};
+
+// Infer the types from the tool
+type WeatherUITool = InferUITool<typeof weatherTool>;
+// This creates a type with:
+// {
+//   input: { location: string };
+//   output: string;
+// }
+```
+
+## 相关内容
+
+- [`InferUITools`](/docs/reference/ai-sdk-ui/infer-ui-tools) - 推断工具集的类型
+- [`ToolUIPart`](/docs/reference/ai-sdk-core/ui-message#tooluipart) - UI 消息的工具片段类型

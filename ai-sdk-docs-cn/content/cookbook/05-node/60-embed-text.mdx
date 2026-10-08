@@ -1,0 +1,28 @@
+---
+title: 嵌入文本
+description: 了解如何使用 AI SDK 和 Node 嵌入文本
+tags: ['node', 'embedding']
+---
+
+# Embed Text
+
+文本嵌入（embedding）是文本的数值化表示，能够捕捉语义信息，让机器以数学方式理解和处理语言。这些向量表示对许多 AI 应用至关重要，它们让语义搜索、文档相似度比较和内容推荐等任务成为可能。
+
+本示例演示如何使用文本嵌入模型将文本转换为嵌入（embedding）。得到的嵌入是一个高维向量，表示输入文本的语义。想了解嵌入的更多实际应用，请查看我们的 [RAG 示例](/cookbook/node/retrieval-augmented-generation)，其中展示了如何将嵌入用于文档检索。
+
+```ts
+import { embed } from 'ai';
+import 'dotenv/config';
+
+async function main() {
+  const { embedding, usage } = await embed({
+    model: 'openai/text-embedding-3-small',
+    value: 'sunny day at the beach',
+  });
+
+  console.log(embedding);
+  console.log(usage);
+}
+
+main().catch(console.error);
+```

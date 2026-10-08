@@ -1,0 +1,881 @@
+---
+title: 将你的数据迁移到 AI SDK 5.0
+description: 了解如何将已持久化的消息和聊天数据从 AI SDK 4.x 迁移到 5.0。
+---
+
+# Migrate Your Data to AI SDK 5.0
+
+AI SDK 5.0 对消息结构和持久化模式做出了变更。代码迁移通常可以用 codemod 自动完成，而数据迁移则不同，它取决于你具体的持久化方式、数据库 schema 和应用需求。
+
+**本指南首先让你的应用在 AI SDK 5.0 下跑起来**，做法是使用一个运行时转换层。这样你可以立即更新应用，而不会被数据库迁移阻塞，之后再按自己的节奏迁移数据 schema。
+
+## 推荐迁移流程
+
+为安全迁移，请遵循以下两阶段方法：
+
+### 阶段 1：让应用先跑起来（运行时转换）
+
+**目标**：在不改动数据库的前提下，将应用更新到 AI SDK 5.0。
+
+1. 更新依赖（v4 类型与 v5 一起安装）
+2. 添加在 v4 与 v5 消息格式之间转换的转换函数
+3. 更新数据读取逻辑，在从数据库读出消息时进行转换
+4. 将应用其余代码更新到 AI SDK 5.0（参见[主迁移指南](/docs/migration-guides/migration-guide-5-0)）
+
+在阶段 1 期间，数据库 schema 保持不变。你只是添加了一个在运行时转换消息的转换层。
+
+**时间线**：数小时到数天内可完成。
+
+### 阶段 2：迁移到 V5 schema（推荐）
+
+**目标**：将数据迁移到兼容 v5 的 schema，消除运行时转换开销。
+
+阶段 1 能让你立即恢复工作，但请在完成阶段 1 后尽快迁移 schema。本阶段采用并行迁移方式，配以等价的 v5 schema：
+
+1. 在现有 `messages` 表旁创建 `messages_v5` 表
+2. 开始向两张表双写（含转换）
+3. 运行后台迁移，转换存量消息
+4. 将读取切换到 v5 schema
+5. 从 Route Handler 中移除转换
+6. 移除双写（只写入 v5）
+7. 删除旧表
+
+**时间线**：在阶段 1 之后尽快进行。
+
+**为什么这很重要**：
+
+- 消除运行时转换开销
+- 尽早还清技术债
+- 使用 v5 消息格式获得类型安全
+- 更易维护和扩展
+
+## 了解变更内容
+
+在开始之前，先了解 AI SDK 5.0 中与持久化相关的主要变更：
+
+**AI SDK 4.0**：
+
+- 用于文本的 `content` 字段
+- 顶层属性 `reasoning`
+- 顶层属性 `toolInvocations`
+- `parts`（可选）有序数组
+
+**AI SDK 5.0**：
+
+- `parts` 数组是唯一的事实来源
+- `content` 已移除（弃用），改为通过 `text` 部件访问
+- `reasoning` 已移除，替换为 `reasoning` 部件
+- `toolInvocations` 已移除，替换为带 `input`/`output` 的 `tool-${toolName}` 部件（由 `args`/`result` 更名而来）
+- `data` 角色已移除（改用 data 部件）
+
+## 阶段 1：运行时转换模式
+
+此方式在不改动数据库 schema 的前提下创建一个转换层。
+
+### 步骤 1：更新依赖
+
+要为 v4 消息获得正确的 TypeScript 类型，请使用 npm 别名将 v4 包与 v5 一起安装：
+
+```json filename="package.json"
+{
+  "dependencies": {
+    "ai": "^5.0.0",
+    "ai-legacy": "npm:ai@^4.3.2"
+  }
+}
+```
+
+运行：
+
+```bash
+pnpm install
+```
+
+导入 v4 类型以保证类型安全：
+
+```tsx
+import type { Message as V4Message } from 'ai-legacy';
+import type { UIMessage } from 'ai';
+```
+
+### 步骤 2：添加转换函数
+
+创建类型守卫以检测当前处理的是哪种消息格式，并构建一个能处理所有 v4 消息类型的转换函数：
+
+```tsx
+import type {
+  ToolInvocation,
+  Message as V4Message,
+  UIMessage as LegacyUIMessage,
+} from 'ai-legacy';
+import type { ToolUIPart, UIMessage, UITools } from 'ai';
+
+export type MyUIMessage = UIMessage<unknown, { custom: any }, UITools>;
+
+type V4Part = NonNullable<V4Message['parts']>[number];
+type V5Part = MyUIMessage['parts'][number];
+
+// Type definitions for V4 parts
+type V4ToolInvocationPart = Extract<V4Part, { type: 'tool-invocation' }>;
+
+type V4ReasoningPart = Extract<V4Part, { type: 'reasoning' }>;
+
+type V4SourcePart = Extract<V4Part, { type: 'source' }>;
+
+type V4FilePart = Extract<V4Part, { type: 'file' }>;
+
+// Type guards
+function isV4Message(msg: V4Message | MyUIMessage): msg is V4Message {
+  return (
+    msg?.parts == null ||
+    'toolInvocations' in msg ||
+    (msg?.parts?.some(p => p.type === 'tool-invocation') ?? false) ||
+    msg?.role === 'data' ||
+    ('reasoning' in msg && typeof msg.reasoning === 'string') ||
+    (msg?.parts?.some(p => 'args' in p || 'result' in p) ?? false) ||
+    (msg?.parts?.some(p => 'reasoning' in p && 'details' in p) ?? false) ||
+    (msg?.parts?.some(
+      p => p.type === 'file' && 'mimeType' in p && 'data' in p,
+    ) ??
+      false)
+  );
+}
+
+function isV4ToolInvocationPart(part: unknown): part is V4ToolInvocationPart {
+  return (
+    typeof part === 'object' &&
+    part !== null &&
+    'type' in part &&
+    part.type === 'tool-invocation' &&
+    'toolInvocation' in part
+  );
+}
+
+function isV4ReasoningPart(part: unknown): part is V4ReasoningPart {
+  return (
+    typeof part === 'object' &&
+    part !== null &&
+    'type' in part &&
+    part.type === 'reasoning' &&
+    'reasoning' in part
+  );
+}
+
+function isV4SourcePart(part: unknown): part is V4SourcePart {
+  return (
+    typeof part === 'object' &&
+    part !== null &&
+    'type' in part &&
+    part.type === 'source' &&
+    'source' in part
+  );
+}
+
+function isV4FilePart(part: unknown): part is V4FilePart {
+  return (
+    typeof part === 'object' &&
+    part !== null &&
+    'type' in part &&
+    part.type === 'file' &&
+    'mimeType' in part &&
+    'data' in part
+  );
+}
+
+// State mapping
+const V4_TO_V5_STATE_MAP = {
+  'partial-call': 'input-streaming',
+  call: 'input-available',
+  result: 'output-available',
+} as const;
+
+function convertToolInvocationState(
+  v4State: ToolInvocation['state'],
+): 'input-streaming' | 'input-available' | 'output-available' {
+  return V4_TO_V5_STATE_MAP[v4State] ?? 'output-available';
+}
+
+// Tool conversion
+function convertV4ToolInvocationToV5ToolUIPart(
+  toolInvocation: ToolInvocation,
+): ToolUIPart {
+  return {
+    type: `tool-${toolInvocation.toolName}`,
+    toolCallId: toolInvocation.toolCallId,
+    input: toolInvocation.args,
+    output:
+      toolInvocation.state === 'result' ? toolInvocation.result : undefined,
+    state: convertToolInvocationState(toolInvocation.state),
+  };
+}
+
+// Part converters
+function convertV4ToolInvocationPart(part: V4ToolInvocationPart): V5Part {
+  return convertV4ToolInvocationToV5ToolUIPart(part.toolInvocation);
+}
+
+function convertV4ReasoningPart(part: V4ReasoningPart): V5Part {
+  return { type: 'reasoning', text: part.reasoning };
+}
+
+function convertV4SourcePart(part: V4SourcePart): V5Part {
+  return {
+    type: 'source-url',
+    url: part.source.url,
+    sourceId: part.source.id,
+    title: part.source.title,
+  };
+}
+
+function convertV4FilePart(part: V4FilePart): V5Part {
+  return {
+    type: 'file',
+    mediaType: part.mimeType,
+    url: part.data,
+  };
+}
+
+function convertPart(part: V4Part | V5Part): V5Part {
+  if (isV4ToolInvocationPart(part)) {
+    return convertV4ToolInvocationPart(part);
+  }
+  if (isV4ReasoningPart(part)) {
+    return convertV4ReasoningPart(part);
+  }
+  if (isV4SourcePart(part)) {
+    return convertV4SourcePart(part);
+  }
+  if (isV4FilePart(part)) {
+    return convertV4FilePart(part);
+  }
+  // Already V5 format
+  return part;
+}
+
+// Message conversion
+function createBaseMessage(
+  msg: V4Message | MyUIMessage,
+  index: number,
+): Pick<MyUIMessage, 'id' | 'role'> {
+  return {
+    id: msg.id || `msg-${index}`,
+    role: msg.role === 'data' ? 'assistant' : msg.role,
+  };
+}
+
+function convertDataMessage(msg: V4Message, index: number): MyUIMessage {
+  return {
+    ...createBaseMessage(msg, index),
+    parts: [
+      {
+        type: 'data-custom',
+        data: msg.data || msg.content,
+      },
+    ],
+  };
+}
+
+function buildPartsFromTopLevelFields(msg: V4Message): MyUIMessage['parts'] {
+  const parts: MyUIMessage['parts'] = [];
+
+  if (msg.reasoning) {
+    parts.push({ type: 'reasoning', text: msg.reasoning });
+  }
+
+  if (msg.toolInvocations) {
+    parts.push(
+      ...msg.toolInvocations.map(convertV4ToolInvocationToV5ToolUIPart),
+    );
+  }
+
+  if (msg.content && typeof msg.content === 'string') {
+    parts.push({ type: 'text', text: msg.content });
+  }
+
+  return parts;
+}
+
+function convertPartsArray(parts: V4Part[]): MyUIMessage['parts'] {
+  return parts.map(convertPart);
+}
+
+export function convertV4MessageToV5(
+  msg: V4Message | MyUIMessage,
+  index: number,
+): MyUIMessage {
+  if (!isV4Message(msg)) {
+    return msg as MyUIMessage;
+  }
+
+  if (msg.role === 'data') {
+    return convertDataMessage(msg, index);
+  }
+
+  const base = createBaseMessage(msg, index);
+  const parts = msg.parts
+    ? convertPartsArray(msg.parts)
+    : buildPartsFromTopLevelFields(msg);
+
+  return { ...base, parts };
+}
+
+// V5 to V4 conversion
+function convertV5ToolUIPartToV4ToolInvocation(
+  part: ToolUIPart,
+): ToolInvocation {
+  const state =
+    part.state === 'input-streaming'
+      ? 'partial-call'
+      : part.state === 'input-available'
+        ? 'call'
+        : 'result';
+
+  const toolName = part.type.startsWith('tool-')
+    ? part.type.slice(5)
+    : part.type;
+
+  const base = {
+    toolCallId: part.toolCallId,
+    toolName,
+    args: part.input,
+    state,
+  };
+
+  if (state === 'result' && part.output !== undefined) {
+    return { ...base, state: 'result' as const, result: part.output };
+  }
+
+  return base as ToolInvocation;
+}
+
+export function convertV5MessageToV4(msg: MyUIMessage): LegacyUIMessage {
+  const parts: V4Part[] = [];
+
+  const base: LegacyUIMessage = {
+    id: msg.id,
+    role: msg.role,
+    content: '',
+    parts,
+  };
+
+  let textContent = '';
+  let reasoning: string | undefined;
+  const toolInvocations: ToolInvocation[] = [];
+
+  for (const part of msg.parts) {
+    if (part.type === 'text') {
+      textContent = part.text;
+      parts.push({ type: 'text', text: part.text });
+    } else if (part.type === 'reasoning') {
+      reasoning = part.text;
+      parts.push({
+        type: 'reasoning',
+        reasoning: part.text,
+        details: [{ type: 'text', text: part.text }],
+      });
+    } else if (part.type.startsWith('tool-')) {
+      const toolInvocation = convertV5ToolUIPartToV4ToolInvocation(
+        part as ToolUIPart,
+      );
+      parts.push({ type: 'tool-invocation', toolInvocation: toolInvocation });
+      toolInvocations.push(toolInvocation);
+    } else if (part.type === 'source-url') {
+      parts.push({
+        type: 'source',
+        source: {
+          id: part.sourceId,
+          url: part.url,
+          title: part.title,
+          sourceType: 'url',
+        },
+      });
+    } else if (part.type === 'file') {
+      parts.push({
+        type: 'file',
+        mimeType: part.mediaType,
+        data: part.url,
+      });
+    } else if (part.type === 'data-custom') {
+      base.data = part.data;
+    }
+  }
+
+  if (textContent) {
+    base.content = textContent;
+  }
+
+  if (reasoning) {
+    base.reasoning = reasoning;
+  }
+
+  if (toolInvocations.length > 0) {
+    base.toolInvocations = toolInvocations;
+  }
+
+  if (parts.length > 0) {
+    base.parts = parts;
+  }
+  return base;
+}
+```
+
+### 步骤 3：读取时转换消息
+
+从数据库加载消息时应用转换：
+
+<Note type="warning">请根据你自己的数据库和 ORM 调整此代码。</Note>
+
+```tsx
+import { convertV4MessageToV5, type MyUIMessage } from './conversion';
+
+export async function loadChat(chatId: string): Promise<MyUIMessage[]> {
+  // Fetch messages from your database (pseudocode - update based on your data access layer)
+  const rawMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.chatId, chatId))
+    .orderBy(messages.createdAt);
+
+  // Convert on read
+  return rawMessages.map((msg, index) => convertV4MessageToV5(msg, index));
+}
+```
+
+### 步骤 4：保存时转换消息
+
+在阶段 1 中，你的应用运行在 v5 上，但数据库存储的是 v4 格式。请在 Route Handler 中内联转换消息，再传给数据库函数：
+
+```tsx
+import {
+  convertV5MessageToV4,
+  convertV4MessageToV5,
+  type MyUIMessage,
+} from './conversion';
+import { upsertMessage, loadChat } from './db/actions';
+import { streamText, generateId, convertToModelMessages } from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { message, chatId }: { message: MyUIMessage; chatId: string } =
+    await req.json();
+
+  // Convert and save incoming user message (v5 to v4 inline)
+  await upsertMessage({
+    chatId,
+    id: message.id,
+    message: convertV5MessageToV4(message), // convert to v4
+  });
+
+  // Load all messages, including the one just saved (already in v5 format)
+  const messages = await loadChat(chatId);
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: convertToModelMessages(messages),
+    tools: {
+      // Your tools here
+    },
+  });
+
+  return result.toUIMessageStreamResponse({
+    generateMessageId: generateId,
+    originalMessages: messages,
+    onFinish: async ({ responseMessage }) => {
+      // Convert and save assistant response (v5 to v4 inline)
+      await upsertMessage({
+        chatId,
+        id: responseMessage.id,
+        message: convertV5MessageToV4(responseMessage),
+      });
+    },
+  });
+}
+```
+
+保持 `upsertMessage`（或等价函数）不变，以继续处理 v4 消息。
+
+完成步骤 3 和 4 后，你就拥有了一个双向转换层：
+
+- **读取**：v4（数据库）→ v5（应用）
+- **写入**：v5（应用）→ v4（数据库）
+
+数据库 schema 保持不变，而应用已经可以使用 v5 格式工作。
+
+**下一步**：按照主迁移指南更新应用其余代码，包括 API 路由、组件以及其他使用 AI SDK 的代码。然后进入阶段 2。
+
+详见[主迁移指南](/docs/migration-guides/migration-guide-5-0)。
+
+## 阶段 2：并行的 schema 迁移
+
+应用已更新到 AI SDK 5.0，并通过阶段 1 的运行时转换层正常工作，此时系统已完全可用。但**转换函数只是临时方案**。数据库仍以 v4 格式存储消息，这意味着：
+
+- 每次读取操作都要承担运行时转换开销
+- 你需要无限期地维护向后兼容代码
+- 未来的功能需要与旧 schema 打交道
+
+**阶段 2 将消息历史迁移到 v5 schema**，从而去除转换层，获得更好的性能和长期可维护性。
+
+本阶段采用一种简化做法：新建一个 `messages_v5` 表，结构与当前 `messages` 表相同，但存储 v5 格式的消息部件。
+
+<Note type="warning">
+**请根据你的环境调整阶段 2 的示例**
+
+这些代码示例只用于演示迁移模式。具体实现会因数据库（Postgres、MySQL、SQLite）、ORM（Drizzle、Prisma、原生 SQL）、schema 设计和数据持久化方式而异。
+
+请将这些示例当作参考，再按你的实际环境调整。
+
+</Note>
+
+### 概览：迁移策略
+
+1. 在现有 `messages` 表旁**创建 `messages_v5` 表**
+2. 将新消息**双写**到两个 schema（含转换）
+3. 用**后台迁移**转换存量消息
+4. **校验**数据完整性
+5. **更新读取函数**以使用 `messages_v5` schema
+6. 从 Route Handler 中**移除转换**
+7. **移除双写**（只写入 `messages_v5`）
+8. **清理**旧表
+
+这能确保应用在整个迁移期间持续运行，且没有数据丢失风险。
+
+### 步骤 1：在 V4 旁创建 V5 schema
+
+新建一个 `messages_v5` 表，结构与现有表相同，但设计用于存储 v5 消息部件：
+
+**现有 v4 schema**（继续运行）：
+
+```typescript
+import { UIMessage } from 'ai-legacy';
+
+export const messages = pgTable('messages', {
+  id: varchar()
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+  chatId: varchar()
+    .references(() => chats.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  parts: jsonb().$type<UIMessage['parts']>().notNull(),
+  role: text().$type<UIMessage['role']>().notNull(),
+});
+```
+
+**新建 v5 schema**（并行创建）：
+
+```typescript
+import { MyUIMessage } from './conversion';
+
+export const messages_v5 = pgTable('messages_v5', {
+  id: varchar()
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+  chatId: varchar()
+    .references(() => chats.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  parts: jsonb().$type<MyUIMessage['parts']>().notNull(),
+  role: text().$type<MyUIMessage['role']>().notNull(),
+});
+```
+
+运行迁移以创建新表：
+
+```bash
+pnpm drizzle-kit generate
+pnpm drizzle-kit migrate
+```
+
+### 步骤 2：为新消息实现双写
+
+在迁移期间更新保存函数，使其同时写入两个 schema。这确保新消息以两种格式同时可用：
+
+```typescript
+import { convertV4MessageToV5 } from './conversion';
+import { messages, messages_v5 } from './schema';
+import type { UIMessage } from 'ai-legacy';
+
+export const upsertMessage = async ({
+  chatId,
+  message,
+  id,
+}: {
+  id: string;
+  chatId: string;
+  message: UIMessage; // Still accepts v4 format
+}) => {
+  return await db.transaction(async tx => {
+    // Write to v4 schema (existing)
+    const [result] = await tx
+      .insert(messages)
+      .values({
+        chatId,
+        parts: message.parts ?? [],
+        role: message.role,
+        id,
+      })
+      .onConflictDoUpdate({
+        target: messages.id,
+        set: {
+          parts: message.parts ?? [],
+          chatId,
+        },
+      })
+      .returning();
+
+    // Convert and write to v5 schema (new)
+    const v5Message = convertV4MessageToV5(
+      {
+        ...message,
+        content: '',
+      },
+      0,
+    );
+
+    await tx
+      .insert(messages_v5)
+      .values({
+        chatId,
+        parts: v5Message.parts ?? [],
+        role: v5Message.role,
+        id,
+      })
+      .onConflictDoUpdate({
+        target: messages_v5.id,
+        set: {
+          parts: v5Message.parts ?? [],
+          chatId,
+        },
+      });
+
+    return result;
+  });
+};
+```
+
+### 步骤 3：迁移存量消息
+
+创建一个脚本，将存量消息从 v4 schema 迁移到 v5 schema：
+
+```typescript
+import { convertV4MessageToV5 } from './conversion';
+import { db } from './db';
+import { messages, messages_v5 } from './db/schema';
+
+async function migrateExistingMessages() {
+  console.log('Starting migration of existing messages...');
+
+  // Get all v4 messages that haven't been migrated yet
+  const migratedIds = await db.select({ id: messages_v5.id }).from(messages_v5);
+
+  const migratedIdSet = new Set(migratedIds.map(m => m.id));
+
+  const allMessages = await db.select().from(messages);
+  const unmigrated = allMessages.filter(msg => !migratedIdSet.has(msg.id));
+
+  console.log(`Found ${unmigrated.length} messages to migrate`);
+
+  let migrated = 0;
+  let errors = 0;
+  const batchSize = 100;
+
+  for (let i = 0; i < unmigrated.length; i += batchSize) {
+    const batch = unmigrated.slice(i, i + batchSize);
+
+    await db.transaction(async tx => {
+      for (const msg of batch) {
+        try {
+          // Convert message to v5 format
+          const v5Message = convertV4MessageToV5(
+            {
+              id: msg.id,
+              content: '',
+              role: msg.role,
+              parts: msg.parts,
+              createdAt: msg.createdAt,
+            },
+            0,
+          );
+
+          // Insert into v5 messages table
+          await tx.insert(messages_v5).values({
+            id: v5Message.id,
+            chatId: msg.chatId,
+            role: v5Message.role,
+            parts: v5Message.parts,
+            createdAt: msg.createdAt,
+          });
+
+          migrated++;
+        } catch (error) {
+          console.error(`Error migrating message ${msg.id}:`, error);
+          errors++;
+        }
+      }
+    });
+
+    console.log(`Progress: ${migrated}/${unmigrated.length} messages migrated`);
+  }
+
+  console.log(`Migration complete: ${migrated} migrated, ${errors} errors`);
+}
+
+// Run migration
+migrateExistingMessages().catch(console.error);
+```
+
+该脚本：
+
+- 只迁移尚未迁移过的消息
+- 采用分批处理以获得更好性能
+- 可以安全地重复运行
+- 可以中断后继续
+
+### 步骤 4：验证迁移
+
+创建一个校验脚本以确保数据完整性：
+
+```typescript
+import { count } from 'drizzle-orm';
+import { db } from './db';
+import { messages, messages_v5 } from './db/schema';
+
+async function verifyMigration() {
+  // Count messages in both schemas
+  const v4Count = await db.select({ count: count() }).from(messages);
+  const v5Count = await db.select({ count: count() }).from(messages_v5);
+
+  console.log('Migration Status:');
+  console.log(`V4 Messages: ${v4Count[0].count}`);
+  console.log(`V5 Messages: ${v5Count[0].count}`);
+  console.log(
+    `Migration progress: ${((v5Count[0].count / v4Count[0].count) * 100).toFixed(2)}%`,
+  );
+}
+
+verifyMigration().catch(console.error);
+```
+
+### 步骤 5：从 V5 schema 读取
+
+迁移完成后，更新读取函数以使用新的 v5 schema。由于数据已是 v5 格式，无需再转换：
+
+```typescript
+import type { MyUIMessage } from './conversion';
+
+export const loadChat = async (chatId: string): Promise<MyUIMessage[]> => {
+  // Load from v5 schema - no conversion needed
+  const messages = await db
+    .select()
+    .from(messages_v5)
+    .where(eq(messages_v5.chatId, chatId))
+    .orderBy(messages_v5.createdAt);
+
+  return messages;
+};
+```
+
+### 步骤 6：只写入 V5 schema
+
+当读取函数能够处理 v5 且后台迁移完成后，停止双写，只写入 v5：
+
+```typescript
+import type { MyUIMessage } from './conversion';
+
+export const upsertMessage = async ({
+  chatId,
+  message,
+  id,
+}: {
+  id: string;
+  chatId: string;
+  message: MyUIMessage; // Now accepts v5 format
+}) => {
+  // Write to v5 schema only
+  const [result] = await db
+    .insert(messages_v5)
+    .values({
+      chatId,
+      parts: message.parts ?? [],
+      role: message.role,
+      id,
+    })
+    .onConflictDoUpdate({
+      target: messages_v5.id,
+      set: {
+        parts: message.parts ?? [],
+        chatId,
+      },
+    })
+    .returning();
+
+  return result;
+};
+```
+
+更新 Route Handler 以直接传递 v5 消息：
+
+```tsx
+export async function POST(req: Request) {
+  const { message, chatId }: { message: MyUIMessage; chatId: string } =
+    await req.json();
+
+  // Pass v5 message directly - no conversion needed
+  await upsertMessage({
+    chatId,
+    id: message.id,
+    message,
+  });
+
+  const messages = await loadChat(chatId);
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: convertToModelMessages(messages),
+    tools: {
+      // Your tools here
+    },
+  });
+
+  return result.toUIMessageStreamResponse({
+    generateMessageId: generateId,
+    originalMessages: messages,
+    onFinish: async ({ responseMessage }) => {
+      await upsertMessage({
+        chatId,
+        id: responseMessage.id,
+        message: responseMessage, // No conversion needed
+      });
+    },
+  });
+}
+```
+
+### 步骤 7：完成切换
+
+校验通过且你对迁移有信心之后：
+
+1. **移除转换函数**：删除 v4↔v5 转换工具
+2. **移除 `ai-legacy` 依赖**：卸载 v4 类型包
+3. **充分测试**：确保应用在 v5 schema 下正常工作
+4. **监控**：留意生产环境中的问题
+5. **清理**：在安全期（1-2 周）过后删除旧表
+
+```sql
+-- After confirming everything works
+DROP TABLE messages;
+
+-- Optionally rename v5 table to standard name
+ALTER TABLE messages_v5 RENAME TO messages;
+```
+
+**阶段 2 现已完成**。你的应用已完全迁移到 v5 schema，不再有运行时转换开销。
+
+## 社区资源
+
+以下社区成员分享了他们的迁移经验：
+
+- [AI SDK 迁移：处理先前保存的消息](https://jhakim.com/blog/ai-sdk-migration-handling-previously-saved-messages) - 详细的转换函数实现
+- [我们如何将 Atypica.ai 迁移到 AI SDK v5 而不破坏 1000 万多条聊天记录](https://blog.web3nomad.com/p/how-we-migrated-atypicaai-to-ai-sdk-v5-without-breaking-10m-chat-histories) - 大规模迁移的运行时转换方案
+
+更多 API 变更细节，参见[主迁移指南](/docs/migration-guides/migration-guide-5-0)。

@@ -1,0 +1,259 @@
+---
+title: Topaz Labs
+description: 了解如何在 AI SDK 中使用 Topaz Labs 提供商。
+---
+
+# Topaz Labs 提供商
+
+[Topaz Labs](https://www.topazlabs.com/) 提供商为 Topaz Labs 的图像与视频增强模型提供支持。
+
+Topaz 模型**增强你提供的媒体**。它们对现有图像或视频进行放大、降噪、锐化和修复。它们不会根据文本提示词生成媒体，因此输入文件是请求的必要部分，文本提示词会被忽略。
+
+## 安装
+
+Topaz Labs 提供商包含在 `@ai-sdk/topaz` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/topaz" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/topaz` 导入默认提供商实例 `topaz`：
+
+```ts
+import { topaz } from '@ai-sdk/topaz';
+```
+
+如果需要自定义配置，可以导入 `createTopaz`，并使用你的设置创建提供商实例：
+
+```ts
+import { createTopaz } from '@ai-sdk/topaz';
+
+const topaz = createTopaz({
+  apiKey: process.env.TOPAZ_API_KEY,
+});
+```
+
+你可以使用以下可选设置来定制 Topaz Labs 提供商实例：
+
+- **apiKey** _string_
+
+  作为 `X-API-Key` 请求头发送的 API 密钥。
+  默认值为 `TOPAZ_API_KEY` 环境变量。
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.topazlabs.com`。
+
+- **headers** _Record&lt;string, string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## 图像模型
+
+你可以使用 `topaz.image()` 创建 Topaz 图像模型：
+
+```ts
+import { topaz } from '@ai-sdk/topaz';
+import { generateImage } from 'ai';
+
+const { images } = await generateImage({
+  model: topaz.image('wonder-3.5'),
+  prompt: {
+    images: ['https://example.com/photo.jpg'],
+  },
+});
+```
+
+要增强的图像（JPEG、PNG 或 TIFF）通过提示词的 `images` 传入。Topaz 图像 API 是异步的：提供商会提交任务、轮询直到完成，然后下载结果，因此 `generateImage` 会以增强后的图像完成解析。
+
+### 模型能力
+
+| 模型         | Topaz 模型   | 描述                                     |
+| ------------ | ------------ | ---------------------------------------- |
+| `wonder-3.5` | `Wonder 3.5` | 生成式放大与细节恢复                     |
+
+传入原始的 Topaz 模型名称（例如 `Wonder 3.5`）也可以工作，未知的 id 会原样转发给 API。
+
+### 图像提供商选项
+
+```ts
+import { topaz, type TopazImageModelOptions } from '@ai-sdk/topaz';
+import { generateImage } from 'ai';
+
+const { images } = await generateImage({
+  model: topaz.image('wonder-3.5'),
+  prompt: {
+    images: ['https://example.com/photo.jpg'],
+  },
+  size: '4096x4096',
+  providerOptions: {
+    topaz: {
+      enhancementStrength: 'high',
+      grain: true,
+      grainDensity: 0.3,
+      outputFormat: 'png',
+    } satisfies TopazImageModelOptions,
+  },
+});
+```
+
+- **enhancementStrength** _'low' | 'medium' | 'high'_：增强的激进程度。默认值为 `high`。
+- **grain** _boolean_：为输出添加颗粒。默认值为 `false`。
+- **grainDensity** _number_：颗粒密度，0 到 1。默认值为 0.5。
+- **grainModel** _'silver' | 'gaussian' | 'grey'_：颗粒模型。默认值为 `silver`。
+- **grainSize** _number_：颗粒尺寸，1 到 5。默认值为 1。
+- **grainStrength** _number_：颗粒效果强度，0 到 1。默认值为 0.5。
+- **inputWidth** / **inputHeight** _number_：输入尺寸（像素）。省略时 Topaz 会根据上传内容推断。
+- **outputWidth** / **outputHeight** _number_：输出尺寸（像素），1 到 32000。它们的优先级高于由 `size` 推导出的尺寸。
+- **outputFormat** _'jpeg' | 'jpg' | 'png' | 'tiff' | 'tif'_：输出格式。Topaz 默认为 `jpeg`。
+- **cropToFill** _boolean_：裁剪输出以填满请求的尺寸。默认值为 `false`。
+- **webhookUrl** _string_：接收任务状态 webhook 的 URL。
+- **pollIntervalMillis** _number_：状态轮询间隔。默认值为 2000。
+- **pollTimeoutMillis** _number_：等待任务的最长时间。默认值为 600000。超时或调用被中止时，提供商会取消 Topaz 任务，因为 Topaz 在完成时才计费。
+
+`aspectRatio`、`seed`、`mask` 以及大于 1 的 `n` 不受支持，会产生警告。
+
+### 图像提供商元数据
+
+结果中的 `providerMetadata.topaz.images[]` 对每张图像包含：
+
+- **processId** _string_：Topaz 任务 id。
+- **credits** _number_：Topaz 对该任务收取的点数。
+- **width** / **height** _number_：输出尺寸。
+- **format** _string_：输出格式。
+
+## 视频模型
+
+你可以使用 `topaz.video()` 创建 Topaz 视频模型：
+
+```ts
+import { topaz } from '@ai-sdk/topaz';
+import { experimental_generateVideo as generateVideo } from 'ai';
+
+const { videos } = await generateVideo({
+  model: topaz.video('proteus'),
+  prompt: '',
+  inputReferences: ['https://example.com/clip.mp4'],
+  resolution: '3840x2160',
+});
+```
+
+要增强的视频通过 `inputReferences` 传入，`resolution` 设置输出分辨率。Starlight 模型还需要[源元数据](#源元数据)。`generateVideo` 要求提供 `prompt`，所以传一个空字符串即可：Topaz 会忽略文本，非空提示词会产生警告。
+
+### 模型能力
+
+| 模型                    | Topaz 模型  | 描述                                          |
+| ----------------------- | ----------- | --------------------------------------------- |
+| `proteus`               | `prob-4`    | 保留细节的放大，支持精细控制                  |
+| `starlight-precise-2.6` | `slp-2.6`   | 高保真的生成式放大                            |
+
+传入原始的 Topaz 滤镜模型名称（例如 `slp-2.5`）也可以工作，未知的 id 会原样转发给 API。
+
+### 输入视频
+
+URL 输入会交给 Topaz，由它自行抓取。文件输入会上传到 Topaz。无论哪种方式，处理都会在 Topaz 拿到视频后开始，唯一必需的设置是输出分辨率（来自 `resolution` 或 `output.width` / `output.height`）。
+
+### 源元数据
+
+`source` 提供商选项描述输入视频。AI SDK 不会检查媒体文件，因此这些值由你提供：
+
+- **Starlight 模型必需**。没有它 Topaz 会拒绝 Starlight 请求，并依据这些值定价，因此它们必须描述真实的视频。
+- **对其他模型则是可选的**。设置后，Topaz 会在请求创建时立即返回成本估算。
+
+设置 `width`、`height`、`duration` 或 `frameRate` 中的任何一个都需要全部四项。输出的分辨率和帧率默认取源值。
+
+| 字段         | 来源                                                               |
+| ------------ | ------------------------------------------------------------------ |
+| `resolution` | `source.width` 和 `source.height`。                                |
+| `duration`   | `source.duration`。                                                |
+| `frameRate`  | `source.frameRate`。                                               |
+| `frameCount` | `source.frameCount`，省略时为 `duration * frameRate`。             |
+| `container`  | `source.container`，或输入的媒体类型或 URL 扩展名。                |
+| `size`       | 输入的字节数（仅文件输入）。                                       |
+
+```ts
+const { videos } = await generateVideo({
+  model: topaz.video('starlight-precise-2.6'),
+  prompt: '',
+  inputReferences: ['https://example.com/clip.mp4'],
+  resolution: '3840x2160',
+  providerOptions: {
+    topaz: {
+      source: {
+        width: 1920,
+        height: 1080,
+        duration: 10,
+        frameRate: 30,
+        frameCount: 300,
+      },
+    },
+  },
+});
+```
+
+<Note>
+  对于可变帧率输入，`duration * frameRate` 不精确，
+  请显式设置 `source.frameCount`。
+</Note>
+
+### 视频提供商选项
+
+结构性选项：
+
+- **source** _object_：输入视频元数据，`width`、`height`、`duration`、`frameRate`、`frameCount` 和 `container`。参见[源元数据](#源元数据)。
+- **output** _object_：输出设置。
+  - `width` / `height`：输出尺寸。它们的优先级高于 `resolution`。
+  - `frameRate`：输出帧率，优先级高于 `fps`。只有存在帧插值滤镜时 Topaz 才会改变帧率。
+  - `audioTransfer`（`'Copy' | 'Convert' | 'None'`，默认 `Copy`）、`audioCodec`（`'AAC' | 'AC3' | 'PCM'`，默认 `AAC`）、`audioBitrate`。
+  - `videoEncoder`（`'AV1' | 'H264' | 'H265' | 'ProRes' | 'VP9'`，Topaz 默认为 `H265`）、`videoProfile`、`videoBitrate`、`dynamicCompressionLevel`（`'Low' | 'Mid' | 'High'`）。
+  - `container`（`'mp4' | 'mov' | 'mkv' | 'avi' | 'webm'`）：输入容器为 `mov` 或 `mkv` 时默认沿用输入容器，否则为 `mp4`。`ProRes` 始终产生 `mov`，`AV1` 和 `VP9` 始终产生 `mp4`。
+  - `cropToFit`：居中裁剪到输出尺寸。
+- **additionalFilters** _Array&lt;Record&lt;string, unknown&gt;&gt;_：额外的 `filters[]` 条目，例如帧插值滤镜。每个条目必须包含 `model` 键。
+- **filter** _Record&lt;string, unknown&gt;_：合并进模型滤镜条目的逃生通道（escape hatch），会覆盖下方的类型化选项。
+
+Proteus 滤镜设置：`videoType`、`auto`、`fieldOrder`、`focusFixLevel`、`compression`、`details`、`prenoise`、`noise`、`halo`、`preblur`、`blur`、`grain`、`grainSigma`、`grainSize`、`grainType`、`recoverOriginalDetailValue`。
+
+Starlight Precise 滤镜设置：`sharpness`、`videoBitDepth`、`videoCodec`、`videoProfile`、`watermark`。
+
+可接受的取值范围请参见 [Proteus](https://developer.topazlabs.com/video-models/proteus/proteus-1) 与 [Starlight Precise 2.6](https://developer.topazlabs.com/video-models/starlight/starlight-precise-2.6) 参考文档，编码器与 profile 的可接受组合请参见 [Create Video Request](https://developer.topazlabs.com/reference/video/create-request/create-video-request)。
+
+非空的 `prompt`、`aspectRatio`、`seed`、`duration`、`generateAudio`、`frameImages` 以及大于 1 的 `n` 不受支持，会产生警告。
+
+### 长时运行操作
+
+视频增强需要数分钟，因此 Topaz 视频模型实现了 AI SDK 的异步操作协议。`generateVideo` 会轮询到完成，较长的片段可能超过其默认的 10 分钟超时，因此必要时请调高 `poll.timeoutMs`。如果你更希望持久化该操作并稍后检查其状态，请使用 `experimental_startVideo`：
+
+```ts
+import { topaz } from '@ai-sdk/topaz';
+import { experimental_startVideo as startVideo } from 'ai';
+
+const operation = await startVideo({
+  model: topaz.video('proteus'),
+  prompt: '',
+  inputReferences: ['https://example.com/clip.mp4'],
+  resolution: '3840x2160',
+});
+```
+
+如果请求创建后上传失败，提供商会取消 Topaz 请求，以便退还任何预留的点数。
+
+### 视频提供商元数据
+
+Topaz 以 `[下限, 上限]` 的点数区间估算视频请求的成本，并按下限计费。
+
+启动结果的 `providerMetadata.topaz` 包含 `requestId`，以及当 Topaz 能在请求时估算成本时的 `estimatedCredits`。设置了源元数据时 Topaz 才能做到这一点。它仅供参考：完成状态中携带实际计费值。
+
+完成状态的 `providerMetadata.topaz` 包含：
+
+- **requestId** _string_：Topaz 请求 id。
+- **credits** _number_：Topaz 对该请求计费的点数（其最终估算的下限）。
+- **estimatedCredits** _[number, number]_：最终成本区间。
+- **outputSize** _string_：增强后视频的大小。
+- **expiresAt** _number_：下载 URL 的过期时间，自 Unix 纪元起的毫秒数。
+
+失败的请求会在错误消息和 `providerMetadata.topaz.errorCode` 中报告 Topaz 的 `errorCode`（例如当 Topaz 读取视频后的估算与第一次估算不一致时的 `CREDIT_DIFFERENCE`，此时它会退还点数）。

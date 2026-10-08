@@ -1,0 +1,37 @@
+---
+title: 使用聊天提示词生成文本
+description: 了解如何在 Node 中结合 AI SDK 使用聊天提示词生成文本
+tags: ['node', 'chat']
+---
+
+# Generate Text with Chat Prompt
+
+前面我们已经能够使用单条消息提示词（prompt）、系统提示词，或两者的组合来生成文本和对象。然而，有时你可能希望基于一系列消息来生成文本。
+
+聊天补全（chat completion）允许你基于一系列消息生成文本。这一系列消息可以是任意数量的系统之间的任意交互序列，但最常见、最易懂的用例是一系列表示用户与模型之间对话的消息。
+
+```ts file='index.ts'
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: 'openai/gpt-6-astra',
+  maxOutputTokens: 1024,
+  instructions: 'You are a helpful chatbot.',
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'Hello!' }],
+    },
+    {
+      role: 'assistant',
+      content: [{ type: 'text', text: 'Hello! How can I help you today?' }],
+    },
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'I need help with my computer.' }],
+    },
+  ],
+});
+
+console.log(result.text);
+```

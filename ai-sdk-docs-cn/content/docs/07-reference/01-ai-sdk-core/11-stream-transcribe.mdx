@@ -1,0 +1,161 @@
+---
+title: experimental_streamTranscribe
+description: experimental_streamTranscribe 的 API 参考。
+---
+
+# `experimental_streamTranscribe()`
+
+<Note type="warning">
+  `experimental_streamTranscribe` 是一个实验性功能。
+</Note>
+
+使用支持流式的语音转写（transcription）模型从实时原始音频流式生成转写文本。
+
+```ts
+import { experimental_streamTranscribe as streamTranscribe } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = streamTranscribe({
+  model: openai.transcription('gpt-realtime-whisper'),
+  audio: audioStream, // ReadableStream<Uint8Array | string>
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+});
+
+for await (const part of result.fullStream) {
+  if (part.type === 'transcript-delta') {
+    process.stdout.write(part.delta);
+  }
+}
+
+console.log(await result.text);
+```
+
+## 导入
+
+<Snippet
+  text={`import { experimental_streamTranscribe as streamTranscribe } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'TranscriptionModelV4',
+      description:
+        "要使用的语音转写模型。该模型必须支持流式（`doStream`）。字符串模型 ID 会通过全局提供商（默认为 AI Gateway）解析，它为受支持的模型提供流式转写（如 `openai/gpt-realtime-whisper`、`xai/grok-stt`）：`experimental_streamTranscribe({ model: 'openai/gpt-realtime-whisper', ... })`。",
+    },
+    {
+      name: 'audio',
+      type: 'ReadableStream<Uint8Array | string>',
+      description:
+        '要转写的原始音频块。`Uint8Array` 块包含原始音频字节；`string` 块包含 base64 编码的原始音频字节。',
+    },
+    {
+      name: 'inputAudioFormat',
+      type: '{ type: string; rate?: number }',
+      description:
+        '原始音频块的输入音频格式，例如 `{ type: "audio/pcm", rate: 24000 }`。支持的类型取决于提供商（如 `audio/pcm`、`audio/pcmu`、`audio/pcma`）。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'Record<string, JSONObject>',
+      isOptional: true,
+      description: '额外的提供商特定选项。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '用于取消本次调用的可选中止信号。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description: '额外的 HTTP/WebSocket 请求头（如果提供商支持）。',
+    },
+    {
+      name: 'includeRawChunks',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '设为 true 时，提供商会以 `raw` 部分的形式在流中包含原始提供商数据块。',
+    },
+    {
+      name: 'telemetry',
+      type: 'TelemetryOptions',
+      isOptional: true,
+      description:
+        '遥测配置。实验性生命周期回调使用 experimental_onStreamTranscriptionStart 和 experimental_onStreamTranscriptionEnd。结束事件在音频流被消费完之后发出，并包含最终的输入字节长度。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'fullStream',
+      type: 'AsyncIterableStream<TranscriptionStreamPart>',
+      description:
+        '单消费者的实时转写部分流：`transcript-delta`、`transcript-partial`、`transcript-final`、`raw` 和 `error`。当同时需要流部分和最终结果时，应在访问任何结果 Promise 之前访问它一次。先访问结果 Promise 会在内部消费该流，导致 `fullStream` 不可用。',
+    },
+    {
+      name: 'text',
+      type: 'Promise<string>',
+      description: '从音频输入得到的完整转写文本。',
+    },
+    {
+      name: 'segments',
+      type: 'Promise<Array<{ text: string; startSecond: number; endSecond: number }>>',
+      description: '带时间信息的最终转写分段（如可用）。',
+    },
+    {
+      name: 'language',
+      type: 'Promise<string | undefined>',
+      description: '转写文本的语言，ISO-639-1 格式（如可用）。',
+    },
+    {
+      name: 'durationInSeconds',
+      type: 'Promise<number | undefined>',
+      description: '转写时长（秒）（如可用）。',
+    },
+    {
+      name: 'warnings',
+      type: 'Promise<Warning[]>',
+      description:
+        '本次调用的警告，例如不支持的设置。在提供商发出流开始时完成。',
+    },
+    {
+      name: 'responses',
+      type: 'Promise<Array<TranscriptionModelResponseMetadata>>',
+      description: '响应元数据（时间戳、模型 ID、响应头）。',
+    },
+    {
+      name: 'providerMetadata',
+      type: 'Promise<Record<string, JSONObject>>',
+      description: '额外的提供商特定元数据。',
+    },
+  ]}
+/>
+
+<Note>
+  结果 Promise 会随着流的消费逐步完成。如果提前停止消费 `fullStream`（例如从循环中
+  `break`），底层提供商连接会被关闭，待完成的结果 Promise 会拒绝。
+</Note>
+
+## 线上格式（实验性）
+
+基于 WebSocket 的流式转写使用 `@ai-sdk/provider-utils` 中定义的实验性
+transcription-stream 信封进行序列化（`experimental_parseTranscriptionStreamClientFrame`、
+`experimental_serializeTranscriptionStreamPart`、
+`experimental_parseTranscriptionStreamPart`）：客户端发送一个
+`transcription-stream.start` TEXT 帧、以 BINARY 帧发送音频，最后发送一个
+`transcription-stream.audio-done` TEXT 帧；服务端的每个 TEXT 帧都是一个 JSON
+序列化的转写流部分。AI Gateway 实现了该信封的服务端。

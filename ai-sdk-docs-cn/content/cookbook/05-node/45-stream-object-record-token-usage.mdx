@@ -1,0 +1,79 @@
+---
+title: 流式输出对象后记录 token 用量
+description: 了解如何在使用 AI SDK 与 Node 流式输出结构化数据时记录 token 用量
+tags: ['node', 'streaming', 'structured data', 'observability']
+---
+
+# Record Token Usage After Streaming Object
+
+当你使用 `streamText` 和 `Output` 流式输出结构化数据时，
+可能需要记录 token 用量以用于计费。
+
+## `onEnd` 回调
+
+你可以使用 `onEnd` 回调来记录 token 用量。
+它会在流结束时被调用。
+
+```ts file='index.ts' highlight={"16-18"}
+import { streamText, Output } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: 'openai/gpt-6-astra',
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+  onEnd({ usage }) {
+    console.log('Token usage:', usage);
+  },
+});
+```
+
+## `usage` Promise
+
+`streamText` 的结果包含一个 `usage` promise，其兑现值为总 token 用量。
+
+```ts file='index.ts' highlight={"29,32"}
+import { streamText, Output, LanguageModelUsage } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: 'openai/gpt-6-astra',
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+
+function recordUsage({
+  inputTokens,
+  outputTokens,
+  totalTokens,
+}: LanguageModelUsage) {
+  console.log('Prompt tokens:', inputTokens);
+  console.log('Completion tokens:', outputTokens);
+  console.log('Total tokens:', totalTokens);
+}
+
+// use as promise:
+result.usage.then(recordUsage);
+
+// or use with async/await:
+recordUsage(await result.usage);
+
+for await (const partialObject of result.partialOutputStream) {
+}
+```

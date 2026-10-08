@@ -1,0 +1,63 @@
+---
+title: 显示流式状态但没有文本出现
+description: 为什么 useChat 显示 "streaming" 状态却没有任何可见内容
+---
+
+# Streaming Status Shows But No Text Appears
+
+## 问题
+
+使用 `useChat` 时，状态立即变为 "streaming"，但文本过了几秒才出现。
+
+## 背景
+
+只要与服务器建立连接且流式传输开始，状态就会变为 "streaming"——这包括元数据的流式传输，而不仅仅是 LLM 生成的 token。
+
+## 解决方案
+
+创建一个自定义加载状态，检查最后一条助手消息是否真的包含内容：
+
+```tsx
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export default function Page() {
+  const { messages, status } = useChat();
+
+  const lastMessage = messages.at(-1);
+
+  const showLoader =
+    status === 'streaming' &&
+    lastMessage?.role === 'assistant' &&
+    lastMessage?.parts?.length === 0;
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      {showLoader && <div>Loading...</div>}
+    </>
+  );
+}
+```
+
+如果你在等待特定内容，也可以检查特定的 part 类型：
+
+```tsx
+const showLoader =
+  status === 'streaming' &&
+  lastMessage?.role === 'assistant' &&
+  !lastMessage?.parts?.some(part => part.type === 'text');
+```
+
+## 相关问题
+
+- [GitHub Issue #7586](https://github.com/vercel/ai/issues/7586)

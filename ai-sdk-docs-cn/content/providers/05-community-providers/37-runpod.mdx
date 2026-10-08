@@ -1,0 +1,331 @@
+---
+title: Runpod
+description: 适用于 AI SDK 的 Runpod 提供商
+---
+
+# Runpod
+
+官方 [Runpod](https://runpod.io) 提供商为公共与私有端点（endpoint）提供语言模型与图像生成支持。
+
+## 安装
+
+Runpod 提供商包含在 `@runpod/ai-sdk-provider` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="@runpod/ai-sdk-provider" />
+
+## 提供商实例
+
+你可以从 `@runpod/ai-sdk-provider` 导入默认提供商实例 `runpod`：
+
+```ts
+import { runpod } from '@runpod/ai-sdk-provider';
+```
+
+如果需要自定义配置，可以导入 `createRunpod`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createRunpod } from '@runpod/ai-sdk-provider';
+
+const runpod = createRunpod({
+  apiKey: 'your-api-key', // optional, defaults to RUNPOD_API_KEY environment variable
+  baseURL: 'custom-url', // optional, for custom endpoints
+  headers: {
+    /* custom headers */
+  }, // optional
+});
+```
+
+你可以使用以下可选设置来自定义 Runpod 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器或自定义端点。
+  支持 vLLM 部署、SGLang 服务器以及任何 OpenAI 兼容 API。
+  默认前缀为 `https://api.runpod.ai/v2`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。
+  默认取自 `RUNPOD_API_KEY` 环境变量。
+  你可以在 [Runpod 控制台](https://console.runpod.io/user/settings)的 "API Keys" 下获取你的 API key。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将它用作中间件来拦截请求，
+  或提供自定义 fetch 实现，例如用于测试。
+
+## 语言模型
+
+你可以使用提供商实例创建语言模型。第一个参数是模型 ID：
+
+```ts
+import { runpod } from '@runpod/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: runpod('qwen/qwen3-32b-awq'),
+  prompt: 'What is the capital of Germany?',
+});
+```
+
+**返回值：**
+
+- `text` - 生成的文本字符串
+- `finishReason` - 生成停止的原因（'stop'、'length' 等）
+- `usage` - token 用量信息（prompt、completion、总 token 数）
+
+### 流式
+
+```ts
+import { runpod } from '@runpod/ai-sdk-provider';
+import { streamText } from 'ai';
+
+const { textStream } = await streamText({
+  model: runpod('qwen/qwen3-32b-awq'),
+  prompt:
+    'Write a short poem about artificial intelligence in exactly 4 lines.',
+  temperature: 0.7,
+});
+
+for await (const delta of textStream) {
+  process.stdout.write(delta);
+}
+```
+
+### 模型能力
+
+| 模型 ID               | 描述                                        | 流式      | 对象生成   | 工具使用   | 推理说明                  |
+| --------------------- | ------------------------------------------- | --------- | ---------- | ---------- | ------------------------- |
+| `qwen/qwen3-32b-awq`  | 32B 参数多语言模型，具备强大的推理能力      | <Check /> | <Cross />  | <Check />  | 标准推理事件              |
+| `openai/gpt-oss-120b` | 120B 参数开源 GPT 模型                      | <Check /> | <Cross />  | <Check />  | 标准推理事件              |
+
+**注意：** 所有可用模型的最新列表请参阅 [Runpod 公共端点参考](https://docs.runpod.io/hub/public-endpoint-reference)。
+
+### 聊天对话
+
+```ts
+const { text } = await generateText({
+  model: runpod('qwen/qwen3-32b-awq'),
+  messages: [
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: 'What is the capital of France?' },
+  ],
+});
+```
+
+### 工具调用
+
+```ts
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const { text, toolCalls } = await generateText({
+  model: runpod('openai/gpt-oss-120b'),
+  prompt: 'What is the weather like in San Francisco?',
+  tools: {
+    getWeather: tool({
+      description: 'Get weather information for a city',
+      inputSchema: z.object({
+        city: z.string().describe('The city name'),
+      }),
+      execute: async ({ city }) => {
+        return `The weather in ${city} is sunny.`;
+      },
+    }),
+  },
+});
+```
+
+**额外返回值：**
+
+- `toolCalls` - 模型发起的工具调用数组
+- `toolResults` - 已执行工具的结果
+
+### 结构化输出
+
+该提供商包含的两个模型不支持使用 [`Output`](/docs/reference/ai-sdk-core/output) 强制结构化输出。
+
+你仍然可以通过指示模型返回 JSON 并自行校验来获得结构化数据。
+
+```ts
+import { runpod } from '@runpod/ai-sdk-provider';
+import { generateText } from 'ai';
+import { z } from 'zod';
+
+const RecipeSchema = z.object({
+  name: z.string(),
+  ingredients: z.array(z.string()),
+  steps: z.array(z.string()),
+});
+
+const { text } = await generateText({
+  model: runpod('qwen/qwen3-32b-awq'),
+  messages: [
+    {
+      role: 'system',
+      content:
+        'return ONLY valid JSON matching { name: string; ingredients: string[]; steps: string[] }',
+    },
+    { role: 'user', content: 'generate a lasagna recipe.' },
+  ],
+  temperature: 0,
+});
+
+const parsed = JSON.parse(text);
+const result = RecipeSchema.safeParse(parsed);
+
+if (!result.success) {
+  // handle invalid JSON shape
+}
+
+console.log(result.success ? result.data : parsed);
+```
+
+## 图像模型
+
+你可以使用 `.imageModel()` 工厂方法创建 Runpod 图像模型。
+
+### 基本用法
+
+```ts
+import { runpod } from '@runpod/ai-sdk-provider';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: runpod.imageModel('qwen/qwen-image'),
+  prompt: 'A serene mountain landscape at sunset',
+  aspectRatio: '4:3',
+});
+
+// Save to filesystem
+import { writeFileSync } from 'fs';
+writeFileSync('landscape.jpg', image.uint8Array);
+```
+
+**返回值：**
+
+- `image.uint8Array` - 二进制图像数据（便于处理/保存）
+- `image.base64` - Base64 编码字符串（用于网页展示）
+- `image.mediaType` - MIME 类型（'image/jpeg' 或 'image/png'）
+- `warnings` - 关于不支持参数的所有警告数组
+
+### 模型能力
+
+| 模型 ID                                | 描述                     | 支持的宽高比                           |
+| -------------------------------------- | ------------------------ | -------------------------------------- |
+| `bytedance/seedream-3.0`               | 高级文生图模型           | 1:1、4:3、3:4                          |
+| `bytedance/seedream-4.0`               | 文生图（v4）             | 1:1（支持 1024、2048、4096）           |
+| `bytedance/seedream-4.0-edit`          | 图像编辑（v4，多图）     | 1:1（支持 1024、1536、2048、4096）     |
+| `black-forest-labs/flux-1-schnell`     | 快速图像生成（4 步）     | 1:1、4:3、3:4                          |
+| `black-forest-labs/flux-1-dev`         | 高质量图像生成           | 1:1、4:3、3:4                          |
+| `black-forest-labs/flux-1-kontext-dev` | 上下文感知图像生成       | 1:1、4:3、3:4                          |
+| `qwen/qwen-image`                      | 文生图                   | 1:1、4:3、3:4                          |
+| `qwen/qwen-image-edit`                 | 图像编辑（提示词引导）   | 1:1、4:3、3:4                          |
+
+**注意**：该提供商对图像参数使用严格校验。不支持的宽高比（如 `16:9`、`9:16`、`3:2`、`2:3`）会抛出 `InvalidArgumentError`，并附带关于可用替代值的明确提示。
+
+所有可用图像模型的最新列表请参阅 [Runpod 公共端点参考](https://docs.runpod.io/hub/public-endpoint-reference)。
+
+### 高级参数
+
+```ts
+const { image } = await generateImage({
+  model: runpod.imageModel('bytedance/seedream-3.0'),
+  prompt: 'A sunset over mountains',
+  size: '1328x1328',
+  seed: 42,
+  providerOptions: {
+    runpod: {
+      negative_prompt: 'blurry, low quality',
+      enable_safety_checker: true,
+    },
+  },
+});
+```
+
+#### 修改图像
+
+使用文本提示词转换已有图像。
+
+```ts
+// Example: Transform existing image
+const { image } = await generateImage({
+  model: runpod.imageModel('black-forest-labs/flux-1-kontext-dev'),
+  prompt: 'Transform this into a cyberpunk style with neon lights',
+  aspectRatio: '1:1',
+  providerOptions: {
+    runpod: {
+      image: 'https://example.com/input-image.jpg',
+    },
+  },
+});
+
+// Example: Using base64 encoded image
+const { image } = await generateImage({
+  model: runpod.imageModel('black-forest-labs/flux-1-kontext-dev'),
+  prompt: 'Make this image look like a painting',
+  providerOptions: {
+    runpod: {
+      image: 'data:image/png;base64,iVBORw0KGgoAAAANS...',
+    },
+  },
+});
+```
+
+### 高级配置
+
+```ts
+// Full control over generation parameters
+const { image } = await generateImage({
+  model: runpod.imageModel('black-forest-labs/flux-1-dev'),
+  prompt: 'A majestic dragon breathing fire in a medieval castle',
+  size: '1328x1328',
+  seed: 42, // For reproducible results
+  providerOptions: {
+    runpod: {
+      negative_prompt: 'blurry, low quality, distorted, ugly, bad anatomy',
+      enable_safety_checker: true,
+      num_inference_steps: 50, // Higher quality (default: 28)
+      guidance: 3.5, // Stronger prompt adherence (default: 2)
+      output_format: 'png', // High quality format
+      // Polling settings for long generations
+      maxPollAttempts: 30,
+      pollIntervalMillis: 4000,
+    },
+  },
+});
+
+// Fast generation with minimal steps
+const { image } = await generateImage({
+  model: runpod.imageModel('black-forest-labs/flux-1-schnell'),
+  prompt: 'A simple red apple',
+  aspectRatio: '1:1',
+  providerOptions: {
+    runpod: {
+      num_inference_steps: 2, // Even faster (default: 4)
+      guidance: 10, // Higher guidance for simple prompts
+      output_format: 'jpg', // Smaller file size
+    },
+  },
+});
+```
+
+### 提供商选项
+
+Runpod 图像模型通过 `providerOptions.runpod` 对象支持灵活的提供商选项：
+
+| 选项                    | 类型      | 默认值  | 描述                                                     |
+| ----------------------- | --------- | ------- | -------------------------------------------------------- |
+| `negative_prompt`       | `string`  | `""`    | 描述你不希望出现在图像中的内容的文本                     |
+| `enable_safety_checker` | `boolean` | `true`  | 启用内容安全过滤                                         |
+| `image`                 | `string`  | -       | 输入图像：URL 或 base64 data URI（Flux Kontext 模型必填） |
+| `num_inference_steps`   | `number`  | 自动    | 去噪步数（Flux：schnell 为 4，其余为 28）                |
+| `guidance`              | `number`  | 自动    | 提示词遵循度的引导系数（Flux：schnell 为 7，其余为 2）   |
+| `output_format`         | `string`  | `"png"` | 输出图像格式（"png" 或 "jpg"）                           |
+| `maxPollAttempts`       | `number`  | `60`    | 异步生成的最大轮询次数                                   |
+| `pollIntervalMillis`    | `number`  | `5000`  | 轮询间隔，单位毫秒（5 秒）                               |

@@ -1,0 +1,159 @@
+---
+title: Z.AI
+description: 了解如何在 AI SDK 中使用 Z.AI 的 GLM 模型。
+---
+
+# Z.AI 提供商
+
+[Z.AI](https://z.ai/) 提供商让你能够通过 Z.AI API 访问 GLM 语言模型与视觉模型。
+
+API 密钥可在 [Z.AI API key 控制台](https://z.ai/manage-apikey/apikey-list)创建。
+
+## 安装
+
+Z.AI 提供商通过 `@ai-sdk/zai` 包提供。使用以下命令安装：
+
+<InstallPackages packages="@ai-sdk/zai" />
+
+设置 `ZAI_API_KEY` 环境变量：
+
+```bash
+ZAI_API_KEY=your-api-key
+```
+
+## 提供商实例
+
+从 `@ai-sdk/zai` 导入默认提供商实例 `zai`：
+
+```ts
+import { zai } from '@ai-sdk/zai';
+```
+
+如需自定义配置，请使用 `createZai`：
+
+```ts
+import { createZai } from '@ai-sdk/zai';
+
+const zai = createZai({
+  apiKey: process.env.ZAI_API_KEY,
+  baseURL: 'https://api.z.ai/api/paas/v4',
+});
+```
+
+该提供商接受以下可选设置：
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认值为 `ZAI_API_KEY` 环境变量。
+
+- **baseURL** _string_
+
+  API 请求的 URL 前缀。默认值为 `https://api.z.ai/api/paas/v4`。
+
+- **headers** _Record&lt;string, string&gt;_
+
+  额外的请求头。
+
+- **fetch** _FetchFunction_
+
+  自定义 fetch 实现，例如在中间件中拦截请求。
+
+## 语言模型
+
+将模型 id 传给提供商即可创建语言模型：
+
+```ts
+import { zai } from '@ai-sdk/zai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: zai('glm-5.3'),
+  prompt: 'Explain quantum entanglement in simple terms.',
+});
+```
+
+当前模型系列包括 GLM 5、GLM 4.7、GLM 4.6、GLM 4.5 以及 GLM 视觉模型。模型可用性会随时间变化；当前目录请参见 [Z.AI 模型文档](https://docs.z.ai/guides/llm)。
+
+该提供商支持：
+
+- 文本生成与流式输出
+- 推理输出与推理历史
+- 函数调用，包括增量式工具调用流式输出
+- JSON 对象输出
+- 兼容的视觉模型上基于 URL 的图像和视频输入
+
+## 提供商选项
+
+Z.AI 特有的选项可以通过 `providerOptions.zai` 传入：
+
+```ts
+import { zai } from '@ai-sdk/zai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: zai('glm-5.3'),
+  prompt: 'Compare two approaches to implementing a rate limiter.',
+  providerOptions: {
+    zai: {
+      thinking: { type: 'enabled', clearThinking: true },
+      reasoningEffort: 'high',
+      requestId: 'request-123456',
+      userId: 'user-123456',
+    },
+  },
+});
+```
+
+可用的选项如下：
+
+- **doSample** _boolean_
+
+  启用采样。禁用时，`temperature` 和 `topP` 不生效。
+
+- **thinking** _object_
+
+  通过 `type: 'enabled' | 'disabled'` 控制思考。将 `clearThinking` 设为 `false` 可保留先前助手消息中的推理内容。
+
+- **reasoningEffort** _'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'_
+
+  在支持的模型上控制推理力度。
+
+- **toolStream** _boolean_
+
+  在支持的模型上启用增量式函数调用参数流式输出。
+
+- **requestId** _string_
+
+  调用方提供的请求 id，长度 6 到 64 个字符。
+
+- **userId** _string_
+
+  非敏感的终端用户 id，长度 6 到 128 个字符。
+
+## 流式工具调用
+
+当你希望支持的 GLM 模型以增量方式流式输出函数调用参数时，请启用 `toolStream`：
+
+```ts
+import { zai } from '@ai-sdk/zai';
+import { streamText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: zai('glm-5.3'),
+  prompt: 'What is the weather in San Francisco?',
+  tools: {
+    weather: tool({
+      description: 'Get the weather for a city',
+      inputSchema: z.object({ city: z.string() }),
+    }),
+  },
+  providerOptions: {
+    zai: { toolStream: true },
+  },
+});
+
+for await (const part of result.fullStream) {
+  console.log(part);
+}
+```

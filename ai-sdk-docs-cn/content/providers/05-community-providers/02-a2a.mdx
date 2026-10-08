@@ -1,0 +1,88 @@
+---
+title: A2A
+description: AI SDK 的 A2A 协议提供商
+---
+
+# A2A
+
+[dracoblue/a2a-ai-provider](https://github.com/dracoblue/a2a-ai-provider) 是一个社区提供商，让你能够在 [AI SDK](https://ai-sdk.dev/) 中使用符合 [A2A 协议](https://a2aproject.github.io/A2A/specification/)的智能体（agent）。它使开发者能够通过基于 HTTP 的标准化 JSON-RPC 接口，以流式方式发送与接收文本、工具调用和工件（artifact）。
+
+<Note type="warning">
+  `a2a-ai-provider` 包仍在持续开发中。
+</Note>
+
+该提供商（通过官方 a2a-js sdk [@a2a-js/sdk](https://github.com/a2aproject/a2a-js)）支持：
+
+- 通过 `sendSubscribe` 与 SSE 实现**流式文本响应**
+- 向 A2A 服务器**上传文件与工件**
+- 支持文本与文件部分的**多模态消息**
+- 面向 A2A 兼容 LLM 智能体的**完整 JSON-RPC 2.0 兼容性**
+
+欲了解更多 A2A 相关内容，请访问 [A2A 项目站点](https://a2aproject.github.io/A2A/)。
+
+## 设置
+
+从 npm 安装 `a2a-ai-provider`：
+
+<InstallPackages packages="a2a-ai-provider" />
+
+## 提供商实例
+
+为 A2A 服务器创建一个提供商实例：
+
+```ts
+import { a2a } from 'a2a-ai-provider';
+```
+
+## 示例
+
+现在你可以像这样在 AI SDK 中使用该提供商：
+
+### `generateText`
+
+```ts
+import { a2a } from 'a2a-ai-provider';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: a2a('https://your-a2a-server.example.com'),
+  prompt: 'What is love?',
+});
+
+console.log(result.text);
+```
+
+### `streamText`
+
+```ts
+import { a2a } from 'a2a-ai-provider';
+import { streamText } from 'ai';
+
+const chatId = 'unique-chat-id'; // for each conversation to keep history in a2a server
+
+const streamResult = streamText({
+  model: a2a('https://your-a2a-server.example.com'),
+  prompt: 'What is love?',
+  providerOptions: {
+    a2a: {
+      contextId: chatId,
+    },
+  },
+});
+
+await streamResult.consumeStream();
+
+console.log(await streamResult.content);
+```
+
+## 特性
+
+- **文本流式传输**：逐 token 流式输出 A2A 服务器的内容
+- **文件上传**：在提示词中一并发送文件
+- **工件处理**：在流式或最终结果中接收文件工件
+
+## 更多资源
+
+- [GitHub 仓库](https://github.com/DracoBlue/a2a-ai-provider)
+- [A2A 协议规范](https://a2aproject.github.io/A2A/specification/)
+- 许可证：MIT

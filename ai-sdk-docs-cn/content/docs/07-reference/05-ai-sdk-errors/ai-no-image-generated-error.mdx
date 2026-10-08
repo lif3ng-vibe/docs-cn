@@ -1,0 +1,43 @@
+---
+title: AI_NoImageGeneratedError
+description: 了解如何修复 AI_NoImageGeneratedError
+---
+
+# AI_NoImageGeneratedError
+
+当 AI 提供商未能生成图像时会引发此错误。
+可能的原因如下：
+
+- 模型未能生成响应。
+- 模型生成了无效的响应。
+
+## 属性
+
+- `message`：错误消息（可选，默认为 `'No image generated.'`）。
+- `calls`：底层图像模型调用的结果，包括生成的图像、提供商元数据、响应元数据、警告和用量（可选）。
+- `responses`：关于图像模型响应的元数据，包括时间戳、模型和请求头（可选）。
+- `cause`：错误原因。可用于更细致的错误处理（可选）。
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_NoImageGeneratedError` 的实例：
+
+```typescript
+import { generateImage, NoImageGeneratedError } from 'ai';
+
+try {
+  await generateImage({ model, prompt });
+} catch (error) {
+  if (NoImageGeneratedError.isInstance(error)) {
+    console.log('NoImageGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Responses:', error.responses);
+
+    for (const call of error.calls ?? []) {
+      console.log('Provider metadata:', call.providerMetadata);
+      console.log('Warnings:', call.warnings);
+      console.log('Usage:', call.usage);
+    }
+  }
+}
+```

@@ -1,0 +1,1986 @@
+---
+title: Amazon Bedrock
+description: 了解如何使用 Amazon Bedrock 提供商。
+---
+
+# Amazon Bedrock 提供商
+
+[AI SDK](/docs) 的 Amazon Bedrock 提供商为 [Amazon Bedrock](https://aws.amazon.com/bedrock) API 提供语言模型支持。
+
+## 安装
+
+Bedrock 提供商包含在 `@ai-sdk/amazon-bedrock` 模块中。你可以使用以下命令安装：
+
+<InstallPackages packages="@ai-sdk/amazon-bedrock" />
+
+### 前置条件
+
+Amazon Bedrock 基础模型默认不开放访问。要获得某个基础模型的访问权限，需要由拥有足够权限的 IAM 用户通过控制台申请。一旦某个模型被授予访问权限，账户中的所有用户都可以使用它。
+
+更多信息请参阅[模型访问文档](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html)。
+
+### 身份验证
+
+Amazon Bedrock 提供商支持两种身份验证方式，并可在其间自动回退（fallback）：API 密钥验证（推荐）和使用 IAM 凭证或 AWS SDK 凭证链的 AWS SigV4 验证。
+
+#### 使用 API 密钥（推荐）
+
+与 AWS SigV4 验证相比，API 密钥验证的配置更简单。提供 API 密钥时，它的优先级高于任何 SigV4 凭证。
+
+从 [AWS 控制台](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html)生成 Bedrock API 密钥，然后将其设置为 `AWS_BEARER_TOKEN_BEDROCK` 环境变量：
+
+```bash
+AWS_BEARER_TOKEN_BEDROCK=your-api-key-here
+```
+
+或者直接传递给 `createAmazonBedrock`：
+
+```ts
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+
+const amazonBedrock = createAmazonBedrock({
+  apiKey: 'your-api-key-here',
+  region: 'us-east-1',
+});
+```
+
+省略 `apiKey` 时，提供商会回退到 `AWS_BEARER_TOKEN_BEDROCK`；若两者都未设置，则回退到 SigV4 验证。
+
+#### 使用 IAM 访问密钥和秘密访问密钥
+
+**第 1 步：创建 AWS 访问密钥和秘密访问密钥**
+
+首先，你需要创建 AWS 访问密钥（access key）和秘密访问密钥（secret key）。步骤如下：
+
+**登录 AWS 管理控制台**
+
+- 前往 [AWS 管理控制台](https://console.aws.amazon.com/)，使用你的 AWS 账户凭证登录。
+
+**创建 IAM 用户**
+
+- 进入 [IAM 控制面板](https://console.aws.amazon.com/iam/home)，在左侧导航菜单中点击"Users"。
+- 点击"Create user"，填写所需信息以创建新的 IAM 用户。
+- 务必选择"Programmatic access"（编程访问）作为访问类型。
+- 该用户账户需要附加 `AmazonBedrockFullAccess` 策略。
+
+**创建访问密钥**
+
+- 点击"Security credentials"（安全凭证）选项卡，然后点击"Create access key"。
+- 点击"Create access key"生成新的访问密钥对。
+- 下载包含访问密钥 ID 和秘密访问密钥的 `.csv` 文件。
+
+**第 2 步：配置访问密钥和秘密访问密钥**
+
+在你的项目中，如果还没有 `.env` 文件，请先添加一个。该文件将用于把访问密钥和秘密访问密钥设置为环境变量。在 `.env` 文件中加入以下内容：
+
+```makefile
+AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+AWS_REGION=YOUR_REGION
+```
+
+<Note>
+  许多框架（如 [Next.js](https://nextjs.org/)）会自动加载 `.env` 文件。如果你使用的是其他框架，可能需要借助 [`dotenv`](https://github.com/motdotla/dotenv) 之类的包手动加载 `.env` 文件。
+</Note>
+
+请记得将 `YOUR_ACCESS_KEY_ID`、`YOUR_SECRET_ACCESS_KEY` 和 `YOUR_REGION` 替换为你 AWS 账户中的实际值。
+
+#### 使用 AWS SDK 凭证链（实例配置文件、实例角色、ECS 角色、EKS 服务账户等）
+
+使用 AWS SDK 时，SDK 会自动通过凭证链确定要使用的凭证，包括实例配置文件、实例角色、ECS 角色、EKS 服务账户等。AI SDK 也可以实现类似行为：在提供商设置中不指定 `accessKeyId`、`secretAccessKey`、`sessionToken` 属性，而是传入一个 `credentialProvider` 属性。
+
+_用法：_
+
+`@aws-sdk/credential-providers` 包提供了一组凭证提供程序，可用于创建凭证提供程序链。
+
+<InstallPackages packages="@aws-sdk/credential-providers" />
+
+```ts
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+
+const amazonBedrock = createAmazonBedrock({
+  region: 'us-east-1',
+  credentialProvider: fromNodeProviderChain(),
+});
+```
+
+## 提供商实例
+
+你可以从 `@ai-sdk/amazon-bedrock` 导入默认的提供商实例 `amazonBedrock`：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+```
+
+如果需要自定义配置，你可以从 `@ai-sdk/amazon-bedrock` 导入 `createAmazonBedrock`，并使用你的设置创建提供商实例：
+
+```ts
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+
+const amazonBedrock = createAmazonBedrock({
+  region: 'us-east-1',
+  accessKeyId: 'xxxxxxxxx',
+  secretAccessKey: 'xxxxxxxxx',
+  sessionToken: 'xxxxxxxxx',
+});
+```
+
+<Note>
+  省略的选项会使用下文列出的环境变量。当 `accessKeyId` 和 `secretAccessKey` **同时**以字符串形式传入时，SigV4 **只在你显式传入 `sessionToken` 时才使用它**——而不会读取环境变量中的 `AWS_SESSION_TOKEN`——这样静态密钥就不会与工作负载 token（如 EKS IRSA）混用。
+</Note>
+
+你可以使用以下可选设置来自定义 Amazon Bedrock 提供商实例：
+
+- **region** _string_
+
+  用于 API 调用的 AWS 区域。
+  默认使用 `AWS_REGION` 环境变量。
+
+- **accessKeyId** _string_
+
+  用于 API 调用的 AWS 访问密钥 ID。
+  默认使用 `AWS_ACCESS_KEY_ID` 环境变量。
+
+- **secretAccessKey** _string_
+
+  用于 API 调用的 AWS 秘密访问密钥。
+  默认使用 `AWS_SECRET_ACCESS_KEY` 环境变量。
+
+- **sessionToken** _string_
+
+  可选。用于临时凭证。当**两个**访问密钥都以字符串形式设置时，如需要请在此传入 token；此时不会使用环境变量中的 `AWS_SESSION_TOKEN`。如果任一密钥来自环境变量，省略 `sessionToken` 则允许使用 `AWS_SESSION_TOKEN`。
+
+- **credentialProvider** _() =&gt; Promise&lt;&#123; accessKeyId: string; secretAccessKey: string; sessionToken?: string; &#125;&gt;_
+
+  可选。用于 API 调用的 AWS 凭证提供程序链。
+  默认使用指定的凭证。
+
+- **apiKey** _string_
+
+  可选。用于 Bearer token 身份验证请求的 API 密钥。
+  提供后将替代 AWS SigV4 验证。
+  默认使用 `AWS_BEARER_TOKEN_BEDROCK` 环境变量。
+
+- **baseURL** _string_
+
+  可选。Bedrock API 调用的基础 URL。
+  适用于自定义端点或代理配置。
+  省略时，提供商还支持服务专属的
+  `AWS_ENDPOINT_URL_BEDROCK_RUNTIME` 和
+  `AWS_ENDPOINT_URL_BEDROCK_AGENT_RUNTIME` 环境变量，它们优先于全局的
+  `AWS_ENDPOINT_URL` 环境变量。
+
+- **headers** _Record&lt;string, string&gt;_
+
+  可选。包含在请求中的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) =&gt; Promise&lt;Response&gt;_
+
+  可选。自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将其作为中间件拦截请求，
+  或提供自定义 fetch 实现（例如用于测试）。
+
+## 语言模型
+
+你可以使用提供商实例创建调用 Bedrock API 的模型。
+第一个参数是模型 ID，例如 `meta.llama3-70b-instruct-v1:0`。
+
+```ts
+const model = amazonBedrock('meta.llama3-70b-instruct-v1:0');
+```
+
+Amazon Bedrock 模型还支持一些模型专属的提供商选项，它们不属于[标准调用设置](/docs/ai-sdk-core/settings)。
+你可以在 `providerOptions` 参数中传入：
+
+```ts
+const model = amazonBedrock('anthropic.claude-3-sonnet-20240229-v1:0');
+
+await generateText({
+  model,
+  providerOptions: {
+    anthropic: {
+      additionalModelRequestFields: { top_k: 350 },
+    },
+  },
+});
+```
+
+基于所选模型的更多设置，请参阅 [Amazon Bedrock 推理参数文档](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html)。
+
+你可以使用 Amazon Bedrock 语言模型通过 `generateText` 函数生成文本：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: amazonBedrock('meta.llama3-70b-instruct-v1:0'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+Amazon Bedrock 语言模型也可以在 `streamText` 函数中使用
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### 结构化输出
+
+对于 Anthropic 模型，你可以使用 `structuredOutputMode` 提供商选项来
+选择 Amazon Bedrock 生成结构化输出的方式：
+
+- `"outputFormat"`：使用 Bedrock 原生的 `output_config.format` 参数。
+- `"jsonTool"`：使用一个特殊的 `json` 工具并强制工具选择。
+- `"auto"`：支持时使用原生结构化输出，否则回退到 JSON 工具。这是默认值。
+
+在 `"auto"` 模式下，Claude Sonnet 4.6 和 Claude Haiku 4.5 会使用 JSON 工具
+回退，因为原生结构化输出在不同工作负载和 Bedrock 账户间可能不稳定。如果原生结构化输出
+在你的账户和工作负载上运行良好，你可以设置 `"outputFormat"` 来启用它；
+也可以使用 `"jsonTool"` 对任意模型强制回退：
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockLanguageModelChatOptions,
+} from '@ai-sdk/amazon-bedrock';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: amazonBedrock('eu.anthropic.claude-sonnet-4-6'),
+  output: Output.object({
+    schema: z.object({
+      summary: z.string(),
+      findings: z.array(z.string()),
+    }),
+  }),
+  prompt: 'Summarize the inspection report.',
+  providerOptions: {
+    amazonBedrock: {
+      structuredOutputMode: 'jsonTool',
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+```
+
+旧版 `providerOptions.bedrock` 键仍然受支持。为了与 Anthropic 提供商保持一致，
+Bedrock 上的 Anthropic 模型也会识别 `providerOptions.anthropic.structuredOutputMode`。
+两者同时提供时，`amazonBedrock`（或旧版 `bedrock`）的值优先。
+
+对于 Anthropic 应用推理配置文件（application inference profile），建议使用 Bedrock Anthropic
+提供商。它使用 Bedrock 原生的 InvokeModel API，该 API 接受应用推理配置文件 ARN，
+并会自动将模型识别为 Anthropic：
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+
+const profileArn =
+  'arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/qibm5eutlkcy';
+
+const model = bedrockAnthropic(profileArn);
+```
+
+仅当你需要使用通用的 `@ai-sdk/amazon-bedrock` 提供商（它使用 Bedrock 的
+Converse API，例如 IAM 只允许 Converse 而不允许 InvokeModel 时）才设置
+`modelFamily: 'anthropic'`。应用推理配置文件的 ARN 不能标识其底层模型，
+因此声明模型族可以启用 Anthropic 专属特性，包括原生结构化输出：
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockChatModelSettings,
+} from '@ai-sdk/amazon-bedrock';
+
+const profileArn =
+  'arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/qibm5eutlkcy';
+
+const model = amazonBedrock(profileArn, {
+  modelFamily: 'anthropic',
+} satisfies AmazonBedrockChatModelSettings);
+```
+
+如果底层模型对原生结构化输出的支持不可靠，请将 `structuredOutputMode`
+设置为 `"jsonTool"`。
+
+### 文件输入
+
+<Note type="warning">
+  Amazon Bedrock 仅在特定模型（例如 `anthropic.claude-3-haiku-20240307-v1:0`）上支持文件输入。
+</Note>
+
+Amazon Bedrock 提供商支持文件输入，例如 PDF 文件。
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: amazonBedrock('us.anthropic.claude-haiku-5-5'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the pdf in detail.' },
+        {
+          type: 'file',
+          data: readFileSync('./data/ai.pdf'),
+          mediaType: 'application/pdf',
+        },
+      ],
+    },
+  ],
+});
+```
+
+### 护栏（Guardrails）
+
+你可以使用 `bedrock` 提供商选项来启用 [Amazon Bedrock Guardrails](https://aws.amazon.com/bedrock/guardrails/)：
+
+```ts
+import { type AmazonBedrockLanguageModelChatOptions } from '@ai-sdk/amazon-bedrock';
+
+const result = await generateText({
+  model: amazonBedrock('anthropic.claude-3-sonnet-20240229-v1:0'),
+  prompt: 'Write a story about space exploration.',
+  providerOptions: {
+    bedrock: {
+      guardrailConfig: {
+        guardrailIdentifier: '1abcd2ef34gh',
+        guardrailVersion: '1',
+        trace: 'enabled' as const,
+        streamProcessingMode: 'async',
+      },
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+```
+
+如果启用了追踪（tracing），追踪信息会通过提供商元数据返回。
+
+```ts
+if (result.providerMetadata?.bedrock.trace) {
+  // ...
+}
+```
+
+更多信息请参阅 [Amazon Bedrock Guardrails 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html)。
+
+#### 防护内容
+
+你可以通过在内容部分（part）自身上设置 `providerOptions`，将单个文本或图像部分标记为防护内容（guard content）。这会把该部分包装进一个 [`guardContent`](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_GuardrailConverseContentBlock.html) 块，告诉 Bedrock Guardrails 专门评估该内容。
+
+对于文本部分，你还可以指定 `guardContentQualifiers`，指示护栏应如何处理该内容（例如作为依据来源（grounding source）、查询或防护内容）：
+
+```ts
+const result = await generateText({
+  model: bedrock('anthropic.claude-3-sonnet-20240229-v1:0'),
+  providerOptions: {
+    bedrock: {
+      guardrailConfig: {
+        guardrailIdentifier: '1abcd2ef34gh',
+        guardrailVersion: '1',
+      },
+    },
+  },
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'London is the capital of UK. Tokyo is the capital of Japan.',
+          providerOptions: {
+            bedrock: {
+              guardContent: true,
+              guardContentQualifiers: ['grounding_source'],
+            },
+          },
+        },
+        {
+          type: 'text',
+          text: 'Some additional background information.',
+        },
+        {
+          type: 'text',
+          text: 'What is the capital of Japan?',
+          providerOptions: {
+            bedrock: {
+              guardContent: true,
+              guardContentQualifiers: ['query'],
+            },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+图像部分同样可以标记为防护内容：
+
+```ts
+{
+  type: 'file',
+  data: {
+    type: 'data',
+    data: imageBase64,
+  },
+  mediaType: 'image/png',
+  providerOptions: {
+    bedrock: {
+      guardContent: true,
+    },
+  },
+}
+```
+
+可用的 `guardContentQualifiers` 取值如下：
+
+- `'grounding_source'` — 用作护栏依据来源的内容
+- `'query'` — 作为待评估查询处理的内容
+- `'guard_content'` — 由护栏评估的内容
+
+更多信息请参阅 [Amazon Bedrock Guardrails 与 Converse API 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html)。
+
+### 引用
+
+Amazon Bedrock 在兼容的模型上支持针对文档输入的引用（citation）。启用后：
+
+- 部分模型可以通过视觉理解阅读文档，而不仅仅是提取文本
+- 模型可以引用你所提供文档中的具体位置，便于追溯信息的来源（AI SDK 暂时尚未在结果中返回引用数据）
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+import fs from 'fs';
+
+const result = await generateText({
+  model: amazonBedrock('apac.anthropic.claude-sonnet-4-20250514-v1:0'),
+  output: Output.object({
+    schema: z.object({
+      summary: z.string().describe('Summary of the PDF document'),
+      keyPoints: z.array(z.string()).describe('Key points from the PDF'),
+    }),
+  }),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Summarize this PDF and provide key points.',
+        },
+        {
+          type: 'file',
+          data: readFileSync('./document.pdf'),
+          mediaType: 'application/pdf',
+          providerOptions: {
+            bedrock: {
+              citations: { enabled: true },
+            },
+          },
+        },
+      ],
+    },
+  ],
+});
+
+console.log('Response:', result.output);
+```
+
+### 缓存点
+
+<Note>
+  Amazon Bedrock 提示词缓存目前处于预览阶段。如需申请访问权限，请访问
+  [Amazon Bedrock 提示词缓存页面](https://aws.amazon.com/bedrock/prompt-caching/)。
+</Note>
+
+在消息中，你可以使用 `providerOptions` 属性设置缓存点（cache point）。将 `providerOptions` 对象中的 `bedrock` 属性设置为 `{ cachePoint: { type: 'default' } }` 即可创建缓存点。
+
+你还可以使用 `ttl` 属性为缓存点指定 TTL（存活时间）。支持的取值为 `'5m'`（5 分钟，默认）和 `'1h'`（1 小时）。1 小时 TTL 仅受 Claude Opus 4.5、Claude Haiku 4.5 和 Claude Sonnet 4.5 支持。
+
+```ts
+providerOptions: {
+  bedrock: { cachePoint: { type: 'default', ttl: '1h' } },
+}
+```
+
+<Note>
+  使用多个不同 TTL 的缓存点时，TTL 较长的缓存条目必须出现在 TTL 较短的条目之前
+  （即 1 小时缓存条目必须位于 5 分钟缓存条目之前）。
+</Note>
+
+缓存用量信息会通过 `providerMetadata` 对象返回。参见下方示例。
+
+<Note>
+  缓存点有模型专属的 token 下限和数量上限。例如，
+  Claude 3.5 Sonnet v2 要求每个缓存点至少 1,024 个 token，
+  且最多允许 4 个缓存点。支持的模型、区域和限制的详细信息请参阅
+  [Amazon Bedrock 提示词缓存文档](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html)。
+</Note>
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const cyberpunkAnalysis =
+  '... literary analysis of cyberpunk themes and concepts ...';
+
+const result = await generateText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-5-5'),
+  messages: [
+    {
+      role: 'system',
+      content: `You are an expert on William Gibson's cyberpunk literature and themes. You have access to the following academic analysis: ${cyberpunkAnalysis}`,
+      providerOptions: {
+        bedrock: { cachePoint: { type: 'default' } },
+      },
+    },
+    {
+      role: 'user',
+      content:
+        'What are the key cyberpunk themes that Gibson explores in Neuromancer?',
+    },
+  ],
+});
+
+console.log(result.text);
+console.log(result.providerMetadata?.bedrock?.usage);
+// Shows cache read/write token usage, e.g.:
+// {
+//   cacheReadInputTokens: 1337,
+//   cacheWriteInputTokens: 42,
+// }
+```
+
+缓存点同样适用于流式响应：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { streamText } from 'ai';
+
+const cyberpunkAnalysis =
+  '... literary analysis of cyberpunk themes and concepts ...';
+
+const result = streamText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-5-5'),
+  messages: [
+    {
+      role: 'assistant',
+      content: [
+        { type: 'text', text: 'You are an expert on cyberpunk literature.' },
+        { type: 'text', text: `Academic analysis: ${cyberpunkAnalysis}` },
+      ],
+      providerOptions: { bedrock: { cachePoint: { type: 'default' } } },
+    },
+    {
+      role: 'user',
+      content:
+        'How does Gibson explore the relationship between humanity and technology?',
+    },
+  ],
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+
+console.log(
+  'Cache token usage:',
+  (await result.providerMetadata)?.bedrock?.usage,
+);
+// Shows cache read/write token usage, e.g.:
+// {
+//   cacheReadInputTokens: 1337,
+//   cacheWriteInputTokens: 42,
+// }
+```
+
+### 提供商元数据
+
+以下 Bedrock 专属元数据可能会通过 `providerMetadata.bedrock` 返回：
+
+- **trace** _(optional)_
+  护栏追踪信息（启用追踪时）。
+- **performanceConfig** _(optional)_
+  性能配置，例如 `{ latency: 'optimized' }`。
+- **serviceTier** _(optional)_
+  服务层级信息，例如 `{ type: 'on-demand' }`。
+- **usage** _(optional)_
+  缓存 token 用量详情，包括 `cacheWriteInputTokens` 和 `cacheDetails`。
+- **stopSequence** _string | null_
+  触发停止的停止序列（如有）。
+
+## 推理
+
+Amazon Bedrock 支持模型创建方专属的推理（reasoning）特性：
+
+- Anthropic（例如 `claude-sonnet-4-5-20250929`）：通过 `reasoningConfig` 提供商选项启用，并以 token 为单位指定思考预算（最小值：`1024`，最大值：`64000`）。
+- Amazon（例如 `us.amazon.nova-2-lite-v1:0`）：通过 `reasoningConfig` 提供商选项启用，并指定最大推理力度级别（`'low' | 'medium' | 'high'`）。
+
+你也可以使用顶层的 `reasoning` 参数。对于 Amazon Nova 2，`'xhigh'` 和 `'max'` 会被映射为 `'high'` 并伴随一条兼容性警告。Anthropic 和 OpenAI 的力度映射则保留 `'max'`。
+
+Bedrock 会将部分的 `providerOptions.amazonBedrock.reasoningConfig` 与
+可移植推理设置合并，保留显式给定的值，并为模型的推理 API 推导出缺失字段。
+显式的 `maxReasoningEffort` 会取代力度映射，且不会为被覆盖的值发出强制转换警告。
+对于基于预算的 Anthropic 模型，`{ budgetTokens: 5000 }` 会保留该预算，
+并使用可移植推理填充缺失的 `type: 'enabled'`。仅含类型、仅作展示用途以及空配置
+同样会保留可移植推理。
+
+基于力度的 Anthropic 模型可以将可移植力度与显式的思考配置结合使用。禁用类型会阻止
+力度/预算的推导；即便提供了启用的类型或预算，可移植的 `reasoning: 'none'` 也会在
+Anthropic 模型上禁用思考。省略可移植推理或使用 `'provider-default'` 时，提供商配置
+保持不变。旧版 `bedrock` 提供商选项键遵循相同的规则。优先级细节请参阅
+[推理指南](/docs/ai-sdk-core/reasoning#优先级规则)。
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockLanguageModelChatOptions,
+} from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+// Anthropic example
+const anthropicResult = await generateText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+  prompt: 'How many people will live in the world in 2040?',
+  providerOptions: {
+    bedrock: {
+      reasoningConfig: { type: 'enabled', budgetTokens: 1024 },
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+
+console.log(anthropicResult.reasoningText); // reasoning text
+console.log(anthropicResult.text); // text response
+
+// Nova 2 example
+const amazonResult = await generateText({
+  model: amazonBedrock('us.amazon.nova-2-lite-v1:0'),
+  prompt: 'How many people will live in the world in 2040?',
+  providerOptions: {
+    bedrock: {
+      reasoningConfig: { type: 'enabled', maxReasoningEffort: 'medium' },
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+
+console.log(amazonResult.reasoningText); // reasoning text
+console.log(amazonResult.text); // text response
+```
+
+对于 Anthropic 模型，Bedrock 的 `maxTokens` 上限同时包含思考和最终文本。
+因此提供商在设置 `maxTokens` 时会把 `budgetTokens` 加到 `maxOutputTokens` 上。
+省略 `maxOutputTokens` 时，提供商会在默认值 `4096` 的基础上加上 `budgetTokens`。
+
+关于如何将推理集成到你的聊天机器人中，请参阅
+[AI SDK UI：聊天机器人](/docs/ai-sdk-ui/chatbot#推理)了解更多细节。
+
+## 服务层级
+
+Amazon Bedrock 支持通过 `serviceTier` 提供商选项为每次请求选择推理服务层级。
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockLanguageModelChatOptions,
+} from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-4-20250514-v1:0'),
+  prompt: 'Summarize this support ticket backlog.',
+  providerOptions: {
+    bedrock: {
+      serviceTier: 'priority',
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+```
+
+支持的取值为：
+
+- `reserved`
+- `priority`
+- `default`
+- `flex`
+
+模型的可用性与行为请参阅 [Amazon Bedrock 服务层级文档](https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html)。
+
+## 扩展上下文窗口
+
+Amazon Bedrock 上的 Claude Sonnet 4 模型在使用 `context-1m-2025-08-07` beta 特性时支持最高 100 万 token 的扩展上下文窗口。
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockLanguageModelChatOptions,
+} from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-4-20250514-v1:0'),
+  prompt: 'analyze this large document...',
+  providerOptions: {
+    bedrock: {
+      anthropicBeta: ['context-1m-2025-08-07'],
+    } satisfies AmazonBedrockLanguageModelChatOptions,
+  },
+});
+```
+
+## 计算机使用（Computer Use）
+
+Amazon Bedrock 通过 Anthropic 提供了三个可用于与外部系统交互的提供商定义工具：
+
+1. **Bash 工具**：允许运行 bash 命令。
+2. **文本编辑器工具**：提供查看和编辑文本文件的功能。
+3. **计算机工具**：支持控制计算机上的键盘和鼠标操作。
+
+它们通过提供商实例的 `tools` 属性提供。
+
+<Note>
+  Amazon Bedrock 不支持工具定义上的严格（strict）模式。在工具上设置
+  `strict: true` 会被忽略并发出一条警告。
+</Note>
+
+### Bash 工具
+
+Bash 工具允许运行 bash 命令。以下是创建和使用它的方法：
+
+```ts
+const bashTool = amazonBedrock.tools.bash_20241022({
+  execute: async ({ command, restart }) => {
+    // Implement your bash command execution logic here
+    // Return the result of the command execution
+  },
+});
+```
+
+参数：
+
+- `command` (string)：要运行的 bash 命令。除非工具正在重启，否则必填。
+- `restart` (boolean, optional)：设为 true 将重启此工具。
+
+### 文本编辑器工具
+
+文本编辑器工具提供查看和编辑文本文件的功能。
+
+**适用于 Claude 4 模型（Opus 与 Sonnet）：**
+
+```ts
+const textEditorTool = amazonBedrock.tools.textEditor_20250429({
+  execute: async ({
+    command,
+    path,
+    file_text,
+    insert_line,
+    new_str,
+    insert_text,
+    old_str,
+    view_range,
+  }) => {
+    // Implement your text editing logic here
+    // Return the result of the text editing operation
+  },
+});
+```
+
+**适用于 Claude 3.5 Sonnet 及更早的模型：**
+
+```ts
+const textEditorTool = amazonBedrock.tools.textEditor_20241022({
+  execute: async ({
+    command,
+    path,
+    file_text,
+    insert_line,
+    new_str,
+    insert_text,
+    old_str,
+    view_range,
+  }) => {
+    // Implement your text editing logic here
+    // Return the result of the text editing operation
+  },
+});
+```
+
+参数：
+
+- `command` ('view' | 'create' | 'str_replace' | 'insert' | 'undo_edit')：要运行的命令。注意：`undo_edit` 仅在 Claude 3.5 Sonnet 及更早的模型上可用。
+- `path` (string)：文件或目录的绝对路径，例如 `/repo/file.py` 或 `/repo`。
+- `file_text` (string, optional)：`create` 命令必填，为要创建文件的内容。
+- `insert_line` (number, optional)：`insert` 命令必填。在其后插入新字符串的行号。
+- `new_str` (string, optional)：`str_replace` 命令的新字符串。
+- `insert_text` (string, optional)：`insert` 命令必填，为要插入的文本。
+- `old_str` (string, optional)：`str_replace` 命令必填，为要替换的字符串。
+- `view_range` (number[], optional)：`view` 命令可选，用于指定要显示的行范围。
+
+使用文本编辑器工具时，请务必正确命名 tools 对象中的键：
+
+- **Claude 4 模型**：使用 `str_replace_based_edit_tool`
+- **Claude 3.5 Sonnet 及更早**：使用 `str_replace_editor`
+
+```ts
+// For Claude 4 models
+const response = await generateText({
+  model: amazonBedrock('us.anthropic.claude-sonnet-4-20250514-v1:0'),
+  prompt:
+    "Create a new file called example.txt, write 'Hello World' to it, and run 'cat example.txt' in the terminal",
+  tools: {
+    str_replace_based_edit_tool: textEditorTool, // Claude 4 tool name
+  },
+});
+
+// For Claude 3.5 Sonnet and earlier
+const response = await generateText({
+  model: amazonBedrock('anthropic.claude-3-5-sonnet-20241022-v2:0'),
+  prompt:
+    "Create a new file called example.txt, write 'Hello World' to it, and run 'cat example.txt' in the terminal",
+  tools: {
+    str_replace_editor: textEditorTool, // Earlier models tool name
+  },
+});
+```
+
+### 计算机工具
+
+计算机工具支持控制计算机上的键盘和鼠标操作：
+
+```ts
+const computerTool = amazonBedrock.tools.computer_20241022({
+  displayWidthPx: 1920,
+  displayHeightPx: 1080,
+  displayNumber: 0, // Optional, for X11 environments
+
+  execute: async ({ action, coordinate, text }) => {
+    // Implement your computer control logic here
+    // Return the result of the action
+
+    // Example code:
+    switch (action) {
+      case 'screenshot': {
+        // multipart result:
+        return {
+          type: 'image',
+          data: fs
+            .readFileSync('./data/screenshot-editor.png')
+            .toString('base64'),
+        };
+      }
+      default: {
+        console.log('Action:', action);
+        console.log('Coordinate:', coordinate);
+        console.log('Text:', text);
+        return `executed ${action}`;
+      }
+    }
+  },
+
+  // map to tool result content for LLM consumption:
+  toModelOutput({ output }) {
+    return typeof output === 'string'
+      ? [{ type: 'text', text: output }]
+      : [{ type: 'file-data', data: output.data, mediaType: 'image/png' }];
+  },
+});
+```
+
+参数：
+
+- `action` ('key' | 'type' | 'mouse_move' | 'left_click' | 'left_click_drag' | 'right_click' | 'middle_click' | 'double_click' | 'screenshot' | 'cursor_position')：要执行的操作。
+- `coordinate` (number[], optional)：`mouse_move` 和 `left_click_drag` 操作必填。指定 (x, y) 坐标。
+- `text` (string, optional)：`type` 和 `key` 操作必填。
+
+这些工具可以与 `anthropic.claude-3-5-sonnet-20240620-v1:0` 模型配合使用，以实现更复杂的交互和任务。
+
+### 模型能力
+
+| 模型                                           | 图像输入    | 对象生成          | 工具使用   | 工具流式传输   |
+| ---------------------------------------------- | ----------- | ----------------- | ---------- | -------------- |
+| `amazon.titan-tg1-large`                       | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `amazon.titan-text-express-v1`                 | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `amazon.titan-text-lite-v1`                    | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `us.amazon.nova-premier-v1:0`                  | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.amazon.nova-pro-v1:0`                      | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.amazon.nova-lite-v1:0`                     | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.amazon.nova-micro-v1:0`                    | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-haiku-4-5-20251001-v1:0`     | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-sonnet-4-20250514-v1:0`      | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-sonnet-4-5-20250929-v1:0`    | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-opus-4-20250514-v1:0`        | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-opus-4-1-20250805-v1:0`      | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-3-5-sonnet-20241022-v2:0`    | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-3-5-sonnet-20240620-v1:0`    | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-3-opus-20240229-v1:0`        | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-3-sonnet-20240229-v1:0`      | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-3-haiku-20240307-v1:0`       | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-sonnet-4-20250514-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-opus-4-20250514-v1:0`     | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-opus-4-1-20250805-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-3-5-sonnet-20241022-v2:0` | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-3-5-sonnet-20240620-v1:0` | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-3-sonnet-20240229-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-3-opus-20240229-v1:0`     | <Check />   | <Check />         | <Check />  | <Check />      |
+| `us.anthropic.claude-3-haiku-20240307-v1:0`    | <Check />   | <Check />         | <Check />  | <Check />      |
+| `anthropic.claude-v2`                          | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `anthropic.claude-v2:1`                        | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `anthropic.claude-instant-v1`                  | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `cohere.command-text-v14`                      | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `cohere.command-light-text-v14`                | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `cohere.command-r-v1:0`                        | <Cross />   | <Cross />         | <Check />  | <Cross />      |
+| `cohere.command-r-plus-v1:0`                   | <Cross />   | <Cross />         | <Check />  | <Cross />      |
+| `us.deepseek.r1-v1:0`                          | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `meta.llama3-8b-instruct-v1:0`                 | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-70b-instruct-v1:0`                | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-1-8b-instruct-v1:0`               | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-1-70b-instruct-v1:0`              | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-1-405b-instruct-v1:0`             | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-2-1b-instruct-v1:0`               | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-2-3b-instruct-v1:0`               | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-2-11b-instruct-v1:0`              | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `meta.llama3-2-90b-instruct-v1:0`              | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `us.meta.llama3-2-1b-instruct-v1:0`            | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-2-3b-instruct-v1:0`            | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-2-11b-instruct-v1:0`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-2-90b-instruct-v1:0`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-1-8b-instruct-v1:0`            | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-1-70b-instruct-v1:0`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama3-3-70b-instruct-v1:0`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama4-scout-17b-instruct-v1:0`       | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `us.meta.llama4-maverick-17b-instruct-v1:0`    | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `mistral.mistral-7b-instruct-v0:2`             | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `mistral.mixtral-8x7b-instruct-v0:1`           | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `mistral.mistral-large-2402-v1:0`              | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `mistral.mistral-small-2402-v1:0`              | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `us.mistral.pixtral-large-2502-v1:0`           | <Check />   | <Check />         | <Check />  | <Check />      |
+| `openai.gpt-oss-120b-1:0`                      | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `openai.gpt-oss-20b-1:0`                       | <Cross />   | <Check />         | <Check />  | <Check />      |
+
+<Note>
+  上表列出了常用模型。可用模型的完整列表请参阅
+  [Amazon Bedrock 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html)。
+  如有需要，你也可以将任意可用的提供商模型 ID 以字符串形式传入。
+</Note>
+
+## 嵌入模型
+
+你可以使用 `.embedding()` 工厂方法创建调用
+[Bedrock API](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) 的模型。
+
+```ts
+const model = amazonBedrock.embedding('amazon.titan-embed-text-v1');
+```
+
+Bedrock Titan 嵌入模型 amazon.titan-embed-text-v2:0 支持若干附加设置。
+你可以将它们作为选项参数传入：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { type AmazonBedrockEmbeddingModelOptions } from '@ai-sdk/amazon-bedrock';
+import { embed } from 'ai';
+
+const model = amazonBedrock.embedding('amazon.titan-embed-text-v2:0');
+
+const { embedding } = await embed({
+  model,
+  value: 'sunny day at the beach',
+  providerOptions: {
+    bedrock: {
+      dimensions: 512, // optional, number of dimensions for the embedding
+      normalize: true, // optional, normalize the output embeddings
+    } satisfies AmazonBedrockEmbeddingModelOptions,
+  },
+});
+```
+
+Bedrock Titan 嵌入模型支持以下可选提供商选项：
+
+- **dimensions**: _number_
+
+  输出嵌入的维度数。接受的取值：1024（默认）、512、256。
+
+- **normalize** _boolean_
+
+  指示是否对输出嵌入进行归一化的标志。默认为 true。
+
+### Nova 嵌入模型
+
+Amazon Nova 嵌入模型支持附加的提供商选项：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { type AmazonBedrockEmbeddingModelOptions } from '@ai-sdk/amazon-bedrock';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: amazonBedrock.embedding('amazon.nova-embed-text-v2:0'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    bedrock: {
+      embeddingDimension: 1024, // optional, number of dimensions
+      embeddingPurpose: 'TEXT_RETRIEVAL', // optional, purpose of embedding
+      truncate: 'END', // optional, truncation behavior
+    } satisfies AmazonBedrockEmbeddingModelOptions,
+  },
+});
+```
+
+Nova 嵌入模型支持以下可选提供商选项：
+
+- **embeddingDimension** _number_
+
+  输出嵌入的维度数。支持的取值：256、384、1024（默认）、3072。
+
+- **embeddingPurpose** _string_
+
+  嵌入的用途。接受：`GENERIC_INDEX`（默认）、`TEXT_RETRIEVAL`、`IMAGE_RETRIEVAL`、`VIDEO_RETRIEVAL`、`DOCUMENT_RETRIEVAL`、`AUDIO_RETRIEVAL`、`GENERIC_RETRIEVAL`、`CLASSIFICATION`、`CLUSTERING`。
+
+- **truncate** _string_
+
+  输入超出模型上下文长度时的截断行为。接受：`NONE`、`START`、`END`（默认）。
+
+### Cohere 嵌入模型
+
+Bedrock 上的 Cohere 嵌入模型需要 `inputType` 并支持截断：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { type AmazonBedrockEmbeddingModelOptions } from '@ai-sdk/amazon-bedrock';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: amazonBedrock.embedding('cohere.embed-english-v3'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    bedrock: {
+      inputType: 'search_document', // required for Cohere
+      truncate: 'END', // optional, truncation behavior
+    } satisfies AmazonBedrockEmbeddingModelOptions,
+  },
+});
+```
+
+Cohere 嵌入模型支持以下提供商选项：
+
+- **inputType** _string_
+
+  Cohere 嵌入模型的输入类型。接受：`search_document`、`search_query`（默认）、`classification`、`clustering`。
+
+- **truncate** _string_
+
+  输入超出模型上下文长度时的截断行为。接受：`NONE`、`START`、`END`。
+
+### 应用推理配置文件
+
+应用推理配置文件（application inference profile）的 ARN 不能标识其底层模型。
+创建嵌入模型时请传入模型族（model family），以便提供商选择正确的请求格式和批处理大小：
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockEmbeddingModelSettings,
+} from '@ai-sdk/amazon-bedrock';
+import { embedMany } from 'ai';
+
+const profileArn =
+  'arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/qibm5eutlkcy';
+
+const { embeddings } = await embedMany({
+  model: amazonBedrock.embedding(profileArn, {
+    modelFamily: 'cohere',
+  } satisfies AmazonBedrockEmbeddingModelSettings),
+  values: ['hello', 'world'],
+});
+```
+
+### 模型能力
+
+| 模型                           | 默认维度           | 自定义维度        |
+| ------------------------------ | ------------------ | ----------------- |
+| `amazon.titan-embed-text-v1`   | 1536               | <Cross />         |
+| `amazon.titan-embed-text-v2:0` | 1024               | <Check />         |
+| `amazon.nova-embed-text-v2:0`  | 1024               | <Check />         |
+| `cohere.embed-english-v3`      | 1024               | <Cross />         |
+| `cohere.embed-multilingual-v3` | 1024               | <Cross />         |
+
+## 重排序模型
+
+你可以使用 `.reranking()` 工厂方法创建调用
+[Bedrock Rerank API](https://docs.aws.amazon.com/bedrock/latest/userguide/rerank-api.html) 的模型。
+
+```ts
+const model = amazonBedrock.reranking('cohere.rerank-v3-5:0');
+```
+
+你可以使用 Amazon Bedrock 重排序模型通过 `rerank` 函数对文档进行重排序：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { rerank } from 'ai';
+
+const documents = [
+  'sunny day at the beach',
+  'rainy afternoon in the city',
+  'snowy night in the mountains',
+];
+
+const { ranking } = await rerank({
+  model: amazonBedrock.reranking('cohere.rerank-v3-5:0'),
+  documents,
+  query: 'talk about rain',
+  topN: 2,
+});
+
+console.log(ranking);
+// [
+//   { originalIndex: 1, score: 0.9, document: 'rainy afternoon in the city' },
+//   { originalIndex: 0, score: 0.3, document: 'sunny day at the beach' }
+// ]
+```
+
+Amazon Bedrock 重排序模型支持附加的提供商选项，可通过 `providerOptions.bedrock` 传入：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: amazonBedrock.reranking('cohere.rerank-v3-5:0'),
+  documents: ['sunny day at the beach', 'rainy afternoon in the city'],
+  query: 'talk about rain',
+  providerOptions: {
+    bedrock: {
+      nextToken: 'pagination_token_here',
+    },
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **nextToken** _string_
+
+  用于结果分页的 token。
+
+- **additionalModelRequestFields** _Record&lt;string, unknown&gt;_
+
+  附加的模型专属请求字段。
+
+### 模型能力
+
+| 模型                   |
+| ---------------------- |
+| `amazon.rerank-v1:0`   |
+| `cohere.rerank-v3-5:0` |
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建调用
+[Bedrock API](https://docs.aws.amazon.com/nova/latest/userguide/image-generation.html) 的模型。
+
+关于 Amazon Nova Canvas 图像模型的更多信息，请参阅
+[Nova Canvas
+概述](https://docs.aws.amazon.com/ai/responsible-ai/nova-canvas/overview.html)。
+
+<Note>
+  `amazon.nova-canvas-v1:0` 模型在 `us-east-1`、
+  `eu-west-1` 和 `ap-northeast-1` 区域可用。
+</Note>
+
+```ts
+const model = amazonBedrock.image('amazon.nova-canvas-v1:0');
+```
+
+然后你就可以使用 `generateImage` 函数生成图像：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: 'A beautiful sunset over a calm ocean',
+  size: '512x512',
+  seed: 42,
+});
+```
+
+你还可以将 `providerOptions` 对象传给 `generateImage` 函数来自定义生成行为。使用 `AmazonBedrockImageModelOptions` 类型来校验 Amazon Bedrock 图像提供商选项。推荐的提供商选项键是 `providerOptions.amazonBedrock`；旧版 `providerOptions.bedrock` 键为了向后兼容仍然受支持：
+
+```ts
+import {
+  amazonBedrock,
+  type AmazonBedrockImageModelOptions,
+} from '@ai-sdk/amazon-bedrock';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: 'A beautiful sunset over a calm ocean',
+  size: '512x512',
+  seed: 42,
+  providerOptions: {
+    amazonBedrock: {
+      quality: 'premium',
+      negativeText: 'blurry, low quality',
+      cfgScale: 7.5,
+      style: 'PHOTOREALISM',
+    } satisfies AmazonBedrockImageModelOptions,
+  },
+});
+```
+
+Amazon Nova Canvas 支持以下可选提供商选项：
+
+- **quality** _string_
+
+  图像生成的质量级别。接受 `'standard'` 或 `'premium'`。
+
+- **negativeText** _string_
+
+  描述你不希望出现在生成图像中的内容的文本。
+
+- **cfgScale** _number_
+
+  控制生成图像与提示词的贴合程度。取值越高，生成的图像与提示词越一致。
+
+- **style** _string_
+
+  图像生成的预定义视觉风格。
+  接受以下取值之一：
+  `3D_ANIMATED_FAMILY_FILM` · `DESIGN_SKETCH` · `FLAT_VECTOR_ILLUSTRATION` ·
+  `GRAPHIC_NOVEL_ILLUSTRATION` · `MAXIMALISM` · `MIDCENTURY_RETRO` ·
+  `PHOTOREALISM` · `SOFT_DIGITAL_PAINTING`。
+
+更多设置请参阅
+[Amazon Bedrock
+用户指南中的 Amazon Nova
+文档](https://docs.aws.amazon.com/nova/latest/userguide/image-gen-req-resp-structure.html)。
+
+### 图像编辑
+
+Amazon Nova Canvas 支持多种图像编辑任务类型。当你通过 `prompt.images` 提供输入图像时，模型会自动检测合适的编辑模式；你也可以在提供商选项中显式指定 `taskType`。
+
+#### 图像变体
+
+在保持图像核心特征的前提下，为已有图像创建变体：
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: {
+    text: 'Modernize the style, photo-realistic, 8k, hdr',
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    amazonBedrock: {
+      taskType: 'IMAGE_VARIATION',
+      similarityStrength: 0.7, // 0.2-1.0, higher = closer to original
+      negativeText: 'bad quality, low resolution',
+    } satisfies AmazonBedrockImageModelOptions,
+  },
+});
+```
+
+- **similarityStrength** _number_
+
+  控制输出与输入图像的相似程度。取值范围为 0.2 到 1.0，取值越高，结果越接近原图。
+
+#### 局部重绘（Inpainting）
+
+编辑图像的特定部分。你可以使用遮罩图像或文本提示词来定义要修改的区域：
+
+**使用遮罩提示词（基于文本的选择）：**
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: {
+    text: 'a cute corgi dog in the same style',
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    amazonBedrock: {
+      maskPrompt: 'cat', // Describe what to replace
+    } satisfies AmazonBedrockImageModelOptions,
+  },
+  seed: 42,
+});
+```
+
+**使用遮罩图像：**
+
+```ts
+const image = readFileSync('./input-image.png');
+const mask = readFileSync('./mask.png'); // White pixels = area to change
+
+const { images } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: {
+    text: 'A sunlit indoor lounge area with a pool containing a flamingo',
+    images: [image],
+    mask: mask,
+  },
+});
+```
+
+- **maskPrompt** _string_
+
+  要修改区域的文本描述。模型会自动识别并遮罩所描述的区域。
+
+#### 外扩绘制（Outpainting）
+
+将图像扩展到其原始边界之外：
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: {
+    text: 'A beautiful sunset landscape with mountains',
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    amazonBedrock: {
+      taskType: 'OUTPAINTING',
+      maskPrompt: 'background',
+      outPaintingMode: 'DEFAULT', // or 'PRECISE'
+    } satisfies AmazonBedrockImageModelOptions,
+  },
+});
+```
+
+- **outPaintingMode** _string_
+
+  控制外扩绘制的执行方式。接受 `'DEFAULT'` 或 `'PRECISE'`。
+
+#### 背景移除
+
+移除图像的背景：
+
+```ts
+const imageBuffer = readFileSync('./input-image.png');
+
+const { images } = await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: {
+    images: [imageBuffer],
+  },
+  providerOptions: {
+    amazonBedrock: {
+      taskType: 'BACKGROUND_REMOVAL',
+    } satisfies AmazonBedrockImageModelOptions,
+  },
+});
+```
+
+<Note>
+  背景移除不需要文本提示词——只需要输入图像。
+</Note>
+
+#### 图像编辑提供商选项
+
+图像编辑还支持以下附加提供商选项：
+
+- **taskType** _string_
+
+  显式设置编辑任务类型。接受 `'TEXT_IMAGE'`（纯文本时的默认值）、`'IMAGE_VARIATION'`、`'INPAINTING'`、`'OUTPAINTING'` 或 `'BACKGROUND_REMOVAL'`。提供了图像但未显式指定 taskType 时，模型默认使用 `'IMAGE_VARIATION'`（若提供了遮罩则为 `'INPAINTING'`）。
+
+- **maskPrompt** _string_
+
+  要修改区域的文本描述（用于局部重绘/外扩绘制）。是提供遮罩图像之外的另一种方式。
+
+- **similarityStrength** _number_
+
+  用于 `IMAGE_VARIATION`：控制与原图的相似度（0.2-1.0）。
+
+- **outPaintingMode** _string_
+
+  用于 `OUTPAINTING`：控制外扩绘制行为（`'DEFAULT'` 或 `'PRECISE'`）。
+
+### 图像模型设置
+
+你可以使用以下可选选项自定义生成行为：
+
+```ts
+await generateImage({
+  model: amazonBedrock.image('amazon.nova-canvas-v1:0'),
+  prompt: 'A beautiful sunset over a calm ocean',
+  size: '512x512',
+  seed: 42,
+  maxImagesPerCall: 1, // Maximum number of images to generate per API call
+});
+```
+
+- **maxImagesPerCall** _number_
+
+  覆盖每次 API 调用生成图像的最大数量。默认值因模型而异，
+  常见默认值为 5。
+
+### 模型能力
+
+Amazon Nova Canvas 模型支持自定义尺寸，约束如下：
+
+- 每条边必须介于 320-4096 像素之间（含边界）。
+- 每条边必须能被 16 整除。
+- 宽高比必须介于 1:4 和 4:1 之间。也就是说，一条边不能超过另一条边的 4 倍长。
+- 总像素数必须小于 4,194,304。
+
+更多信息请参阅[图像生成访问与
+使用](https://docs.aws.amazon.com/nova/latest/userguide/image-gen-access.html)。
+
+| 模型                      | 尺寸                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `amazon.nova-canvas-v1:0` | 自定义尺寸：每边 320-4096px（必须能被 16 整除），宽高比 1:4 到 4:1，最大 4.2M 像素 |
+
+## 响应头
+
+Amazon Bedrock 提供商会返回与对 Bedrock 服务器发起的网络请求相关联的响应头。
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: amazonBedrock('meta.llama3-70b-instruct-v1:0'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+
+console.log(result.response.headers);
+```
+
+以下是示例输出，其中可以看到 `x-amzn-requestid` 响应头。这有助于将
+Bedrock API 调用与 AI SDK 发起的请求进行关联：
+
+```js highlight="6"
+{
+  connection: 'keep-alive',
+  'content-length': '2399',
+  'content-type': 'application/json',
+  date: 'Fri, 07 Feb 2025 04:28:30 GMT',
+  'x-amzn-requestid': 'c9f3ace4-dd5d-49e5-9807-39aedfa47c8e'
+}
+```
+
+该信息在 `streamText` 中同样可用：
+
+```ts
+import { amazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: amazonBedrock('meta.llama3-70b-instruct-v1:0'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+console.log('Response headers:', (await result.response).headers);
+```
+
+示例输出如下：
+
+```js highlight="6"
+{
+  connection: 'keep-alive',
+  'content-type': 'application/vnd.amazon.eventstream',
+  date: 'Fri, 07 Feb 2025 04:33:37 GMT',
+  'transfer-encoding': 'chunked',
+  'x-amzn-requestid': 'a976e3fc-0e45-4241-9954-b9bdd80ab407'
+}
+```
+
+## Bedrock Anthropic 提供商用法
+
+Bedrock Anthropic 提供商通过 Amazon Bedrock 原生的 InvokeModel API 提供对 Anthropic Claude 模型的支持。它与 [Anthropic API](https://platform.claude.com/docs/en/build-with-claude/overview) 完全功能对等，包括一些可能无法通过 Converse API 使用的特性（例如流式响应中的 `stop_sequence`）。
+
+关于 Amazon Bedrock 上可用 Claude 模型的更多信息，请参阅
+[Claude on Amazon Bedrock](https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock)。
+
+### 提供商实例
+
+你可以从 `@ai-sdk/amazon-bedrock/anthropic` 导入默认的提供商实例 `bedrockAnthropic`：
+
+```typescript
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+```
+
+如果需要自定义配置，你可以从 `@ai-sdk/amazon-bedrock/anthropic` 导入 `createBedrockAnthropic`，并使用你的设置创建提供商实例：
+
+```typescript
+import { createBedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+
+const bedrockAnthropic = createBedrockAnthropic({
+  region: 'us-east-1', // optional
+  accessKeyId: 'xxxxxxxxx', // optional
+  secretAccessKey: 'xxxxxxxxx', // optional
+  sessionToken: 'xxxxxxxxx', // optional
+});
+```
+
+#### 提供商设置
+
+你可以使用以下可选设置来自定义 Bedrock Anthropic 提供商实例：
+
+- **region** _string_
+
+  用于 API 调用的 AWS 区域。
+  默认使用 `AWS_REGION` 环境变量。
+
+- **accessKeyId** _string_
+
+  用于 API 调用的 AWS 访问密钥 ID。
+  默认使用 `AWS_ACCESS_KEY_ID` 环境变量。
+
+- **secretAccessKey** _string_
+
+  用于 API 调用的 AWS 秘密访问密钥。
+  默认使用 `AWS_SECRET_ACCESS_KEY` 环境变量。
+
+- **sessionToken** _string_
+
+  可选。用于临时凭证。当**两个**访问密钥都以字符串形式设置时，如需要请在此传入 token；此时不会使用环境变量中的 `AWS_SESSION_TOKEN`。如果任一密钥来自环境变量，省略 `sessionToken` 则允许使用 `AWS_SESSION_TOKEN`。
+
+- **apiKey** _string_
+
+  用于 Bearer token 身份验证请求的 API 密钥。
+  提供后将替代 AWS SigV4 验证。
+  默认使用 `AWS_BEARER_TOKEN_BEDROCK` 环境变量。
+
+- **baseURL** _string_
+
+  Bedrock API 调用的基础 URL。
+  适用于自定义端点或代理配置。
+  省略时，提供商还支持服务专属的
+  `AWS_ENDPOINT_URL_BEDROCK_RUNTIME` 环境变量，它优先于全局的
+  `AWS_ENDPOINT_URL` 环境变量。
+
+- **headers** _Resolvable&lt;Record&lt;string, string | undefined&gt;&gt;_
+
+  包含在请求中的请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将其作为中间件拦截请求，
+  或提供自定义 fetch 实现（例如用于测试）。
+
+- **credentialProvider** _() => PromiseLike&lt;BedrockCredentials&gt;_
+
+  Bedrock 提供商用于获取动态凭证的 AWS 凭证提供程序，行为类似
+  AWS SDK。在此设置提供程序后，将使用其凭证值，
+  而不再使用 `accessKeyId`、`secretAccessKey`
+  和 `sessionToken` 设置。
+
+### 语言模型
+
+你可以使用提供商实例创建调用 [Anthropic Messages API](https://docs.anthropic.com/claude/reference/messages_post) 的模型。
+第一个参数是模型 ID，例如 `us.anthropic.claude-sonnet-5-5`。
+
+```ts
+const model = bedrockAnthropic('us.anthropic.claude-sonnet-5-5');
+```
+
+你可以使用 Bedrock Anthropic 语言模型通过 `generateText` 函数生成文本：
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-5-5'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+### 提供商选项
+
+Bedrock Anthropic 模型支持以下可选提供商选项：
+
+- `metadata` _object_
+
+  可选。随请求一起包含的元数据。详情请参阅 [Anthropic API 文档](https://platform.claude.com/docs/en/api/messages/create)。
+  - `userId` _string_ - 终端用户的外部标识符。
+
+### 缓存控制
+
+在消息和消息部分上，你可以使用 `providerOptions` 属性设置缓存控制断点。
+将 `providerOptions` 对象中的 `anthropic` 属性设置为 `{ cacheControl: { type: 'ephemeral' } }` 即可设置缓存控制断点。
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-5-5'),
+  messages: [
+    {
+      role: 'system',
+      content: 'You are an expert assistant.',
+      providerOptions: {
+        anthropic: { cacheControl: { type: 'ephemeral' } },
+      },
+    },
+    {
+      role: 'user',
+      content: 'Explain quantum computing.',
+    },
+  ],
+});
+```
+
+<Note>
+  缓存控制要求缓存检查点之前至少有 1024 个 token。
+  支持的模型和限制详情请参阅
+  [Amazon Bedrock 提示词缓存文档](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html)。
+</Note>
+
+### 计算机使用（Computer Use）
+
+Bedrock Anthropic 提供商支持 Anthropic 的计算机使用工具：
+
+1. **Bash 工具**：允许运行 bash 命令。
+2. **文本编辑器工具**：提供查看和编辑文本文件的功能。
+3. **计算机工具**：支持控制计算机上的键盘和鼠标操作。
+
+它们通过提供商实例的 `tools` 属性提供。
+
+<Note>
+  计算机使用工具需要 Claude 3.7 Sonnet 或更新的模型。Claude 3.5
+  Sonnet v2 不支持这些工具。
+</Note>
+
+#### Bash 工具
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+  tools: {
+    bash: bedrockAnthropic.tools.bash_20241022({
+      execute: async ({ command }) => {
+        // Implement your bash command execution logic here
+        return [{ type: 'text', text: `Executed: ${command}` }];
+      },
+    }),
+  },
+  prompt: 'List the files in my directory.',
+  stopWhen: isStepCount(2),
+});
+```
+
+#### 文本编辑器工具
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+  tools: {
+    str_replace_editor: bedrockAnthropic.tools.textEditor_20241022({
+      execute: async ({ command, path, old_str, new_str, insert_text }) => {
+        // Implement your text editing logic here
+        return 'File updated successfully';
+      },
+    }),
+  },
+  prompt: 'Update my README file.',
+  stopWhen: isStepCount(5),
+});
+```
+
+#### 计算机工具
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText, isStepCount } from 'ai';
+import fs from 'fs';
+
+const result = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+  tools: {
+    computer: bedrockAnthropic.tools.computer_20241022({
+      displayWidthPx: 1024,
+      displayHeightPx: 768,
+      execute: async ({ action, coordinate, text }) => {
+        if (action === 'screenshot') {
+          return {
+            type: 'image',
+            data: fs.readFileSync('./screenshot.png').toString('base64'),
+          };
+        }
+        return `executed ${action}`;
+      },
+      toModelOutput({ output }) {
+        return {
+          type: 'content',
+          value: [
+            typeof output === 'string'
+              ? { type: 'text', text: output }
+              : {
+                  type: 'image-data',
+                  data: output.data,
+                  mediaType: 'image/png',
+                },
+          ],
+        };
+      },
+    }),
+  },
+  prompt: 'Take a screenshot.',
+  stopWhen: isStepCount(3),
+});
+```
+
+### 推理
+
+Anthropic 在 Bedrock 上为 Claude 3.7 和 Claude 4 模型提供推理支持，包括：
+
+- `us.anthropic.claude-fable-5-1`
+- `us.anthropic.claude-sonnet-5-5`
+- `us.anthropic.claude-sonnet-5`
+- `us.anthropic.claude-fable-5`
+- `us.anthropic.claude-opus-4-8`
+- `us.anthropic.claude-opus-4-7`
+- `us.anthropic.claude-opus-4-6-v1`
+- `us.anthropic.claude-opus-4-5-20251101-v1:0`
+- `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+- `us.anthropic.claude-opus-4-20250514-v1:0`
+- `us.anthropic.claude-sonnet-4-20250514-v1:0`
+- `us.anthropic.claude-opus-4-1-20250805-v1:0`
+- `us.anthropic.claude-haiku-4-5-20251001-v1:0`
+
+你可以使用 `thinking` 提供商选项启用它，并以 token 为单位指定思考预算。
+
+```ts
+import { bedrockAnthropic } from '@ai-sdk/amazon-bedrock/anthropic';
+import { generateText } from 'ai';
+
+const { text, reasoningText, reasoning } = await generateText({
+  model: bedrockAnthropic('us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+  prompt: 'How many people will live in the world in 2040?',
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 12000 },
+    },
+  },
+});
+
+console.log(reasoningText); // reasoning text
+console.log(reasoning); // reasoning details including redacted reasoning
+console.log(text); // text response
+```
+
+Anthropic 的 `max_tokens` 上限同时包含思考和最终文本。为了给两者都预留
+空间，提供商在设置 `max_tokens` 时会把 `budgetTokens` 加到 `maxOutputTokens` 上。
+对于已知模型，合并后的值会以模型的最大输出 token 上限封顶。
+
+关于如何将推理集成到你的聊天机器人中，请参阅
+[AI SDK UI：聊天机器人](/docs/ai-sdk-ui/chatbot#推理)了解更多细节。
+
+### 模型能力
+
+| 模型                                           | 图像输入    | 对象生成          | 工具使用   | 计算机使用   | 推理      |
+| ---------------------------------------------- | ----------- | ----------------- | ---------- | ------------ | --------- |
+| `us.anthropic.claude-fable-5-1`                | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-sonnet-5-5`               | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-sonnet-5`                 | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-haiku-5-5`                | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-fable-5`                  | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-8`                 | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-7`                 | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-6-v1`              | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-5-20251101-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-20250514-v1:0`     | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-sonnet-4-20250514-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-opus-4-1-20250805-v1:0`   | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-haiku-4-5-20251001-v1:0`  | <Check />   | <Check />         | <Check />  | <Check />    | <Check /> |
+| `us.anthropic.claude-3-5-sonnet-20241022-v2:0` | <Check />   | <Check />         | <Check />  | <Cross />    | <Cross /> |
+
+<Note>
+  Bedrock Anthropic 提供商使用原生 InvokeModel API，支持
+  Anthropic API 中的所有特性，但 Bedrock 不支持的
+  Files API 和 MCP
+  Connector 除外。
+</Note>
+
+## Bedrock Mantle 提供商用法
+
+Bedrock Mantle 提供商通过 Amazon Bedrock 的 Mantle API 提供对 OpenAI 兼容模型的访问。它会根据模型自动选择 `/v1` 或 `/openai/v1` 路由。这些端点支持 Chat Completions API 和 Responses API，并提供可能只能通过 Mantle 端点访问的模型（例如 `openai.gpt-oss-120b`）。
+
+### 提供商实例
+
+你可以从 `@ai-sdk/amazon-bedrock/mantle` 导入默认的提供商实例 `bedrockMantle`：
+
+```typescript
+import { bedrockMantle } from '@ai-sdk/amazon-bedrock/mantle';
+```
+
+如果需要自定义配置，你可以从 `@ai-sdk/amazon-bedrock/mantle` 导入 `createBedrockMantle`，并使用你的设置创建提供商实例：
+
+```typescript
+import { createBedrockMantle } from '@ai-sdk/amazon-bedrock/mantle';
+
+const bedrockMantle = createBedrockMantle({
+  region: 'us-east-1', // optional
+  accessKeyId: 'xxxxxxxxx', // optional
+  secretAccessKey: 'xxxxxxxxx', // optional
+  sessionToken: 'xxxxxxxxx', // optional
+});
+```
+
+#### 提供商设置
+
+你可以使用以下可选设置来自定义 Bedrock Mantle 提供商实例：
+
+- **region** _string_
+
+  用于 API 调用的 AWS 区域。
+  默认使用 `AWS_REGION` 环境变量。
+
+- **accessKeyId** _string_
+
+  用于 API 调用的 AWS 访问密钥 ID。
+  默认使用 `AWS_ACCESS_KEY_ID` 环境变量。
+
+- **secretAccessKey** _string_
+
+  用于 API 调用的 AWS 秘密访问密钥。
+  默认使用 `AWS_SECRET_ACCESS_KEY` 环境变量。
+
+- **sessionToken** _string_
+
+  可选。用于 API 调用的 AWS 会话 token。
+  默认使用 `AWS_SESSION_TOKEN` 环境变量。
+
+- **apiKey** _string_
+
+  用于 Bearer token 身份验证请求的 API 密钥。
+  提供后将替代 AWS SigV4 验证。
+  默认使用 `AWS_BEARER_TOKEN_BEDROCK` 环境变量。
+
+- **baseURL** _string_
+
+  Bedrock Mantle API 调用的基础 URL。
+  默认情况下，提供商会根据模型选择
+  `https://bedrock-mantle.{region}.api.aws/v1` 或
+  `https://bedrock-mantle.{region}.api.aws/openai/v1`。
+
+- **headers** _Record&lt;string, string | undefined&gt;_
+
+  包含在请求中的请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将其作为中间件拦截请求，
+  或提供自定义 fetch 实现（例如用于测试）。
+
+- **credentialProvider** _() => PromiseLike&lt;BedrockCredentials&gt;_
+
+  Bedrock 提供商用于获取动态凭证的 AWS 凭证提供程序，行为类似
+  AWS SDK。在此设置提供程序后，将使用其凭证值，
+  而不再使用 `accessKeyId`、`secretAccessKey`
+  和 `sessionToken` 设置。
+
+### 语言模型
+
+你可以使用 Mantle 提供商实例创建模型。默认情况下，提供商使用 Chat Completions API 创建模型，它在 Mantle 上拥有最广泛的模型支持：
+
+```ts
+const model = bedrockMantle('openai.gpt-oss-120b');
+```
+
+你也可以显式选择 Chat Completions API 或 Responses API：
+
+```ts
+const chatModel = bedrockMantle.chat('openai.gpt-oss-120b');
+const responsesModel = bedrockMantle.responses('openai.gpt-oss-120b');
+```
+
+注意，并非所有 Mantle 模型都支持 Responses API。请参阅下方的模型能力表。
+
+你可以使用 Bedrock Mantle 语言模型通过 `generateText` 函数生成文本：
+
+```ts
+import { bedrockMantle } from '@ai-sdk/amazon-bedrock/mantle';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: bedrockMantle('openai.gpt-oss-120b'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+也可以使用 `streamText` 函数流式生成文本：
+
+```ts
+import { bedrockMantle } from '@ai-sdk/amazon-bedrock/mantle';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: bedrockMantle('openai.gpt-oss-120b'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+```
+
+### 提供商选项
+
+由于 Mantle API 与 OpenAI 兼容，提供商选项通过 `openai` 命名空间传入：
+
+```ts
+import { bedrockMantle } from '@ai-sdk/amazon-bedrock/mantle';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: bedrockMantle('openai.gpt-oss-120b'),
+  prompt: 'Hello!',
+  providerOptions: {
+    openai: {
+      // OpenAI-compatible provider options
+    },
+  },
+});
+```
+
+### 模型能力
+
+| 模型                            | Chat Completions | Responses API |
+| ------------------------------- | ---------------- | ------------- |
+| `openai.gpt-oss-20b`            | <Check />        | <Check />     |
+| `openai.gpt-oss-120b`           | <Check />        | <Check />     |
+| `openai.gpt-oss-safeguard-20b`  | <Check />        | <Cross />     |
+| `openai.gpt-oss-safeguard-120b` | <Check />        | <Cross />     |
+
+<Note>
+  Bedrock Mantle 提供商使用与 OpenAI 兼容的 API 格式。通过 Mantle 端点可用的
+  模型可能与通过 Bedrock Converse API 可用的模型有所不同。请使用 Mantle
+  端点的模型列表 API 来发现所有可用模型。
+</Note>
+
+## 迁移到 `@ai-sdk/amazon-bedrock` 2.x
+
+Amazon Bedrock 提供商在 2.x 版本中被重写，移除了对
+`@aws-sdk/client-bedrock-runtime` 包的依赖。
+
+之前提供的 `bedrockOptions` 提供商设置已被移除。如果你之前使用
+`bedrockOptions` 对象，现在应改为直接使用 `region`、
+`accessKeyId`、`secretAccessKey` 和 `sessionToken` 设置。
+
+静态 IAM 用户密钥不需要 `sessionToken`。

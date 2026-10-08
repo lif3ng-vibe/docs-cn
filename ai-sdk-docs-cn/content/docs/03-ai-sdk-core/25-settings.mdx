@@ -1,0 +1,255 @@
+---
+title: 设置
+description: 了解如何配置 AI SDK。
+---
+
+# Settings
+
+大型语言模型（LLM）通常提供一些设置来增强其输出。
+
+除了模型、[提示词](/docs/foundations/prompts)以及提供商特有的设置之外，所有 AI SDK 函数还支持以下通用设置：
+
+```ts highlight="3-6"
+const result = await generateText({
+  model: __MODEL__,
+  maxOutputTokens: 512,
+  temperature: 0.3,
+  maxRetries: 5,
+  timeout: 10000,
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+<Note>
+  部分提供商并不支持所有通用设置。如果你在被该提供商不支持的场景下使用了某个设置，就会生成一条警告。你可以检查结果对象中的 `warnings` 属性，看看是否产生了警告。
+</Note>
+
+## 语言模型调用选项
+
+语言模型调用选项（`LanguageModelCallOptions`）是影响语言模型如何生成响应的设置——包括 token 限制、采样行为、惩罚项、停止序列、seed 以及推理（reasoning）。这些设置会被转发给底层模型。
+
+### `maxOutputTokens`
+
+最多可生成的 token 数量。
+
+### `temperature`
+
+温度（temperature）设置。
+
+取值会原样传递给提供商。取值范围取决于提供商和模型。对大多数提供商而言，`0` 意味着结果几乎是确定性的，更高的值意味着更大的随机性。
+
+建议只设置 `temperature` 或 `topP` 其中之一，不要同时设置。
+
+<Note>在 AI SDK 5.0 中，temperature 不再默认设为 `0`。</Note>
+
+### `topP`
+
+核采样（nucleus sampling）。
+
+取值会原样传递给提供商。取值范围取决于提供商和模型。对大多数提供商而言，核采样是一个介于 0 和 1 之间的数字。例如 0.1 意味着只考虑概率质量位于前 10% 的 token。
+
+建议只设置 `temperature` 或 `topP` 其中之一，不要同时设置。
+
+### `topK`
+
+对每个后续 token，只从前 K 个候选中进行采样。
+
+用于过滤掉长尾的低概率响应。建议仅在高阶用例中使用。通常你只需要使用 `temperature`。
+
+### `presencePenalty`
+
+存在惩罚（presence penalty）影响模型重复提示词中已有信息的可能性。
+
+取值会原样传递给提供商。取值范围取决于提供商和模型。对大多数提供商而言，`0` 表示不施加惩罚。
+
+### `frequencyPenalty`
+
+频率惩罚（frequency penalty）影响模型反复使用相同词语或短语的可能性。
+
+取值会原样传递给提供商。取值范围取决于提供商和模型。对大多数提供商而言，`0` 表示不施加惩罚。
+
+### `stopSequences`
+
+用于停止文本生成的停止序列。
+
+如果设置了停止序列，当其中某个停止序列被生成时，模型就会停止生成文本。提供商可能会对停止序列的数量有限制。
+
+### `seed`
+
+用于随机采样的种子（整数）。如果设置了该值且模型支持，调用将生成确定性的结果。
+
+### `reasoning`
+
+控制模型在生成响应之前进行多少推理。
+
+| Value                | Behavior                                                             |
+| -------------------- | -------------------------------------------------------------------- |
+| `'provider-default'` | 使用提供商的默认推理行为（省略时的默认值）                             |
+| `'none'`             | 禁用推理                                                              |
+| `'minimal'`          | 最低限度的推理                                                        |
+| `'low'`              | 快速、简洁的推理                                                      |
+| `'medium'`           | 平衡的推理                                                            |
+| `'high'`             | 深入的推理                                                            |
+| `'xhigh'`            | 超高强度的推理                                                        |
+| `'max'`              | 最大程度的推理                                                        |
+
+提供商特有的设置优先于从 `reasoning` 推导出的对应字段。部分配置仍可使用可移植推理（portable reasoning）来补全缺失字段；摘要与展示选项可以与之并行使用。例如，Bedrock 会保留显式的 thinking 预算，同时从可移植推理中推导缺失的启用类型。
+
+关于各提供商的映射以及从 `providerOptions` 迁移的细节，请参阅[推理指南](/docs/ai-sdk-core/reasoning)。
+
+## 请求选项
+
+请求选项（`RequestOptions`）是影响传输、重试、取消与超时的设置——而非模型的生成行为。它们控制 SDK 如何与提供商的 API 通信。
+
+### `maxRetries`
+
+最大重试次数。设为 0 可禁用重试。默认值：`2`。
+
+### `abortSignal`
+
+可选的中止信号，可用于取消调用。
+
+例如，中止信号可以由用户界面转发而来以取消调用，也可以借助 `AbortSignal.timeout` 定义超时。
+
+#### 示例：AbortSignal.timeout
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  abortSignal: AbortSignal.timeout(5000), // 5 seconds
+});
+```
+
+### `timeout`
+
+可选的超时时间，以毫秒为单位。如果调用耗时超过指定时长，调用将被中止。
+
+这是一个便捷参数，会在内部创建一个中止信号。它可以与 `abortSignal` 一起使用——如果两者同时提供，任一条件满足时调用就会中止。
+
+你可以将超时指定为一个数字（毫秒），或指定为带有以下属性的对象：
+
+- `totalMs`：整个调用（包括所有步骤）的总超时。
+- `stepMs`：每个独立步骤（LLM 调用）的超时。这在多步生成中很有用：可以独立限制每一步所花费的时间。
+- `firstChunkMs`：每个步骤出现首个含内容输出之前的超时（仅限流式）。文本增量、推理增量、工具输入增量、生成的文件以及工具调用都满足该超时；响应元数据、流开始、空增量、原始 chunk 以及传输层活动则不满足该超时，也不会重置它。
+- `chunkMs`：输出开始后，各含内容输出块之间的超时（仅限流式）。非内容块不会重置它。这有助于检测在生成开始后陷入停滞的流。
+- `toolMs`：所有工具执行的默认超时时间。如果某个工具耗时超过该值，它会中止并返回一个 tool-error，以便模型做出响应或重试。
+- `tools`：通过 `{toolName}Ms` 键（例如 `weatherMs`、`slowApiMs`）设置的逐个工具超时覆盖。优先级高于 `toolMs`。工具名会进行类型检查，以便自动补全。
+
+#### 示例：5 秒超时（数字格式）
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: 5000, // 5 seconds
+});
+```
+
+#### 示例：5 秒总超时（对象格式）
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: { totalMs: 5000 }, // 5 seconds
+});
+```
+
+#### 示例：10 秒步骤超时
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: { stepMs: 10000 }, // 10 seconds per step
+});
+```
+
+#### 示例：总超时与步骤超时的组合
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: {
+    totalMs: 60000, // 60 seconds total
+    stepMs: 10000, // 10 seconds per step
+  },
+});
+```
+
+#### 示例：流式的逐块超时（仅 streamText）
+
+```ts
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: { chunkMs: 5000 }, // abort if content stalls for 5 seconds
+});
+```
+
+#### 示例：流式的首个内容超时（仅 streamText）
+
+```ts
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  timeout: {
+    firstChunkMs: 10000, // 10 seconds for first content in each step
+  },
+});
+```
+
+#### 示例：工具执行超时
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  tools: { weather: weatherTool, slowApi: slowApiTool },
+  timeout: {
+    toolMs: 5000, // 5 seconds default for all tools
+  },
+  prompt: 'What is the weather in San Francisco?',
+});
+```
+
+#### 示例：逐个工具的超时覆盖
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  tools: { weather: weatherTool, slowApi: slowApiTool },
+  timeout: {
+    toolMs: 5000, // default for all tools
+    tools: {
+      weatherMs: 3000, // 3 seconds for weather tool
+      slowApiMs: 10000, // 10 seconds for slow API tool
+    },
+  },
+  prompt: 'What is the weather in San Francisco?',
+});
+```
+
+### `headers`
+
+随请求一同发送的附加 HTTP 请求头。仅适用于基于 HTTP 的提供商。
+
+你可以借助请求头向提供商提供额外信息，具体取决于提供商支持什么。例如，部分可观测性（observability）提供商支持诸如 `Prompt-Id` 之类的请求头。
+
+```ts
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  headers: {
+    'Prompt-Id': 'my-prompt-id',
+  },
+});
+```
+
+<Note>
+  `headers` 设置用于特定请求的请求头。你也可以在提供商配置中设置 `headers`。这些请求头会随该提供商发出的每一个请求一同发送。
+</Note>

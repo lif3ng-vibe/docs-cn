@@ -1,0 +1,183 @@
+---
+title: pipeAgentUIStreamToResponse
+description: pipeAgentUIStreamToResponse 工具的 API 参考。
+---
+
+# `pipeAgentUIStreamToResponse`
+
+`pipeAgentUIStreamToResponse` 函数运行一个[智能体（Agent）](/docs/reference/ai-sdk-core/agent)，并将产生的 UI 消息输出直接流式传输到 Node.js [`ServerResponse`](https://nodejs.org/api/http.html#class-httpserverresponse) 对象。它非常适合在 Express、Hono 或自定义 Node 服务器等基于 Node.js 的框架中构建实时流式 API 端点（用于聊天、工具调用等）。
+
+## 导入
+
+<Snippet
+  text={`import { pipeAgentUIStreamToResponse } from "ai"`}
+  prompt={false}
+/>
+
+## 用法
+
+```ts
+import { pipeAgentUIStreamToResponse } from 'ai';
+import { MyAgent } from './agent';
+
+export async function handler(req, res) {
+  const { messages } = JSON.parse(req.body);
+
+  await pipeAgentUIStreamToResponse({
+    response: res, // Node.js ServerResponse
+    agent: MyAgent,
+    uiMessages: messages, // Required: array of input UI messages
+    // abortSignal: optional AbortSignal for cancellation
+    // experimental_sandbox: optional experimental sandbox passed through to tool execution
+    // status: 200,
+    // headers: { ... },
+    // ...other optional UI message stream options
+  });
+}
+```
+
+## 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'response',
+      type: 'ServerResponse',
+      isRequired: true,
+      description:
+        '要将 UI 消息流输出写入其中的 Node.js ServerResponse 对象。',
+    },
+    {
+      name: 'agent',
+      type: 'Agent',
+      isRequired: true,
+      description:
+        '实现了 `.stream({ prompt, ... })` 并定义了 `tools` 属性的智能体实例。',
+    },
+    {
+      name: 'uiMessages',
+      type: 'unknown[]',
+      isRequired: true,
+      description:
+        '发送给智能体的输入 UI 消息数组（例如用户/助手消息对象）。',
+    },
+    {
+      name: 'convertDataPart',
+      type: '(part: DataUIPart) => TextPart | FilePart | undefined',
+      isRequired: false,
+      description:
+        '将自定义 UI 数据部分（data part）转换为文本或文件部分以供模型使用。当该回调被省略或返回 undefined 时，数据部分将被忽略。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isRequired: false,
+      description:
+        '可选的中止信号，用于取消流式输出（例如客户端断开连接时）。请提供 [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)，例如来自 `AbortController`。',
+    },
+    {
+      name: 'timeout',
+      type: 'number | { totalMs?: number }',
+      isRequired: false,
+      description:
+        '以毫秒为单位的超时时间。可以指定为数字，或带有 totalMs 属性的对象。若调用耗时超过指定的超时时间，则会被中止。可与 abortSignal 同时使用。',
+    },
+    {
+      name: 'experimental_sandbox',
+      type: 'Experimental_SandboxSession',
+      isRequired: false,
+      description:
+        '可选的实验性沙箱环境，会传递给工具执行。工具可以从其执行上下文中访问它。',
+    },
+    {
+      name: 'options',
+      type: 'CALL_OPTIONS',
+      isRequired: false,
+      description:
+        '可选的智能体调用选项，适用于配置了泛型参数 `CALL_OPTIONS` 的智能体。',
+    },
+    {
+      name: 'experimental_transform',
+      type: 'StreamTextTransform | StreamTextTransform[]',
+      isRequired: false,
+      description:
+        '应用于智能体输出的可选流文本转换。',
+    },
+    {
+      name: 'onStepEnd',
+      type: 'GenerateTextOnStepEndCallback',
+      isRequired: false,
+      description:
+        '在每个智能体步骤（LLM/工具调用）完成后调用的回调。可用于跟踪 token 用量、每步性能或记录中间步骤。',
+    },
+    {
+      name: 'onStepFinish',
+      type: 'GenerateTextOnStepFinishCallback',
+      isRequired: false,
+      description:
+        '已弃用。请改用 `onStepEnd`。该别名仅在未提供 `onStepEnd` 时作为回退使用。',
+    },
+    {
+      name: 'onUIMessageStepEnd',
+      type: 'UIMessageStreamOnStepEndCallback',
+      isRequired: false,
+      description:
+        '在每个 UI 消息步骤组装完成后调用的回调。它接收 `messages`、`isContinuation` 和累积的 `responseMessage`，用于中间持久化。',
+    },
+    {
+      name: '...UIMessageStreamResponseInit & AgentUIMessageStreamOptions',
+      type: 'object',
+      isRequired: false,
+      description:
+        '用于流式请求头、状态码、SSE 流配置以及更多 UI 消息流控制的选项。',
+    },
+  ]}
+/>
+
+## 返回值
+
+返回一个 `Promise<void>`。当 UI 消息流已完整发送到给定的 ServerResponse 后，该函数即完成。
+
+可使用 `onUIMessageStepEnd` 在每个智能体步骤之后持久化累积的 UI 响应。它会在对应的 `finish-step` 分块被写入管道之前被等待完成。请使用幂等写入，并将模型输出、推理内容、工具输入和工具输出作为敏感对话数据加以保护。若需要底层生成的用量、结束原因或原始步骤细节，请改用现有的 `onStepEnd` 回调。
+
+## 示例：Express Route Handler
+
+```ts
+import { pipeAgentUIStreamToResponse } from 'ai';
+import { openaiWebSearchAgent } from './openai-web-search-agent';
+
+app.post('/chat', async (req, res) => {
+  // Use req.body.messages as input UI messages
+  await pipeAgentUIStreamToResponse({
+    response: res,
+    agent: openaiWebSearchAgent,
+    uiMessages: req.body.messages,
+    // experimental_sandbox, // optional
+    // abortSignal: yourController.signal
+    // status: 200,
+    // headers: { ... },
+    // ...more options
+  });
+});
+```
+
+## 工作原理
+
+1. **运行智能体**：以提供的 UI 消息和选项调用智能体的 `.stream` 方法，按需将其转换为模型消息，并透传 `experimental_sandbox` 等选项。
+2. **流式输出 UI 消息**：将智能体输出作为 UI 消息流写入 `ServerResponse` 管道，通过流式 HTTP 响应发送数据（包括相应的请求头）。
+3. **中止信号处理**：如果提供了 `abortSignal`，一旦信号触发（例如客户端断开连接），流式输出即被取消。
+4. **不返回响应对象**：与返回 `Response` 的 Edge/无服务器 API 不同，此函数直接将字节写入 ServerResponse，不返回响应对象。
+
+## 说明
+
+- **中止处理**：为了最佳健壮性，请使用 `AbortSignal`（例如接入 Express/Hono 的客户端断开事件），以确保快速取消智能体计算和流式输出。
+- **仅限 Node.js**：只适用于 Node.js [ServerResponse](https://nodejs.org/api/http.html#class-httpserverresponse) 对象（例如 Express、Hono 的 node 适配器等），不适用于 Edge/无服务器/Web 的 Response API。
+- **流式支持**：请确保你的客户端（及所有代理）正确支持流式 HTTP 响应以获得完整效果。
+- **参数命名**：为了与 SDK 智能体工具保持一致，输入消息的属性名为 `uiMessages`（而非 `messages`）。
+- 当你的智能体工具在执行期间需要实验性沙箱环境时，请传入 `experimental_sandbox`。
+
+## 另请参阅
+
+- [`createAgentUIStreamResponse`](/docs/reference/ai-sdk-core/create-agent-ui-stream-response)
+- [`Agent`](/docs/reference/ai-sdk-core/agent)
+- [`UIMessage`](/docs/reference/ai-sdk-core/ui-message)

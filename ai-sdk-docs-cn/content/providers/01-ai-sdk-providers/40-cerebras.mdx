@@ -1,0 +1,192 @@
+---
+title: Cerebras
+description: 了解如何在 AI SDK 中使用 Cerebras 的模型。
+---
+
+# Cerebras 提供商
+
+[Cerebras](https://cerebras.ai) 提供商通过 Cerebras API 提供对强大语言模型的访问，包括由晶圆级引擎（Wafer-Scale Engine）和 CS-3 系统驱动的高速推理能力。
+
+API 密钥可以从 [Cerebras 平台](https://cloud.cerebras.ai)获取。
+
+## 安装
+
+Cerebras 提供商包含在 `@ai-sdk/cerebras` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/cerebras" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/cerebras` 导入默认提供商实例 `cerebras`：
+
+```ts
+import { cerebras } from '@ai-sdk/cerebras';
+```
+
+如果需要自定义配置，可以导入 `createCerebras` 并使用你的设置创建提供商实例：
+
+```ts
+import { createCerebras } from '@ai-sdk/cerebras';
+
+const cerebras = createCerebras({
+  apiKey: process.env.CEREBRAS_API_KEY ?? '',
+});
+```
+
+你可以使用以下可选设置来定制 Cerebras 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀。
+  默认前缀为 `https://api.cerebras.ai/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认取
+  `CEREBRAS_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## 语言模型
+
+你可以使用提供商实例创建语言模型：
+
+```ts
+import { cerebras } from '@ai-sdk/cerebras';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: cerebras('gpt-oss-120b'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+Cerebras 语言模型也可以用于 `streamText` 函数
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+你可以使用提供商实例创建 Cerebras 语言模型。第一个参数是模型 ID，例如 `gpt-oss-120b`：
+
+```ts
+const model = cerebras('gpt-oss-120b');
+```
+
+你也可以使用 `.languageModel()` 和 `.chat()` 方法：
+
+```ts
+const languageModel = cerebras.languageModel('gpt-oss-120b');
+const chatModel = cerebras.chat('gpt-oss-120b');
+```
+
+### 推理模型
+
+Cerebras 提供包括 `gpt-oss-120b` 和 `gemma-4-31b` 在内的推理模型，它们会在给出最终响应之前生成中间思考 token。推理输出通过标准的 AI SDK 推理部分流式输出。
+
+对于 `gpt-oss-120b`，可以使用 `reasoningEffort` 提供商选项控制推理深度：
+
+```ts
+import { cerebras } from '@ai-sdk/cerebras';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: cerebras('gpt-oss-120b'),
+  providerOptions: {
+    cerebras: {
+      reasoningEffort: 'medium',
+    },
+  },
+  prompt: 'How many "r"s are in the word "strawberry"?',
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    console.log('Reasoning:', part.text);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+有关如何将推理集成到你的聊天机器人中的更多细节，请参见 [AI SDK UI：聊天机器人](/docs/ai-sdk-ui/chatbot#推理)。
+
+### 提供商选项
+
+Cerebras 语言模型支持以下可选提供商选项：
+
+- **parallelToolCalls** _boolean_
+
+  是否在工具使用期间启用并行函数调用。默认为 `true`。
+
+- **logprobs** _boolean_
+
+  是否返回生成 token 的对数概率。默认为 `false`。
+
+- **topLogprobs** _number_
+
+  在每个 token 位置返回的最可能 token 的数量。接受 `0` 到 `20` 的取值。要求 `logprobs` 为 `true`。
+
+- **logitBias** _Record&lt;string, number&gt;_
+
+  将 token ID 映射到 `-100` 到 `100` 之间的偏置值。
+
+- **serviceTier** _'auto' | 'default' | 'flex' | 'priority'_
+
+  控制请求优先级。可用性取决于你的账户和端点。
+
+- **reasoningEffort** _'none' | 'low' | 'medium' | 'high'_
+
+  控制受支持模型执行的推理量。支持的取值和默认值取决于模型。
+
+- **reasoningFormat** _'none' | 'parsed' | 'text_parsed' | 'raw' | 'hidden'_
+
+  控制推理内容在响应中的呈现方式。格式支持情况取决于模型。
+
+- **prediction** _&#123; type: 'content'; content: string | Array&lt;&#123; type: 'text'; text: string &#125;&gt; &#125;_
+
+  提供预测输出，可以加速响应大部分内容已知的请求。
+
+- **promptCacheKey** _string_
+
+  将相关请求路由到同一个提示词缓存。该值最多可包含 1024 个字符，且需要在账户层级启用。
+
+- **user** _string_
+
+  代表你的终端用户的唯一标识符，有助于监控和滥用检测。
+
+- **strictJsonSchema** _boolean_
+
+  是否使用严格的 JSON schema 校验。为 `true` 时，模型使用约束解码来保证符合 schema。默认为 `true`。
+
+例如：
+
+```ts
+import {
+  cerebras,
+  type CerebrasLanguageModelChatOptions,
+} from '@ai-sdk/cerebras';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: cerebras('gpt-oss-120b'),
+  prompt: 'Explain why the sky is blue.',
+  providerOptions: {
+    cerebras: {
+      reasoningEffort: 'low',
+      reasoningFormat: 'parsed',
+      promptCacheKey: 'conversation-123',
+    } satisfies CerebrasLanguageModelChatOptions,
+  },
+});
+```
+
+## 模型能力
+
+| 模型           | 图像输入    | 对象生成          | 工具使用   | 工具流式       | 推理      |
+| -------------- | ----------- | ----------------- | ---------- | -------------- | --------- |
+| `gpt-oss-120b` | <Cross />   | <Check />         | <Check />  | <Check />      | <Check /> |
+| `gemma-4-31b`  | <Check />   | <Check />         | <Check />  | <Check />      | <Check /> |

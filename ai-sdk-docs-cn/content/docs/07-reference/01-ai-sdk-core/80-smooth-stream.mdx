@@ -1,0 +1,145 @@
+---
+title: smoothStream
+description: 用于平滑文本与推理输出的流转换器
+---
+
+# `smoothStream()`
+
+`smoothStream` 是一个工具函数，用于为 `streamText` 的 `experimental_transform` 选项创建 TransformStream，
+通过缓冲并按可配置的延迟释放完整分块，来平滑文本与推理内容的流式输出。
+这能让文本与推理响应在流式输出时呈现更自然的阅读体验。
+
+```ts highlight={"6-9"}
+import { smoothStream, streamText } from 'ai';
+
+const result = streamText({
+  model,
+  prompt,
+  experimental_transform: smoothStream({
+    delayInMs: 20, // optional: defaults to 10ms
+    chunking: 'line', // optional: defaults to 'word'
+  }),
+});
+```
+
+## 导入
+
+<Snippet text={`import { smoothStream } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'delayInMs',
+      type: 'number | null',
+      isOptional: true,
+      description:
+        '每个分块输出之间的延迟（毫秒）。默认为 10ms。设置为 `null` 可禁用延迟。当文档处于隐藏状态（例如浏览器后台标签页）时会跳过延迟，否则定时器节流会导致流停滞。',
+    },
+    {
+      name: 'chunking',
+      type: '"word" | "line" | RegExp | Intl.Segmenter | (buffer: string) => string | undefined | null',
+      isOptional: true,
+      description:
+        '控制流式输出时文本与推理内容的分块方式。使用 "word" 按词流式输出（默认），"line" 按行流式输出，使用 Intl.Segmenter 进行区域设置感知的分词（推荐用于 CJK 语言），或提供不匹配空字符串的自定义回调或 RegExp 模式来实现自定义分块。',
+    },
+  ]}
+/>
+
+#### 非拉丁语言的按词分块注意事项
+
+按词分块**对以下不以空格分隔单词的语言效果不佳**：
+
+- 中文
+- 日语
+- 韩语
+- 越南语
+- 泰语
+
+#### 使用 Intl.Segmenter（推荐）
+
+对于这些语言，我们推荐使用 `Intl.Segmenter` 来进行正确的区域设置感知分词。
+这是首选方案，因为它能为 CJK 及其他语言提供准确的单词边界。
+
+<Note>
+  `Intl.Segmenter` 在 Node.js 16+ 及所有现代浏览器（Chrome
+  87+、Firefox 125+、Safari 14.1+）中可用。
+</Note>
+
+```tsx filename="使用 Intl.Segmenter 的日语示例"
+import { smoothStream, streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const segmenter = new Intl.Segmenter('ja', { granularity: 'word' });
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Your prompt here',
+  experimental_transform: smoothStream({
+    chunking: segmenter,
+  }),
+});
+```
+
+```tsx filename="使用 Intl.Segmenter 的中文示例"
+import { smoothStream, streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const segmenter = new Intl.Segmenter('zh', { granularity: 'word' });
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Your prompt here',
+  experimental_transform: smoothStream({
+    chunking: segmenter,
+  }),
+});
+```
+
+#### 基于正则的分块
+
+要使用基于正则的分块，请向 `chunking` 选项传入一个 `RegExp`。支持全局（g）
+与粘性（y）表达式。该表达式不得匹配空字符串。
+
+```ts
+// To split on underscores:
+smoothStream({
+  chunking: /_+/,
+});
+
+// Also can do it like this, same behavior
+smoothStream({
+  chunking: /[^_]*_/,
+});
+```
+
+#### 基于自定义回调的分块
+
+要使用自定义回调进行分块，请向 `chunking` 选项传入一个函数。
+
+```ts
+smoothStream({
+  chunking: text => {
+    const findString = 'some string';
+    const index = text.indexOf(findString);
+
+    if (index === -1) {
+      return null;
+    }
+
+    return text.slice(0, index) + findString;
+  },
+});
+```
+
+### 返回值
+
+返回一个 `TransformStream`，它会：
+
+- 缓冲传入的文本与推理分块
+- 在遇到分块模式时释放内容
+- 在分块之间添加可配置的延迟以实现平滑输出
+- 立即透传非文本/推理分块（如工具调用、步骤结束事件）

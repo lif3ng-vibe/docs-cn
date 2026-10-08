@@ -1,0 +1,99 @@
+---
+title: defaultInstructionsMiddleware
+description: 为语言模型调用应用默认指令（instructions）的中间件
+---
+
+# `defaultInstructionsMiddleware()`
+
+`defaultInstructionsMiddleware` 会为尚未包含系统消息的语言模型调用应用默认指令。这适用于配置可复用的模型行为，同时允许调用级别的 `instructions` 优先生效。
+
+## 导入
+
+<Snippet
+  text={`import { defaultInstructionsMiddleware } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+```ts
+function defaultInstructionsMiddleware(options: {
+  instructions: Instructions;
+}): LanguageModelMiddleware;
+```
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'instructions',
+      type: 'string | SystemModelMessage | Array<SystemModelMessage>',
+      isOptional: false,
+      description:
+        '当调用尚未包含系统消息时前置添加的默认指令。',
+    },
+  ]}
+/>
+
+### 返回值
+
+返回一个
+[LanguageModelMiddleware](/docs/ai-sdk-core/middleware)，它会：
+
+- 为不含系统消息的调用前置添加所配置的指令。
+- 保留指令级别的 `providerOptions`。
+- 保持包含任何系统消息的调用不变，从而让调用级别的指令优先生效。
+- 同时适用于非流式与流式语言模型调用。
+
+## 用法示例
+
+```ts
+import {
+  defaultInstructionsMiddleware,
+  generateText,
+  wrapLanguageModel,
+} from 'ai';
+
+const model = wrapLanguageModel({
+  model: __MODEL__,
+  middleware: defaultInstructionsMiddleware({
+    instructions: 'You are a concise technical assistant.',
+  }),
+});
+
+const defaultResult = await generateText({
+  model,
+  prompt: 'Explain HTTP caching.',
+});
+
+const overriddenResult = await generateText({
+  model,
+  instructions: 'Explain concepts for a complete beginner.',
+  prompt: 'Explain HTTP caching.',
+});
+```
+
+你可以通过 `SystemModelMessage` 为默认指令附加提供商选项（provider options）：
+
+```ts
+const model = wrapLanguageModel({
+  model: __MODEL__,
+  middleware: defaultInstructionsMiddleware({
+    instructions: {
+      role: 'system',
+      content: 'You are a concise technical assistant.',
+      providerOptions: {
+        anthropic: {
+          cacheControl: { type: 'ephemeral' },
+        },
+      },
+    },
+  }),
+});
+```
+
+<Note>
+  此中间件提供的是默认值，而非强制指令。归一化后的提示词（prompt）中若包含任何系统消息，都会使默认值失效。请仅在可信的消息历史中使用
+  `allowSystemInMessages`，因为不可信的系统消息可能覆盖所配置的默认值。
+</Note>

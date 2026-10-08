@@ -1,0 +1,31 @@
+---
+title: AI_NoSuchProviderError
+description: 了解如何修复 AI_NoSuchProviderError
+---
+
+# AI_NoSuchProviderError
+
+此错误在找不到指定提供商 ID 时发生。
+
+## 属性
+
+- `providerId`：未找到的提供商 ID
+- `availableProviders`：可用提供商 ID 数组
+- `modelId`：模型 ID
+- `modelType`：模型类型
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoSuchProviderError` 的实例：
+
+```typescript
+import { NoSuchProviderError } from 'ai';
+
+if (NoSuchProviderError.isInstance(error)) {
+  // Handle the error
+}
+```
+
+实验性的决策解析使用 `modelType: 'decisionModel'`。它涵盖不可用的决策能力，
+以及未知的决策模型或提供商 ID。参见 [Decisions](/docs/ai-sdk-core/decisions#默认提供商字符串)。

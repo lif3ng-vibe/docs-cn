@@ -1,0 +1,139 @@
+---
+title: Axiom
+description: 使用 Axiom 度量、观测并改进你的 AI SDK 应用
+---
+
+# Axiom 可观测性
+
+**Axiom** 是一个数据平台，为 **AI 工程工作流**提供专门特性，帮助你满怀信心地构建复杂的 AI 系统。
+
+Axiom 与 AI SDK 的集成使用一个模型包装器（wrapper），自动为每次 LLM 调用捕获详细的追踪（trace）数据，让你立即掌握应用的性能、成本与行为。
+
+## 安装
+
+### 1. 配置 Axiom
+
+首先，你需要一个 Axiom 组织、一个用于接收追踪数据的数据集，以及一个 API token。
+
+- [创建 Axiom 组织](https://app.axiom.co/register)。
+- [创建新数据集](https://app.axiom.co/datasets)（例如 `my-ai-app`）。
+- [创建 API token](https://app.axiom.co/settings/api-tokens)，并为其授予对你数据集的写入（ingest）权限。
+
+### 2. 安装 Axiom SDK
+
+在你的项目中安装 Axiom 包：
+
+<InstallPackages packages="axiom" />
+
+### 3. 设置环境变量
+
+在 `.env` 文件中配置你的环境变量。这里使用标准 OpenTelemetry 配置，把追踪数据直接发送到你的 Axiom 数据集。
+
+```bash filename=".env"
+# Axiom Configuration
+AXIOM_TOKEN="YOUR_AXIOM_API_TOKEN"
+AXIOM_DATASET="your-axiom-dataset-name"
+
+# Vercel and OpenTelemetry Configuration
+OTEL_SERVICE_NAME="my-ai-app"
+OTEL_EXPORTER_OTLP_ENDPOINT="https://api.axiom.co/v1/traces"
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer YOUR_AXIOM_API_TOKEN,X-Axiom-Dataset=your-axiom-dataset-name"
+
+# Your AI Provider Key
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+将占位值替换为你实际的 Axiom token 与数据集名称。
+
+### 4. 设置埋点（instrumentation）
+
+要向 Axiom 发送数据，需要配置一个 tracer。例如，使用一个专用的埋点文件，并在应用其余部分之前加载它。下面是 Node.js 环境的示例配置：
+
+1. 安装依赖：
+
+<InstallPackages packages="dotenv @opentelemetry/exporter-trace-otlp-http @opentelemetry/resources @opentelemetry/sdk-node @opentelemetry/sdk-trace-node @opentelemetry/semantic-conventions @opentelemetry/api" />
+
+2. 创建埋点文件：
+
+```typescript filename="src/instrumentation.ts"
+import { trace } from '@opentelemetry/api';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import type { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { initAxiomAI, RedactionPolicy } from 'axiom/ai';
+
+const tracer = trace.getTracer('my-tracer');
+
+const sdk = new NodeSDK({
+  resource: resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: 'my-ai-app',
+  }) as Resource,
+  spanProcessor: new SimpleSpanProcessor(
+    new OTLPTraceExporter({
+      url: `https://api.axiom.co/v1/traces`,
+      headers: {
+        Authorization: `Bearer ${process.env.AXIOM_TOKEN}`,
+        'X-Axiom-Dataset': process.env.AXIOM_DATASET,
+      },
+    }),
+  ),
+});
+
+sdk.start();
+
+initAxiomAI({ tracer, redactionPolicy: RedactionPolicy.AxiomDefault });
+```
+
+### 5. 包装并使用 AI 模型
+
+在你的应用代码中，从 Axiom 导入 `wrapAISDKModel`，并用它包装你现有的 AI SDK 模型客户端。
+
+```typescript
+import { createOpenAI } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+import { wrapAISDKModel } from 'axiom/ai';
+
+// 1. Create your standard AI model provider
+const openaiProvider = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// 2. Wrap the model to enable automatic tracing
+const tracedGpt4o = wrapAISDKModel(openaiProvider('gpt-6-astra'));
+
+// 3. Use the wrapped model as you normally would
+const { text } = await generateText({
+  model: tracedGpt4o,
+  prompt: 'What is the capital of Spain?',
+});
+
+console.log(text);
+```
+
+此后，使用 `tracedGpt4o` 模型发起的任何调用都会自动向你的 Axiom 数据集发送详细的追踪数据。
+
+## 你会在 Axiom 中看到什么
+
+完成集成后，你的 Axiom 数据集将包含：
+
+- **AI 追踪瀑布图**：一个专用视图，用于可视化单步与多步 LLM 工作流。
+- **Gen AI 仪表盘**：一个预构建的仪表盘，用于监控成本、延迟、token 用量与错误率。
+- **详细 span**：每次调用都有丰富的遥测数据，包括完整提示词与补全、token 计数以及模型信息。
+
+## 高级用法
+
+Axiom 的 AI SDK 提供更多高级埋点能力，带来更深入的可见性：
+
+- **业务上下文**：使用 `withSpan` 函数把 LLM 调用归组到特定业务能力之下（例如 `customer_support_agent`）。
+- **工具追踪**：使用 `wrapTool` 辅助函数自动追踪你的 AI 模型所调用工具的执行过程。
+
+要进一步了解这些功能，请参阅 [Axiom AI SDK 埋点指南](https://axiom.co/docs/ai-engineering/observe/axiom-ai-sdk-instrumentation)。
+
+## 更多资源
+
+- [Axiom AI Engineering 文档](https://axiom.co/docs/ai-engineering/overview)
+- [GitHub 上的 Axiom AI SDK](https://github.com/axiomhq/ai)
+- [完整快速上手指南](https://axiom.co/docs/ai-engineering/quickstart)

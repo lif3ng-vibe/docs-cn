@@ -1,0 +1,119 @@
+---
+title: Send Custom Body from useChat
+description: 了解如何使用 AI SDK 和 Next.js 从 useChat Hook 发送自定义请求体
+tags: ['next', 'chat']
+---
+
+# Send Custom Body from useChat
+
+<Note>
+  如果你希望在每条消息之外额外发送自定义数据，请参阅 [聊天机器人请求配置文档](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot#request-configuration)。
+</Note>
+
+默认情况下，`useChat` 会将所有消息以及请求中的信息一并发送到服务器。
+然而，你往往希望完全控制发送到服务器的请求体内容，例如：
+
+- 只发送最后一条消息
+- 随消息一起发送额外数据
+- 更改请求体的结构
+
+`prepareSendMessagesRequest` 选项允许你自定义发送到服务器的整个请求体内容。
+该函数会接收消息列表、请求数据以及调用发送时传入的请求体。
+它应当返回将要发送到服务器的请求体内容。
+
+## 示例
+
+本示例展示如何只向服务器发送最后一条消息。
+如果你想减少发送到服务器的数据量，这会很有用。
+
+### 客户端
+
+```typescript filename='app/page.tsx' highlight="3,7-14"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ id, messages }) => {
+        return {
+          body: {
+            id,
+            message: messages[messages.length - 1],
+          },
+        };
+      },
+    }),
+  });
+
+  return (
+    <div>
+    {messages.map((message, index) => (
+      <div key={index}>
+        {message.role === 'user' ? 'User: ' : 'AI: '}
+        {message.parts.map((part) => {
+          switch (part.type) {
+            case "text":
+              return <div key={`${message.id}-text`}>{part.text}</div>;
+          }
+        })}
+      </div>
+    ))}
+
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        sendMessage({text: input});
+        setInput('');
+      }}>
+        <input value={input} onChange={(e) => setInput(e.currentTarget.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+### 服务器
+
+我们需要调整服务器，以接收带有聊天 ID 和最后一条消息的自定义请求格式。
+其余的消息历史可以从存储中加载。
+
+```tsx filename='app/api/chat/route.ts' highlight="12,15-16,21"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { id, message } = await req.json();
+
+  // Load existing messages and add the new one
+  const messages = await loadMessages(id);
+  messages.push(message);
+
+  // Call the language model
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    messages: await convertToModelMessages(messages),
+  });
+
+  // Respond with the stream
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages,
+      onFinish: ({ messages: newMessages }) => {
+        saveMessages(id, newMessages);
+      },
+    }),
+  });
+}
+```

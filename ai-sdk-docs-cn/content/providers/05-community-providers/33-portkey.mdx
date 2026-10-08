@@ -1,0 +1,129 @@
+---
+title: Portkey
+description: 了解如何使用适用于 AI SDK 的 Portkey 提供商。
+---
+
+# Portkey 提供商
+
+[Portkey](https://portkey.ai/?utm_source=vercel&utm_medium=docs&utm_campaign=integration) 与 AI SDK 原生集成，让你的应用达到生产级可靠。导入 Portkey 的 Vercel 包，并在你的 Vercel AI 应用中将其用作提供商，即可启用 Portkey 的全部功能：
+
+- 对所有请求提供全栈**可观测性（observability）**与**追踪（tracing）**
+- 跨 **250+ LLM** 互操作
+- 内置 **50+** 个业界领先的护栏（guardrails）
+- 简单与语义**缓存**，节省成本与时间
+- 带回退（fallback）、负载均衡、自动重试等的条件请求路由
+- 基于用户反馈的持续改进
+
+在 [Portkey AI SDK 文档](https://docs.portkey.ai/docs/integrations/libraries/vercel)了解更多。
+
+## 安装
+
+Portkey 提供商包含在 `@portkey-ai/vercel-provider` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="@portkey-ai/vercel-provider" />
+
+## 提供商实例
+
+使用 `createPortkey` 函数创建 Portkey 提供商实例：
+
+```typescript
+import { createPortkey } from '@portkey-ai/vercel-provider';
+
+const portkeyConfig = {
+  provider: 'openai', //enter provider of choice
+  api_key: 'OPENAI_API_KEY', //enter the respective provider's api key
+  override_params: {
+    model: 'gpt-5', //choose from 250+ LLMs
+  },
+};
+
+const portkey = createPortkey({
+  apiKey: 'YOUR_PORTKEY_API_KEY',
+  config: portkeyConfig,
+});
+```
+
+你可以在 [Portkey 控制台](https://app.portkey.ai)找到你的 Portkey API key。
+
+## 语言模型
+
+Portkey 同时支持聊天模型与补全模型。聊天模型使用 `portkey.chatModel()`，补全模型使用 `portkey.completionModel()`：
+
+```typescript
+const chatModel = portkey.chatModel('');
+const completionModel = portkey.completionModel('');
+```
+
+注意：如果你已在 `portkeyConfig` 中定义了模型名称，则可以传入空字符串作为模型名。
+
+## 示例
+
+你可以将 Portkey 语言模型与 `generateText` 或 `streamText` 函数配合使用：
+
+### `generateText`
+
+```javascript
+import { createPortkey } from '@portkey-ai/vercel-provider';
+import { generateText } from 'ai';
+
+const portkey = createPortkey({
+  apiKey: 'YOUR_PORTKEY_API_KEY',
+  config: portkeyConfig,
+});
+
+const { text } = await generateText({
+  model: portkey.chatModel(''),
+  prompt: 'What is Portkey?',
+});
+
+console.log(text);
+```
+
+### `streamText`
+
+```javascript
+import { createPortkey } from '@portkey-ai/vercel-provider';
+import { streamText } from 'ai';
+
+const portkey = createPortkey({
+  apiKey: 'YOUR_PORTKEY_API_KEY',
+  config: portkeyConfig,
+});
+
+const result = streamText({
+  model: portkey.completionModel(''),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+
+for await (const chunk of result) {
+  console.log(chunk);
+}
+```
+
+注意：
+
+- Portkey 支持 AI SDK 的 `Tool` 使用
+- 目前不支持配合 [`Output`](/docs/reference/ai-sdk-core/output) 的结构化输出。
+
+## 高级功能
+
+Portkey 提供多项高级功能，以增强你的 AI 应用：
+
+1. **互操作性**：只需更改配置中的提供商与模型名称，即可在 250+ 个 AI 模型之间轻松切换。
+
+2. **可观测性**：访问所有请求的全面分析与日志。
+
+3. **可靠性**：实现缓存、回退、负载均衡与条件路由。
+
+4. **护栏**：通过输入与输出检查实时约束 LLM 行为。
+
+5. **安全与合规**：设置预算上限，实现细粒度的用户角色与权限。
+
+有关这些功能与高级配置选项的详细信息，请参阅 [Portkey 文档](https://docs.portkey.ai/docs/integrations/libraries/vercel)。
+
+## 更多资源
+
+- [Portkey 文档](https://docs.portkey.ai/docs/integrations/libraries/vercel)
+- [Twitter](https://twitter.com/portkeyai)
+- [Discord 社区](https://discord.gg/JHPt4C7r)
+- [Portkey 控制台](https://app.portkey.ai)

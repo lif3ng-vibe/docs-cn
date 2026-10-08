@@ -1,0 +1,156 @@
+---
+title: 终端 UI
+description: 在交互式终端 UI 中运行 AI SDK 智能体。
+---
+
+# Terminal UI
+
+`@ai-sdk/tui` 包让你可以在交互式终端界面中运行本地的 `ToolLoopAgent`，或通过 `ChatTransport` 连接到远程智能体。它适用于本地开发、演示和内部工具等场景——当终端体验已经足够、而你又不想搭建自定义 UI 时，它非常实用。
+
+终端 UI 负责处理提示词输入、流式助手响应、markdown 渲染、工具卡片、推理区块、滚动以及工具审批提示。
+
+## 安装
+
+在你使用的提供商包之外，连同 `ai` 一起安装 `@ai-sdk/tui`：
+
+<Snippet text={`pnpm add @ai-sdk/tui ai @ai-sdk/openai`} prompt={false} />
+
+## 运行智能体
+
+创建一个 `ToolLoopAgent` 并将其传给 `runAgentTUI`：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { runAgentTUI } from '@ai-sdk/tui';
+import { ToolLoopAgent, tool } from 'ai';
+import { z } from 'zod';
+
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  instructions:
+    'You are a helpful terminal assistant. Answer in markdown and use tools when they help.',
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72,
+      }),
+    }),
+  },
+});
+
+await runAgentTUI({
+  title: 'Weather Agent',
+  agent,
+});
+```
+
+`runAgentTUI` 会一直运行，直到用户按 `Esc` 或 `Ctrl+C` 退出。
+
+## 连接远程智能体
+
+传入一个 `ChatTransport`（而不是 `agent`），即可将终端 UI 连接到远程 AI SDK UI 消息端点：
+
+```ts
+import { runAgentTUI } from '@ai-sdk/tui';
+import { DefaultChatTransport } from 'ai';
+
+await runAgentTUI({
+  title: 'Remote Agent',
+  transport: new DefaultChatTransport({
+    api: 'https://example.com/api/chat',
+  }),
+});
+```
+
+transport 决定了端点、身份验证、请求体以及其他远程通信行为。终端 UI 会将其内部聊天 id 和消息历史保持在 transport 契约的私有范围内。
+
+## 沙箱（Sandbox）
+
+当你的智能体工具需要执行环境时，可以通过 `sandbox` 选项传入一个沙箱会话：
+
+```ts
+import { createJustBashNetworkSandboxSession } from '@ai-sdk/sandbox-just-bash';
+
+const sandboxSession = await createJustBashNetworkSandboxSession({
+  cwd: '/home/user',
+});
+
+try {
+  await runAgentTUI({
+    title: 'Sandbox Agent',
+    agent,
+    sandbox: sandboxSession.restricted(),
+  });
+} finally {
+  await sandboxSession.destroy();
+}
+```
+
+终端 UI 会以 `experimental_sandbox` 的形式将该沙箱转发给每一次智能体调用。工具描述函数和工具 `execute` 函数可以从各自的 options 中读取它，并将命令或文件操作委托给它执行。如果希望模型了解工作目录、公共主机名或暴露的端口等细节，请把这些沙箱描述信息加入你的智能体 instructions。
+
+## 显示选项
+
+你可以控制工具调用、推理和响应统计信息的展示方式：
+
+```ts
+await runAgentTUI({
+  title: 'Weather Agent',
+  agent,
+  tools: 'auto-collapsed',
+  reasoning: 'collapsed',
+  responseStatistics: 'outputTokensPerSecond',
+  contextSize: 200_000,
+});
+```
+
+各设置项：
+
+- `tools`：控制工具调用的渲染方式。`"full"` 显示工具输入和输出；`"collapsed"` 只显示工具卡片；`"auto-collapsed"` 展开最近一次工具调用，直到出现其他可见区块；`"hidden"` 则完全省略工具调用。默认值为 `"auto-collapsed"`。
+- `reasoning`：控制推理内容的渲染方式。`"full"` 显示推理内容；`"collapsed"` 只显示推理卡片；`"auto-collapsed"` 展开最近一次推理，直到出现其他可见区块；`"hidden"` 则完全省略推理。默认值为 `"auto-collapsed"`。
+- `responseStatistics`：`"outputTokensPerSecond"` 显示输出 token 吞吐量，`"outputTokenCount"` 显示输出 token 数量。默认值为 `"outputTokensPerSecond"`。
+- `contextSize`：提供该选项时，终端 UI 会将总 token 用量以模型上下文窗口的百分比形式展示。
+
+## 工具审批
+
+`runAgentTUI` 支持 `ToolLoopAgent` 的工具审批流程。当智能体发出手动审批请求时，终端 UI 会提示用户在智能体继续执行之前批准或拒绝该工具调用。
+
+```ts
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  tools: { weather },
+  toolApproval: {
+    weather: ({ location }) =>
+      location.toLowerCase().includes('san francisco')
+        ? 'approved'
+        : 'user-approval',
+  },
+});
+
+await runAgentTUI({ title: 'Weather Agent', agent });
+```
+
+## 兼容性
+
+使用 `agent` 选项时，该智能体必须能够直接根据终端用户输入运行。它不能依赖每次调用的 options，也不能使用结构化输出，因为终端 UI 无法从自由格式的提示词中推断这些值。需要自定义请求处理的远程智能体，请改用 `transport`。
+
+对于需要固定提示词、调用 options、结构化输出、自定义结果检查或自定义流处理的示例或应用，请直接使用 `agent.generate()` 或 `agent.stream()`。
+
+## 按键控制
+
+- `Enter`：提交提示词
+- `y` / `n`：批准或拒绝工具调用
+- `Up` / `Down`：滚动会话记录
+- `PageUp` / `PageDown`：整页滚动会话记录
+- `Ctrl+L`：重绘
+- `Esc` / `Ctrl+C`：退出
+
+## 下一步
+
+- [构建智能体](/docs/agents/building-agents)：了解如何创建 `ToolLoopAgent` 实例
+- [工具审批](/docs/agents/tool-approvals)：了解如何配置工具调用的人工审核
+- [runAgentTUI API 参考](/docs/reference/ai-sdk-tui/run-agent-tui)：查看详细的参数文档

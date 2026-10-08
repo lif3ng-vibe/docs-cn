@@ -1,0 +1,327 @@
+---
+title: 流式生成对象
+description: 了解如何使用 AI SDK 和 Next.js 流式生成对象
+tags: ['next', 'streaming', 'structured data']
+---
+
+# Stream Object
+
+对象生成有时需要很长时间才能完成，尤其是在生成大型 schema 的情况下。
+此时，将对象生成过程实时流式传输到客户端会很有用。
+这让客户端可以在对象生成的同时将其显示出来，
+而不必让用户等待生成完成后再展示结果。
+
+<Browser>
+  <ObjectGeneration
+    stream
+    object={{
+      notifications: [
+        {
+          name: 'Jamie Roberts',
+          message: "Hey! How's the study grind going? Need a coffee boost?",
+          minutesAgo: 15,
+        },
+        {
+          name: 'Prof. Morgan',
+          message:
+            'Reminder: Your term paper is due promptly at 8 AM tomorrow. Please ensure it meets the submission guidelines outlined.',
+          minutesAgo: 46,
+        },
+        {
+          name: 'Alex Chen',
+          message:
+            "Dude, urgent! Borrow your notes for tomorrow's exam? I swear mine got eaten by my dog!",
+          minutesAgo: 30,
+        },
+      ],
+    }}
+  />
+</Browser>
+
+## 对象模式
+
+`streamText` 函数配合 `Output` 允许你指定不同的输出策略。使用 `Output.object` 时，它会精确生成你在 schema 选项中指定的结构化对象。
+
+### schema
+
+将 schema 放在一个单独的文件中、再由客户端和服务器分别导入，会很有帮助。
+
+```ts filename='app/api/use-object/schema.ts'
+import { z } from 'zod';
+
+// define a schema for the notifications
+export const notificationSchema = z.object({
+  notifications: z.array(
+    z.object({
+      name: z.string().describe('Name of a fictional person.'),
+      message: z.string().describe('Message. Do not use emojis or links.'),
+    }),
+  ),
+});
+```
+
+### 客户端
+
+客户端使用 [`useObject`](/docs/reference/ai-sdk-ui/use-object) 来流式接收对象生成过程。
+
+结果是不完整的，并且会在收到时逐步显示。
+请注意 JSX 中处理 `undefined` 值的代码。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from './api/use-object/schema';
+
+export default function Page() {
+  const { object, submit } = useObject({
+    api: '/api/use-object',
+    schema: notificationSchema,
+  });
+
+  return (
+    <div>
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 服务器
+
+在服务器端，我们使用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 配合 `Output.object` 来流式输出对象生成过程。
+
+```typescript filename='app/api/use-object/route.ts'
+import { streamText, Output, createTextStreamResponse, toTextStream } from 'ai';
+import { notificationSchema } from './schema';
+
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    output: Output.object({ schema: notificationSchema }),
+    prompt:
+      `Generate 3 notifications for a messages app in this context:` + context,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## 加载状态与停止流
+
+在对象生成期间，你可以使用 `isLoading` 状态来显示加载指示器。
+你还可以使用 `stop` 函数停止对象生成过程。
+
+```tsx filename='app/page.tsx' highlight="7,16,21,24"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from './api/use-object/schema';
+
+export default function Page() {
+  const { object, submit, isLoading, stop } = useObject({
+    api: '/api/use-object',
+    schema: notificationSchema,
+  });
+
+  return (
+    <div>
+      <button
+        onClick={() => submit('Messages during finals week.')}
+        disabled={isLoading}
+      >
+        Generate notifications
+      </button>
+
+      {isLoading && (
+        <div>
+          <div>Loading...</div>
+          <button type="button" onClick={() => stop()}>
+            Stop
+          </button>
+        </div>
+      )}
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## 数组模式
+
+`Output.array` 模式允许你逐个元素地流式输出对象数组。这在生成项目列表时特别有用。
+
+### schema
+
+首先，更新 schema 以生成单个对象（移除 `z.array()`）。
+
+```ts filename='app/api/use-object/schema.ts'
+import { z } from 'zod';
+
+// define a schema for a single notification
+export const notificationSchema = z.object({
+  name: z.string().describe('Name of a fictional person.'),
+  message: z.string().describe('Message. Do not use emojis or links.'),
+});
+```
+
+### 客户端
+
+在客户端，你用 `z.array()` 包裹 schema 以生成对象数组。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from './api/use-object/schema';
+import z from 'zod';
+
+export default function Page() {
+  const { object, submit, isLoading, stop } = useObject({
+    api: '/api/use-object',
+    schema: z.array(notificationSchema),
+  });
+
+  return (
+    <div>
+      <button
+        onClick={() => submit('Messages during finals week.')}
+        disabled={isLoading}
+      >
+        Generate notifications
+      </button>
+
+      {isLoading && (
+        <div>
+          <div>Loading...</div>
+          <button type="button" onClick={() => stop()}>
+            Stop
+          </button>
+        </div>
+      )}
+
+      {object?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 服务器
+
+在服务器端，指定 `Output.array` 以生成对象数组。
+
+```typescript filename='app/api/use-object/route.ts'
+import { streamText, Output, createTextStreamResponse, toTextStream } from 'ai';
+import { notificationSchema } from './schema';
+
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    output: Output.array({ element: notificationSchema }),
+    prompt:
+      `Generate 3 notifications for a messages app in this context:` + context,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## JSON 模式
+
+当你不想指定 schema 时可以使用 `Output.json()`，例如数据结构由用户的动态请求决定时。模型仍会尝试根据提示词生成 JSON 数据。
+
+### 客户端
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { z } from 'zod';
+
+export default function Page() {
+  const { object, submit, isLoading, stop } = useObject({
+    api: '/api/use-object',
+    schema: z.unknown(),
+  });
+
+  return (
+    <div>
+      <button
+        onClick={() => submit('Messages during finals week.')}
+        disabled={isLoading}
+      >
+        Generate notifications
+      </button>
+
+      {isLoading && (
+        <div>
+          <div>Loading...</div>
+          <button type="button" onClick={() => stop()}>
+            Stop
+          </button>
+        </div>
+      )}
+
+      {JSON.stringify(object, null, 2)}
+    </div>
+  );
+}
+```
+
+### 服务器
+
+在服务器端，指定 `Output.json()`。
+
+```typescript filename='app/api/use-object/route.ts'
+import { streamText, Output, createTextStreamResponse, toTextStream } from 'ai';
+
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    output: Output.json(),
+    prompt:
+      `Generate 3 notifications (in JSON) for a messages app in this context:` +
+      context,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```

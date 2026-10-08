@@ -1,0 +1,73 @@
+---
+title: 流式生成文本
+description: 了解如何使用 AI SDK 和 Next.js 流式生成文本
+tags: ['next', 'streaming']
+---
+
+# Stream Text
+
+文本生成有时需要很长时间才能完成，尤其是在生成几段文字的情况下。此时，将文本生成过程实时流式传输到客户端会很有用。这让客户端可以在文本生成的同时将其显示出来，而不必让用户等待生成完成后再展示结果。
+
+<Browser>
+  <TextGeneration stream />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，从 `@ai-sdk/react` 模块导入 `useCompletion` Hook。点击按钮时，`useCompletion` Hook 会调用 `/api/completion` 端点。该端点会根据输入的提示词生成文本，并将其流式传输到客户端。
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useCompletion } from '@ai-sdk/react';
+
+export default function Page() {
+  const { completion, complete } = useCompletion({
+    api: '/api/completion',
+  });
+
+  return (
+    <div>
+      <div
+        onClick={async () => {
+          await complete('Why is the sky blue?');
+        }}
+      >
+        Generate
+      </div>
+
+      {completion}
+    </div>
+  );
+}
+```
+
+## 服务器
+
+我们来为 `/api/completion` 创建一个 Route Handler，根据输入的提示词生成文本。该路由会调用 `ai` 模块中的 `streamText` 函数，根据输入的提示词生成文本，并将其流式传输到客户端。
+
+```typescript filename='app/api/completion/route.ts'
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { prompt }: { prompt: string } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a helpful assistant.',
+    prompt,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+---
+
+<GithubLink link="https://github.com/vercel/ai/blob/main/examples/next-openai-pages/pages/basics/stream-text/index.tsx" />

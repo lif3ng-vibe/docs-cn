@@ -1,0 +1,219 @@
+---
+title: DeepSeek V3.2 快速上手
+description: 使用 AI SDK 快速上手 DeepSeek V3.2。
+tags: ['getting-started', 'agents']
+---
+
+# Get started with DeepSeek V3.2
+
+<Note>
+  DeepSeek 已于 2026 年 7 月 24 日退役 `deepseek-chat` 和 `deepseek-reasoner` API 别名。本历史性 V3.2 指南中的示例仅作参考保留，无法再对接当前服务。对于当前应用，请使用 `deepseek-v4-flash` 或 `deepseek-v4-pro`。
+</Note>
+
+随着 [DeepSeek V3.2 的发布](https://api-docs.deepseek.com/news/news251201)，现在是开始构建需要高级推理和智能体（agent）能力的 AI 应用的最佳时机。
+
+[AI SDK](/) 是一个强大的 TypeScript 工具包，用于结合 DeepSeek V3.2 这样的大型语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。
+
+## DeepSeek V3.2
+
+DeepSeek V3.2 是一个前沿模型，将高计算效率与卓越的推理和智能体性能融为一体。它引入了多项关键技术突破，使其在保持开源的同时，性能可与 GPT-5 比肩。
+
+该系列包含两个主要变体：
+
+- **DeepSeek V3.2**：V3.2-Exp 的官方后继版本。一个在推理与推理效率上均衡优化的模型，可提供 GPT-5 级别的性能。
+- **DeepSeek V3.2-Speciale**：推理能力拉满的高算力变体，可与 Gemini-3.0-Pro 匹敌。在 IMO 2025、CMO 2025、ICPC World Finals 2025 和 IOI 2025 中取得金牌级成绩。截至发布时，它不支持工具使用。
+
+### 基准测试
+
+DeepSeek V3.2 模型在推理与智能体任务上均表现出色，在关键基准测试中交出了具有竞争力的成绩：
+
+**推理能力**
+
+- **AIME 2025（Pass@1）**：96.0%（Speciale）
+- **HMMT 2025（Pass@1）**：99.2%（Speciale）
+- **HLE（Pass@1）**：30.6%
+- **Codeforces（等级分）**：2701（Speciale）
+
+**智能体能力**
+
+- **SWE Verified（解决率）**：73.1%
+- **Terminal Bench 2.0（准确率）**：46.4%
+- **τ2 Bench（Pass@1）**：80.3%
+- **Tool Decathlon（Pass@1）**：35.2%
+
+[来源](https://huggingface.co/deepseek-ai/DeepSeek-V3.2/resolve/main/assets/paper.pdf)
+
+### 模型选项
+
+在 AI SDK 中使用 DeepSeek V3.2 时，你有两种模型选择：
+
+| 模型别名            | 模型版本                           | 说明                                   |
+| ------------------- | --------------------------------- | ---------------------------------------------- |
+| `deepseek-chat`     | DeepSeek-V3.2（非思考模式） | 标准聊天模型                           |
+| `deepseek-reasoner` | DeepSeek-V3.2（思考模式）     | 增强推理，面向复杂问题求解 |
+
+## AI SDK 快速上手
+
+AI SDK 是一款 TypeScript 工具包，旨在帮助开发者使用 React、Next.js、Vue、Svelte、Node.js 等构建 AI 驱动的应用。将 LLM 集成到应用中相当复杂，且高度依赖于你所使用的具体模型提供商（provider）。
+
+AI SDK 抽象掉了不同模型提供商之间的差异，消除了构建智能体的样板代码，并让你能够超越纯文本输出，生成丰富、可交互的组件。
+
+AI SDK 的核心是 [AI SDK Core](/docs/ai-sdk-core/overview)，它提供了调用任意 LLM 的统一 API。使用 AI SDK 调用 DeepSeek V3.2 只需要下面这段代码：
+
+```ts
+import { deepSeek } from '@ai-sdk/deepseek';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: deepSeek('deepseek-chat'),
+  prompt: 'Explain the concept of sparse attention in transformers.',
+});
+```
+
+### 构建交互式界面
+
+AI SDK Core 可以与 AI SDK 的另一个强大组件 [AI SDK UI](/docs/ai-sdk-ui/overview) 搭配使用，简化使用 Next.js、Nuxt、SvelteKit 等流行框架构建聊天、补全和助手界面的过程。
+
+AI SDK UI 提供了强大的抽象，简化了在前端管理聊天流和 UI 更新的复杂任务，让你能够更高效地开发生动的 AI 驱动界面。
+
+通过三个主要 Hook——[`useChat`](/docs/reference/ai-sdk-ui/use-chat)、[`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 和 [`useObject`](/docs/reference/ai-sdk-ui/use-object)——你可以在应用中集成实时聊天、文本补全、流式 JSON 和交互式助手功能。
+
+让我们来探索如何结合 [Next.js](https://nextjs.org)、AI SDK 与 DeepSeek V3.2 构建一个智能体：
+
+在新建的 Next.js 应用中，先安装 AI SDK 和 DeepSeek 提供商：
+
+<Snippet text="pnpm install ai @ai-sdk/deepseek @ai-sdk/react" />
+
+然后，为聊天端点创建一个 Route Handler：
+
+```tsx filename="app/api/chat/route.ts"
+import { deepSeek } from '@ai-sdk/deepseek';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: deepSeek('deepseek-reasoner'),
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream, sendReasoning: true }),
+  });
+}
+```
+
+最后，更新根页面（`app/page.tsx`）以使用 `useChat` Hook：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input });
+      setInput('');
+    }
+  };
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) => {
+            if (part.type === 'text' || part.type === 'reasoning') {
+              return <div key={index}>{part.text}</div>;
+            }
+            return null;
+          })}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input
+          name="prompt"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+        />
+        <button type="submit">Submit</button>
+      </form>
+    </>
+  );
+}
+```
+
+根页面（`app/page.tsx`）上的 useChat Hook 会在用户提交消息时向你的 AI 提供商端点（`app/api/chat/route.ts`）发起请求。随后消息会显示在聊天 UI 中。
+
+## 用工具增强你的智能体
+
+DeepSeek V3.2 的关键优势之一是其智能体能力。你可以通过添加工具来扩展智能体的功能，让模型执行特定操作或检索信息。
+
+### 更新你的 Route Handler
+
+我们来为你的智能体添加一个天气工具。更新 `app/api/chat/route.ts` 中的 Route Handler：
+
+```tsx filename="app/api/chat/route.ts"
+import { deepSeek } from '@ai-sdk/deepseek';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  isStepCount,
+  streamText,
+  tool,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: deepSeek('deepseek-reasoner'),
+    messages: await convertToModelMessages(messages),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => ({
+          location,
+          temperature: 72,
+          unit: 'fahrenheit',
+        }),
+      }),
+    },
+    stopWhen: isStepCount(5),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream, sendReasoning: true }),
+  });
+}
+```
+
+这添加了一个模型可在需要时调用的天气工具。`stopWhen: isStepCount(5)` 参数允许智能体持续执行多个步骤（最多 5 步），使其能够在停止前迭代地使用工具并进行推理。了解更多关于[循环控制](/docs/agents/loop-control)的内容，以自定义智能体何时以及如何停止执行。
+
+## 开始使用
+
+准备好深入了吗？以下是如何开始：
+
+1. 浏览 [ai-sdk.dev/docs](/docs) 上的文档，了解 AI SDK 的能力。
+2. 查看 [ai-sdk.dev/examples](/examples) 上的实际示例，看看 SDK 的实际运用。
+3. 通过 [ai-sdk.dev/docs/guides](/cookbook/guides) 上的进阶指南深入学习检索增强生成（RAG）等主题。
+4. 使用 [vercel.com/templates?type=ai](https://vercel.com/templates?type=ai) 上开箱即用的 AI 模板。

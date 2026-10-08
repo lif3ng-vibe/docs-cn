@@ -1,0 +1,271 @@
+---
+title: Writing a Custom Provider
+description: 利用 AI SDK OpenAI Compatible 包，为 OpenAI 兼容的提供商（provider）创建自定义 provider 包。
+---
+
+# Writing a Custom Provider
+
+你可以创建自己的 provider 包，复用 AI SDK 的 [OpenAI Compatible 包](https://www.npmjs.com/package/@ai-sdk/openai-compatible)。把你的 provider 包发布到 [npm](https://www.npmjs.com/) 上，可以让用户便捷地使用该提供商的模型，并随时跟进你后续的变更。下面是一个示例结构：
+
+### 文件结构
+
+```bash
+packages/example/
+├── src/
+│   ├── example-chat-settings.ts       # Chat model types and settings
+│   ├── example-completion-settings.ts # Completion model types and settings
+│   ├── example-embedding-settings.ts  # Embedding model types and settings
+│   ├── example-image-settings.ts      # Image model types and settings
+│   ├── example-provider.ts            # Main provider implementation
+│   ├── example-provider.test.ts       # Provider tests
+│   └── index.ts                       # Public exports
+├── package.json
+├── tsconfig.json
+├── tsdown.config.ts                   # Build configuration
+└── README.md
+```
+
+### 关键文件
+
+1. **example-chat-settings.ts** - 定义聊天模型 ID 与设置：
+
+```ts
+export type ExampleChatModelId =
+  | 'example/chat-model-1'
+  | 'example/chat-model-2'
+  | (string & {});
+```
+
+补全（completion）、嵌入（embedding）与图像设置的实现方式与聊天设置类似。
+
+2. **example-provider.ts** - 主要的 provider 实现：
+
+```ts
+import {
+  EmbeddingModelV4,
+  ImageModelV4,
+  LanguageModelV4,
+} from '@ai-sdk/provider';
+import {
+  OpenAICompatibleChatLanguageModel,
+  OpenAICompatibleCompletionLanguageModel,
+  OpenAICompatibleEmbeddingModel,
+  OpenAICompatibleImageModel,
+} from '@ai-sdk/openai-compatible';
+import {
+  FetchFunction,
+  loadApiKey,
+  withoutTrailingSlash,
+} from '@ai-sdk/provider-utils';
+// Import your model id and settings here.
+
+export interface ExampleProviderSettings {
+  /**
+Example API key.
+*/
+  apiKey?: string;
+  /**
+Base URL for the API calls.
+*/
+  baseURL?: string;
+  /**
+Custom headers to include in the requests.
+*/
+  headers?: Record<string, string>;
+  /**
+Optional custom url query parameters to include in request urls.
+*/
+  queryParams?: Record<string, string>;
+  /**
+Custom fetch implementation. You can use it as a middleware to intercept requests,
+or to provide a custom fetch implementation for e.g. testing.
+*/
+  fetch?: FetchFunction;
+}
+
+export interface ExampleProvider {
+  /**
+Creates a model for text generation.
+*/
+  (
+    modelId: ExampleChatModelId,
+    settings?: ExampleChatSettings,
+  ): LanguageModelV4;
+
+  /**
+Creates a chat model for text generation.
+*/
+  chatModel(
+    modelId: ExampleChatModelId,
+    settings?: ExampleChatSettings,
+  ): LanguageModelV4;
+
+  /**
+Creates a completion model for text generation.
+*/
+  completionModel(
+    modelId: ExampleCompletionModelId,
+    settings?: ExampleCompletionSettings,
+  ): LanguageModelV4;
+
+  /**
+Creates a text embedding model for text generation.
+*/
+  embeddingModel(
+    modelId: ExampleEmbeddingModelId,
+    settings?: ExampleEmbeddingSettings,
+  ): EmbeddingModelV4;
+
+  /**
+Creates an image model for image generation.
+*/
+  imageModel(
+    modelId: ExampleImageModelId,
+    settings?: ExampleImageSettings,
+  ): ImageModelV4;
+}
+
+export function createExample(
+  options: ExampleProviderSettings = {},
+): ExampleProvider {
+  const baseURL = withoutTrailingSlash(
+    options.baseURL ?? 'https://api.example.com/v1',
+  );
+  const getHeaders = () => ({
+    Authorization: `Bearer ${loadApiKey({
+      apiKey: options.apiKey,
+      environmentVariableName: 'EXAMPLE_API_KEY',
+      description: 'Example API key',
+    })}`,
+    ...options.headers,
+  });
+
+  interface CommonModelConfig {
+    provider: string;
+    url: ({ path }: { path: string }) => string;
+    headers: () => Record<string, string>;
+    fetch?: FetchFunction;
+  }
+
+  const getCommonModelConfig = (modelType: string): CommonModelConfig => ({
+    provider: `example.${modelType}`,
+    url: ({ path }) => {
+      const url = new URL(`${baseURL}${path}`);
+      if (options.queryParams) {
+        url.search = new URLSearchParams(options.queryParams).toString();
+      }
+      return url.toString();
+    },
+    headers: getHeaders,
+    fetch: options.fetch,
+  });
+
+  const createChatModel = (
+    modelId: ExampleChatModelId,
+    settings: ExampleChatSettings = {},
+  ) => {
+    return new OpenAICompatibleChatLanguageModel(
+      modelId,
+      settings,
+      getCommonModelConfig('chat'),
+    );
+  };
+
+  const createCompletionModel = (
+    modelId: ExampleCompletionModelId,
+    settings: ExampleCompletionSettings = {},
+  ) =>
+    new OpenAICompatibleCompletionLanguageModel(
+      modelId,
+      settings,
+      getCommonModelConfig('completion'),
+    );
+
+  const createEmbeddingModel = (
+    modelId: ExampleEmbeddingModelId,
+    settings: ExampleEmbeddingSettings = {},
+  ) =>
+    new OpenAICompatibleEmbeddingModel(
+      modelId,
+      settings,
+      getCommonModelConfig('embedding'),
+    );
+
+  const createImageModel = (
+    modelId: ExampleImageModelId,
+    settings: ExampleImageSettings = {},
+  ) =>
+    new OpenAICompatibleImageModel(
+      modelId,
+      settings,
+      getCommonModelConfig('image'),
+    );
+
+  const provider = (
+    modelId: ExampleChatModelId,
+    settings?: ExampleChatSettings,
+  ) => createChatModel(modelId, settings);
+
+  provider.completionModel = createCompletionModel;
+  provider.chatModel = createChatModel;
+  provider.embeddingModel = createEmbeddingModel;
+  provider.imageModel = createImageModel;
+
+  return provider;
+}
+
+// Export default instance
+export const example = createExample();
+```
+
+3. **index.ts** - 公共导出：
+
+```ts
+export { createExample, example } from './example-provider';
+export type {
+  ExampleProvider,
+  ExampleProviderSettings,
+} from './example-provider';
+```
+
+4. **package.json** - 包配置：
+
+```js
+{
+  "name": "@company-name/example",
+  "version": "0.0.1",
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^0.0.7",
+    "@ai-sdk/provider": "^1.0.2",
+    "@ai-sdk/provider-utils": "^2.0.4",
+    // ...additional dependencies
+  },
+  // ...additional scripts and module build configuration
+}
+```
+
+### 用法
+
+发布之后，用户可以这样使用你的 provider：
+
+```ts
+import { example } from '@company-name/example';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: example('example/chat-model-1'),
+  prompt: 'Hello, how are you?',
+});
+```
+
+这一结构提供了简洁且类型安全的实现，既复用了 OpenAI Compatible 包，又与其他 AI SDK 提供商的用法保持一致。
+
+### 内部 API
+
+在开发 provider 的过程中，你可能需要用到 OpenAI Compatible 包的部分内部 API。你可以从 `@ai-sdk/openai-compatible/internal` 包导入它们，例如：
+
+```ts
+import { convertToOpenAICompatibleChatMessages } from '@ai-sdk/openai-compatible/internal';
+```
+
+最新可用的导出项可以在 AI SDK 的 [GitHub 仓库](https://github.com/vercel/ai/blob/main/packages/openai-compatible/src/internal/index.ts)中查看。

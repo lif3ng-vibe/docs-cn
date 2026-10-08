@@ -1,0 +1,31 @@
+---
+title: 概述
+description: AI SDK Core 概述。
+---
+
+# AI SDK Core
+
+大语言模型（LLM）是能够大规模理解、生成人类语言并与之交互的高级程序。
+它们在海量书面材料上训练，以识别语言中的规律，并预测给定文本中接下来可能出现的内容。
+
+AI SDK Core **通过提供一套标准化的集成方式，简化了在应用中使用 LLM 的过程**——这样你就能专注于为用户构建出色的 AI 应用，而无需在技术细节上浪费时间。
+
+例如，下面展示了如何使用 AI SDK 通过各种模型生成文本：
+
+<PreviewSwitchProviders />
+
+## AI SDK Core 函数
+
+AI SDK Core 提供了多种函数，用于[文本生成](./generating-text)、[结构化数据生成](./generating-structured-data)和[工具使用](./tools-and-tool-calling)。
+这些函数以标准化的方式设置[提示词（prompt）](/docs/foundations/prompts)和[设置](./settings)，使得使用不同模型变得更加容易。
+
+- [`generateText`](/docs/ai-sdk-core/generating-text)：生成文本和[工具调用](./tools-and-tool-calling)。
+  该函数非常适合非交互式场景，例如需要撰写文本的自动化任务（如起草邮件或总结网页），以及使用工具的智能体（agent）。
+- [`streamText`](/docs/ai-sdk-core/generating-text)：以流式方式生成文本和工具调用。
+  你可以在交互式场景中使用 `streamText` 函数，例如[聊天机器人](/docs/ai-sdk-ui/chatbot)和[内容流式输出](/docs/ai-sdk-ui/completion)。
+
+`generateText` 和 `streamText` 都支持通过 `output` 属性（如 `Output.object()`、`Output.array()`）生成[结构化输出](/docs/ai-sdk-core/generating-structured-data)，让你能够生成带类型、经 schema 校验的数据，可用于信息提取、合成数据生成、分类任务以及[流式生成 UI](/docs/ai-sdk-ui/object-generation)。
+
+## API 参考
+
+更多各函数的详细信息，请查阅 [AI SDK Core API 参考](/docs/reference/ai-sdk-core)。

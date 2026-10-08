@@ -1,0 +1,322 @@
+---
+title: rerank
+description: rerank 的 API 参考。
+---
+
+# `rerank()`
+
+使用重排序（reranking）模型根据文档与查询的相关性对一组文档进行重排序。
+
+它非常适合通过基于对查询和文档的语义理解来重新排序文档、邮件或其他内容，从而提升搜索相关性。
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents: ['sunny day at the beach', 'rainy afternoon in the city'],
+  query: 'talk about rain',
+});
+```
+
+## 导入
+
+<Snippet text={`import { rerank } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'RerankingModel',
+      description:
+        "要使用的重排序模型。示例：cohere.reranking('rerank-v4.0-pro')",
+    },
+    {
+      name: 'documents',
+      type: 'Array<VALUE>',
+      description: '要重排序的文档。可以是字符串数组或 JSON 对象数组。',
+    },
+    {
+      name: 'query',
+      type: 'string',
+      description: '用于对文档进行相关性排序的搜索查询。',
+    },
+    {
+      name: 'topN',
+      type: 'number',
+      isOptional: true,
+      description: '返回的头部文档最大数量。未指定时返回所有文档。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description: '最大重试次数。设为 0 可禁用重试。默认：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '可选的中止信号，可用于取消本次调用。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description:
+        '随请求一起发送的额外 HTTP 请求头。仅适用于基于 HTTP 的提供商。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '重排序请求的提供商特定选项。',
+    },
+    {
+      name: 'runtimeContext',
+      type: 'RUNTIME_CONTEXT',
+      isOptional: true,
+      description:
+        '传递给生命周期回调的用户自定义运行时上下文。默认为空对象。遥测（telemetry）集成只接收通过 telemetry.includeRuntimeContext 显式包含的顶层属性。',
+    },
+    {
+      name: 'telemetry',
+      type: 'TelemetryOptions<RUNTIME_CONTEXT>',
+      isOptional: true,
+      description: '遥测配置。',
+      properties: [
+        {
+          type: 'TelemetryOptions',
+          parameters: [
+            {
+              name: 'isEnabled',
+              type: 'boolean',
+              isOptional: true,
+              description:
+                '启用或禁用遥测。默认启用。设为 `false` 可选择退出。',
+            },
+            {
+              name: 'recordInputs',
+              type: 'boolean',
+              isOptional: true,
+              description: '启用或禁用输入记录。默认启用。',
+            },
+            {
+              name: 'recordOutputs',
+              type: 'boolean',
+              isOptional: true,
+              description: '启用或禁用输出记录。默认启用。',
+            },
+            {
+              name: 'functionId',
+              type: 'string',
+              isOptional: true,
+              description: '此函数的标识符。用于按函数分组遥测数据。',
+            },
+            {
+              name: 'includeRuntimeContext',
+              type: '{ [KEY in keyof RUNTIME_CONTEXT]?: boolean }',
+              isOptional: true,
+              description:
+                '要包含在遥测中的顶层运行时上下文属性。只有设为 true 的属性才会被包含。默认排除所有属性。用户回调仍会收到完整上下文。',
+            },
+            {
+              name: 'integrations',
+              isOptional: true,
+              type: 'Telemetry | Telemetry[]',
+              description:
+                '接收生命周期事件的每次调用遥测集成。提供时会替换全局注册的集成（仅对本次调用生效）。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onStart',
+      type: '(event: RerankStartEvent<RUNTIME_CONTEXT>) => void | Promise<void>',
+      isOptional: true,
+      description:
+        'rerank 操作开始时、重排序模型被调用之前调用。事件包含完整且未过滤的 runtimeContext。',
+    },
+    {
+      name: 'onEnd',
+      type: '(event: RerankEndEvent<RUNTIME_CONTEXT>) => void | Promise<void>',
+      isOptional: true,
+      description:
+        'rerank 操作完成时、重排序模型返回之后调用。事件包含完整且未过滤的 runtimeContext。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'originalDocuments',
+      type: 'Array<VALUE>',
+      description: '保持原始顺序的原始文档数组。',
+    },
+    {
+      name: 'rerankedDocuments',
+      type: 'Array<VALUE>',
+      description: '按相关性得分排序（降序）的文档。',
+    },
+    {
+      name: 'ranking',
+      type: 'Array<RankingItem<VALUE>>',
+      description: '包含得分与索引的排序项数组。',
+      properties: [
+        {
+          type: 'RankingItem<VALUE>',
+          parameters: [
+            {
+              name: 'originalIndex',
+              type: 'number',
+              description: '文档在原始文档数组中的索引。',
+            },
+            {
+              name: 'score',
+              type: 'number',
+              description: '文档的相关性得分（通常为 0-1，越高越相关）。',
+            },
+            {
+              name: 'document',
+              type: 'VALUE',
+              description: '文档本身。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'response',
+      type: 'Response',
+      description: '响应数据。',
+      properties: [
+        {
+          type: 'Response',
+          parameters: [
+            {
+              name: 'id',
+              isOptional: true,
+              type: 'string',
+              description: '提供商返回的响应 ID。',
+            },
+            {
+              name: 'timestamp',
+              type: 'Date',
+              description: '响应的时间戳。',
+            },
+            {
+              name: 'modelId',
+              type: 'string',
+              description: '用于重排序的模型 ID。',
+            },
+            {
+              name: 'headers',
+              isOptional: true,
+              type: 'Record<string, string>',
+              description: '响应头。',
+            },
+            {
+              name: 'body',
+              type: 'unknown',
+              isOptional: true,
+              description: '原始响应体。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'providerMetadata',
+      type: 'ProviderMetadata | undefined',
+      isOptional: true,
+      description:
+        '来自提供商的可选元数据。外层键是提供商名称，内层值是元数据。具体细节取决于提供商。',
+    },
+  ]}
+/>
+
+## 示例
+
+### 字符串文档
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const { ranking, rerankedDocuments } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents: [
+    'sunny day at the beach',
+    'rainy afternoon in the city',
+    'snowy night in the mountains',
+  ],
+  query: 'talk about rain',
+  topN: 2,
+});
+
+console.log(rerankedDocuments);
+// ['rainy afternoon in the city', 'sunny day at the beach']
+
+console.log(ranking);
+// [
+//   { originalIndex: 1, score: 0.9, document: 'rainy afternoon...' },
+//   { originalIndex: 0, score: 0.3, document: 'sunny day...' }
+// ]
+```
+
+### 对象文档
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const documents = [
+  {
+    from: 'Paul Doe',
+    subject: 'Follow-up',
+    text: 'We are happy to give you a discount of 20%.',
+  },
+  {
+    from: 'John McGill',
+    subject: 'Missing Info',
+    text: 'Here is the pricing from Oracle: $5000/month',
+  },
+];
+
+const { ranking } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents,
+  query: 'Which pricing did we get from Oracle?',
+  topN: 1,
+});
+
+console.log(ranking[0].document);
+// { from: 'John McGill', subject: 'Missing Info', ... }
+```
+
+### 使用提供商选项
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents: ['sunny day at the beach', 'rainy afternoon in the city'],
+  query: 'talk about rain',
+  providerOptions: {
+    cohere: {
+      maxTokensPerDoc: 1000,
+    },
+  },
+});
+```

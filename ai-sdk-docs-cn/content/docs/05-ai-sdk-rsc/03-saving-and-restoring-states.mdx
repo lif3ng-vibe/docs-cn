@@ -1,0 +1,105 @@
+---
+title: 保存与恢复状态
+description: 使用 onGetUIState 和 onSetAIState 保存与恢复 AI 状态和 UI 状态
+---
+
+# Saving and Restoring States
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI
+  的指导，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+AI SDK RSC 提供了便捷的方法来保存和恢复 AI 状态与 UI 状态。这对于在每次模型生成后保存应用状态，并在用户重新访问生成结果时恢复状态非常有用。
+
+## AI 状态
+
+### 保存 AI 状态
+
+可以使用 [`onSetAIState`](/docs/reference/ai-sdk-rsc/create-ai#on-set-ai-state) 回调来保存 AI 状态，该回调会在 AI 状态更新时被调用。在下面的示例中，每当生成被标记为完成时，你都会将聊天历史保存到数据库中。
+
+```tsx filename='app/ai.ts'
+export const AI = createAI<ServerMessage[], ClientMessage[]>({
+  actions: {
+    continueConversation,
+  },
+  onSetAIState: async ({ state, done }) => {
+    'use server';
+
+    if (done) {
+      saveChatToDB(state);
+    }
+  },
+});
+```
+
+### 恢复 AI 状态
+
+可以通过 [`initialAIState`](/docs/reference/ai-sdk-rsc/create-ai#initial-ai-state) prop 来恢复 AI 状态，该 prop 会传递给由 [`createAI`](/docs/reference/ai-sdk-rsc/create-ai) 函数创建的上下文提供程序。在下面的示例中，你会在组件挂载时从数据库恢复聊天历史。
+
+```tsx file='app/layout.tsx'
+import { ReactNode } from 'react';
+import { AI } from './ai';
+
+export default async function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  const chat = await loadChatFromDB();
+
+  return (
+    <html lang="en">
+      <body>
+        <AI initialAIState={chat}>{children}</AI>
+      </body>
+    </html>
+  );
+}
+```
+
+## UI 状态
+
+### 保存 UI 状态
+
+UI 状态无法直接保存，因为其内容尚不可序列化。你可以改为将 AI 状态作为代理来存储 UI 状态的相关信息，并在需要时用它来恢复 UI 状态。
+
+### 恢复 UI 状态
+
+UI 状态可以通过 AI 状态作为代理来恢复。在下面的示例中，你会在组件挂载时从 AI 状态恢复聊天历史。你使用 [`onGetUIState`](/docs/reference/ai-sdk-rsc/create-ai#on-get-ui-state) 回调来监听 SSR 事件并恢复 UI 状态。
+
+```tsx filename='app/ai.ts'
+export const AI = createAI<ServerMessage[], ClientMessage[]>({
+  actions: {
+    continueConversation,
+  },
+  onGetUIState: async () => {
+    'use server';
+
+    const historyFromDB: ServerMessage[] = await loadChatFromDB();
+    const historyFromApp: ServerMessage[] = getAIState();
+
+    // If the history from the database is different from the
+    // history in the app, they're not in sync so return the UIState
+    // based on the history from the database
+
+    if (historyFromDB.length !== historyFromApp.length) {
+      return historyFromDB.map(({ role, content }) => ({
+        id: generateId(),
+        role,
+        display:
+          role === 'function' ? (
+            <Component {...JSON.parse(content)} />
+          ) : (
+            content
+          ),
+      }));
+    }
+  },
+});
+```
+
+想了解更多，请查看这个[示例](/examples/next-app/state-management/save-and-restore-states)，它展示了如何在你的 Next.js 应用中持久化和恢复状态。
+
+---
+
+接下来，你将学习如何使用 `@ai-sdk/rsc` 的 `useActions` 和 `useUIState` 等函数来创建交互式的多步界面。

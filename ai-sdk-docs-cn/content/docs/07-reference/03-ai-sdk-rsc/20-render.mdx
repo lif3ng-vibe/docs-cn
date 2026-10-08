@@ -1,0 +1,265 @@
+---
+title: render (Removed)
+description: AI SDK RSC 中 render 函数的参考文档
+---
+
+# `render` (Removed)
+
+<Note type="warning">"render" 已在 AI SDK 4.0 中被移除。</Note>
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+一个用于从 LLM 提供商创建可流式传输 UI 的辅助函数。此函数与 AI SDK Core API 类似，并支持相同的模型接口。
+
+> **注意**：`render` 已被弃用，请改用 [`streamUI`](/docs/reference/ai-sdk-rsc/stream-ui)。迁移时请确保 `messages` 参数遵循更新后的[规范](/docs/reference/ai-sdk-rsc/stream-ui#messages)。
+
+## 导入（不再可用）
+
+由于 `render` 已被移除，以下导入将不再可用：
+
+<Snippet text={`import { render } from "@ai-sdk/rsc"`} prompt={false} />
+
+请改用 [`streamUI`](/docs/reference/ai-sdk-rsc/stream-ui)。
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'string',
+      description: '模型标识符，必须与 OpenAI SDK 兼容。',
+    },
+    {
+      name: 'provider',
+      type: 'provider client',
+      description:
+        '目前唯一可用的提供商是 OpenAI。此项需要与模型名称相匹配。',
+    },
+    {
+      name: 'initial',
+      isOptional: true,
+      type: 'ReactNode',
+      description: '要渲染的初始 UI。',
+    },
+    {
+      name: 'messages',
+      type: 'Array<SystemMessage | UserMessage | AssistantMessage | ToolMessage>',
+      description: '表示一段对话的消息列表。',
+      properties: [
+        {
+          type: 'SystemMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'system'",
+              description: '系统消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string',
+              description: '消息的内容。',
+            },
+          ],
+        },
+        {
+          type: 'UserMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'user'",
+              description: '用户消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string',
+              description: '消息的内容。',
+            },
+          ],
+        },
+        {
+          type: 'AssistantMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'assistant'",
+              description: '助手消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string',
+              description: '消息的内容。',
+            },
+            {
+              name: 'tool_calls',
+              type: 'ToolCall[]',
+              description: '模型发起的工具调用列表。',
+              properties: [
+                {
+                  type: 'ToolCall',
+                  parameters: [
+                    {
+                      name: 'id',
+                      type: 'string',
+                      description: '工具调用的 id。',
+                    },
+                    {
+                      name: 'type',
+                      type: "'function'",
+                      description: '工具调用的类型。',
+                    },
+                    {
+                      name: 'function',
+                      type: 'Function',
+                      description: '要调用的函数。',
+                      properties: [
+                        {
+                          type: 'Function',
+                          parameters: [
+                            {
+                              name: 'name',
+                              type: 'string',
+                              description: '函数的名称。',
+                            },
+                            {
+                              name: 'arguments',
+                              type: 'string',
+                              description: '函数的参数。',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'ToolMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'tool'",
+              description: '工具消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string',
+              description: '消息的内容。',
+            },
+            {
+              name: 'toolCallId',
+              type: 'string',
+              description: '工具调用的 id。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'functions',
+      type: 'ToolSet',
+      isOptional: true,
+      description:
+        '模型可访问并可调用的工具。',
+      properties: [
+        {
+          type: 'Tool',
+          parameters: [
+            {
+              name: 'description',
+              isOptional: true,
+              type: 'string',
+              description:
+                '关于工具用途的信息，包括模型可以如何以及在何时使用它的细节。',
+            },
+            {
+              name: 'parameters',
+              type: 'zod schema',
+              description:
+                '描述工具参数的类型化 schema，也可用于校验与错误处理。',
+            },
+            {
+              name: 'render',
+              isOptional: true,
+              type: 'async (parameters) => any',
+              description:
+                '一个异步函数，会以工具调用的参数被调用并产生一个结果。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'tools',
+      type: 'ToolSet',
+      isOptional: true,
+      description:
+        '模型可访问并可调用的工具。',
+      properties: [
+        {
+          type: 'Tool',
+          parameters: [
+            {
+              name: 'description',
+              isOptional: true,
+              type: 'string',
+              description:
+                '关于工具用途的信息，包括模型可以如何以及在何时使用它的细节。',
+            },
+            {
+              name: 'parameters',
+              type: 'zod schema',
+              description:
+                '描述工具参数的类型化 schema，也可用于校验与错误处理。',
+            },
+            {
+              name: 'render',
+              isOptional: true,
+              type: 'async (parameters) => any',
+              description:
+                '一个异步函数，会以工具调用的参数被调用并产生一个结果。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'text',
+      isOptional: true,
+      type: '(Text) => ReactNode',
+      description: '用于处理模型生成 token 的回调。',
+      properties: [
+        {
+          type: 'Text',
+          parameters: [
+            {
+              name: 'content',
+              type: 'string',
+              description: '补全的完整内容。',
+            },
+            { name: 'delta', type: 'string', description: '增量内容。' },
+            { name: 'done', type: 'boolean', description: '是否已完成？' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'temperature',
+      isOptional: true,
+      type: 'number',
+      description: '模型使用的 temperature 值。',
+    },
+  ]}
+/>
+
+### 返回值
+
+它可以返回任何有效的 ReactNode。

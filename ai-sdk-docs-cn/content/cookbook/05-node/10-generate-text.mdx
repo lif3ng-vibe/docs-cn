@@ -1,0 +1,22 @@
+---
+title: Generate Text
+description: 了解如何使用 AI SDK 和 Node 生成文本
+tags: ['node']
+---
+
+# Generate Text
+
+LLM 最基本的用例是基于提示词（prompt）生成文本。
+例如，你可能想要生成对一个问题的回答，或者总结一段文本。
+`generateText` 函数可用于基于输入提示词生成文本。
+
+```ts file='index.ts'
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: 'openai/gpt-6-astra',
+  prompt: 'Why is the sky blue?',
+});
+
+console.log(result);
+```

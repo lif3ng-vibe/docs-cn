@@ -1,0 +1,183 @@
+---
+title: MCP Apps
+description: "@ai-sdk/mcp 中 MCP Apps 辅助功能的 API 参考。"
+---
+
+# MCP Apps
+
+`@ai-sdk/mcp` 中的 MCP Apps 辅助功能可以帮助 MCP 宿主（host）声明 UI 支持、将模型可见与应用可见的工具分开，并读取用于渲染的 `ui://` HTML 资源。
+
+## 导入
+
+<Snippet
+  text={`import {
+  MCP_APP_MIME_TYPE,
+  mcpAppClientCapabilities,
+  readMCPAppResource,
+  splitMCPAppTools,
+} from "@ai-sdk/mcp"`}
+  prompt={false}
+/>
+
+## `MCP_APP_MIME_TYPE`
+
+应作为 MCP Apps 渲染的 HTML 资源所使用的 MIME 类型。
+
+```ts
+const MCP_APP_MIME_TYPE = 'text/html;profile=mcp-app';
+```
+
+## `mcpAppClientCapabilities`
+
+当你的宿主支持 MCP Apps 时，传给 [`createMCPClient`](/docs/reference/ai-sdk-core/create-mcp-client) 的客户端能力。
+
+```ts
+import { createMCPClient, mcpAppClientCapabilities } from '@ai-sdk/mcp';
+
+const client = await createMCPClient({
+  transport: {
+    type: 'http',
+    url: 'https://example.com/mcp',
+  },
+  capabilities: mcpAppClientCapabilities,
+});
+```
+
+所声明的能力为：
+
+```json
+{
+  "extensions": {
+    "io.modelcontextprotocol/ui": {
+      "mimeTypes": ["text/html;profile=mcp-app"]
+    }
+  }
+}
+```
+
+## `splitMCPAppTools()`
+
+将 MCP 工具定义拆分为模型可见工具与应用可见工具。
+
+没有 MCP Apps 可见性元数据的工具保持模型可见。`_meta.ui.visibility` 包含 `"app"` 的工具会在 `appVisible` 中返回。
+
+```ts
+const definitions = await client.listTools();
+const { modelVisible, appVisible } = splitMCPAppTools(definitions);
+
+const tools = client.toolsFromDefinitions(modelVisible);
+```
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'definitions',
+      type: 'ListToolsResult',
+      description: '`client.listTools()` 返回的工具定义。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'modelVisible',
+      type: 'ListToolsResult',
+      description:
+        '可以暴露给语言模型的工具定义。',
+    },
+    {
+      name: 'appVisible',
+      type: 'ListToolsResult',
+      description:
+        '可以由 MCP App 通过宿主桥接（bridge）调用的工具定义。',
+    },
+  ]}
+/>
+
+## `readMCPAppResource()`
+
+从 MCP 服务器读取 `ui://` 资源，并将其规范化为 HTML 及渲染元数据。
+
+```ts
+const resource = await readMCPAppResource({
+  client,
+  uri: 'ui://example/dashboard',
+});
+```
+
+该辅助函数会校验 URI 是否以 `ui://` 开头，要求使用 `text/html;profile=mcp-app` MIME 类型，并支持以文本或 base64 blob 数据形式返回的资源内容。
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'client',
+      type: "Pick<MCPClient, 'readResource'>",
+      description: '用于读取资源的 MCP 客户端。',
+    },
+    {
+      name: 'uri',
+      type: 'string',
+      description: '要读取的 `ui://` 资源 URI。',
+    },
+    {
+      name: 'options',
+      type: 'RequestOptions',
+      isOptional: true,
+      description:
+        '可选的请求选项，例如中止信号或超时。',
+    },
+  ]}
+/>
+
+### 返回值
+
+返回一个 `Promise<MCPAppResource>`。
+
+<PropertiesTable
+  content={[
+    {
+      name: 'uri',
+      type: 'string',
+      description: '`ui://` 资源 URI。',
+    },
+    {
+      name: 'mimeType',
+      type: "'text/html;profile=mcp-app'",
+      description: 'MCP Apps 的 HTML MIME 类型。',
+    },
+    {
+      name: 'html',
+      type: 'string',
+      description: '要在沙箱化 iframe 中渲染的应用 HTML。',
+    },
+    {
+      name: 'meta',
+      type: 'MCPAppResourceMeta',
+      isOptional: true,
+      description:
+        '来自资源 `_meta.ui` 的渲染元数据，例如 CSP、权限和 `prefersBorder`。',
+    },
+  ]}
+/>
+
+## 另请参阅
+
+<ExampleLinks
+  examples={[
+    {
+      title: 'MCP Apps 指南',
+      link: '/docs/ai-sdk-core/mcp-apps',
+    },
+    {
+      title: 'createMCPClient',
+      link: '/docs/reference/ai-sdk-core/create-mcp-client',
+    },
+  ]}
+/>

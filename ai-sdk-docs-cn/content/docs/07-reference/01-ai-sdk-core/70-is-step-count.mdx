@@ -1,0 +1,84 @@
+---
+title: isStepCount
+description: isStepCount 的 API 参考。
+---
+
+# `isStepCount()`
+
+创建一个停止条件，当已完成的步骤数等于指定数量时停止。
+
+此函数与 `generateText` 和 `streamText` 中的 `stopWhen` 配合使用，用于根据已执行的步骤数控制工具调用循环何时停止。
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  // Stop after 5 steps
+  stopWhen: isStepCount(5),
+});
+```
+
+## 导入
+
+<Snippet text={`import { isStepCount } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'stepCount',
+      type: 'number',
+      description:
+        '应触发停止条件的已完成步骤数。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个 `StopCondition` 函数，当已完成步骤数等于指定数量时返回 `true`。该函数可与 `generateText` 和 `streamText` 中的 `stopWhen` 参数配合使用。
+
+## 示例
+
+### 基本用法
+
+在 3 个步骤后停止：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: yourTools,
+  stopWhen: isStepCount(3),
+});
+```
+
+### 与其他条件组合
+
+你可以在数组中组合多个停止条件：
+
+```ts
+import { generateText, isStepCount, hasToolCall } from 'ai';
+
+const result = await generateText({
+  model: yourModel,
+  tools: yourTools,
+  // Stop after 10 steps OR when finalAnswer tool is called
+  stopWhen: [isStepCount(10), hasToolCall('finalAnswer')],
+});
+```
+
+## 另请参阅
+
+- [`hasToolCall()`](/docs/reference/ai-sdk-core/has-tool-call)
+- [`generateText()`](/docs/reference/ai-sdk-core/generate-text)
+- [`streamText()`](/docs/reference/ai-sdk-core/stream-text)

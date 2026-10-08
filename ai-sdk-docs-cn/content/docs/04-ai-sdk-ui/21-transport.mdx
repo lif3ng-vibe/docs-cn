@@ -1,0 +1,213 @@
+---
+title: Transport
+description: 了解如何在 useChat 中使用自定义 transport。
+---
+
+# Transport
+
+`useChat` 的 transport 系统提供了对消息如何发送到 API 端点、响应如何处理的细粒度控制。这对于 WebSocket 等替代通信协议、自定义身份验证模式或专门的后端集成特别有用。
+
+## 默认 Transport
+
+默认情况下，`useChat` 使用 HTTP POST 请求将消息发送到 `/api/chat`：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+
+// Uses default HTTP transport
+const { messages, sendMessage } = useChat();
+```
+
+这等价于：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+  }),
+});
+```
+
+## 自定义 Transport 配置
+
+使用自定义选项配置默认 transport：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/custom-chat',
+    headers: {
+      Authorization: 'Bearer your-token',
+      'X-API-Version': '2024-01',
+    },
+    credentials: 'include',
+  }),
+});
+```
+
+### 动态配置
+
+你也可以提供返回配置值的函数。这对于需要刷新的身份验证 token，或依赖于运行时条件的配置非常有用：
+
+```tsx
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    headers: () => ({
+      Authorization: `Bearer ${getAuthToken()}`,
+      'X-User-ID': getCurrentUserId(),
+    }),
+    body: () => ({
+      sessionId: getCurrentSessionId(),
+      preferences: getUserPreferences(),
+    }),
+    credentials: () => 'include',
+  }),
+});
+```
+
+### 请求转换
+
+在发送到你的 API 之前转换请求：
+
+```tsx
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
+      return {
+        headers: {
+          'X-Session-ID': id,
+        },
+        body: {
+          messages: messages.slice(-10), // Only send last 10 messages
+          trigger,
+          messageId,
+        },
+      };
+    },
+  }),
+});
+```
+
+## 直接智能体 Transport
+
+当你想绕过 HTTP 直接与[智能体（agent）](/docs/reference/ai-sdk-core/agent)通信时，可以使用 `DirectChatTransport`。该 transport 会在进程内直接调用智能体的 `stream()` 方法。
+
+这适用于：
+
+- **服务器端渲染**：在服务器上运行智能体而无需 API 端点
+- **测试**：在没有网络请求的情况下测试聊天功能
+- **单进程应用**：客户端与智能体一起运行的桌面或 CLI 应用
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  instructions: 'You are a helpful assistant.',
+  tools: {
+    weather: weatherTool,
+  },
+});
+
+const { messages, sendMessage } = useChat({
+  transport: new DirectChatTransport({ agent }),
+});
+```
+
+### 工作原理
+
+与发送 HTTP 请求的 `DefaultChatTransport` 不同：
+
+1. `DirectChatTransport` 会校验传入的 UI 消息
+2. 使用 `convertToModelMessages` 把它们转换为模型消息
+3. 直接调用智能体的 `stream()` 方法
+4. 通过 `toUIMessageStream()` 把结果作为 UI 消息流返回
+
+### 配置选项
+
+你可以传入额外的选项来自定义流输出：
+
+```tsx
+const transport = new DirectChatTransport({
+  agent,
+  // Pass options to the agent
+  options: { customOption: 'value' },
+  // Configure what's sent to the client
+  sendReasoning: true,
+  sendSources: true,
+});
+```
+
+<Note>
+  `DirectChatTransport` 不支持流重连，因为不存在持久的服务器端流。
+  `reconnectToStream()` 方法始终返回 `null`。
+</Note>
+
+完整的 API 细节请参阅 [DirectChatTransport 参考](/docs/reference/ai-sdk-ui/direct-chat-transport)。
+
+## Workflow Transport
+
+对于基于 [Workflow SDK](/docs/agents/workflow-agent) 构建的聊天应用，来自 `@ai-sdk/workflow` 的 `WorkflowChatTransport` 提供自动的流重连。它处理工作流函数在流中途超时的常见场景——transport 会检测到缺失的 `finish` 事件并重新连接，从中断处继续。
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { WorkflowChatTransport } from '@ai-sdk/workflow/client';
+import { useMemo } from 'react';
+
+export default function Chat() {
+  const transport = useMemo(
+    () =>
+      new WorkflowChatTransport({
+        api: '/api/chat',
+        maxConsecutiveErrors: 5,
+        onChatEnd: ({ chatId, chunkIndex }) => {
+          console.log(`Chat complete: ${chunkIndex} chunks`);
+        },
+      }),
+    [],
+  );
+
+  const { messages, sendMessage } = useChat({ transport });
+
+  // ... render chat UI
+}
+```
+
+主要特性：
+
+- **自动重连**：检测被中断的流（没有 `finish` 事件），并通过 GET 请求 `{api}/{runId}/stream` 重新连接
+- **页面刷新恢复**：`initialStartIndex` 控制初始重连从哪里开始
+- **可配置的重试**：`maxConsecutiveErrors` 控制可容忍的连续重连失败次数
+- **生命周期回调**：`onChatSendMessage` 与 `onChatEnd` 用于跟踪聊天状态
+
+当持久化的服务器流已经存储 `UIMessageChunk` 对象时，负的 `initialStartIndex` 值可以只获取尾部。对于原始的 `WorkflowAgent`
+流，请使用非负游标，并遵循 WorkflowAgent 指南中的服务器端转换。
+
+完整的 API 参考请参阅 [`WorkflowChatTransport`](/docs/reference/ai-sdk-workflow/workflow-chat-transport)。服务器端端点的搭建请参阅 [WorkflowAgent 指南](/docs/agents/workflow-agent#使用-workflowchattransport-实现可恢复的流式)。
+
+## 构建自定义 Transport
+
+要了解如何构建你自己的 transport，请参阅默认实现的源代码：
+
+- **[DefaultChatTransport](https://github.com/vercel/ai/blob/main/packages/ai/src/ui/default-chat-transport.ts)**——完整的默认 HTTP transport 实现
+- **[HttpChatTransport](https://github.com/vercel/ai/blob/main/packages/ai/src/ui/http-chat-transport.ts)**——带有请求处理的基础 HTTP transport
+- **[ChatTransport 接口](https://github.com/vercel/ai/blob/main/packages/ai/src/ui/chat-transport.ts)**——你需要实现的 transport 接口
+
+这些实现清楚地展示了如何：
+
+- 处理 `sendMessages` 方法
+- 处理 UI 消息流
+- 转换请求与响应
+- 处理错误与连接管理
+
+transport 系统让你完全掌控聊天应用的通信方式，从而能够与任何后端协议或服务集成。

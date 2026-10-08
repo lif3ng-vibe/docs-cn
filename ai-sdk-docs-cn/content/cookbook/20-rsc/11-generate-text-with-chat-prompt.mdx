@@ -1,0 +1,113 @@
+---
+title: 使用聊天提示词生成文本
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）基于聊天提示词生成文本。
+tags: ['rsc', 'chat']
+---
+
+# Generate Text with Chat Prompt
+
+在前面的示例中，我们使用单条消息提示词、系统提示词，或两者的组合来生成文本和对象。不过，有时你可能希望基于一系列消息来生成文本。
+
+聊天补全（chat completion）允许你基于一系列消息生成文本。这一系列消息可以是任意数量的系统之间的任意交互序列，但最常见、最易于理解的用例，是表示用户与模型之间对话的一系列消息。
+
+<Browser>
+  <ChatGeneration
+    history={[
+      { role: 'User', content: '最近怎么样？' },
+      { role: 'Assistant', content: '一切都好，有什么可以帮你？' },
+    ]}
+    inputMessage={{ role: 'User', content: '天空为什么是蓝色的？' }}
+    outputMessage={{
+      role: 'Assistant',
+      content: '天空是蓝色的，这是因为瑞利散射。',
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来创建一个用户与模型之间的简单对话，并放置一个调用 `continueConversation` 的按钮。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { Message, continueConversation } from './actions';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [conversation, setConversation] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>('');
+
+  return (
+    <div>
+      <div>
+        {conversation.map((message, index) => (
+          <div key={index}>
+            {message.role}: {message.content}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button
+          onClick={async () => {
+            const { messages } = await continueConversation([
+              ...conversation,
+              { role: 'user', content: input },
+            ]);
+
+            setConversation(messages);
+          }}
+        >
+          Send Message
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+接下来，我们实现 `continueConversation` 函数，它会把用户的消息插入对话并生成响应。
+
+```typescript filename='app/actions.ts'
+'use server';
+
+import { generateText } from 'ai';
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export async function continueConversation(history: Message[]) {
+  'use server';
+
+  const { text } = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a friendly assistant!',
+    messages: history,
+  });
+
+  return {
+    messages: [
+      ...history,
+      {
+        role: 'assistant' as const,
+        content: text,
+      },
+    ],
+  };
+}
+```

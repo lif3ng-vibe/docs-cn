@@ -1,0 +1,1123 @@
+---
+title: WorkflowAgent
+description: WorkflowAgent 类的 API 参考。
+---
+
+# `WorkflowAgent`
+
+创建一个持久化、可恢复的 AI 智能体（agent），用于工作流内部。`WorkflowAgent` 负责智能体循环、跨工作流步骤边界的工具 schema 序列化，以及内置的工具审批流程。
+
+与 `ai` 包中的 [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent) 不同，`WorkflowAgent` 旨在经受住进程重启、暂停以等待人工审批，并与 Workflow DevKit 的步骤机制集成。
+
+`WorkflowAgent` 支持 `runtimeContext`（共享的智能体状态）和 `toolsContext`（每个工具各自的上下文）。由于这些值可能跨越工作流与步骤边界，请保持它们为可序列化的持久化数据。与 `ToolLoopAgent` 不同，不要在上下文中放置函数、类实例、symbol、数据库客户端或 SDK 客户端；请传递标识符或配置，并在步骤函数内部重建不可序列化的资源。
+
+```ts
+import { WorkflowAgent } from '@ai-sdk/workflow';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const agent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+  instructions: 'You are a helpful assistant.',
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string(),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72,
+      }),
+    }),
+  },
+});
+
+const result = await agent.stream({
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is the weather in NYC?' }],
+    },
+  ],
+});
+
+console.log(result.messages);
+```
+
+要查看 `WorkflowAgent` 的实际效果，请参阅[这些示例](#示例)。
+
+## 导入
+
+<Snippet
+  text={`import { WorkflowAgent } from "@ai-sdk/workflow"`}
+  prompt={false}
+/>
+
+## 构造函数
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'id',
+      type: 'string',
+      isOptional: true,
+      description: '智能体的 id。',
+    },
+    {
+      name: 'model',
+      type: 'LanguageModel',
+      isRequired: true,
+      description:
+        "要使用的语言模型。可以是与 Vercel AI Gateway 兼容的字符串（例如 'anthropic/claude-sonnet-5.5'），也可以是提供商实例（例如 `openai('gpt-6-astra')`）。",
+    },
+    {
+      name: 'instructions',
+      type: 'Instructions',
+      isOptional: true,
+      description:
+        '智能体的指令，用作系统提示词（prompt）。使用 SystemModelMessage 形式时支持提供商特定的选项（例如缓存）。',
+    },
+    {
+      name: 'tools',
+      type: 'Record<string, Tool>',
+      isOptional: true,
+      description:
+        '智能体可以调用的一组工具。键为工具名称。工具会在跨工作流步骤边界时被序列化为 JSON Schema，并在运行时通过 Ajv 校验。',
+    },
+    {
+      name: 'toolChoice',
+      type: 'ToolChoice',
+      isOptional: true,
+      description:
+        "工具调用选择策略。可选值：'auto' | 'none' | 'required' | { type: 'tool', toolName: string }。默认值：'auto'。",
+    },
+    {
+      name: 'stopWhen',
+      type: 'StopCondition | StopCondition[]',
+      isOptional: true,
+      description:
+        '智能体循环的默认停止条件。省略时，generate 默认最多 20 个步骤，而 stream 没有最大步数限制。使用 `isStepCount()` 来限定执行。每次调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'activeTools',
+      type: 'ActiveTools<TTools>',
+      isOptional: true,
+      description:
+        '默认的活跃工具集合。在不改变工具调用与结果类型的前提下，限制模型可以调用哪些工具。每次流式调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'output',
+      type: 'OutputSpecification',
+      isOptional: true,
+      description:
+        '默认的结构化输出规范。每次流式调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'repairToolCall',
+      type: 'ToolCallRepairFunction',
+      isOptional: true,
+      description:
+        "用于修复解析失败的工具调用的默认函数。在工作流中使用时，请为该函数标记 'use step'。每次流式调用的值会覆盖此默认值。",
+    },
+    {
+      name: 'experimental_download',
+      type: 'DownloadFunction',
+      isOptional: true,
+      description:
+        '用于 URL 的默认自定义下载函数。每次流式调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'experimental_sandbox',
+      type: 'Experimental_SandboxSession',
+      isOptional: true,
+      description:
+        '默认的沙箱会话，会以 `experimental_sandbox` 的形式传递给工具描述与工具执行，并暴露给 `prepareStep`。每次流式调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'experimental_toolApprovalSecret',
+      type: 'WorkflowToolApprovalSecret',
+      isOptional: true,
+      description:
+        '对环境变量的工作流安全引用，该环境变量包含用于对工具审批请求进行 HMAC 签名、并在工具执行前校验已审批消息历史的密钥。只有环境变量的名称会跨越工作流边界；密钥本身在签名与校验步骤内部读取。每次流式调用的值会覆盖此默认值。',
+    },
+    {
+      name: 'prepareStep',
+      type: 'PrepareStepCallback',
+      isOptional: true,
+      description:
+        '在智能体循环的每个步骤之前调用的回调。可用它修改设置、管理上下文、动态注入消息，或为当前步骤覆盖 `experimental_sandbox`。会接收步骤编号、先前的步骤、消息、上下文和沙箱。',
+    },
+    {
+      name: 'prepareCall',
+      type: 'PrepareCallCallback',
+      isOptional: true,
+      description:
+        '在智能体循环开始前调用一次的回调。可用它根据运行时上下文转换模型、指令、工具配置或其他设置。不能覆盖 `tools`（为类型安全在构造时绑定）。',
+    },
+    {
+      name: 'runtimeContext',
+      type: 'Context',
+      isOptional: true,
+      description:
+        '每次流式调用共享的默认运行时上下文。会流经 `prepareStep`、生命周期回调与步骤结果。每次流式调用的值会覆盖此默认值。在工作流中使用时必须是可序列化的。',
+    },
+    {
+      name: 'toolsContext',
+      type: 'InferToolSetContext<TTools>',
+      isOptional: true,
+      description:
+        '每次流式调用的默认逐工具上下文映射。每个工具只会以 `context` 的形式收到它自己的已校验条目。每次流式调用的值会覆盖此默认值。在工作流中使用时必须是可序列化的。',
+    },
+    {
+      name: 'telemetry',
+      type: 'TelemetryOptions',
+      isOptional: true,
+      description:
+        '遥测（telemetry）配置，包括启用/禁用遥测、设置函数 ID、记录输入/输出等选项。',
+    },
+    {
+      name: 'onStart',
+      type: 'WorkflowAgentOnStartCallback',
+      isOptional: true,
+      description:
+        '在智能体开始流式传输时、任何 LLM 调用之前调用的回调。接收模型、消息、运行时上下文与工具上下文。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。当构造函数中同时提供两者时，优先于 `experimental_onStart`。',
+      properties: [
+        {
+          type: 'GenerateTextStartEvent',
+          parameters: [
+            {
+              name: 'model',
+              type: 'LanguageModel',
+              description: '用于本次生成的模型。',
+            },
+            {
+              name: 'messages',
+              type: 'Array<ModelMessage>',
+              description: '发送给模型的消息。',
+            },
+            {
+              name: 'runtimeContext',
+              type: 'Context',
+              description: '智能体循环共享的运行时上下文。',
+            },
+            {
+              name: 'toolsContext',
+              type: 'InferToolSetContext<Tools>',
+              description: '智能体循环的逐工具上下文映射。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'experimental_onStart',
+      type: 'WorkflowAgentOnStartCallback',
+      isOptional: true,
+      description:
+        '`onStart` 的已弃用别名。仅在构造函数中未提供 `onStart` 时使用。',
+    },
+    {
+      name: 'onStepStart',
+      type: 'WorkflowAgentOnStepStartCallback',
+      isOptional: true,
+      description:
+        '在每个步骤（LLM 调用）开始前调用的回调。接收步骤编号、模型、消息、先前的步骤、运行时上下文与工具上下文。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。当构造函数中同时提供两者时，优先于 `experimental_onStepStart`。',
+      properties: [
+        {
+          type: 'GenerateTextStepStartEvent',
+          parameters: [
+            {
+              name: 'model',
+              type: 'LanguageModel',
+              description: '该步骤使用的模型。',
+            },
+            {
+              name: 'messages',
+              type: 'Array<ModelMessage>',
+              description:
+                '该步骤将发送给模型的消息。',
+            },
+            {
+              name: 'steps',
+              type: 'ReadonlyArray<StepResult>',
+              description: '之前所有已完成步骤的结果。',
+            },
+            {
+              name: 'runtimeContext',
+              type: 'Context',
+              description: '该步骤共享的运行时上下文。',
+            },
+            {
+              name: 'toolsContext',
+              type: 'InferToolSetContext<Tools>',
+              description: '该步骤的逐工具上下文映射。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'experimental_onStepStart',
+      type: 'WorkflowAgentOnStepStartCallback',
+      isOptional: true,
+      description:
+        '`onStepStart` 的已弃用别名。仅在构造函数中未提供 `onStepStart` 时使用。',
+    },
+    {
+      name: 'onToolExecutionStart',
+      type: 'WorkflowAgentOnToolExecutionStartCallback',
+      isOptional: true,
+      description:
+        '在工具的 execute 函数运行前一刻调用的回调。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。实验性（可能在小版本中变更）。',
+      properties: [
+        {
+          type: 'WorkflowAgentToolExecutionStartEvent',
+          parameters: [
+            {
+              name: 'toolCall',
+              type: '{ type: "tool-call"; toolCallId: string; toolName: string; input: unknown }',
+              description:
+                '正在执行的工具调用。对于具体的工具集合，工具名称与输入是相互关联的。',
+            },
+            {
+              name: 'stepNumber',
+              type: 'number',
+              description: '当前步骤编号，从零开始。',
+            },
+            {
+              name: 'messages',
+              type: 'Array<ModelMessage>',
+              description:
+                '为发起包含该工具调用的响应而发送给语言模型的消息。',
+            },
+            {
+              name: 'toolContext',
+              type: 'InferToolContext<TOOLS[NAME]> | undefined',
+              description:
+                '该工具调用的已校验上下文。对于具体的工具集合，每个事件联合成员都会将其与对应的工具名称配对。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onToolExecutionEnd',
+      type: 'WorkflowAgentOnToolExecutionEndCallback',
+      isOptional: true,
+      description:
+        '在工具的 execute 函数完成或出错后立即调用的回调。检查 `success` 以确定 `output` 与 `error` 哪个可用。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。实验性（可能在小版本中变更）。',
+      properties: [
+        {
+          type: 'WorkflowAgentToolExecutionEndEvent',
+          parameters: [
+            {
+              name: 'toolCall',
+              type: '{ type: "tool-call"; toolCallId: string; toolName: string; input: unknown }',
+              description:
+                '已执行的工具调用。对于具体的工具集合，工具名称与输入是相互关联的。',
+            },
+            {
+              name: 'stepNumber',
+              type: 'number',
+              description: '当前步骤编号，从零开始。',
+            },
+            {
+              name: 'durationMs',
+              type: 'number',
+              description:
+                '工具执行耗时（毫秒）。Workflow 智能体使用 `durationMs`；AI SDK Core 生成回调使用 `toolExecutionMs`。',
+            },
+            {
+              name: 'messages',
+              type: 'Array<ModelMessage>',
+              description:
+                '为发起包含该工具调用的响应而发送给语言模型的消息。',
+            },
+            {
+              name: 'toolContext',
+              type: 'InferToolContext<TOOLS[NAME]> | undefined',
+              description:
+                '该工具调用的已校验上下文。对于具体的工具集合，每个事件联合成员都会将其与对应的工具名称配对。',
+            },
+            {
+              name: 'success',
+              type: 'boolean',
+              description:
+                '工具执行是否成功。用于区分 output 与 error 两种事件变体。',
+            },
+            {
+              name: 'output',
+              type: 'InferToolOutput<TOOLS[NAME]>',
+              isOptional: true,
+              description:
+                '工具输出。当 `success` 为 `true` 时可用，并与所配置的工具相关联。',
+            },
+            {
+              name: 'error',
+              type: 'unknown',
+              isOptional: true,
+              description:
+                '工具执行的错误。当 `success` 为 `false` 时可用。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onStepEnd',
+      type: 'WorkflowAgentOnStepEndCallback',
+      isOptional: true,
+      description:
+        '在每个智能体步骤完成后调用的回调。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'onStepFinish',
+      type: 'WorkflowAgentOnStepFinishCallback',
+      isOptional: true,
+      description:
+        '已弃用。请改用 `onStepEnd`。此别名仅在未提供 `onStepEnd` 时作为回退使用。',
+    },
+    {
+      name: 'onEnd',
+      type: 'WorkflowAgentOnEndCallback',
+      isOptional: true,
+      description:
+        '在所有智能体步骤完成、响应结束时调用的回调。接收步骤、消息、文本、完成原因、总用量与上下文。如果 `stream()` 中也指定了，则两个回调都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'maxOutputTokens',
+      type: 'number',
+      isOptional: true,
+      description: '允许模型生成的最大 token 数。',
+    },
+    {
+      name: 'temperature',
+      type: 'number',
+      isOptional: true,
+      description: '采样温度，控制随机性。',
+    },
+    {
+      name: 'topP',
+      type: 'number',
+      isOptional: true,
+      description: 'Top-p（核采样）参数。',
+    },
+    {
+      name: 'topK',
+      type: 'number',
+      isOptional: true,
+      description: 'Top-k 采样参数。',
+    },
+    {
+      name: 'presencePenalty',
+      type: 'number',
+      isOptional: true,
+      description: '存在惩罚（presence penalty）参数。',
+    },
+    {
+      name: 'frequencyPenalty',
+      type: 'number',
+      isOptional: true,
+      description: '频率惩罚（frequency penalty）参数。',
+    },
+    {
+      name: 'stopSequences',
+      type: 'string[]',
+      isOptional: true,
+      description: '用于停止模型输出的自定义 token 序列。',
+    },
+    {
+      name: 'seed',
+      type: 'number',
+      isOptional: true,
+      description: '用于确定性生成的种子（如果受支持）。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '对可重试的模型调用失败进行重试的次数。设为 0 可禁用重试。会遵循 Retry-After 响应头，且持久化工作流步骤的重试不会叠加。默认值：2。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string | undefined>',
+      isOptional: true,
+      description:
+        '随请求一起发送的额外 HTTP 请求头。仅适用于基于 HTTP 的提供商。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '额外的提供商特定配置。',
+    },
+  ]}
+/>
+
+## 属性
+
+<PropertiesTable
+  content={[
+    {
+      name: 'id',
+      type: 'string | undefined',
+      description:
+        '智能体的 id。用于遥测标识。只读。',
+    },
+    {
+      name: 'tools',
+      type: 'Record<string, Tool>',
+      description: '为此智能体配置的工具集合。只读。',
+    },
+  ]}
+/>
+
+## 方法
+
+### `generate()`
+
+使用模型的非流式 `doGenerate()` 方法运行持久化的智能体循环。模型调用与工具执行使用与 `stream()` 相同的编排方式。
+
+```ts
+const result = await agent.generate({ prompt: 'Summarize the findings.' });
+console.log(result.text);
+console.log(result.usage);
+```
+
+接受 `WorkflowAgentGenerateOptions`，与 `stream()` 共享提示词/消息、指令、生成设置、工具与运行时上下文、准备、停止、输出以及生命周期选项。它不接受 `writable`、`includeRawChunks`、`experimental_transform`、`sendFinish` 或 `preventClose`。在没有配置停止条件的情况下，生成最多 20 个步骤后停止。`stream()` 保留其现有的无上限默认值。
+
+`include` 选项接受 `requestBody`、`responseBody` 和 `requestMessages` 布尔值，默认均为 `false`。仅当需要额外的请求/响应数据时才启用它们。当模型提供时，响应 ID、时间戳、模型 ID、请求头与提供商元数据都会保留。
+
+#### 返回值
+
+返回 `Promise<WorkflowAgentGenerateResult>`，具有核心 [`GenerateTextResult`](/docs/reference/ai-sdk-core/generate-text#返回值) 的语义：
+
+- `text`、`finishReason`、`rawFinishReason` 与 `finalStep` 描述最后一个步骤。
+- `content`、`files`、`sources`、`warnings`、工具调用与工具结果覆盖所有步骤。
+- `usage` 与 `totalUsage` 汇总所有步骤，同时保留 token 明细与未知计数。
+- `responseMessages` 包含生成的消息，即使 `prepareStep` 替换了输入历史。
+- `output` 默认为文本，或遵循构造函数/每次调用指定的输出规范。当输出不可用时（例如最终响应为 `tool-calls`），读取它会抛出 `NoOutputGeneratedError`。
+
+在工作流内部，`timeout` 限定模型调用，包括重试与暂停后的派发。它不会取消工具正在等待的 Hook。请使用 Workflow 运行时的 `run.cancel()` 来停止已暂停的运行。参见[截止时间、取消与重放](/docs/agents/workflow-agent#deadlines-cancellation-and-replay)。
+
+生成失败会导致 Promise 被 reject。结束回调在完整输出解析之前运行；因此解析失败可能在 `onEnd` 已经运行后才导致 reject。现有的 Workflow 回调形态与准备优先级仍然适用；它们并非都与核心的回调 API 完全相同。
+
+<Note>
+  请在工作流代码内部使用结果 API，并通过 `run.returnValue` 返回选定的可序列化
+  字段（例如 `text` 和 `usage`）。不支持返回整个结果类。性能数据目前测量的是
+  模型响应；完整的工具/步骤耗时尚未上报。
+</Note>
+
+审批请求会出现在 `content` 与 `responseMessages` 中，无需 writable。要继续执行，请将 `responseMessages` 追加到原始历史中，并添加一条包含用户 `tool-approval-response` 的工具消息。请保留请求签名与工具调用输入；在续跑时使用相同的 `experimental_toolApprovalSecret` 环境变量引用。本地审批会在执行前校验，而由提供商执行的审批响应会被转发给提供商。参见[无需流式传输的审批往返](/docs/agents/workflow-agent#approval-round-trips-without-streaming)。
+
+### `stream()`
+
+运行智能体循环，流式传输响应并按需执行工具调用。返回一个 resolve 为 `WorkflowAgentStreamResult` 的 Promise。
+
+```ts
+const result = await agent.stream({
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+});
+```
+
+<PropertiesTable
+  content={[
+    {
+      name: 'prompt',
+      type: 'string | Array<ModelMessage>',
+      description: '提示词（prompt）字符串或消息列表。`prompt` 与 `messages` 只能二选一。',
+    },
+    {
+      name: 'messages',
+      type: 'Array<ModelMessage>',
+      description: '要处理的对话消息。`prompt` 与 `messages` 只能二选一。',
+    },
+    {
+      name: 'writable',
+      type: 'WritableStream<ModelCallStreamPart>',
+      isOptional: true,
+      description:
+        '一个实时接收原始模型流部分（stream part）的可写流。可在响应边界使用 `createModelCallToUIChunkTransform()` 将其转换为 UI 消息块。',
+    },
+    {
+      name: 'instructions',
+      type: 'Instructions',
+      isOptional: true,
+      description: '为此次调用覆盖智能体指令。',
+    },
+    {
+      name: 'system',
+      type: 'string',
+      isOptional: true,
+      description: '已弃用。请改用 `instructions`。',
+    },
+    {
+      name: 'stopWhen',
+      type: 'StopCondition | StopCondition[]',
+      isOptional: true,
+      description: '结束智能体循环的条件。当省略且未配置构造函数级条件时，WorkflowAgent 没有最大步数限制，会一直运行到自然结束。使用 `isStepCount()` 来限定执行。',
+    },
+
+    {
+      name: 'toolChoice',
+      type: 'ToolChoice',
+      isOptional: true,
+      description: "为此次调用覆盖工具选择策略。默认值：'auto'。",
+    },
+    {
+      name: 'activeTools',
+      type: 'ActiveTools<TTools>',
+      isOptional: true,
+      description: '在不改变工具调用与结果类型的前提下，限制此次调用可用的工具子集。',
+    },
+    {
+      name: 'output',
+      type: 'OutputSpecification',
+      isOptional: true,
+      description:
+        '结构化输出规范。类型化对象使用 `Output.object({ schema })`，文本使用 `Output.text()`。',
+    },
+    {
+      name: 'timeout',
+      type: 'number',
+      isOptional: true,
+      description: '模型调用的截止时间（毫秒）。在工作流内部，该绝对截止时间会在派发与重试时检查，并在暂停期间持续生效。它不会取消正在等待 Workflow Hook 的工具；请使用 run.cancel() 停止已暂停的运行。',
+    },
+    {
+      name: 'sendFinish',
+      type: 'boolean',
+      isOptional: true,
+      description: "流式传输完成时是否向可写流发送一个 'finish' 块。默认值：true。",
+    },
+    {
+      name: 'preventClose',
+      type: 'boolean',
+      isOptional: true,
+      description: '是否阻止可写流在流式传输完成后被关闭。默认值：false。',
+    },
+    {
+      name: 'includeRawChunks',
+      type: 'boolean',
+      isOptional: true,
+      description: '在流中包含来自提供商的原始、未处理的数据块。默认值：false。',
+    },
+    {
+      name: 'repairToolCall',
+      type: 'ToolCallRepairFunction',
+      isOptional: true,
+      description: "当工具调用无法解析时尝试自动恢复的回调。在工作流中使用时，请为该函数标记 'use step'。",
+    },
+    {
+      name: 'experimental_transform',
+      type: 'StreamTextTransform | Array<StreamTextTransform>',
+      isOptional: true,
+      description: "流转换工厂，会在模型处理与可写输出之前按顺序应用于原始提供商事件。每个工厂必须同步返回一个 TransformStream 并保持流结构。在工作流中使用时，请为每个工厂标记 'use step'。",
+    },
+    {
+      name: 'experimental_download',
+      type: 'DownloadFunction',
+      isOptional: true,
+      description: '用于获取文件/URL 的自定义下载函数。',
+    },
+    {
+      name: 'experimental_sandbox',
+      type: 'Experimental_SandboxSession',
+      isOptional: true,
+      description:
+        '沙箱会话，会以 `experimental_sandbox` 的形式传递给工具描述与工具执行，并暴露给 `prepareStep`。覆盖构造函数默认值。',
+    },
+    {
+      name: 'experimental_toolApprovalSecret',
+      type: 'WorkflowToolApprovalSecret',
+      isOptional: true,
+      description:
+        '对环境变量的工作流安全引用，该环境变量包含用于对工具审批请求进行 HMAC 签名、并在工具执行前校验已审批消息历史的密钥。只有环境变量的名称会跨越工作流边界；密钥本身在签名与校验步骤内部读取。覆盖构造函数默认值。',
+    },
+    {
+      name: 'telemetry',
+      type: 'TelemetryOptions',
+      isOptional: true,
+      description: '每次调用独立的遥测配置。',
+    },
+    {
+      name: 'runtimeContext',
+      type: 'Context',
+      isOptional: true,
+      description:
+        '此次流式调用共享的运行时上下文。覆盖构造函数默认值，并流经 `prepareStep`、生命周期回调与步骤结果。在工作流中使用时必须是可序列化的。',
+    },
+    {
+      name: 'toolsContext',
+      type: 'InferToolSetContext<TTools>',
+      isOptional: true,
+      description:
+        '此次流式调用的逐工具上下文映射。覆盖构造函数默认值。每个工具只会以 `context` 的形式收到它自己的已校验条目。在工作流中使用时必须是可序列化的。',
+    },
+    {
+      name: 'prepareStep',
+      type: 'PrepareStepCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 prepareStep 覆盖。会与当前步骤状态一起接收初始指令和消息。',
+    },
+    {
+      name: 'onStart',
+      type: 'WorkflowAgentOnStartCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onStart 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。当此次调用中同时提供两者时，优先于 `experimental_onStart`。',
+    },
+    {
+      name: 'experimental_onStart',
+      type: 'WorkflowAgentOnStartCallback',
+      isOptional: true,
+      description:
+        '每次调用独立 `onStart` 回调的已弃用别名。仅在此次调用中未提供 `onStart` 时使用。',
+    },
+    {
+      name: 'onStepStart',
+      type: 'WorkflowAgentOnStepStartCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onStepStart 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。当此次调用中同时提供两者时，优先于 `experimental_onStepStart`。',
+    },
+    {
+      name: 'experimental_onStepStart',
+      type: 'WorkflowAgentOnStepStartCallback',
+      isOptional: true,
+      description:
+        '每次调用独立 `onStepStart` 回调的已弃用别名。仅在此次调用中未提供 `onStepStart` 时使用。',
+    },
+    {
+      name: 'onToolExecutionStart',
+      type: 'WorkflowAgentOnToolExecutionStartCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onToolExecutionStart 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'onToolExecutionEnd',
+      type: 'WorkflowAgentOnToolExecutionEndCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onToolExecutionEnd 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'onStepEnd',
+      type: 'WorkflowAgentOnStepEndCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onStepEnd 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'onStepFinish',
+      type: 'WorkflowAgentOnStepFinishCallback',
+      isOptional: true,
+      description:
+        '已弃用。请改用 `onStepEnd`。此别名仅在未提供 `onStepEnd` 时作为回退使用。',
+    },
+    {
+      name: 'onEnd',
+      type: 'WorkflowAgentOnEndCallback',
+      isOptional: true,
+      description:
+        '每次调用独立的 onEnd 回调。如果构造函数中也指定了，则两个都会触发（先构造函数中的）。',
+    },
+    {
+      name: 'onError',
+      type: 'WorkflowAgentOnErrorCallback',
+      isOptional: true,
+      description: '在流式传输过程中发生错误时调用的回调。',
+    },
+    {
+      name: 'onAbort',
+      type: 'WorkflowAgentOnAbortCallback',
+      isOptional: true,
+      description: '在操作被中止时调用的回调。会接收之前所有已完成的步骤。',
+    },
+
+]}
+/>
+
+#### 返回值
+
+返回一个 `Promise<WorkflowAgentStreamResult>`，具有以下属性：
+
+<PropertiesTable
+  content={[
+    {
+      name: 'messages',
+      type: 'Array<ModelMessage>',
+      description: '最终的消息，包括所有工具调用与工具结果。',
+    },
+    {
+      name: 'steps',
+      type: 'Array<StepResult>',
+      description: '智能体所执行的所有步骤的详情。',
+    },
+    {
+      name: 'toolCalls',
+      type: 'Array<ToolCall>',
+      description:
+        '最后一个步骤的工具调用，包括未执行的调用（例如需要审批的工具）。',
+    },
+    {
+      name: 'toolResults',
+      type: 'Array<ToolResult>',
+      description:
+        '最后一个步骤的工具结果。只包括已执行的工具的结果。',
+    },
+    {
+      name: 'error',
+      type: 'unknown | undefined',
+      description:
+        "模型流错误部分（error part）的原始值。只要发出了错误部分，该属性就存在，即使其值为 undefined；使用 `'error' in result` 来区分这种情况。",
+    },
+    {
+      name: 'output',
+      type: 'OUTPUT',
+      description:
+        '如果提供了 `output` 规范，则为结构化输出。',
+    },
+  ]}
+/>
+
+### `repairToolCall` 在工作流中
+
+`repairToolCall` 在模型步骤内部运行。在工作流中使用它时，请将回调定义为一个
+带有 `'use step'` 指令的函数。可以在构造函数上设置它，也可以传递给 `stream()`。
+
+Workflow 会保存对已注册函数的引用，并在模型步骤内部加载其实现。请保持函数
+捕获的任何值都是可序列化的。普通的内联回调在跨越此步骤边界时会引发序列化
+错误。
+
+该回调可以是异步的。返回修复后的工具调用；如果无法完成修复则返回 `null`。
+修复策略请参见[工具调用修复](/docs/ai-sdk-core/tools-and-tool-calling#工具调用修复)。
+
+### `experimental_transform` 在工作流中
+
+将一个转换工厂或工厂数组传递给 `stream()`。
+为每个工厂标记 `'use step'`，以便 Workflow 能在模型步骤内部加载它。工厂必须
+同步返回一个 `TransformStream`。请保持捕获的值是可序列化的。
+
+```ts
+import type { LanguageModelV4StreamPart } from '@ai-sdk/provider';
+import { WorkflowAgent } from '@ai-sdk/workflow';
+import { getWritable } from 'workflow';
+
+function uppercaseText() {
+  'use step';
+
+  return new TransformStream<
+    LanguageModelV4StreamPart,
+    LanguageModelV4StreamPart
+  >({
+    transform(part, controller) {
+      controller.enqueue(
+        part.type === 'text-delta'
+          ? { ...part, delta: part.delta.toUpperCase() }
+          : part,
+      );
+    },
+  });
+}
+
+export async function uppercaseWorkflow() {
+  'use workflow';
+
+  const agent = new WorkflowAgent({ model: 'openai/gpt-5' });
+
+  return agent.stream({
+    messages: [{ role: 'user', content: 'Write a short greeting.' }],
+    writable: getWritable(),
+    experimental_transform: uppercaseText,
+  });
+}
+```
+
+## 工具函数
+
+### `createModelCallToUIChunkTransform(options?)`
+
+创建一个 `TransformStream`，将原始的 `ModelCallStreamPart` 块（由智能体写入 `writable` 流）转换为适合客户端消费的 `UIMessageChunk` 对象。
+
+```ts
+import { createModelCallToUIChunkTransform } from '@ai-sdk/workflow';
+
+return createUIMessageStreamResponse({
+  stream: run.readable.pipeThrough(createModelCallToUIChunkTransform()),
+});
+```
+
+使用 `WorkflowChatTransport` 游标恢复时，从索引 `0` 开始重放原始工作流
+流，并将非负的 UI 块索引传递给转换器：
+
+```ts
+const readable = run
+  .getReadable({ startIndex: 0 })
+  .pipeThrough(createModelCallToUIChunkTransform({ uiStartIndex: startIndex }));
+```
+
+`uiStartIndex` 必须是非负的安全整数。原始模型流部分与
+UI 消息块并非一一对应，因此不要将 UI 块索引传递给
+`getReadable`。负数尾部索引要求持久化流已经
+存储了 `UIMessageChunk` 对象。
+
+### `toUIMessageChunk()`
+
+将单个 `ModelCallStreamPart` 转换为 `UIMessageChunk`。对于无法映射为 UI 块的部分返回 `undefined`。
+
+```ts
+import { toUIMessageChunk } from '@ai-sdk/workflow';
+
+const uiChunk = toUIMessageChunk(modelCallPart);
+```
+
+## 类型
+
+### `ActiveTools`
+
+```ts
+type ActiveTools<TTools extends ToolSet> =
+  | ReadonlyArray<keyof TTools & string>
+  | undefined;
+```
+
+将工作流智能体调用限制在列出的工具名称内。`undefined` 表示不应用任何工具限制。
+
+### `InferWorkflowAgentUIMessage`
+
+推断 `WorkflowAgent` 实例的 UI 消息类型。可选地接受第二个类型参数用于自定义消息元数据。
+
+```ts
+import { WorkflowAgent, InferWorkflowAgentUIMessage } from '@ai-sdk/workflow';
+
+const agent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+  tools: { weather: weatherTool },
+});
+
+type MyAgentUIMessage = InferWorkflowAgentUIMessage<typeof agent>;
+```
+
+### `InferWorkflowAgentTools`
+
+推断 `WorkflowAgent` 实例的工具集合类型。
+
+```ts
+import { WorkflowAgent, InferWorkflowAgentTools } from '@ai-sdk/workflow';
+
+type MyTools = InferWorkflowAgentTools<typeof myAgent>;
+```
+
+## 示例
+
+### 带工具的基本智能体
+
+```ts
+import { WorkflowAgent } from '@ai-sdk/workflow';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const agent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+  instructions: 'You are a helpful assistant.',
+  tools: {
+    weather: tool({
+      description: 'Get weather for a location',
+      inputSchema: z.object({
+        location: z.string(),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72,
+        condition: 'sunny',
+      }),
+    }),
+  },
+});
+
+const result = await agent.stream({
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is the weather in NYC?' }],
+    },
+  ],
+});
+
+console.log(result.messages);
+console.log(result.steps);
+```
+
+### 工作流中使用持久化工具的智能体
+
+```ts filename="workflow/agent-chat.ts"
+import { WorkflowAgent, type ModelCallStreamPart } from '@ai-sdk/workflow';
+import { convertToModelMessages, tool, type UIMessage } from 'ai';
+import { getWritable } from 'workflow';
+import { z } from 'zod';
+
+// Tool execute functions marked with 'use step' become durable workflow steps
+// with automatic retries and persistence
+async function searchFlightsStep(input: {
+  origin: string;
+  destination: string;
+}) {
+  'use step';
+  const response = await fetch(`https://api.flights.example/search?...`);
+  return response.json();
+}
+
+export async function chat(messages: UIMessage[]) {
+  'use workflow';
+
+  const modelMessages = await convertToModelMessages(messages);
+
+  const agent = new WorkflowAgent({
+    model: 'anthropic/claude-sonnet-5.5',
+    instructions: 'You are a flight booking assistant.',
+    tools: {
+      searchFlights: tool({
+        description: 'Search for available flights',
+        inputSchema: z.object({
+          origin: z.string(),
+          destination: z.string(),
+        }),
+        execute: searchFlightsStep,
+      }),
+    },
+  });
+
+  const result = await agent.stream({
+    messages: modelMessages,
+    writable: getWritable<ModelCallStreamPart>(),
+  });
+
+  return { messages: result.messages };
+}
+```
+
+```ts filename="app/api/chat/route.ts"
+import { createModelCallToUIChunkTransform } from '@ai-sdk/workflow';
+import { createUIMessageStreamResponse, type UIMessage } from 'ai';
+import { start } from 'workflow/api';
+import { chat } from '@/workflow/agent-chat';
+
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
+
+  const run = await start(chat, [messages]);
+
+  return createUIMessageStreamResponse({
+    stream: run.readable.pipeThrough(createModelCallToUIChunkTransform()),
+  });
+}
+```
+
+### 带结构化输出的智能体
+
+```ts
+import { WorkflowAgent, Output } from '@ai-sdk/workflow';
+import { z } from 'zod';
+
+const analysisAgent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+});
+
+const result = await analysisAgent.stream({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Analyze: "The product exceeded my expectations!"',
+        },
+      ],
+    },
+  ],
+  output: Output.object({
+    schema: z.object({
+      sentiment: z.enum(['positive', 'negative', 'neutral']),
+      score: z.number(),
+      summary: z.string(),
+    }),
+  }),
+});
+
+console.log(result.output);
+// { sentiment: 'positive', score: 9, summary: '...' }
+```
+
+### 带工具审批的智能体
+
+对于 `WorkflowAgent`，工具审批是在工具定义上通过
+`needsApproval` 配置的。对于 `generateText`、`streamText` 和 `ToolLoopAgent`，
+请改用
+`toolApproval`。
+
+```ts
+import { WorkflowAgent } from '@ai-sdk/workflow';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const agent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+  experimental_toolApprovalSecret: {
+    environmentVariable: 'TOOL_APPROVAL_SECRET',
+  },
+  tools: {
+    bookFlight: tool({
+      description: 'Book a flight',
+      inputSchema: z.object({
+        flightId: z.string(),
+        passengerName: z.string(),
+      }),
+      needsApproval: true, // Pauses the agent until user approves
+      execute: bookFlightStep,
+    }),
+  },
+});
+```
+
+配置了 `experimental_toolApprovalSecret` 后，每个审批请求都会基于其审批 ID、
+工具调用 ID、工具名称与已校验输入进行签名。缺少签名或签名无效的重放审批不会
+执行该工具。签名会保留在持久化流与 UI 消息历史中，而只有环境变量名称会跨越
+工作流边界。签名与校验步骤从各自的本地环境读取原始密钥，不会将其序列化。
+流级别的引用会覆盖构造函数的值。
+
+### 带生命周期回调的智能体
+
+```ts
+import { WorkflowAgent } from '@ai-sdk/workflow';
+
+const agent = new WorkflowAgent({
+  model: 'anthropic/claude-sonnet-5.5',
+  tools: { weather: weatherTool },
+
+  // Agent-wide callbacks
+  onStepEnd({ usage }) {
+    console.log('Tokens used:', usage.totalTokens);
+  },
+});
+
+const result = await agent.stream({
+  messages,
+
+  // Per-call callbacks (both fire)
+  async onStepEnd({ usage }) {
+    await trackUsage(usage);
+  },
+
+  onEnd({ steps, totalUsage }) {
+    console.log(
+      `Done in ${steps.length} steps, ${totalUsage.totalTokens} tokens`,
+    );
+  },
+});
+```

@@ -1,0 +1,27 @@
+---
+title: AI_NoSuchProviderReferenceError
+description: 了解如何修复 AI_NoSuchProviderReferenceError
+---
+
+# AI_NoSuchProviderReferenceError
+
+此错误在提供商引用无法被解析时发生，原因是在提供商引用映射中
+找不到指定的提供商。
+
+## 属性
+
+- `provider`：未找到的提供商
+- `reference`：被搜索的完整提供商引用映射
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoSuchProviderReferenceError` 的实例：
+
+```typescript
+import { NoSuchProviderReferenceError } from 'ai';
+
+if (NoSuchProviderReferenceError.isInstance(error)) {
+  // Handle the error
+}
+```

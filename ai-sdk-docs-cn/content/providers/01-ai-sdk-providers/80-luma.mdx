@@ -1,0 +1,251 @@
+---
+title: Luma
+description: 了解如何在 AI SDK 中使用 Luma AI 的模型。
+---
+
+# Luma 提供商
+
+[Luma AI](https://lumalabs.ai/) 通过其 Dream Machine 平台提供最先进的图像生成模型。这些模型提供超高质量的图像生成，具备出色的提示词理解能力，以及角色一致性和多图像引用支持等独特能力。
+
+## 安装
+
+Luma 提供商包含在 `@ai-sdk/luma` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/luma" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/luma` 导入默认提供商实例 `luma`：
+
+```ts
+import { luma } from '@ai-sdk/luma';
+```
+
+如果需要自定义配置，可以导入 `createLuma` 并使用你的设置创建提供商实例：
+
+```ts
+import { createLuma } from '@ai-sdk/luma';
+
+const luma = createLuma({
+  apiKey: 'your-api-key', // optional, defaults to LUMA_API_KEY environment variable
+  baseURL: 'custom-url', // optional
+  headers: {
+    /* custom headers */
+  }, // optional
+});
+```
+
+你可以使用以下可选设置来定制 Luma 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.lumalabs.ai`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认取 `LUMA_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将其用作拦截请求的中间件，
+  或在测试等场景下提供自定义 fetch 实现。
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建 Luma 图像模型。
+有关使用 AI SDK 进行图像生成的更多信息，请参见 [generateImage()](/docs/reference/ai-sdk-core/generate-image)。
+
+### 基本用法
+
+```ts
+import { luma, type LumaImageModelOptions } from '@ai-sdk/luma';
+import { generateImage } from 'ai';
+import fs from 'fs';
+
+const { image } = await generateImage({
+  model: luma.image('photon-1'),
+  prompt: 'A serene mountain landscape at sunset',
+  aspectRatio: '16:9',
+});
+
+const filename = `image-${Date.now()}.png`;
+fs.writeFileSync(filename, image.uint8Array);
+console.log(`Image saved to ${filename}`);
+```
+
+### 图像模型设置
+
+你可以使用可选设置来自定义生成行为：
+
+```ts
+const { image } = await generateImage({
+  model: luma.image('photon-1'),
+  prompt: 'A serene mountain landscape at sunset',
+  aspectRatio: '16:9',
+  maxImagesPerCall: 1, // Maximum number of images to generate per API call
+  providerOptions: {
+    luma: {
+      pollIntervalMillis: 5000, // How often to check for completed images (in ms)
+      maxPollAttempts: 10, // Maximum number of polling attempts before timeout
+    },
+  } satisfies LumaImageModelOptions,
+});
+```
+
+由于 Luma 通过异步队列系统处理图像，这些设置允许你调整轮询行为：
+
+- **maxImagesPerCall** _number_
+
+  覆盖每次 API 调用生成的最大图像数量。默认为 1。
+
+- **pollIntervalMillis** _number_
+
+  控制在图像处理期间检查 API 以获取已完成图像的频率。默认为 500ms。
+
+- **maxPollAttempts** _number_
+
+  限制超时前等待结果的最长时间，因为图像生成
+  是异步排队的。默认为 120 次。
+
+### 模型能力
+
+Luma 提供两个主要模型：
+
+| 模型             | 描述                                    |
+| ---------------- | ---------------------------------------------------------------- |
+| `photon-1`       | 高质量图像生成，具备出色的提示词理解能力         |
+| `photon-flash-1` | 针对速度优化、同时保持质量的更快生成             |
+
+两个模型均支持以下宽高比：
+
+- 1:1
+- 3:4
+- 4:3
+- 9:16
+- 16:9 (default)
+- 9:21
+- 21:9
+
+有关受支持宽高比的更多细节，请参见 [Luma 图像生成文档](https://docs.lumalabs.ai/docs/image-generation)。
+
+Luma 模型的主要特性包括：
+
+- 超高质量的图像生成
+- 相比同类模型高 10 倍的成本效率
+- 出色的提示词理解与遵循能力
+- 从单张参考图像实现独特的角色一致性
+- 支持多图像引用以实现精确的风格匹配
+
+### 图像编辑
+
+Luma 支持多种引用其他图像来生成图像的模式。
+
+#### 修改图像
+
+图像必须以 URL 形式传入。可以在 `providerOptions.luma.images` 数组中为每张图像配置 `weight`。
+
+```ts
+await generateImage({
+  model: luma.image('photon-flash-1'),
+  prompt: {
+    text: 'transform the bike to a boat',
+    images: [
+      'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/future-me-8hcBWcZOkbE53q3gshhEm16S87qDpF.jpeg',
+    ],
+  },
+  providerOptions: {
+    luma: {
+      referenceType: 'modify_image',
+      images: [{ weight: 1.0 }],
+    } satisfies LumaImageModelOptions,
+  },
+});
+```
+
+了解更多：https://docs.lumalabs.ai/docs/image-generation#modify-image。
+
+#### 引用图像
+
+使用最多 4 张参考图像来引导你的生成。适合创建变体或将复杂概念可视化。调整每张图像的 `weight`（0-1）可以控制参考图像的影响程度。
+
+```ts
+await generateImage({
+  model: luma.image('photon-flash-1'),
+  prompt: {
+    text: 'A salamander at dusk in a forest pond, in the style of ukiyo-e',
+    images: [
+      'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/future-me-8hcBWcZOkbE53q3gshhEm16S87qDpF.jpeg',
+    ],
+  },
+  aspectRatio: '1:1',
+  providerOptions: {
+    luma: {
+      referenceType: 'image',
+      images: [{ weight: 0.8 }],
+    } satisfies LumaImageModelOptions,
+  },
+});
+```
+
+了解更多：https://docs.lumalabs.ai/docs/image-generation#image-reference
+
+#### 风格参考
+
+使用参考图像为你的生成应用特定的视觉风格。使用 `weight` 参数控制风格影响程度。
+
+```ts
+await generateImage({
+  model: luma.image('photon-flash-1'),
+  prompt: {
+    text: 'A blue cream Persian cat launching its website on Vercel',
+    images: [
+      'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/future-me-8hcBWcZOkbE53q3gshhEm16S87qDpF.jpeg',
+    ],
+  },
+  aspectRatio: '1:1',
+  providerOptions: {
+    luma: {
+      referenceType: 'style',
+      images: [{ weight: 0.8 }],
+    } satisfies LumaImageModelOptions,
+  },
+});
+```
+
+了解更多：https://docs.lumalabs.ai/docs/image-generation#style-reference
+
+#### 角色参考
+
+使用同一主体最多 4 张参考图像创建一致且个性化的角色。更多参考图像可以提升角色表现力。
+
+```ts
+await generateImage({
+  model: luma.image('photon-flash-1'),
+  prompt: {
+    text: 'A woman with a cat riding a broomstick in a forest',
+    images: [
+      'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/future-me-8hcBWcZOkbE53q3gshhEm16S87qDpF.jpeg',
+    ],
+  },
+  aspectRatio: '1:1',
+  providerOptions: {
+    luma: {
+      referenceType: 'character',
+      images: [
+        {
+          id: 'identity0',
+        },
+      ],
+    } satisfies LumaImageModelOptions,
+  },
+});
+```
+
+了解更多：https://docs.lumalabs.ai/docs/image-generation#character-reference

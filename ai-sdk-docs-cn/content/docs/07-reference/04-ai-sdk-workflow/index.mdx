@@ -1,0 +1,32 @@
+---
+title: AI SDK Workflow
+description: "@ai-sdk/workflow 的参考文档"
+collapsed: true
+---
+
+# AI SDK Workflow
+
+[`@ai-sdk/workflow`](/docs/agents/workflow-agent) 提供 `WorkflowAgent` 类，用于构建在工作流中运行的持久化、可恢复的智能体（agent）。它负责工具 schema 序列化、工作流步骤边界以及内置的工具审批流程。
+
+<IndexCards
+  cards={[
+    {
+      title: 'WorkflowAgent',
+      description:
+        '创建支持工具调用、流式处理与工作流集成的持久化智能体。',
+      href: '/docs/reference/ai-sdk-workflow/workflow-agent',
+    },
+    {
+      title: 'WorkflowChatTransport',
+      description:
+        '面向工作流应用的聊天传输层，支持自动流式重连。',
+      href: '/docs/reference/ai-sdk-workflow/workflow-chat-transport',
+    },
+    {
+      title: 'generateVideo',
+      description:
+        '借助提供商 webhook 持久化生成视频，无隐式下载。',
+      href: '/docs/reference/ai-sdk-workflow/generate-video',
+    },
+  ]}
+/>

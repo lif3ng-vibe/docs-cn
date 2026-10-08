@@ -1,0 +1,145 @@
+---
+title: SigNoz
+description: 使用 SigNoz 监控、观测并调试你的 AI SDK 应用
+---
+
+# SigNoz 可观测性
+
+[SigNoz](https://signoz.io/) 是一个就能满足你全部监控与可观测性需求的单一工具。以下是选择 SigNoz 的几个理由：
+
+- 单一工具覆盖可观测性（日志、指标与追踪）
+- 构建于 [OpenTelemetry](https://opentelemetry.io/) 之上——这一开源标准让你免受任何形式的厂商锁定
+- 日志、指标与追踪相互关联，调试时上下文更丰富
+- 使用 ClickHouse（Uber、Cloudflare 等公司在用）作为数据存储——为可观测性数据高度优化的极速存储
+- 自带查询构建器（DIY Query Builder）、PromQL 与 ClickHouse 查询，满足你查询可观测性数据的各类用例
+
+# 设置
+
+- 创建一个 [SigNoz Cloud 账号](https://signoz.io/teams/)
+- 生成一个 SigNoz Ingestion Key
+
+## 为你的 Next.js 应用接入埋点
+
+关于如何在 Next.js 应用中设置 OpenTelemetry 埋点并在 SigNoz 中查看应用追踪（trace），请参见[此处](https://signoz.io/docs/instrumentation/opentelemetry-nextjs/)的详细说明。
+
+## 直接向 SigNoz Cloud 发送追踪
+
+**第 1 步.** 安装 OpenTelemetry 相关包
+
+```bash
+npm install @vercel/otel @opentelemetry/api @ai-sdk/otel
+```
+
+**第 2 步.** 更新 **`next.config.mjs`**，加入 instrumentationHook
+
+> 只有在使用 Next.js 14 及以下版本时才需要此步骤
+
+```jsx
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // include instrumentationHook experimental feature
+  experimental: {
+    instrumentationHook: true,
+  },
+};
+export default nextConfig;
+```
+
+**第 3 步.** 创建 **`instrumentation.ts`** 文件（位于项目根目录）
+
+```jsx
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { registerOTel, OTLPHttpJsonTraceExporter } from '@vercel/otel';
+// Add otel logging
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR); // set diag log level to DEBUG when debugging
+
+registerTelemetry(new LegacyOpenTelemetry());
+
+export function register() {
+  registerOTel({
+    serviceName: '<service_name>',
+    traceExporter: new OTLPHttpJsonTraceExporter({
+      url: 'https://ingest.<region>.signoz.cloud:443/v1/traces',
+      headers: { 'signoz-ingestion-key': '<your-ingestion-key>' },
+    }),
+  });
+}
+```
+
+- **`<service_name>`** 是你的服务名称
+- 将 **`<region>`** 设置为与你的 SigNoz Cloud [**区域**](https://signoz.io/docs/ingestion/signoz-cloud/overview/#endpoint)一致
+- 将 **`<your-ingestion-key>`** 替换为你的 SigNoz [**ingestion key**](https://signoz.io/docs/ingestion/signoz-cloud/keys/)
+
+> 埋点文件应放在项目根目录，而不是 app 或 pages 目录内。如果你使用 src 目录，请把该文件放在 src 下、与 pages 和 app 并列。
+
+现在你的 Next.js 应用应该已正确接入埋点。
+
+## 为 Vercel AI SDK 启用遥测
+
+Vercel AI SDK 使用 [OpenTelemetry](https://signoz.io/blog/what-is-opentelemetry/) 采集遥测（telemetry）数据。OpenTelemetry 是一个开源可观测性框架，旨在为遥测数据的采集提供标准化埋点。
+
+## 启用遥测
+
+关于 Vercel AI SDK 遥测选项的更多详细信息，请参见[此处](https://ai-sdk.dev/docs/ai-sdk-core/telemetry#telemetry)。
+
+安装 `@ai-sdk/otel` 并在 `instrumentation.ts` 中加入 `registerTelemetry`（见上文第 3 步）之后，每次 AI SDK 调用都会自动捕获遥测数据：
+
+```jsx
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a short story about a cat.',
+});
+```
+
+你还可以控制是否记录函数的输入值与输出值。两者默认都开启，可将 `recordInputs` 和 `recordOutputs` 选项设为 `false` 来关闭。
+
+```jsx
+telemetry: { recordInputs: false, recordOutputs: false }
+```
+
+出于隐私、数据传输和性能方面的考虑，关闭输入与输出的记录可能很有用。例如，当输入包含敏感信息时，你可能希望关闭输入记录。
+
+## 遥测元数据
+
+你可以提供 `functionId` 来标识遥测数据对应的函数，并提供 `context` 在遥测数据中附带额外信息。
+
+```jsx
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a short story about a cat.',
+  context: {
+    something: 'custom',
+    someOtherThing: 'other-value',
+  },
+  telemetry: {
+    functionId: 'my-awesome-function',
+  },
+});
+```
+
+## 自定义 Tracer
+
+如果你希望追踪使用 `TracerProvider`，而不是 `@opentelemetry/api` 单例所提供的那个，请向 `LegacyOpenTelemetry` 构造函数传入一个自定义 `Tracer`：
+
+```jsx
+import { registerTelemetry, generateText } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+
+const tracerProvider = new NodeTracerProvider();
+registerTelemetry(
+  new LegacyOpenTelemetry({
+    tracer: tracerProvider.getTracer('ai'),
+  }),
+);
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a short story about a cat.',
+});
+```
+
+现在你的 Vercel AI SDK 调用应该会自动发出追踪（trace）、span 和事件。关于所生成的 span 与事件类型的更多细节，请参见[此处](https://ai-sdk.dev/docs/ai-sdk-core/telemetry#collected-data)。
+
+最后，你应当可以在 SigNoz Cloud 的 traces 标签页中查看这些数据。

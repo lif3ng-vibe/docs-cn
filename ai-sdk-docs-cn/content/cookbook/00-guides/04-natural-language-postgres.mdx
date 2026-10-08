@@ -1,0 +1,694 @@
+---
+title: Natural Language Postgres
+description: 了解如何构建一个可以用自然语言与 PostgreSQL 数据库对话的 Next.js 应用。
+tags: ['agents', 'next', 'tools']
+---
+
+# Natural Language Postgres Guide
+
+在本指南中，你将学习如何构建一个使用 AI 以自然语言与 PostgreSQL 数据库交互的应用。
+
+该应用将能够：
+
+- 从自然语言输入生成 SQL 查询
+- 用通俗的语言解释查询的组成部分
+- 创建图表来可视化查询结果
+
+你可以在 [natural-language-postgres.vercel.app](https://natural-language-postgres.vercel.app) 找到本项目的完整版本。
+
+## 项目搭建
+
+本项目使用以下技术栈：
+
+- [Next.js](https://nextjs.org)（App Router）
+- [AI SDK](/docs)
+- [OpenAI](https://openai.com)
+- [Zod](https://zod.dev)
+- [Postgres](https://www.postgresql.org/)（通过 [Vercel Marketplace](https://vercel.com/marketplace/neon) 使用 Neon）
+- [shadcn-ui](https://ui.shadcn.com) 和 [TailwindCSS](https://tailwindcss.com) 用于样式
+- [Recharts](https://recharts.org) 用于数据可视化
+
+### 克隆仓库
+
+为了让你专注于 AI 功能本身，而不是项目搭建和配置，我们准备了一个起始仓库，其中包含数据库 schema 和一些组件。
+
+克隆起始仓库并检出 `starter` 分支：
+
+<Snippet
+  text={[
+    'git clone https://github.com/vercel-labs/natural-language-postgres',
+    'cd natural-language-postgres',
+    'git checkout starter',
+  ]}
+/>
+
+### 项目搭建与数据
+
+我们来搭建项目并用数据集填充（seed）数据库：
+
+1. 安装依赖：
+
+<Snippet text={['pnpm install']} />
+
+2. 复制示例环境变量文件：
+
+<Snippet text={['cp .env.example .env']} />
+
+3. 把你的环境变量添加到 `.env`：
+
+```bash filename=".env"
+OPENAI_API_KEY="your_api_key_here"
+POSTGRES_URL="..."
+POSTGRES_PRISMA_URL="..."
+POSTGRES_URL_NO_SSL="..."
+POSTGRES_URL_NON_POOLING="..."
+POSTGRES_USER="..."
+POSTGRES_HOST="..."
+POSTGRES_PASSWORD="..."
+POSTGRES_DATABASE="..."
+```
+
+4. 本项目使用 CB Insights 的 Unicorn Companies 数据集。按照以下说明下载数据集：
+   - 访问 [CB Insights Unicorn Companies](https://www.cbinsights.com/research-unicorn-companies)
+   - 输入你的邮箱，你会收到一个下载数据集的链接。
+   - 将其保存为项目根目录下的 `unicorns.csv`
+
+<Note>
+  完成本教程需要一个 Postgres 数据库。如果你的本地机器上没有安装 Postgres，可以：用 Vercel 创建免费的 Postgres 数据库（推荐，参见下方说明）；或按照[这份指南](https://www.prisma.io/dataguide/postgresql/setting-up-a-local-postgresql-database)在本地搭建。
+</Note>
+
+#### 使用 Vercel 搭建 Postgres
+
+在你的 Vercel 账户上搭建 Postgres 实例：
+
+1. 打开 [Vercel.com](https://vercel.com) 并确认已登录
+1. 进入你的团队主页
+1. 点击 **Integrations** 标签页
+1. 点击 **Browse Marketplace**
+1. 在侧边栏找到 **Storage** 选项
+1. 选择 **Neon** 选项（推荐，但其他 PostgreSQL 数据库提供商应该也可以）
+1. 点击 **Install**，然后在右上角再次点击 **Install**
+1. 在 “Get Started with Neon” 页面，点击右侧的 **Create Database**
+1. 选择你的区域（例如 Washington, D.C., U.S. East）
+1. 关闭 **Auth**
+1. 点击 **Continue**
+1. 为数据库命名（可以使用默认名称，或改名为 “NaturalLanguagePostgres” 之类）
+1. 点击右下角的 **Create**
+1. 看到 “Database created successfully” 后，点击 **Done**
+1. 你会被重定向到数据库实例页面
+1. 在 Quick Start 部分，点击 **Show secrets**
+1. 复制完整的 `DATABASE_URL` 环境变量，并用它填充 `.env` 文件中的各个 Postgres 环境变量
+
+### 关于数据集
+
+Unicorn List 数据集包含关于独角兽初创公司（估值超过 10 亿美元的公司）的以下信息：
+
+- 公司名称
+- 估值
+- 加入日期（达到独角兽地位的时间）
+- 国家
+- 城市
+- 行业
+- 精选投资者
+
+该数据集包含 7 列、超过 1000 行数据，为我们提供了充足的结构化数据可供分析。这使它非常适合用来探索各种 SQL 查询，发掘独角兽初创生态中有价值的洞见。
+
+5. 数据集下载并添加到项目后，使用以下命令初始化数据库：
+
+<Snippet text={['pnpm run seed']} />
+
+注意：这一步可能需要一些时间。你应该会看到一条消息，先是 Unicorns 表已创建，然后是数据库填充成功。
+
+<Note>
+  记住，数据集应命名为 `unicorns.csv` 并位于项目根目录。
+</Note>
+
+6. 启动开发服务器：
+
+<Snippet text={['pnpm run dev']} />
+
+你的应用现在应该运行在 [http://localhost:3000](http://localhost:3000)。
+
+## 项目结构
+
+起始仓库已经包含了你所需的一切，包括：
+
+- 数据库填充脚本（`lib/seed.ts`）
+- 用 shadcn/ui 构建的基础组件（`components/`）
+- 运行 SQL 查询的函数（`app/actions.ts`）
+- 数据库 schema 的类型定义（`lib/types.ts`）
+
+### 现有组件
+
+应用在 `app/page.tsx` 中包含一个作为主界面的单页。
+
+顶部是显示应用标题和描述的头部（`header.tsx`）。其下方是一个输入框和搜索按钮（`search.tsx`），你可以在其中输入自然语言查询。
+
+初始状态下，页面会显示一组建议的示例查询（`suggested-queries.tsx`），点击即可快速试用功能。
+
+提交查询后：
+
+- 建议查询区域消失，出现加载状态
+- 完成后会出现一张带有 “TODO - IMPLEMENT ABOVE” 的卡片（`query-viewer.tsx`），它最终会显示你生成的 SQL
+- 其下方是显示 “No results found” 的空结果区域（`results.tsx`）
+
+实现核心功能后：
+
+- 结果区域会以表格形式显示数据
+- 一个切换按钮可以在表格和图表视图之间切换
+- 图表视图会可视化你的查询结果
+
+接下来实现 AI 功能，把它们串联起来。
+
+## 构建应用
+
+回顾一下，该应用将有三个主要功能：
+
+1. 从自然语言生成 SQL 查询
+2. 根据查询结果创建图表
+3. 用通俗的语言解释 SQL 查询
+
+对于每个功能，你都将通过 [ Server Action ](https://react.dev/reference/rsc/server-actions) 使用 AI SDK 与 OpenAI 的 GPT-6 Astra 和 GPT-6 Luna 模型交互。Server Action 是 React 服务器组件的一项强大特性，允许你从前端代码直接调用服务器端函数。
+
+我们先从自然语言生成 SQL 查询开始。
+
+## 生成 SQL 查询
+
+### 提供上下文
+
+为了让模型生成准确的 SQL 查询，它需要关于数据库 schema、表和关系的上下文。你将通过提示词（prompt）传达这些信息，其中应包括：
+
+1. schema 信息
+2. 示例数据格式
+3. 可用的 SQL 操作
+4. 查询结构的最佳实践
+5. 针对特定字段的细节建议
+
+我们来编写一个包含所有这些信息的提示词：
+
+```txt
+You are a SQL (postgres) and data visualization expert. Your job is to help the user write a SQL query to retrieve the data they need. The table schema is as follows:
+
+unicorns (
+  id SERIAL PRIMARY KEY,
+  company VARCHAR(255) NOT NULL UNIQUE,
+  valuation DECIMAL(10, 2) NOT NULL,
+  date_joined DATE,
+  country VARCHAR(255) NOT NULL,
+  city VARCHAR(255) NOT NULL,
+  industry VARCHAR(255) NOT NULL,
+  select_investors TEXT NOT NULL
+);
+
+Only retrieval queries are allowed.
+
+For things like industry, company names and other string fields, use the ILIKE operator and convert both the search term and the field to lowercase using LOWER() function. For example: LOWER(industry) ILIKE LOWER('%search_term%').
+
+Note: select_investors is a comma-separated list of investors. Trim whitespace to ensure you're grouping properly. Note, some fields may be null or have only one value.
+When answering questions about a specific field, ensure you are selecting the identifying column (ie. what is Vercel's valuation would select company and valuation').
+
+The industries available are:
+- healthcare & life sciences
+- consumer & retail
+- financial services
+- enterprise tech
+- insurance
+- media & entertainment
+- industrials
+- health
+
+If the user asks for a category that is not in the list, infer based on the list above.
+
+Note: valuation is in billions of dollars so 10b would be 10.0.
+Note: if the user asks for a rate, return it as a decimal. For example, 0.1 would be 10%.
+
+If the user asks for 'over time' data, return by year.
+
+When searching for UK or USA, write out United Kingdom or United States respectively.
+
+EVERY QUERY SHOULD RETURN QUANTITATIVE DATA THAT CAN BE PLOTTED ON A CHART! There should always be at least two columns. If the user asks for a single column, return the column and the count of the column. If the user asks for a rate, return the rate as a decimal. For example, 0.1 would be 10%.
+```
+
+这个提示词有几个重要元素：
+
+- schema 描述帮助模型确切了解要处理哪些数据字段
+- 包含基于常见 SQL 模式的查询处理规则——例如，始终用 ILIKE 做大小写不敏感的字符串匹配
+- 解释如何处理数据集中的边缘情况，比如处理逗号分隔的投资者字段，并确保正确处理空白字符
+- 不让模型猜测行业类别，而是提供数据中实际存在的完整列表，帮助避免不匹配
+- 提示词有助于规范数据转换——比如知道把 “10b” 理解为 100 亿美元（“10.0”），或者比率应当用小数表示
+- 明确的规则确保查询输出对图表友好，始终包含至少两列可绘制的数据
+
+这种提示词结构为查询生成打下了坚实基础，但你应该根据自己的具体需求和所用模型不断实验和迭代。
+
+### 创建 Server Action
+
+提示词写好后，我们来创建一个 Server Action。
+
+打开 `app/actions.ts`。你会看到一个已经定义好的 action（`runGeneratedSQLQuery`）。
+
+添加一个新 action。该 action 应为异步，并接收一个参数——自然语言查询。
+
+```ts filename="app/actions.ts"
+/* ...rest of the file... */
+
+export const generateQuery = async (input: string) => {};
+```
+
+在这个 action 中，你将使用 AI SDK 的 `generateText` 函数配合 `Output`，把模型输出约束到预定义的 schema。这个过程有时被称为结构化输出（structured output），它确保模型只返回 SQL 查询本身，不带任何需要手动解析的额外前缀、解释或格式。
+
+```ts filename="app/actions.ts"
+/* ...other imports... */
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+/* ...rest of the file... */
+
+export const generateQuery = async (input: string) => {
+  'use server';
+  try {
+    const result = await generateText({
+      model: 'openai/gpt-6-astra',
+      instructions: `You are a SQL (postgres) ...`, // SYSTEM PROMPT AS ABOVE - OMITTED FOR BREVITY
+      prompt: `Generate the query necessary to retrieve the data the user wants: ${input}`,
+      output: Output.object({
+        schema: z.object({
+          query: z.string(),
+        }),
+      }),
+    });
+    return result.output.query;
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to generate query');
+  }
+};
+```
+
+注意，你使用 TypeScript schema 校验库 zod 把输出约束为单个名为 `query` 的字符串字段。这能确保模型只返回 SQL 查询本身。随后返回生成的输出。
+
+### 更新前端
+
+Server Action 就位后，现在可以更新前端，在用户提交自然语言查询时调用这个 action。在根页面（`app/page.tsx`）中，你会看到一个 `handleSubmit` 函数，它在用户提交查询时被调用。
+
+导入 `generateQuery` 函数，并用用户的输入调用它。
+
+```typescript filename="app/page.tsx" highlight="21"
+/* ...other imports... */
+import { runGeneratedSQLQuery, generateQuery } from './actions';
+
+/* ...rest of the file... */
+
+const handleSubmit = async (suggestion?: string) => {
+  clearExistingData();
+
+  const question = suggestion ?? inputValue;
+  if (inputValue.length === 0 && !suggestion) return;
+
+  if (question.trim()) {
+    setSubmitted(true);
+  }
+
+  setLoading(true);
+  setLoadingStep(1);
+  setActiveQuery('');
+
+  try {
+    const query = await generateQuery(question);
+
+    if (query === undefined) {
+      toast.error('An error occurred. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    setActiveQuery(query);
+    setLoadingStep(2);
+
+    const companies = await runGeneratedSQLQuery(query);
+    const columns = companies.length > 0 ? Object.keys(companies[0]) : [];
+    setResults(companies);
+    setColumns(columns);
+
+    setLoading(false);
+  } catch (e) {
+    toast.error('An error occurred. Please try again.');
+    setLoading(false);
+  }
+};
+
+/* ...rest of the file... */
+```
+
+现在，当用户提交自然语言查询（例如 “how many unicorns are from San Francisco?”）时，该问题会发送到你新建的 Server Action。Server Action 会调用模型，传入你的系统提示词和用户查询，并以结构化格式返回生成的 SQL 查询。随后这个查询被传给 `runGeneratedSQLQuery` action，在你的数据库上执行。结果保存到本地状态并展示给用户。
+
+保存文件，确保开发服务器正在运行，然后在浏览器中打开 `localhost:3000`。试着提交一个自然语言查询，看看生成的 SQL 查询和结果。你应该会看到生成的 SQL 查询显示在输入框下方，查询结果以表格形式显示在输入框下方。
+
+如果 SQL 查询太长无法在输入框中完整显示，可以点击它查看完整查询。你应该会看到输入框右侧有一个带问号图标的按钮。点击它目前没有任何效果，但你将在下一步为它添加“解释查询”功能。
+
+## 解释 SQL 查询
+
+接下来，我们添加用通俗的语言解释 SQL 查询的能力。该功能把生成的 SQL 查询拆分为逻辑段落，帮助用户理解它的工作方式。与生成 SQL 查询一样，解释查询时也需要一个提示词来引导模型。
+
+我们来为解释查询功能编写一个提示词：
+
+```txt
+You are a SQL (postgres) expert. Your job is to explain to the user the SQL query you wrote to retrieve the data they asked for. The table schema is as follows:
+unicorns (
+  id SERIAL PRIMARY KEY,
+  company VARCHAR(255) NOT NULL UNIQUE,
+  valuation DECIMAL(10, 2) NOT NULL,
+  date_joined DATE,
+  country VARCHAR(255) NOT NULL,
+  city VARCHAR(255) NOT NULL,
+  industry VARCHAR(255) NOT NULL,
+  select_investors TEXT NOT NULL
+);
+
+When you explain you must take a section of the query, and then explain it. Each "section" should be unique. So in a query like: "SELECT * FROM unicorns limit 20", the sections could be "SELECT *", "FROM UNICORNS", "LIMIT 20".
+If a section doesn't have any explanation, include it, but leave the explanation empty.
+```
+
+与生成 SQL 查询的提示词一样，你向模型提供了数据库 schema，还提供了查询各段落可能的样子示例。这帮助模型理解查询的结构，以及如何把它拆分为逻辑段落。
+
+### 创建 Server Action
+
+添加一个新的 Server Action，为 SQL 查询生成解释。
+
+该 action 接收两个参数——原始自然语言输入和生成的 SQL 查询。
+
+```ts filename="app/actions.ts"
+/* ...rest of the file... */
+
+export const explainQuery = async (input: string, sqlQuery: string) => {
+  'use server';
+  try {
+    const result = await generateText({
+      model: 'openai/gpt-6-astra',
+      instructions: `You are a SQL (postgres) expert. ...`, // SYSTEM PROMPT AS ABOVE - OMITTED FOR BREVITY
+      prompt: `Explain the SQL query you generated to retrieve the data the user wanted. Assume the user is not an expert in SQL. Break down the query into steps. Be concise.
+
+      User Query:
+      ${input}
+
+      Generated SQL Query:
+      ${sqlQuery}`,
+    });
+    return result.text;
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to generate query');
+  }
+};
+```
+
+这个 action 使用了 `generateText` 函数，但你还没有定义输出 schema。我们在另一个文件中定义它，这样它还能作为类型在组件中使用。
+
+更新 `lib/types.ts` 文件，加入解释的 schema：
+
+```ts filename="lib/types.ts"
+import { z } from 'zod';
+
+/* ...rest of the file... */
+
+export const explanationSchema = z.object({
+  section: z.string(),
+  explanation: z.string(),
+});
+
+export type QueryExplanation = z.infer<typeof explanationSchema>;
+```
+
+该 schema 定义了模型生成解释的结构。每条解释都有一个 `section` 和一个 `explanation`。`section` 是被解释的查询部分，`explanation` 是对该部分的通俗解释。回到你的 `actions.ts` 文件，导入并使用 `explanationSchema`：
+
+```ts filename="app/actions.ts" highlight="2,19,20"
+// other imports
+import { explanationSchema } from '@/lib/types';
+
+/* ...rest of the file... */
+
+export const explainQuery = async (input: string, sqlQuery: string) => {
+  'use server';
+  try {
+    const result = await generateText({
+      model: 'openai/gpt-6-astra',
+      instructions: `You are a SQL (postgres) expert. ...`, // SYSTEM PROMPT AS ABOVE - OMITTED FOR BREVITY
+      prompt: `Explain the SQL query you generated to retrieve the data the user wanted. Assume the user is not an expert in SQL. Break down the query into steps. Be concise.
+
+      User Query:
+      ${input}
+
+      Generated SQL Query:
+      ${sqlQuery}`,
+      output: Output.array({ element: explanationSchema }),
+    });
+    return result.output;
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to generate query');
+  }
+};
+```
+
+<Note>
+  你可以使用 `Output.array()` 告知模型，你期望它返回一个符合该 schema 的对象数组。
+</Note>
+
+### 更新查询查看器
+
+接下来，更新 `query-viewer.tsx` 组件来展示这些解释。用户每次点击查询右侧的问号图标按钮时，都会调用 `handleExplainQuery` 函数。我们来更新这个函数，让它使用新的 `explainQuery` action：
+
+```ts filename="components/query-viewer.tsx" highlight="2,10,11"
+/* ...other imports... */
+import { explainQuery } from '@/app/actions';
+
+/* ...rest of the component... */
+
+const handleExplainQuery = async () => {
+  setQueryExpanded(true);
+  setLoadingExplanation(true);
+
+  const explanations = await explainQuery(inputValue, activeQuery);
+  setQueryExplanations(explanations);
+
+  setLoadingExplanation(false);
+};
+
+/* ...rest of the component... */
+```
+
+现在，当用户点击解释按钮（问号图标）时，组件会：
+
+1. 显示加载状态
+2. 把当前 SQL 查询和用户的自然语言查询发送给你的 Server Action
+3. 模型会生成一个解释数组
+4. 解释会被存入组件状态并渲染到 UI
+
+提交一个新查询，然后点击解释按钮。把鼠标悬停在查询的不同部分上，你应该能看到每个段落的解释！
+
+## 可视化查询结果
+
+最后，我们把查询结果以图表形式可视化呈现。有两种可选方案：
+
+1. 把查询和数据都发给模型，让它以可直接可视化的格式返回数据。这虽然能完全控制可视化效果，但需要模型传回所有数据，会显著增加延迟和成本。
+
+2. 把查询和数据发给模型，让它生成一个能恰当映射你的数据的图表配置（大小固定、token 不多）。该配置规定了如何可视化信息，同时传达自然语言查询所要的洞见。重要的是，这不需要模型返回完整数据集。
+
+由于你事先并不知道 SQL 查询或数据形态，我们采用第二种方案，根据查询结果和用户意图动态生成图表配置。
+
+### 生成图表配置
+
+为这个功能，你将创建一个 Server Action，接收查询结果和用户原始的自然语言查询，以确定最佳可视化方式。你的应用已经配置为使用 `shadcn` charts（底层使用 [`Recharts`](https://recharts.org/en-US/)），因此模型需要生成：
+
+- 图表类型（bar、line、area 或 pie）
+- 坐标轴映射
+- 视觉样式
+
+我们先在 `lib/types.ts` 中定义图表配置的 schema：
+
+```ts filename="lib/types.ts"
+/* ...rest of the file... */
+
+export const configSchema = z
+  .object({
+    description: z
+      .string()
+      .describe(
+        'Describe the chart. What is it showing? What is interesting about the way the data is displayed?',
+      ),
+    takeaway: z.string().describe('What is the main takeaway from the chart?'),
+    type: z.enum(['bar', 'line', 'area', 'pie']).describe('Type of chart'),
+    title: z.string(),
+    xKey: z.string().describe('Key for x-axis or category'),
+    yKeys: z
+      .array(z.string())
+      .describe(
+        'Key(s) for y-axis values this is typically the quantitative column',
+      ),
+    multipleLines: z
+      .boolean()
+      .describe(
+        'For line charts only: whether the chart is comparing groups of data.',
+      )
+      .optional(),
+    measurementColumn: z
+      .string()
+      .describe(
+        'For line charts only: key for quantitative y-axis column to measure against (eg. values, counts etc.)',
+      )
+      .optional(),
+    lineCategories: z
+      .array(z.string())
+      .describe(
+        'For line charts only: Categories used to compare different lines or data series. Each category represents a distinct line in the chart.',
+      )
+      .optional(),
+    colors: z
+      .record(
+        z.string().describe('Any of the yKeys'),
+        z.string().describe('Color value in CSS format (e.g., hex, rgb, hsl)'),
+      )
+      .describe('Mapping of data keys to color values for chart elements')
+      .optional(),
+    legend: z.boolean().describe('Whether to show legend'),
+  })
+  .describe('Chart configuration object');
+
+export type Config = z.infer<typeof configSchema>;
+```
+
+<Note>
+  用新的类型替换现有的 `export type Config = any;`。
+</Note>
+
+该 schema 大量使用 Zod 的 `.describe()` 函数，为模型提供关于图表配置中每个键的额外上下文。这有助于模型理解每个键的用途，生成更准确的结果。
+
+这里还有另一个值得注意的重要技巧：你定义了 `description` 和 `takeaway` 字段。它们不仅能让用户快速理解图表含义和要点，还迫使模型在尝试生成坐标轴、列等配置属性之前，先生成对数据的描述。这有助于模型生成更准确、更相关的图表配置。
+
+### 创建 Server Action（图表配置）
+
+在 `app/actions.ts` 中创建一个新 action：
+
+```ts
+/* ...other imports... */
+import { Config, configSchema, Result } from '@/lib/types';
+
+/* ...rest of the file... */
+
+export const generateChartConfig = async (
+  results: Result[],
+  userQuery: string,
+) => {
+  'use server';
+
+  try {
+    const { output: config } = await generateText({
+      model: 'openai/gpt-6-astra',
+      instructions: 'You are a data visualization expert.',
+      prompt: `Given the following data from a SQL query result, generate the chart config that best visualises the data and answers the users query.
+      For multiple groups use multi-lines.
+
+      Here is an example complete config:
+      export const chartConfig = {
+        type: "pie",
+        xKey: "month",
+        yKeys: ["sales", "profit", "expenses"],
+        colors: {
+          sales: "#4CAF50",    // Green for sales
+          profit: "#2196F3",   // Blue for profit
+          expenses: "#F44336"  // Red for expenses
+        },
+        legend: true
+      }
+
+      User Query:
+      ${userQuery}
+
+      Data:
+      ${JSON.stringify(results, null, 2)}`,
+      output: Output.object({ schema: configSchema }),
+    });
+
+    // Override with shadcn theme colors
+    const colors: Record<string, string> = {};
+    config.yKeys.forEach((key, index) => {
+      colors[key] = `hsl(var(--chart-${index + 1}))`;
+    });
+
+    const updatedConfig = { ...config, colors };
+    return { config: updatedConfig };
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to generate chart suggestion');
+  }
+};
+```
+
+### 更新图表组件
+
+action 就位后，你希望在收到查询结果后自动触发它。这能确保数据加载后几乎立即呈现可视化。
+
+更新根页面（`app/page.tsx`）中的 `handleSubmit` 函数，在运行查询后生成并设置图表配置：
+
+```typescript filename="app/page.tsx" highlight="38,39"
+/* ...other imports... */
+import { getCompanies, generateQuery, generateChartConfig } from './actions';
+
+/* ...rest of the file... */
+const handleSubmit = async (suggestion?: string) => {
+  clearExistingData();
+
+  const question = suggestion ?? inputValue;
+  if (inputValue.length === 0 && !suggestion) return;
+
+  if (question.trim()) {
+    setSubmitted(true);
+  }
+
+  setLoading(true);
+  setLoadingStep(1);
+  setActiveQuery('');
+
+  try {
+    const query = await generateQuery(question);
+
+    if (query === undefined) {
+      toast.error('An error occurred. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    setActiveQuery(query);
+    setLoadingStep(2);
+
+    const companies = await runGeneratedSQLQuery(query);
+    const columns = companies.length > 0 ? Object.keys(companies[0]) : [];
+    setResults(companies);
+    setColumns(columns);
+
+    setLoading(false);
+
+    const { config } = await generateChartConfig(companies, question);
+    setChartConfig(config);
+  } catch (e) {
+    toast.error('An error occurred. Please try again.');
+    setLoading(false);
+  }
+};
+
+/* ...rest of the file... */
+```
+
+现在，用户提交查询时，应用会：
+
+1. 生成并执行 SQL 查询
+2. 显示表格结果
+3. 为结果生成图表配置
+4. 允许在表格和图表视图之间切换
+
+回到浏览器，用几个查询测试应用。你应该会看到图表可视化出现在表格结果之后。
+
+## 下一步
+
+你已经构建了一个 AI 驱动的 SQL 分析工具，可以把自然语言转换为 SQL 查询、可视化查询结果，并用通俗的语言解释 SQL 查询。
+
+例如，你可以扩展应用以使用自己的数据源，或者添加更高级的功能，比如自定义图表配置 schema 以支持更多图表类型和选项。你还可以添加更复杂的 SQL 查询生成能力。

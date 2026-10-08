@@ -1,0 +1,121 @@
+---
+title: 通过表单提交以文件提示词生成对象
+description: 了解如何使用 AI SDK 和 Next.js 通过表单提交以文件提示词生成对象
+tags: ['next', 'multi-modal']
+---
+
+# Generate Object with File Prompt through Form Submission
+
+<Note>
+  此功能仅限支持 PDF 输入的模型/提供商
+  （[Anthropic](/providers/ai-sdk-providers/anthropic#pdf-支持)、
+  [OpenAI](/providers/ai-sdk-providers/openai#pdf-支持)、[Google
+  Gemini](/providers/ai-sdk-providers/google#文件输入) 和 [Google
+  Vertex](/providers/ai-sdk-providers/google-vertex#文件输入)）。
+</Note>
+
+借助部分模型，你可以将 PDF（文件）作为提示词的一部分发送。我们来创建一个简单的 Next.js 应用，允许用户上传 PDF 并将其发送给 LLM 进行摘要。
+
+## 客户端
+
+在前端，创建一个允许用户上传 PDF 的表单。表单提交时，将 PDF 发送到 `/api/analyze` 路由。
+
+```tsx file="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+
+export default function Page() {
+  const [description, setDescription] = useState<string>();
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <div>
+      <form
+        action={async formData => {
+          try {
+            setLoading(true);
+            const response = await fetch('/api/analyze', {
+              method: 'POST',
+              body: formData,
+            });
+            setLoading(false);
+
+            if (response.ok) {
+              setDescription(await response.text());
+            }
+          } catch (error) {
+            console.error('Analysis failed:', error);
+          }
+        }}
+      >
+        <div>
+          <label>Upload Image</label>
+          <input name="pdf" type="file" accept="application/pdf" />
+        </div>
+        <button type="submit" disabled={loading}>
+          Submit{loading && 'ing...'}
+        </button>
+      </form>
+      {description && (
+        <pre>{JSON.stringify(JSON.parse(description), null, 2)}</pre>
+      )}
+    </div>
+  );
+}
+```
+
+## 服务器
+
+在服务器端，创建一个 API 路由，接收 PDF、发送给 LLM 并返回结果。此示例使用 [ `generateText` ](/docs/reference/ai-sdk-core/generate-text) 函数配合 `Output.object`，将摘要作为结构化输出的一部分生成。
+
+```typescript file="app/api/analyze/route.ts"
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const file = formData.get('pdf') as File;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+
+  const charArray = Array.from(uint8Array, byte => String.fromCharCode(byte));
+  const binaryString = charArray.join('');
+  const base64Data = btoa(binaryString);
+  const fileDataUrl = `data:application/pdf;base64,${base64Data}`;
+
+  const result = await generateText({
+    model: 'openai/gpt-6-astra',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'Analyze the following PDF and generate a summary.',
+          },
+          {
+            type: 'file',
+            data: fileDataUrl,
+            mediaType: 'application/pdf',
+          },
+        ],
+      },
+    ],
+    output: Output.object({
+      schema: z.object({
+        people: z
+          .object({
+            name: z.string().describe('The name of the person.'),
+            age: z.number().min(0).describe('The age of the person.'),
+          })
+          .array()
+          .describe('An array of people.'),
+      }),
+    }),
+  });
+
+  return Response.json(result.output);
+}
+```

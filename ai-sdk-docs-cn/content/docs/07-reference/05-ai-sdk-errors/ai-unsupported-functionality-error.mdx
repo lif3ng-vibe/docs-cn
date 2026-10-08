@@ -1,0 +1,25 @@
+---
+title: AI_UnsupportedFunctionalityError
+description: 了解如何修复 AI_UnsupportedFunctionalityError
+---
+
+# AI_UnsupportedFunctionalityError
+
+当某个功能不受支持时，会发生此错误。
+
+## 属性
+
+- `functionality`：不受支持的功能名称
+- `message`：错误消息（可选，由 `functionality` 自动生成）
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_UnsupportedFunctionalityError` 的实例：
+
+```typescript
+import { UnsupportedFunctionalityError } from 'ai';
+
+if (UnsupportedFunctionalityError.isInstance(error)) {
+  // Handle the error
+}
+```

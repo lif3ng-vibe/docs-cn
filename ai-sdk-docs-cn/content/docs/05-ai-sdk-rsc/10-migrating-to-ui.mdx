@@ -1,0 +1,743 @@
+---
+title: 从 RSC 迁移到 UI
+description: 了解如何从 AI SDK RSC 迁移到 AI SDK UI。
+---
+
+# Migrating from RSC to UI
+
+本指南帮助你从 AI SDK RSC 迁移到 AI SDK UI。
+
+## 背景
+
+AI SDK 提供两个包来帮助你构建应用的前端——[AI SDK UI](/docs/ai-sdk-ui) 和 [AI SDK RSC](/docs/ai-sdk-rsc)。
+
+我们在 AI SDK 中引入了对 [React 服务器组件（RSC）](https://react.dev/reference/rsc/server-components)的支持，以简化在支持 RSC 的框架中构建生成式用户界面的过程。
+
+然而，由于这项技术仍处于探索前沿，AI SDK RSC 目前存在一些重大局限，使其不适合在生产环境中稳定使用。
+
+- 无法通过 Server Action 中止流。这将在 React 和 Next.js 的未来版本中得到改进（[(1122)](https://github.com/vercel/ai/issues/1122)）。
+- 使用 `createStreamableUI` 和 `streamUI` 时，组件会在 `.done()` 时重新挂载，导致闪烁（[(2939)](https://github.com/vercel/ai/issues/2939)）。
+- 过多的 Suspense 边界可能导致崩溃（[(2843)](https://github.com/vercel/ai/issues/2843)）。
+- 使用 `createStreamableUI` 可能导致二次方级别的数据传输。你可以改用 `createStreamableValue` 并在客户端渲染组件来避免这一问题。
+- 已关闭的 RSC 流会导致更新问题（[(3007)](https://github.com/vercel/ai/issues/3007)）。
+
+由于这些局限，AI SDK RSC 被标记为实验性，我们不建议在稳定的生产环境中使用它。
+
+因此，我们强烈建议迁移到 AI SDK UI，它经过了大量开发，能够提供更稳定、达到生产级别的体验。
+
+在构建 [v0](https://v0.dev) 的过程中，我们投入了大量时间探索如何在 Web 上打造最佳的聊天体验。AI SDK UI 内置了许多这样的最佳实践和常用模式，例如[语言模型中间件](/docs/ai-sdk-core/middleware)、[多步工具调用](/docs/ai-sdk-core/tools-and-tool-calling#多步调用使用-stopwhen)、[附件](/docs/ai-sdk-ui/chatbot#附件)、[遥测](/docs/ai-sdk-core/telemetry)、[提供商注册表](/docs/ai-sdk-core/provider-management#提供商注册表)等等。这些功能经过了精心设计，形成了一个简洁的抽象，你可以用它将 AI 可靠地集成到你的应用中。
+
+## 流式传输聊天补全
+
+### 基本设置
+
+`streamUI` 函数作为 Server Action 的一部分执行，如下所示。
+
+#### 迁移前：在单个 Server Action 中处理生成与渲染
+
+```tsx filename="@/app/actions.tsx"
+import { openai } from '@ai-sdk/openai';
+import { getMutableAIState, streamUI } from '@ai-sdk/rsc';
+
+export async function sendMessage(message: string) {
+  'use server';
+
+  const messages = getMutableAIState('messages');
+
+  messages.update([...messages.get(), { role: 'user', content: message }]);
+
+  const { value: stream } = await streamUI({
+    model: openai('gpt-6-astra'),
+    instructions: 'you are a friendly assistant!',
+    messages: messages.get(),
+    text: async function* ({ content, done }) {
+      // process text
+    },
+    tools: {
+      // tool definitions
+    },
+  });
+
+  return stream;
+}
+```
+
+#### 迁移前：调用 Server Action 并更新 UI 状态
+
+聊天界面调用 Server Action，然后使用 `useUIState` Hook 保存响应。
+
+```tsx filename="@/app/page.tsx"
+'use client';
+
+import { useState, ReactNode } from 'react';
+import { useActions, useUIState } from '@ai-sdk/rsc';
+
+export default function Page() {
+  const { sendMessage } = useActions();
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useUIState();
+
+  return (
+    <div>
+      {messages.map(message => message)}
+
+      <form
+        onSubmit={async event => {
+          event.preventDefault();
+          const response: ReactNode = await sendMessage(input);
+          setMessages(msgs => [...msgs, response]);
+        }}
+      >
+        <input type="text" />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  );
+}
+```
+
+`streamUI` 函数将文本生成和用户界面渲染结合在一起。要迁移到 AI SDK UI，你需要**分离这些关注点**——使用 `streamText` 流式传输生成内容，并使用 `useChat` 渲染 UI。
+
+#### 迁移后：用 Route Handler 替换 Server Action
+
+`streamText` 函数作为 Route Handler 的一部分执行，并将响应流式传输到客户端。客户端的 `useChat` Hook 会解码这个流，并在聊天界面中渲染响应。
+
+```ts filename="@/app/api/chat/route.ts"
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+export async function POST(request) {
+  const { messages } = await request.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    instructions: 'you are a friendly assistant!',
+    messages,
+    tools: {
+      // tool definitions
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+#### 迁移后：更新客户端以使用 chat Hook
+
+```tsx filename="@/app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export default function Page() {
+  const { messages, input, setInput, handleSubmit } = useChat();
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <div>{message.role}</div>
+          <div>{message.content}</div>
+        </div>
+      ))}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+### 并行工具调用
+
+在 AI SDK RSC 中，`streamUI` 不支持并行工具调用。你将不得不组合使用 `streamText`、`createStreamableUI` 和 `createStreamableValue`。
+
+在 AI SDK UI 中，`useChat` 内置了对并行工具调用的支持。你可以在 `streamText` 中定义多个工具并让它们并行调用，`useChat` Hook 随后会自动为你处理并行工具调用。
+
+### 多步工具调用
+
+在 AI SDK RSC 中，`streamUI` 不支持多步工具调用。你将不得不组合使用 `streamText`、`createStreamableUI` 和 `createStreamableValue`。
+
+在 AI SDK UI 中，`useChat` 内置了对多步工具调用的支持。你可以在 `streamText` 函数中设置 `stopWhen` 来定义模型何时应停止进行工具调用，`useChat` Hook 随后会自动为你处理多步工具调用。
+
+### 生成式用户界面
+
+`streamUI` 函数使用 `tools` 来基于用户输入执行函数，并根据函数输出渲染 React 组件，从而在聊天界面中超越纯文本的表现形式。
+
+#### 迁移前：在 Server Action 内渲染组件并流式传输到客户端
+
+```tsx filename="@/app/actions.tsx"
+import { z } from 'zod';
+import { streamUI } from '@ai-sdk/rsc';
+import { openai } from '@ai-sdk/openai';
+import { getWeather } from '@/utils/queries';
+import { Weather } from '@/components/weather';
+
+const { value: stream } = await streamUI({
+  model: openai('gpt-6-astra'),
+  instructions: 'you are a friendly assistant!',
+  messages,
+  text: async function* ({ content, done }) {
+    // process text
+  },
+  tools: {
+    displayWeather: {
+      description: 'Display the weather for a location',
+      inputSchema: z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+      }),
+      generate: async function* ({ latitude, longitude }) {
+        yield <div>Loading weather...</div>;
+
+        const { value, unit } = await getWeather({ latitude, longitude });
+
+        return <Weather value={value} unit={unit} />;
+      },
+    },
+  },
+});
+```
+
+如前所述，`streamUI` 在单次 Server Action 调用中生成文本并渲染 React 组件。
+
+#### 迁移后：替换为 Route Handler 并将 props 数据流式传输到客户端
+
+`streamText` 函数将 props 数据作为响应流式传输到客户端，而 `useChat` 将该流解码为 `toolInvocations` 并渲染聊天界面。
+
+```ts filename="@/app/api/chat/route.ts"
+import { z } from 'zod';
+import { openai } from '@ai-sdk/openai';
+import { getWeather } from '@/utils/queries';
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+
+export async function POST(request) {
+  const { messages } = await request.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    instructions: 'you are a friendly assistant!',
+    messages,
+    tools: {
+      displayWeather: {
+        description: 'Display the weather for a location',
+        inputSchema: z.object({
+          latitude: z.number(),
+          longitude: z.number(),
+        }),
+        execute: async function ({ latitude, longitude }) {
+          const props = await getWeather({ latitude, longitude });
+          return props;
+        },
+      },
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+#### 迁移后：更新客户端以使用 chat Hook 并通过工具调用渲染组件
+
+```tsx filename="@/app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { Weather } from '@/components/weather';
+
+export default function Page() {
+  const { messages, input, setInput, handleSubmit } = useChat();
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <div>{message.role}</div>
+          <div>{message.content}</div>
+
+          <div>
+            {message.toolInvocations.map(toolInvocation => {
+              const { toolName, toolCallId, state } = toolInvocation;
+
+              if (state === 'result') {
+                const { result } = toolInvocation;
+
+                return (
+                  <div key={toolCallId}>
+                    {toolName === 'displayWeather' ? (
+                      <Weather weatherAtLocation={result} />
+                    ) : null}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={toolCallId}>
+                    {toolName === 'displayWeather' ? (
+                      <div>Loading weather...</div>
+                    ) : null}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        </div>
+      ))}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+### 处理客户端交互
+
+在 AI SDK RSC 中，流式传输到客户端的组件可以通过 `useActions` Hook 调用相关的 Server Action 来触发后续生成。只要该组件是 `<AI/>` 上下文提供程序的后代，这就可以实现。
+
+#### 迁移前：使用 actions Hook 发送消息
+
+```tsx filename="@/app/components/list-flights.tsx"
+'use client';
+
+import { useActions, useUIState } from '@ai-sdk/rsc';
+
+export function ListFlights({ flights }) {
+  const { sendMessage } = useActions();
+  const [_, setMessages] = useUIState();
+
+  return (
+    <div>
+      {flights.map(flight => (
+        <div
+          key={flight.id}
+          onClick={async () => {
+            const response = await sendMessage(
+              `I would like to choose flight ${flight.id}!`,
+            );
+
+            setMessages(msgs => [...msgs, response]);
+          }}
+        >
+          {flight.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+#### 迁移后：在组件中使用相同 ID 的另一个 chat Hook
+
+切换到 AI SDK UI 后，通过在组件中初始化与父组件具有相同 `id` 的 `useChat` Hook 来同步这些消息。
+
+```tsx filename="@/app/components/list-flights.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export function ListFlights({ chatId, flights }) {
+  const { append } = useChat({
+    id: chatId,
+    body: { id: chatId },
+  });
+
+  return (
+    <div>
+      {flights.map(flight => (
+        <div
+          key={flight.id}
+          onClick={async () => {
+            await append({
+              role: 'user',
+              content: `I would like to choose flight ${flight.id}!`,
+            });
+          }}
+        >
+          {flight.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 加载指示器
+
+在 AI SDK RSC 中，你可以使用 `streamUI` 的 `initial` 参数来定义生成进行期间要显示的组件。
+
+#### 迁移前：使用 `loading` 显示加载指示器
+
+```tsx filename="@/app/actions.tsx"
+import { openai } from '@ai-sdk/openai';
+import { streamUI } from '@ai-sdk/rsc';
+
+const { value: stream } = await streamUI({
+  model: openai('gpt-6-astra'),
+  instructions: 'you are a friendly assistant!',
+  messages,
+  initial: <div>Loading...</div>,
+  text: async function* ({ content, done }) {
+    // process text
+  },
+  tools: {
+    // tool definitions
+  },
+});
+
+return stream;
+```
+
+在 AI SDK UI 中，你可以在工具执行期间使用工具调用状态来显示加载指示器。
+
+#### 迁移后：使用工具调用状态显示加载指示器
+
+```tsx filename="@/app/components/message.tsx"
+'use client';
+
+export function Message({ role, content, toolInvocations }) {
+  return (
+    <div>
+      <div>{role}</div>
+      <div>{content}</div>
+
+      {toolInvocations && (
+        <div>
+          {toolInvocations.map(toolInvocation => {
+            const { toolName, toolCallId, state } = toolInvocation;
+
+            if (state === 'result') {
+              const { result } = toolInvocation;
+
+              return (
+                <div key={toolCallId}>
+                  {toolName === 'getWeather' ? (
+                    <Weather weatherAtLocation={result} />
+                  ) : null}
+                </div>
+              );
+            } else {
+              return (
+                <div key={toolCallId}>
+                  {toolName === 'getWeather' ? (
+                    <Weather isLoading={true} />
+                  ) : (
+                    <div>Loading...</div>
+                  )}
+                </div>
+              );
+            }
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### 保存聊天
+
+在将 `streamUI` 实现为 Server Action 之前，你应当创建一个 `<AI/>` 提供程序并在根布局中包裹你的应用，以同步 AI 状态和 UI 状态。在初始化期间，你通常使用 `onSetAIState` 回调函数来追踪 AI 状态的更新，并在调用 `done(...)` 时将其保存到数据库。
+
+#### 迁移前：使用上下文提供程序的回调函数保存聊天
+
+```ts filename="@/app/actions.ts"
+import { createAI } from '@ai-sdk/rsc';
+import { saveChat } from '@/utils/queries';
+
+export const AI = createAI({
+  initialAIState: {},
+  initialUIState: {},
+  actions: {
+    // server actions
+  },
+  onSetAIState: async ({ state, done }) => {
+    'use server';
+
+    if (done) {
+      await saveChat(state);
+    }
+  },
+});
+```
+
+#### 迁移后：使用 `streamText` 的回调函数保存聊天
+
+在 AI SDK UI 中，你将在 Route Handler 中使用 `streamText` 的 `onEnd` 回调函数来保存聊天。
+
+```ts filename="@/app/api/chat/route.ts"
+import { openai } from '@ai-sdk/openai';
+import { saveChat } from '@/utils/queries';
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  convertToModelMessages,
+} from 'ai';
+
+export async function POST(request) {
+  const { id, messages } = await request.json();
+
+  const coreMessages = await convertToModelMessages(messages);
+
+  const result = streamText({
+    model: __MODEL__,
+    instructions: 'you are a friendly assistant!',
+    messages: coreMessages,
+    onEnd: async ({ responseMessages }) => {
+      try {
+        await saveChat({
+          id,
+          messages: [...coreMessages, ...responseMessages],
+        });
+      } catch (error) {
+        console.error('Failed to save chat');
+      }
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+### 恢复聊天
+
+在使用 AI SDK RSC 时，`useUIState` Hook 包含聊天的 UI 状态。恢复之前保存的聊天时，需要将消息加载到 UI 状态中。
+
+与在 AI SDK RSC 中通常保存聊天的方式类似，你应当使用 `onGetUIState` 回调函数从数据库中获取聊天，将其转换为 UI 状态并返回，以便通过 `useUIState` 访问。
+
+#### 迁移前：使用上下文提供程序的回调函数从数据库加载聊天
+
+```ts filename="@/app/actions.ts"
+import { createAI } from '@ai-sdk/rsc';
+import { loadChatFromDB, convertToUIState } from '@/utils/queries';
+
+export const AI = createAI({
+  actions: {
+    // server actions
+  },
+  onGetUIState: async () => {
+    'use server';
+
+    const chat = await loadChatFromDB();
+    const uiState = convertToUIState(chat);
+
+    return uiState;
+  },
+});
+```
+
+AI SDK UI 使用 `useChat` 的 `messages` 字段来存储消息。要在 `useChat` 挂载时加载消息，你应当使用 `initialMessages`。
+
+由于消息通常从数据库加载，我们可以在 Page 组件内使用 Server Action，在静态生成期间从数据库中获取较早的聊天，并将消息作为 props 传递给 `<Chat/>` 组件。
+
+#### 迁移后：在页面静态生成期间从数据库加载聊天
+
+```tsx filename="@/app/chat/[id]/page.tsx"
+import { Chat } from '@/app/components/chat';
+import { getChatById } from '@/utils/queries';
+
+// link to example implementation: https://github.com/vercel/ai-chatbot/blob/00b125378c998d19ef60b73fe576df0fe5a0e9d4/lib/utils.ts#L87-L127
+import { convertToUIMessages } from '@/utils/functions';
+
+export default async function Page({ params }: { params: any }) {
+  const { id } = params;
+  const chatFromDb = await getChatById({ id });
+
+  const chat: Chat = {
+    ...chatFromDb,
+    messages: convertToUIMessages(chatFromDb.messages),
+  };
+
+  return <Chat key={id} id={chat.id} initialMessages={chat.messages} />;
+}
+```
+
+#### 迁移后：将聊天消息作为 props 传入并加载到 chat Hook
+
+```tsx filename="@/app/components/chat.tsx"
+'use client';
+
+import { Message } from 'ai';
+import { useChat } from '@ai-sdk/react';
+
+export function Chat({
+  id,
+  initialMessages,
+}: {
+  id;
+  initialMessages: Array<Message>;
+}) {
+  const { messages } = useChat({
+    id,
+    initialMessages,
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <div>{message.role}</div>
+          <div>{message.content}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## 流式传输对象生成
+
+`createStreamableValue` 函数可以将任何可序列化的数据从服务器流式传输到客户端。因此，与 `streamText` 和 `Output` 搭配使用时，该函数可以让你将对象生成从服务器流式传输到客户端。
+
+#### 迁移前：使用可流式值流式传输对象生成
+
+```ts filename="@/app/actions.ts"
+import { Output, streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { createStreamableValue } from '@ai-sdk/rsc';
+import { notificationsSchema } from '@/utils/schemas';
+
+export async function generateSampleNotifications() {
+  'use server';
+
+  const stream = createStreamableValue();
+
+  (async () => {
+    const { partialOutputStream } = streamText({
+      model: __MODEL__,
+      instructions: 'generate sample ios messages for testing',
+      prompt: 'messages from a family group chat during diwali, max 4',
+      output: Output.object({ schema: notificationsSchema }),
+    });
+
+    for await (const partialObject of partialOutputStream) {
+      stream.update(partialObject);
+    }
+
+    stream.done();
+  })();
+
+  return { partialNotificationsStream: stream.value };
+}
+```
+
+#### 迁移前：读取可流式值并更新对象
+
+```tsx filename="@/app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { readStreamableValue } from '@ai-sdk/rsc';
+import { generateSampleNotifications } from '@/app/actions';
+
+export default function Page() {
+  const [notifications, setNotifications] = useState(null);
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const { partialNotificationsStream } =
+            await generateSampleNotifications();
+
+          for await (const partialNotifications of readStreamableValue(
+            partialNotificationsStream,
+          )) {
+            if (partialNotifications) {
+              setNotifications(partialNotifications.notifications);
+            }
+          }
+        }}
+      >
+        Generate
+      </button>
+    </div>
+  );
+}
+```
+
+要迁移到 AI SDK UI，你应当使用 `useObject` Hook，并在 Route Handler 中实现带有 `Output` 的 `streamText`。
+
+#### 迁移后：替换为 Route Handler 并流式传输文本响应
+
+```ts filename="@/app/api/object/route.ts"
+import { Output, createTextStreamResponse, streamText, toTextStream } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { notificationSchema } from '@/utils/schemas';
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    output: Output.object({ schema: notificationSchema }),
+    prompt:
+      `Generate 3 notifications for a messages app in this context:` + context,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+#### 迁移后：使用 object Hook 解码流并更新对象
+
+```tsx filename="@/app/page.tsx"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from '@/utils/schemas';
+
+export default function Page() {
+  const { object, submit } = useObject({
+    api: '/api/object',
+    schema: notificationSchema,
+  });
+
+  return (
+    <div>
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```

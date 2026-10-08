@@ -1,0 +1,115 @@
+---
+title: 多步界面
+description: 构建多步界面背后的概念
+---
+
+# Multistep Interfaces
+
+多步界面（multistep interfaces）指需要执行多个独立步骤才能完成特定任务的用户界面。
+
+要理解多步界面，重要的是理解两个概念：
+
+- 工具组合
+- 应用上下文
+
+**工具组合**（tool composition）是把多个[工具](/docs/ai-sdk-core/tools-and-tool-calling)组合起来创建新工具的过程。这是一个强大的概念，让你可以把复杂任务拆分为更小、更易管理的步骤。
+
+**应用上下文**（application context）指应用在任一时间点的状态，包括用户输入、语言模型的输出以及任何其他相关信息。
+
+在设计多步界面时，你需要考虑如何组合应用中的工具以形成连贯的用户体验，以及随着用户在界面中的推进，应用上下文如何变化。
+
+## 应用上下文
+
+应用上下文可以看作用户与语言模型之间的对话历史。上下文越丰富，模型拥有的可用于生成相关响应的信息就越多。
+
+在多步界面的语境下，应用上下文变得更加重要。这是因为**某一步骤中用户的输入可能会影响下一步骤中模型的输出**。
+
+例如，设想一个帮助用户记录每日饮食的用餐记录应用。该语言模型配备了以下工具：
+
+- `log_meal`：接收食物名称、份量和进食时间等参数来记录一餐。
+- `delete_meal`：接收要删除的餐食名称。
+
+当用户记录一餐时，模型会生成确认该餐已记录的响应。
+
+```txt highlight="2"
+User: Log a chicken shawarma for lunch.
+Tool: log_meal("chicken shawarma", "250g", "12:00 PM")
+Model: Chicken shawarma has been logged for lunch.
+```
+
+现在，当用户决定删除这餐时，模型应该能够参照之前的步骤来确定要删除的餐食。
+
+```txt highlight="7"
+User: Log a chicken shawarma for lunch.
+Tool: log_meal("chicken shawarma", "250g", "12:00 PM")
+Model: Chicken shawarma has been logged for lunch.
+...
+...
+User: I skipped lunch today, can you update my log?
+Tool: delete_meal("chicken shawarma")
+Model: Chicken shawarma has been deleted from your log.
+```
+
+在这个例子中，管理应用上下文对模型生成正确响应非常重要。模型需要掌握之前操作的信息，才能为 `delete_meal` 工具生成参数。
+
+## 工具组合
+
+工具组合是把多个工具组合起来创建新工具的过程。这包括定义每个工具的输入与输出，以及它们之间如何交互。
+
+这些工具如何组合形成多步界面的设计，对你的应用用户体验以及模型生成正确输出的能力都至关重要。
+
+例如，设想一个可以帮助用户预订航班的机票预订助手。这个助手可以设计为拥有以下工具：
+
+- `searchFlights`：根据用户的查询搜索航班。
+- `lookupFlight`：根据航班号查询特定航班的详情。
+- `bookFlight`：根据用户的选择预订航班。
+
+当用户想查询特定航线的航班时会调用 `searchFlights` 工具。这通常意味着该工具应能接收航班的出发地和目的地等参数。
+
+当用户想了解某个航班的更多详情时会调用 `lookupFlight` 工具。这通常意味着该工具应能接收航班号等参数，并返回座位余量信息。
+
+当用户决定预订航班时会调用 `bookFlight` 工具。为了确定要预订的航班，该工具应能接收航班号、出行日期和乘客信息等参数。
+
+因此，用户与模型之间的对话可能如下所示：
+
+```txt highlight="8"
+User: I want to book a flight from New York to London.
+Tool: searchFlights("New York", "London")
+Model: Here are the available flights from New York to London.
+User: I want to book flight number BA123 on 12th December for myself and my wife.
+Tool: lookupFlight("BA123") -> "4 seats available"
+Model: Sure, there are seats available! Can you provide the names of the passengers?
+User: John Doe and Jane Doe.
+Tool: bookFlight("BA123", "12th December", ["John Doe", "Jane Doe"])
+Model: Your flight has been booked!
+```
+
+在 `lookupFlight` 返回后，`bookFlight` 工具所需的乘客信息尚未出现在应用上下文中。模型会向用户询问这些信息；一旦用户提供了姓名，模型就可以调用 `bookFlight`。
+
+假设用户已登录应用，查询乘客信息本可以是模型在调用 `bookFlight` 工具之前调用的另一个工具。这样，模型就不必向用户询问乘客信息，可以直接继续完成预订。
+
+```txt highlight="5,6"
+User: I want to book a flight from New York to London.
+Tool: searchFlights("New York", "London")
+Model: Here are the available flights from New York to London.
+User: I want to book flight number BA123 on 12th December for myself and my wife.
+Tool: lookupContacts() -> ["John Doe", "Jane Doe"]
+Tool: bookFlight("BA123", "12th December", ["John Doe", "Jane Doe"])
+Model: Your flight has been booked!
+```
+
+在 `bookFlight` 工具之前调用 `lookupContacts` 工具，是为了确保预订航班时乘客信息已在应用上下文中可用。这样，模型可以减少需要用户执行的步骤，并利用其调用工具来填充上下文的能力，再用这些信息完成预订流程。
+
+现在，我们引入另一个名为 `lookupBooking` 的工具，它以乘客姓名为参数来展示预订详情。该工具可以与现有工具组合，提供更完整的用户体验。
+
+```txt highlight="2-4"
+User: What's the status of my wife's upcoming flight?
+Tool: lookupContacts() -> ["John Doe", "Jane Doe"]
+Tool: lookupBooking("Jane Doe") -> "BA123 confirmed"
+Tool: lookupFlight("BA123") -> "Flight BA123 is scheduled to depart on 12th December."
+Model: Your wife's flight BA123 is confirmed and scheduled to depart on 12th December.
+```
+
+在这个例子中，`lookupBooking` 工具用于向用户提供其妻子即将乘坐的航班的状态。通过将该工具与现有工具组合，模型能够生成包含预订状态和航班出发日期的响应，而无需用户提供额外信息。
+
+因此，你设计的可组合工具越多，应用就能变得越复杂、越强大。

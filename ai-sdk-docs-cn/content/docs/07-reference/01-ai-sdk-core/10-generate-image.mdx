@@ -1,0 +1,248 @@
+---
+title: generateImage
+description: generateImage 的 API 参考。
+---
+
+# `generateImage()`
+
+使用图像模型根据给定的提示词（prompt）生成图像。
+
+它非常适合需要以编程方式生成图像的场景，例如创建视觉内容或生成用于数据增强的图像。
+
+```ts
+import { generateImage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { images } = await generateImage({
+  model: __IMAGE_MODEL__,
+  prompt: 'A futuristic cityscape at sunset',
+  n: 3,
+  size: '1024x1024',
+});
+
+console.log(images);
+```
+
+## 导入
+
+<Snippet text={`import { generateImage } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'ImageModelV4',
+      description: '要使用的图像模型。',
+    },
+    {
+      name: 'prompt',
+      type: 'string | GenerateImagePrompt',
+      description: '用于生成图像的输入提示词。',
+      properties: [
+        {
+          type: 'GenerateImagePrompt',
+          type: 'object',
+          description: '用于图像编辑的提示词对象',
+          parameters: [
+            {
+              name: 'images',
+              type: 'Array<DataContent>',
+              description:
+                '图像项可以是以下之一：base64 编码字符串、`Uint8Array`、`ArrayBuffer` 或 `Buffer`。',
+            },
+            {
+              name: 'text',
+              type: 'string',
+              description: '文本提示词。',
+            },
+            {
+              name: 'mask',
+              type: 'DataContent',
+              description:
+                'base64 编码字符串、`Uint8Array`、`ArrayBuffer` 或 `Buffer`。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'n',
+      type: 'number',
+      isOptional: true,
+      description: '要生成的图像数量。',
+    },
+    {
+      name: 'size',
+      type: 'string',
+      isOptional: true,
+      description: '要生成的图像尺寸。格式：`{width}x{height}`。',
+    },
+    {
+      name: 'aspectRatio',
+      type: 'string',
+      isOptional: true,
+      description: '要生成的图像宽高比。格式：`{width}:{height}`。',
+    },
+    {
+      name: 'seed',
+      type: 'number',
+      isOptional: true,
+      description: '图像生成的随机种子。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '额外的提供商特定选项。',
+    },
+    {
+      name: 'maxImagesPerCall',
+      type: 'number',
+      isOptional: true,
+      description:
+        '每次 API 调用可生成的最大图像数量。当 n 超过该值时会发起多次 API 调用。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '每次图像模型调用的最大重试次数，包括未归类空响应之后的重试。被提供商标记为不可重试的空响应不会重试。默认：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '用于取消本次调用的可选中止信号。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description: '请求的额外 HTTP 请求头。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'image',
+      type: 'GeneratedFile',
+      description: '生成的第一张图像。',
+      properties: [
+        {
+          type: 'GeneratedFile',
+          parameters: [
+            {
+              name: 'base64',
+              type: 'string',
+              description: '以 base64 编码字符串表示的图像。',
+            },
+            {
+              name: 'uint8Array',
+              type: 'Uint8Array',
+              description: '以 Uint8Array 表示的图像。',
+            },
+            {
+              name: 'mediaType',
+              type: 'string',
+              description: '图像的 IANA 媒体类型。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'images',
+      type: 'Array<GeneratedFile>',
+      description: '生成的所有图像。',
+      properties: [
+        {
+          type: 'GeneratedFile',
+          parameters: [
+            {
+              name: 'base64',
+              type: 'string',
+              description: '以 base64 编码字符串表示的图像。',
+            },
+            {
+              name: 'uint8Array',
+              type: 'Uint8Array',
+              description: '以 Uint8Array 表示的图像。',
+            },
+            {
+              name: 'mediaType',
+              type: 'string',
+              description: '图像的 IANA 媒体类型。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'warnings',
+      type: 'Warning[]',
+      description: '来自模型提供商的警告（例如不支持的设置）。',
+    },
+    {
+      name: 'usage',
+      type: 'ImageModelUsage',
+      description: '图像生成的用量统计。',
+      properties: [
+        {
+          type: 'ImageModelUsage',
+          parameters: [
+            {
+              name: 'imagesGenerated',
+              type: 'number',
+              description: '生成的图像总数。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'providerMetadata',
+      type: 'ImageModelProviderMetadata',
+      isOptional: true,
+      description:
+        '来自提供商的可选元数据。外层键是提供商名称，内层值是元数据。元数据中始终存在 `images` 键，它是一个与顶层 `images` 键长度相同的数组。具体细节取决于提供商。',
+    },
+    {
+      name: 'responses',
+      type: 'Array<ImageModelResponseMetadata>',
+      description:
+        '来自提供商的响应元数据。若对模型发起了多次调用，可能会有多个响应。',
+      properties: [
+        {
+          type: 'ImageModelResponseMetadata',
+          parameters: [
+            {
+              name: 'timestamp',
+              type: 'Date',
+              description: '生成的响应开始时间的时间戳。',
+            },
+            {
+              name: 'modelId',
+              type: 'string',
+              description: '用于生成响应的响应模型 ID。',
+            },
+            {
+              name: 'headers',
+              type: 'Record<string, string>',
+              isOptional: true,
+              description: '响应头。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>

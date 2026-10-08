@@ -1,0 +1,90 @@
+---
+title: 使用 jsonrepair 修复畸形 JSON
+description: 了解如何使用 jsonrepair 库自动修复语言模型输出的截断或畸形 JSON。
+tags: ['error-handling', 'json', 'structured-outputs']
+---
+
+# Repair Malformed JSON with jsonrepair
+
+生成结构化输出时，语言模型有时会产生畸形的 JSON 输出。可能的原因包括：
+
+- 响应被截断（达到 token 上限）
+- 语法错误，如用单引号代替双引号
+- 缺少闭合的方括号或花括号
+- 尾随逗号
+
+在 AI SDK v6 中，一个实用的模式是：先生成文本，再修复它，然后解析并校验。结合 [`jsonrepair`](https://github.com/josdejong/jsonrepair) 库，你可以自动修复许多常见的 JSON 问题。
+
+## 安装
+
+首先安装 `jsonrepair` 库：
+
+```bash
+pnpm add jsonrepair
+```
+
+## 在 generateText 中使用
+
+下面展示如何将 `jsonrepair` 与 `generateText` 结合使用：
+
+```ts
+import { generateText, Output } from 'ai';
+import { safeParseJSON } from '@ai-sdk/provider-utils';
+__PROVIDER_IMPORT__;
+import { jsonrepair } from 'jsonrepair';
+import { z } from 'zod';
+
+const recipeSchema = z.object({
+  recipe: z.object({
+    name: z.string(),
+    ingredients: z.array(
+      z.object({
+        name: z.string(),
+        amount: z.string(),
+      }),
+    ),
+    steps: z.array(z.string()),
+  }),
+});
+
+const result = await generateText({
+  model: __MODEL__,
+  output: Output.text(),
+  prompt: 'Generate a lasagna recipe.',
+});
+
+const repairedText = jsonrepair(result.text);
+const parseResult = safeParseJSON({ text: repairedText });
+
+if (!parseResult.success) {
+  throw parseResult.error;
+}
+
+const output = recipeSchema.parse(parseResult.value);
+console.log(output.recipe);
+```
+
+## 工作原理
+
+这个流程分为三步：
+
+1. 从模型生成纯文本（`Output.text()`）。
+2. 用 `jsonrepair` 修复畸形 JSON。
+3. 安全解析并用你的 schema 进行校验。
+
+## jsonrepair 能修复哪些问题
+
+`jsonrepair` 库可以自动修复许多常见问题：
+
+- 缺少闭合括号：`{"name": "test"` -> `{"name": "test"}`
+- 单引号：`{'name': 'test'}` -> `{"name": "test"}`
+- 键名缺少引号：`{name: "test"}` -> `{"name": "test"}`
+- 尾随逗号：`{"items": [1, 2, 3,]}` -> `{"items": [1, 2, 3]}`
+- JSON 中的注释
+- 未转义的特殊字符
+
+## 注意事项
+
+1. **修复是尽力而为**——`jsonrepair` 能处理许多情况，但无法修复所有畸形 JSON（例如恰好是合法 JSON 但语义错误的数据）。
+2. **schema 校验**——即使修复之后，对象仍必须符合你的 schema。如果模型生成了结构性错误的数据，修复也无济于事。
+3. **内容截断**——对于严重截断的响应，考虑增大 `maxOutputTokens` 或简化你的 schema。

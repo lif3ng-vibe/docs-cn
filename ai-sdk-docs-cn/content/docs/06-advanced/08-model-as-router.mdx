@@ -1,0 +1,120 @@
+---
+title: 语言模型作为路由器
+description: 生成式 UI 与语言模型作为路由器
+---
+
+# 生成式用户界面
+
+由于语言模型可以把用户界面作为生成内容的一部分渲染出来，这类模型生成结果被称为生成式用户界面（generative user interfaces）。
+
+本节将进一步介绍生成式用户界面，以及它们对 AI 应用构建方式的影响。
+
+## 确定性路由与概率性路由
+
+生成式用户界面本质上不是确定性的，因为它们取决于模型的生成输出。而这些生成结果本身具有概率性，因此每一次用户查询都可能产生不同的用户界面。
+
+用户期望在应用中获得可预期的体验，因此非确定性的用户界面乍听起来像是个坏主意。不过，可以利用语言模型调用函数的能力，把它的生成结果限制在一组特定的输出之内。
+
+当为语言模型提供一组函数定义，并指示它根据用户查询执行其中某个函数时，它会做以下两件事之一：
+
+- 执行与用户查询最相关的函数。
+- 如果用户查询超出了可用函数的范围，则不执行任何函数。
+
+```tsx filename='app/actions.ts'
+const sendMessage = (prompt: string) =>
+  generateText({
+    model: __MODEL__,
+    instructions: 'you are a friendly weather assistant!',
+    prompt,
+    tools: {
+      getWeather: {
+        description: 'Get the weather in a location',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }: { location: string }) => ({
+          location,
+          temperature: 72 + Math.floor(Math.random() * 21) - 10,
+        }),
+      },
+    },
+  });
+
+sendMessage('What is the weather in San Francisco?'); // getWeather is called
+sendMessage('What is the weather in New York?'); // getWeather is called
+sendMessage('What events are happening in London?'); // No function is called
+```
+
+这样一来，就能保证生成结果是确定性的输出，而模型做出的选择仍然是概率性的。
+
+语言模型所展现出的这种涌现能力——根据用户查询选择是否执行某个函数——被认为是模型在模拟"推理"。
+
+由此，语言模型既能推理出该执行哪个函数，又能同时渲染用户界面，二者结合让你可以构建把语言模型当作路由器来使用的应用。
+
+## 语言模型作为路由器
+
+过去，开发者必须编写路由逻辑，把应用的不同部分连接起来，让用户可以导航并完成特定任务。
+
+在如今的 Web 应用中，大多数路由逻辑以路由的形式呈现：
+
+- `/login` 会把你导航到带有登录表单的页面。
+- `/user/john` 会把你导航到包含 John 个人资料的页面。
+- `/api/events?limit=5` 会显示活动数据库中最新的 5 条活动。
+
+路由帮助你构建把应用各部分连接成无缝用户体验的 Web 应用，但随着应用复杂度的增长，管理这些路由也可能成为负担。
+
+Next.js 通过引入以下特性降低了使用路由进行开发的复杂度：
+
+- 基于文件的路由系统
+- 动态路由
+- API 路由
+- 中间件
+- App Router，等等
+
+随着语言模型的推理能力越来越强，我们相信未来开发者只需编写应用核心的业务组件，而由模型根据用户在应用中的状态来负责对它们进行路由。
+
+在生成式用户界面中，语言模型根据用户在应用中的状态决定渲染哪个用户界面，让用户能够以对话的方式与你的应用交互，而不必在一系列预定义的路由中导航。
+
+### 按参数路由
+
+对于如下这类路由：
+
+- `/profile/[username]`
+- `/search?q=[query]`
+- `/media/[id]`
+
+其路径片段依赖动态数据，语言模型可以生成正确的参数并渲染相应的用户界面。
+
+例如，在搜索应用中，你可以让语言模型搜索不同艺术家的艺术作品。语言模型会以艺术家姓名作为参数调用搜索函数，并渲染搜索结果。
+
+<div className="not-prose">
+  <CardPlayer
+    type="media-search"
+    title="媒体搜索"
+    description="在搜索体验中直接渲染组件，让用户看到的超越文字所能表达。"
+  />
+</div>
+
+### 按序列路由
+
+对于需要通过在不同路由间导航来完成一系列步骤的操作，语言模型可以生成需要完成的正确路由序列，以满足用户的请求。
+
+例如，在日历应用中，你可以让语言模型安排一个与朋友们的晚间欢乐时光。语言模型会理解你的请求，并执行正确的[工具调用](/docs/ai-sdk-core/tools-and-tool-calling)序列来：
+
+1. 查看你的日历
+2. 查看你朋友们的日历
+3. 确定对所有人都最合适的时间
+4. 搜索附近的欢乐时光去处
+5. 创建活动并向你的朋友们发出邀请
+
+<div className="not-prose">
+  <CardPlayer
+    type="event-planning"
+    title="策划一场活动"
+    description="模型根据用户意图调用函数并生成界面，如同路由器一般。"
+  />
+</div>
+
+只需定义好查找联系人、从日历中提取活动以及搜索附近地点的函数，模型就能为你按顺序完成路由导航。
+
+想了解更多，请查看这些[示例](/examples/next-app/interface)，它们使用 `streamUI` 函数根据语言模型的响应将生成式用户界面流式传输到客户端。

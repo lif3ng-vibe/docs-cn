@@ -1,0 +1,245 @@
+---
+title: Get started with Computer Use
+description: 通过 AI SDK 上手 Claude 的 Computer Use 能力
+tags: ['computer-use', 'tools']
+---
+
+# Get started with Computer Use
+
+随着 [Claude 3.5 Sonnet 中 Computer Use 的发布](https://www.anthropic.com/news/3-5-models-and-computer-use)，你现在可以让 AI 模型像人类一样操作计算机——移动光标、点击按钮、输入文字。这项能力在借助 Claude 高级推理能力的同时，实现了复杂任务的自动化。
+
+AI SDK 是一个强大的 TypeScript 工具包，可用于结合 Anthropic 的 Claude 等大语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。在本指南中，你将学习如何把 Computer Use 集成到你的 AI SDK 应用中。
+
+<Note>
+  Computer Use 目前处于 beta 阶段，存在一些[限制](https://docs.anthropic.com/en/docs/build-with-claude/computer-use#understand-computer-use-limitations)。该功能有时可能出错。Anthropic 建议从低风险任务开始，并实现适当的安全措施。
+</Note>
+
+## Computer Use
+
+Anthropic 最近发布了 Claude 3.5 Sonnet 模型的新版本，它具备 “Computer Use” 能力。这让模型可以通过以下基本操作与计算机界面交互：
+
+- 移动光标
+- 点击按钮
+- 输入文字
+- 截取屏幕截图
+- 读取屏幕内容
+
+## 工作原理
+
+Computer Use 让模型能够通过一系列协调的步骤读取屏幕内容并与之交互。该流程的工作方式如下：
+
+1. **从提示词和工具开始**
+
+   在请求中添加 Anthropic 定义的 Computer Use 工具，并为模型提供一个任务（提示词）。例如：“save an image to your downloads folder.”。
+
+2. **选择合适的工具**
+
+   模型会评估哪些计算机工具可以帮助完成任务，然后发送格式化的 `tool_call` 来使用相应的工具。
+
+3. **执行操作并返回结果**
+
+   AI SDK 通过运行所选工具来处理 Claude 的请求。随后可以通过 `tool_result` 消息把结果发回给 Claude。
+
+4. **通过迭代完成任务**
+
+   Claude 会分析每个结果，判断是否需要更多操作。它会持续请求使用工具并处理结果，直到完成你的任务或需要额外输入。
+
+### 可用工具
+
+Computer Use API 中有三个主要工具：
+
+1. **Computer Tool**：支持鼠标移动、点击和键盘输入等基本计算机控制
+2. **Text Editor Tool**：提供查看和编辑文本文件的功能
+3. **Bash Tool**：允许执行 bash 命令
+
+### 实现注意事项
+
+AI SDK 中的 Computer Use 工具是预定义的接口，需要你自行实现执行层。虽然 SDK 提供了这些工具的类型定义和结构，但你还需要：
+
+1. 为 Computer Use 执行搭建受控环境
+2. 实现鼠标控制和键盘输入等核心功能
+3. 处理截图的捕获与处理
+4. 为 Claude 与你系统交互的方式设置规则和限制
+
+推荐的做法是从 [ Anthropic 的参考实现 ](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo)开始，它提供了：
+
+- 一个为安全 Computer Use 配置的容器化环境
+- 开箱即用的 Computer Use 工具（Python）实现
+- 用于 API 交互和工具执行的智能体循环
+- 用于监控和控制的 Web 界面
+
+在构建你自己的定制方案之前，这个参考实现可以作为理解相关要求的基础。
+
+## 使用 AI SDK 上手
+
+<Note>
+  如果你从未使用过 AI SDK，请先阅读[快速上手指南](/docs/getting-started)。
+</Note>
+
+<Note>
+  有关 Next.js 与 AI SDK 实现 Computer Use 的可运行示例，请查看我们的 [AI SDK Computer Use Template](https://github.com/vercel-labs/ai-sdk-computer-use)。
+</Note>
+
+首先，确保已安装 AI SDK 和 [Anthropic AI SDK 提供商](/providers/ai-sdk-providers/anthropic)：
+
+<Snippet text="pnpm add ai @ai-sdk/anthropic" />
+
+你可以使用 provider-defined-client 工具为 AI SDK 应用添加 Computer Use。这些工具接受各种输入参数（比如 computer 工具的显示高度和宽度），然后要求你定义一个 execute 函数。
+
+以下是如何使用 AI SDK 设置 Computer Tool：
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { getScreenshot, executeComputerAction } from '@/utils/computer-use';
+
+const computerTool = anthropic.tools.computer_20250124({
+  displayWidthPx: 1920,
+  displayHeightPx: 1080,
+  execute: async ({ action, coordinate, text }) => {
+    switch (action) {
+      case 'screenshot': {
+        return {
+          type: 'image',
+          data: getScreenshot(),
+        };
+      }
+      default: {
+        return executeComputerAction(action, coordinate, text);
+      }
+    }
+  },
+  toModelOutput({ output }) {
+    return typeof output === 'string'
+      ? [{ type: 'text', text: output }]
+      : [{ type: 'file-data', data: output.data, mediaType: 'image/png' }];
+  },
+});
+```
+
+`computerTool` 处理两个主要操作：通过 `getScreenshot()` 截图，以及通过 `executeComputerAction()` 执行鼠标移动和点击等计算机操作。记住，你必须自己实现这些执行逻辑（例如 `getScreenshot` 和 `executeComputerAction` 函数）来处理实际的计算机交互。`execute` 函数应当处理与操作系统的所有底层交互。
+
+最后，要把工具结果发回给模型，可以使用 [`toModelOutput()`](/docs/foundations/prompts#multi-modal-tool-results) 函数把文本和图像响应转换为模型可处理的格式。在使用 Anthropic 模型时，AI SDK 对这类多模态工具结果提供了实验性支持。
+
+<Note>
+  Computer Use 需要适当的安全措施，比如使用虚拟机、限制对敏感数据的访问，以及对关键操作实施人工监督。
+</Note>
+
+### 在文本生成中使用计算机工具
+
+工具定义好后，可以在 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 和 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 两个函数中使用它。
+
+一次性文本生成使用 `generateText`：
+
+```ts
+const result = await generateText({
+  model: 'anthropic/claude-sonnet-4-20250514',
+  prompt: 'Move the cursor to the center of the screen and take a screenshot',
+  tools: { computer: computerTool },
+});
+
+console.log(result.text);
+```
+
+流式响应使用 `streamText` 实时接收更新：
+
+```ts
+const result = streamText({
+  model: 'anthropic/claude-sonnet-4-20250514',
+  prompt: 'Open the browser and navigate to vercel.com',
+  tools: { computer: computerTool },
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 配置多步（智能体）生成
+
+要让模型在无需用户干预的情况下执行多个步骤，可以使用 `stopWhen` 参数。它会自动把工具结果发回给模型，以触发后续生成：
+
+```ts highlight="1,7"
+import { isStepCount } from 'ai';
+
+const stream = streamText({
+  model: 'anthropic/claude-sonnet-4-20250514',
+  prompt: 'Open the browser and navigate to vercel.com',
+  tools: { computer: computerTool },
+  stopWhen: isStepCount(10), // experiment with this value based on your use case
+});
+```
+
+### 组合多个工具
+
+你可以在单个请求中组合多个工具，实现更复杂的工作流。AI SDK 支持 Claude 的全部三个 Computer Use 工具：
+
+```ts
+const computerTool = anthropic.tools.computer_20250124({
+  ...
+});
+
+const bashTool = anthropic.tools.bash_20250124({
+  execute: async ({ command, restart }) => execSync(command).toString()
+});
+
+const textEditorTool = anthropic.tools.textEditor_20250728({
+  execute: async ({
+    command,
+    path,
+    file_text,
+    insert_line,
+    new_str,
+    insert_text,
+    old_str,
+    view_range
+  }) => {
+    // Handle file operations based on command
+    switch(command) {
+      return executeTextEditorFunction({
+        command,
+        path,
+        fileText: file_text,
+        insertLine: insert_line,
+        newStr: new_str,
+        insertText: insert_text,
+        oldStr: old_str,
+        viewRange: view_range
+      });
+    }
+  }
+});
+
+
+const response = await generateText({
+  model: 'anthropic/claude-sonnet-4-20250514',
+  prompt: "Create a new file called example.txt, write 'Hello World' to it, and run 'cat example.txt' in the terminal",
+  tools: {
+    computer: computerTool,
+    bash: bashTool,
+    str_replace_editor: textEditorTool,
+  },
+});
+```
+
+<Note>
+  在生产应用中启用 Computer Use 之前，务必实现适当的[安全措施](#安全措施)并获得用户同意。
+</Note>
+
+### Computer Use 最佳实践
+
+要在使用 Computer Use 时获得最佳效果：
+
+1. 指定简单、定义清晰的任务，并为每个步骤给出明确指示
+2. 提示 Claude 通过截图验证结果
+3. 当 UI 元素难以操作时使用键盘快捷键
+4. 为可重复的任务提供示例截图
+5. 在系统提示词中为已知任务提供明确提示
+
+## 安全措施
+
+记住，Computer Use 是一项 beta 功能。请注意，它会带来一些不同于标准 API 功能或聊天界面的独特风险。当使用 Computer Use 与互联网交互时，这些风险会被放大。为了将风险降至最低，请考虑采取以下预防措施：
+
+1. 使用权限最小化的专用虚拟机或容器，防止直接的系统攻击或意外。
+2. 避免让模型访问敏感数据（如账户登录信息），防止信息窃取。
+3. 将互联网访问限制在域名允许列表内，减少接触恶意内容的机会。
+4. 对于可能产生重大现实影响的决策，以及任何需要明确同意的任务（如接受 Cookie、执行金融交易或同意服务条款），请让人类进行确认。

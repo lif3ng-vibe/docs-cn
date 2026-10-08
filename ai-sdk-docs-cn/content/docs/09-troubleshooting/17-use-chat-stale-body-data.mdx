@@ -1,0 +1,143 @@
+---
+title: useChat 中 body 数据过期
+description: 排查通过 useChat 的 body 参数传递信息时值保持过期的问题
+---
+
+# Stale body values with useChat
+
+## 问题
+
+在使用 `useChat` 并通过 hook 层级的 `body` 参数传递动态信息时，数据会保持过期状态，只反映组件初次渲染时的值。这是因为 body 配置在 hook 初始化时只被捕获一次，不会随组件后续重新渲染而更新。
+
+```tsx
+// Problematic code - body data will be stale
+export default function Chat() {
+  const [temperature, setTemperature] = useState(0.7);
+  const [userId, setUserId] = useState('user123');
+
+  // This body configuration is captured once and won't update
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: {
+        temperature, // Always the initial value (0.7)
+        userId, // Always the initial value ('user123')
+      },
+    }),
+  });
+
+  // Even if temperature or userId change, the body in requests will still use initial values
+  return (
+    <div>
+      <input
+        type="range"
+        value={temperature}
+        onChange={e => setTemperature(parseFloat(e.target.value))}
+      />
+      {/* Chat UI */}
+    </div>
+  );
+}
+```
+
+## 背景
+
+Hook 层级的 body 配置只在初次渲染时求值一次，组件状态变化时不会重新求值。
+
+## 解决方案
+
+改为通过 `sendMessage` 函数的第二个参数传递动态变量，而不是在 hook 层级传递。请求级选项在每次调用时求值，并且优先于 hook 级选项。
+
+```tsx
+export default function Chat() {
+  const [temperature, setTemperature] = useState(0.7);
+  const [userId, setUserId] = useState('user123');
+  const [input, setInput] = useState('');
+
+  const { messages, sendMessage } = useChat({
+    // Static configuration only
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div>
+      <input
+        type="range"
+        value={temperature}
+        onChange={e => setTemperature(parseFloat(e.target.value))}
+      />
+
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          if (input.trim()) {
+            // Pass dynamic values as request-level options
+            sendMessage(
+              { text: input },
+              {
+                body: {
+                  temperature, // Current value at request time
+                  userId, // Current value at request time
+                },
+              },
+            );
+            setInput('');
+          }
+        }}
+      >
+        <input value={input} onChange={e => setInput(e.target.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+### 替代方案：Hook 级动态配置
+
+如果你需要能响应变化的 hook 级配置，可以使用返回配置值的函数。但对于组件状态，你需要借助 `useRef` 来访问当前值：
+
+```tsx
+export default function Chat() {
+  const temperatureRef = useRef(0.7);
+
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: () => ({
+        temperature: temperatureRef.current, // Access via ref.current
+        sessionId: getCurrentSessionId(), // Function calls work directly
+      }),
+    }),
+  });
+
+  // ...
+}
+```
+
+**建议**：对于组件状态，请求级配置更简单、更可靠。凡是要传递组件生命周期内会变化的动态值，都应优先使用请求级配置。
+
+### 服务端处理
+
+在服务端，通过解构请求体来获取自定义字段：
+
+```tsx
+// app/api/chat/route.ts
+export async function POST(req: Request) {
+  const { messages, temperature, userId } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-4.1-mini', // Supports dynamic temperature settings
+    messages: await convertToModelMessages(messages),
+    temperature, // Use the dynamic temperature from the request
+    // ... other configuration
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+更多信息请参阅[聊天机器人请求配置文档](/docs/ai-sdk-ui/chatbot#请求配置)。

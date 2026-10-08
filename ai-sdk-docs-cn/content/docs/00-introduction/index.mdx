@@ -1,0 +1,79 @@
+---
+title: Vercel 的 AI SDK
+description: AI SDK 是一套 TypeScript 工具包，用于基于 React、Next.js、Vue、Svelte、Node.js 等构建 AI 应用与智能体（agent）。
+---
+
+# AI SDK
+
+AI SDK 是一套 TypeScript 工具包，旨在帮助开发者基于 React、Next.js、Vue、Svelte、Node.js 等构建 AI 应用与智能体（agent）。
+
+## 为什么使用 AI SDK？
+
+将大语言模型（LLM）集成到应用中是件复杂的事情，而且高度依赖你所使用的具体模型提供商。
+
+AI SDK 统一了在[受支持的提供商](/docs/foundations/providers-and-models)之间集成人工智能（AI）模型的方式，让开发者能够专注于构建出色的 AI 应用，而不必在技术细节上浪费时间。
+
+AI SDK 还提供了面向 harness 的[抽象层](/docs/ai-sdk-harnesses)，可以通过 `HarnessAgent` 使用 Claude Code、Codex、Pi 等成熟的智能体 harness。harness 与模型提供商解耦，但采用兼容的流式与响应原语，因此 AI SDK 的 UI 与智能体界面可以按相同的方式使用它们。
+
+例如，下面展示了如何使用 AI SDK 和各种模型生成文本：
+
+<PreviewSwitchProviders />
+
+AI SDK 包含以下几个主要组成部分：
+
+- **[AI SDK Core](/docs/ai-sdk-core)**：一套统一 API，用于生成文本、结构化对象、工具调用，以及基于 LLM 构建智能体。
+- **[AI SDK UI](/docs/ai-sdk-ui)**：一组与框架无关的 Hook，用于快速构建聊天与生成式用户界面。
+- **[AI SDK Harnesses](/docs/ai-sdk-harnesses)**：一套统一 API，用于通过 `HarnessAgent` 运行成熟的智能体 harness。
+
+## 模型提供商
+
+AI SDK 支持[多种模型提供商](/providers)。
+
+<OfficialModelCards />
+
+## 模板
+
+我们构建了一些[模板](https://vercel.com/templates?type=ai)，其中包含面向不同使用场景、提供商和框架的 AI SDK 集成。你可以使用这些模板快速上手你的 AI 应用。
+
+### 起步套件
+
+<Templates type="starter-kits" />
+
+### 功能探索
+
+<Templates type="feature-exploration" />
+
+### 框架
+
+<Templates type="frameworks" />
+
+### 生成式 UI
+
+<Templates type="generative-ui" />
+
+### 安全
+
+<Templates type="security" />
+
+## 加入我们的社区
+
+如果你对 AI SDK 相关的任何内容有疑问，欢迎随时到 [Vercel 社区](https://community.vercel.com/c/ai-sdk/62)提问。
+
+## `llms.txt`（适用于 Cursor、Windsurf、Copilot、Claude 等）
+
+你可以在 [ai-sdk.dev/llms.txt](/llms.txt) 获取 Markdown 格式的完整 AI SDK 文档。任何 LLM（只要上下文窗口足够大）都可以据此基于最新的文档解答关于 AI SDK 的问题。
+
+### 示例用法
+
+例如，要让 LLM 解答关于 AI SDK 的问题：
+
+1. 从 [ai-sdk.dev/llms.txt](/llms.txt) 复制文档内容
+2. 使用以下提示词格式：
+
+```prompt
+Documentation:
+{paste documentation here}
+---
+Based on the above documentation, answer the following:
+{your question}
+```

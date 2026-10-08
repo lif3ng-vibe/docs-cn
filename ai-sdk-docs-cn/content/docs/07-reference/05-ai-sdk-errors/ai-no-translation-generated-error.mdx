@@ -1,0 +1,25 @@
+---
+title: AI_NoTranslationGeneratedError
+description: 了解如何修复 AI_NoTranslationGeneratedError
+---
+
+# AI_NoTranslationGeneratedError
+
+此错误在无法从输入音频生成翻译时发生：
+既没有发出任何 `audio` 部分且最终输出文本为空，或者流在没有 finish 事件的情况下结束。
+
+## 属性
+
+- `response`：语音翻译模型响应元数据（构造函数中必填）
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoTranslationGeneratedError` 的实例：
+
+```typescript
+import { NoTranslationGeneratedError } from 'ai';
+
+if (NoTranslationGeneratedError.isInstance(error)) {
+  // Handle the error
+}
+```

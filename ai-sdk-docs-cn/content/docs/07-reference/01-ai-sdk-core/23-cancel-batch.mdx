@@ -1,0 +1,93 @@
+---
+title: experimental_cancelBatch
+description: experimental_cancelBatch 的 API 参考。
+---
+
+# `experimental_cancelBatch()`
+
+<Note type="warning">
+  批处理（batch）支持为实验性功能，API 可能在补丁版本中变更。
+</Note>
+
+请求取消一个异步批处理。调用成功只表示提供商接受了取消请求，并不代表取消已完成。有关批处理生命周期的完整指南，请参阅
+[批处理](/docs/ai-sdk-core/batch)。
+
+```ts
+import { experimental_cancelBatch as cancelBatch } from 'ai';
+
+const result = await cancelBatch({
+  provider,
+  batch,
+});
+
+console.log(result.providerMetadata);
+```
+
+## 导入
+
+<Snippet
+  text={`import { experimental_cancelBatch } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'provider',
+      type: 'Experimental_BatchProvider',
+      isOptional: true,
+      description:
+        '用于访问批处理的提供商。默认为全局提供商；未配置全局提供商时使用 AI Gateway。',
+    },
+    {
+      name: 'batch',
+      type: 'Experimental_BatchReference',
+      description:
+        'experimental_startBatch 返回的可序列化引用。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description:
+        '取消请求的额外提供商专属选项。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '可选的中止信号，用于取消该 API 请求。',
+    },
+    {
+      name: 'timeout',
+      type: 'number | { totalMs?: number }',
+      isOptional: true,
+      description: '取消请求允许的最长时间。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string | undefined>',
+      isOptional: true,
+      description: '请求的额外 HTTP 请求头。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'providerMetadata',
+      type: 'ProviderMetadata',
+      isOptional: true,
+      description: '取消响应中的提供商专属元数据。',
+    },
+  ]}
+/>
+
+如果所用提供商不支持批处理取消，调用此函数会抛出 `UnsupportedFunctionalityError`。

@@ -1,0 +1,511 @@
+---
+title: 循环控制
+description: 通过内置的 stopWhen 与 prepareStep 循环管理控制智能体（agent）的执行
+---
+
+# Loop Control
+
+你可以同时控制智能体（agent）循环的执行流程和每一步的设置。循环会一直持续，直到：
+
+- 返回了工具调用（tool-calls）以外的结束原因，或
+- 被调用的工具没有 execute 函数，或
+- 某个工具调用需要审批，或
+- 满足了某个停止条件
+
+AI SDK 通过两个参数提供内置的循环控制：`stopWhen` 用于定义停止条件，`prepareStep` 用于在步骤之间修改设置（模型、工具、消息等）。
+
+## 停止条件
+
+`stopWhen` 参数控制在最后一步包含工具结果时何时停止执行。默认情况下，`ToolLoopAgent` 使用 `isStepCount(20)` 在 20 步之后停止。这一默认值是一项安全措施，用于防止可能导致过多 API 调用和成本的失控循环。
+
+`WorkflowAgent` 不应用默认的步数上限。它会一直运行，直到模型停止调用工具或满足其他自然终止条件。当需要限制其模型调用次数时，请配置一个显式条件，例如 `isStepCount(20)`。详见 [WorkflowAgent 循环控制](/docs/agents/workflow-agent#循环控制)。
+
+提供 `stopWhen` 后，智能体会在工具调用之后继续执行，直到满足停止条件。当条件是一个数组时，只要满足其中任一条件，执行就会停止。
+
+### 使用内置条件
+
+AI SDK 提供了若干内置停止条件：
+
+- `isStepCount(count)` — 在指定步数之后停止
+- `hasToolCall(...toolNames)` — 当任一指定工具被调用时停止
+- `isLoopFinished()` — 永不触发，让循环一直运行到智能体自然结束
+
+### 在最大步数内运行
+
+```ts
+import { ToolLoopAgent, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  stopWhen: isStepCount(50), // Increase ToolLoopAgent's default from 20 to 50.
+});
+
+const result = await agent.generate({
+  prompt: 'Analyze this dataset and create a summary report',
+});
+```
+
+### 运行至自然结束
+
+如果你希望 `ToolLoopAgent` 一直运行到模型自然停止调用工具，可以使用 `isLoopFinished()`。这会移除其默认的步数上限：
+
+```ts
+import { ToolLoopAgent, isLoopFinished } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  stopWhen: isLoopFinished(), // No maximum step limit.
+});
+
+const result = await agent.generate({
+  prompt: 'Analyze this dataset and create a summary report',
+});
+```
+
+<Note>
+  使用 `isLoopFinished()` 时需谨慎。在没有步数上限的情况下，如果模型持续调用工具，
+  智能体可能无限运行，或产生高额成本。
+</Note>
+
+### 组合多个条件
+
+组合多个停止条件。只要满足其中任一条件，循环就会停止：
+
+```ts
+import { ToolLoopAgent, isStepCount, hasToolCall } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  stopWhen: [
+    isStepCount(20), // Maximum 20 steps
+    hasToolCall('someTool', 'done'), // Stop after calling either tool
+  ],
+});
+
+const result = await agent.generate({
+  prompt: 'Research and analyze the topic',
+});
+```
+
+### 创建自定义条件
+
+为特定需求构建自定义停止条件：
+
+```ts
+import { ToolLoopAgent, StopCondition, ToolSet } from 'ai';
+__PROVIDER_IMPORT__;
+
+const tools = {
+  // your tools
+} satisfies ToolSet;
+
+const hasAnswer: StopCondition<typeof tools> = ({ steps }) => {
+  // Stop when the model generates text containing "ANSWER:"
+  return steps.some(step => step.text?.includes('ANSWER:')) ?? false;
+};
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools,
+  stopWhen: hasAnswer,
+});
+
+const result = await agent.generate({
+  prompt: 'Find the answer and respond with "ANSWER: [your answer]"',
+});
+```
+
+自定义条件会接收跨所有步骤的步骤信息：
+
+```ts
+const budgetExceeded: StopCondition<typeof tools> = ({ steps }) => {
+  const totalUsage = steps.reduce(
+    (acc, step) => ({
+      inputTokens: acc.inputTokens + (step.usage?.inputTokens ?? 0),
+      outputTokens: acc.outputTokens + (step.usage?.outputTokens ?? 0),
+    }),
+    { inputTokens: 0, outputTokens: 0 },
+  );
+
+  const costEstimate =
+    (totalUsage.inputTokens * 0.01 + totalUsage.outputTokens * 0.03) / 1000;
+  return costEstimate > 0.5; // Stop if cost exceeds $0.50
+};
+```
+
+## 准备步骤（prepareStep）
+
+`prepareStep` 回调在循环的每一步之前运行；如果你未返回任何更改，则默认沿用初始设置。可以用它来修改设置、管理上下文，或基于执行历史实现动态行为。
+
+它会接收当前步骤的 `messages`；当你需要区分原始输入与此前步骤累积的助手/工具消息时，还会接收到 `initialMessages` 和 `responseMessages`。请将 `messages` 视为循环当前的消息状态：如果你返回一个 `messages` 覆盖值，该覆盖值会作为后续步骤的基础保持生效，并与每个已完成步骤的响应消息合并在一起。
+
+### 动态模型选择
+
+根据步骤需求切换模型：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: 'openai/gpt-6-luna', // Default model
+  tools: {
+    // your tools
+  },
+  prepareStep: async ({ stepNumber, messages }) => {
+    // Use a stronger model for complex reasoning after initial steps
+    if (stepNumber > 2 && messages.length > 10) {
+      return {
+        model: __MODEL__,
+      };
+    }
+    // Continue with default settings
+    return {};
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+### 模型调用设置
+
+为单个步骤覆盖与提供商无关的模型调用设置。当工具调用步骤需要比最终响应更具确定性的采样时，这会很有用：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  temperature: 0.7,
+  tools: {
+    // your tools
+  },
+  prepareStep: async ({ stepNumber }) => {
+    if (stepNumber === 0) {
+      return {
+        temperature: 0,
+        maxOutputTokens: 300,
+      };
+    }
+
+    return {};
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+`prepareStep` 可以覆盖 `maxOutputTokens`、`temperature`、`topP`、`topK`、
+`presencePenalty`、`frequencyPenalty`、`stopSequences`、`seed` 和
+`reasoning`。这些覆盖仅作用于当前步骤。当某个设置被省略或为 `undefined` 时，
+该步骤将使用顶层值。已定义的假值，例如 `temperature: 0`、`seed: 0` 和空的
+`stopSequences` 数组，都会被保留。
+
+### 上下文管理
+
+长时间运行的智能体可能累积大量工具结果、推理部分和助手消息。可以使用 `prepareStep` 来修改后续步骤将使用的消息状态。这对压缩（compaction）很有用，且由你决定何时进行压缩。
+
+`messages` 值包含将为当前步骤发送的消息。当你从 `prepareStep` 返回一个 `messages` 覆盖值时，这份变更后的列表会成为后续步骤的基础，随着循环继续，新的助手消息和工具响应消息会追加到它之后。如果你需要从离散片段而不是持久化的消息状态重建某一步，可以使用 `initialMessages` 表示原始输入，用 `responseMessages` 表示到目前为止累积的模型/工具响应消息。
+
+`pruneMessages` 辅助函数提供了一种移除所选消息的内置方式。当你想要一个简单的压缩策略时，可以在 `prepareStep` 内使用它。
+
+```ts
+import { ToolLoopAgent, pruneMessages, type ModelMessage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const COMPACTION_THRESHOLD = 100_000;
+
+const estimateTokens = (messages: ModelMessage[]) => {
+  return JSON.stringify(messages).length / 4;
+};
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  prepareStep: async ({ messages }) => {
+    if (estimateTokens(messages) > COMPACTION_THRESHOLD) {
+      return {
+        messages: pruneMessages({
+          messages,
+          reasoning: 'all',
+          toolCalls: 'before-last-3-messages',
+          emptyMessages: 'remove',
+        }),
+      };
+    }
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+上面的 token 估算器刻意保持简单，只演示了决定何时压缩的一种方式。关键在于 `prepareStep` 可以返回一个新的 `messages` 数组，而该数组会成为后续步骤的消息状态。同样的模式也适用于 `generateText` 和 `streamText`。
+
+### 工具选择
+
+控制每一步可用的工具：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    search: searchTool,
+    analyze: analyzeTool,
+    summarize: summarizeTool,
+  },
+  prepareStep: async ({ stepNumber, steps }) => {
+    // Search phase (steps 0-2)
+    if (stepNumber <= 2) {
+      return {
+        activeTools: ['search'],
+        toolChoice: 'required',
+      };
+    }
+
+    // Analysis phase (steps 3-5)
+    if (stepNumber <= 5) {
+      return {
+        activeTools: ['analyze'],
+      };
+    }
+
+    // Summary phase (step 6+)
+    return {
+      activeTools: ['summarize'],
+      toolChoice: 'required',
+    };
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+你也可以强制使用某个特定工具：
+
+```ts
+prepareStep: async ({ stepNumber }) => {
+  if (stepNumber === 0) {
+    // Force the search tool to be used first
+    return {
+      toolChoice: { type: 'tool', toolName: 'search' },
+    };
+  }
+
+  if (stepNumber === 5) {
+    // Force the summarize tool after analysis
+    return {
+      toolChoice: { type: 'tool', toolName: 'summarize' },
+    };
+  }
+
+  return {};
+};
+```
+
+### 消息修改
+
+在将消息发送给模型之前对其进行转换。返回的消息会延续到后续步骤，因此后续的 `messages` 值会包含你转换后的消息，再加上已完成步骤的助手/工具响应消息：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    // your tools
+  },
+  prepareStep: async ({ messages, stepNumber }) => {
+    // Summarize tool results to reduce token usage
+    const processedMessages = messages.map(msg => {
+      if (msg.role === 'tool' && msg.content.length > 1000) {
+        return {
+          ...msg,
+          content: summarizeToolResult(msg.content),
+        };
+      }
+      return msg;
+    });
+
+    return { messages: processedMessages };
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+### 实验性沙箱选择
+
+为单一步骤切换用于工具执行的实验性沙箱：
+
+```ts
+import { ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    runCommand,
+  },
+  experimental_sandbox: defaultSandbox,
+  prepareStep: async ({ stepNumber }) => {
+    if (stepNumber === 0) {
+      return {
+        experimental_sandbox: setupSandbox,
+      };
+    }
+
+    return {};
+  },
+});
+
+const result = await agent.generate({
+  prompt: '...',
+});
+```
+
+与 `runtimeContext` 和 `toolsContext` 不同，从 `prepareStep` 返回的实验性沙箱只作用于该步骤的工具执行。后续步骤会使用顶层的 `experimental_sandbox`，除非它们自己返回了实验性沙箱覆盖值。
+
+## 访问步骤信息
+
+`stopWhen` 和 `prepareStep` 都会接收关于当前执行的详细信息：
+
+```ts
+prepareStep: async ({
+  model, // Current model configuration
+  stepNumber, // Current step number (0-indexed)
+  steps, // All previous steps with their results
+  messages, // Messages to be sent to the model
+}) => {
+  // Access previous tool calls and results
+  const previousToolCalls = steps.flatMap(step => step.toolCalls);
+  const previousResults = steps.flatMap(step => step.toolResults);
+
+  // Make decisions based on execution history
+  if (previousToolCalls.some(call => call.toolName === 'dataAnalysis')) {
+    return {
+      toolChoice: { type: 'tool', toolName: 'reportGenerator' },
+    };
+  }
+
+  return {};
+},
+```
+
+## 强制工具调用
+
+你可以将 `toolChoice: 'required'` 与一个没有 `execute` 函数的 `done` 工具结合使用，强制智能体始终使用工具。这种模式确保智能体每一步都使用工具，并且只在它显式发出完成信号时才停止。
+
+```ts
+import { ToolLoopAgent, tool } from 'ai';
+import { z } from 'zod';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    search: searchTool,
+    analyze: analyzeTool,
+    done: tool({
+      description: 'Signal that you have finished your work',
+      inputSchema: z.object({
+        answer: z.string().describe('The final answer'),
+      }),
+      // No execute function - stops the agent when called
+    }),
+  },
+  toolChoice: 'required', // Force tool calls at every step
+});
+
+const result = await agent.generate({
+  prompt: 'Research and analyze this topic, then provide your answer.',
+});
+
+// extract answer from done tool call
+const toolCall = result.staticToolCalls[0]; // tool call from final step
+if (toolCall?.toolName === 'done') {
+  console.log(toolCall.input.answer);
+}
+```
+
+这种模式的关键要点：
+
+- **`toolChoice: 'required'`**：强制模型在每一步调用工具，而不是直接生成文本。这确保智能体遵循结构化的工作流。
+- **没有 `execute` 的 `done` 工具**：没有 `execute` 函数的工具充当终止信号。当智能体调用该工具时，循环会停止，因为没有函数可执行。
+- **访问结果**：最终答案可在 `result.staticToolCalls` 中获取，其中包含未被执行的工具调用。
+
+当你希望智能体在执行操作（如代码执行或数据检索）时始终使用特定工具，而不是尝试直接回答时，这种模式很有用。
+
+## 手动循环控制
+
+对于需要完全控制智能体循环的场景，你可以使用 AI SDK Core 函数（`generateText` 和 `streamText`）自行实现循环管理，而不是使用 `stopWhen` 和 `prepareStep`。这种方式为复杂工作流提供了最大的灵活性。
+
+### 实现手动循环
+
+当你需要对执行拥有完全控制权时，可以构建自己的智能体循环：
+
+```ts
+import { generateText, ModelMessage } from 'ai';
+__PROVIDER_IMPORT__;
+
+const messages: ModelMessage[] = [{ role: 'user', content: '...' }];
+
+let step = 0;
+const maxSteps = 10;
+
+while (step < maxSteps) {
+  const result = await generateText({
+    model: __MODEL__,
+    messages,
+    tools: {
+      // your tools here
+    },
+  });
+
+  messages.push(...result.responseMessages);
+
+  if (result.text) {
+    break; // Stop when model generates text
+  }
+
+  step++;
+}
+```
+
+这种手动方式让你可以完全掌控：
+
+- 消息历史管理
+- 逐步决策
+- 自定义停止条件
+- 动态工具与模型选择
+- 错误处理与恢复
+
+[在 Cookbook 中进一步了解手动智能体循环](/cookbook/node/manual-agent-loop)。

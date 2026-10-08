@@ -1,0 +1,40 @@
+---
+title: 使用聊天提示词进行流式生成
+description: 了解如何在 Node 中结合 AI SDK 使用聊天提示词进行文本流式生成
+tags: ['node', 'streaming', 'chat']
+---
+
+# Stream Text with Chat Prompt
+
+文本生成有时需要较长时间才能完成，尤其是当响应很大的时候。
+在这种情况下，将聊天补全（chat completion）实时流式（streaming）传输到客户端会很有用。
+这样客户端就可以在模型生成新消息的同时展示它，
+而不必让用户等待生成结束。
+
+```ts file='index.ts'
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: 'openai/gpt-6-astra',
+  maxOutputTokens: 1024,
+  instructions: 'You are a helpful chatbot.',
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'Hello!' }],
+    },
+    {
+      role: 'assistant',
+      content: [{ type: 'text', text: 'Hello! How can I help you today?' }],
+    },
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'I need help with my computer.' }],
+    },
+  ],
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+```

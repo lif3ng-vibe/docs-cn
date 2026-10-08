@@ -1,0 +1,725 @@
+---
+title: Expo
+description: 学习如何使用 AI SDK 和 Expo 构建你的第一个智能体。
+---
+
+# Expo 快速上手
+
+在本快速上手教程中，你将使用 [Expo](https://expo.dev/) 构建一个带有流式聊天界面的简单智能体。在此过程中，你还会学到在自己项目中使用该 SDK 不可或缺的核心概念与技巧。
+
+如果你不熟悉[提示词工程（prompt engineering）](/docs/advanced/prompt-engineering)和 [HTTP 流式传输（streaming）](/docs/foundations/streaming)这两个概念，可以先选读这两篇文档。
+
+## Prerequisites
+
+要跟随本快速上手教程，你需要：
+
+- 本地开发机上已安装 Node.js 22+ 和 pnpm。
+- 一个 [ Vercel AI Gateway ](https://vercel.com/ai-gateway) API 密钥。
+
+如果你尚未获取 Vercel AI Gateway API 密钥，可以在 Vercel 网站上[注册](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai&title=Go+to+AI+Gateway)获取。
+
+## 创建你的应用
+
+首先创建一个新的 Expo 应用。该命令会创建一个名为 `my-ai-app` 的新目录，并在其中搭建一个基础的 Expo 应用。
+
+<Snippet text="pnpm create expo-app@latest my-ai-app" />
+
+进入新创建的目录：
+
+<Snippet text="cd my-ai-app" />
+
+<Note>本指南要求 Expo 52 或更高版本。</Note>
+
+### 安装依赖
+
+安装 `ai` 和 `@ai-sdk/react`，即 AI 包和 AI SDK 的 React hooks。AI SDK 的 [ Vercel AI Gateway 提供商 ](/providers/ai-sdk-providers/ai-gateway) 随 `ai` 包一同提供。你还需要安装 `zod`，这是一个用于定义工具输入的 schema 校验库。
+
+<Note>
+  本指南使用 Vercel AI Gateway 提供商，让你用一个 API 密钥即可访问来自不同
+  提供商的上百个模型；你也可以通过安装对应的包切换到任何提供商或模型。
+  更多信息请查看可用的 [AI SDK 提供商](/providers/ai-sdk-providers)。
+</Note>
+
+<InstallPackages packages="ai @ai-sdk/react zod" />
+
+### 配置你的 AI Gateway API 密钥
+
+在项目根目录创建一个 `.env.local` 文件，并添加你的 AI Gateway API 密钥。该密钥用于向 Vercel AI Gateway 验证你的应用。
+
+<Snippet text="touch .env.local" />
+
+编辑 `.env.local` 文件：
+
+```env filename=".env.local"
+AI_GATEWAY_API_KEY=xxxxxxxxx
+```
+
+将 `xxxxxxxxx` 替换为你实际的 Vercel AI Gateway API 密钥。
+
+<Note className="mb-4">
+  AI SDK 的 Vercel AI Gateway 提供商默认会使用
+  `AI_GATEWAY_API_KEY` 环境变量。
+</Note>
+
+## 创建 API 路由
+
+创建 Route Handler `app/api/chat+api.ts`，并添加以下代码：
+
+```tsx filename="app/api/chat+api.ts"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Encoding': 'none',
+    },
+  });
+}
+```
+
+我们来看看这段代码中发生了什么：
+
+1. 定义一个异步 `POST` 请求处理器，并从请求体中提取 `messages`。`messages` 变量包含你与聊天机器人之间的对话历史，为聊天机器人生成下一轮回复提供了必要的上下文。
+2. 调用 [`streamText`](/docs/reference/ai-sdk-core/stream-text)，它从 `ai` 包导入。该函数接受一个配置对象，其中包含 `model` ID 字符串（通过 AI Gateway 解析）和 `messages`（在第 1 步中定义）。你还可以传入其他[设置](/docs/ai-sdk-core/settings)来进一步自定义模型的行为。
+3. `streamText` 函数返回一个 [`StreamTextResult`](/docs/reference/ai-sdk-core/stream-text#result-object)。将其 `stream` 传给 `toUIMessageStream`，再用 `createUIMessageStreamResponse` 返回，即可创建一个流式响应对象。
+4. 最后，将结果返回给客户端，以流式形式输出响应。
+
+该 API 路由在 `/api/chat` 处创建了一个 POST 请求端点。
+
+<Note>
+  如果已部署的 Expo API Route 尽管设置了上述流式请求头仍会缓冲响应，
+  可以在不使用部署适配器的情况下测试同一处理器，以隔离问题原因。
+  一种变通方案是将聊天端点托管在一个独立的 Vercel Function 中，
+  并将 `EXPO_PUBLIC_API_BASE_URL` 设置为该 Function 的基础 URL。
+</Note>
+
+## 选择提供商
+
+AI SDK 通过[第一方](/providers/ai-sdk-providers)、[OpenAI 兼容](/providers/openai-compatible-providers)和[社区](/providers/community-providers)包支持数十种模型提供商。
+
+本快速上手教程使用 [Vercel AI Gateway](https://vercel.com/ai-gateway) 提供商，它是默认的[全局提供商](/docs/ai-sdk-core/provider-management#全局提供商配置)。这意味着你可以在模型配置中用一个简单的字符串来访问模型：
+
+```ts
+model: __MODEL__;
+```
+
+你还可以通过以下两种等价方式显式导入并使用 gateway 提供商：
+
+```ts
+// Option 1: Import from 'ai' package (included by default)
+import { gateway } from 'ai';
+model: gateway('anthropic/claude-sonnet-5.5');
+
+// Option 2: Install and import from '@ai-sdk/gateway' package
+import { gateway } from '@ai-sdk/gateway';
+model: gateway('anthropic/claude-sonnet-5.5');
+```
+
+### 使用其他提供商
+
+要使用其他提供商，请安装其对应的包并创建提供商实例。例如，直接使用 OpenAI：
+
+<InstallPackages packages="@ai-sdk/openai" />
+
+```ts
+import { openai } from '@ai-sdk/openai';
+
+model: openai('gpt-6-astra');
+```
+
+#### 更新全局提供商
+
+你可以更改默认的全局提供商，使应用中所有以字符串引用模型的地方都使用你偏好的提供商。详细了解[提供商管理](/docs/ai-sdk-core/provider-management#全局提供商配置)。
+
+选择最符合你应用级提供商管理方式的做法即可。
+
+## 接入 UI
+
+现在，你已经拥有一个可以查询 LLM 的 API 路由，接下来是搭建前端。AI SDK 的 [ UI ](/docs/ai-sdk-ui) 包将聊天界面的复杂逻辑抽象为一个 Hook：[`useChat`](/docs/reference/ai-sdk-ui/use-chat)。
+
+用以下代码更新你的根页面（`app/(tabs)/index.tsx`），以显示聊天消息列表并提供用户消息输入框：
+
+```tsx filename="app/(tabs)/index.tsx"
+import { generateAPIUrl } from '@/utils';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { fetch as expoFetch } from 'expo/fetch';
+import { useState } from 'react';
+import { View, TextInput, ScrollView, Text, SafeAreaView } from 'react-native';
+
+export default function App() {
+  const [input, setInput] = useState('');
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl('/api/chat'),
+    }),
+    onError: error => console.error(error, 'ERROR'),
+  });
+
+  if (error) return <Text>{error.message}</Text>;
+
+  return (
+    <SafeAreaView style={{ height: '100%' }}>
+      <View
+        style={{
+          height: '95%',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingHorizontal: 8,
+        }}
+      >
+        <ScrollView style={{ flex: 1 }}>
+          {messages.map(m => (
+            <View key={m.id} style={{ marginVertical: 8 }}>
+              <View>
+                <Text style={{ fontWeight: 700 }}>{m.role}</Text>
+                {m.parts.map((part, i) => {
+                  switch (part.type) {
+                    case 'text':
+                      return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
+                  }
+                })}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={{ marginTop: 8 }}>
+          <TextInput
+            style={{ backgroundColor: 'white', padding: 8 }}
+            placeholder="Say something..."
+            value={input}
+            onChange={e => setInput(e.nativeEvent.text)}
+            onSubmitEditing={e => {
+              e.preventDefault();
+              sendMessage({ text: input });
+              setInput('');
+            }}
+            autoFocus={true}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+```
+
+该页面使用了 `useChat` Hook，它默认会使用你之前创建的 `POST` API 路由（`/api/chat`）。该 Hook 提供了处理用户输入和表单提交所需的函数与状态。`useChat` Hook 提供了多个实用函数和状态变量：
+
+- `messages` - 当前的聊天消息（一个包含 `id`、`role` 和 `parts` 属性的对象数组）。
+- `sendMessage` - 向聊天 API 发送消息的函数。
+
+该组件使用本地状态（`useState`）管理输入框的值，并通过在提交时调用 `sendMessage` 传入输入文本、随后清空输入框来处理表单提交。
+
+LLM 的响应通过消息的 `parts` 数组访问。每条消息都包含一个有序的 `parts` 数组，表示模型在本次响应中生成的所有内容。这些部分可以包括纯文本、推理（reasoning）token，以及稍后你会看到的其他内容。`parts` 数组保留了模型输出的先后顺序，让你可以按生成顺序显示或处理每个部分。
+
+<Note>
+  这里使用 expo/fetch 函数而非原生 Node fetch，以启用聊天响应的流式传输。
+  这要求 Expo 52 或更高版本。
+</Note>
+
+### 创建 API URL 生成器
+
+由于你使用 expo/fetch 而非原生 fetch 函数来实现流式响应，你需要一个 API URL 生成器，以确保根据客户端环境（例如 Web 或移动端）使用正确的基础 URL 和格式。在项目根目录新建一个名为 `utils.ts` 的文件，并添加以下代码：
+
+```ts filename="utils.ts"
+import Constants from 'expo-constants';
+
+export const generateAPIUrl = (relativePath: string) => {
+  const origin = Constants.experienceUrl.replace('exp://', 'http://');
+
+  const path = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+
+  if (process.env.NODE_ENV === 'development') {
+    return origin.concat(path);
+  }
+
+  if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
+    throw new Error(
+      'EXPO_PUBLIC_API_BASE_URL environment variable is not defined',
+    );
+  }
+
+  return process.env.EXPO_PUBLIC_API_BASE_URL.concat(path);
+};
+```
+
+该工具函数同时处理开发和生产环境的 URL 生成，确保你的 API 调用在不同设备和配置下都能正常工作。
+
+<Note>
+  部署到生产环境之前，你必须先在生产环境中设置 `EXPO_PUBLIC_API_BASE_URL`
+  环境变量。该变量应指向你的 API 服务器的基础 URL。
+</Note>
+
+## 运行你的应用
+
+至此，你的聊天机器人所需的一切都已完成！要启动应用，请使用以下命令：
+
+<Snippet text="pnpm expo" />
+
+打开浏览器并访问 http://localhost:8081。你应该会看到一个输入框。输入一条消息试一试，即可看到 AI 聊天机器人实时响应！借助 AI SDK，使用 Expo 构建 AI 聊天界面既快速又简单。
+
+<Note>
+  如果在移动端遇到 “Property `structuredClone` doesn't exist” 报错，
+  请添加[下文所述的 polyfill](#polyfills)。
+</Note>
+
+## 用工具增强你的聊天机器人
+
+尽管大语言模型（LLM）拥有出色的生成能力，但它们在处理离散任务（例如数学运算）和与外部世界交互（例如获取天气）时表现不佳。这正是[工具](/docs/ai-sdk-core/tools-and-tool-calling)的用武之地。
+
+工具是 LLM 可以调用的动作。这些动作的结果可以回报给 LLM，供其在下一次响应中参考。
+
+例如，当用户询问当前天气时，如果不使用工具，模型只能根据其训练数据提供笼统的信息；而有了天气工具，它就能获取并提供最新、针对特定位置的天气信息。
+
+让我们通过添加一个简单的天气工具来增强你的聊天机器人。
+
+### 更新你的 API 路由
+
+修改你的 `app/api/chat+api.ts` 文件，加入新的天气工具：
+
+```tsx filename="app/api/chat+api.ts" highlight="9,18-32"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Encoding': 'none',
+    },
+  });
+}
+```
+
+在更新后的代码中：
+
+1. 你从 `ai` 包导入了 `tool` 函数，并从 `zod` 导入了 `z` 用于 schema 校验。
+2. 你定义了一个包含 `weather` 工具的 `tools` 对象。该工具：
+   - 带有描述信息，帮助模型理解何时使用它。
+   - 使用 Zod schema 定义了 `inputSchema`，指定执行该工具需要一个 `location` 字符串。模型会尝试从对话上下文中提取该输入；若无法提取，它会向用户询问缺失的信息。
+   - 定义了一个 `execute` 函数，用于模拟获取天气数据（在本例中返回一个随机温度）。这是一个在服务器上运行的异步函数，因此你可以在其中从外部 API 获取真实数据。
+
+现在，你的聊天机器人可以“获取”用户询问的任何位置的天气信息了。当模型判定需要使用天气工具时，它会生成一个携带必要输入的工具调用。随后 `execute` 函数会被自动执行，工具输出将作为一条 `tool` 消息添加到 `messages` 中。
+
+<Note>
+  你可能需要重启开发服务器，更改才能生效。
+</Note>
+
+试着询问类似 “What's the weather in New York?” 的问题，看看模型如何使用新工具。
+
+注意到 UI 中的空白回复了吗？这是因为模型没有生成文本响应，而是生成了一个工具调用。你可以在客户端通过 `message.parts` 数组中的 `tool-weather` 部分访问该工具调用以及随后的工具结果。
+
+<Note>
+  工具部分的类型始终命名为 `tool-{toolName}`，其中 `{toolName}` 是你定义
+  工具时使用的键。在本例中，由于我们将工具定义为 `weather`，
+  因此该部分的类型为 `tool-weather`。
+</Note>
+
+### 更新 UI
+
+要在 UI 中展示天气工具的调用情况，请更新你的 `app/(tabs)/index.tsx` 文件：
+
+```tsx filename="app/(tabs)/index.tsx" highlight="31-35"
+import { generateAPIUrl } from '@/utils';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { fetch as expoFetch } from 'expo/fetch';
+import { useState } from 'react';
+import { View, TextInput, ScrollView, Text, SafeAreaView } from 'react-native';
+
+export default function App() {
+  const [input, setInput] = useState('');
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl('/api/chat'),
+    }),
+    onError: error => console.error(error, 'ERROR'),
+  });
+
+  if (error) return <Text>{error.message}</Text>;
+
+  return (
+    <SafeAreaView style={{ height: '100%' }}>
+      <View
+        style={{
+          height: '95%',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingHorizontal: 8,
+        }}
+      >
+        <ScrollView style={{ flex: 1 }}>
+          {messages.map(m => (
+            <View key={m.id} style={{ marginVertical: 8 }}>
+              <View>
+                <Text style={{ fontWeight: 700 }}>{m.role}</Text>
+                {m.parts.map((part, i) => {
+                  switch (part.type) {
+                    case 'text':
+                      return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
+                    case 'tool-weather':
+                      return (
+                        <Text key={`${m.id}-${i}`}>
+                          {JSON.stringify(part, null, 2)}
+                        </Text>
+                      );
+                  }
+                })}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={{ marginTop: 8 }}>
+          <TextInput
+            style={{ backgroundColor: 'white', padding: 8 }}
+            placeholder="Say something..."
+            value={input}
+            onChange={e => setInput(e.nativeEvent.text)}
+            onSubmitEditing={e => {
+              e.preventDefault();
+              sendMessage({ text: input });
+              setInput('');
+            }}
+            autoFocus={true}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+```
+
+<Note>
+  你可能需要重启开发服务器，更改才能生效。
+</Note>
+
+通过这一更改，UI 现在可以处理不同类型的消息部分。对于文本部分，你像之前一样显示文本内容；对于天气工具调用，你则以 JSON 形式显示工具调用及其结果。
+
+现在，当你询问天气时，聊天界面中会显示工具调用及其结果。
+
+## 启用多步工具调用
+
+你可能已经注意到：虽然工具结果已经显示在聊天界面中，但模型并没有利用这些信息来回答你最初的问题。这是因为模型一旦生成了工具调用，从技术上讲它的生成就已经结束了。
+
+要解决这个问题，你可以使用 `stopWhen` 启用多步工具调用。默认情况下，`stopWhen` 被设置为 `isStepCount(1)`，意味着当存在工具结果时，第一步结束后生成就停止。通过修改这一条件，你可以让模型自动将工具结果回传给自己，触发后续的生成，直到满足你指定的停止条件。在本例中，你希望模型继续生成，以便利用天气工具的结果来回答你最初的问题。
+
+### 更新你的 API 路由
+
+修改你的 `app/api/chat+api.ts` 文件，加入 `stopWhen` 条件：
+
+```tsx filename="app/api/chat+api.ts" highlight="19"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  isStepCount,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    stopWhen: isStepCount(5),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Encoding': 'none',
+    },
+  });
+}
+```
+
+<Note>
+  你可能需要重启开发服务器，更改才能生效。
+</Note>
+
+回到 Expo 应用，询问某个位置的天气。现在你应该能看到模型利用天气工具的结果来回答你的问题。
+
+通过设置 `stopWhen: isStepCount(5)`，你允许模型在任意一次生成中最多使用 5 个“步骤”。这使得更复杂的交互成为可能，并允许模型在需要时跨多个步骤收集和处理信息。你可以再添加一个将温度从华氏转换为摄氏的工具，来实际验证这一点。
+
+### 添加更多工具
+
+更新你的 `app/api/chat+api.ts` 文件，添加一个将温度从华氏度转换为摄氏度的新工具：
+
+```tsx filename="app/api/chat+api.ts" highlight="34-47"
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  tool,
+  isStepCount,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    stopWhen: isStepCount(5),
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location (fahrenheit)',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => {
+          const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          return {
+            location,
+            temperature,
+          };
+        },
+      }),
+      convertFahrenheitToCelsius: tool({
+        description: 'Convert a temperature in fahrenheit to celsius',
+        inputSchema: z.object({
+          temperature: z
+            .number()
+            .describe('The temperature in fahrenheit to convert'),
+        }),
+        execute: async ({ temperature }) => {
+          const celsius = Math.round((temperature - 32) * (5 / 9));
+          return {
+            celsius,
+          };
+        },
+      }),
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Encoding': 'none',
+    },
+  });
+}
+```
+
+<Note>
+  你可能需要重启开发服务器，更改才能生效。
+</Note>
+
+### 为新工具更新 UI
+
+要在 UI 中展示温度转换工具的调用情况，请更新你的 `app/(tabs)/index.tsx` 文件以处理新的工具部分：
+
+```tsx filename="app/(tabs)/index.tsx" highlight="39-45"
+import { generateAPIUrl } from '@/utils';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { fetch as expoFetch } from 'expo/fetch';
+import { useState } from 'react';
+import { View, TextInput, ScrollView, Text, SafeAreaView } from 'react-native';
+
+export default function App() {
+  const [input, setInput] = useState('');
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl('/api/chat'),
+    }),
+    onError: error => console.error(error, 'ERROR'),
+  });
+
+  if (error) return <Text>{error.message}</Text>;
+
+  return (
+    <SafeAreaView style={{ height: '100%' }}>
+      <View
+        style={{
+          height: '95%',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingHorizontal: 8,
+        }}
+      >
+        <ScrollView style={{ flex: 1 }}>
+          {messages.map(m => (
+            <View key={m.id} style={{ marginVertical: 8 }}>
+              <View>
+                <Text style={{ fontWeight: 700 }}>{m.role}</Text>
+                {m.parts.map((part, i) => {
+                  switch (part.type) {
+                    case 'text':
+                      return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
+                    case 'tool-weather':
+                    case 'tool-convertFahrenheitToCelsius':
+                      return (
+                        <Text key={`${m.id}-${i}`}>
+                          {JSON.stringify(part, null, 2)}
+                        </Text>
+                      );
+                  }
+                })}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={{ marginTop: 8 }}>
+          <TextInput
+            style={{ backgroundColor: 'white', padding: 8 }}
+            placeholder="Say something..."
+            value={input}
+            onChange={e => setInput(e.nativeEvent.text)}
+            onSubmitEditing={e => {
+              e.preventDefault();
+              sendMessage({ text: input });
+              setInput('');
+            }}
+            autoFocus={true}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+```
+
+<Note>
+  你可能需要重启开发服务器，更改才能生效。
+</Note>
+
+现在，当你询问 “What's the weather in New York in celsius?” 时，你应该会看到一次更完整的交互：
+
+1. 模型会为纽约调用天气工具。
+2. 你将看到显示出来的工具结果。
+3. 接着它会调用温度转换工具，将温度从华氏度转换为摄氏度。
+4. 然后模型会利用该信息，给出一段关于纽约天气的自然语言回复。
+
+这种多步方式让模型能够收集信息，并利用这些信息提供更准确、更贴合上下文的回复，使你的聊天机器人好用得多。
+
+这个简单示例展示了如何用工具扩展模型的能力。你可以创建更复杂的工具，与真实的 API、数据库或其他任何外部系统集成，让模型实时访问并处理真实世界的数据。工具弥合了模型知识截止时间与当前信息之间的差距。
+
+## Polyfills
+
+根据你的配置和目标平台，AI SDK 内部使用的若干函数可能在 Expo 运行时中不可用。
+
+首先，安装以下包：
+
+<InstallPackages packages="@ungap/structured-clone @stardazed/streams-text-encoding" />
+
+然后在项目根目录新建一个文件，写入以下 polyfill：
+
+```ts filename="polyfills.js"
+import { Platform } from 'react-native';
+import structuredClone from '@ungap/structured-clone';
+
+if (Platform.OS !== 'web') {
+  const setupPolyfills = async () => {
+    const { polyfillGlobal } =
+      await import('react-native/Libraries/Utilities/PolyfillFunctions');
+
+    const { TextEncoderStream, TextDecoderStream } =
+      await import('@stardazed/streams-text-encoding');
+
+    if (!('structuredClone' in global)) {
+      polyfillGlobal('structuredClone', () => structuredClone);
+    }
+
+    polyfillGlobal('TextEncoderStream', () => TextEncoderStream);
+    polyfillGlobal('TextDecoderStream', () => TextDecoderStream);
+  };
+
+  setupPolyfills();
+}
+
+export {};
+```
+
+最后，在根目录的 `_layout.tsx` 中导入这些 polyfill：
+
+```ts filename="_layout.tsx"
+import '@/polyfills';
+```
+
+## 下一步
+
+你已经用 AI SDK 构建了一个 AI 聊天机器人！从这里出发，你有多种路径可以探索：
+
+- 要进一步了解 AI SDK，请通读[文档](/docs)。
+- 如果你想通过指南深入学习，请查看 [RAG（检索增强生成）](/cookbook/guides/rag-chatbot)和[多模态聊天机器人](/cookbook/guides/multi-modal-chatbot)指南。
+- 要快速启动你的第一个 AI 项目，请浏览可用的[模板](https://vercel.com/templates?type=ai)。

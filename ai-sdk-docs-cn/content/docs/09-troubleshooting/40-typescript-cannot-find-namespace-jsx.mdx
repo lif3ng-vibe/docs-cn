@@ -1,0 +1,23 @@
+---
+title: TypeScript 错误 "Cannot find namespace 'JSX'"
+description: 排查与 TypeScript 和 JSX 相关的错误。
+---
+
+# TypeScript error "Cannot find namespace 'JSX'"
+
+## 问题
+
+我在一个不使用 React 的项目（例如 Hono 服务器）中使用 AI SDK，出现如下错误：
+`error TS2503: Cannot find namespace 'JSX'.`
+
+## 背景
+
+AI SDK 依赖定义了 `JSX` 命名空间的 `@types/react`。这一依赖将在 AI SDK 的下一个主版本中移除。
+
+## 解决方案
+
+你可以安装 `@types/react` 包作为依赖来修复该错误。
+
+```bash
+npm install @types/react
+```

@@ -1,0 +1,130 @@
+---
+title: Node.js HTTP 服务器
+description: 了解如何在 Node.js HTTP 服务器中使用 AI SDK
+tags: ['api servers', 'streaming']
+---
+
+# Node.js HTTP Server
+
+你可以在 Node.js HTTP 服务器中使用 AI SDK 生成文本并将其流式传输给客户端。
+
+## 示例
+
+以下示例会启动一个监听 8080 端口的简单 HTTP 服务器。例如可以用 `curl` 测试它：
+
+```bash
+curl -X POST http://localhost:8080
+```
+
+<Note>
+  这些示例使用 Vercel AI Gateway。请确保你的 AI Gateway API key 已设置在
+  `AI_GATEWAY_API_KEY` 环境变量中。
+</Note>
+
+**完整示例**：[github.com/vercel/ai/examples/node-http-server](https://github.com/vercel/ai/tree/main/examples/node-http-server)
+
+### UI 消息流
+
+你可以使用 `pipeUIMessageStreamToResponse` 辅助函数把流数据通过管道写入服务器响应。
+
+```ts filename='index.ts'
+import {
+  pipeUIMessageStreamToResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+import { createServer } from 'http';
+
+createServer(async (req, res) => {
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    prompt: 'Invent a new holiday and describe its traditions.',
+  });
+
+  pipeUIMessageStreamToResponse({
+    response: res,
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}).listen(8080);
+```
+
+### 发送自定义数据
+
+`createUIMessageStream` 和 `pipeUIMessageStreamToResponse` 可用于向客户端发送自定义数据。
+本示例处理 `/stream-data` 路径，可用 `curl -X POST http://localhost:8080/stream-data` 测试。
+
+```ts filename='index.ts'
+import {
+  createUIMessageStream,
+  pipeUIMessageStreamToResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+import { createServer } from 'http';
+
+createServer(async (req, res) => {
+  switch (req.url) {
+    case '/stream-data': {
+      const stream = createUIMessageStream({
+        execute: ({ writer }) => {
+          // write some custom data
+          writer.write({ type: 'start' });
+
+          writer.write({
+            type: 'data-custom',
+            data: {
+              custom: 'Hello, world!',
+            },
+          });
+
+          const result = streamText({
+            model: 'openai/gpt-6-astra',
+            prompt: 'Invent a new holiday and describe its traditions.',
+          });
+
+          writer.merge(
+            toUIMessageStream({
+              stream: result.stream,
+              sendStart: false,
+              onError: error => {
+                // Error messages are masked by default for security reasons.
+                // If you want to expose the error message to the client, you can do so here:
+                return error instanceof Error ? error.message : String(error);
+              },
+            }),
+          );
+        },
+      });
+
+      pipeUIMessageStreamToResponse({ stream, response: res });
+
+      break;
+    }
+  }
+}).listen(8080);
+```
+
+### 文本流
+
+你可以使用 `pipeTextStreamToResponse` 向客户端发送文本流。
+
+```ts filename='index.ts'
+import { pipeTextStreamToResponse, streamText, toTextStream } from 'ai';
+import { createServer } from 'http';
+
+createServer(async (req, res) => {
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    prompt: 'Invent a new holiday and describe its traditions.',
+  });
+
+  pipeTextStreamToResponse({
+    response: res,
+    stream: toTextStream({ stream: result.stream }),
+  });
+}).listen(8080);
+```
+
+## 故障排查
+
+- [代理环境下流式传输不工作](/docs/troubleshooting/streaming-not-working-when-proxied)

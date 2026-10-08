@@ -1,0 +1,1415 @@
+---
+title: 聊天机器人
+description: 了解如何使用 useChat Hook。
+---
+
+# Chatbot
+
+`useChat` Hook 让你轻松地为聊天机器人应用创建对话式用户界面。它支持从 AI 提供商流式传输聊天消息、管理聊天状态，并在新消息到达时自动更新 UI。
+
+总而言之，`useChat` Hook 提供以下特性：
+
+- **消息流式传输**：来自 AI 提供商的所有消息都会实时流式传输到聊天 UI。
+- **托管状态**：该 Hook 为你管理输入、消息、状态、错误等各项状态。
+- **无缝集成**：以最少的成本轻松把聊天 AI 集成到任何设计或布局中。
+
+在本指南中，你将学习如何使用 `useChat` Hook 创建具有实时消息流式传输的聊天机器人应用。
+如需了解如何在聊天机器人中使用工具，请参阅[带工具的聊天机器人指南](/docs/ai-sdk-ui/chatbot-tool-usage)。
+我们先从下面的示例开始。
+
+## 示例
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Page() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+  const [input, setInput] = useState('');
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (input.trim()) {
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={status !== 'ready'}
+          placeholder="Say something..."
+        />
+        <button type="submit" disabled={status !== 'ready'}>
+          Submit
+        </button>
+      </form>
+    </>
+  );
+}
+```
+
+```ts filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    instructions: 'You are a helpful assistant.',
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+<Note>
+  UI 消息有一个新的 `parts` 属性，包含消息的各个部分。
+  我们建议使用 `parts` 属性而不是 `content` 属性来渲染消息。parts 属性支持不同的消息类型，
+  包括文本、工具调用和工具结果，可用于构建更灵活、更复杂的聊天 UI。
+</Note>
+
+在 `Page` 组件中，每当用户通过 `sendMessage` 发送消息时，`useChat` Hook 都会请求你的 AI 提供商端点。
+消息随后会实时流式传回并显示在聊天 UI 中。
+
+这带来了无缝的聊天体验：用户可以在 AI 响应可用时立即看到它，
+而不必等待整个响应接收完毕。
+
+## 自定义 UI
+
+`useChat` 还提供了通过代码管理聊天消息状态、显示状态，以及在不由用户交互触发的情况下更新消息的方式。
+
+### 状态
+
+`useChat` Hook 会返回一个 `status`，其可能的取值如下：
+
+- `submitted`：消息已发送到 API，正在等待响应流开始。
+- `streaming`：响应正在从 API 持续流入，接收数据分块。
+- `ready`：完整响应已接收并处理完毕；可以提交新的用户消息。
+- `error`：API 请求期间发生错误，未能成功完成。
+
+你可以将 `status` 用于以下场景：
+
+- 在聊天机器人处理用户消息时显示加载指示器。
+- 显示“停止”按钮以中止当前消息。
+- 禁用提交按钮。
+
+
+```tsx filename='app/page.tsx' highlight="8,26-33,47,50"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Page() {
+  const { messages, sendMessage, status, stop } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+  const [input, setInput] = useState('');
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      {(status === 'submitted' || status === 'streaming') && (
+        <div>
+          {status === 'submitted' && <Spinner />}
+          <button type="button" onClick={() => stop()}>
+            Stop
+          </button>
+        </div>
+      )}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (input.trim()) {
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={status !== 'ready'}
+          placeholder="Say something..."
+        />
+        <button type="submit" disabled={status !== 'ready'}>
+          Submit
+        </button>
+      </form>
+    </>
+  );
+}
+```
+
+### 错误状态
+
+类似地，`error` 状态反映了 fetch 请求期间抛出的错误对象。
+它可用于显示错误消息、禁用提交按钮，或显示重试按钮：
+
+<Note>
+  我们建议向用户显示通用的错误消息，例如“Something
+  went wrong.”。这是避免泄露服务器信息的良好实践。
+</Note>
+
+
+```tsx file="app/page.tsx" highlight="8,26-33,47"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Chat() {
+  const { messages, sendMessage, error, regenerate } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+  const [input, setInput] = useState('');
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}:{' '}
+          {m.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      {error && (
+        <>
+          <div>An error occurred.</div>
+          <button type="button" onClick={() => regenerate()}>
+            Retry
+          </button>
+        </>
+      )}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (input.trim()) {
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }}
+      >
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={error != null}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+更多信息请参阅[错误处理](/docs/ai-sdk-ui/error-handling)指南。
+
+### 修改消息
+
+有时你可能希望直接修改某些已有消息。例如，可以为每条消息添加删除按钮，让用户能将其从聊天历史中移除。
+
+`setMessages` 函数可以帮你完成这些任务：
+
+
+```tsx
+const { messages, setMessages } = useChat()
+
+const handleDelete = (id) => {
+  setMessages(messages.filter(message => message.id !== id))
+}
+
+return <>
+  {messages.map(message => (
+    <div key={message.id}>
+      {message.role === 'user' ? 'User: ' : 'AI: '}
+      {message.parts.map((part, index) => (
+        part.type === 'text' ? (
+          <span key={index}>{part.text}</span>
+        ) : null
+      ))}
+      <button onClick={() => handleDelete(message.id)}>Delete</button>
+    </div>
+  ))}
+  ...
+```
+
+你可以把 `messages` 和 `setMessages` 理解为 React 中 `state` 与 `setState` 的一对组合。
+
+### 取消与重新生成
+
+另一个常见场景是在响应消息仍从 AI 提供商流式传回时中止它。你可以通过调用 `useChat` Hook 返回的 `stop` 函数来实现。
+
+
+```tsx
+const { stop, status } = useChat()
+
+return <>
+  <button onClick={stop} disabled={!(status === 'streaming' || status === 'submitted')}>Stop</button>
+  ...
+```
+
+当用户点击“停止”按钮时，fetch 请求会被中止。这避免了不必要的资源消耗，并提升了聊天机器人应用的用户体验。
+
+类似地，你还可以通过调用 `useChat` Hook 返回的 `regenerate` 函数，请求 AI 提供商重新处理最后一条消息：
+
+
+```tsx
+const { regenerate, status } = useChat();
+
+return (
+  <>
+    <button
+      onClick={regenerate}
+      disabled={!(status === 'ready' || status === 'error')}
+    >
+      Regenerate
+    </button>
+    ...
+  </>
+);
+```
+
+当用户点击“重新生成”按钮时，AI 提供商会重新生成最后一条消息，并相应地替换当前消息。
+
+### 节流 UI 更新
+
+默认情况下，`useChat` 会在每个分块被处理时发布消息更新。
+React 可能把多次更新合并为一次渲染。
+React 和 Vue 应用可以使用 `throttle` 选项对响应式消息更新进行节流。
+流处理与事件回调保持即时，并且在聊天进入最终的 `ready` 或 `error` 状态之前，最新消息一定会被发布。
+
+
+<Tabs items={['React', 'Vue']}>
+  <Tab>
+    ```tsx filename="page.tsx" highlight="2-3"
+    const { messages, ... } = useChat({
+      // Throttle reactive message updates to 50ms:
+      throttle: 50,
+    });
+    ```
+  </Tab>
+  <Tab>
+    ```vue filename="pages/index.vue" highlight="4-6"
+    <script setup lang="ts">
+    import { useChat } from '@ai-sdk/vue';
+
+    const { messages } = useChat({
+      throttle: 50,
+    });
+    </script>
+    ```
+
+  </Tab>
+</Tabs>
+
+## 事件回调
+
+`useChat` 提供可选的事件回调，可用于处理聊天机器人生命周期的不同阶段：
+
+- `onFinish`：在助手响应完成时调用。事件包含响应消息、所有消息，以及中止、断连和错误的标志位。
+- `onError`：在 fetch 请求期间发生错误时调用。
+- `onData`：每当接收到数据部分时调用。
+
+这些回调可用于触发额外操作，例如日志记录、分析或自定义 UI 更新。
+
+
+```tsx
+import { UIMessage } from 'ai';
+
+const {
+  /* ... */
+} = useChat({
+  onFinish: ({ message, messages, isAbort, isDisconnect, isError }) => {
+    // use information to e.g. update other UI states
+  },
+  onError: error => {
+    console.error('An error occurred:', error);
+  },
+  onData: data => {
+    console.log('Received data part from server:', data);
+  },
+});
+```
+
+值得注意的是，你可以在 `onData` 回调中抛出错误来中止处理。这会触发 `onError` 回调，并阻止该消息被追加到聊天 UI。这对于处理来自 AI 提供商的意外响应很有用。
+
+## 请求配置
+
+### 自定义请求头、请求体与凭据
+
+默认情况下，`useChat` Hook 会向 `/api/chat` 端点发送 HTTP POST 请求，并以消息列表作为请求体。你可以通过两种方式自定义请求：
+
+#### Hook 级配置（应用于所有请求）
+
+你可以配置传输层选项，它们会应用于该 Hook 发出的所有请求：
+
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/custom-chat',
+    headers: {
+      Authorization: 'your_token',
+    },
+    body: {
+      user_id: '123',
+    },
+    credentials: 'same-origin',
+  }),
+});
+```
+
+#### 动态 Hook 级配置
+
+你也可以提供返回配置值的函数。这对于需要刷新的认证令牌，或依赖运行时条件的配置非常有用：
+
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/custom-chat',
+    headers: () => ({
+      Authorization: `Bearer ${getAuthToken()}`,
+      'X-User-ID': getCurrentUserId(),
+    }),
+    body: () => ({
+      sessionId: getCurrentSessionId(),
+      preferences: getUserPreferences(),
+    }),
+    credentials: () => 'include',
+  }),
+});
+```
+
+<Note>
+  对于随时间变化的组件状态，请使用 `useRef` 存储当前值，并在配置函数中引用 `ref.current`，
+  或者优先使用请求级选项（见下一节）以获得更好的可靠性。
+</Note>
+
+#### 请求级配置（推荐）
+
+<Note>
+  **推荐**：使用请求级选项可获得更好的灵活性与控制力。
+  请求级选项优先于 Hook 级选项，并允许你逐个自定义每次请求。
+</Note>
+
+
+```tsx
+// Pass options as the second parameter to sendMessage
+sendMessage(
+  { text: input },
+  {
+    headers: {
+      Authorization: 'Bearer token123',
+      'X-Custom-Header': 'custom-value',
+    },
+    body: {
+      temperature: 0.7,
+      max_tokens: 100,
+      user_id: '123',
+    },
+    metadata: {
+      userId: 'user123',
+      sessionId: 'session456',
+    },
+  },
+);
+```
+
+请求级选项会与 Hook 级选项合并，且请求级选项优先。在服务器端，你可以利用这些附加信息处理请求。
+
+### 为每个请求设置自定义 body 字段
+
+你可以使用 `sendMessage` 函数的第二个参数，按请求配置自定义 `body` 字段。
+如果你想向后端传递不属于消息列表的附加信息，这会很有用。
+
+
+```tsx filename="app/page.tsx" highlight="25-32"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat();
+  const [input, setInput] = useState('');
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}:{' '}
+          {m.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          if (input.trim()) {
+            sendMessage(
+              { text: input },
+              {
+                body: {
+                  customKey: 'customValue',
+                },
+              },
+            );
+            setInput('');
+          }
+        }}
+      >
+        <input value={input} onChange={e => setInput(e.target.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+你可以在服务器端通过解构请求体来获取这些自定义字段：
+
+
+```ts filename="app/api/chat/route.ts" highlight="3,4"
+export async function POST(req: Request) {
+  // Extract additional information ("customKey") from the body of the request:
+  const { messages, customKey }: { messages: UIMessage[]; customKey: string } =
+    await req.json();
+  //...
+}
+```
+
+## 消息元数据
+
+你可以为消息附加自定义元数据，用于记录时间戳、模型详情和 token 用量等信息。
+
+
+```ts
+// Server: Send metadata about the message
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream({
+    stream: result.stream,
+    messageMetadata: ({ part }) => {
+      if (part.type === 'start') {
+        return {
+          createdAt: Date.now(),
+          model: 'gpt-6-astra',
+        };
+      }
+
+      if (part.type === 'finish') {
+        return {
+          totalTokens: part.totalUsage.totalTokens,
+        };
+      }
+    },
+  }),
+});
+```
+
+```tsx
+// Client: Access metadata via message.metadata
+{
+  messages.map(message => (
+    <div key={message.id}>
+      {message.role}:{' '}
+      {message.metadata?.createdAt &&
+        new Date(message.metadata.createdAt).toLocaleTimeString()}
+      {/* Render message content */}
+      {message.parts.map((part, index) =>
+        part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+      )}
+      {/* Show token count if available */}
+      {message.metadata?.totalTokens && (
+        <span>{message.metadata.totalTokens} tokens</span>
+      )}
+    </div>
+  ));
+}
+```
+
+包含类型安全与高级用法的完整示例请参阅[消息元数据文档](/docs/ai-sdk-ui/message-metadata)。
+
+## 传输配置
+
+你可以使用 `transport` 选项配置自定义传输行为，自定义消息发送到 API 的方式：
+
+
+```tsx filename="app/page.tsx"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat({
+    id: 'my-chat',
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ id, messages }) => {
+        return {
+          body: {
+            id,
+            message: messages[messages.length - 1],
+          },
+        };
+      },
+    }),
+  });
+
+  // ... rest of your component
+}
+```
+
+对应的 API 路由会接收这种自定义请求格式：
+
+
+```ts filename="app/api/chat/route.ts"
+export async function POST(req: Request) {
+  const { id, message } = await req.json();
+
+  // Load existing messages and add the new one
+  const messages = await loadMessages(id);
+  messages.push(message);
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+### 进阶：基于触发器的路由
+
+对于消息重新生成这类更复杂的场景，你可以使用基于触发器的路由：
+
+
+```tsx filename="app/page.tsx"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  const { messages, sendMessage, regenerate } = useChat({
+    id: 'my-chat',
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
+        if (trigger === 'submit-user-message') {
+          return {
+            body: {
+              trigger: 'submit-user-message',
+              id,
+              message: messages[messages.length - 1],
+              messageId,
+            },
+          };
+        } else if (trigger === 'regenerate-assistant-message') {
+          return {
+            body: {
+              trigger: 'regenerate-assistant-message',
+              id,
+              messageId,
+            },
+          };
+        }
+        throw new Error(`Unsupported trigger: ${trigger}`);
+      },
+    }),
+  });
+
+  // ... rest of your component
+}
+```
+
+对应的 API 路由会处理不同的触发器：
+
+
+```ts filename="app/api/chat/route.ts"
+export async function POST(req: Request) {
+  const { trigger, id, message, messageId } = await req.json();
+
+  const chat = await readChat(id);
+  let messages = chat.messages;
+
+  if (trigger === 'submit-user-message') {
+    // Handle new user message
+    messages = [...messages, message];
+  } else if (trigger === 'regenerate-assistant-message') {
+    // Handle message regeneration - remove messages after messageId
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex !== -1) {
+      messages = messages.slice(0, messageIndex);
+    }
+  }
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+要了解如何构建自定义传输，请参阅 [Transport API 文档](/docs/ai-sdk-ui/transport)。
+
+### 直接智能体传输
+
+在你想与智能体直接通信而不经过 HTTP 的场景中，可以使用 `DirectChatTransport`。它适用于：
+
+- 服务器端渲染场景
+- 无网络的测试
+- 单进程应用
+
+
+```tsx filename="app/page.tsx"
+import { useChat } from '@ai-sdk/react';
+import { DirectChatTransport, ToolLoopAgent } from 'ai';
+__PROVIDER_IMPORT__;
+
+const agent = new ToolLoopAgent({
+  model: __MODEL__,
+  instructions: 'You are a helpful assistant.',
+});
+
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DirectChatTransport({ agent }),
+  });
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+
+      <button
+        onClick={() => sendMessage({ text: 'Hello!' })}
+        disabled={status !== 'ready'}
+      >
+        Send
+      </button>
+    </>
+  );
+}
+```
+
+`DirectChatTransport` 会直接调用智能体的 `stream()` 方法，把 UI 消息转换为模型消息，并将响应作为 UI 消息分块流式传回。
+
+更多细节请参阅 [DirectChatTransport 参考](/docs/reference/ai-sdk-ui/direct-chat-transport)。
+
+## 控制响应流
+
+借助 `streamText`，你可以控制错误消息和用量信息回传给客户端的方式。
+
+### 错误消息
+
+出于安全考虑，错误消息默认是被遮蔽的。
+默认错误消息为 "An error occurred."
+
+标记为 `providerExecuted: true` 的工具执行错误是个例外。它们会绕过 UI 流的 `onError` 回调：字符串原样转发，其他错误值则用 `JSON.stringify` 序列化。这样可以在聊天历史被转换回模型消息时保留提供商的错误码，也同样适用于来自 harness 运行时的错误消息。流错误与无效工具调用仍然使用 `onError`，即使对提供商执行的工具也是如此。不要依赖该回调在错误到达客户端之前脱敏提供商执行的工具执行错误。
+
+你可以通过提供 `onError` 函数来转发错误消息或发送自己的错误消息：
+
+
+```ts filename="app/api/chat/route.ts" highlight="21-35"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      onError: error => {
+        if (error == null) {
+          return 'unknown error';
+        }
+
+        if (typeof error === 'string') {
+          return error;
+        }
+
+        if (error instanceof Error) {
+          return error.message;
+        }
+
+        return JSON.stringify(error);
+      },
+    }),
+  });
+}
+```
+
+### 用量信息
+
+借助[消息元数据](/docs/ai-sdk-ui/message-metadata)跟踪 token 消耗与资源用量：
+
+1. 定义带有用量字段的自定义元数据类型（可选，用于类型安全）
+2. 在响应中使用 `messageMetadata` 附加用量数据
+3. 在 UI 组件中显示用量指标
+
+用量数据会作为元数据附加到消息上，并在模型完成响应生成后可用。
+
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+  type LanguageModelUsage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Create a new metadata type (optional for type-safety)
+type MyMetadata = {
+  totalUsage: LanguageModelUsage;
+};
+
+// Create a new custom message type with your own metadata
+export type MyUIMessage = UIMessage<MyMetadata>;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: MyUIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages,
+      messageMetadata: ({ part }) => {
+        // Send total usage when generation is finished
+        if (part.type === 'finish') {
+          return { totalUsage: part.totalUsage };
+        }
+      },
+    }),
+  });
+}
+```
+
+然后，在客户端你可以访问消息级元数据。
+
+
+```tsx
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import type { MyUIMessage } from './api/chat/route';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  // Use custom message type defined on the server (optional for type-safety)
+  const { messages } = useChat<MyUIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(m => (
+        <div key={m.id} className="whitespace-pre-wrap">
+          {m.role === 'user' ? 'User: ' : 'AI: '}
+          {m.parts.map(part => {
+            if (part.type === 'text') {
+              return part.text;
+            }
+          })}
+          {/* Render usage via metadata */}
+          {m.metadata?.totalUsage && (
+            <div>Total usage: {m.metadata?.totalUsage.totalTokens} tokens</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+你也可以在 `useChat` 的 `onFinish` 回调中访问你的元数据：
+
+
+```tsx
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import type { MyUIMessage } from './api/chat/route';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  // Use custom message type defined on the server (optional for type-safety)
+  const { messages } = useChat<MyUIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+    onFinish: ({ message }) => {
+      // Access message metadata via onFinish callback
+      console.log(message.metadata?.totalUsage);
+    },
+  });
+}
+```
+
+### 文本流
+
+通过将 `streamProtocol` 选项设为 `text`，`useChat` 也可以处理纯文本流：
+
+
+```tsx filename="app/page.tsx" highlight="7"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { TextStreamChatTransport } from 'ai';
+
+export default function Chat() {
+  const { messages } = useChat({
+    transport: new TextStreamChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return <>...</>;
+}
+```
+
+这一配置同样适用于其他以纯文本流式输出的后端服务器。
+更多信息请查看[流协议指南](/docs/ai-sdk-ui/stream-protocol)。
+
+<Note>
+  使用 `TextStreamChatTransport` 时，工具调用、用量信息和完成原因均不可用。
+</Note>
+
+## 推理
+
+一些模型（例如 DeepSeek 的 `deepseek-r1`
+和 Anthropic 的 `claude-sonnet-5-5`）支持推理 token。
+这些 token 通常在消息内容之前发送。
+你可以使用 `sendReasoning` 选项将它们转发给客户端：
+
+
+```ts filename="app/api/chat/route.ts" highlight="20"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: 'deepseek/deepseek-r1',
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      sendReasoning: true,
+    }),
+  });
+}
+```
+
+在客户端，你可以访问消息对象的推理部分。
+
+推理部分有一个 `text` 属性，包含推理内容。
+
+
+```tsx filename="app/page.tsx"
+messages.map(message => (
+  <div key={message.id}>
+    {message.role === 'user' ? 'User: ' : 'AI: '}
+    {message.parts.map((part, index) => {
+      // text parts:
+      if (part.type === 'text') {
+        return <div key={index}>{part.text}</div>;
+      }
+
+      // reasoning parts:
+      if (part.type === 'reasoning') {
+        return <pre key={index}>{part.text}</pre>;
+      }
+    })}
+  </div>
+));
+```
+
+一些模型还可能在推理过程中产生文件（例如图像）。
+它们以 `reasoning-file` 部分（`ReasoningFileUIPart`）的形式提供，带有
+`mediaType` 和 `url` 属性，与普通文件部分类似。
+
+## 来源
+
+一些提供商（例如 [Perplexity](/providers/ai-sdk-providers/perplexity#来源) 和
+[Google](/providers/ai-sdk-providers/google#sources)）会在响应中包含来源。
+
+你可以使用 `sendSources` 选项将来源转发给客户端。本示例使用 Perplexity Agent API 的 `fast` 预设进行网络搜索。请安装 `@ai-sdk/perplexity` 并在环境中设置 `PERPLEXITY_API_KEY`：
+
+
+<InstallPackages packages="@ai-sdk/perplexity" />
+
+```ts filename="app/api/chat/route.ts" highlight="21"
+import { perplexity } from '@ai-sdk/perplexity';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: perplexity('fast'),
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      sendSources: true,
+    }),
+  });
+}
+```
+
+在客户端，你可以访问消息对象的来源部分。
+来源有两种类型：用于网页的 `source-url` 和用于文档的 `source-document`。
+下面是一个同时渲染两种来源的示例：
+
+
+```tsx filename="app/page.tsx"
+messages.map(message => (
+  <div key={message.id}>
+    {message.role === 'user' ? 'User: ' : 'AI: '}
+
+    {/* Render URL sources */}
+    {message.parts
+      .filter(part => part.type === 'source-url')
+      .map(part => (
+        <span key={`source-${part.sourceId}`}>
+          [
+          <a href={part.url} target="_blank">
+            {part.title ?? new URL(part.url).hostname}
+          </a>
+          ]
+        </span>
+      ))}
+
+    {/* Render document sources */}
+    {message.parts
+      .filter(part => part.type === 'source-document')
+      .map(part => (
+        <span key={`source-${part.sourceId}`}>
+          [<span>{part.title ?? `Document ${part.sourceId}`}</span>]
+        </span>
+      ))}
+  </div>
+));
+```
+
+## 图像生成
+
+一些模型（例如 Google 的 `gemini-3.1-flash-image-preview`）支持图像生成。
+生成的图像会以文件的形式暴露给客户端。
+在客户端，你可以访问消息对象的文件部分，
+并将其渲染为图像。
+
+
+```tsx filename="app/page.tsx"
+messages.map(message => (
+  <div key={message.id}>
+    {message.role === 'user' ? 'User: ' : 'AI: '}
+    {message.parts.map((part, index) => {
+      if (part.type === 'text') {
+        return <div key={index}>{part.text}</div>;
+      } else if (part.type === 'file' && part.mediaType.startsWith('image/')) {
+        return <img key={index} src={part.url} alt="Generated image" />;
+      }
+    })}
+  </div>
+));
+```
+
+## 附件
+
+`useChat` Hook 支持在发送消息的同时发送文件附件，并在客户端渲染它们。这对于构建需要向 AI 提供商发送图像、文件或其他媒体内容的应用很有用。
+
+随消息发送文件有两种方式：使用来自文件输入的 `FileList` 对象，或使用文件对象数组。
+
+### FileList
+
+使用 `FileList`，你可以通过文件输入元素随消息一起发送多个文件作为附件。`useChat` Hook 会自动将它们转换为 data URL 并发送给 AI 提供商。
+
+<Note>
+  目前，只有 `image/*` 和 `text/*` 内容类型会被自动转换为[多模态内容
+  部分](/docs/foundations/prompts#file-parts)。其他内容类型需要手动处理。
+</Note>
+
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useRef, useState } from 'react';
+
+export default function Page() {
+  const { messages, sendMessage, status } = useChat();
+
+  const [input, setInput] = useState('');
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div>
+      <div>
+        {messages.map(message => (
+          <div key={message.id}>
+            <div>{`${message.role}: `}</div>
+
+            <div>
+              {message.parts.map((part, index) => {
+                if (part.type === 'text') {
+                  return <span key={index}>{part.text}</span>;
+                }
+
+                if (
+                  part.type === 'file' &&
+                  part.mediaType?.startsWith('image/')
+                ) {
+                  return <img key={index} src={part.url} alt={part.filename} />;
+                }
+
+                return null;
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          if (input.trim()) {
+            sendMessage({
+              text: input,
+              files,
+            });
+            setInput('');
+            setFiles(undefined);
+
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+          }
+        }}
+      >
+        <input
+          type="file"
+          onChange={event => {
+            if (event.target.files) {
+              setFiles(event.target.files);
+            }
+          }}
+          multiple
+          ref={fileInputRef}
+        />
+        <input
+          value={input}
+          placeholder="Send message..."
+          onChange={e => setInput(e.target.value)}
+          disabled={status !== 'ready'}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+### 文件对象
+
+你也可以将文件作为对象随消息一起发送。这对于发送预先上传的文件或 data URL 很有用。
+
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+import { FileUIPart } from 'ai';
+
+export default function Page() {
+  const { messages, sendMessage, status } = useChat();
+
+  const [input, setInput] = useState('');
+  const [files] = useState<FileUIPart[]>([
+    {
+      type: 'file',
+      filename: 'earth.png',
+      mediaType: 'image/png',
+      url: 'https://example.com/earth.png',
+    },
+    {
+      type: 'file',
+      filename: 'moon.png',
+      mediaType: 'image/png',
+      url: 'data:image/png;base64,iVBORw0KGgo...',
+    },
+  ]);
+
+  return (
+    <div>
+      <div>
+        {messages.map(message => (
+          <div key={message.id}>
+            <div>{`${message.role}: `}</div>
+
+            <div>
+              {message.parts.map((part, index) => {
+                if (part.type === 'text') {
+                  return <span key={index}>{part.text}</span>;
+                }
+
+                if (
+                  part.type === 'file' &&
+                  part.mediaType?.startsWith('image/')
+                ) {
+                  return <img key={index} src={part.url} alt={part.filename} />;
+                }
+
+                return null;
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          if (input.trim()) {
+            sendMessage({
+              text: input,
+              files,
+            });
+            setInput('');
+          }
+        }}
+      >
+        <input
+          value={input}
+          placeholder="Send message..."
+          onChange={e => setInput(e.target.value)}
+          disabled={status !== 'ready'}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+作为模型推理一部分生成的文件以 `reasoning-file`
+部分（`ReasoningFileUIPart`）的形式提供，带有相同的 `mediaType` 和 `url` 属性。
+
+## 工具的类型推断
+
+在 TypeScript 中使用工具时，AI SDK UI 提供类型推断辅助工具，以确保工具输入与输出的类型安全。
+
+### InferUITool
+
+`InferUITool` 类型辅助工具为单个工具推断输入与输出类型，用于 UI 消息：
+
+
+```tsx
+import { InferUITool } from 'ai';
+import { z } from 'zod';
+
+const weatherTool = {
+  description: 'Get the current weather',
+  inputSchema: z.object({
+    location: z.string().describe('The city and state'),
+  }),
+  execute: async ({ location }) => {
+    return `The weather in ${location} is sunny.`;
+  },
+};
+
+// Infer the types from the tool
+type WeatherUITool = InferUITool<typeof weatherTool>;
+// This creates a type with:
+// {
+//   input: { location: string };
+//   output: string;
+// }
+```
+
+### InferUITools
+
+`InferUITools` 类型辅助工具为 `ToolSet` 推断输入与输出类型：
+
+
+```tsx
+import { InferUITools, ToolSet } from 'ai';
+import { z } from 'zod';
+
+const tools = {
+  weather: {
+    description: 'Get the current weather',
+    inputSchema: z.object({
+      location: z.string().describe('The city and state'),
+    }),
+    execute: async ({ location }) => {
+      return `The weather in ${location} is sunny.`;
+    },
+  },
+  calculator: {
+    description: 'Perform basic arithmetic',
+    inputSchema: z.object({
+      operation: z.enum(['add', 'subtract', 'multiply', 'divide']),
+      a: z.number(),
+      b: z.number(),
+    }),
+    execute: async ({ operation, a, b }) => {
+      switch (operation) {
+        case 'add':
+          return a + b;
+        case 'subtract':
+          return a - b;
+        case 'multiply':
+          return a * b;
+        case 'divide':
+          return a / b;
+      }
+    },
+  },
+} satisfies ToolSet;
+
+// Infer the types from the tool set
+type MyUITools = InferUITools<typeof tools>;
+// This creates a type with:
+// {
+//   weather: { input: { location: string }; output: string };
+//   calculator: { input: { operation: 'add' | 'subtract' | 'multiply' | 'divide'; a: number; b: number }; output: number };
+// }
+```
+
+### 使用推断类型
+
+你可以使用这些推断类型创建自定义 UIMessage 类型，并传给各种 AI SDK UI 函数：
+
+
+```tsx
+import { InferUITools, UIMessage, UIDataTypes } from 'ai';
+
+type MyUITools = InferUITools<typeof tools>;
+type MyUIMessage = UIMessage<never, UIDataTypes, MyUITools>;
+```
+
+将自定义类型传给 `useChat` 或 `createUIMessageStream`：
+
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { createUIMessageStream } from 'ai';
+import type { MyUIMessage } from './types';
+
+// With useChat
+const { messages } = useChat<MyUIMessage>();
+
+// With createUIMessageStream
+const stream = createUIMessageStream<MyUIMessage>(/* ... */);
+```
+
+这为客户端和服务器上的工具输入与输出提供了完整的类型安全。
+

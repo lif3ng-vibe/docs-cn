@@ -1,0 +1,173 @@
+---
+title: 背压
+description: 在使用 AI SDK 时如何处理背压与取消
+---
+
+# 流的背压与取消
+
+本页聚焦于在使用流时理解背压（back-pressure）与取消。使用 AI SDK 并不需要了解这些信息，但对于感兴趣的读者，本页将深入探讨 SDK 为何以及如何以最优方式流式传输响应。
+
+在接下来的小节中，我们将通过一个简单的示例程序来探讨背压与取消。我们会讨论急切（eager）方式可能引发的问题，并演示惰性（lazy）方式如何解决这些问题。
+
+## 流的背压与取消
+
+让我们先搭建一个简单的示例程序：
+
+```jsx
+// A generator that will yield positive integers
+async function* integers() {
+  let i = 1;
+  while (true) {
+    console.log(`yielding ${i}`);
+    yield i++;
+
+    await sleep(100);
+  }
+}
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Wraps a generator into a ReadableStream
+function createStream(iterator) {
+  return new ReadableStream({
+    async start(controller) {
+      for await (const v of iterator) {
+        controller.enqueue(v);
+      }
+      controller.close();
+    },
+  });
+}
+
+// Collect data from stream
+async function run() {
+  // Set up a stream of integers
+  const stream = createStream(integers());
+
+  // Read values from our stream
+  const reader = stream.getReader();
+  for (let i = 0; i < 10_000; i++) {
+    // we know our stream is infinite, so there's no need to check `done`.
+    const { value } = await reader.read();
+    console.log(`read ${value}`);
+
+    await sleep(1_000);
+  }
+}
+run();
+```
+
+在这个示例中，我们创建了一个产出正整数的异步生成器、一个包裹整数生成器的 `ReadableStream`，以及一个从流中读取值的读取器。还要注意，整数生成器会输出 `"yielding ${i}"`，读取器会输出 `"read ${value}"`。两者处理数据都需要任意长度的时间，在示例中用生成器内的 100ms 睡眠和读取器内的 1 秒睡眠来表示。
+
+## 背压
+
+如果你运行这个程序，会发现一个有趣的现象："yield" 日志的数量大约是 "read" 日志的 10 倍。这看起来显而易见：生成器推送值的速度是读取器取出值速度的 10 倍。但这代表一个问题——我们的 `stream` 必须维护一个不断增长的队列，存放那些已被推入但尚未被取出的条目。
+
+问题源于我们将生成器包裹成流的方式。注意 `start` 处理器中 `for await (…)` 的使用。这是一个**急切的** for 循环，它不断运行以从生成器获取下一个值并入队到流中。这意味着我们的流不遵守背压——即消费者向生产者发出的"暂时还不需要更多值"的信号。本质上，我们派生了一个会永远向流中推送更多数据的"线程"，它以尽可能快的速度立即推送新数据。更糟的是，当我们不需要更多数据时，没有任何办法通知这个线程停止运行。
+
+要解决这个问题，`ReadableStream` 允许使用 `pull` 处理器。每当消费者尝试从流中读取更多数据时（如果内部没有已排队的数据），就会调用 `pull`。但仅仅把 `for await(…)` 移到 `pull` 中还不够，我们还需要将急切的入队方式转换为**惰性的**入队方式。通过这两处修改，我们就能够响应消费者：如果他们需要更多数据，我们可以轻松生产；如果不需要，我们就无需花费时间做不必要的工作。
+
+```jsx
+function createStream(iterator) {
+  return new ReadableStream({
+    async pull(controller) {
+      const { value, done } = await iterator.next();
+
+      if (done) {
+        controller.close();
+      } else {
+        controller.enqueue(value);
+      }
+    },
+  });
+}
+```
+
+现在的 `createStream` 有点冗长，但新代码很重要。首先，我们需要手动调用 `iterator.next()` 方法。它返回一个 `Promise`，解析为类型签名为 `{ done: boolean, value: T }` 的对象。如果 `done` 为 `true`，我们知道迭代器不会再产出任何值，必须 `close` 这个流（这让消费者知道流也已经完成值的产出）。否则，我们需要 `enqueue` 新生产的值。
+
+当我们运行这个程序时，会看到 "yield" 和 "read" 日志现在是成对出现的。我们不再为每次读取产出 10 倍的整数了！而且，我们的流现在只需要在内部缓冲区中维护 1 个条目。本质上，我们把控制权交给了消费者，由它负责在需要时生产新值。非常好！
+
+## 取消
+
+让我们回到最初的急切示例，只做一处小修改：现在我们不再读取 10,000 个整数，而是只读取 3 个：
+
+```jsx
+// A generator that will yield positive integers
+async function* integers() {
+  let i = 1;
+  while (true) {
+    console.log(`yielding ${i}`);
+    yield i++;
+
+    await sleep(100);
+  }
+}
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Wraps a generator into a ReadableStream
+function createStream(iterator) {
+  return new ReadableStream({
+    async start(controller) {
+      for await (const v of iterator) {
+        controller.enqueue(v);
+      }
+      controller.close();
+    },
+  });
+}
+// Collect data from stream
+async function run() {
+  // Set up a stream that of integers
+  const stream = createStream(integers());
+
+  // Read values from our stream
+  const reader = stream.getReader();
+  // We're only reading 3 items this time:
+  for (let i = 0; i < 3; i++) {
+    // we know our stream is infinite, so there's no need to check `done`.
+    const { value } = await reader.read();
+    console.log(`read ${value}`);
+
+    await sleep(1000);
+  }
+}
+run();
+```
+
+产出的值又回到了读取数量的 10 倍。但请注意，在读取 3 个值之后，生成器仍在继续产出新值。我们知道读取器永远不会读取下一个值，但我们的流并不知道！急切的 `for await (…)` 会永远继续下去，不断向流的缓冲区入队新值，增加内存占用，直到耗尽程序所有可用内存。
+
+解决方法完全相同：使用 `pull` 和手动迭代。通过**惰性地**生产值，我们将整数生成器的生命周期与读取器的生命周期绑定在一起。一旦读取停止，产出也会停止：
+
+```jsx
+// Wraps a generator into a ReadableStream
+function createStream(iterator) {
+  return new ReadableStream({
+    async pull(controller) {
+      const { value, done } = await iterator.next();
+
+      if (done) {
+        controller.close();
+      } else {
+        controller.enqueue(value);
+      }
+    },
+  });
+}
+```
+
+由于这个解决方案与实现背压相同，这表明它们只是同一个问题的两个侧面：向流中推送值应该**惰性地**进行，急切地推送则会带来意料之中的问题。
+
+## 将流的惰性与 AI 响应关联起来
+
+现在想象你正在将 AIBot 服务集成到你的产品中。用户可以输入提示词"从 1 数到无穷"，浏览器会请求你的 AI API 端点，你的服务器连接 AIBot 以获取响应。但"无穷"顾名思义是无限的。这个响应永远不会结束！
+
+几秒钟后，用户感到无聊并离开了页面。或者你正在进行本地开发，热模块重载刷新了页面。浏览器已经断开了与 API 端点的连接，但你的服务器会断开与 AIBot 的连接吗？
+
+如果你使用了急切的 `for await (...)` 方式，那么连接仍在运行，你的服务器会向 AIBot 请求越来越多的数据。我们的服务器派生了一个"线程"，而没有任何信号告诉我们何时可以结束这些急切的拉取。最终，服务器将耗尽内存（记住，已经没有活跃的 fetch 连接去读取并释放缓冲的响应了）。
+
+{/* When we started writing the streaming code for the AI SDK, we confirm aborting a fetch will end a streamed response from Next.js */}
+
+使用惰性方式，这些问题都会自动得到处理。因为流只在消费者请求时才向 AIBot 请求新数据，所以离开页面会自然释放所有资源。fetch 连接被中止，服务器可以清理响应。与该响应关联的 `ReadableStream` 随之可以被垃圾回收。此时，它持有的与 AIBot 的连接也得以释放。

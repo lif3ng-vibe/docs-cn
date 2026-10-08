@@ -1,0 +1,77 @@
+---
+title: createStreamableValue
+description: AI SDK RSC 中 createStreamableValue 函数的参考文档
+---
+
+# `createStreamableValue`
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+创建一个从服务器向客户端发送值的流。该值可以是任何可序列化的数据。
+
+## 导入
+
+<Snippet
+  text={`import { createStreamableValue } from "@ai-sdk/rsc"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'value',
+      type: 'any',
+      description: 'RSC 支持的任何数据，例如 JSON。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'value',
+      type: 'StreamableValue',
+      description:
+        '可流式传输的值。可以从 Server Action 返回并由客户端接收。要读取流式传输的值，请使用 `readStreamableValue` 或 `useStreamableValue` API。',
+    },
+  ]}
+/>
+
+### 方法
+
+<PropertiesTable
+  content={[
+    {
+      name: 'update',
+      type: '(value: T) => StreamableValueWrapper',
+      description: '用新值更新当前值。',
+    },
+    {
+      name: 'append',
+      type: '(value: T) => StreamableValueWrapper',
+      description:
+        '向当前值追加一个增量字符串。要求可流式传输的当前值必须是字符串。',
+    },
+    {
+      name: 'done',
+      type: '(value?: T) => StreamableValueWrapper',
+      description:
+        '将该值标记为已完成。可以不带任何参数调用，也可以传入一个新值作为最终状态。一旦调用，该值便不能再被更新或追加。必须始终调用此方法，否则响应将一直停留在加载状态。',
+    },
+    {
+      name: 'error',
+      type: '(error: any) => StreamableValueWrapper',
+      description:
+        '发出值流中存在错误的信号。当客户端通过 `readStreamableValue` 或 `useStreamableValue` 消费时，该错误将被抛出。',
+    },
+  ]}
+/>

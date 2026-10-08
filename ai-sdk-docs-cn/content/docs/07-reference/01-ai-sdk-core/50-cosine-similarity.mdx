@@ -1,0 +1,52 @@
+---
+title: cosineSimilarity
+description: 计算两个向量之间的余弦相似度（API 参考）
+---
+
+# `cosineSimilarity()`
+
+当你想比较嵌入（embedding）之间的相似度时，通常会使用余弦相似度这类标准
+向量相似度指标。
+
+`cosineSimilarity` 计算两个向量之间的余弦相似度。
+值高（接近 1）表示两个向量非常相似，值低（接近 -1）则表示它们不同。
+
+```ts
+import { cosineSimilarity, embedMany } from 'ai';
+
+const { embeddings } = await embedMany({
+  model: 'openai/text-embedding-3-small',
+  values: ['sunny day at the beach', 'rainy afternoon in the city'],
+});
+
+console.log(
+  `cosine similarity: ${cosineSimilarity(embeddings[0], embeddings[1])}`,
+);
+```
+
+## 导入
+
+<Snippet text={`import { cosineSimilarity } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'vector1',
+      type: 'number[]',
+      description: '要比较的第一个向量',
+    },
+    {
+      name: 'vector2',
+      type: 'number[]',
+      description: '要比较的第二个向量',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个介于 -1 和 1 之间的数字，表示两个向量之间的余弦相似度。

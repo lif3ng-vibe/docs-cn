@@ -1,0 +1,67 @@
+---
+title: Zhipu AI (Z.AI)
+description: 了解如何使用 Zhipu（Z.AI）提供商。
+---
+
+# Zhipu AI (Z.AI) 提供商
+
+[Zhipu AI 提供商](https://github.com/Xiang-CH/zhipu-ai-provider)是 [AI SDK](/) 的一个社区提供商。它可以无缝集成 [ZhipuAI](https://www.zhipuai.cn/) 在 [bigmodel.cn](https://bigmodel.cn/) 或 [z.ai](https://docs.z.ai/) 上提供的 **GLM** 模型与嵌入（embedding）模型。
+
+## 安装
+
+<InstallPackages packages="zhipu-ai-provider" />
+
+在 `.env` 文件或环境中配置你的 API key。
+
+```bash
+ZHIPU_API_KEY=<your-api-key>
+```
+
+## 提供商实例
+
+你可以从 `zhipu-ai-provider` 导入默认提供商实例 `zhipu`（它会自动从环境变量 `ZHIPU_API_KEY` 读取 API key）：
+
+```ts
+import { zhipu } from 'zhipu-ai-provider';
+```
+
+你也可以使用 `createZhipu` 创建自定义配置的提供商实例（如果想使用非中国的 [Z.AI](https://docs.z.ai/guides) 基础设施，请这样做）：
+
+```ts
+import { createZhipu } from 'zhipu-ai-provider';
+
+const zhipu = createZhipu({
+  baseURL: 'https://api.z.ai/api/paas/v4',
+  apiKey: 'your-api-key',
+});
+```
+
+你可以使用以下可选设置来自定义 Zhipu 提供商实例：
+
+- **baseURL**: _string_
+  - 为 API 调用使用不同的 URL 前缀，例如使用代理服务器。默认前缀为 `https://open.bigmodel.cn/api/paas/v4`。
+
+- **apiKey**: _string_
+  - 你在 Zhipu [BigModel 平台](https://bigmodel.cn/)的 API key。未提供时，提供商将尝试从环境变量 `ZHIPU_API_KEY` 读取 API key。
+
+- **headers**: _Record\<string, string\>_
+  - 请求中包含的自定义请求头。
+
+## 示例
+
+```ts
+import { generateText } from 'ai';
+import { zhipu } from 'zhipu-ai-provider';
+
+const { text } = await generateText({
+  model: zhipu('glm-4-plus'),
+  prompt: 'Why is the sky blue?',
+});
+
+console.log(text);
+```
+
+## 文档
+
+- **[Zhipu 文档](https://bigmodel.cn/dev/welcome)**
+- **[Z.AI 文档](https://docs.z.ai/)**

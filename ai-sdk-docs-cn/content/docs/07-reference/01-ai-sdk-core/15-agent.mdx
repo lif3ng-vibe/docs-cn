@@ -1,0 +1,257 @@
+---
+title: Agent（接口）
+description: Agent 接口的 API 参考。
+---
+
+# `Agent`（接口）
+
+`Agent` 接口定义了一类智能体（agent）的契约：它们能够针对提示词（prompt）生成或流式输出 AI 生成的响应。智能体可以封装工具调用、多步工作流、提示词处理等高级逻辑，从而同时支持简单与自主的 AI 智能体。
+
+`Agent` 接口的实现——例如 `ToolLoopAgent`——遵循同一契约，并可与所有需要智能体的 SDK API 和工具无缝集成。这种设计允许用户提供自定义智能体类，或为第三方链提供包装器，同时最大化与 AI SDK 功能的兼容性。
+
+## 接口定义
+
+```ts
+import {
+  ModelMessage,
+  Experimental_SandboxSession,
+} from '@ai-sdk/provider-utils';
+import { ToolSet } from '../generate-text/tool-set';
+import { Output } from '../generate-text/output';
+import { GenerateTextResult } from '../generate-text/generate-text-result';
+import { StreamTextResult } from '../generate-text/stream-text-result';
+
+export type AgentCallParameters<CALL_OPTIONS, TOOLS extends ToolSet = {}> = ([
+  CALL_OPTIONS,
+] extends [never]
+  ? { options?: never }
+  : { options: CALL_OPTIONS }) &
+  (
+    | {
+        /**
+         * A prompt. It can be either a text prompt or a list of messages.
+         *
+         * You can either use `prompt` or `messages` but not both.
+         */
+        prompt: string | Array<ModelMessage>;
+
+        /**
+         * A list of messages.
+         *
+         * You can either use `prompt` or `messages` but not both.
+         */
+        messages?: never;
+      }
+    | {
+        /**
+         * A list of messages.
+         *
+         * You can either use `prompt` or `messages` but not both.
+         */
+        messages: Array<ModelMessage>;
+
+        /**
+         * A prompt. It can be either a text prompt or a list of messages.
+         *
+         * You can either use `prompt` or `messages` but not both.
+         */
+        prompt?: never;
+      }
+  ) & {
+    /**
+     * Abort signal.
+     */
+    abortSignal?: AbortSignal;
+    /**
+     * Timeout in milliseconds. Can be specified as a number or as an object with a totalMs property.
+     * The call will be aborted if it takes longer than the specified timeout.
+     * Can be used alongside abortSignal.
+     */
+    timeout?: number | { totalMs?: number };
+    /**
+     * Experimental sandbox environment that is passed through to tool execution.
+     */
+    experimental_sandbox?: Experimental_SandboxSession;
+    /**
+     * Callback that is called when the agent operation begins, before any LLM calls.
+     */
+    onStart?: GenerateTextOnStartCallback<TOOLS>;
+    /**
+     * Callback that is called when a step (LLM call) begins, before the provider is called.
+     */
+    onStepStart?: GenerateTextOnStepStartCallback<TOOLS>;
+    /**
+     * Callback that is called before each tool execution begins.
+     */
+    onToolExecutionStart?: OnToolExecutionStartCallback<TOOLS>;
+    /**
+     * Callback that is called after each tool execution completes.
+     */
+    onToolExecutionEnd?: OnToolExecutionEndCallback<TOOLS>;
+    /**
+     * Callback that is called when each step (LLM call) ends, including intermediate steps.
+     */
+    onStepEnd?: GenerateTextOnStepEndCallback<TOOLS>;
+    /**
+     * Callback that is called when each step (LLM call) ends, including intermediate steps.
+     *
+     * @deprecated Use `onStepEnd` instead.
+     */
+    onStepFinish?: GenerateTextOnStepFinishCallback<TOOLS>;
+    /**
+     * Callback that is called when all steps are finished and the response is complete.
+     */
+    onEnd?: GenerateTextOnEndCallback<TOOLS>;
+    /**
+     * Callback that is called when all steps are finished and the response is complete.
+     *
+     * @deprecated Use `onEnd` instead.
+     */
+    onFinish?: GenerateTextOnEndCallback<TOOLS>;
+  };
+
+/**
+ * An Agent receives a prompt (text or messages) and generates or streams an output
+ * that consists of steps, tool calls, data parts, etc.
+ *
+ * You can implement your own Agent by implementing the `Agent` interface,
+ * or use the `ToolLoopAgent` class.
+ */
+export interface Agent<
+  CALL_OPTIONS = never,
+  TOOLS extends ToolSet = {},
+  OUTPUT extends Output = never,
+> {
+  /**
+   * The specification version of the agent interface. This will enable
+   * us to evolve the agent interface and retain backwards compatibility.
+   */
+  readonly version: 'agent-v1';
+
+  /**
+   * The id of the agent.
+   */
+  readonly id: string | undefined;
+
+  /**
+   * The tools that the agent can use.
+   */
+  readonly tools: TOOLS;
+
+  /**
+   * Generates an output from the agent (non-streaming).
+   */
+  generate(
+    options: AgentCallParameters<CALL_OPTIONS, TOOLS>,
+  ): PromiseLike<GenerateTextResult<TOOLS, OUTPUT>>;
+
+  /**
+   * Streams an output from the agent (streaming).
+   */
+  stream(
+    options: AgentStreamParameters<CALL_OPTIONS, TOOLS>,
+  ): PromiseLike<StreamTextResult<TOOLS, OUTPUT>>;
+}
+```
+
+## 核心属性与方法
+
+| 名称         | 类型                                             | 说明                                                                 |
+| ------------ | ------------------------------------------------ | -------------------------------------------------------------------- |
+| `version`    | `'agent-v1'`                                     | 用于兼容性的接口版本。                                               |
+| `id`         | `string \| undefined`                            | 可选的智能体标识符。                                                 |
+| `tools`      | `ToolSet`                                        | 该智能体可用的工具集合。                                             |
+| `generate()` | `PromiseLike<GenerateTextResult<TOOLS, OUTPUT>>` | 为文本提示词或消息列表生成完整的非流式输出。                         |
+| `stream()`   | `PromiseLike<StreamTextResult<TOOLS, OUTPUT>>`   | 为文本提示词或消息列表流式输出结果（分块或步骤）。                   |
+
+## 泛型参数
+
+| 参数           | 默认值  | 说明                                                 |
+| -------------- | ------- | ---------------------------------------------------- |
+| `CALL_OPTIONS` | `never` | 可选类型，表示可传给智能体的额外调用选项。           |
+| `TOOLS`        | `{}`    | 该智能体可用工具集合的类型。                         |
+| `OUTPUT`       | `never` | 智能体可产生的额外输出数据的类型。                   |
+
+## 方法参数
+
+`generate()` 接受一个 `AgentCallParameters<CALL_OPTIONS, TOOLS>` 对象，`stream()` 接受一个 `AgentStreamParameters<CALL_OPTIONS, TOOLS>` 对象（后者在 `AgentCallParameters` 的基础上增加了可选的 `experimental_transform`）。两者均接受以下参数：
+
+- `prompt`（可选）：字符串提示词或 `ModelMessage` 对象数组
+- `messages`（可选）：`ModelMessage` 对象数组（与 `prompt` 互斥）
+- `options`（可选）：当 `CALL_OPTIONS` 不为 `never` 时的额外调用选项
+- `abortSignal`（可选）：用于取消操作的 `AbortSignal`
+- `timeout`（可选）：以毫秒为单位的超时时间。可以指定为数字，或带有 `totalMs` 属性的对象。若调用耗时超过指定的超时时间，则会被中止。可与 `abortSignal` 同时使用。
+- `experimental_sandbox`（可选）：转发给工具执行的实验性沙箱环境。
+- `onStart`（可选）：在智能体操作开始时、任何 LLM 调用之前调用的回调。
+- `onStepStart`（可选）：在步骤（LLM 调用）开始时、调用提供商（provider）之前调用的回调。
+- `onToolExecutionStart`（可选）：在工具的 execute 函数运行前立即调用的回调。
+- `onToolExecutionEnd`（可选）：在工具的 execute 函数完成或出错后立即调用的回调。
+- `onStepEnd`（可选）：在每个智能体步骤（LLM/工具调用）完成后调用的回调。可用于跟踪 token 用量、每步性能或记录日志。
+- `onStepFinish`（可选）：`onStepEnd` 的已弃用别名。
+- `onEnd`（可选）：在所有步骤完成且响应结束后调用的回调。
+- `onFinish`（可选）：`onEnd` 的已弃用别名。
+
+## 示例：自定义 Agent 实现
+
+下面展示了如何实现你自己的智能体：
+
+```ts
+import { Agent, GenerateTextResult, StreamTextResult } from 'ai';
+import type { ModelMessage } from '@ai-sdk/provider-utils';
+
+class MyEchoAgent implements Agent {
+  version = 'agent-v1' as const;
+  id = 'echo';
+  tools = {};
+
+  async generate({ prompt, messages, abortSignal }) {
+    const text = prompt ?? JSON.stringify(messages);
+    return { text, steps: [] };
+  }
+
+  async stream({ prompt, messages, abortSignal }) {
+    const text = prompt ?? JSON.stringify(messages);
+    return {
+      textStream: (async function* () {
+        yield text;
+      })(),
+    };
+  }
+}
+```
+
+## 用法：与智能体交互
+
+所有接受智能体的 SDK 工具——包括 [`createAgentUIStream`](/docs/reference/ai-sdk-core/create-agent-ui-stream)、[`createAgentUIStreamResponse`](/docs/reference/ai-sdk-core/create-agent-ui-stream-response) 和 [`pipeAgentUIStreamToResponse`](/docs/reference/ai-sdk-core/pipe-agent-ui-stream-to-response)——都要求传入符合 `Agent` 接口的对象。
+
+你可以使用官方的 [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent)（推荐用于带工具调用的多步 AI 工作流），也可以提供自己的实现：
+
+```ts
+import { ToolLoopAgent, createAgentUIStream } from "ai";
+
+const agent = new ToolLoopAgent({ ... });
+
+const stream = await createAgentUIStream({
+  agent,
+  messages: [{ role: "user", content: "What is the weather in NYC?" }]
+});
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+## 另请参阅
+
+- [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent) &mdash; 官方的多步智能体实现
+- [`createAgentUIStream`](/docs/reference/ai-sdk-core/create-agent-ui-stream)
+- [`GenerateTextResult`](/docs/reference/ai-sdk-core/generate-text)
+- [`StreamTextResult`](/docs/reference/ai-sdk-core/stream-text)
+
+## 说明
+
+- 智能体应定义其 `tools` 属性，即使为空（`{}`），以保证与 SDK 工具的兼容性。
+- 该接口既接受纯提示词，也接受消息数组作为输入，但一次只能使用其中一种。
+- `CALL_OPTIONS` 泛型参数允许智能体在需要时接受额外的调用专属选项。
+- `abortSignal` 参数支持取消智能体操作。
+- 这种设计既可扩展到复杂的自主智能体，也适用于简单的 LLM 包装器。

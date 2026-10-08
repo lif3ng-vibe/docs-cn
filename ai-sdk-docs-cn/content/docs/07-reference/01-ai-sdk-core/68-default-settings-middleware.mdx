@@ -1,0 +1,83 @@
+---
+title: defaultSettingsMiddleware
+description: 为语言模型应用默认设置的中间件
+---
+
+# `defaultSettingsMiddleware()`
+
+`defaultSettingsMiddleware` 是一个中间件函数，它为语言模型调用应用默认设置。当你想在多次模型调用之间建立一致的默认参数时，这会很有用。
+
+若要应用默认系统指令，请使用
+[`defaultInstructionsMiddleware`](/docs/reference/ai-sdk-core/default-instructions-middleware)。
+
+```ts
+import { defaultSettingsMiddleware } from 'ai';
+
+const middleware = defaultSettingsMiddleware({
+  settings: {
+    temperature: 0.7,
+    maxOutputTokens: 1000,
+    // other settings...
+  },
+});
+```
+
+## 导入
+
+<Snippet
+  text={`import { defaultSettingsMiddleware } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+此中间件接受一个包含以下属性的配置对象：
+
+- `settings`：一个对象，包含要应用到语言模型调用的默认参数值。可以包括任何有效的 `LanguageModelV4CallOptions` 属性以及可选的提供商元数据。
+
+### 返回值
+
+返回一个中间件对象，它会：
+
+- 将默认设置与每次模型调用中提供的参数合并
+- 确保显式提供的参数优先于默认值
+- 合并提供商元数据对象
+
+### 用法示例
+
+```ts
+import { streamText, wrapLanguageModel, defaultSettingsMiddleware } from 'ai';
+
+// Create a model with default settings
+const modelWithDefaults = wrapLanguageModel({
+  model: gateway('anthropic/claude-sonnet-4.5'),
+  middleware: defaultSettingsMiddleware({
+    settings: {
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'high',
+        },
+      },
+    },
+  }),
+});
+
+// Use the model - default settings will be applied
+const result = await streamText({
+  model: modelWithDefaults,
+  prompt: 'Your prompt here',
+  // These parameters will override the defaults
+  temperature: 0.8,
+});
+```
+
+## 工作原理
+
+此中间件会：
+
+1. 接收一组默认设置作为配置
+2. 将这些默认值与每次模型调用中提供的参数合并
+3. 确保显式提供的参数优先于默认值
+4. 合并来自双方的提供商元数据对象

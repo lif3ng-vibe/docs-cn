@@ -1,0 +1,121 @@
+---
+title: experimental_getRealtimeToolDefinitions
+description: experimental_getRealtimeToolDefinitions 的 API 参考。
+---
+
+# `experimental_getRealtimeToolDefinitions()`
+
+<Note type="warning">
+  `experimental_getRealtimeToolDefinitions` 属于实验性实时 API。
+</Note>
+
+将 AI SDK 的 `ToolSet` 转换为提供商中立的实时工具定义（realtime tool definitions），可传入实时会话的 setup 请求。
+
+在创建短期实时提供商 token 的服务器端 setup 端点中使用它。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { experimental_getRealtimeToolDefinitions, tool } from 'ai';
+import { z } from 'zod';
+
+const tools = {
+  getWeather: tool({
+    description: 'Get the current weather for a city',
+    inputSchema: z.object({
+      city: z.string(),
+    }),
+  }),
+};
+
+const toolDefinitions = await experimental_getRealtimeToolDefinitions({
+  tools,
+});
+
+const token = await openai.experimental_realtime.getToken({
+  model: 'gpt-realtime',
+  sessionConfig: {
+    tools: toolDefinitions,
+  },
+});
+```
+
+## 导入
+
+<Snippet
+  text={`import { experimental_getRealtimeToolDefinitions } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'options',
+      type: 'Object',
+      description: '转换工具所需的选项。',
+      properties: [
+        {
+          type: 'Object',
+          parameters: [
+            {
+              name: 'tools',
+              type: 'ToolSet',
+              description:
+                '要暴露给实时模型的 AI SDK 工具。函数工具与动态工具会被转换为实时函数定义。提供商工具会被跳过。',
+            },
+            {
+              name: 'toolsContext',
+              type: 'InferToolSetContext<TOOLS>',
+              isOptional: true,
+              description:
+                '解析动态工具描述时使用的逐工具上下文。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+一个 `Promise<Experimental_RealtimeToolDefinition[]>`。
+
+每个返回的定义包含：
+
+<PropertiesTable
+  content={[
+    {
+      name: 'type',
+      type: "'function'",
+      description: '实时工具定义的类型。',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      description: '来自输入 ToolSet 的工具名称。',
+    },
+    {
+      name: 'description',
+      type: 'string | undefined',
+      description: '发送给实时模型的工具描述。',
+    },
+    {
+      name: 'parameters',
+      type: 'JSONSchema7',
+      description:
+        '由工具 inputSchema 转换而来的 JSON schema。实时模型使用该 schema 生成工具调用参数。',
+    },
+  ]}
+/>
+
+## 说明
+
+- `experimental_getRealtimeToolDefinitions` 不负责工具执行。请使用
+  [`experimental_useRealtime`](/docs/reference/ai-sdk-ui/use-realtime)
+  的 `onToolCall` 与 `addToolOutput` 来执行工具并返回结果。
+- 提供商工具会被跳过，因为实时提供商期望会话配置中是常规的函数定义。
+- 在返回定义之前，动态工具描述会使用 `toolsContext` 中匹配的值进行解析。

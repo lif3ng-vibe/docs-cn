@@ -1,0 +1,30 @@
+---
+title: generateId
+description: 生成唯一标识符（API 参考）
+---
+
+# `generateId()`
+
+生成一个唯一标识符。
+
+这与 AI SDK 内部使用的 id 生成器相同。
+
+```ts
+import { generateId } from 'ai';
+
+const id = generateId();
+```
+
+## 导入
+
+<Snippet text={`import { generateId } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 返回值
+
+一个表示所生成 ID 的字符串。
+
+## 另请参阅
+
+- [`createIdGenerator()`](/docs/reference/ai-sdk-core/create-id-generator)

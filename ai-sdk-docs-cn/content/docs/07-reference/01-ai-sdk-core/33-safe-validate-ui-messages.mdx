@@ -1,0 +1,123 @@
+---
+title: safeValidateUIMessages
+description: safeValidateUIMessages 的 API 参考
+---
+
+# `safeValidateUIMessages`
+
+`safeValidateUIMessages` 是一个异步函数，其校验 UI 消息的方式与 [`validateUIMessages`](/docs/reference/ai-sdk-core/validate-ui-messages) 相同，但它不抛出异常，而是返回一个带有 `success` 键、以及 `data` 或 `error` 的对象。
+
+## 基本用法
+
+不使用自定义 schema 的简单校验：
+
+```typescript
+import { safeValidateUIMessages } from 'ai';
+
+const messages = [
+  {
+    id: '1',
+    role: 'user',
+    parts: [{ type: 'text', text: 'Hello!' }],
+  },
+];
+
+const result = await safeValidateUIMessages({
+  messages,
+});
+
+if (!result.success) {
+  console.error(result.error.message);
+} else {
+  const validatedMessages = result.data;
+}
+```
+
+## 已弃用的 `rawInput` 字段
+
+为了向后兼容，校验仍然接受处于 `output-error` 状态的工具部分上的
+`rawInput`。当发现已定义的 `rawInput` 值时，`safeValidateUIMessages` 会通过
+`AI_SDK_LOG_WARNINGS` 发出 AI SDK 弃用警告。
+
+请迁移已持久化的消息，将工具参数存入 `input` 并移除 `rawInput`。为了向后
+兼容，当 `input` 为 `null` 或 `undefined` 时，转换会使用 `rawInput` 作为回退。
+`rawInput` 将在下一个主版本中被移除。
+
+## 进阶用法
+
+使用自定义元数据、数据部分和工具进行全面校验：
+
+```typescript
+import { safeValidateUIMessages, tool } from 'ai';
+import { z } from 'zod';
+
+// Define schemas
+const metadataSchema = z.object({
+  timestamp: z.string().datetime(),
+  userId: z.string(),
+});
+
+const dataSchemas = {
+  chart: z.object({
+    data: z.array(z.number()),
+    labels: z.array(z.string()),
+  }),
+  image: z.object({
+    url: z.string().url(),
+    caption: z.string(),
+  }),
+};
+
+const tools = {
+  weather: tool({
+    description: 'Get weather info',
+    inputSchema: z.object({
+      location: z.string(),
+    }),
+    execute: async ({ location }) => `Weather in ${location}: sunny`,
+  }),
+};
+
+// Messages with custom parts
+const messages = [
+  {
+    id: '1',
+    role: 'user',
+    metadata: { timestamp: '2024-01-01T00:00:00Z', userId: 'user123' },
+    parts: [
+      { type: 'text', text: 'Show me a chart' },
+      {
+        type: 'data-chart',
+        data: { data: [1, 2, 3], labels: ['A', 'B', 'C'] },
+      },
+    ],
+  },
+  {
+    id: '2',
+    role: 'assistant',
+    parts: [
+      {
+        type: 'tool-weather',
+        toolCallId: 'call_123',
+        state: 'output-available',
+        input: { location: 'San Francisco' },
+        output: 'Weather in San Francisco: sunny',
+      },
+    ],
+  },
+];
+
+// Validate with all schemas
+const result = await safeValidateUIMessages({
+  messages,
+  metadataSchema,
+  dataSchemas,
+  tools,
+});
+
+if (!result.success) {
+  console.error(result.error.message);
+} else {
+  const validatedMessages = result.data;
+}
+```

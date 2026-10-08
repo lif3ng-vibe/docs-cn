@@ -1,0 +1,109 @@
+---
+title: zodSchema
+description: 用于创建 Zod schema 的辅助函数
+---
+
+# `zodSchema()`
+
+`zodSchema` 是一个辅助函数，用于将 Zod schema 转换为与 AI SDK 兼容的 JSON schema 对象。
+它以 Zod schema 和可选配置作为输入，返回一个带类型的 schema。
+
+可以用它来[生成结构化数据](/docs/ai-sdk-core/generating-structured-data)，或在[工具](/docs/ai-sdk-core/tools-and-tool-calling)中使用。
+
+<Note>
+  你也可以将 Zod 对象直接传给 AI SDK 函数。内部实现中，
+  AI SDK 会使用 `zodSchema()` 将 Zod schema 转换为 JSON schema。
+  不过，如果你想指定 `useReferences` 等选项，可以改为传入
+  `zodSchema()` 辅助函数。
+</Note>
+
+<Note type="warning">
+  使用 `.meta()` 或 `.describe()` 为 Zod schema 添加元数据时，
+  请确保这些方法在 schema 链的**末尾**调用。
+  
+  元数据附加在特定的 schema
+  实例上，而大多数 schema 方法（`.min()`、`.optional()`、`.extend()` 等）
+  会返回一个新实例，不会继承前一个实例的元数据。
+  由于 Zod 的不可变性，只有当 `.meta()` 或 `.describe()` 是链中的最后一个方法时，
+  元数据才会包含在 JSON schema 输出中。
+
+```ts
+// ❌ Metadata will be lost - .min() returns a new instance without metadata
+z.string().meta({ describe: 'first name' }).min(1);
+
+// ✅ Metadata is preserved - .meta() is the final method
+z.string().min(1).meta({ describe: 'first name' });
+```
+
+</Note>
+
+## 递归 schema 示例
+
+```ts
+import { zodSchema } from 'ai';
+import { z } from 'zod';
+
+// Define a base category schema
+const baseCategorySchema = z.object({
+  name: z.string(),
+});
+
+// Define the recursive Category type
+type Category = z.infer<typeof baseCategorySchema> & {
+  subcategories: Category[];
+};
+
+// Create the recursive schema using z.lazy
+const categorySchema: z.ZodType<Category> = baseCategorySchema.extend({
+  subcategories: z.lazy(() => categorySchema.array()),
+});
+
+// Create the final schema with useReferences enabled for recursive support
+const mySchema = zodSchema(
+  z.object({
+    category: categorySchema,
+  }),
+  { useReferences: true },
+);
+```
+
+## 导入
+
+<Snippet text={`import { zodSchema } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'zodSchema',
+      type: 'z.Schema',
+      description: 'Zod schema 定义。',
+    },
+    {
+      name: 'options',
+      type: 'object',
+      description: 'schema 转换的附加选项。',
+      properties: [
+        {
+          type: 'object',
+          parameters: [
+            {
+              name: 'useReferences',
+              isOptional: true,
+              type: 'boolean',
+              description:
+                '启用 schema 中的引用（reference）支持。递归 schema（例如使用 `z.lazy`）需要此选项。但并非所有语言模型和提供商都支持此类引用。默认为 `false`。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+一个与 AI SDK 兼容的 Schema 对象，同时包含 JSON schema 表示与校验功能。

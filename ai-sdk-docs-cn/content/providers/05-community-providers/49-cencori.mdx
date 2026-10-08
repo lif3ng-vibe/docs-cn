@@ -1,0 +1,232 @@
+---
+title: Cencori
+description: 适用于 AI SDK 的 Cencori 提供商
+---
+
+# Cencori
+
+[Cencori](https://cencori.com) 是面向 AI 应用的统一基础设施层。它通过单一 API 提供内置的安全性、可观测性与多提供商支持。
+
+使用 Cencori，你将获得：
+
+- **多提供商网关**：通过一个 API 访问 OpenAI、Anthropic、Google Gemini、Mistral、DeepSeek 等提供商
+- **内置安全**：自动 PII 检测、提示词注入防护与内容过滤
+- **完整可观测性**：为每个请求提供完整的审计日志、分析与成本跟踪
+- **透明定价**：基于积分（credits）的计费方式，成本实时可见
+
+## 安装
+
+Cencori 提供商通过 `cencori` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="cencori" />
+
+## 提供商实例
+
+使用 `createCencori` 函数创建 Cencori 提供商实例：
+
+```ts
+import { createCencori } from 'cencori/vercel';
+
+const cencori = createCencori({
+  apiKey: 'YOUR_CENCORI_API_KEY',
+});
+```
+
+你可以在 [Cencori 控制台](https://cencori.com/dashboard)获取 Cencori API key。
+
+### 环境变量
+
+你也可以设置 `CENCORI_API_KEY` 环境变量并使用默认提供商：
+
+```ts
+import { cencori } from 'cencori/vercel';
+
+// Uses CENCORI_API_KEY environment variable
+const model = cencori('gpt-4o');
+```
+
+## 语言模型
+
+Cencori 提供对多个提供商语言模型的访问。直接调用提供商函数即可创建模型：
+
+```ts
+// OpenAI models
+const gpt4o = cencori('gpt-4o');
+const gpt4oMini = cencori('gpt-4o-mini');
+
+// Anthropic models
+const claude = cencori('claude-3-5-sonnet');
+const opus = cencori('claude-3-opus');
+
+// Google Gemini models
+const gemini = cencori('gemini-2.5-flash');
+const geminiPro = cencori('gemini-3.1-pro-preview');
+
+// Other providers
+const mistral = cencori('mistral-large');
+const deepseek = cencori('deepseek-v3.2');
+const grok = cencori('grok-4');
+const llama = cencori('llama-3-70b');
+```
+
+可用模型的完整列表请参阅 [Cencori 文档](https://cencori.com/docs)。
+
+## 示例
+
+以下是在 AI SDK 中使用 Cencori 的示例：
+
+### generateText
+
+```ts
+import { cencori } from 'cencori/vercel';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: cencori('gpt-4o'),
+  prompt: 'What is Cencori?',
+});
+
+console.log(text);
+```
+
+### streamText
+
+```ts
+import { cencori } from 'cencori/vercel';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: cencori('claude-3-5-sonnet'),
+  prompt: 'Write a short story about AI safety.',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 工具调用
+
+Cencori 支持所有兼容模型的工具调用：
+
+```ts
+import { cencori } from 'cencori/vercel';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const { text, toolCalls } = await generateText({
+  model: cencori('gpt-4o'),
+  prompt: 'What is the weather in San Francisco?',
+  tools: {
+    getWeather: tool({
+      description: 'Get the weather for a location',
+      inputSchema: z.object({
+        location: z.string().describe('The city and state'),
+      }),
+      execute: async ({ location }) => {
+        return { temperature: 72, condition: 'sunny', location };
+      },
+    }),
+  },
+});
+
+console.log(text, toolCalls);
+```
+
+### Next.js Route Handler
+
+```ts
+import { cencori } from 'cencori/vercel';
+import { streamText } from 'ai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: cencori('gemini-2.5-flash'),
+    messages,
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+### useChat Hook
+
+```tsx
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export default function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: '/api/chat',
+  });
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}: {m.content}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input value={input} onChange={handleInputChange} />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+## 高级特性
+
+Cencori 提供多项高级特性，以增强你的 AI 应用：
+
+1. **内置安全**：每个请求都会经过自动安全过滤，包括 PII 检测、提示词注入防护与有害内容过滤。违反安全策略的请求会在到达模型之前被拦截。
+
+2. **多提供商路由**：无需更改代码，即可在 15 多个 AI 提供商（OpenAI、Anthropic、Google、Mistral、DeepSeek、xAI 等）之间切换。Cencori 会自动处理路由。
+
+3. **成本跟踪**：为每个请求提供实时成本跟踪与分析。你可以在控制台中按模型、提供商和项目查看详细拆分。
+
+4. **完整审计日志**：每个请求都会记录完整的载荷、token 用量、成本与安全评分，便于合规与调试。
+
+5. **自带密钥（BYOK）**：为每个提供商使用你自己的 API key，同时仍可享受 Cencori 的安全与可观测性层。
+
+6. **提供商故障转移**：当主提供商不可用时，自动切换到备用提供商。
+
+有关这些特性与高级配置选项的更多信息，请访问 [Cencori 文档](https://cencori.com/docs)。
+
+## 提供商选项
+
+你可以使用额外的选项自定义提供商：
+
+```ts
+import { createCencori } from 'cencori/vercel';
+
+const cencori = createCencori({
+  apiKey: 'YOUR_CENCORI_API_KEY',
+  baseUrl: 'https://cencori.com', // Custom base URL (optional)
+  headers: {
+    // Custom headers (optional)
+    'X-Custom-Header': 'value',
+  },
+});
+```
+
+### 模型专属选项
+
+你还可以传入模型专属选项：
+
+```ts
+const model = cencori('gpt-4o', {
+  userId: 'user-123', // Track usage by user
+});
+```
+
+## 更多资源
+
+- [Cencori 提供商仓库](https://github.com/cencori/cencori)
+- [Cencori 文档](https://cencori.com/docs)
+- [Cencori 控制台](https://cencori.com/dashboard/organizations)
+- [NPM 包](https://www.npmjs.com/package/cencori)

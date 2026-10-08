@@ -1,0 +1,186 @@
+---
+title: Share useChat State Across Components
+description: 了解如何使用 useChat 在多个组件间共享同一个聊天实例，并轻松重置聊天。
+tags: ['next', 'useChat', 'context']
+---
+
+# Share useChat State Across Components
+
+在构建聊天应用时，你可能希望在多个组件中访问同一个聊天实例。这样可以在一个组件中显示消息，在另一个组件中处理输入，并从应用中的任何位置控制聊天状态。
+
+## 创建 Chat Context
+
+首先，创建一个用于保存聊天实例并提供交互方法的 context。
+
+```tsx filename='app/chat-context.tsx'
+'use client';
+
+import React, { createContext, useContext, ReactNode, useState } from 'react';
+import { Chat } from '@ai-sdk/react';
+import { DefaultChatTransport, UIMessage } from 'ai';
+
+interface ChatContextValue {
+  // replace with your custom message type
+  chat: Chat<UIMessage>;
+  clearChat: () => void;
+}
+
+const ChatContext = createContext<ChatContextValue | undefined>(undefined);
+
+function createChat() {
+  return new Chat<UIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+}
+
+export function ChatProvider({ children }: { children: ReactNode }) {
+  const [chat, setChat] = useState(() => createChat());
+
+  const clearChat = () => {
+    setChat(createChat());
+  };
+
+  return (
+    <ChatContext.Provider
+      value={{
+        chat,
+        clearChat,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  );
+}
+
+export function useSharedChatContext() {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error('useSharedChatContext must be used within a ChatProvider');
+  }
+  return context;
+}
+```
+
+## 使用 Provider 包裹应用
+
+将 ChatProvider 添加到你的 layout 中，使聊天 context 对所有子组件可用。
+
+```tsx filename='app/layout.tsx'
+import { ChatProvider } from './chat-context';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <ChatProvider>{children}</ChatProvider>;
+}
+```
+
+## 显示消息并清空聊天
+
+创建一个显示消息并提供清空聊天按钮的组件。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useSharedChatContext } from './chat-context';
+import ChatInput from './chat-input';
+
+export default function Chat() {
+  const { chat, clearChat } = useSharedChatContext();
+  const { messages } = useChat({
+    chat,
+  });
+
+  return (
+    <div>
+      <button onClick={clearChat} disabled={messages.length === 0}>
+        Clear Chat
+      </button>
+
+      {messages?.map(message => (
+        <div key={message.id}>
+          <strong>{`${message.role}: `}</strong>
+          {message.parts.map((part, index) => {
+            if (part.type === 'text') {
+              return <div key={index}>{part.text}</div>;
+            }
+          })}
+        </div>
+      ))}
+
+      <ChatInput />
+    </div>
+  );
+}
+```
+
+## 在独立组件中处理输入
+
+创建一个输入组件，它使用共享的聊天 context 来发送消息。
+
+```tsx filename='app/chat-input.tsx'
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+import { useSharedChatContext } from './chat-context';
+
+export default function ChatInput() {
+  const { chat } = useSharedChatContext();
+  const [text, setText] = useState('');
+  const { status, stop, sendMessage } = useChat({ chat });
+
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        if (text.trim() === '') return;
+        sendMessage({ text });
+        setText('');
+      }}
+    >
+      <input
+        placeholder="Say something..."
+        disabled={status !== 'ready'}
+        value={text}
+        onChange={e => setText(e.target.value)}
+      />
+      {stop && (status === 'streaming' || status === 'submitted') && (
+        <button type="submit" onClick={stop}>
+          Stop
+        </button>
+      )}
+    </form>
+  );
+}
+```
+
+## 服务器
+
+创建一个 API 路由，使用 AI SDK 处理聊天消息。
+
+```tsx filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-luna',
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+<GithubLink link="https://github.com/vercel/ai/tree/main/examples/ai-e2e-next/app/chat/shared-context" />

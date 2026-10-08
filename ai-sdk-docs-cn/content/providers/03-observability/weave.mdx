@@ -1,0 +1,76 @@
+---
+title: Weave
+description: 使用 Weave 监控与评估 LLM 应用
+---
+
+# Weave 可观测性
+
+[Weave](https://wandb.ai/site/weave) 是由 [Weights & Biases](https://wandb.ai/site/) 构建的工具包，用于跟踪、实验、评估、部署和改进基于 LLM 的应用。
+
+与 AI SDK 集成后，你可以使用 Weave 查看并交互 AI SDK 应用的追踪（trace）信息，包括提示词（prompt）、响应、流程、成本等。
+
+## 设置
+
+要将 Weave 配置为 [OpenTelemetry](https://opentelemetry.io/docs/) 后端，你需要把追踪路由到 Weave 的 OpenTelemetry 端点、设置 API key，并指定团队与项目。要将追踪记录到 Weave，你必须拥有一个 [Weights & Biases 账号](https://wandb.ai/site/weave)。
+
+### 身份验证
+
+首先，前往 [wandb.ai/authorize](https://wandb.ai/authorize)，复制你的 API key，并运行以下命令生成 base64 编码的授权字符串：
+
+```bash
+echo -n "api:<YOUR_API_KEY>" | base64
+```
+
+记下输出内容，稍后会在环境配置中使用。
+
+### 项目配置
+
+你的 W&B 项目 ID 标识遥测（telemetry）数据的记录位置。
+其格式为 `<YOUR_TEAM_NAME>/<YOUR_PROJECT_NAME>`。
+
+1. 前往 [Weights & Biases 控制台](https://wandb.ai/home)。
+2. 在 **Teams** 区块中选择或创建一个团队。
+3. 选择一个现有项目或创建一个新项目。
+4. 记下 `<YOUR_TEAM_NAME>/<YOUR_PROJECT_NAME>`，下一步会用到。
+
+### Next.js
+
+在 Next.js 应用的 `.env` 文件中设置 OTEL 环境变量。将 `<BASE64_AUTH_STRING>` 和 `<YOUR_TEAM_NAME>/<YOUR_PROJECT_NAME>` 替换为前面步骤中获得的值：
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.wandb.ai/otel/v1/traces"
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <BASE64_AUTH_STRING>,project_id=<YOUR_TEAM_NAME>/<YOUR_PROJECT_NAME>"
+```
+
+安装 `@ai-sdk/otel`，并在 `instrumentation.ts` 文件中注册 `LegacyOpenTelemetry`：
+
+```typescript filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new LegacyOpenTelemetry());
+```
+
+然后即可使用 `telemetry` 选项，在受支持的 AI SDK 函数调用上启用遥测：
+
+```typescript
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'What is 2 + 2?',
+  telemetry: {
+    metadata: {
+      query: 'math',
+      difficulty: 'easy',
+    },
+  },
+});
+```
+
+## 相关资源
+
+- [Weave 文档](https://weave-docs.wandb.ai)
+- [OpenTelemetry 文档](https://opentelemetry.io/docs/)
+- [AI SDK 遥测指南](/docs/ai-sdk-core/telemetry)

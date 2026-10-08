@@ -1,0 +1,78 @@
+---
+title: extractReasoningMiddleware
+description: 使用可配置分隔符从生成文本中提取推理（reasoning）段落的中间件
+---
+
+# `extractReasoningMiddleware()`
+
+`extractReasoningMiddleware` 是一个中间件函数，用于从生成的文本中提取以分隔符界定的推理段落，并将其与正文内容分开呈现。当你想把 AI 模型的推理过程与其最终输出分开时，这尤其有用。
+
+```ts
+import { extractReasoningMiddleware } from 'ai';
+
+const middleware = extractReasoningMiddleware({
+  tagName: 'reasoning',
+  separator: '\n',
+});
+```
+
+对于输出非 XML 分隔符的模型，可传入字面量 `opening` 和 `closing` 字符串。例如，Gemma 4 的原始思考通道输出在其起始分隔符中包含一个换行符：
+
+```ts
+const middleware = extractReasoningMiddleware({
+  tagName: { opening: '<|channel>thought\n', closing: '<channel|>' },
+});
+```
+
+自定义分隔符必须非空。它们按字面量匹配（包括 `|` 等字符），并且可以跨越多个流式分块。空的推理块也会从回答文本中移除。当服务器在文本中返回这些标记时，使用此中间件；已经单独返回推理内容的提供商则不需要它。
+
+## 导入
+
+<Snippet
+  text={`import { extractReasoningMiddleware } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'tagName',
+      type: 'string | { opening: string; closing: string }',
+      isOptional: false,
+      description:
+        '不带尖括号的 XML 标签名（例如 <think> / </think> 对应 "think"），或包含非空字面量起始与结束分隔符的对象。',
+    },
+    {
+      name: 'separator',
+      type: 'string',
+      isOptional: true,
+      description:
+        '推理部分与文本部分之间使用的分隔符。默认为 "\\n"',
+    },
+    {
+      name: 'startWithReasoning',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '以推理 token 开头。当响应总是以推理开头且省略了起始分隔符时，设为 true。默认为 false。',
+    },
+  ]}
+/>
+
+### 返回值
+
+返回一个中间件对象，它会：
+
+- 同时处理流式与非流式响应
+- 将指定分隔符之间的内容提取为推理内容
+- 从正文中移除分隔符和推理内容
+- 将推理内容部分与文本内容部分分开输出
+- 使用指定的分隔符保持各文本部分之间的正确分隔
+
+### 类型参数
+
+此中间件在处理流式响应时使用 `LanguageModelV4StreamPart` 类型。

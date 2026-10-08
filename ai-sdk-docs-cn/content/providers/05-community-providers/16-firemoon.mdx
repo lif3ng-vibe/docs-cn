@@ -1,0 +1,189 @@
+---
+title: Firemoon
+description: AI SDK 的 Firemoon 提供商。
+---
+
+# Firemoon 提供商
+
+[Firemoon Studio](https://firemoon.studio/) 是一个专注于高质量图像与视频生成模型的 AI 平台，主打微调模型与最先进的模型。
+
+AI SDK 的 Firemoon 提供商让你可以通过简单、一致的 API 使用这些模型：
+
+- **图像生成**：即刻生成图像，并已提供早期视频模型支持。
+- **模型多样**：通过单一提供商访问多个模型家族。
+- **提供商选项**：需要更强控制时可传入模型专属参数。
+
+## 安装
+
+Firemoon 提供商通过 `@firemoon/ai-provider` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="@firemoon/ai-provider" />
+
+## 提供商实例
+
+使用你的 API key 创建 Firemoon 提供商实例：
+
+```ts
+import { createFiremoon } from '@firemoon/ai-provider';
+
+const firemoon = createFiremoon({
+  apiKey: process.env.FIREMOON_API_KEY,
+});
+```
+
+你可以在 [Firemoon Dashboard](https://firemoon.studio/keys) 获取你的 Firemoon API key。
+
+## 图像生成
+
+Firemoon 通过 `image()` 方法支持多种图像生成模型：
+
+```ts
+import { generateImage } from 'ai';
+
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'An orangered moon with a dark background',
+  size: 'square_hd',
+});
+
+console.log(result.images[0]);
+```
+
+### 可用模型
+
+- `flux/dev` - 快速、高质量的图像生成
+- `flux-2-dev/edit` - 使用 Flux 2 进行快速、高质量的图像编辑
+- `nano-banana` - 快速、高质量的图像生成
+- `nano-banana/edit` - 由 Gemini 提供的高质量图像编辑，又名 Gemini 2.5 Flash Image
+- `nano-banana-pro/edit` - 由 Gemini 3 Pro 提供的高质量图像编辑
+- `firemoon-studio/memphis-style` - Memphis 风格图像生成
+
+你可以在 [Firemoon Studio Models](https://firemoon.studio/models) 页面浏览所有可用模型。
+
+### 参数
+
+#### 尺寸
+
+你可以使用 `size` 参数指定图像尺寸：
+
+```ts
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'A beautiful landscape with an orangered moon in the background',
+  size: 'square_hd', // or 'landscape_16_9', etc.
+});
+```
+
+或者使用宽高比映射：
+
+```ts
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'A beautiful landscape with an orangered moon in the background',
+  aspectRatio: '16:9', // maps to landscape_16_9
+});
+```
+
+#### 种子（seed）
+
+为了获得可复现的结果，你可以指定一个种子（seed）：
+
+```ts
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'A beautiful landscape with an orangered moon in the background',
+  seed: 12345,
+});
+```
+
+#### 自定义参数
+
+你可以传入 Firemoon 模型专属的其他参数：
+
+```ts
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'A beautiful landscape with an orangered moon in the background',
+  providerOptions: {
+    firemoon: {
+      // custom parameters
+    },
+  },
+});
+```
+
+#### 微调模型
+
+你可以将模型 id 传给 `image()` 方法来使用微调模型：
+
+```ts
+const result = await generateImage({
+  model: firemoon.image('firemoon-studio/memphis-style'),
+  prompt: 'a man smiling at the camera',
+  size: 'landscape_16_9',
+  providerOptions: {
+    firemoon: {
+      lora_scale: 0.6,
+      num_images: 1,
+      image_size: 'landscape_4_3',
+      output_format: 'jpeg',
+      guidance_scale: 3.5,
+      num_inference_steps: 28,
+      enable_safety_checker: true,
+    },
+  },
+});
+```
+
+## 快速上手示例
+
+### `generateImage`
+
+```ts
+import { createFiremoon } from '@firemoon/ai-provider';
+import { generateImage } from 'ai';
+
+const firemoon = createFiremoon({
+  apiKey: process.env.FIREMOON_API_KEY,
+});
+
+const result = await generateImage({
+  model: firemoon.image('flux/dev'),
+  prompt: 'A beautiful landscape with an orangered moon in the background',
+  aspectRatio: '16:9',
+});
+
+console.log(result.images[0]);
+```
+
+## 高级特性
+
+1. **宽高比映射**：使用 `aspectRatio` 获得便捷预设，无需硬编码尺寸。
+2. **可复现输出**：提供 `seed` 使结果更易复现。
+3. **模型专属选项**：使用 `providerOptions.firemoon` 透传 Firemoon 参数。
+
+## 错误处理
+
+Firemoon 提供商在发生 API 相关错误时会抛出 `APICallError`：
+
+```ts
+import { APICallError } from 'ai';
+
+try {
+  const result = await generateImage({
+    model: firemoon.image('flux/dev'),
+    prompt: 'A beautiful landscape with an orangered moon in the background',
+  });
+} catch (error) {
+  if (error instanceof APICallError) {
+    console.error('API Error:', error.message);
+    console.error('Status:', error.statusCode);
+  }
+}
+```
+
+## 相关资源
+
+- [Firemoon Studio](https://firemoon.studio/)
+- [Firemoon Studio Models](https://firemoon.studio/models)
+- [Firemoon Studio API Reference](https://docs.firemoon.studio)

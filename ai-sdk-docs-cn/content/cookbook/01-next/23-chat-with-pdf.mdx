@@ -1,0 +1,170 @@
+---
+title: 与 PDF 对话
+description: 了解如何使用 AI SDK 和 Next.js 构建能够理解 PDF 的聊天机器人
+tags: ['next', 'pdf', 'multimodal']
+---
+
+# Chat with PDFs
+
+某些语言模型（如 Anthropic 的 Claude Sonnet 5.5 和 Google 的 Gemini 3.8 Flash）能够理解 PDF，并回答与其内容相关的问题。在本例中，我们将向你展示如何构建一个支持 PDF 上传的聊天界面。
+
+<Note>
+  此示例需要支持 PDF 的提供商，例如 Anthropic 的 Claude Sonnet 5.5、Google 的
+  Gemini 3.8 Flash 或 OpenAI 的 GPT-6 Astra。最新的支持信息请查阅[提供商文档](/providers/ai-sdk-providers)。
+</Note>
+
+## 实现
+
+### 服务器
+
+创建一个 Route Handler，使用 Anthropic 的 Claude 模型处理消息和 PDF：
+
+```tsx filename="app/api/chat/route.ts"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: 'anthropic/claude-sonnet-5.5',
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+### 客户端
+
+创建一个聊天界面，允许在发送消息的同时上传 PDF：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useRef, useState } from 'react';
+
+async function convertFilesToDataURLs(
+  files: FileList,
+): Promise<
+  { type: 'file'; filename: string; mediaType: string; url: string }[]
+> {
+  return Promise.all(
+    Array.from(files).map(
+      file =>
+        new Promise<{
+          type: 'file';
+          filename: string;
+          mediaType: string;
+          url: string;
+        }>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            resolve({
+              type: 'file',
+              filename: file.name,
+              mediaType: file.type,
+              url: reader.result as string, // Data URL
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        }),
+    ),
+  );
+}
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+
+          {message.parts.map(part => {
+            if (part.type === 'text') {
+              return <div key={`${message.id}-text`}>{part.text}</div>;
+            }
+          })}
+
+          <div></div>
+        </div>
+      ))}
+
+      <form
+        className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl space-y-2"
+        onSubmit={async event => {
+          event.preventDefault();
+
+          const fileParts =
+            files && files.length > 0
+              ? await convertFilesToDataURLs(files)
+              : [];
+
+          sendMessage({
+            role: 'user',
+            parts: [{ type: 'text', text: input }, ...fileParts],
+          });
+
+          setFiles(undefined);
+          setInput('');
+
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }}
+      >
+        <input
+          type="file"
+          onChange={event => {
+            if (event.target.files) {
+              setFiles(event.target.files);
+            }
+          }}
+          multiple
+          ref={fileInputRef}
+        />
+
+        <input
+          className="w-full p-2"
+          value={input}
+          placeholder="Say something..."
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+这段代码使用了 `useChat` Hook，由它处理文件上传和消息流式传输。`experimental_attachments` 选项允许你在发送消息的同时附带文件。
+
+请确保使用你的 Anthropic API 密钥配置好环境变量：
+
+```env filename=".env.local"
+ANTHROPIC_API_KEY=xxxxxxxxx
+```
+
+现在你可以上传 PDF 并就其内容提问。LLM 会分析这份 PDF，并根据文档内容给出相关回答。

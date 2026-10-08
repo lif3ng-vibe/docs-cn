@@ -1,0 +1,268 @@
+---
+title: MCP Apps
+description: 了解如何连接 MCP Apps，并使用 AI SDK 渲染交互式工具 UI。
+---
+
+# MCP Apps
+
+MCP Apps 通过交互式 UI 资源扩展了 [Model Context Protocol（MCP）](/docs/ai-sdk-core/mcp-tools)工具。模型仍然调用普通的 MCP 工具，但工具可以指向一个 `ui://` 资源，其中包含的 HTML 会由你的应用在沙盒 iframe 中渲染。
+
+AI SDK 为构建 MCP Apps 宿主提供了两个部分：
+
+- [`@ai-sdk/mcp`](/docs/reference/ai-sdk-core/mcp-apps) 辅助工具，用于声明 MCP Apps 支持、过滤模型可见与应用可见的工具，以及读取 `ui://` 资源。
+- [`@ai-sdk/react`](/docs/reference/ai-sdk-ui/mcp-app-renderer) 组件，用于渲染应用 iframe 并桥接 MCP Apps 的 JSON-RPC 消息。
+
+## 宿主流程
+
+MCP Apps 宿主通常执行以下步骤：
+
+1. 使用 MCP Apps 客户端能力连接到 MCP 服务器。
+1. 列出工具，并按 MCP Apps 可见性拆分。
+1. 仅将模型可见的工具传给 `streamText` 或 `generateText`。
+1. 当工具部件包含 MCP App 元数据时，读取该应用的 `ui://` 资源。
+1. 在沙盒 iframe 中渲染该 HTML 资源。
+1. 将允许的 iframe 请求（例如应用可见的 `tools/call`）代理回 MCP 服务器。
+
+## 连接启用 MCP Apps 支持
+
+创建 MCP 客户端时使用 `mcpAppClientCapabilities`。它会声明你的宿主能够渲染 `text/html;profile=mcp-app` 资源。
+
+```ts
+import { createMCPClient, mcpAppClientCapabilities } from '@ai-sdk/mcp';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
+export function createMCPAppsClient(origin: string) {
+  return createMCPClient({
+    transport: new StreamableHTTPClientTransport(new URL('/mcp', origin)),
+    clientName: 'my-mcp-apps-host',
+    capabilities: mcpAppClientCapabilities,
+  });
+}
+```
+
+仅当你的宿主能够安全地获取并渲染 MCP App 资源时，才声明这些能力。
+
+## 仅暴露模型可见的工具
+
+MCP Apps 工具可以声明 `_meta.ui.visibility`。可见性为 `"model"` 的工具可传给模型。仅有 `"app"` 可见性的工具应保留给 iframe 请求使用，不向模型暴露。
+
+```ts filename="app/api/chat/route.ts"
+import { splitMCPAppTools } from '@ai-sdk/mcp';
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+import { createMCPAppsClient } from './mcp-client';
+import { openai } from '@ai-sdk/openai';
+
+export async function POST(req: Request) {
+  const requestUrl = new URL(req.url);
+  const client = await createMCPAppsClient(requestUrl.origin);
+  const { messages } = await req.json();
+
+  try {
+    const definitions = await client.listTools();
+    const { modelVisible } = splitMCPAppTools(definitions);
+    const tools = client.toolsFromDefinitions(modelVisible);
+
+    const result = streamText({
+      model: openai('gpt-6-luna'),
+      tools,
+      messages: await convertToModelMessages(messages),
+      onEnd: async () => {
+        await client.close();
+      },
+    });
+
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({ stream: result.stream }),
+    });
+  } catch (error) {
+    await client.close();
+    throw error;
+  }
+}
+```
+
+当模型调用由应用支撑的工具时，MCP 客户端会在工具 UI 部件上保留该应用的元数据。React 渲染器利用该元数据判断某个工具部件是否带有 MCP App。
+
+## 读取应用资源
+
+在发送到浏览器宿主之前，使用 `readMCPAppResource` 读取并规范化应用资源。
+
+```ts filename="app/api/mcp-app-host/read-resource/route.ts"
+import { readMCPAppResource } from '@ai-sdk/mcp';
+import { createMCPAppsClient } from '../../chat/mcp-client';
+
+export async function POST(req: Request) {
+  const requestUrl = new URL(req.url);
+  const { uri } = await req.json();
+  const client = await createMCPAppsClient(requestUrl.origin);
+
+  try {
+    return Response.json(await readMCPAppResource({ client, uri }));
+  } finally {
+    await client.close();
+  }
+}
+```
+
+`readMCPAppResource` 会校验资源使用 `ui://` URI，要求使用 MCP Apps MIME 类型，解码文本或 base64 资源内容，并返回 HTML 以及 CSP、权限等渲染元数据。
+
+## 代理应用可见的工具调用
+
+iframe 无法直接连接到你的 MCP 服务器。它将 JSON-RPC 消息发送给你的宿主，由宿主决定允许哪些请求。
+
+对于由应用发起的工具调用，应在调用 MCP 服务器之前校验所请求的工具是否为应用可见。
+
+```ts filename="app/api/mcp-app-host/call-tool/route.ts"
+import { splitMCPAppTools } from '@ai-sdk/mcp';
+import { createMCPAppsClient } from '../../chat/mcp-client';
+
+export async function POST(req: Request) {
+  const requestUrl = new URL(req.url);
+  const { name, arguments: toolArguments } = await req.json();
+  const client = await createMCPAppsClient(requestUrl.origin);
+
+  try {
+    const { appVisible } = splitMCPAppTools(await client.listTools());
+    const isAllowed = appVisible.tools.some(tool => tool.name === name);
+
+    if (!isAllowed) {
+      return Response.json(
+        { error: 'Tool is not app-visible' },
+        { status: 403 },
+      );
+    }
+
+    return Response.json(
+      await client.callTool({
+        name,
+        arguments: toolArguments ?? {},
+      }),
+    );
+  } finally {
+    await client.close();
+  }
+}
+```
+
+在生产环境中，转发 iframe 请求之前，请加上你的应用所需的策略与用户审批检查。
+
+## 使用 React 渲染
+
+在你的 React 聊天界面中，照常渲染普通消息部件，并将工具部件传给 `experimental_MCPAppRenderer`。
+
+<Note type="warning">
+  `experimental_MCPAppRenderer` 为实验性特性，在未来版本中可能变更。
+</Note>
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import {
+  experimental_MCPAppRenderer as MCPAppRenderer,
+  useChat,
+  type MCPAppBridgeHandlers,
+  type MCPAppMetadata,
+  type MCPAppResource,
+  type MCPAppSandboxConfig,
+} from '@ai-sdk/react';
+import { DefaultChatTransport, isToolUIPart } from 'ai';
+
+const sandbox = {
+  url: '/mcp-app-sandbox',
+  className: 'h-80 w-full rounded-lg border',
+  style: { border: 0 },
+} satisfies MCPAppSandboxConfig;
+
+async function loadResource(app: MCPAppMetadata): Promise<MCPAppResource> {
+  const response = await fetch('/api/mcp-app-host/read-resource', {
+    method: 'POST',
+    body: JSON.stringify({ uri: app.resourceUri }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load MCP App resource');
+  }
+
+  return response.json();
+}
+
+const handlers: MCPAppBridgeHandlers = {
+  callTool: params =>
+    fetch('/api/mcp-app-host/call-tool', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }).then(response => response.json()),
+  openLink: ({ url }) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return {};
+  },
+};
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  return (
+    <>
+      {messages.map(message =>
+        message.parts.map((part, index) => {
+          if (part.type === 'text') {
+            return <div key={index}>{part.text}</div>;
+          }
+
+          if (isToolUIPart(part)) {
+            return (
+              <MCPAppRenderer
+                key={part.toolCallId}
+                part={part}
+                loadResource={loadResource}
+                handlers={handlers}
+                sandbox={sandbox}
+                fallback={<div>Loading MCP App...</div>}
+              />
+            );
+          }
+
+          return null;
+        }),
+      )}
+
+      <button onClick={() => sendMessage({ text: 'Show me a dashboard' })}>
+        Send
+      </button>
+    </>
+  );
+}
+```
+
+对于普通工具，`experimental_MCPAppRenderer` 渲染提供的 `fallback`（未提供时则什么都不渲染）。对于由应用支撑的工具，它会加载资源、创建沙盒桥接、向 iframe 发送工具输入与结果通知，并通过你的 handlers 转发受支持的应用请求。
+
+## 最佳实践
+
+- 将 MCP App HTML 视为不受信任的内容。在沙盒 iframe 中渲染，最好经由独立源上的沙盒代理路由。
+- 不要将仅供应用使用的工具传给模型。使用 `splitMCPAppTools` 并仅暴露 `modelVisible` 工具。
+- 在调用 `client.callTool` 之前，在服务器端校验每个 iframe 请求。
+- 按 `resourceUri` 缓存应用资源，避免重复的工具调用再次获取相同的 HTML。
+- 让工具的 `content` 与 `structuredContent` 在没有 UI 的情况下依然有用，以便纯文本宿主也能正常工作。
+- 当响应或宿主请求结束时，关闭短生命周期的 MCP 客户端。
+
+## 参考
+
+<ExampleLinks
+  examples={[
+    {
+      title: 'MCP Apps 辅助工具',
+      link: '/docs/reference/ai-sdk-core/mcp-apps',
+    },
+    {
+      title: 'MCP App Renderer',
+      link: '/docs/reference/ai-sdk-ui/mcp-app-renderer',
+    },
+  ]}
+/>

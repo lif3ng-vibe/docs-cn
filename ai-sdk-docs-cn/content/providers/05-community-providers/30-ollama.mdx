@@ -1,0 +1,125 @@
+---
+title: Ollama
+description: 了解如何使用 Ollama 提供商。
+---
+
+# Ollama 提供商
+
+AI SDK 通过两个社区提供商支持 [Ollama](https://ollama.com/)：
+
+- [nordwestt/ollama-ai-provider-v2](https://github.com/nordwestt/ollama-ai-provider-v2) - 直接的 HTTP API 集成
+- [ai-sdk-ollama](https://github.com/jagreehal/ai-sdk-ollama) - 基于官方 Ollama JavaScript 客户端构建
+
+两者都为 AI SDK 提供语言模型支持，但实现方式与功能集各有侧重。
+
+## 选择你的提供商
+
+AI SDK 生态提供了多个 Ollama 提供商，各自针对不同用例做了优化：
+
+### 适合简单文本生成
+
+[nordwestt/ollama-ai-provider-v2](https://github.com/nordwestt/ollama-ai-provider-v2) 通过直接的 HTTP API 调用提供对 Ollama 模型的直接访问，非常适合基础的文本生成和快速上手。
+
+### 适合高级功能与工具调用可靠性
+
+当你需要以下能力时，推荐使用 [jagreehal 的 `ai-sdk-ollama`](https://github.com/jagreehal/ai-sdk-ollama)：
+
+- **可靠的工具调用**，保证响应完整（解决常见的空响应问题）
+- **网络搜索能力**，使用 [Ollama 新的网络搜索 API](https://docs.ollama.com/web-search) 获取最新信息
+- **跨环境支持**，自动检测 Node.js 与浏览器
+- **高级 Ollama 功能**，如 `mirostat`、`repeat_penalty`、`num_ctx`，支持精细控制
+- **更高的可靠性**，通过官方客户端内置错误处理与重试
+
+关键技术优势：
+
+- 基于官方 [`Ollama`](https://www.npmjs.com/package/ollama) JavaScript 客户端库构建
+- 同时支持 CommonJS 与 ESM 模块格式
+- 完整的 TypeScript 支持，Ollama 专属选项均为类型安全
+
+两个提供商都实现了 AI SDK 规范，并提供出色的 TypeScript 支持。请根据项目的复杂度与功能需求进行选择。
+
+## 安装
+
+选择并安装你偏好的 Ollama 提供商：
+
+### ollama-ai-provider-v2
+
+<InstallPackages packages="ollama-ai-provider-v2" />
+
+### ai-sdk-ollama
+
+<InstallPackages packages="ai-sdk-ollama" />
+
+## 提供商实例
+
+你可以从 `ollama-ai-provider-v2` 导入默认提供商实例 `ollama`：
+
+```ts
+import { ollama } from 'ollama-ai-provider-v2';
+```
+
+如果需要自定义配置，可以从 `ollama-ai-provider-v2` 导入 `createOllama`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createOllama } from 'ollama-ai-provider-v2';
+
+const ollama = createOllama({
+  // optional settings, e.g.
+  baseURL: 'https://api.ollama.com',
+});
+```
+
+你可以使用以下可选设置来自定义 Ollama 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `http://localhost:11434/api`。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+## 语言模型
+
+你可以使用提供商实例创建调用 [Ollama Chat Completion API](https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-chat-completion) 的模型。
+第一个参数是模型 id，例如 `phi3`。部分模型具备多模态能力。
+
+```ts
+const model = ollama('phi3');
+```
+
+更多模型可以在 [Ollama Library](https://ollama.com/library) 主页找到。
+
+### 模型能力
+
+该提供商可以使用 qwen3 等混合推理（reasoning）模型，允许在消息之间切换推理开关。
+
+```ts
+import { ollama } from 'ollama-ai-provider-v2';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: ollama('qwen3:4b'),
+  providerOptions: { ollama: { think: true } },
+  prompt:
+    'Write a vegetarian lasagna recipe for 4 people, but really think about it',
+});
+```
+
+## 嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 [Ollama 嵌入 API](https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings) 的模型。
+
+```ts
+const model = ollama.embeddingModel('nomic-embed-text');
+
+const { embeddings } = await embedMany({
+  model: model,
+  values: ['sunny day at the beach', 'rainy afternoon in the city'],
+});
+
+console.log(
+  `cosine similarity: ${cosineSimilarity(embeddings[0], embeddings[1])}`,
+);
+```

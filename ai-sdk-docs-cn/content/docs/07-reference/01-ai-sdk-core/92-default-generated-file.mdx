@@ -1,0 +1,68 @@
+---
+title: DefaultGeneratedFile
+description: DefaultGeneratedFile 的 API 参考。
+---
+
+# `DefaultGeneratedFile`
+
+`GeneratedFile` 接口的一个具体实现，提供 base64 与 Uint8Array 格式之间的惰性转换。
+
+```ts
+import { DefaultGeneratedFile } from 'ai';
+
+const file = new DefaultGeneratedFile({
+  data: uint8ArrayData,
+  mediaType: 'image/png',
+});
+
+console.log(file.base64); // Automatically converted to base64
+console.log(file.uint8Array); // Original Uint8Array
+```
+
+## 导入
+
+<Snippet text={`import { DefaultGeneratedFile } from "ai"`} prompt={false} />
+
+## 构造函数
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'data',
+      type: 'string | Uint8Array',
+      description:
+        '文件数据，可以是 base64 编码的字符串或 Uint8Array。',
+    },
+    {
+      name: 'mediaType',
+      type: 'string',
+      description: '文件的 IANA 媒体类型。',
+    },
+  ]}
+/>
+
+## 属性
+
+<PropertiesTable
+  content={[
+    {
+      name: 'base64',
+      type: 'string',
+      description:
+        '以 base64 编码字符串表示的文件。必要时会从 Uint8Array 惰性转换而来。',
+    },
+    {
+      name: 'uint8Array',
+      type: 'Uint8Array',
+      description:
+        '以 Uint8Array 表示的文件。必要时会从 base64 惰性转换而来。',
+    },
+    {
+      name: 'mediaType',
+      type: 'string',
+      description: '文件的 IANA 媒体类型。',
+    },
+  ]}
+/>

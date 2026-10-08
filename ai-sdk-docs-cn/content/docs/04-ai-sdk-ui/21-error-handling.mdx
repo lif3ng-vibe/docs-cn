@@ -1,0 +1,245 @@
+---
+title: 错误处理
+description: 了解如何处理 AI SDK UI 中的错误
+---
+
+# Error Handling and warnings
+
+## 警告
+
+当某些内容可能无法按预期工作时，AI SDK 会显示警告。
+这些警告帮助你在问题演变成错误之前修复它们。
+
+### 警告何时出现
+
+在可用时警告会使用 Node.js 的 `process.emitWarning`，在浏览器/边缘运行时中使用 `console.warn`。它们在以下情况出现：
+
+- **不支持的功能**：你使用了 AI 模型不支持的功能或设置（例如某些选项或参数）。
+- **兼容性警告**：某功能在兼容模式下使用，其表现可能与预期不同或不够理想。
+- **弃用提醒**：你使用了已弃用的 API、选项或消息格式。
+- **其他警告**：AI 模型报告了其他类型的问题，例如一般性问题或提示性消息。
+
+### 警告消息
+
+所有警告都包含"AI SDK Warning"字样，方便你轻松找到它们。例如：
+
+```
+AI SDK Warning: The feature "temperature" is not supported by this model
+```
+
+### 关闭警告
+
+默认情况下，警告会显示在控制台中。你可以控制这一行为：
+
+#### 关闭全部警告
+
+设置一个全局变量即可完全关闭警告：
+
+```ts
+globalThis.AI_SDK_LOG_WARNINGS = false;
+```
+
+#### 自定义警告处理器
+
+你也可以提供自己的函数来处理警告。
+该函数会接收警告列表以及可选的提供商与模型 id。自定义
+处理器会收到每一条警告，包括重复的弃用警告。
+
+```ts
+globalThis.AI_SDK_LOG_WARNINGS = ({ warnings, provider, model }) => {
+  // Handle warnings your own way
+};
+```
+
+### 弃用警告
+
+默认日志器在每个已加载的 SDK 实例中对每个弃用代码只发出一次。
+在 Node.js 中，这些警告的类型为 `DeprecationWarning`，并带有稳定的
+`AISDK_DEP_*` 代码，可通过 `process.on('warning', handler)` 以 `warning.code` 获取。
+浏览器/边缘环境的控制台消息则以方括号附带该代码。
+
+| 代码                                     | 已弃用用法 / 替代方案                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| `AISDK_DEP_GENERATE_OBJECT`              | 改用带 `output` 的 `generateText`，而不是 `generateObject`。                |
+| `AISDK_DEP_STREAM_OBJECT`                | 改用带 `output` 的 `streamText`，而不是 `streamObject`。                    |
+| `AISDK_DEP_EXPERIMENTAL_GENERATE_SPEECH` | 使用 `generateSpeech` 而不是 `experimental_generateSpeech`。                |
+| `AISDK_DEP_EXPERIMENTAL_TRANSCRIBE`      | 使用 `transcribe` 而不是 `experimental_transcribe`。                        |
+| `AISDK_DEP_TOOL_RESULT_*`                | 对带标签的 `data` 使用 `file`，而不是旧式工具结果内容类型。                 |
+| `AISDK_DEP_UI_MESSAGE_RAW_INPUT`         | 在 UI 工具部分中使用 `input` 而不是 `rawInput`。                            |
+| `AISDK_DEP_IMAGE_CONTENT_PART`           | 对图像 `mediaType` 使用 `file`，而不是 `image` 消息部分。                   |
+
+使用 `--throw-deprecation` 运行 Node.js 可在出现弃用用法时直接失败，
+使用 `--no-deprecation` 可抑制弃用警告，或使用 `--trace-deprecation` 获取堆栈
+跟踪。这些标志影响的是所有 `DeprecationWarning`，而不是单个代码，且仅对
+Node.js 默认日志器生效。
+
+## 错误处理
+
+### 错误辅助对象
+
+每个 AI SDK UI Hook 还会返回一个 [error](/docs/reference/ai-sdk-ui/use-chat#error) 对象，你可以用它把错误渲染到 UI 中。
+你可以使用该错误对象来显示错误消息、禁用提交按钮或显示重试按钮。
+
+<Note>
+  建议向用户显示通用的错误消息，例如"出错了"。
+  这是避免泄露服务器信息的良好实践。
+</Note>
+
+```tsx file="app/page.tsx" highlight="8,28-35,41"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage, error, regenerate } = useChat();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage({ text: input });
+    setInput('');
+  };
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}:{' '}
+          {m.parts
+            .filter(part => part.type === 'text')
+            .map(part => part.text)
+            .join('')}
+        </div>
+      ))}
+
+      {error && (
+        <>
+          <div>An error occurred.</div>
+          <button type="button" onClick={() => regenerate()}>
+            Retry
+          </button>
+        </>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={error != null}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+#### 替代方案：替换失败的消息
+
+或者，你也可以编写一个自定义提交处理器，用新输入替换失败
+的用户消息。如果助手响应在错误发生前已开始流式输出，
+则应同时移除不完整的助手响应及其用户消息。
+
+```tsx file="app/page.tsx" highlight="13-19,21-22,39"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { sendMessage, error, messages, setMessages } = useChat();
+
+  function customSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (error != null) {
+      setMessages(messages =>
+        messages.at(-1)?.role === 'assistant'
+          ? messages.slice(0, -2)
+          : messages.slice(0, -1),
+      );
+    }
+
+    sendMessage({ text: input });
+    setInput('');
+  }
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}:{' '}
+          {m.parts
+            .filter(part => part.type === 'text')
+            .map(part => part.text)
+            .join('')}
+        </div>
+      ))}
+
+      {error && <div>An error occurred.</div>}
+
+      <form onSubmit={customSubmit}>
+        <input value={input} onChange={e => setInput(e.target.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+### 错误处理回调
+
+可以向 [`useChat`](/docs/reference/ai-sdk-ui/use-chat) 或 [`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) Hook 传入 [`onError`](/docs/reference/ai-sdk-ui/use-chat#on-error) 回调函数作为选项来处理错误。
+该回调函数会接收一个错误对象作为参数。
+
+AI SDK 创建的客户端错误使用带有基于标记（marker）的
+`.isInstance()` 守卫的导出错误类：
+
+| 错误类                                                                                              | AI SDK UI 失败场景                                                                          |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`APICallError`](/docs/reference/ai-sdk-errors/ai-api-call-error)                                   | 聊天 transport 或补全请求返回了非成功的 HTTP 响应。                                         |
+| [`EmptyResponseBodyError`](/docs/reference/ai-sdk-errors/ai-empty-response-body-error)              | 成功的聊天 transport 或补全响应没有响应体。                                                 |
+| [`UIMessageStreamError`](/docs/reference/ai-sdk-errors/ai-ui-message-stream-error)                  | 补全数据流报告了错误，或 UI 消息流包含无效的块。                                            |
+| [`InvalidArgumentError`](/docs/reference/ai-sdk-errors/ai-invalid-argument-error)                   | 使用了无效的流协议或消息 ID。                                                               |
+| [`UnsupportedFunctionalityError`](/docs/reference/ai-sdk-errors/ai-unsupported-functionality-error) | 在不支持 `FileList` 的环境中使用了 `FileList`。                                             |
+
+由自定义 fetch 实现、回调与流解析器抛出的错误
+会继续原样传播。
+
+```tsx file="app/page.tsx" highlight="2,9-15"
+import { useChat } from '@ai-sdk/react';
+import { APICallError, EmptyResponseBodyError } from 'ai';
+
+export default function Page() {
+  const {
+    /* ... */
+  } = useChat({
+    // handle error:
+    onError: error => {
+      if (APICallError.isInstance(error)) {
+        console.error('Request failed with status:', error.statusCode);
+      } else if (EmptyResponseBodyError.isInstance(error)) {
+        console.error('The server returned no response body.');
+      } else {
+        console.error(error);
+      }
+    },
+  });
+}
+```
+
+对于 AI SDK UI 请求，`APICallError.requestBodyValues` 为 `undefined`，因此
+提示词和消息不会被复制进面向客户端的错误对象。响应文本仍可通过
+`message` 与 `responseBody` 获取；请向用户显示通用消息，
+以避免泄露服务器信息。
+
+### 注入错误用于测试
+
+你可能需要在测试时制造错误。
+只需在 Route Handler 中抛出一个错误即可轻松做到：
+
+```ts file="app/api/chat/route.ts"
+export async function POST(req: Request) {
+  throw new Error('This is a test error');
+}
+```

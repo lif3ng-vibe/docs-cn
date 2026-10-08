@@ -1,0 +1,879 @@
+---
+title: 遥测
+description: 在 AI SDK Core 中使用 OpenTelemetry
+---
+
+# Telemetry
+
+AI SDK 使用 [OpenTelemetry](https://opentelemetry.io/) 收集遥测数据。OpenTelemetry 是一个开源的可观测性框架，旨在为遥测数据的收集提供标准化的埋点。
+
+查看 [AI SDK 可观测性集成](/providers/observability)，了解哪些提供商为 AI SDK 应用提供监控与追踪。
+
+## 启用遥测
+
+### 步骤 1：注册 OpenTelemetry 集成
+
+OpenTelemetry span 的收集需要 `@ai-sdk/otel` 包。请安装该包，并在应用启动时注册一次集成：
+
+```bash
+pnpm install @ai-sdk/otel
+```
+
+```ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new OpenTelemetry());
+```
+
+#### Next.js
+
+对于 Next.js 应用，请在项目根目录创建 `instrumentation.ts` 文件，并在设置 OpenTelemetry 提供商的同时注册 AI SDK 遥测集成：
+
+```ts filename="instrumentation.ts"
+import { registerOTel } from '@vercel/otel';
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+export function register() {
+  registerOTel({
+    serviceName: 'my-ai-app',
+  });
+
+  registerTelemetry(new OpenTelemetry());
+}
+```
+
+详见 [Next.js OpenTelemetry 指南](https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry)，了解在 Next.js 中设置 OpenTelemetry 的更多细节。
+
+对于 Node.js 应用（不使用 Next.js），请在入口文件的顶层注册集成。
+
+### 步骤 2：启用遥测
+
+注册遥测集成后，受支持的 AI SDK 调用默认会发出遥测事件，包括文本与对象生成、嵌入（embedding）、重排序（rerank）、语音生成，以及非流式与流式语音转写（transcription）。
+你仍然可以传入 `telemetry` 来附加元数据（如 `functionId`），或针对某次调用选择退出：
+
+```ts highlight="4-6"
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Write a short story about a cat.',
+  telemetry: {
+    functionId: `story-agent`,
+  },
+});
+```
+
+默认会同时记录输入与输出。你可以将 `recordInputs` 和 `recordOutputs` 选项设为 `false` 来禁用记录。
+
+出于隐私、数据传输和性能方面的考虑，禁用输入与输出的记录可能很有用。例如，当输入包含敏感信息时，你可能希望禁用输入记录。
+
+对于 `generateSpeech`，输入遥测包含源文本，输出遥测包含生成音频的字节长度、媒体类型和格式。对于 `transcribe` 和 `experimental_streamTranscribe`，遥测包含输入音频的字节长度、媒体类型以及输出转写文本。原始音频永远不会包含在遥测事件中。当音频流被消费完毕且转写完成后，流式转写会报告最终的字节长度。
+
+自定义集成通过 `onStart` 和 `onEnd` 接收稳定的 `generateSpeech` 与 `transcribe` 操作。为了让实验性 API 保持隔离，`experimental_streamTranscribe` 使用 `experimental_onStreamTranscriptionStart` 和 `experimental_onStreamTranscriptionEnd`；这三个操作都通过 `onError` 报告失败。
+
+包装或委托其他集成的集成必须显式转发实验性的流式转写回调。只转发稳定的 `onStart` 和 `onEnd` 回调无法观察到 `experimental_streamTranscribe`。
+
+内置的 OpenTelemetry 集成默认以数值形式记录提供商用量（usage），并保留每种上报的计量单位。现代集成使用 `gen_ai.usage.characters`、`gen_ai.usage.seconds`、`gen_ai.usage.input_tokens` 等属性；`LegacyOpenTelemetry` 使用对应的 `ai.usage.*` 属性。提供商原生的用量对象仍可供回调使用，也可以通过启用 `usage: true` 把它作为补充属性 `ai.response.usage` 一并收录。
+
+### 选择退出
+
+遥测是可退出的。要禁用某次调用的遥测，请设置 `isEnabled: false`：
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Write a short story about a cat.',
+  telemetry: { isEnabled: false },
+});
+```
+
+不通过 `registerTelemetry()` 注册集成可以阻止事件投递到全局注册的集成，但不会禁用单次调用的集成或 Node.js 追踪通道（tracing channel）订阅者。要禁用某次调用的遥测事件（包括追踪通道事件），请传入 `telemetry: { isEnabled: false }`。如果要在整个应用范围内退出遥测，请对每一次调用都应用此设置。
+
+## 遥测元数据
+
+你可以提供 `functionId` 来标识遥测数据所属的函数，并提供 `runtimeContext` 来在遥测数据中附带额外信息。关于更完整的上下文模型，请参阅[运行时与工具上下文](/docs/ai-sdk-core/runtime-and-tool-context)。
+
+```ts highlight="4-10"
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Write a short story about a cat.',
+  runtimeContext: {
+    userId: 'user_123',
+    requestId: 'req_abc',
+  },
+  telemetry: {
+    functionId: 'my-awesome-function',
+  },
+});
+```
+
+### 运行时上下文的遥测收录
+
+`runtimeContext` 可能包含应用内部有用但不应发送给遥测提供商的值，例如用户标识、租户 ID 或凭据。可以使用 `telemetry.includeRuntimeContext` 标记应收录进遥测的顶层 `runtimeContext` 属性：
+
+```ts highlight="8-10"
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Write a short story about a cat.',
+  runtimeContext: {
+    userId: 'user_123',
+    requestId: 'req_abc',
+  },
+  telemetry: {
+    includeRuntimeContext: {
+      requestId: true,
+    },
+  },
+});
+```
+
+在此示例中，遥测集成收到的 `runtimeContext` 为 `{ requestId: 'req_abc' }`。设为 `false` 或省略的属性会被排除。如果省略 `telemetry.includeRuntimeContext`，则不会收录任何运行时上下文属性。`generateText`、`streamText`、`ToolLoopAgent`、`embed`、`embedMany`、`rerank` 和 `experimental_decide` 支持 `telemetry.includeRuntimeContext`。
+
+<Note>
+  `telemetry.includeRuntimeContext` 只过滤遥测集成（包括 OpenTelemetry 集成）。生命周期回调与返回结果仍会收到完整的 `runtimeContext`。
+</Note>
+
+### 工具上下文
+
+工具专属上下文同样可能包含执行期间有用但不应发送给遥测提供商的值，例如 API 密钥或访问令牌。可以使用 `telemetry.includeToolsContext` 把工具 `context` 中选定的顶层属性收录进遥测：
+
+```ts highlight="16-20,23-28"
+const weatherTool = tool({
+  inputSchema: z.object({
+    location: z.string(),
+  }),
+  contextSchema: z.object({
+    weatherApiKey: z.string(),
+    defaultUnit: z.enum(['celsius', 'fahrenheit']),
+  }),
+  execute: async ({ location }, { context }) =>
+    fetchWeather(location, context.weatherApiKey, context.defaultUnit),
+});
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: { weather: weatherTool },
+  toolsContext: {
+    weather: {
+      weatherApiKey: 'weather-123',
+      defaultUnit: 'fahrenheit',
+    },
+  },
+  prompt: 'What is the weather in San Francisco?',
+  telemetry: {
+    includeToolsContext: {
+      weather: {
+        defaultUnit: true,
+      },
+    },
+  },
+});
+```
+
+在此示例中，遥测集成收到的 `toolsContext.weather` 与工具执行遥测事件中的 `toolContext` 为 `{ defaultUnit: 'fahrenheit' }`。设为 `false` 或省略的属性会被排除。如果省略 `telemetry.includeToolsContext`，则不会收录任何工具上下文属性。`generateText`、`streamText` 和 `ToolLoopAgent` 支持 `telemetry.includeToolsContext`。
+
+<Note>
+  `telemetry.includeToolsContext` 只过滤遥测集成（包括 OpenTelemetry 集成）。工具执行、生命周期回调与返回结果仍会收到完整的工具上下文。工具执行上下文与遥测事件上下文的区别请参阅[运行时与工具上下文](/docs/ai-sdk-core/runtime-and-tool-context)。
+</Note>
+
+## 自定义 Tracer
+
+如果你希望追踪使用 `@opentelemetry/api` 单例所提供的 `TracerProvider` 之外的其他提供者，可以向 `OpenTelemetry` 构造函数传入自定义 `Tracer`：
+
+```ts highlight="6-8"
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+const tracerProvider = new NodeTracerProvider();
+registerTelemetry(
+  new OpenTelemetry({
+    tracer: tracerProvider.getTracer('gen_ai'),
+  }),
+);
+```
+
+## 遥测集成
+
+遥测集成让你能够接入生成生命周期，构建自定义的可观测性——日志、分析、DevTools 或任何其他监控系统。无需在每次调用上逐个接线回调，你只需实现一次 `Telemetry`，然后全局注册，或通过 `telemetry.integrations` 传入。
+
+`@ai-sdk/otel` 中的 `OpenTelemetry` 和 `LegacyOpenTelemetry` 是收集 OpenTelemetry span 的内置集成（见上文的[启用遥测](#启用遥测)）。
+
+### 全局注册集成
+
+使用 `registerTelemetry` 一次性注册集成，对所有 AI SDK 调用生效：
+
+```ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new OpenTelemetry());
+```
+
+你也可以在一次调用中把多个集成作为额外参数传入，从而同时注册多个集成。它们都会收到相同的生命周期事件：
+
+```ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+
+registerTelemetry(new OpenTelemetry(), DevToolsTelemetry());
+```
+
+### 单次调用的集成
+
+你也可以向单个 `generateText` 或 `streamText` 调用传入一个或多个集成。提供单次调用集成时，它们会取代该调用的全局注册集成：
+
+```ts highlight="6-8"
+import { streamText } from 'ai';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+
+const result = streamText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Hello!',
+  telemetry: {
+    integrations: [DevToolsTelemetry()],
+  },
+});
+```
+
+你可以组合多个集成——它们都会收到相同的生命周期事件：
+
+```ts
+telemetry: {
+  integrations: [DevToolsTelemetry(), customLogger()],
+},
+```
+
+集成内部的错误会被捕获，不会中断生成流程。
+
+### 追踪通道（tracing channel）
+
+在 Node.js 中，AI SDK 遥测的生命周期与执行事件也会记录在 `ai:telemetry` [追踪通道](https://nodejs.org/api/diagnostics_channel.html#diagnostics_channeltracingchannelnameorchannels)上。这使可观测性提供商无需用户注册单独的遥测集成即可订阅 AI SDK 遥测事件，并能在提供商调用与工具执行之间绑定异步上下文。
+
+```ts
+import { tracingChannel } from 'node:diagnostics_channel';
+import {
+  AI_SDK_TELEMETRY_TRACING_CHANNEL,
+  type TelemetryTracingChannelMessage,
+} from 'ai';
+
+tracingChannel(AI_SDK_TELEMETRY_TRACING_CHANNEL).subscribe({
+  start(message) {
+    const telemetryMessage = message as TelemetryTracingChannelMessage;
+
+    if (telemetryMessage.type === 'onStart') {
+      // Inspect telemetryMessage.event and forward it to your provider.
+    }
+  },
+});
+```
+
+追踪通道事件遵循与其他遥测集成相同的单次调用遥测设置。设置 `telemetry: { isEnabled: false }` 会同时禁用该次调用的已注册集成与追踪通道事件。
+
+### 构建自定义集成
+
+实现 `ai` 包中的 `Telemetry` 接口。所有方法都是可选的——只需实现你关心的生命周期事件：
+
+```ts
+import type { Telemetry } from 'ai';
+
+class MyIntegration implements Telemetry {
+  async onStart(event) {
+    console.log('Generation started:', event.modelId);
+  }
+
+  async onStepEnd(event) {
+    console.log(
+      `Step ${event.stepNumber} done:`,
+      event.usage.totalTokens,
+      'tokens',
+    );
+  }
+
+  async onToolExecutionEnd(event) {
+    if (event.toolOutput.type === 'tool-result') {
+      console.log(
+        `Tool "${event.toolCall.toolName}" took ${event.toolExecutionMs}ms`,
+      );
+    } else {
+      console.error(
+        `Tool "${event.toolCall.toolName}" failed:`,
+        event.toolOutput.error,
+      );
+    }
+  }
+
+  async onEnd(event) {
+    console.log('Done. Total tokens:', event.usage.totalTokens);
+  }
+
+  async onAbort(event) {
+    console.log('Stream aborted after', event.steps.length, 'finished steps');
+  }
+
+  async onError(event) {
+    console.error('Generation failed:', event.callId, event.error);
+  }
+}
+
+export function myIntegration(): Telemetry {
+  return new MyIntegration();
+}
+```
+
+### 可用的生命周期方法
+
+<PropertiesTable
+  content={[
+    {
+      name: 'onStart',
+      type: '(event: GenerateTextStartEvent) => void | PromiseLike<void>',
+      description:
+        '在生成操作开始时调用，发生于任何 LLM 调用之前。',
+    },
+    {
+      name: 'onStepStart',
+      type: '(event: GenerateTextStepStartEvent) => void | PromiseLike<void>',
+      description:
+        '在一个步骤（LLM 调用）开始时调用，发生于提供商被调用之前。',
+    },
+    {
+      name: 'onLanguageModelCallStart',
+      type: '(event: LanguageModelCallStartEvent) => void | PromiseLike<void>',
+      description:
+        '在提供商模型调用即将开始前立即调用。适用于仅针对模型的 span 或日志记录。',
+    },
+    {
+      name: 'onLanguageModelCallEnd',
+      type: '(event: LanguageModelCallEndEvent) => void | PromiseLike<void>',
+      description:
+        '在模型响应完成规范化与解析之后、任何客户端工具执行开始之前调用。可用时会包含提供商专属元数据。',
+    },
+    {
+      name: 'onToolExecutionStart',
+      type: '(event: ToolExecutionStartEvent) => void | PromiseLike<void>',
+      description: '在工具的 execute 函数即将运行时调用。',
+    },
+    {
+      name: 'onToolExecutionEnd',
+      type: '(event: ToolExecutionEndEvent) => void | PromiseLike<void>',
+      description: '在工具的 execute 函数完成或出错时调用。',
+    },
+    {
+      name: 'onStepEnd',
+      type: '(event: GenerateTextStepEndEvent) => void | PromiseLike<void>',
+      description: '在一个步骤（LLM 调用）完成时调用。',
+    },
+    {
+      name: 'onEmbedEnd',
+      type: '(event: EmbeddingModelCallEndEvent) => void | PromiseLike<void>',
+      description: '在单个嵌入模型调用完成时调用。',
+    },
+    {
+      name: 'onRerankEnd',
+      type: '(event: RerankingModelCallEndEvent) => void | PromiseLike<void>',
+      description: '在单个重排序模型调用完成时调用。',
+    },
+    {
+      name: 'experimental_onDecideStart',
+      type: '(event: Experimental_DecideStartEvent) => void | PromiseLike<void>',
+      description: '在实验性决策（decision）操作开始时调用。',
+    },
+    {
+      name: 'experimental_onDecisionModelCallStart',
+      type: '(event: Experimental_DecisionModelCallStartEvent) => void | PromiseLike<void>',
+      description:
+        '在逻辑上的决策模型调用开始时调用。该调用包含提供商的任何重试。',
+    },
+    {
+      name: 'experimental_onDecisionModelCallEnd',
+      type: '(event: Experimental_DecisionModelCallEndEvent) => void | PromiseLike<void>',
+      description:
+        '在逻辑上的决策模型调用（含任何重试）完成时调用。',
+    },
+    {
+      name: 'experimental_onDecideEnd',
+      type: '(event: Experimental_DecideEndEvent) => void | PromiseLike<void>',
+      description: '在实验性决策操作完成时调用。',
+    },
+    {
+      name: 'onEnd',
+      type: '(event: GenerateTextEndEvent) => void | PromiseLike<void>',
+      description:
+        '在整个生成完成时调用（所有步骤均已结束）。',
+    },
+    {
+      name: 'onAbort',
+      type: '(event: GenerateTextAbortEvent) => void | PromiseLike<void>',
+      description:
+        '在流式文本生成操作完成前被中止时调用。',
+    },
+    {
+      name: 'onError',
+      type: '(event: { callId: string; error: unknown }) => void | PromiseLike<void>',
+      description:
+        '在发生不可恢复的错误时调用。事件会标识对应的操作，并包含抛出的值。',
+    },
+  ]}
+/>
+
+实验性决策事件使用上方的四个 `experimental_*` 回调，它们不包含在稳定的 `onStart` 和 `onEnd` 事件联合类型中。
+
+每个方法的事件类型与对应的[生命周期回调](/docs/ai-sdk-core/lifecycle-callbacks)相同。每个事件的完整属性参考请查阅生命周期回调文档。
+
+## 收集的数据
+
+`@ai-sdk/otel` 包提供了两个集成，会输出不同的 span 格式。`OpenTelemetry` 遵循 [OpenTelemetry GenAI 语义约定](https://opentelemetry.io/docs/specs/semconv/gen-ai/)，是推荐的集成。`LegacyOpenTelemetry` 集成输出旧版的 AI SDK 专属 span。
+
+### GenAI 语义约定
+
+`OpenTelemetry` 输出的 span 遵循 [OpenTelemetry GenAI 语义约定](https://opentelemetry.io/docs/specs/semconv/gen-ai/)。默认情况下，属性使用 `gen_ai.*` 前缀。提供商名称会映射为公认的值（如 `openai`、`anthropic`、`gcp.vertex_ai`）。
+
+#### generateText / streamText
+
+对于 `generateText` 和 `streamText`，该集成会记录 3 种 span：
+
+- **`invoke_agent {modelId}`**（根 span，`INTERNAL`）：覆盖包含所有步骤和工具调用的完整操作。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"invoke_agent"`
+  - `gen_ai.provider.name`：提供商（如 `"openai"`、`"anthropic"`）
+  - `gen_ai.request.model`：请求的模型 ID
+  - `gen_ai.agent.name`：来自遥测设置的 `functionId`
+  - `gen_ai.system_instructions`：以 JSON 数组形式表示的系统指令 parts（启用 `recordInputs` 时）
+  - `gen_ai.input.messages`：以 [GenAI SemConv 消息格式](#genai-消息格式)表示的输入消息（启用 `recordInputs` 时）
+  - `gen_ai.request.temperature`：温度设置
+  - `gen_ai.request.max_tokens`：最大输出 token 数
+  - `gen_ai.request.top_p`：topP 设置
+  - `gen_ai.request.top_k`：topK 设置
+  - `gen_ai.request.frequency_penalty`：频率惩罚
+  - `gen_ai.request.presence_penalty`：存在惩罚
+  - `gen_ai.request.stop_sequences`：停止序列
+  - `gen_ai.request.seed`：随机种子值
+
+  完成时设置的属性：
+  - `gen_ai.response.finish_reasons`：结束原因数组（如 `["stop"]`、`["tool_call"]`）
+  - `gen_ai.usage.input_tokens`：使用的输入 token 数量
+  - `gen_ai.usage.output_tokens`：使用的输出 token 数量
+  - `gen_ai.usage.cache_read.input_tokens`：读取的缓存输入 token
+  - `gen_ai.usage.cache_creation.input_tokens`：创建的缓存输入 token
+  - `gen_ai.output.messages`：以 [GenAI SemConv 消息格式](#genai-消息格式)表示的输出（启用 `recordOutputs` 时）
+
+- **`chat {modelId}`**（步骤 span，`CLIENT`）：每次 LLM 提供商调用一个 span，嵌套在根 span 之下。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"chat"`
+  - `gen_ai.provider.name`：提供商
+  - `gen_ai.request.model`：请求的模型 ID
+  - `gen_ai.request.temperature`、`gen_ai.request.max_tokens`、`gen_ai.request.top_p`、`gen_ai.request.top_k`、`gen_ai.request.frequency_penalty`、`gen_ai.request.presence_penalty`、`gen_ai.request.stop_sequences`：请求参数
+  - `gen_ai.system_instructions`：与聊天历史分开提供的指令，以 JSON 数组形式表示的 parts（启用 `recordInputs` 时）
+  - `gen_ai.input.messages`：以 [GenAI SemConv 消息格式](#genai-消息格式)表示的提示词消息，包括聊天历史中按原始顺序排列的系统消息（启用 `recordInputs` 时）
+  - `gen_ai.tool.definitions`：字符串化 JSON 形式的工具定义（启用 `recordInputs` 时）
+
+  完成时设置的属性：
+  - `gen_ai.response.finish_reasons`：结束原因数组
+  - `gen_ai.response.id`：提供商返回的响应 ID
+  - `gen_ai.response.model`：生成响应的模型（可能与请求的模型不同）
+  - `gen_ai.usage.input_tokens`：此步骤使用的输入 token
+  - `gen_ai.usage.output_tokens`：此步骤使用的输出 token
+  - `gen_ai.usage.cache_read.input_tokens`：读取的缓存输入 token
+  - `gen_ai.usage.cache_creation.input_tokens`：创建的缓存输入 token
+  - `gen_ai.client.operation.duration`：提供商调用时长（秒）
+  - `gen_ai.client.operation.time_to_first_chunk`：收到首个流式输出块的时间（秒，仅流式调用）
+  - `gen_ai.client.operation.time_per_output_chunk`：流式输出块之间的平均时间（秒，仅限具有多个输出块的流式调用）
+  - `gen_ai.output.messages`：以 [GenAI SemConv 消息格式](#genai-消息格式)表示的输出（启用 `recordOutputs` 时）
+
+- **`execute_tool {toolName}`**（工具 span，`INTERNAL`）：每次工具执行一个 span，嵌套在步骤 span 之下。详情见 [GenAI 工具调用 span](#genai-工具调用-span)。
+
+#### 已弃用的对象 API（generateObject / streamObject）
+
+<Note type="warning">
+  `generateObject` 和 `streamObject` 已弃用。请改用带有 `output` 属性的 `generateText` 和 `streamText`。
+</Note>
+
+已弃用的对象 API 会输出与 `generateText`/`streamText` 相同的 span 层级，并在根 span 上附加以下属性：
+
+- `gen_ai.output.type`：`"json"`
+
+步骤 span 同样包含 `gen_ai.output.type: "json"`，且 `gen_ai.output.messages` 会以文本 part 的形式包含生成的对象。
+
+#### embed / embedMany
+
+对于 `embed` 和 `embedMany`，该集成会记录 `CLIENT` 类型的 span：
+
+- **`embeddings {modelId}`**（根 span）：覆盖完整的嵌入操作。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"embeddings"`
+  - `gen_ai.provider.name`：提供商
+  - `gen_ai.request.model`：请求的模型 ID
+
+- **`embeddings {modelId}`**（内部 span）：每次提供商请求一个 span，嵌套在根 span 之下。`embed` 会创建一个内部 span；`embedMany` 会为每次提供商批量调用创建一个内部 span。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"embeddings"`
+  - `gen_ai.provider.name`：提供商
+  - `gen_ai.request.model`：模型 ID
+
+  完成时设置的属性：
+  - `gen_ai.usage.input_tokens`：使用的 token 数量
+
+用量只记录在内部的提供商请求 span 上。对于 `embedMany`，请把各内部 span 的用量相加，得到整个操作的用量。
+
+#### rerank
+
+对于 `rerank`，该集成会记录 `CLIENT` 类型的 span：
+
+- **`rerank {modelId}`**（根 span）：覆盖完整的重排序操作。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"rerank"`
+  - `gen_ai.provider.name`：提供商
+  - `gen_ai.request.model`：请求的模型 ID
+
+- **`rerank {modelId}`**（内部 span）：每次提供商重排序调用一个 span，嵌套在根 span 之下。
+
+  初始属性：
+  - `gen_ai.operation.name`：`"rerank"`
+  - `gen_ai.provider.name`：提供商
+  - `gen_ai.request.model`：模型 ID
+
+#### generateSpeech / transcribe / experimental_streamTranscribe
+
+每次调用都会记录一个名为 `{operationId} {modelId}` 的 `CLIENT` span，其中 `operationId` 为 `ai.generateSpeech`、`ai.transcribe` 或 `ai.streamTranscribe`。
+
+- `gen_ai.output.type`：语音生成取 `"speech"`，语音转写取 `"text"`。
+- `gen_ai.request.stream`：流式转写取 `true`，否则为 `false`。
+- `gen_ai.input.messages`：语音生成的输入文本，表示为带文本 part 的用户消息（启用 `recordInputs` 时）。
+- `gen_ai.output.messages`：完成的转写文本，表示为带文本 part 的助手消息（启用 `recordOutputs` 时）。流式转写会在完成时记录一次。
+
+现有的 `ai.request.text` 和 `ai.response.text` 属性也继续保留。音频字节长度、媒体类型和输出格式仍保留在 `ai.request.audio.*` 和 `ai.response.audio.*` 属性中，并受相应的输入/输出记录开关控制。由于不会捕获原始音频，转写输入和语音输出不会以音频内容或占位音频 part 填充消息属性。
+
+#### experimental_decide
+
+对于 `experimental_decide`，该集成会记录两个 `CLIENT` 类型的 span：一个覆盖整个操作的 **`decide {modelId}`** 根 span，以及一个覆盖决策模型工作（含重试）的 **`decide {modelId}`** 子 span。两者都包含提供商与请求的模型，且 `gen_ai.operation.name: "decide"`。token 用量记录在子 span 上。启用决策属性后，答案会记录在两个 span 上，使操作 span 包含其输出。
+
+`decide` 是 AI SDK 自定义的操作名，并非公认的 OpenTelemetry GenAI 操作。当没有公认的值能描述该操作时，OpenTelemetry 允许使用自定义操作名。
+
+OpenTelemetry 的 `gen_ai.evaluation.result` 事件描述的是对 GenAI 输出在质量或其他特征上进行评估的结果。相比之下，`experimental_decide` 可以使用任意 JSON 状态来完成分类、路由、打分等类似任务。因此该集成不会发出 `gen_ai.evaluation.result` 事件。
+
+决策状态、问题与答案也没有适用的 GenAI 语义约定属性。请启用 `experimental_decision` 补充选项，以便以 AI SDK 专属的 `ai.decision.*` 属性记录它们。
+
+#### GenAI span 详情
+
+##### GenAI 消息格式
+
+`gen_ai.input.messages` 和 `gen_ai.output.messages` 属性遵循 [OpenTelemetry GenAI 语义约定的消息格式](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/)。
+消息是对象的 JSON 数组，每个对象包含 `role` 和一个 `parts` 数组。每个 part 都有一个 `type` 和该类型专属的字段：
+
+- `text`：`{ type: "text", content: "..." }`
+- `reasoning`：`{ type: "reasoning", content: "..." }`
+- `tool_call`：`{ type: "tool_call", id: "...", name: "...", arguments: ... }`
+- `tool_call_response`：`{ type: "tool_call_response", id: "...", response: ... }`
+- `blob`：`{ type: "blob", modality: "image"|"video"|"audio", mime_type: "...", content: "..." }`（base64 编码）
+- `uri`：`{ type: "uri", modality: "image"|"video"|"audio", mime_type: "...", uri: "..." }`（用于基于 URL 的文件）
+
+输出消息还包含一个 `finish_reason` 字段（如 `"stop"`、`"tool_call"`、`"length"`、`"content_filter"`）。
+
+通过 `instructions`（或已弃用的 `system` 选项）提供的指令会单独记录在 `gen_ai.system_instructions` 中，为由 `{ type: "text", content: "..." }` part 组成的 JSON 数组。通过 `allowSystemInMessages` 作为聊天历史提供的系统消息仍会按其原始位置保留在 `gen_ai.input.messages` 中。
+
+##### GenAI 工具调用 span
+
+工具调用 span（`execute_tool {toolName}`）嵌套在步骤 span 之下，包含：
+
+- `gen_ai.operation.name`：`"execute_tool"`
+- `gen_ai.tool.name`：工具名称
+- `gen_ai.tool.call.id`：工具调用 ID
+- `gen_ai.tool.type`：`"function"`
+- `gen_ai.tool.call.arguments`：输入参数（字符串化 JSON，启用 `recordInputs` 时）
+- `gen_ai.execute_tool.duration`：工具执行时长（秒）
+- `gen_ai.tool.call.result`：输出结果（字符串化 JSON，启用 `recordOutputs` 时）。仅在工具调用成功时设置。
+
+### 自定义 OpenTelemetry span 属性
+
+使用 `enrichSpan` 可以为 `OpenTelemetry` 集成创建的 span 添加自定义属性。当可观测性后端需要不属于 AI SDK 语义的厂商专属属性时，这会很有用。
+
+```ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(
+  new OpenTelemetry({
+    enrichSpan: ({ spanType, operationId, callId, runtimeContext }) => {
+      return {
+        ...getCustomAttributes(runtimeContext, spanType),
+        'my_app.operation_id': operationId,
+        'my_app.call_id': callId,
+      };
+    },
+  }),
+);
+```
+
+该回调会在每个 span 创建时运行，并接收：
+
+- `spanType`：正在创建的 span 类型（`operation`、`step`、`languageModel`、`tool`、`embedding`、`reranking` 或 `experimental_decision`）。
+- `operationId`：当前调用的 AI SDK 操作 ID，如 `ai.generateText` 或 `ai.streamText`。
+- `callId`：当前 AI SDK 调用的唯一 ID。
+- `runtimeContext`：经遥测过滤后的运行时上下文，适用于文本生成、嵌入、重排序和决策 span。文本生成 span 还会反映 `prepareStep` 带来的更新。
+
+自定义属性会与 span 上的 AI SDK 属性合并。当自定义属性使用相同的键时，AI SDK 专属属性优先。
+
+`telemetry.includeRuntimeContext` 会在遥测集成收到 `runtimeContext` 之前生效，因此自定义 span 充实（enrichment）只会收到显式设为 `true` 的顶层运行时上下文属性。如果省略该选项，则不会收录任何运行时上下文属性。
+
+嵌入与重排序操作可以与文本生成共享相同的运行时上下文，从而把自己的 span 归属到同一个应用请求：
+
+```ts
+await embed({
+  model: 'openai/text-embedding-3-small',
+  value: 'sunny day at the beach',
+  runtimeContext: {
+    requestId: 'req_abc',
+    userId: 'user_123',
+  },
+  telemetry: {
+    includeRuntimeContext: { requestId: true },
+  },
+});
+```
+
+全局注册的 `OpenTelemetry({ enrichSpan })` 集成会在操作 span 及其嵌入模型 span 上收到 `{ requestId: 'req_abc' }`。`embedMany` 中的每个 chunk，以及 `rerank` 的操作 span 与模型 span 同样如此。`onStart` 和 `onEnd` 回调则会收到完整上下文。
+
+### OpenTelemetry span 上的补充 AI SDK 属性
+
+GenAI 语义约定覆盖了核心的模型、提示词、响应、工具调用与用量数据。对于 GenAI 语义未覆盖的数据，你可以选择启用额外的 AI SDK 专属属性：
+
+```ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(
+  new OpenTelemetry({
+    usage: true,
+    providerMetadata: true,
+    runtimeContext: true,
+  }),
+);
+```
+
+这不会创建额外的 AI SDK 专属 span（如 `ai.generateText`、`ai.generateText.doGenerate` 或 `ai.toolCall`），而只会把选定的补充属性添加到 `OpenTelemetry` 输出的 span 上，例如 `invoke_agent {modelId}`、`step {n}`、`chat {modelId}` 和 `execute_tool {toolName}`。
+
+所有补充属性默认关闭。请只启用你想收集的数据：
+
+```ts
+registerTelemetry(
+  new OpenTelemetry({
+    usage: true,
+    providerMetadata: true,
+    embedding: true,
+    reranking: true,
+    experimental_decision: true,
+    runtimeContext: true,
+    headers: true,
+    toolChoice: true,
+    schema: true,
+  }),
+);
+```
+
+可用选项如下：
+
+- `usage`：GenAI 用量属性未覆盖的详细用量属性，例如未缓存输入 token 以及输出文本/推理 token 明细。
+- `providerMetadata`：操作、步骤和模型调用 span 上的 `ai.response.providerMetadata`。
+- `embedding`：嵌入的输入与输出。
+- `reranking`：重排序的输入文档与排序输出。
+- `experimental_decision`：实验性决策的状态、问题与答案。
+- `runtimeContext`：`ai.settings.context.*`。
+- `headers`：`ai.request.headers.*`。
+- `toolChoice`：`ai.prompt.toolChoice`。
+- `schema`：对象生成的 schema 与输出模式属性。
+
+补充的输入与输出属性仍会遵循 `recordInputs` 和 `recordOutputs` 遥测选项。
+
+### Legacy AI SDK span（LegacyOpenTelemetry）
+
+`LegacyOpenTelemetry` 集成输出使用 AI SDK 专属 `ai.*` 前缀属性的 span。
+这是旧版格式。建议迁移到 `OpenTelemetry`，以获得与可观测性平台更好的兼容性。
+
+#### generateText 函数
+
+`generateText` 会记录 3 种 span：
+
+- `ai.generateText`（span）：generateText 调用的完整时长。它包含 1 个或多个 `ai.generateText.doGenerate` span。
+  它包含[基础 LLM span 信息](#基础-llm-span-信息)以及以下属性：
+  - `operation.name`：`ai.generateText`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.generateText"`
+  - `ai.prompt`：调用 `generateText` 时使用的提示词
+  - `ai.response.text`：生成的文本
+  - `ai.response.toolCalls`：生成过程中发起的工具调用（字符串化 JSON）
+  - `ai.response.finishReason`：生成结束的原因
+  - `ai.settings.maxOutputTokens`：设置的最大输出 token 数
+
+- `ai.generateText.doGenerate`（span）：一次提供商 doGenerate 调用。它可以包含 `ai.toolCall` span。
+  它包含[调用 LLM span 信息](#调用-llm-span-信息)以及以下属性：
+  - `operation.name`：`ai.generateText.doGenerate`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.generateText.doGenerate"`
+  - `ai.prompt.messages`：传入提供商的消息
+  - `ai.prompt.tools`：字符串化工具定义组成的数组。序列化后的工具可以是 `function` 或 `provider` 类型。
+    函数工具包括 `FunctionTool` 和 `DynamicTool` 定义，具有 `name`、`description`（可选）和 `inputSchema`（JSON schema）。
+    提供商工具包括 `ProviderDefinedTool` 和 `ProviderExecutedTool` 定义，具有 `name`、`id` 和 `args`（Record）。
+  - `ai.prompt.toolChoice`：字符串化的工具选择设置（JSON）。它有一个 `type` 属性
+    （`auto`、`none`、`required`、`tool`）；当类型为 `tool` 时，还有一个携带具体工具的 `toolName` 属性。
+  - `ai.response.text`：生成的文本
+  - `ai.response.toolCalls`：生成过程中发起的工具调用（字符串化 JSON）
+  - `ai.response.finishReason`：生成结束的原因
+
+- `ai.toolCall`（span）：generateText 调用中发起的一次工具调用。详情见 [Legacy 工具调用 span](#legacy-工具调用-span)。
+
+#### streamText 函数
+
+`streamText` 会记录 3 种 span 和 2 种事件：
+
+- `ai.streamText`（span）：streamText 调用的完整时长。它包含一个 `ai.streamText.doStream` span。
+  它包含[基础 LLM span 信息](#基础-llm-span-信息)以及以下属性：
+  - `operation.name`：`ai.streamText`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.streamText"`
+  - `ai.prompt`：调用 `streamText` 时使用的提示词
+  - `ai.response.text`：生成的文本
+  - `ai.response.toolCalls`：生成过程中发起的工具调用（字符串化 JSON）
+  - `ai.response.finishReason`：生成结束的原因
+  - `ai.settings.maxOutputTokens`：设置的最大输出 token 数
+
+- `ai.streamText.doStream`（span）：一次提供商 doStream 调用。
+  该 span 包含一个 `ai.stream.firstChunk` 事件和若干 `ai.toolCall` span。
+  它包含[调用 LLM span 信息](#调用-llm-span-信息)以及以下属性：
+  - `operation.name`：`ai.streamText.doStream`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.streamText.doStream"`
+  - `ai.prompt.messages`：传入提供商的消息
+  - `ai.prompt.tools`：字符串化工具定义组成的数组。序列化后的工具可以是 `function` 或 `provider` 类型。
+    函数工具包括 `FunctionTool` 和 `DynamicTool` 定义，具有 `name`、`description`（可选）和 `inputSchema`（JSON schema）。
+    提供商工具包括 `ProviderDefinedTool` 和 `ProviderExecutedTool` 定义，具有 `name`、`id` 和 `args`（Record）。
+  - `ai.prompt.toolChoice`：字符串化的工具选择设置（JSON）。它有一个 `type` 属性
+    （`auto`、`none`、`required`、`tool`）；当类型为 `tool` 时，还有一个携带具体工具的 `toolName` 属性。
+  - `ai.response.text`：生成的文本
+  - `ai.response.toolCalls`：生成过程中发起的工具调用（字符串化 JSON）
+  - `ai.response.msToFirstChunk`：收到第一个 chunk 所用的时间（毫秒）
+  - `ai.response.msToFinish`：收到 LLM 流结束部分所用的时间（毫秒）
+  - `ai.response.avgCompletionTokensPerSecond`：每秒平均补全 token 数
+  - `ai.response.finishReason`：生成结束的原因
+
+- `ai.toolCall`（span）：streamText 调用中发起的一次工具调用。详情见 [Legacy 工具调用 span](#legacy-工具调用-span)。
+
+- `ai.stream.firstChunk`（事件）：收到流的第一个 chunk 时发出的事件。
+  - `ai.response.msToFirstChunk`：收到第一个 chunk 所用的时间
+
+- `ai.stream.finish`（事件）：收到 LLM 流结束部分时发出的事件。
+
+#### 已弃用的对象 API
+
+<Note type="warning">
+  `generateObject` 和 `streamObject` 已弃用。请改用带有 `output` 属性的 `generateText` 和 `streamText`。
+</Note>
+
+如果仍在运行已弃用的对象 API，你会看到旧版 span 名称：
+
+- `generateObject`：`ai.generateObject`、`ai.generateObject.doGenerate`
+- `streamObject`：`ai.streamObject`、`ai.streamObject.doStream`、`ai.stream.firstChunk`
+
+旧版对象 span 包含与其他 LLM span 相同的核心元数据，外加对象专属属性，如 `ai.schema.*`、`ai.response.object` 和 `ai.settings.output`。
+
+#### embed 函数
+
+`embed` 会记录 2 种 span：
+
+- `ai.embed`（span）：embed 调用的完整时长。它包含 1 个 `ai.embed.doEmbed` span。
+  它包含[基础嵌入 span 信息](#基础嵌入-span-信息)以及以下属性：
+  - `operation.name`：`ai.embed`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.embed"`
+  - `ai.value`：传入 `embed` 函数的值
+  - `ai.embedding`：JSON 字符串化的嵌入
+
+- `ai.embed.doEmbed`（span）：一次提供商 doEmbed 调用。
+  它包含[基础嵌入 span 信息](#基础嵌入-span-信息)以及以下属性：
+  - `operation.name`：`ai.embed.doEmbed`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.embed.doEmbed"`
+  - `ai.values`：传入提供商的值（数组）
+  - `ai.embeddings`：JSON 字符串化嵌入组成的数组
+
+#### embedMany 函数
+
+`embedMany` 会记录 2 种 span：
+
+- `ai.embedMany`（span）：embedMany 调用的完整时长。它包含 1 个或多个 `ai.embedMany.doEmbed` span。
+  它包含[基础嵌入 span 信息](#基础嵌入-span-信息)以及以下属性：
+  - `operation.name`：`ai.embedMany`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.embedMany"`
+  - `ai.values`：传入 `embedMany` 函数的值
+  - `ai.embeddings`：JSON 字符串化嵌入组成的数组
+
+- `ai.embedMany.doEmbed`（span）：一次提供商 doEmbed 调用。
+  它包含[基础嵌入 span 信息](#基础嵌入-span-信息)以及以下属性：
+  - `operation.name`：`ai.embedMany.doEmbed`，加上通过 `telemetry.functionId` 设置的 functionId
+  - `ai.operationId`：`"ai.embedMany.doEmbed"`
+  - `ai.values`：发送给提供商的值
+  - `ai.embeddings`：每个值对应的 JSON 字符串化嵌入数组
+
+#### Legacy span 详情
+
+##### 基础 LLM span 信息
+
+许多使用 LLM 的 span（`ai.generateText`、`ai.generateText.doGenerate`、`ai.streamText`、`ai.streamText.doStream`）都包含以下属性：
+
+- `resource.name`：通过 `telemetry.functionId` 设置的 functionId
+- `ai.model.id`：模型 ID
+- `ai.model.provider`：模型的提供商
+- `ai.request.headers.*`：通过 `headers` 传入的请求头
+- `ai.response.providerMetadata`：随生成响应一起返回的提供商专属元数据
+- `ai.settings.maxRetries`：设置的最大重试次数
+- `ai.telemetry.functionId`：通过 `telemetry.functionId` 设置的 functionId
+- `ai.settings.runtimeContext.*`：通过 `runtimeContext` 选项传入的运行时上下文；配置了 `telemetry.includeRuntimeContext` 时，会过滤为被标记的顶层属性
+- `ai.usage.completionTokens`：使用的补全 token 数量
+- `ai.usage.promptTokens`：使用的提示词 token 数量
+
+##### 调用 LLM span 信息
+
+对应单个 LLM 调用的 span（`ai.generateText.doGenerate`、`ai.streamText.doStream`）包含
+[基础 LLM span 信息](#基础-llm-span-信息)以及以下属性：
+
+- `ai.response.model`：用于生成响应的模型。如果提供商支持别名，它可能与请求的模型不同。
+- `ai.response.id`：响应的 ID。可用时使用提供商返回的 ID。
+- `ai.response.timestamp`：响应的时间戳。可用时使用提供商返回的时间戳。
+- [GenAI 操作的语义约定](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/)
+  - `gen_ai.system`：使用的提供商
+  - `gen_ai.request.model`：请求的模型
+  - `gen_ai.request.temperature`：设置的温度
+  - `gen_ai.request.max_tokens`：设置的最大 token 数
+  - `gen_ai.request.frequency_penalty`：设置的频率惩罚
+  - `gen_ai.request.presence_penalty`：设置的存在惩罚
+  - `gen_ai.request.top_k`：设置的 topK 参数值
+  - `gen_ai.request.top_p`：设置的 topP 参数值
+  - `gen_ai.request.stop_sequences`：停止序列
+  - `gen_ai.response.finish_reasons`：提供商返回的结束原因
+  - `gen_ai.response.model`：用于生成响应的模型。如果提供商支持别名，它可能与请求的模型不同。
+  - `gen_ai.response.id`：响应的 ID。可用时使用提供商返回的 ID。
+  - `gen_ai.usage.input_tokens`：使用的提示词 token 数量
+  - `gen_ai.usage.output_tokens`：使用的补全 token 数量
+
+##### 基础嵌入 span 信息
+
+许多使用嵌入模型的 span（`ai.embed`、`ai.embed.doEmbed`、`ai.embedMany`、`ai.embedMany.doEmbed`）都包含以下属性：
+
+- `ai.model.id`：模型 ID
+- `ai.model.provider`：模型的提供商
+- `ai.request.headers.*`：通过 `headers` 传入的请求头
+- `ai.settings.maxRetries`：设置的最大重试次数
+- `ai.telemetry.functionId`：通过 `telemetry.functionId` 设置的 functionId
+- `ai.settings.runtimeContext.*`：通过 `runtimeContext` 选项传入的运行时上下文
+- `ai.usage.tokens`：使用的 token 数量
+- `resource.name`：通过 `telemetry.functionId` 设置的 functionId
+
+##### Legacy 工具调用 span
+
+工具调用 span（`ai.toolCall`）包含以下属性：
+
+- `operation.name`：`"ai.toolCall"`
+- `ai.operationId`：`"ai.toolCall"`
+- `ai.toolCall.name`：工具名称
+- `ai.toolCall.id`：工具调用的 ID
+- `ai.toolCall.args`：工具调用的输入参数
+- `ai.toolCall.result`：工具调用的输出结果。仅在工具调用成功且结果可序列化时可用。

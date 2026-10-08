@@ -1,0 +1,70 @@
+---
+title: Latitude
+description: 使用 Latitude 监控并调试你的 AI SDK 应用
+---
+
+# Latitude 可观测性
+
+[Latitude](https://latitude.so)（[GitHub](https://github.com/latitude-dev/latitude-llm)）是一个开源（MIT 许可）的智能体（agent）可观测性平台，提供语义化 trace 搜索与问题追踪。它与 AI SDK 集成后可捕获：
+
+- 每次 `generateText`、`streamText` 与工具调用的 trace
+- 每次调用的 token 用量与延迟
+- 按重复发生归组的问题及其错误与失败模式
+
+## 安装
+
+Latitude 的 SDK 会注册一个全局 OpenTelemetry tracer。注册 AI SDK 的遥测（telemetry）集成后，每次 AI SDK 调用都会自动发出 span。
+
+安装这两个包：
+
+<InstallPackages packages="@latitude-data/telemetry @ai-sdk/otel" />
+
+登录 [app.latitude.so](https://app.latitude.so)，从仪表盘获取你的 API key 与项目 slug，并设置到环境中：
+
+```bash filename=".env"
+LATITUDE_API_KEY="..."
+LATITUDE_PROJECT_SLUG="..."
+```
+
+在启动时初始化 Latitude 并注册一次遥测。此后，每次 AI SDK 调用都会自动发出 trace：
+
+```ts
+import { Latitude } from '@latitude-data/telemetry';
+import { registerTelemetry, generateText } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { openai } from '@ai-sdk/openai';
+
+const latitude = new Latitude({
+  apiKey: process.env.LATITUDE_API_KEY!,
+  project: process.env.LATITUDE_PROJECT_SLUG!,
+});
+
+registerTelemetry(new OpenTelemetry());
+
+const { text } = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Hello',
+});
+
+await latitude.shutdown();
+```
+
+要获得命名 trace 与按调用的元数据（标签、用户 ID、会话 ID），可以用 Latitude 的 `capture()` 辅助函数包裹调用：
+
+```ts
+import { capture } from '@latitude-data/telemetry';
+
+await capture('generate-support-reply', async () => {
+  const { text } = await generateText({
+    model: openai('gpt-6-astra'),
+    prompt: 'Hello',
+  });
+  return text;
+});
+```
+
+## 资源
+
+- [Latitude Vercel AI SDK 指南](https://docs.latitude.so/telemetry/frameworks/vercel-ai-sdk)
+- [Latitude 文档](https://docs.latitude.so)
+- [GitHub 仓库](https://github.com/latitude-dev/latitude-llm)

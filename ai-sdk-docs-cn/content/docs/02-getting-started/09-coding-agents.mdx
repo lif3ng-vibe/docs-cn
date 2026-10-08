@@ -1,0 +1,145 @@
+---
+title: 编码智能体
+description: 了解如何设置 AI SDK 以配合编码智能体使用，包括安装技能、访问内置文档以及使用 DevTools。
+---
+
+# Getting Started with Coding Agents
+
+本页介绍在编码智能体（如 Claude Code、Codex、OpenCode、Cursor 或其他任何 AI 辅助开发环境）中工作时，如何充分发挥 AI SDK 的能力。
+
+## 安装 AI SDK 技能
+
+让编码智能体深入掌握 AI SDK 的最快方式是安装官方 AI SDK 技能。技能是一些轻量级 markdown 文件，可按需将专用指令加载到智能体的上下文中——因此智能体能准确知道如何使用 SDK，而无需你费力解释。
+
+使用 `npx skills add` 安装 AI SDK 技能：
+
+```bash
+npx skills add vercel/ai
+```
+
+技能会被安装到你的智能体对应的技能目录（例如 `.claude/skills`、`.codex/skills`）。如果你选择了多个智能体，CLI 会创建符号链接，让每个智能体都能发现该技能。使用 `-a` 可以直接指定智能体——例如 `-a amp` 会安装到通用的 `.agents/skills` 目录。使用 `-y` 可进行非交互式安装。
+
+安装完成后，任何支持 [Agent Skills](https://agentskills.io) 格式的智能体都会在处理 AI SDK 相关任务时自动发现并加载该技能。
+
+<Note>
+  Agent Skills 使用**渐进式披露**（progressive disclosure）：智能体在启动时只加载技能的
+  名称和描述，完整的指令只有在任务需要时才会拉入上下文，从而保持智能体快速且专注。
+</Note>
+
+## `node_modules` 中的文档与源代码
+
+安装 `ai` 包之后，完整的 AI SDK 文档与源代码就已经在本地 `node_modules` 中了。你的编码智能体可以直接读取这些内容——无需访问互联网。
+
+如果尚未安装，请先安装 `ai` 包：
+
+<InstallPackages packages="ai" />
+
+安装后，智能体可以引用以下路径中的内置源代码和文档：
+
+```
+node_modules/ai/src/              # Full source code organized by module
+node_modules/ai/docs/             # Official documentation with examples
+```
+
+这意味着智能体可以直接从已安装的包中查询准确的 API 签名、实现与用法示例——确保它始终使用你项目中实际安装的那个 SDK 版本。
+
+## 安装 DevTools
+
+AI SDK DevTools 让你在开发过程中全面掌握 AI SDK 调用的情况。它会捕获 LLM 请求、响应、工具调用、token 用量以及多步交互，并在本地 web UI 中展示。
+
+<Note type="warning">
+  AI SDK DevTools 为实验性功能，仅用于本地开发。
+  请勿在生产环境中使用。
+</Note>
+
+安装 DevTools 包：
+
+<InstallPackages packages="@ai-sdk/devtools" />
+
+### 注册集成
+
+全局注册 `DevToolsTelemetry`，使其捕获所有 AI SDK 调用：
+
+```ts
+import { registerTelemetry } from 'ai';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+
+registerTelemetry(DevToolsTelemetry());
+```
+
+一旦某个集成完成注册，你的所有 AI SDK 调用都会自动启用[遥测（telemetry）](/docs/ai-sdk-core/telemetry)：
+
+```ts
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'What cities are in the United States?',
+});
+```
+
+### 启动查看器
+
+在单独的终端中启动 DevTools 查看器：
+
+```bash
+npx @ai-sdk/devtools@latest
+```
+
+打开 [http://localhost:4983](http://localhost:4983) 即可实时查看你的 AI SDK 交互。
+
+## 检查工具调用与输出
+
+DevTools 会为每次调用捕获并展示以下内容：
+
+- **输入参数与提示词**——发送给 LLM 的完整输入
+- **输出内容与工具调用**——生成的文本与工具调用
+- **token 用量与耗时**——每一步的资源消耗与延迟
+- **原始提供商数据**——完整的请求与响应载荷
+
+对于多步智能体交互，DevTools 会将所有内容归组为**运行**（run）（一次完整交互）和**步骤**（step）（其中的每次 LLM 调用），便于你准确追踪智能体做了什么以及为什么这样做。
+
+你也可以在开发过程中直接在代码中记录工具结果：
+
+```ts
+import { streamText, tool, isStepCount } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model,
+  prompt: "What's the weather in New York in celsius?",
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location (fahrenheit)',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: Math.round(Math.random() * (90 - 32) + 32),
+      }),
+    }),
+  },
+  stopWhen: isStepCount(5),
+  onStepEnd: async ({ toolResults }) => {
+    if (toolResults.length) {
+      console.log(JSON.stringify(toolResults, null, 2));
+    }
+  },
+});
+```
+
+`onStepEnd` 回调会在每次 LLM 步骤结束后触发，并将所有工具结果打印到终端——便于在不打开 DevTools UI 的情况下快速调试。
+
+<Note>
+  DevTools 会将所有 AI 交互存储在本地 `.devtools/generations.json`
+  文件中，并自动将 `.devtools` 添加到你的 `.gitignore`，以防止
+  敏感的交互数据被提交。
+</Note>
+
+## 下一步
+
+- 了解 [Agent Skills](https://agentskills.io/specification)，掌握完整的技能格式。
+- 阅读 [DevTools 参考](/docs/ai-sdk-core/devtools)，查看所捕获数据与配置选项的完整列表。
+- 探索[工具与工具调用](/docs/ai-sdk-core/tools-and-tool-calling)，构建能够执行真实操作的智能体。
+- 查阅[为智能体添加技能（Add Skills to Your Agent）](/cookbook/guides/agent-skills) Cookbook 指南，一步步了解集成过程。

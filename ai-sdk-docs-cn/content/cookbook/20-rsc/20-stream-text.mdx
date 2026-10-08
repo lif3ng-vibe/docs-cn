@@ -1,0 +1,87 @@
+---
+title: 流式传输文本
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）流式传输文本。
+tags: ['rsc', 'streaming']
+---
+
+# Stream Text
+
+<Note>
+  本示例使用 React 服务器组件（RSC）。如果你想改用客户端渲染和 Hook，请参阅[使用
+  useCompletion 的"流式传输文本"示例](/examples/next-pages/basics/streaming-text-generation)。
+</Note>
+
+文本生成有时需要较长时间才能完成，尤其是生成几段文字时。在这种情况下，将文本生成过程实时流式传输到客户端会很有用。这样客户端可以在文本生成的同时逐步显示生成的内容，而不必让用户等待全部完成后再显示结果。
+
+<Browser>
+  <TextGeneration stream />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，点击按钮时会调用 `generate` 函数。`generate` 函数会调用 `streamText` 函数，进而基于输入的提示词生成文本。为了在客户端消费文本流，我们将使用 `@ai-sdk/rsc` 模块中的 `readStreamableValue` 函数。
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { generate } from './actions';
+import { readStreamableValue } from '@ai-sdk/rsc';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [generation, setGeneration] = useState<string>('');
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const { output } = await generate('Why is the sky blue?');
+
+          for await (const delta of readStreamableValue(output)) {
+            setGeneration(currentGeneration => `${currentGeneration}${delta}`);
+          }
+        }}
+      >
+        Ask
+      </button>
+
+      <div>{generation}</div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+在服务器端，我们需要实现 `generate` 函数，它会调用 `streamText` 函数。`streamText` 函数将基于输入的提示词生成文本。为了把文本生成过程流式传输到客户端，我们将使用 `createStreamableValue`，它可以包装任何可变的值并将其流式传输到客户端。
+
+通过 DevTools，我们可以看到文本生成结果正实时流式传输到客户端。
+
+```typescript filename='app/actions.ts'
+'use server';
+
+import { streamText } from 'ai';
+import { createStreamableValue } from '@ai-sdk/rsc';
+
+export async function generate(input: string) {
+  const stream = createStreamableValue('');
+
+  (async () => {
+    const { textStream } = streamText({
+      model: 'openai/gpt-6-astra',
+      prompt: input,
+    });
+
+    for await (const delta of textStream) {
+      stream.update(delta);
+    }
+
+    stream.done();
+  })();
+
+  return { output: stream.value };
+}
+```

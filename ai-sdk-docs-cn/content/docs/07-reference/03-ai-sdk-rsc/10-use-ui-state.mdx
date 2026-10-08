@@ -1,0 +1,34 @@
+---
+title: useUIState
+description: AI SDK RSC 中 useUIState 函数的参考文档
+---
+
+# `useUIState`
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+它是一个 Hook，让你能够读取和更新 UI 状态。该状态位于客户端，可以包含函数、React 节点和其他数据。UI 状态（UIState）是 AI 状态的视觉呈现。
+
+## 导入
+
+<Snippet text={`import { useUIState } from "@ai-sdk/rsc"`} prompt={false} />
+
+## API 签名
+
+### 返回值
+
+与 useState 类似，它是一个数组：第一个元素是当前的 UI 状态，第二个元素是用于更新状态的函数。
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title: '学习如何在 Next.js 中管理 AI 状态与 UI 状态',
+      link: '/examples/next-app/state-management/ai-ui-states',
+    },
+  ]}
+/>

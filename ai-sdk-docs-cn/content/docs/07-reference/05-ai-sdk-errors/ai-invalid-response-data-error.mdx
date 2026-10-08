@@ -1,0 +1,25 @@
+---
+title: AI_InvalidResponseDataError
+description: 了解如何修复 AI_InvalidResponseDataError
+---
+
+# AI_InvalidResponseDataError
+
+当服务器返回的响应包含无效的数据内容时会引发此错误。
+
+## 属性
+
+- `data`：无效的响应数据值
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_InvalidResponseDataError` 的实例：
+
+```typescript
+import { InvalidResponseDataError } from 'ai';
+
+if (InvalidResponseDataError.isInstance(error)) {
+  // Handle the error
+}
+```

@@ -1,0 +1,133 @@
+---
+title: experimental_getBatchStatus
+description: experimental_getBatchStatus 的 API 参考。
+---
+
+# `experimental_getBatchStatus()`
+
+<Note type="warning">
+  批处理（batch）支持为实验性功能，API 可能在补丁版本中变更。
+</Note>
+
+检索异步批处理的最新状态。有关批处理生命周期的完整指南，请参阅
+[批处理](/docs/ai-sdk-core/batch)。
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { experimental_getBatchStatus as getBatchStatus } from 'ai';
+
+const status = await getBatchStatus({
+  provider: anthropic,
+  batch,
+});
+
+console.log(status.status, status.requestCounts);
+```
+
+## 导入
+
+<Snippet
+  text={`import { experimental_getBatchStatus } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'provider',
+      type: 'Experimental_BatchProvider',
+      isOptional: true,
+      description:
+        '用于访问批处理的提供商。默认为全局提供商；未配置全局提供商时使用 AI Gateway。',
+    },
+    {
+      name: 'batch',
+      type: 'Experimental_BatchReference',
+      description:
+        'experimental_startBatch 返回的可序列化引用。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '状态检索的额外提供商专属选项。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '状态检索的最大重试次数。设为 0 可禁用重试。默认值：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '可选的中止信号，用于取消请求。',
+    },
+    {
+      name: 'timeout',
+      type: 'number | { totalMs?: number }',
+      isOptional: true,
+      description: '状态请求允许的最长时间。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string | undefined>',
+      isOptional: true,
+      description: '请求的额外 HTTP 请求头。',
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'status',
+      type: "'pending' | 'completed' | 'failed'",
+      description: '最新的规范化批处理状态。',
+    },
+    {
+      name: 'rawStatus',
+      type: 'string',
+      isOptional: true,
+      description: '提供商专属的批处理状态（如果可用）。',
+    },
+    {
+      name: 'requestCounts',
+      type: '{ total: number; pending: number; completed: number; failed: number }',
+      isOptional: true,
+      description: '提供商报告的请求数量。',
+    },
+    {
+      name: 'error',
+      type: 'Experimental_BatchError',
+      isOptional: true,
+      description: '批处理失败时的错误详情。',
+    },
+    {
+      name: 'createdAt',
+      type: 'string',
+      isOptional: true,
+      description: '创建时间戳（由提供商提供时）。',
+    },
+    {
+      name: 'expiresAt',
+      type: 'string',
+      isOptional: true,
+      description: '过期时间戳（由提供商提供时）。',
+    },
+    {
+      name: 'providerMetadata',
+      type: 'ProviderMetadata',
+      isOptional: true,
+      description: '批处理的提供商专属元数据。',
+    },
+  ]}
+/>

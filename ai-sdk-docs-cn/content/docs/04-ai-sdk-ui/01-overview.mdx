@@ -1,0 +1,44 @@
+---
+title: 概述
+description: AI SDK UI 的概述。
+---
+
+# AI SDK UI
+
+AI SDK UI 旨在帮助你轻松构建交互式聊天、补全和助手应用。它是一套**与框架无关的工具包**，简化了将高级 AI 功能集成到应用中的过程。
+
+AI SDK UI 提供了强大的抽象，简化了在前端管理聊天流和 UI 更新等复杂任务，让你能够更高效地开发动态的 AI 驱动界面。借助三个核心 Hook——**`useChat`**、**`useCompletion`** 和 **`useObject`**——你可以将实时聊天、文本补全、流式 JSON 和交互式助手功能集成到应用中。
+
+- **[`useChat`](/docs/ai-sdk-ui/chatbot)** 提供聊天消息的实时流式传输，并管理消息、加载与错误状态。你可以在组件中自行管理输入状态，从而无缝融入任何 UI 设计。
+- **[`useCompletion`](/docs/ai-sdk-ui/completion)** 让你能够在应用中处理文本补全，管理提示词（prompt）输入，并在新的补全流式输出时自动更新 UI。
+- **[`useObject`](/docs/ai-sdk-ui/object-generation)** 是一个用于消费流式 JSON 对象的 Hook，提供了一种在应用中处理和展示结构化数据的简单方式。
+
+这些 Hook 旨在降低实现 AI 交互所需的复杂度与时间成本，让你专注于打造卓越的用户体验。
+
+## UI 框架支持
+
+AI SDK UI 支持以下框架：[React](https://react.dev/)、[Svelte](https://svelte.dev/)、[Vue.js](https://vuejs.org/)、
+[Angular](https://angular.dev/) 和 [SolidJS](https://www.solidjs.com/)。
+
+以下是各框架支持功能的对比：
+
+|                                                                 | [useChat](/docs/reference/ai-sdk-ui/use-chat) | [useCompletion](/docs/reference/ai-sdk-ui/use-completion) | [useObject](/docs/reference/ai-sdk-ui/use-object) | [MCP Apps](/docs/ai-sdk-core/mcp-apps) |
+| --------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| React `@ai-sdk/react`                                           | <Check />                                     | <Check />                                                 | <Check />                                         | <Check />                              |
+| Vue.js `@ai-sdk/vue`                                            | <Check />                                     | <Check />                                                 | <Check />                                         | <Cross />                              |
+| Svelte `@ai-sdk/svelte`                                         | <Check /> Chat                                | <Check /> Completion                                      | <Check /> StructuredObject                        | <Cross />                              |
+| Angular `@ai-sdk/angular`                                       | <Check /> Chat                                | <Check /> Completion                                      | <Check /> StructuredObject                        | <Cross />                              |
+| [SolidJS](https://github.com/kodehort/ai-sdk-solid) （社区）    | <Check />                                     | <Check />                                                 | <Check />                                         | <Cross />                              |
+
+## 框架示例
+
+探索这些不同框架的示例实现：
+
+- [**Next.js**](https://github.com/vercel/ai/tree/main/examples/ai-e2e-next)
+- [**Nuxt**](https://github.com/vercel/ai/tree/main/examples/nuxt-openai)
+- [**SvelteKit**](https://github.com/vercel/ai/tree/main/examples/sveltekit-openai)
+- [**Angular**](https://github.com/vercel/ai/tree/main/examples/angular)
+
+## API 参考
+
+更多各函数的详细信息，请查阅 [AI SDK UI API 参考](/docs/reference/ai-sdk-ui)。

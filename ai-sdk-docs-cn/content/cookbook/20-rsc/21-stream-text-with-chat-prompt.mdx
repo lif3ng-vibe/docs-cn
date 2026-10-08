@@ -1,0 +1,129 @@
+---
+title: 使用聊天提示词流式传输文本
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）基于聊天提示词流式传输文本。
+tags: ['rsc', 'chat']
+---
+
+# Stream Text with Chat Prompt
+
+聊天补全有时需要较长时间才能完成，尤其是响应内容较多时。在这种情况下，将聊天补全实时流式传输到客户端会很有用。这样客户端可以在模型生成新消息的同时逐步显示它，而不必让用户等待生成结束。
+
+<Browser>
+  <ChatGeneration
+    stream
+    history={[
+      { role: 'User', content: '最近怎么样？' },
+      { role: 'Assistant', content: '一切都好，有什么可以帮你？' },
+    ]}
+    inputMessage={{ role: 'User', content: '天空为什么是蓝色的？' }}
+    outputMessage={{
+      role: 'Assistant',
+      content: '天空是蓝色的，这是因为瑞利散射。',
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来创建一个用户与模型之间的简单对话，并放置一个调用 `continueConversation` 的按钮。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { Message, continueConversation } from './actions';
+import { readStreamableValue } from '@ai-sdk/rsc';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [conversation, setConversation] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>('');
+
+  return (
+    <div>
+      <div>
+        {conversation.map((message, index) => (
+          <div key={index}>
+            {message.role}: {message.content}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button
+          onClick={async () => {
+            const { messages, newMessage } = await continueConversation([
+              ...conversation,
+              { role: 'user', content: input },
+            ]);
+
+            let textContent = '';
+
+            for await (const delta of readStreamableValue(newMessage)) {
+              textContent = `${textContent}${delta}`;
+
+              setConversation([
+                ...messages,
+                { role: 'assistant', content: textContent },
+              ]);
+            }
+          }}
+        >
+          Send Message
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+接下来，我们实现 `continueConversation` 函数，它会把用户的消息插入对话，并将新消息流式传回。
+
+```typescript filename='app/actions.ts'
+'use server';
+
+import { streamText } from 'ai';
+import { createStreamableValue } from '@ai-sdk/rsc';
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export async function continueConversation(history: Message[]) {
+  'use server';
+
+  const stream = createStreamableValue();
+
+  (async () => {
+    const { textStream } = streamText({
+      model: 'openai/gpt-6-astra',
+      instructions:
+        "You are a dude that doesn't drop character until the DVD commentary.",
+      messages: history,
+    });
+
+    for await (const text of textStream) {
+      stream.update(text);
+    }
+
+    stream.done();
+  })();
+
+  return {
+    messages: history,
+    newMessage: stream.value,
+  };
+}
+```

@@ -1,0 +1,774 @@
+---
+title: streamUI
+description: 来自 AI SDK RSC 的 streamUI 函数参考
+---
+
+# `streamUI`
+
+<Note type="warning">
+  AI SDK RSC 目前为实验性功能。我们建议在生产环境中使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指引，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+一个从 LLM 提供商创建可流式 UI 的辅助函数。此函数与 AI SDK Core API 类似，并支持相同的模型接口。
+
+要查看 `streamUI` 的实际效果，请查看[这些示例](#示例)。
+
+## 导入
+
+<Snippet text={`import { streamUI } from "@ai-sdk/rsc"`} prompt={false} />
+
+## 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'LanguageModel',
+      description: '要使用的语言模型。示例：openai("gpt-6-astra")',
+    },
+    {
+      name: 'initial',
+      isOptional: true,
+      type: 'ReactNode',
+      description: '要渲染的初始 UI。',
+    },
+    {
+      name: 'instructions',
+      isOptional: true,
+      type: 'Instructions',
+      description:
+        '用于指定模型行为的指令。'
+    },
+    {
+      name: 'prompt',
+      type: 'string',
+      description: '用于生成文本的输入提示词。',
+    },
+    {
+      name: 'messages',
+      type: 'Array<SystemModelMessage | UserModelMessage | AssistantModelMessage | ToolModelMessage> | Array<UIMessage>',
+      description:
+        '表示对话的消息列表。会自动转换来自 useChat Hook 的 UI 消息。',
+      properties: [
+        {
+          type: 'SystemModelMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'system'",
+              description: '系统消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string',
+              description: '消息的内容。',
+            },
+          ],
+        },
+        {
+          type: 'UserModelMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'user'",
+              description: '用户消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string | Array<TextPart | ImagePart | FilePart>',
+              description: '消息的内容。',
+              properties: [
+                {
+                  type: 'TextPart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'text'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'text',
+                      type: 'string',
+                      description: '消息片段的文本内容。',
+                    },
+                  ],
+                },
+                {
+                  type: 'ImagePart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'image'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'image',
+                      type: 'string | Uint8Array | Buffer | ArrayBuffer | URL',
+                      description:
+                        '消息片段的图像内容。字符串可以是 base64 编码内容、base64 数据 URL 或 http(s) URL。',
+                    },
+                    {
+                      name: 'mediaType',
+                      type: 'string',
+                      isOptional: true,
+                      description:
+                        '图像的 IANA 媒体类型。可选。',
+                    },
+                  ],
+                },
+                {
+                  type: 'FilePart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'file'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'data',
+                      type: 'string | Uint8Array | Buffer | ArrayBuffer | URL',
+                      description:
+                        '消息片段的文件内容。字符串可以是 base64 编码内容、base64 数据 URL 或 http(s) URL。',
+                    },
+                    {
+                      name: 'mediaType',
+                      type: 'string',
+                      description: '文件的 IANA 媒体类型。',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'AssistantModelMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'assistant'",
+              description: '助手消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'string | Array<TextPart | ToolCallPart>',
+              description: '消息的内容。',
+              properties: [
+                {
+                  type: 'TextPart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'text'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'text',
+                      type: 'string',
+                      description: '消息片段的文本内容。',
+                    },
+                  ],
+                },
+                {
+                  type: 'ToolCallPart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'tool-call'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'toolCallId',
+                      type: 'string',
+                      description: '工具调用的 id。',
+                    },
+                    {
+                      name: 'toolName',
+                      type: 'string',
+                      description:
+                        '工具的名称，通常是函数名。',
+                    },
+                    {
+                      name: 'args',
+                      type: 'object based on zod schema',
+                      description:
+                        '由模型生成的、供工具使用的参数。',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'ToolModelMessage',
+          parameters: [
+            {
+              name: 'role',
+              type: "'tool'",
+              description: '工具消息的角色。',
+            },
+            {
+              name: 'content',
+              type: 'Array<ToolResultPart>',
+              description: '消息的内容。',
+              properties: [
+                {
+                  type: 'ToolResultPart',
+                  parameters: [
+                    {
+                      name: 'type',
+                      type: "'tool-result'",
+                      description: '消息片段的类型。',
+                    },
+                    {
+                      name: 'toolCallId',
+                      type: 'string',
+                      description:
+                        '结果所对应的工具调用的 id。',
+                    },
+                    {
+                      name: 'toolName',
+                      type: 'string',
+                      description:
+                        '结果所对应的工具的名称。',
+                    },
+                    {
+                      name: 'result',
+                      type: 'unknown',
+                      description:
+                        '工具执行后返回的结果。',
+                    },
+                    {
+                      name: 'isError',
+                      type: 'boolean',
+                      isOptional: true,
+                      description:
+                        '结果是否为错误或错误消息。',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'allowSystemInMessages',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '是否允许在 `prompt` 或 `messages` 字段中出现系统消息。默认为 false。`instructions` 选项中的系统消息始终允许。对用户可控的消息启用此选项可能带来提示词注入风险。',
+    },
+    {
+      name: 'maxOutputTokens',
+      type: 'number',
+      isOptional: true,
+      description: '要生成的最大 token 数。',
+    },
+    {
+      name: 'temperature',
+      type: 'number',
+      isOptional: true,
+      description:
+        '温度设置。该值会直接传递给提供商。取值范围取决于提供商和模型。建议只设置 `temperature` 或 `topP` 之一，不要同时设置。',
+    },
+    {
+      name: 'topP',
+      type: 'number',
+      isOptional: true,
+      description:
+        '核采样（nucleus sampling）。该值会直接传递给提供商。取值范围取决于提供商和模型。建议只设置 `temperature` 或 `topP` 之一，不要同时设置。',
+    },
+    {
+      name: 'topK',
+      type: 'number',
+      isOptional: true,
+      description:
+        '对每个后续 token 仅从前 K 个选项中采样。用于剔除"长尾"低概率响应。仅建议在高级场景中使用。通常只需要使用 temperature。',
+    },
+    {
+      name: 'presencePenalty',
+      type: 'number',
+      isOptional: true,
+      description:
+        '存在惩罚（presence penalty）设置。它影响模型重复提示词中已有信息的可能性。该值会直接传递给提供商。取值范围取决于提供商和模型。',
+    },
+    {
+      name: 'frequencyPenalty',
+      type: 'number',
+      isOptional: true,
+      description:
+        '频率惩罚（frequency penalty）设置。它影响模型重复使用相同词语或短语的可能性。该值会直接传递给提供商。取值范围取决于提供商和模型。',
+    },
+    {
+      name: 'stopSequences',
+      type: 'string[]',
+      isOptional: true,
+      description:
+        '会停止文本生成的序列。如果模型生成了其中任何一个序列，就会停止生成后续文本。',
+    },
+    {
+      name: 'seed',
+      type: 'number',
+      isOptional: true,
+      description:
+        '用于随机采样的种子（整数）。如果设置且模型支持，调用将生成确定性的结果。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '最大重试次数。设为 0 可禁用重试。默认值：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description:
+        '可选的中止信号，可用于取消调用。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description:
+        '随请求发送的附加 HTTP 请求头。仅适用于基于 HTTP 的提供商。',
+    },
+    {
+      name: 'tools',
+      type: 'ToolSet',
+      description:
+        '可供模型访问并调用的工具。',
+      properties: [
+        {
+          type: 'Tool',
+          parameters: [
+            {
+              name: 'description',
+              isOptional: true,
+              type: 'string',
+              description:
+                '关于工具用途的信息，包括模型如何以及何时可以使用它的细节。',
+            },
+            {
+              name: 'inputSchema',
+              type: 'zod schema',
+              description:
+                '描述工具参数的类型化 schema，也可用于校验和错误处理。',
+            },
+            {
+              name: 'generate',
+              isOptional: true,
+              type: '(parameters) => ReactNode | Promise<ReactNode> | Generator<ReactNode, ReactNode, void> | AsyncGenerator<ReactNode, ReactNode, void>',
+              description:
+                '一个函数或生成器函数，以工具调用的参数调用，并产出作为 UI 的 React 节点。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'toolChoice',
+      isOptional: true,
+      type: '"auto" | "none" | "required" | { "type": "tool", "toolName": string }',
+      description:
+        '工具选择设置。它指定如何选择要执行的工具。默认为 "auto"。"none" 禁用工具执行。"required" 要求必须执行工具。{ "type": "tool", "toolName": string } 指定要执行的具体工具。',
+    },
+    {
+      name: 'text',
+      isOptional: true,
+      type: '(Text) => ReactNode',
+      description: '处理模型生成 token 的回调。',
+      properties: [
+        {
+          type: 'Text',
+          parameters: [
+            {
+              name: 'content',
+              type: 'string',
+              description: '补全的完整内容。',
+            },
+            { name: 'delta', type: 'string', description: '增量。' },
+            { name: 'done', type: 'boolean', description: '是否完成？' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'providerOptions',
+      type: 'Record<string,JSONObject> | undefined',
+      isOptional: true,
+      description:
+        '提供商特定的选项。外层键是提供商名称，内层的值是元数据。细节取决于提供商。',
+    },
+    {
+      name: 'onFinish',
+      type: '(result: OnFinishResult) => void',
+      isOptional: true,
+      description:
+        '当 LLM 响应和所有请求内工具执行（针对具有 `generate` 函数的工具）完成时调用的回调。',
+      properties: [
+        {
+          type: 'OnFinishResult',
+          parameters: [
+            {
+              name: 'usage',
+              type: 'LanguageModelUsage',
+              description: '生成文本的 token 用量。',
+              properties: [
+                {
+                  type: 'LanguageModelUsage',
+                  parameters: [
+                    {
+                      name: 'inputTokens',
+                      type: 'number | undefined',
+                      description: '使用的输入（提示词）token 总数。',
+                    },
+                    {
+                      name: 'inputTokenDetails',
+                      type: 'LanguageModelInputTokenDetails',
+                      description:
+                        '关于输入（提示词）token 的详细信息。另请参阅：缓存 token 与非缓存 token。',
+                      properties: [
+                        {
+                          type: 'LanguageModelInputTokenDetails',
+                          parameters: [
+                            {
+                              name: 'noCacheTokens',
+                              type: 'number | undefined',
+                              description:
+                                '使用的非缓存输入（提示词）token 数量。',
+                            },
+                            {
+                              name: 'cacheReadTokens',
+                              type: 'number | undefined',
+                              description:
+                                '读取的缓存输入（提示词）token 数量。',
+                            },
+                            {
+                              name: 'cacheWriteTokens',
+                              type: 'number | undefined',
+                              description:
+                                '写入的缓存输入（提示词）token 数量。',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      name: 'outputTokens',
+                      type: 'number | undefined',
+                      description: '使用的输出（补全）token 总数。',
+                    },
+                    {
+                      name: 'outputTokenDetails',
+                      type: 'LanguageModelOutputTokenDetails',
+                      description:
+                        '关于输出（补全）token 的详细信息。',
+                      properties: [
+                        {
+                          type: 'LanguageModelOutputTokenDetails',
+                          parameters: [
+                            {
+                              name: 'textTokens',
+                              type: 'number | undefined',
+                              description: '使用的文本 token 数量。',
+                            },
+                            {
+                              name: 'reasoningTokens',
+                              type: 'number | undefined',
+                              description: '使用的推理 token 数量。',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      name: 'totalTokens',
+                      type: 'number | undefined',
+                      description: '使用的 token 总数。',
+                    },
+                    {
+                      name: 'raw',
+                      type: 'object | undefined',
+                      isOptional: true,
+                      description: '来自提供商的原始用量信息。这是提供商原始的用量信息，可能包含额外字段。',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'value',
+              type: 'ReactNode',
+              description: '最终生成的 UI 节点。',
+            },
+            {
+              name: 'warnings',
+              type: 'Warning[] | undefined',
+              description:
+                '来自模型提供商的警告（例如不支持的设置）。',
+            },
+            {
+              name: 'response',
+              type: 'Response',
+              isOptional: true,
+              description: '可选的响应数据。',
+              properties: [
+                {
+                  type: 'Response',
+                  parameters: [
+                    {
+                      name: 'headers',
+                      isOptional: true,
+                      type: 'Record<string, string>',
+                      description: '响应请求头。',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
+]}
+/>
+
+## 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'value',
+      type: 'ReactNode',
+      description: '基于流输出的用户界面。',
+    },
+    {
+      name: 'response',
+      type: 'Response',
+      isOptional: true,
+      description: '可选的响应数据。',
+      properties: [
+        {
+          type: 'Response',
+          parameters: [
+            {
+              name: 'headers',
+              isOptional: true,
+              type: 'Record<string, string>',
+              description: '响应请求头。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'warnings',
+      type: 'Warning[] | undefined',
+      description:
+        '来自模型提供商的警告（例如不支持的设置）。',
+    },
+    {
+      name: 'stream',
+      type: 'AsyncIterable<StreamPart> & ReadableStream<StreamPart>',
+      description:
+        '包含所有事件的流，包括文本增量、工具调用、工具结果和错误。它可以作为 AsyncIterable 或 ReadableStream 使用。发生错误时，流会抛出该错误。',
+      properties: [
+        {
+          type: 'StreamPart',
+          parameters: [
+            {
+              name: 'type',
+              type: "'text-delta'",
+              description: '将对象标识为文本增量的类型。',
+            },
+            {
+              name: 'textDelta',
+              type: 'string',
+              description: '文本增量。',
+            },
+          ],
+        },
+        {
+          type: 'StreamPart',
+          parameters: [
+            {
+              name: 'type',
+              type: "'tool-call'",
+              description: '将对象标识为工具调用的类型。',
+            },
+            {
+              name: 'toolCallId',
+              type: 'string',
+              description: '工具调用的 id。',
+            },
+            {
+              name: 'toolName',
+              type: 'string',
+              description:
+                '工具的名称，通常是函数名。',
+            },
+            {
+              name: 'args',
+              type: 'object based on zod schema',
+              description:
+                '由模型生成的、供工具使用的参数。',
+            },
+          ],
+        },
+        {
+          type: 'StreamPart',
+          parameters: [
+            {
+              name: 'type',
+              type: "'error'",
+              description: '将对象标识为错误的类型。',
+            },
+            {
+              name: 'error',
+              type: 'Error',
+              description:
+                '描述执行期间可能发生的错误。',
+            },
+          ],
+        },
+        {
+          type: 'StreamPart',
+          parameters: [
+            {
+              name: 'type',
+              type: "'finish'",
+              description: '将对象标识为完成的类型。',
+            },
+            {
+              name: 'finishReason',
+              type: "'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other'",
+              description: '模型完成文本生成的原因。',
+            },
+            {
+              name: 'usage',
+              type: 'LanguageModelUsage',
+              description: '生成文本的 token 用量。',
+              properties: [
+                {
+                  type: 'LanguageModelUsage',
+                  parameters: [
+                    {
+                      name: 'inputTokens',
+                      type: 'number | undefined',
+                      description:
+                        '使用的输入（提示词）token 总数。',
+                    },
+                    {
+                      name: 'inputTokenDetails',
+                      type: 'LanguageModelInputTokenDetails',
+                      description:
+                        '关于输入（提示词）token 的详细信息。另请参阅：缓存 token 与非缓存 token。',
+                      properties: [
+                        {
+                          type: 'LanguageModelInputTokenDetails',
+                          parameters: [
+                            {
+                              name: 'noCacheTokens',
+                              type: 'number | undefined',
+                              description:
+                                '使用的非缓存输入（提示词）token 数量。',
+                            },
+                            {
+                              name: 'cacheReadTokens',
+                              type: 'number | undefined',
+                              description:
+                                '读取的缓存输入（提示词）token 数量。',
+                            },
+                            {
+                              name: 'cacheWriteTokens',
+                              type: 'number | undefined',
+                              description:
+                                '写入的缓存输入（提示词）token 数量。',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      name: 'outputTokens',
+                      type: 'number | undefined',
+                      description:
+                        '使用的输出（补全）token 总数。',
+                    },
+                    {
+                      name: 'outputTokenDetails',
+                      type: 'LanguageModelOutputTokenDetails',
+                      description:
+                        '关于输出（补全）token 的详细信息。',
+                      properties: [
+                        {
+                          type: 'LanguageModelOutputTokenDetails',
+                          parameters: [
+                            {
+                              name: 'textTokens',
+                              type: 'number | undefined',
+                              description: '使用的文本 token 数量。',
+                            },
+                            {
+                              name: 'reasoningTokens',
+                              type: 'number | undefined',
+                              description:
+                                '使用的推理 token 数量。',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      name: 'totalTokens',
+                      type: 'number | undefined',
+                      description: '使用的 token 总数。',
+                    },
+                    {
+                      name: 'raw',
+                      type: 'object | undefined',
+                      isOptional: true,
+                      description:
+                        "来自提供商的原始用量信息。这是提供商原始的用量信息，可能包含额外字段。",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title:
+        '学习在 Next.js 中使用语言模型将 React 组件作为函数调用进行渲染',
+      link: '/examples/next-app/state-management/ai-ui-states',
+    },
+    {
+      title: '学习在 Next.js 中持久化并恢复 UI/AI 状态',
+      link: '/examples/next-app/state-management/save-and-restore-states',
+    },
+    {
+      title:
+        '学习在 Next.js 中使用语言模型路由 React 组件',
+      link: '/examples/next-app/interface/route-components',
+    },
+    {
+      title: '学习在 Next.js 中将组件更新流式传输到客户端',
+      link: '/examples/next-app/interface/stream-component-updates',
+    },
+  ]}
+/>

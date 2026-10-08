@@ -1,0 +1,299 @@
+---
+title: Fal
+description: 了解如何在 AI SDK 中使用 Fal AI 模型。
+---
+
+# Fal 提供商
+
+[Fal AI](https://fal.ai/) 为开发者提供了一个具备极速推理能力的生成式媒体平台。其平台针对扩散模型的运行做了性能优化，速度最高可达替代方案的 4 倍。
+
+## 安装
+
+Fal 提供商可通过 `@ai-sdk/fal` 模块获取，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/fal" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/fal` 导入默认提供商实例 `fal`：
+
+```ts
+import { fal } from '@ai-sdk/fal';
+```
+
+如果需要自定义配置，可以导入 `createFal` 并用你的设置创建提供商实例：
+
+```ts
+import { createFal } from '@ai-sdk/fal';
+
+const fal = createFal({
+  apiKey: 'your-api-key', // optional, defaults to FAL_API_KEY environment variable, falling back to FAL_KEY
+  baseURL: 'custom-url', // optional
+  headers: {
+    /* custom headers */
+  }, // optional
+});
+```
+
+你可以使用以下可选设置来自定义 Fal 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。默认前缀为 `https://fal.run`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认取 `FAL_API_KEY` 环境变量，回退到 `FAL_KEY`。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。可以把它当作中间件拦截请求，或用于测试等场景提供自定义 fetch 实现。
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建 Fal 图像模型。有关使用 AI SDK 进行图像生成的更多信息，参见 [generateImage()](/docs/reference/ai-sdk-core/generate-image)。
+
+### 基本用法
+
+```ts
+import { fal } from '@ai-sdk/fal';
+import { generateImage } from 'ai';
+import fs from 'fs';
+
+const { image, providerMetadata } = await generateImage({
+  model: fal.image('fal-ai/flux/dev'),
+  prompt: 'A serene mountain landscape at sunset',
+});
+
+const filename = `image-${Date.now()}.png`;
+fs.writeFileSync(filename, image.uint8Array);
+console.log(`Image saved to ${filename}`);
+```
+
+Fal 图像模型可能会为图像和请求返回额外信息。
+
+以下是一些可能为每张图像设置的属性示例：
+
+```js
+providerMetadata.fal.images[0].nsfw; // boolean, image is not safe for work
+providerMetadata.fal.images[0].width; // number, image width
+providerMetadata.fal.images[0].height; // number, image height
+providerMetadata.fal.images[0].contentType; // string, mime type of the image
+```
+
+### 模型能力
+
+Fal 提供了许多针对不同用例优化的模型。以下是一些热门示例。模型的完整列表见 [Fal AI 搜索页](https://fal.ai/explore/search)。
+
+| 模型                                           | 说明                                                                                                                              |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `fal-ai/flux/dev`                              | FLUX.1 [dev] 模型，用于高质量图像生成                                                                                             |
+| `fal-ai/flux-pro/kontext`                      | FLUX.1 Kontext [pro] 可同时接受文本和参考图像作为输入，实现针对性编辑与复杂变换                                                   |
+| `fal-ai/flux-pro/kontext/max`                  | FLUX.1 Kontext [max]，提示词遵从度与文字排版生成能力更强                                                                          |
+| `fal-ai/flux-lora`                             | 支持 LoRA 的超快 FLUX.1 端点                                                                                                      |
+| `fal-ai/ideogram/character`                    | 在多张图像间生成一致的角色外观，保持面部特征、身体比例和独特气质                                                                  |
+| `fal-ai/qwen-image`                            | Qwen-Image 基础模型，在复杂文字渲染与精准图像编辑方面有显著进步                                                                   |
+| `fal-ai/omnigen-v2`                            | 统一的图像生成模型，支持图像编辑、个性化图像生成、虚拟试衣、多人生成等                                                             |
+| `fal-ai/bytedance/dreamina/v3.1/text-to-image` | Dreamina 在美学表现、精准多样的风格和丰富细节上有所改进，呈现出色的画面效果                                                       |
+| `fal-ai/recraft/v3/text-to-image`              | 图像生成领域的 SOTA，具备矢量艺术与品牌风格能力                                                                                   |
+| `fal-ai/wan/v2.2-a14b/text-to-image`           | 高分辨率、照片级的写实图像，细节精细                                                                                              |
+
+Fal 模型支持以下宽高比：
+
+- 1:1（方形 HD）
+- 16:9（横向）
+- 9:16（纵向）
+- 4:3（横向）
+- 3:4（纵向）
+- 16:10（1280x800）
+- 10:16（800x1280）
+- 21:9（2560x1080）
+- 9:21（1080x2560）
+
+Fal 模型的主要特性包括：
+
+- 推理速度最高可达替代方案的 4 倍
+- 由 Fal Inference Engine™ 优化
+- 支持实时基础设施
+- 按用量付费，扩展更具成本效益
+- 支持 LoRA 训练以实现模型个性化
+
+#### 修改图像
+
+使用文本提示词变换现有图像。
+
+```ts
+await generateImage({
+  model: fal.image('fal-ai/flux-pro/kontext/max'),
+  prompt: {
+    text: 'Put a donut next to the flour.',
+    images: [
+      'https://v3.fal.media/files/rabbit/rmgBxhwGYb2d3pl3x9sKf_output.png',
+    ],
+  },
+});
+```
+
+图像也可以以 base64 编码字符串、`Uint8Array`、`ArrayBuffer` 或 `Buffer` 的形式传入。还可以传入蒙版（mask）：
+
+```ts
+await generateImage({
+  model: fal.image('fal-ai/flux-general/inpainting'),
+  prompt: {
+    text: 'Put a donut next to the flour.',
+    images: [imageBuffer],
+    mask: maskBuffer,
+  },
+});
+```
+
+### 提供商选项
+
+Fal 图像模型通过 `providerOptions.fal` 对象支持灵活的提供商选项。你可以传入特定 Fal 模型 API 支持的任何参数。常见选项包括：
+
+- **imageUrl** - 图生图（image-to-image）的参考图像 URL（已弃用，请改用 `prompt.images`）
+- **strength** - 控制输出与输入图像的差异程度
+- **guidanceScale** - 控制对提示词的遵从程度（范围：1-20）
+- **numInferenceSteps** - 去噪步数（范围：1-50）
+- **enableSafetyChecker** - 启用/禁用安全过滤
+- **outputFormat** - 输出格式：'jpeg' 或 'png'
+- **syncMode** - 等待生成完成后再返回响应
+- **acceleration** - 生成速度：'none'、'regular' 或 'high'
+- **safetyTolerance** - 内容安全过滤级别（1-6，1 最严格）
+- **useMultipleImages** - 设为 true 时，对支持多张图像的模型（如 fal-ai/flux-2/edit），将多张输入图像转换为 `image_urls` 数组
+
+<Note type="warning">
+  **弃用通知**：snake_case 参数名（如 `image_url`、`guidance_scale`）已弃用，并将在未来版本中移除。请改用 camelCase 名称（如 `imageUrl`、`guidanceScale`）。
+</Note>
+
+模型特有的参数请参阅 [Fal AI 模型文档](https://fal.ai/models)。
+
+### 高级特性
+
+Fal 平台提供多项高级能力：
+
+- **私有模型推理**：运行你自己的 diffusion transformer 模型，推理速度最高可提升 50%
+- **LoRA 训练**：5 分钟内完成模型训练与个性化
+- **实时基础设施**：以极快的推理速度支持全新的用户体验
+- **可扩展架构**：需要时可扩展至数千块 GPU
+
+Fal 能力与特性的更多详情，请访问 [Fal AI 文档](https://fal.ai/docs)。
+
+## 语音转写模型
+
+你可以使用 `.transcription()` 工厂方法创建调用 [Fal 语音转写 API](https://docs.fal.ai/guides/convert-speech-to-text) 的模型。
+
+第一个参数是不带 `fal-ai/` 前缀的模型 ID，例如 `wizper`。
+
+```ts
+const model = fal.transcription('wizper');
+```
+
+你还可以通过 `providerOptions` 参数传入其他提供商特有的选项。例如，提供 `batchSize` 选项会增加并行处理的音频分块数量。
+
+```ts highlight="6"
+import { transcribe } from 'ai';
+import { fal, type FalTranscriptionModelOptions } from '@ai-sdk/fal';
+import { readFile } from 'fs/promises';
+
+const result = await transcribe({
+  model: fal.transcription('wizper'),
+  audio: await readFile('audio.mp3'),
+  providerOptions: {
+    fal: { batchSize: 10 } satisfies FalTranscriptionModelOptions,
+  },
+});
+```
+
+以下提供商选项可用：
+
+- **language** _string | null_
+  音频文件的语言。默认为 'en'。设为 null 时将自动检测语言。
+  接受 'en'、'fr'、'zh' 等 ISO 语言代码。
+  可选。
+
+- **diarize** _boolean_
+  是否对音频文件做说话人分离（区分不同说话人）。
+  默认为 true。
+  可选。
+
+- **chunkLevel** _string_
+  返回的分块级别。'segment' 或 'word'。
+  默认值："segment"
+  可选。
+
+- **version** _string_
+  要使用的模型版本。所有模型都是 Whisper large 变体。
+  默认值："3"
+  可选。
+
+- **batchSize** _number_
+  处理时的批大小。
+  默认值：64
+  可选。
+
+- **numSpeakers** _number_
+  音频文件中的说话人数量。未提供时将自动检测。
+  可选。
+
+### 模型能力
+
+| 模型      | 语音转写   | 时长      | 分段      | 语言      |
+| --------- | ------------- | --------- | --------- | --------- |
+| `whisper` | <Check />     | <Check /> | <Check /> | <Check /> |
+| `wizper`  | <Check />     | <Check /> | <Check /> | <Check /> |
+
+## 语音模型
+
+你可以使用 `.speech()` 工厂方法创建调用 Fal 文本转语音端点的模型。
+
+### 基本用法
+
+```ts
+import { generateSpeech } from 'ai';
+import { fal } from '@ai-sdk/fal';
+
+const result = await generateSpeech({
+  model: fal.speech('fal-ai/minimax/speech-02-hd'),
+  text: 'Hello from the AI SDK!',
+});
+```
+
+### 模型能力
+
+| 模型                                      | 说明                                                                                                                                                                  |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fal-ai/minimax/voice-clone`              | 从示例音频克隆音色，并根据文本提示词生成语音                                                                                                                          |
+| `fal-ai/minimax/voice-design`             | 根据文字描述设计个性化音色，并根据文本提示词生成语音                                                                                                                  |
+| `fal-ai/dia-tts/voice-clone`              | 从示例音频克隆对话音色，并根据文本提示词生成对话                                                                                                                      |
+| `fal-ai/minimax/speech-02-hd`             | 根据文本提示词和不同音色生成语音                                                                                                                                      |
+| `fal-ai/minimax/speech-02-turbo`          | 根据文本提示词和不同音色快速生成语音                                                                                                                                  |
+| `fal-ai/dia-tts`                          | 直接从文本生成逼真对话，并通过音频条件控制情感。能产出笑声、清嗓等自然的非语言声音                                                                                    |
+| `resemble-ai/chatterboxhd/text-to-speech` | 使用 Resemble AI 的 Chatterbox 生成富有表现力的自然语音。具备独特的情感控制、从短音频即时克隆音色以及内置水印功能                                                     |
+
+### 提供商选项
+
+根据模型通过 `providerOptions.fal` 传入提供商特有选项：
+
+- **voice_setting** _object_
+  - `voice_id` (string)：预定义音色 ID
+  - `speed` (number)：0.5–2.0
+  - `vol` (number)：0–10
+  - `pitch` (number)：-12–12
+  - `emotion` (enum)：happy | sad | angry | fearful | disgusted | surprised | neutral
+  - `english_normalization` (boolean)
+
+- **audio_setting** _object_
+  该模型特有的音频配置设置。
+
+- **language_boost** _enum_
+  Chinese | Chinese,Yue | English | Arabic | Russian | Spanish | French | Portuguese | German | Turkish | Dutch | Ukrainian | Vietnamese | Indonesian | Japanese | Italian | Korean | Thai | Polish | Romanian | Greek | Czech | Finnish | Hindi | auto
+
+- **pronunciation_dict** _object_
+  针对特定词语的自定义发音词典。
+
+模型特有的参数（如 `audio_url`、`prompt`、`preview_text`、`ref_audio_url`、`ref_text`）可以直接放在 `providerOptions.fal` 下，并会被转发给 Fal API。

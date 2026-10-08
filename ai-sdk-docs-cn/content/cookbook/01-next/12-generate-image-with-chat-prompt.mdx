@@ -1,0 +1,173 @@
+---
+title: 使用聊天提示词生成图像
+description: 了解如何使用 AI SDK 和 Next.js 通过聊天提示词生成图像
+tags: ['next', 'streaming', 'chat', 'image generation', 'tools']
+---
+
+# Generate Image with Chat Prompt
+
+构建聊天机器人时，你可能希望允许用户生成图像。这可以通过创建一个工具来实现，该工具使用 AI SDK 的 [`generateImage`](/docs/reference/ai-sdk-core/generate-image) 函数生成图像。
+
+## 服务器
+
+我们来创建一个位于 `/api/chat` 的端点，根据对话历史生成助手的响应。你还将定义一个名为 `generateImage` 的工具，它会根据助手的响应生成图像。
+
+```typescript filename='tools/generate-image.ts'
+import { openai } from '@ai-sdk/openai';
+import { generateImage, tool } from 'ai';
+import z from 'zod';
+
+export const generateImageTool = tool({
+  description: 'Generate an image',
+  inputSchema: z.object({
+    prompt: z.string().describe('The prompt to generate the image from'),
+  }),
+  execute: async ({ prompt }) => {
+    const { image } = await generateImage({
+      model: openai.imageModel('dall-e-3'),
+      prompt,
+    });
+    // in production, save this image to blob storage and return a URL
+    return { image: image.base64, prompt };
+  },
+});
+```
+
+```typescript filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  type InferUITools,
+  isStepCount,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai';
+
+import { generateImageTool } from '@/tools/generate-image';
+
+const tools = {
+  generateImage: generateImageTool,
+};
+
+export type ChatTools = InferUITools<typeof tools>;
+
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    messages: await convertToModelMessages(messages),
+    stopWhen: isStepCount(5),
+    tools,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+<Note>
+  在生产环境中，你应该将生成的图像保存到 blob 存储并返回 URL，而不是返回 base64 图像数据。否则，base64 图像数据会被发送给模型，可能导致生成失败。
+</Note>
+
+## 客户端
+
+我们用 `useChat` 创建一个简单的聊天界面。你将调用 `/api/chat` 端点来生成助手的响应。如果助手的响应包含 `generateImage` 工具调用，你将使用 Next 的 `Image` 组件展示工具结果（base64 格式的图像和提示词）。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, type UIMessage } from 'ai';
+import Image from 'next/image';
+import { type FormEvent, useState } from 'react';
+import type { ChatTools } from './api/chat/route';
+
+type ChatMessage = UIMessage<never, never, ChatTools>;
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+
+  const { messages, sendMessage } = useChat<ChatMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(event.target.value);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    sendMessage({
+      parts: [{ type: 'text', text: input }],
+    });
+
+    setInput('');
+  };
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      <div className="space-y-4">
+        {messages.map(message => (
+          <div key={message.id} className="whitespace-pre-wrap">
+            <div key={message.id}>
+              <div className="font-bold">{message.role}</div>
+              {message.parts.map((part, partIndex) => {
+                const { type } = part;
+
+                if (type === 'text') {
+                  return (
+                    <div key={`${message.id}-part-${partIndex}`}>
+                      {part.text}
+                    </div>
+                  );
+                }
+
+                if (type === 'tool-generateImage') {
+                  const { state, toolCallId } = part;
+
+                  if (state === 'input-available') {
+                    return (
+                      <div key={`${message.id}-part-${partIndex}`}>
+                        Generating image...
+                      </div>
+                    );
+                  }
+
+                  if (state === 'output-available') {
+                    const { input, output } = part;
+
+                    return (
+                      <Image
+                        key={toolCallId}
+                        src={`data:image/png;base64,${output.image}`}
+                        alt={input.prompt}
+                        height={400}
+                        width={400}
+                      />
+                    );
+                  }
+                }
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={handleInputChange}
+        />
+      </form>
+    </div>
+  );
+}
+```

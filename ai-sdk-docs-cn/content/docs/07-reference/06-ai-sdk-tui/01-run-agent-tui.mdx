@@ -1,0 +1,218 @@
+---
+title: runAgentTUI
+description: runAgentTUI 函数的 API 参考。
+---
+
+# `runAgentTUI()`
+
+在交互式终端 UI 中运行本地智能体（agent）或聊天传输层（transport）。终端 UI 会读取用户提示词（prompt）、流式输出助手响应、渲染 markdown、展示工具与推理部分，并处理手动工具批准。
+
+`runAgentTUI` 会一直运行，直到用户按 `Esc` 或 `Ctrl+C` 退出。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { runAgentTUI } from '@ai-sdk/tui';
+import { ToolLoopAgent } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: openai('gpt-6-astra'),
+  instructions: 'You are a helpful terminal assistant.',
+});
+
+await runAgentTUI({
+  title: 'Assistant',
+  agent,
+});
+```
+
+## 导入
+
+<Snippet text={`import { runAgentTUI } from "@ai-sdk/tui"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'options',
+      type: 'RunAgentTUIOptions',
+      isRequired: true,
+      description: '启动终端 UI 所需的选项。',
+      properties: [
+        {
+          type: 'RunAgentTUIOptions',
+          parameters: [
+            {
+              name: 'agent',
+              type: 'AgentTUIAgent',
+              isOptional: true,
+              description:
+                '要运行的智能体。`agent` 与 `transport` 必须且只能提供其中之一。该智能体不得需要每次调用的选项，也不得使用结构化输出。',
+            },
+            {
+              name: 'transport',
+              type: 'ChatTransport<UIMessage>',
+              isOptional: true,
+              description:
+                '用于与远程智能体通信的传输层。`agent` 与 `transport` 必须且只能提供其中之一。',
+            },
+            {
+              name: 'title',
+              type: 'string',
+              isOptional: true,
+              description:
+                '终端 UI 中显示的标题。若省略，则不显示标题。',
+            },
+            {
+              name: 'tools',
+              type: "'full' | 'collapsed' | 'auto-collapsed' | 'hidden'",
+              isOptional: true,
+              description:
+                '控制工具调用部分的展示方式。默认为 `auto-collapsed`。',
+            },
+            {
+              name: 'reasoning',
+              type: "'full' | 'collapsed' | 'auto-collapsed' | 'hidden'",
+              isOptional: true,
+              description:
+                '控制推理部分的展示方式。默认为 `auto-collapsed`。',
+            },
+            {
+              name: 'responseStatistics',
+              type: "'outputTokenCount' | 'outputTokensPerSecond'",
+              isOptional: true,
+              description:
+                '控制在响应头部显示哪项响应统计指标。默认为 `outputTokensPerSecond`。',
+            },
+            {
+              name: 'contextSize',
+              type: 'number',
+              isOptional: true,
+              description:
+                '模型上下文窗口大小（以 token 计）。提供后，终端 UI 会以该上下文窗口的百分比展示总 token 用量。',
+            },
+            {
+              name: 'sandbox',
+              type: 'Experimental_SandboxSession',
+              isOptional: true,
+              description:
+                '沙箱会话，会在每次调用时以 `experimental_sandbox` 的形式透传给智能体。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'returns',
+      type: 'Promise<void>',
+      description: '在终端 UI 退出时兑现的 Promise。',
+    },
+  ]}
+/>
+
+## 类型
+
+### `AgentTUIAgent`
+
+与终端 UI 兼容的智能体：
+
+```ts
+type AgentTUIAgent = Agent<undefined, any, any, never>;
+```
+
+这意味着该智能体没有每次调用的选项，也没有结构化输出。
+
+### `TerminalPartDisplayMode`
+
+控制终端各部分的展示方式：
+
+```ts
+type TerminalPartDisplayMode =
+  | 'full'
+  | 'collapsed'
+  | 'auto-collapsed'
+  | 'hidden';
+```
+
+- `"full"`：显示部分标题与完整内容。
+- `"collapsed"`：仅显示部分标题。
+- `"auto-collapsed"`：最新出现的部分保持展开，直到另一个可见部分出现，然后将其折叠。
+- `"hidden"`：完全省略该部分。
+
+### `ResponseStatisticsMode`
+
+控制显示哪项响应统计指标：
+
+```ts
+type ResponseStatisticsMode = 'outputTokenCount' | 'outputTokensPerSecond';
+```
+
+- `"outputTokenCount"`：显示响应中的输出 token 数量。
+- `"outputTokensPerSecond"`：显示响应的输出 token 吞吐量。
+
+## 工具显示选项示例
+
+```ts
+await runAgentTUI({
+  title: 'Assistant',
+  agent,
+  tools: 'auto-collapsed',
+  reasoning: 'collapsed',
+  responseStatistics: 'outputTokenCount',
+  contextSize: 200_000,
+});
+```
+
+## 聊天传输层示例
+
+```ts
+import { DefaultChatTransport } from 'ai';
+
+await runAgentTUI({
+  title: 'Remote Assistant',
+  transport: new DefaultChatTransport({
+    api: 'https://example.com/api/chat',
+  }),
+});
+```
+
+## 沙箱示例
+
+```ts
+import { createJustBashNetworkSandboxSession } from '@ai-sdk/sandbox-just-bash';
+
+const sandboxSession = await createJustBashNetworkSandboxSession({
+  cwd: '/home/user',
+});
+
+try {
+  await runAgentTUI({
+    title: 'Sandbox Assistant',
+    agent,
+    sandbox: sandboxSession.restricted(),
+  });
+} finally {
+  await sandboxSession.destroy();
+}
+```
+
+沙箱会以 `experimental_sandbox` 的形式转发到每一次 `agent.stream()` 调用，从而可供工具描述函数和工具的 `execute` 函数使用。当模型需要了解沙箱的特定细节（例如工作目录或暴露的端口）时，请在智能体指令（instructions）中包含沙箱描述。
+
+## 兼容性
+
+对于可以直接从自由格式的用户输入运行的智能体，请使用 `agent` 选项。要与远程智能体通信，请使用 `transport` 选项。当你需要固定提示词、每次调用的选项、结构化输出、自定义结果检查或自定义流处理时，请直接使用 `agent.generate()` 或 `agent.stream()`。
+
+## 相关内容
+
+- [终端 UI 指南](/docs/agents/terminal-ui)
+- [构建智能体](/docs/agents/building-agents)
+- [ToolLoopAgent 指南](/docs/agents/overview#toolloopagent-类)

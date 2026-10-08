@@ -1,0 +1,492 @@
+---
+title: Node.js
+description: 了解如何使用 AI SDK 和 Node.js 构建你的第一个智能体（agent）。
+---
+
+# Node.js Quickstart
+
+AI SDK 是一个强大的 TypeScript 库，旨在帮助开发者构建 AI 驱动的应用。
+
+在这个快速上手教程中，你将构建一个带流式聊天用户界面的简单智能体（agent）。在此过程中，你将学到在自己的项目中使用该 SDK 的一些关键概念与技术。
+
+如果你不熟悉[提示词工程（prompt engineering）](/docs/advanced/prompt-engineering)和 [HTTP 流式传输](/docs/foundations/streaming)这两个概念，可以选择先阅读这些文档。
+
+## 前置条件
+
+要完成本快速上手教程，你需要：
+
+- 本地开发机上安装了 Node.js 22+ 和 pnpm。
+- 一个 [ Vercel AI Gateway ](https://vercel.com/ai-gateway) API 密钥。
+
+如果你尚未获取 Vercel AI Gateway API 密钥，可以在 Vercel 网站上[注册](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai&title=Go+to+AI+Gateway)获取。
+
+## 设置你的应用程序
+
+首先使用 `mkdir` 命令创建一个新目录。进入新目录，然后运行 `pnpm init` 命令。这会在你的新目录中创建一个 `package.json`。
+
+```bash
+mkdir my-ai-app
+cd my-ai-app
+pnpm init
+```
+
+### 安装依赖
+
+安装 `ai`（即 AI SDK）以及其他必要的依赖。
+
+<Note>
+  AI SDK 旨在提供统一接口来与任何大型语言模型交互。这意味着你只需修改一行
+  代码即可更换模型和提供商！欲了解更多，请参阅 [providers](/providers) 章节
+  中的[可用提供商](/providers)以及[构建自定义提供商](/providers/community-providers/custom-providers)。
+</Note>
+
+```bash
+pnpm add ai zod dotenv
+pnpm add -D @types/node tsx typescript
+```
+
+`ai` 包包含 AI SDK。你将使用 `zod` 定义类型安全的 schema，并将其传递给大型语言模型（LLM）。你将使用 `dotenv` 在应用中访问环境变量（你的 Vercel AI Gateway 密钥）。此外还有三个开发依赖需要用 `-D` 标志安装，它们是运行 TypeScript 代码所必需的。
+
+### 配置 Vercel AI Gateway API 密钥
+
+在项目根目录下创建一个 `.env` 文件，并添加你的 Vercel AI Gateway API 密钥。该密钥用于让你的应用向 Vercel AI Gateway 服务完成身份验证。
+
+<Snippet text="touch .env" />
+
+编辑 `.env` 文件：
+
+```env filename=".env"
+AI_GATEWAY_API_KEY=xxxxxxxxx
+```
+
+将 `xxxxxxxxx` 替换为你实际的 Vercel AI Gateway API 密钥。
+
+<Note className="mb-4">
+  AI SDK 将使用 `AI_GATEWAY_API_KEY` 环境变量来向 Vercel AI Gateway 完成
+  身份验证。
+</Note>
+
+## 创建你的应用程序
+
+在项目根目录下创建一个 `index.ts` 文件，并添加以下代码：
+
+```ts filename="index.ts"
+import { ModelMessage, streamText } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import * as readline from 'node:readline/promises';
+
+const terminal = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const messages: ModelMessage[] = [];
+
+async function main() {
+  while (true) {
+    const userInput = await terminal.question('You: ');
+
+    messages.push({ role: 'user', content: userInput });
+
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+    });
+
+    let fullResponse = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of result.textStream) {
+      fullResponse += delta;
+      process.stdout.write(delta);
+    }
+    process.stdout.write('\n\n');
+
+    messages.push({ role: 'assistant', content: fullResponse });
+  }
+}
+
+main().catch(console.error);
+```
+
+我们来看看这段代码都在做什么：
+
+1. 设置一个 readline 接口以从终端获取输入，从而支持直接在命令行进行交互式会话。
+2. 初始化一个名为 `messages` 的数组来保存对话历史。这段历史让智能体（agent）能在持续对话中保持上下文。
+3. 在 `main` 函数中：
+
+- 提示并捕获用户输入，将其存入 `userInput`。
+- 将用户输入作为用户消息添加到 `messages` 数组。
+- 调用 [`streamText`](/docs/reference/ai-sdk-core/stream-text)（从 `ai` 包导入）。该函数接受一个配置对象，其中包含 `model` 提供商和 `messages`。
+- 遍历 `streamText` 函数返回的文本流（`result.textStream`），并将流的内容打印到终端。
+- 将助手的响应添加到 `messages` 数组。
+
+## 运行你的应用程序
+
+至此，你已经完成了构建智能体所需的一切！使用以下命令启动你的应用：
+
+<Snippet text="pnpm tsx index.ts" />
+
+你会在终端中看到一个提示。输入一条消息测试一下，看看 AI 智能体如何实时响应！借助 AI SDK，用 Node.js 构建 AI 聊天界面既快速又简单。
+
+## 选择提供商
+
+AI SDK 通过[第一方](/providers/ai-sdk-providers)、[OpenAI 兼容](/providers/openai-compatible-providers)和[社区](/providers/community-providers)包支持数十种模型提供商。
+
+本快速上手教程使用 [Vercel AI Gateway](https://vercel.com/ai-gateway) 提供商，它也是默认的[全局提供商](/docs/ai-sdk-core/provider-management#全局提供商配置)。这意味着你可以用一个简单的字符串在模型配置中访问模型：
+
+```ts
+model: __MODEL__;
+```
+
+你也可以以下列两种等价方式显式导入并使用该网关提供商：
+
+```ts
+// Option 1: Import from 'ai' package (included by default)
+import { gateway } from 'ai';
+model: gateway('anthropic/claude-sonnet-5.5');
+
+// Option 2: Install and import from '@ai-sdk/gateway' package
+import { gateway } from '@ai-sdk/gateway';
+model: gateway('anthropic/claude-sonnet-5.5');
+```
+
+### 使用其他提供商
+
+要使用其他提供商，请安装其包并创建一个提供商实例。例如，直接使用 OpenAI：
+
+<InstallPackages packages="@ai-sdk/openai" />
+
+```ts
+import { openai } from '@ai-sdk/openai';
+
+model: openai('gpt-6-astra');
+```
+
+## 用工具增强你的智能体
+
+虽然大型语言模型（LLM）拥有惊人的生成能力，但它们在离散任务（如数学）和与外部世界交互（如获取天气）方面表现不佳。这正是[工具](/docs/ai-sdk-core/tools-and-tool-calling)的用武之地。
+
+工具是 LLM 可以调用的动作。这些动作的结果可以上报给 LLM，供其在下一次响应中参考。
+
+举个例子：当用户询问当前天气时，如果没有工具，智能体只能基于训练数据提供笼统的信息；但借助天气工具，它就能获取并提供最新的、特定于地点的天气信息。
+
+下面我们通过添加一个简单的天气工具来增强你的智能体。
+
+### 更新你的应用程序
+
+修改你的 `index.ts` 文件，加入新的天气工具：
+
+```ts filename="index.ts" highlight="2,4,24-38"
+import { ModelMessage, streamText, tool } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import { z } from 'zod';
+import * as readline from 'node:readline/promises';
+
+const terminal = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const messages: ModelMessage[] = [];
+
+async function main() {
+  while (true) {
+    const userInput = await terminal.question('You: ');
+
+    messages.push({ role: 'user', content: userInput });
+
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+      tools: {
+        weather: tool({
+          description: 'Get the weather in a location (fahrenheit)',
+          inputSchema: z.object({
+            location: z
+              .string()
+              .describe('The location to get the weather for'),
+          }),
+          execute: async ({ location }) => {
+            const temperature = Math.round(Math.random() * (90 - 32) + 32);
+            return {
+              location,
+              temperature,
+            };
+          },
+        }),
+      },
+    });
+
+    let fullResponse = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of result.textStream) {
+      fullResponse += delta;
+      process.stdout.write(delta);
+    }
+    process.stdout.write('\n\n');
+
+    messages.push({ role: 'assistant', content: fullResponse });
+  }
+}
+
+main().catch(console.error);
+```
+
+在这段更新后的代码中：
+
+1. 你从 `ai` 包导入了 `tool` 函数。
+2. 你定义了一个包含 `weather` 工具的 `tools` 对象。该工具：
+   - 带有一段描述，帮助智能体理解何时使用它。
+   - 使用 Zod schema 定义了 `inputSchema`，指定执行该工具需要一个 `location` 字符串。智能体会尝试从对话上下文中提取这个输入；如果提取不到，它会向用户询问缺失的信息。
+   - 定义了一个 `execute` 函数来模拟获取天气数据（此处返回一个随机温度）。这是一个在服务器上运行的异步函数，因此你可以从外部 API 获取真实数据。
+
+现在，你的智能体可以为用户询问的任何地点"获取"天气信息了。当智能体判断需要使用天气工具时，它会生成一个包含必要参数的工具调用（tool call）。随后 `execute` 函数会自动运行，其结果会被智能体用来生成响应。
+
+试着问一句"What's the weather in New York?"，看看智能体如何使用这个新工具。
+
+注意到"assistant"响应为空了吗？这是因为智能体没有生成文本响应，而是生成了一个工具调用。你可以在结果对象的 `toolCalls` 和 `toolResults` 属性中访问工具调用以及随后的工具结果（tool result）。
+
+```typescript highlight="50-51"
+import { ModelMessage, streamText, tool } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import { z } from 'zod';
+import * as readline from 'node:readline/promises';
+
+const terminal = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const messages: ModelMessage[] = [];
+
+async function main() {
+  while (true) {
+    const userInput = await terminal.question('You: ');
+
+    messages.push({ role: 'user', content: userInput });
+
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+      tools: {
+        weather: tool({
+          description: 'Get the weather in a location (fahrenheit)',
+          inputSchema: z.object({
+            location: z
+              .string()
+              .describe('The location to get the weather for'),
+          }),
+          execute: async ({ location }) => {
+            const temperature = Math.round(Math.random() * (90 - 32) + 32);
+            return {
+              location,
+              temperature,
+            };
+          },
+        }),
+      },
+    });
+
+    let fullResponse = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of result.textStream) {
+      fullResponse += delta;
+      process.stdout.write(delta);
+    }
+    process.stdout.write('\n\n');
+
+    console.log(await result.toolCalls);
+    console.log(await result.toolResults);
+    messages.push({ role: 'assistant', content: fullResponse });
+  }
+}
+
+main().catch(console.error);
+```
+
+现在，当你询问天气时，你会在聊天界面中看到工具调用及其结果。
+
+## 启用多步工具调用
+
+你可能已经注意到，虽然工具结果在聊天界面中可见，但智能体并没有利用这些信息来回答你的原始问题。这是因为智能体一旦生成了工具调用，从技术上讲它就已完成本次生成。
+
+要解决这个问题，你可以使用 `stopWhen` 启用多步工具调用。该特性会自动把工具结果发回给智能体，触发再一次生成，直到满足你定义的停止条件。本例中，你希望智能体利用天气工具的结果来回答你的问题。
+
+### 更新你的应用程序
+
+修改你的 `index.ts` 文件，使用 `stopWhen` 配置停止条件：
+
+```ts filename="index.ts" highlight="1,40-45"
+import { ModelMessage, streamText, tool, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import { z } from 'zod';
+import * as readline from 'node:readline/promises';
+
+const terminal = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const messages: ModelMessage[] = [];
+
+async function main() {
+  while (true) {
+    const userInput = await terminal.question('You: ');
+
+    messages.push({ role: 'user', content: userInput });
+
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+      tools: {
+        weather: tool({
+          description: 'Get the weather in a location (fahrenheit)',
+          inputSchema: z.object({
+            location: z
+              .string()
+              .describe('The location to get the weather for'),
+          }),
+          execute: async ({ location }) => {
+            const temperature = Math.round(Math.random() * (90 - 32) + 32);
+            return {
+              location,
+              temperature,
+            };
+          },
+        }),
+      },
+      stopWhen: isStepCount(5),
+      onStepEnd: async ({ toolResults }) => {
+        if (toolResults.length) {
+          console.log(JSON.stringify(toolResults, null, 2));
+        }
+      },
+    });
+
+    let fullResponse = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of result.textStream) {
+      fullResponse += delta;
+      process.stdout.write(delta);
+    }
+    process.stdout.write('\n\n');
+
+    messages.push({ role: 'assistant', content: fullResponse });
+  }
+}
+
+main().catch(console.error);
+```
+
+在这段更新后的代码中：
+
+1. 你将 `stopWhen` 设为 `isStepCount(5)`，允许智能体在任意一次生成中使用最多 5 个"步骤"（step）。
+2. 你添加了一个 `onStepEnd` 回调，在交互的每一步结束时记录 `toolResults`，帮助你了解智能体的工具使用情况。这也意味着我们可以删除上一个示例中的 `toolCalls` 和 `toolResults` 的 `console.log` 语句。
+
+现在，当你询问某个地点的天气时，你应该会看到智能体使用天气工具的结果来回答你的问题。
+
+通过设置 `stopWhen: isStepCount(5)`，你允许智能体在任意一次生成中使用最多 5 个"步骤"。这使得更复杂的交互成为可能，并允许智能体在需要时跨多个步骤收集和处理信息。你可以通过再添加一个把温度从华氏度转换为摄氏度的工具来观察这一机制的实际效果。
+
+### 添加第二个工具
+
+更新你的 `index.ts` 文件，添加一个新工具，把温度从华氏度转换为摄氏度：
+
+```ts filename="index.ts" highlight="39-52"
+import { ModelMessage, streamText, tool, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import { z } from 'zod';
+import * as readline from 'node:readline/promises';
+
+const terminal = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const messages: ModelMessage[] = [];
+
+async function main() {
+  while (true) {
+    const userInput = await terminal.question('You: ');
+
+    messages.push({ role: 'user', content: userInput });
+
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+      tools: {
+        weather: tool({
+          description: 'Get the weather in a location (fahrenheit)',
+          inputSchema: z.object({
+            location: z
+              .string()
+              .describe('The location to get the weather for'),
+          }),
+          execute: async ({ location }) => {
+            const temperature = Math.round(Math.random() * (90 - 32) + 32);
+            return {
+              location,
+              temperature,
+            };
+          },
+        }),
+        convertFahrenheitToCelsius: tool({
+          description: 'Convert a temperature in fahrenheit to celsius',
+          inputSchema: z.object({
+            temperature: z
+              .number()
+              .describe('The temperature in fahrenheit to convert'),
+          }),
+          execute: async ({ temperature }) => {
+            const celsius = Math.round((temperature - 32) * (5 / 9));
+            return {
+              celsius,
+            };
+          },
+        }),
+      },
+      stopWhen: isStepCount(5),
+      onStepEnd: async ({ toolResults }) => {
+        if (toolResults.length) {
+          console.log(JSON.stringify(toolResults, null, 2));
+        }
+      },
+    });
+
+    let fullResponse = '';
+    process.stdout.write('\nAssistant: ');
+    for await (const delta of result.textStream) {
+      fullResponse += delta;
+      process.stdout.write(delta);
+    }
+    process.stdout.write('\n\n');
+
+    messages.push({ role: 'assistant', content: fullResponse });
+  }
+}
+
+main().catch(console.error);
+```
+
+现在，当你询问"What's the weather in New York in celsius?"时，你应该会看到一次更完整的交互：
+
+1. 智能体会为纽约调用天气工具。
+2. 你会看到工具结果被记录输出。
+3. 接着它会调用温度转换工具，把温度从华氏度转换为摄氏度。
+4. 然后智能体会利用这些信息给出关于纽约天气的自然语言响应。
+
+这种多步（multi-step）方式使智能体能够收集信息并用它提供更准确、更有上下文的响应，从而让你的智能体实用得多。
+
+这个示例展示了工具如何扩展智能体的能力。你可以创建更复杂的工具来对接真实的 API、数据库或其他外部系统，让智能体实时访问和处理真实世界的数据，并执行与外部世界交互的动作。工具弥合了智能体知识截止时间与当前信息之间的鸿沟，同时也让它能够采取超越单纯文本生成且有实际意义的行动。
+
+## 下一步
+
+你已经用 AI SDK 构建了一个 AI 智能体！接下来，你有几条路径可以探索：
+
+- 想进一步了解 AI SDK，请通读[文档](/docs)。
+- 如果你有兴趣通过指南深入学习，可以查看 [RAG（检索增强生成）](/cookbook/guides/rag-chatbot)和[多模态聊天机器人](/cookbook/guides/multi-modal-chatbot)指南。
+- 想快速启动你的第一个 AI 项目，可以浏览可用的[模板](https://vercel.com/templates?type=ai)。

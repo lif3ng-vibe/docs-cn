@@ -1,0 +1,96 @@
+---
+title: 错误处理
+description: 了解如何使用 AI SDK 处理错误。
+---
+
+# Error Handling
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI
+  的指导，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+使用 RSC API 时可能发生两类错误：流式传输用户界面时的错误，以及流式传输其他值时的错误。
+
+## 处理 UI 错误
+
+要处理生成 UI 时的错误，[`streamableUI`](/docs/reference/ai-sdk-rsc/create-streamable-ui) 对象暴露了一个 `error()` 方法。
+
+```tsx filename='app/actions.tsx'
+'use server';
+
+import { createStreamableUI } from '@ai-sdk/rsc';
+
+export async function getStreamedUI() {
+  const ui = createStreamableUI();
+
+  (async () => {
+    ui.update(<div>loading</div>);
+    const data = await fetchData();
+    ui.done(<div>{data}</div>);
+  })().catch(e => {
+    ui.error(<div>Error: {e.message}</div>);
+  });
+
+  return ui.value;
+}
+```
+
+通过这个方法，你可以捕获流中的任何错误并返回相关的 UI。在客户端，你还可以使用 [React Error Boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) 包裹流式传输的组件，以捕获其他额外的错误。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { getStreamedUI } from '@/actions';
+import { useState } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
+
+export default function Page() {
+  const [streamedUI, setStreamedUI] = useState(null);
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const newUI = await getStreamedUI();
+          setStreamedUI(newUI);
+        }}
+      >
+        What does the new UI look like?
+      </button>
+      <ErrorBoundary>{streamedUI}</ErrorBoundary>
+    </div>
+  );
+}
+```
+
+## 处理其他错误
+
+要处理流式传输过程中的其他错误，你可以返回一个错误对象，接收方可以用它来判断失败发生的原因。
+
+```tsx filename='app/actions.tsx'
+'use server';
+
+import { createStreamableValue } from '@ai-sdk/rsc';
+import { fetchData, emptyData } from '../utils/data';
+
+export const getStreamedData = async () => {
+  const streamableData = createStreamableValue<string>(emptyData);
+
+  (async () => {
+    const data1 = await fetchData();
+    streamableData.update(data1);
+
+    const data2 = await fetchData();
+    streamableData.update(data2);
+
+    const data3 = await fetchData();
+    streamableData.done(data3);
+  })().catch(e => {
+    streamableData.error(e);
+  });
+
+  return { data: streamableData.value };
+};
+```

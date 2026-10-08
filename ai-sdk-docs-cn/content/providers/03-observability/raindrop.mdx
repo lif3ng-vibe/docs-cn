@@ -1,0 +1,155 @@
+---
+title: Raindrop
+description: 使用 Raindrop 监控 AI SDK 调用与智能体（agent）追踪
+---
+
+# Raindrop 可观测性
+
+[Raindrop](https://www.raindrop.ai/) 为 AI 应用提供可观测性（observability）能力。其 AI SDK 集成会记录 `generateText`、`streamText`、`generateObject`、`streamObject`、模型调用、工具调用、错误、延迟与 token 用量的事件和追踪（trace）。
+
+Raindrop 直接支持 AI SDK v7 遥测（telemetry）接口，因此无需额外配置 OpenTelemetry 即可使用 `registerTelemetry` 和 `telemetry` 选项。
+
+## 设置
+
+安装 Raindrop AI SDK 集成：
+
+<InstallPackages packages="@raindrop-ai/ai-sdk" />
+
+设置你的 Raindrop write key（可在 [Raindrop 控制台](https://www.raindrop.ai/)创建）：
+
+```bash filename=".env.local"
+RAINDROP_WRITE_KEY="..."
+```
+
+然后在应用启动时注册一次 Raindrop。`raindrop()` 会自动读取 `RAINDROP_WRITE_KEY`，无需 `@ai-sdk/otel` 或 OpenTelemetry 配置：
+
+```ts filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { raindrop } from '@raindrop-ai/ai-sdk';
+
+registerTelemetry(raindrop());
+```
+
+## 用法
+
+注册完成后，AI SDK 调用会自动发出遥测数据。使用 `telemetry` 选项进行函数级设置，例如 `functionId`：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a short welcome message for a new user.',
+  telemetry: {
+    functionId: 'welcome-message',
+  },
+});
+```
+
+一旦 `userId` 可用，Raindrop 就会记录一条事件，因此请设置 Raindrop `context`，将调用归因到具体用户。你可以在注册时全局提供（`raindrop({ context: { userId } })`），也可以通过 `telemetry.integrations` 按请求提供（见下文）。若没有 `userId`，Raindrop 仍会为该调用记录追踪（trace），但不会发出事件。
+
+## 请求级 Raindrop 上下文
+
+如果 `userId`、`convoId`、`eventName` 等 Raindrop 事件字段随请求变化，请通过 `telemetry.integrations` 为该次调用传入一个 Raindrop 集成：
+
+```ts highlight="8-10,15-19,21"
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { raindrop } from '@raindrop-ai/ai-sdk';
+
+const userId = 'user_123';
+const convoId = 'chat_456';
+
+const raindropTelemetry = raindrop({
+  context: { userId, convoId, eventName: 'support-chat' },
+});
+
+const { text } = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Summarize the latest support ticket.',
+  telemetry: {
+    functionId: 'support-summary',
+    integrations: [raindropTelemetry],
+  },
+});
+
+await raindropTelemetry.flush();
+```
+
+<Note>
+  每次调用的 `telemetry.integrations` 会替换全局注册的集成，仅对该次调用生效。
+  如果你还使用了其他遥测集成，请把它一并放进同一个 `integrations` 数组。
+</Note>
+
+## 流式
+
+流式调用的用法相同。对于 AI SDK UI 路由，返回 v7 流式辅助函数，并在流结束后刷新（flush）Raindrop：
+
+```ts filename="app/api/chat/route.ts" highlight="15-27"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { raindrop } from '@raindrop-ai/ai-sdk';
+
+export async function POST(req: Request) {
+  const { id, messages, userId } = (await req.json()) as {
+    id: string;
+    messages: UIMessage[];
+    userId: string;
+  };
+
+  const raindropTelemetry = raindrop({
+    context: { userId, convoId: id, eventName: 'chat' },
+  });
+
+  const result = streamText({
+    model: openai('gpt-6-luna'),
+    messages: await convertToModelMessages(messages),
+    telemetry: {
+      functionId: 'chat-route',
+      integrations: [raindropTelemetry],
+    },
+    onEnd: async () => {
+      await raindropTelemetry.flush();
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+## 隐私控制
+
+`recordInputs` 和 `recordOutputs` 控制是否将提示词（prompt）与响应附加到**追踪 span**：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Summarize this private document.',
+  telemetry: {
+    recordInputs: false,
+    recordOutputs: false,
+  },
+});
+```
+
+这些标志只影响 span 属性。Raindrop 的事件负载仍会记录输入（最后一条用户消息）和输出（最终文本）。若想彻底避免敏感内容进入 Raindrop，可以禁用事件捕获，只记录追踪：
+
+```ts
+registerTelemetry(raindrop({ events: { enabled: false } }));
+```
+
+凭证形态的取值默认会从追踪中剥离；可通过 `traces.transformSpan` 或 `traces.disableDefaultRedaction` 自定义该行为。
+
+## 相关资源
+
+- [Raindrop AI SDK 集成](https://www.raindrop.ai/docs/integrations/vercel-ai-sdk/)
+- [AI SDK 遥测文档](/docs/ai-sdk-core/telemetry)

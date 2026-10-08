@@ -1,0 +1,345 @@
+---
+title: 对象生成
+description: 学习如何使用 useObject Hook。
+---
+
+# Object Generation
+
+<Note>
+  `useObject` 在 React、Svelte、Vue 以及 SolidJS 社区集成中可用。Angular 提供等价的
+  `StructuredObject` 服务。
+</Note>
+
+[`useObject`](/docs/reference/ai-sdk-ui/use-object) Hook 允许你创建用于呈现正在流式传输的结构化 JSON 对象的界面。
+
+在本指南中，你将学习如何在应用中使用 `useObject` Hook，即时为结构化数据生成 UI。
+
+## 示例
+
+该示例展示了一个小型通知演示应用，可实时生成虚构的通知。
+
+### Schema
+
+建议将 schema 放在一个单独的文件中，由客户端和服务器共同导入使用。
+
+```ts filename='app/api/notifications/schema.ts'
+import { z } from 'zod';
+
+// define a schema for the notifications
+export const notificationSchema = z.object({
+  notifications: z.array(
+    z.object({
+      name: z.string().describe('Name of a fictional person.'),
+      message: z.string().describe('Message. Do not use emojis or links.'),
+    }),
+  ),
+});
+```
+
+### 客户端
+
+客户端使用 [`useObject`](/docs/reference/ai-sdk-ui/use-object) 来流式执行对象生成过程。
+
+结果是部分结果，并会在接收时立即显示。
+请注意 JSX 中处理 `undefined` 值的代码。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from './api/notifications/schema';
+
+export default function Page() {
+  const { object, submit } = useObject({
+    api: '/api/notifications',
+    schema: notificationSchema,
+  });
+
+  return (
+    <>
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+### 服务器
+
+在服务器端，我们使用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 配合 [`Output.object()`](/docs/reference/ai-sdk-core/output#output-object) 来流式执行对象生成过程。
+
+```typescript filename='app/api/notifications/route.ts'
+import { createTextStreamResponse, Output, streamText, toTextStream } from 'ai';
+__PROVIDER_IMPORT__;
+import { notificationSchema } from './schema';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    output: Output.object({ schema: notificationSchema }),
+    prompt:
+      `Generate 3 notifications for a messages app in this context:` + context,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## 枚举输出模式
+
+当你需要将输入分类或归类到预定义的选项时，可以在 `useObject` 中使用 `enum` 输出模式。这要求 schema 具有特定结构：对象以 `enum` 为键，其值为包含所有候选选项的 `z.enum`。
+
+### 示例：文本分类
+
+该示例展示如何构建一个简单的文本分类器，将陈述分类为真或假。
+
+#### 客户端
+
+在 `useObject` 中使用 enum 输出模式时，schema 必须是一个以 `enum` 为键的对象：
+
+```tsx filename='app/classify/page.tsx'
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { z } from 'zod';
+
+export default function ClassifyPage() {
+  const { object, submit, isLoading } = useObject({
+    api: '/api/classify',
+    schema: z.object({ enum: z.enum(['true', 'false']) }),
+  });
+
+  return (
+    <>
+      <button onClick={() => submit('The earth is flat')} disabled={isLoading}>
+        Classify statement
+      </button>
+
+      {object && <div>Classification: {object.enum}</div>}
+    </>
+  );
+}
+```
+
+#### 服务器
+
+在服务器端，使用 `streamText` 配合 `Output.choice()` 来流式传输分类结果：
+
+```typescript filename='app/api/classify/route.ts'
+import { createTextStreamResponse, Output, streamText, toTextStream } from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const context = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    output: Output.choice({ options: ['true', 'false'] }),
+    prompt: `Classify this statement as true or false: ${context}`,
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## 自定义 UI
+
+`useObject` 还提供了展示加载与错误状态的方式：
+
+### 加载状态
+
+`useObject` Hook 返回的 `isLoading` 状态可用于多种用途：
+
+- 在对象生成期间显示加载指示器。
+- 禁用提交按钮。
+
+```tsx filename='app/page.tsx' highlight="6,13-20,24"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+
+export default function Page() {
+  const { isLoading, object, submit } = useObject({
+    api: '/api/notifications',
+    schema: notificationSchema,
+  });
+
+  return (
+    <>
+      {isLoading && <Spinner />}
+
+      <button
+        onClick={() => submit('Messages during finals week.')}
+        disabled={isLoading}
+      >
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+### 停止处理
+
+`stop` 函数可用于停止对象生成过程。当用户想要取消请求，或服务器响应耗时过长时，这会很有用。
+
+```tsx filename='app/page.tsx' highlight="6,14-16"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+
+export default function Page() {
+  const { isLoading, stop, object, submit } = useObject({
+    api: '/api/notifications',
+    schema: notificationSchema,
+  });
+
+  return (
+    <>
+      {isLoading && (
+        <button type="button" onClick={() => stop()}>
+          Stop
+        </button>
+      )}
+
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+### 错误状态
+
+类似地，`error` 状态反映了 fetch 请求期间抛出的错误对象。
+它可用于显示错误消息，或禁用提交按钮：
+
+<Note>
+  建议向用户显示通用的错误消息，例如"出了点问题"。这是避免泄露服务器信息的良好实践。
+</Note>
+
+```tsx file="app/page.tsx" highlight="6,13"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+
+export default function Page() {
+  const { error, object, submit } = useObject({
+    api: '/api/notifications',
+    schema: notificationSchema,
+  });
+
+  return (
+    <>
+      {error && <div>An error occurred.</div>}
+
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+## 事件回调
+
+`useObject` 提供了可选的事件回调，可用于处理生命周期事件。
+
+- `onFinish`：对象生成完成时调用。
+- `onError`：fetch 请求期间发生错误时调用。
+
+这些回调可用于触发额外操作，例如日志记录、数据分析或自定义 UI 更新。
+
+```tsx filename='app/page.tsx' highlight="10-20"
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+import { notificationSchema } from './api/notifications/schema';
+
+export default function Page() {
+  const { object, submit } = useObject({
+    api: '/api/notifications',
+    schema: notificationSchema,
+    onFinish({ object, error }) {
+      // typed object, undefined if schema validation fails:
+      console.log('Object generation completed:', object);
+
+      // error, undefined if schema validation succeeds:
+      console.log('Schema validation error:', error);
+    },
+    onError(error) {
+      // error during fetch request:
+      console.error('An error occurred:', error);
+    },
+  });
+
+  return (
+    <div>
+      <button onClick={() => submit('Messages during finals week.')}>
+        Generate notifications
+      </button>
+
+      {object?.notifications?.map((notification, index) => (
+        <div key={index}>
+          <p>{notification?.name}</p>
+          <p>{notification?.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## 配置请求选项
+
+你可以使用 `api`、`headers` 和 `credentials` 设置来配置 API 端点、可选的请求头与凭据。
+
+```tsx highlight="2-5"
+const { submit, object } = useObject({
+  api: '/api/use-object',
+  headers: {
+    'X-Custom-Header': 'CustomValue',
+  },
+  credentials: 'include',
+  schema: yourSchema,
+});
+```

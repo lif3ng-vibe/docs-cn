@@ -1,0 +1,45 @@
+---
+title: 使用图像提示词调用工具
+description: 了解如何结合 AI SDK 与 Node，使用图像提示词调用工具
+tags: ['node', 'tool use', 'multimodal']
+---
+
+# Call Tools with Image Prompt
+
+某些支持视觉能力的语言模型可以接受图像作为提示词（prompt）的一部分。以下是在输入中包含图像时可使用的几种不同[格式](/docs/reference/ai-sdk-core/generate-text#content-image)。
+
+```ts
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: 'openai/gpt-6-astra',
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'can you log this meal for me?' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: new URL(
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Cheeseburger_%2817237580619%29.jpg/640px-Cheeseburger_%2817237580619%29.jpg',
+          ),
+        },
+      ],
+    },
+  ],
+  tools: {
+    logFood: tool({
+      description: 'Log a food item',
+      inputSchema: z.object({
+        name: z.string(),
+        calories: z.number(),
+      }),
+      execute({ name, calories }) {
+        storeInDatabase({ name, calories }); // your implementation here
+      },
+    }),
+  },
+});
+```

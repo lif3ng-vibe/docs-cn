@@ -1,0 +1,122 @@
+---
+title: LM Studio
+description: 在 AI SDK 中使用 LM Studio 的 OpenAI 兼容 API。
+---
+
+# LM Studio 提供商
+
+[LM Studio](https://lmstudio.ai/) 是一个用于运行本地模型的用户界面。
+
+它内置一个 OpenAI 兼容的 API 服务器，可配合 AI SDK 使用。你可以在 LM Studio 界面的 [Local Server 标签页](https://lmstudio.ai/docs/basics/server)（"Start Server" 按钮）启动本地服务器。
+
+## 设置
+
+LM Studio 提供商（provider）与 OpenAI API 兼容，因此通过 `@ai-sdk/openai-compatible` 模块提供。
+安装方式如下：
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+## 提供商实例
+
+要使用 LM Studio，可以用 `@ai-sdk/openai-compatible` 中的 `createOpenAICompatible` 函数创建一个自定义提供商实例：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const lmstudio = createOpenAICompatible({
+  name: 'lmstudio',
+  baseURL: 'http://localhost:1234/v1',
+});
+```
+
+<Note>
+  LM Studio 默认使用端口 `1234`，但你可以在[应用的 Local Server 标签页](https://lmstudio.ai/docs/basics/server)中修改。
+</Note>
+
+## 语言模型
+
+你可以使用提供商实例与 [LM Studio](https://lmstudio.ai/docs/basics/server#endpoints-overview) 中的本地 LLM 交互。
+第一个参数是模型 id，例如 `llama-3.2-1b`。
+
+```ts
+const model = lmstudio('llama-3.2-1b');
+```
+
+###### 要使用模型，你需要先[下载它](https://lmstudio.ai/docs/basics/download-model)。
+
+### 示例
+
+你可以使用 LM Studio 语言模型，通过 `generateText` 函数生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const lmstudio = createOpenAICompatible({
+  name: 'lmstudio',
+  baseURL: 'http://localhost:1234/v1',
+});
+
+const { text } = await generateText({
+  model: lmstudio('llama-3.2-1b'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  maxRetries: 0, // immediately error if the server is not running
+});
+```
+
+LM Studio 语言模型也可以配合 `streamText` 使用。
+
+## 嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 [LM Studio 嵌入 API](https://lmstudio.ai/docs/basics/server#endpoints-overview) 的模型。
+
+```ts
+const model = lmstudio.embeddingModel('text-embedding-nomic-embed-text-v1.5');
+```
+
+### 示例 - 嵌入单个值
+
+```tsx
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { embed } from 'ai';
+
+const lmstudio = createOpenAICompatible({
+  name: 'lmstudio',
+  baseURL: 'http://localhost:1234/v1',
+});
+
+// 'embedding' is a single embedding object (number[])
+const { embedding } = await embed({
+  model: lmstudio.embeddingModel('text-embedding-nomic-embed-text-v1.5'),
+  value: 'sunny day at the beach',
+});
+```
+
+### 示例 - 批量嵌入多个值
+
+在加载数据时（例如为检索增强生成 RAG 准备数据存储），一次性嵌入多个值（批量嵌入）通常很有用。
+
+AI SDK 为此提供了 [`embedMany`](/docs/reference/ai-sdk-core/embed-many) 函数。
+与 `embed` 类似，你可以将它与嵌入模型一起使用，
+例如 `lmstudio.embeddingModel('text-embedding-nomic-embed-text-v1.5')` 或 `lmstudio.embeddingModel('text-embedding-bge-small-en-v1.5')`。
+
+```tsx
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { embedMany } from 'ai';
+
+const lmstudio = createOpenAICompatible({
+  name: 'lmstudio',
+  baseURL: 'http://localhost:1234/v1',
+});
+
+// 'embeddings' is an array of embedding objects (number[][]).
+// It is sorted in the same order as the input values.
+const { embeddings } = await embedMany({
+  model: lmstudio.embeddingModel('text-embedding-nomic-embed-text-v1.5'),
+  values: [
+    'sunny day at the beach',
+    'rainy afternoon in the city',
+    'snowy night in the mountains',
+  ],
+});
+```

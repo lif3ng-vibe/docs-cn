@@ -1,0 +1,207 @@
+---
+title: 流式传输 React 组件
+description: 流式传输 RSC 概述
+---
+
+import { UIPreviewCard, Card } from '@/components/home/card';
+import { EventPlanning } from '@/components/home/event-planning';
+import { Searching } from '@/components/home/searching';
+import { Weather } from '@/components/home/weather';
+
+# Streaming React Components
+
+<Note type="warning">
+  AI SDK RSC 目前仍处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，
+  请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+RSC API 让你可以使用 [`streamUI`](/docs/reference/ai-sdk-rsc/stream-ui) 函数把 React 组件从服务器流式传输到客户端。当你想超越纯文本、实时地把组件流式传输到客户端时，这非常有用。
+
+与 [ AI SDK Core ](/docs/ai-sdk-core/overview) API（例如 [ `streamText` ](/docs/reference/ai-sdk-core/stream-text)）类似，`streamUI` 提供了一个单一的函数来调用模型，并允许它以 React 服务器组件作出响应。
+它支持与 AI SDK Core API 相同的模型接口。
+
+### 核心概念
+
+要让模型能够用 React 组件回应用户的提示词，你可以借助[工具](/docs/ai-sdk-core/tools-and-tool-calling)。
+
+<Note>
+  请记住，工具就像你可以交给模型的程序，模型可以根据
+  对话的上下文决定是否使用以及何时使用。
+</Note>
+
+通过 `streamUI` 函数，**你提供返回 React 组件的工具**。借助流式传输组件的能力，模型就像一个动态路由器，能够理解用户的意图并展示相关的 UI。
+
+从高层次来看，`streamUI` 的工作方式与其他 AI SDK Core 函数类似：你可以为模型提供提示词或一些对话历史，还可以选择性地提供一些工具。如果模型根据对话的上下文决定调用某个工具，它就会生成一次工具调用。随后 `streamUI` 函数会运行相应的工具，返回一个 React 组件。如果模型没有可用的相关工具，它会返回一个文本生成结果，该结果会传递给 `text` 函数，由你来处理（渲染并作为 React 组件返回）。
+
+<Note>请记住，`streamUI` 函数必须返回一个 React 组件。</Note>
+
+```tsx
+const result = await streamUI({
+  model: openai('gpt-6-astra'),
+  prompt: 'Get the weather for San Francisco',
+  text: ({ content }) => <div>{content}</div>,
+  tools: {},
+});
+```
+
+这个示例使用 OpenAI 的 `gpt-6-astra` 模型调用 `streamUI` 函数，传入一个提示词，指定模型的纯文本响应（`content`）应如何渲染，然后为工具提供了一个空对象。尽管这个示例没有定义任何工具，它仍会把模型的响应作为 `div` 而不是纯文本进行流式传输。
+
+### 添加工具
+
+在 `streamUI` 中使用工具的方式与在 `generateText` 和 `streamText` 中类似。
+工具是一个包含以下属性的对象：
+
+- `description`：一个字符串，告诉模型这个工具做什么、何时使用
+- `inputSchema`：一个 Zod schema，描述工具运行所需的内容
+- `generate`：一个异步函数，当模型调用该工具时会被运行。它必须返回一个 React 组件
+
+让我们扩展前面的示例来添加一个工具。
+
+```tsx highlight="6-14"
+const result = await streamUI({
+  model: openai('gpt-6-astra'),
+  prompt: 'Get the weather for San Francisco',
+  text: ({ content }) => <div>{content}</div>,
+  tools: {
+    getWeather: {
+      description: 'Get the weather for a location',
+      inputSchema: z.object({ location: z.string() }),
+      generate: async function* ({ location }) {
+        yield <LoadingComponent />;
+        const weather = await getWeather(location);
+        return <WeatherComponent weather={weather} location={location} />;
+      },
+    },
+  },
+});
+```
+
+当用户询问其所在位置的天气时，这个工具就会被运行。如果用户没有指定位置，模型会在调用工具之前先询问。当模型调用该工具时，generate 函数最初会返回一个加载组件。该组件会一直显示，直到对 `getWeather` 的等待调用完成，此时模型会把 `<WeatherComponent />` 流式传输给用户。
+
+<Note>
+  注意：这个示例使用了[生成器函数
+  （generator function）](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*)
+  （`function*`），它允许你暂停执行并返回一个值，
+  然后在下次调用时从中断处继续。这对处理数据流很有用：
+  你可以从 API 之类的异步来源获取并返回数据，然后在需要时
+  恢复函数以获取下一个块。通过一次产出一个值，生成器函数
+  能够在不阻塞主线程的情况下高效处理流式数据。
+</Note>
+
+## 在 Next.js 中使用 `streamUI`
+
+让我们看看如何在 Next.js 应用中使用上面的示例。
+
+要在 Next.js 应用中使用 `streamUI`，你需要两样东西：
+
+1. 一个 Server Action（你将在其中调用 `streamUI`）
+2. 一个调用该 Server Action 并渲染所得组件的页面
+
+### 步骤 1：创建 Server Action
+
+<Note>
+  Server Action 是可以直接从前端调用的服务器端函数。更多信息请参阅
+  [相关文档](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#with-client-components)。
+</Note>
+
+在 `app/actions.tsx` 创建一个 Server Action，并添加以下代码：
+
+```tsx filename="app/actions.tsx"
+'use server';
+
+import { streamUI } from '@ai-sdk/rsc';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const LoadingComponent = () => (
+  <div className="animate-pulse p-4">getting weather...</div>
+);
+
+const getWeather = async (location: string) => {
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  return '82°F️ ☀️';
+};
+
+interface WeatherProps {
+  location: string;
+  weather: string;
+}
+
+const WeatherComponent = (props: WeatherProps) => (
+  <div className="border border-neutral-200 p-4 rounded-lg max-w-fit">
+    The weather in {props.location} is {props.weather}
+  </div>
+);
+
+export async function streamComponent() {
+  const result = await streamUI({
+    model: openai('gpt-6-astra'),
+    prompt: 'Get the weather for San Francisco',
+    text: ({ content }) => <div>{content}</div>,
+    tools: {
+      getWeather: {
+        description: 'Get the weather for a location',
+        inputSchema: z.object({
+          location: z.string(),
+        }),
+        generate: async function* ({ location }) {
+          yield <LoadingComponent />;
+          const weather = await getWeather(location);
+          return <WeatherComponent weather={weather} location={location} />;
+        },
+      },
+    },
+  });
+
+  return result.value;
+}
+```
+
+`getWeather` 工具看起来应该很眼熟，它与上一节的示例完全相同。为了让这个工具正常工作：
+
+1. 首先定义一个 `LoadingComponent`，它渲染一个带脉冲动画的 `div`，用于显示加载文本。
+2. 接着定义一个 `getWeather` 函数，它会先超时 2 秒（以模拟从外部获取天气），然后返回某个 `location` 的"天气"。注意：你可以在这里运行任何异步 TypeScript 代码。
+3. 最后定义一个 `WeatherComponent`，它接受 `location` 和 `weather` 作为属性，并把它们渲染在一个 `div` 中。
+
+你的 Server Action 是一个名为 `streamComponent` 的异步函数，它不接受任何输入，并返回一个 `ReactNode`。在这个 Action 中，你调用 `streamUI` 函数，指定模型（`gpt-6-astra`）、提示词、模型选择返回文本时应渲染的组件，最后是你的 `getWeather` 工具。最后同样重要的是，你用 `result.value` 返回模型生成的组件。
+
+要调用这个 Server Action 并显示所得的 React 组件，你还需要一个页面。
+
+### 步骤 2：创建页面
+
+使用以下代码创建或更新你的根页面（`app/page.tsx`）：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { streamComponent } from './actions';
+
+export default function Page() {
+  const [component, setComponent] = useState<React.ReactNode>();
+
+  return (
+    <div>
+      <form
+        onSubmit={async e => {
+          e.preventDefault();
+          setComponent(await streamComponent());
+        }}
+      >
+        <Button>Stream Component</Button>
+      </form>
+      <div>{component}</div>
+    </div>
+  );
+}
+```
+
+这个页面首先用 `"use client";` 指令标记为客户端组件，因为它会使用 Hook 和交互功能。在页面中，你渲染一个表单。当表单提交时，你调用上一步创建的 `streamComponent` Action（就像调用任何其他函数一样）。`streamComponent` Action 返回一个 `ReactNode`，然后你可以用 React 状态（`setComponent`）把它渲染到页面上。
+
+## 超越单个提示词
+
+现在你可以让模型用 React 组件回应你的提示词了。不过，这个示例局限于 Server Action 中设置的静态提示词。你可以把它改造成聊天机器人，让这个示例变得可交互。
+
+通过这个[示例](/examples/next-app/interface/route-components)，学习如何使用 `streamUI` 在 Next.js App Router 中流式传输 React 组件。

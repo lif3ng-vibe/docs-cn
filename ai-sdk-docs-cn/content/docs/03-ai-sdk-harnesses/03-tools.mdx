@@ -1,0 +1,242 @@
+---
+title: 工具
+description: 在 AI SDK Harness 中使用工具。
+---
+
+# Harness 工具
+
+Harness 有三类工具来源（tool surfaces）：
+
+- 由底层 Harness 运行时暴露的内置工具，例如文件读取、编辑、shell 命令和网络搜索。
+- 通过 `tools` 设置传给 `HarnessAgent` 的 AI SDK 工具。
+- 通过 Harness 适配器的 `mcpServers` 设置配置的外部 MCP 工具。
+
+本页介绍 Harness 特有的行为。关于 AI SDK 工具的一般概念、schema、工具结果以及 `tool()` 的用法，请参阅[工具](/docs/foundations/tools)。
+
+## 内置工具
+
+每个适配器都会声明其运行时可以原生调用的内置工具。`HarnessAgent` 会将这些内置工具与你（宿主）定义的工具合并，并通过 `agent.tools` 暴露合并后的工具集。
+
+```ts
+const agent = new HarnessAgent({
+  harness: claudeCode,
+});
+
+agent.tools.bash;
+agent.tools.read;
+agent.tools.write;
+```
+
+内置工具调用由 Harness 运行时执行，而不是由你的应用程序进程执行。当运行时已经执行了该调用时，流式部分会带有 `providerExecuted: true`。
+
+适配器会尽可能使用通用名称：
+
+- `read`
+- `write`
+- `edit`
+- `bash`
+- `grep`
+- `glob`
+- `webSearch`
+
+某些运行时还会暴露没有跨 Harness 通用名称的原生工具。这些工具会以其原生名称出现。
+
+## 宿主执行的工具
+
+像对 `ToolLoopAgent` 一样，将 AI SDK 工具传给 `HarnessAgent`：
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { claudeCode } from '@ai-sdk/harness-claude-code';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const weather = tool({
+  description: 'Get the current temperature for a city.',
+  inputSchema: z.object({
+    city: z.string(),
+  }),
+  execute: async ({ city }) => {
+    const temperatures: Record<string, number> = {
+      Paris: 12,
+      Tokyo: 18,
+      Reykjavik: 3,
+    };
+
+    return { city, celsius: temperatures[city] ?? 20 };
+  },
+});
+
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  tools: { weather },
+});
+```
+
+当 Harness 调用 `weather` 时，`HarnessAgent` 会在你的宿主进程中执行该工具，然后将结果提交回 Harness 运行时。
+
+宿主执行的工具可以声明 `contextSchema`，并通过 `toolsContext` 接收轮次作用域的上下文：
+
+```ts
+const lookupAccount = tool({
+  inputSchema: z.object({}),
+  contextSchema: z.object({ userId: z.string() }),
+  execute: async (_, { context }) => {
+    return loadAccount(context.userId);
+  },
+});
+
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  tools: { lookupAccount },
+  toolsContext: {
+    lookupAccount: { userId: 'user-123' },
+  },
+});
+```
+
+当取值依赖于自定义调用选项时，使用 `prepareCall` 来替换 `toolsContext`。`toolsContext` 的类型由工具集决定：当没有任何工具声明 context schema 时会被拒绝；当有工具要求上下文对象时为必填；当所有上下文对象都是可选时则为可选。`HarnessAgent` 会在执行前根据工具的 `contextSchema` 校验每个条目，并在步骤结果和生命周期回调中暴露配置好的映射。
+
+工具上下文仅存在于宿主侧，不会被序列化到挂起轮次的状态中。在为未完成的轮次重建会话时，请显式重新绑定：
+
+```ts
+const session = await agent.createSession({
+  sessionId,
+  continueFrom,
+  sandboxSession,
+  toolsContext: {
+    lookupAccount: { userId: 'user-123' },
+  },
+});
+```
+
+上下文缺失或无效会在宿主工具执行前导致校验失败。返回给 Harness 运行时的校验错误是刻意泛化的，以免向模型泄露仅宿主可见的上下文值和 schema 细节。
+
+## 客户端工具
+
+当工具结果由浏览器、用户交互或其他外部进程提供时，请省略 `execute`：
+
+```ts
+const weather = tool({
+  description: 'Get the current temperature for a city.',
+  inputSchema: z.object({ city: z.string() }),
+});
+```
+
+当 Harness 调用没有 `execute` 的工具时，返回的结果切片会在工具调用步骤之后结束，而底层轮次则继续等待结果。`session.hasUnfinishedTurn()` 保持为 `true`，`session.suspendTurn()` 会将待处理的工具调用包含在其可序列化的续传状态中。
+
+在 UI 流程中，把 `addToolOutput` 之后产生的模型消息传给下一次 `stream()` 或 `generate()` 调用。`HarnessAgent` 会提取末尾的工具结果，并自动继续被暂停的轮次。
+
+对于直接智能体调用，请将原始结果提供给 `continueStream()` 或 `continueGenerate()`：
+
+```ts
+const continued = await agent.continueStream({
+  session,
+  toolResultContinuations: [
+    {
+      toolCallId,
+      output: { city: 'Paris', celsius: 12 },
+    },
+  ],
+});
+```
+
+当外部工具执行失败时，设置 `isError: true`。若要在另一个进程中继续，请调用 `suspendTurn()`，用 `continueFrom` 重建会话，然后将结果传给 `continueStream()` 或 `continueGenerate()`。
+
+## 工具过滤
+
+在 `HarnessAgent` 上使用 `activeTools` 或 `inactiveTools` 来控制 Harness 可以调用哪些工具。这两个设置都接受来自合并后工具集的工具名称：即 Harness 适配器声明的内置工具，以及通过 `tools` 传入的 AI SDK 工具。
+
+`activeTools` 是一个允许列表（allowlist）：
+
+```ts
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  tools: { weather },
+  activeTools: ['weather'],
+});
+```
+
+`inactiveTools` 是一个拒绝列表（denylist）：
+
+```ts
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  tools: { weather },
+  inactiveTools: ['bash', 'write'],
+});
+```
+
+只能传 `activeTools` 或 `inactiveTools` 其中之一，不能同时传两者。TypeScript 设置类型会阻止组合使用，并且当两者同时指定时，`HarnessAgent` 在运行时也会抛出错误。
+
+对于宿主执行的工具，未激活的工具不会被传给底层 Harness 运行时。如果运行时仍然尝试调用某个未激活的工具，`HarnessAgent` 会返回一个执行被拒绝（execution-denied）的工具结果。
+
+对于内置工具，支持情况取决于 Harness 适配器。有些适配器可以原生过滤内置工具；另一些则通过其内置工具审批机制来强制过滤——在内置调用执行前拒绝未激活的调用，且不会发出审批请求或审批响应的流式部分。两种机制都不支持的适配器在你过滤内置工具时会抛出错误。
+
+## 工具执行中的沙箱
+
+宿主执行的工具会通过与其他 AI SDK 工具相同的 `experimental_sandbox` 执行选项接收会话沙箱。该值是一个受限的沙箱会话，因此工具可以读取、写入和运行命令，但无法停止网络沙箱或更改其网络策略。
+
+```ts
+const inspectFile = tool({
+  description: 'Read a file from the harness workspace.',
+  inputSchema: z.object({
+    path: z.string(),
+  }),
+  execute: async ({ path }, { experimental_sandbox }) => {
+    return {
+      content: await experimental_sandbox?.readTextFile({ path }),
+    };
+  },
+});
+```
+
+## 工具审批
+
+Harness 会区分内置工具权限与宿主执行工具的审批。
+
+对于适配器原生的内置工具，使用 `permissionMode`：
+
+```ts
+const agent = new HarnessAgent({
+  harness: pi,
+  permissionMode: 'allow-edits',
+});
+```
+
+可用取值如下：
+
+- `allow-all`：允许内置的读取、编辑和 shell 命令。这是默认值。
+- `allow-edits`：允许读取和编辑，但在适配器支持内置审批时，对 shell 命令请求审批。
+- `allow-reads`：允许读取，但在适配器支持内置审批时，对编辑和 shell 命令请求审批。
+
+对于宿主执行的工具，使用 `toolApproval`：
+
+```ts
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  tools: { weather },
+  toolApproval: {
+    weather: 'user-approval',
+  },
+});
+```
+
+`toolApproval` 接受与 AI SDK 工具审批状态对象相同的状态值：`not-applicable`、`approved`、`user-approval` 和 `denied`。
+
+当需要审批时，流会在 `tool-approval-request` 之后暂停。通过发送一条工具审批响应消息来继续同一会话。在 UI 流程中，`useChat` 会在你添加审批结果时自动发送这些消息。在直接智能体代码中，将审批响应作为 `messages` 传给下一次 `stream()` 或 `generate()` 调用。
+
+## 内置审批支持
+
+大多数适配器都能暂停内置工具调用以等待审批。不支持该能力的适配器在指定了不受支持的工具审批模式时会报错。
+
+宿主执行工具的审批由 `HarnessAgent` 处理，因此可跨适配器使用。
+
+## 文件变更与压缩
+
+某些 Harness 事件并不是普通的工具调用。为了 UI 兼容性，`HarnessAgent` 将它们呈现为动态的、由提供商执行的工具部分（tool parts）：
+
+- `fileChange`：在不透明的工作区文件被修改时发出。
+- `compaction`：在运行时压缩上下文时发出。
+
+在假定某个工具部分属于你的类型化工具集之前，请先检查 `part.dynamic`。

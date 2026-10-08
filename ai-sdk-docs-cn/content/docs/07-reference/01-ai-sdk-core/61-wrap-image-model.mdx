@@ -1,0 +1,78 @@
+---
+title: wrapImageModel
+description: 使用中间件包装图像模型的函数（API 参考）
+---
+
+# `wrapImageModel()`
+
+`wrapImageModel` 函数提供了一种通过中间件包装图像模型来增强其行为的方式。
+
+```ts
+import { generateImage, wrapImageModel } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const model = wrapImageModel({
+  model: openai.image('gpt-image-2.5-sunburst'),
+  middleware: yourImageModelMiddleware,
+});
+
+const { image } = await generateImage({
+  model,
+  prompt: 'Santa Claus driving a Cadillac',
+});
+```
+
+## 导入
+
+<Snippet text={`import { wrapImageModel } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'ImageModelV4',
+      description: '要包装的原始 ImageModelV4 实例。',
+    },
+    {
+      name: 'middleware',
+      type: 'ImageModelV4Middleware | ImageModelV4Middleware[]',
+      description:
+        '要应用于图像模型的中间件。提供多个中间件时，第一个中间件会最先转换输入，最后一个中间件会直接包裹在模型周围。',
+    },
+    {
+      name: 'modelId',
+      type: 'string',
+      description:
+        '可选的自定义模型 ID，用于覆盖原始模型的 ID。',
+    },
+    {
+      name: 'providerId',
+      type: 'string',
+      description:
+        '可选的自定义提供商 ID，用于覆盖原始模型的提供商。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个应用了中间件的全新 `ImageModelV4` 实例。被包装的模型
+默认会保留原始模型的 `supportsFileInputs` 与 `supportsMaskInputs`
+能力。中间件可以通过
+`overrideSupportsFileInputs` 和 `overrideSupportsMaskInputs` 覆盖它们。从覆盖函数返回
+`undefined` 会刻意将该项能力标记为未知。
+
+```ts
+const model = wrapImageModel({
+  model: originalModel,
+  middleware: {
+    specificationVersion: 'v4',
+    overrideSupportsFileInputs: () => true,
+    overrideSupportsMaskInputs: () => false,
+  },
+});
+```

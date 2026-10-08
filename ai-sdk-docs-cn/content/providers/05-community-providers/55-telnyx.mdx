@@ -1,0 +1,127 @@
+---
+title: Telnyx
+description: AI SDK 7 的 Telnyx 提供商
+---
+
+# Telnyx
+
+[Telnyx](https://telnyx.com/) 为 [Vercel AI SDK](https://ai-sdk.dev) 提供了一个 AI SDK 提供商，让开发者通过单个包即可访问聊天模型、嵌入（embedding）、语音转文本和文本转语音。
+
+如果你有以下需求，Telnyx 提供商会是很好的选择：
+
+- **一个包覆盖多种 AI 能力**：聊天、嵌入、语音转写（transcription）和语音生成
+- **OpenAI 兼容的模型访问**：通过熟悉的 API 模式使用 Telnyx 托管的模型
+- **同一提供商内支持语音**：在同一个集成中组合文本与语音工作流
+- **设置简单**：使用 AI SDK 的标准 API 密钥配置
+
+更多信息请参阅 [Telnyx 文档](https://developers.telnyx.com/docs/inference/getting-started)。
+
+## 设置
+
+`@telnyx/ai-sdk-provider` 包（v2.0.0+）支持 AI SDK 7 与 Provider V4 规范。
+
+将其与 AI SDK 7 一同安装：
+
+<Tabs items={['pnpm', 'npm', 'yarn', 'bun']}>
+  <Tab>
+    <Snippet text="pnpm add @telnyx/ai-sdk-provider ai@^7 zod" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="npm install @telnyx/ai-sdk-provider ai@^7 zod" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="yarn add @telnyx/ai-sdk-provider ai@^7 zod" dark />
+  </Tab>
+
+  <Tab>
+    <Snippet text="bun add @telnyx/ai-sdk-provider ai@^7 zod" dark />
+  </Tab>
+</Tabs>
+
+将你的 Telnyx API 密钥设置为环境变量：
+
+```bash
+export TELNYX_API_KEY="your_api_key_here"
+```
+
+## 提供商实例
+
+使用 `createTelnyx` 函数创建 Telnyx 提供商实例：
+
+```typescript
+import { createTelnyx } from '@telnyx/ai-sdk-provider';
+
+const telnyx = createTelnyx({
+  apiKey: process.env.TELNYX_API_KEY,
+});
+```
+
+当环境中已设置 `TELNYX_API_KEY` 时，也可以使用默认导出的 `telnyx`。
+
+## 示例
+
+### `generateText`
+
+```typescript
+import { telnyx } from '@telnyx/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: telnyx('Qwen/Qwen3-235B-A22B'),
+  prompt: 'Explain WebRTC in simple terms.',
+});
+
+console.log(text);
+```
+
+### `embed`
+
+```typescript
+import { telnyx } from '@telnyx/ai-sdk-provider';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: telnyx.embeddingModel('thenlper/gte-large'),
+  value: 'What is WebRTC?',
+});
+
+console.log(embedding);
+```
+
+### `transcribe`
+
+```typescript
+import { telnyx } from '@telnyx/ai-sdk-provider';
+import { transcribe } from 'ai';
+import { readFile } from 'node:fs/promises';
+
+const result = await transcribe({
+  model: telnyx.transcriptionModel('distil-whisper/distil-large-v2'),
+  audio: await readFile('./audio.wav'),
+});
+
+console.log(result.text);
+```
+
+### `generateSpeech`
+
+```typescript
+import { telnyx } from '@telnyx/ai-sdk-provider';
+import { generateSpeech } from 'ai';
+
+const { audio } = await generateSpeech({
+  model: telnyx.speech('Telnyx.NaturalHD.astra'),
+  text: 'Hello from Telnyx!',
+  voice: 'Telnyx.NaturalHD.astra',
+});
+
+await audio.writeToFile('./speech.mp3');
+```
+
+## 更多资源
+
+- [Telnyx 提供商仓库](https://github.com/team-telnyx/ai-sdk-provider)
+- [npm 包](https://www.npmjs.com/package/@telnyx/ai-sdk-provider)
+- [Telnyx AI Inference 文档](https://developers.telnyx.com/docs/inference/getting-started)
+- [Telnyx 模型目录](https://developers.telnyx.com/docs/inference/models)
+- [Telnyx 语音文档](https://developers.telnyx.com/docs/tts-stt/overview)

@@ -1,0 +1,533 @@
+---
+title: Black Forest Labs
+description: 了解如何在 AI SDK 中使用 Black Forest Labs 模型。
+---
+
+# Black Forest Labs 提供商
+
+[Black Forest Labs](https://bfl.ai/) 为开发者提供了一个基于 FLUX 模型的生成式媒体平台。该平台提供快速、高质量、上下文感知的图像生成与编辑，并通过 FLUX 3 提供视频生成。
+
+## 安装
+
+Black Forest Labs 提供商可通过 `@ai-sdk/black-forest-labs` 模块获取，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/black-forest-labs" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/black-forest-labs` 导入默认提供商实例 `blackForestLabs`：
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+```
+
+如果需要自定义配置，可以导入 `createBlackForestLabs`，并用你的设置创建提供商实例：
+
+```ts
+import { createBlackForestLabs } from '@ai-sdk/black-forest-labs';
+
+const blackForestLabs = createBlackForestLabs({
+  apiKey: 'your-api-key', // optional, defaults to BFL_API_KEY environment variable
+  baseURL: 'custom-url', // optional
+  headers: {
+    /* custom headers */
+  }, // optional
+});
+```
+
+你可以使用以下可选设置来自定义 Black Forest Labs 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用区域端点。默认前缀为 `https://api.bfl.ai/v1`。
+
+- **apiKey** _string_
+
+  通过 `x-key` 请求头发送的 API 密钥。默认取 `BFL_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。可以把它当作中间件拦截请求，或用于测试等场景提供自定义 fetch 实现。
+
+- **pollIntervalMillis** _number_
+
+  等待生成完成时轮询尝试之间的间隔（毫秒）。图像模型默认 500 毫秒，视频模型默认 2000 毫秒。
+
+- **pollTimeoutMillis** _number_
+
+  轮询放弃前的整体超时时间（毫秒）。图像模型默认 60000 毫秒（60 秒），视频模型默认 600000 毫秒（10 分钟）。
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建 Black Forest Labs 图像模型。有关使用 AI SDK 进行图像生成的更多信息，参见 [generateImage()](/docs/reference/ai-sdk-core/generate-image)。
+
+### 基本用法
+
+```ts
+import { writeFileSync } from 'node:fs';
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { image, providerMetadata } = await generateImage({
+  model: blackForestLabs.image('flux-pro-1.1'),
+  prompt: 'A serene mountain landscape at sunset',
+});
+
+const filename = `image-${Date.now()}.png`;
+writeFileSync(filename, image.uint8Array);
+console.log(`Image saved to ${filename}`);
+```
+
+### 模型能力
+
+Black Forest Labs 提供了许多针对不同用例优化的模型。以下是一些热门示例。模型的完整列表见 [Black Forest Labs 模型页](https://bfl.ai/models)。
+
+| 模型                 | 说明                                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `flux-3-image`       | FLUX 3，支持文生图与编辑，最多可带十张参考图像，并可选开启 web grounding                                                   |
+| `flux-2-pro`         | FLUX.2 [pro]，在同一个端点上完成文生图与基于参考图的编辑                                                                   |
+| `flux-2-max`         | FLUX.2 [max]，FLUX.2 家族中提示词遵从度与细节最高                                                                          |
+| `flux-2-flex`        | FLUX.2 [flex] 暴露 `steps` 和 `guidance`，可在速度与质量之间权衡                                                           |
+| `flux-2-klein-9b`    | FLUX.2 [klein] 9B，开放权重的蒸馏模型                                                                                      |
+| `flux-2-klein-4b`    | FLUX.2 [klein] 4B，最小、最便宜的开放权重 FLUX.2 模型                                                                      |
+| `flux-kontext-pro`   | FLUX.1 Kontext [pro] 可同时接受文本和参考图像作为输入，实现针对性编辑与复杂变换                                            |
+| `flux-kontext-max`   | FLUX.1 Kontext [max]，提示词遵从度与文字排版生成能力更强                                                                   |
+| `flux-pro-1.1-ultra` | 超快速、超高分辨率的图像创作                                                                                               |
+| `flux-pro-1.1`       | 从文本快速生成高质量图像。                                                                                                 |
+| `flux-pro-1.0-fill`  | 局部重绘（inpainting）模型，用新内容填充图像中被蒙版遮盖的区域                                                             |
+
+FLUX.1 和 FLUX.2 模型支持从 3:7（纵向）到 7:3（横向）的宽高比。
+FLUX 3 只接受 `21:9`、`2:1`、`16:9`、`3:2`、`7:5`、`4:3`、`5:4`、`1:1`、`4:5`、`3:4`、`5:7`、`2:3`、`9:16`、`1:2` 和 `9:21`。
+省略 `aspectRatio` 将使用端点的 `auto` 默认值。不支持的比例会被省略并伴随警告。
+
+FLUX.2 模型与 Kontext 模型一样，通过同一个 `prompt.images` 字段接收参考图像，因此单个模型 ID 即可同时覆盖文生图与编辑。参见下文[图像编辑](#图像编辑)。
+
+<Note>
+  FLUX.2 的生成可能超过 60 秒的默认轮询超时，尤其是带参考图像时。当请求报告 `Black Forest Labs generation timed out.` 时，请调高 `pollTimeoutMillis`。
+</Note>
+
+### FLUX 3 图像生成与编辑
+
+`flux-3-image` 模型可以从文本生成图像，并通过同一个端点编辑参考图像。通过 `prompt.images` 传入参考图像，并用 `providerOptions.blackForestLabs.resolution` 选择输出分辨率：
+
+```ts
+import {
+  blackForestLabs,
+  type BlackForestLabsImageModelOptions,
+} from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: blackForestLabs.image('flux-3-image'),
+  prompt: 'A watercolor illustration of a coastal village at dawn',
+  aspectRatio: '16:9',
+  providerOptions: {
+    blackForestLabs: {
+      resolution: '2k',
+      grounding: false,
+      version: 'latest',
+      pollTimeoutMillis: 240000,
+    } satisfies BlackForestLabsImageModelOptions,
+  },
+});
+```
+
+编辑时可以使用如下提示词：
+
+```ts
+const { image } = await generateImage({
+  model: blackForestLabs.image('flux-3-image'),
+  prompt: {
+    text: 'Change the sky to sunset while preserving the buildings',
+    images: ['https://example.com/village.png'],
+  },
+});
+```
+
+FLUX 3 最多接受十张参考图像，可以是 URL 或 base64 编码数据。每张参考图像必须至少 256 × 256 像素，且不超过 16 兆像素。省略 `aspectRatio` 时，端点会根据提示词或第一张参考图像选择比例。默认分辨率为 `1k`，grounding 默认启用。
+
+FLUX 3 不接受 `seed`、蒙版、显式的 `width`/`height`，也不接受 `outputFormat`、`steps`、`promptUpsampling` 等旧版图像选项。`size` 仅用于推导受支持的宽高比；不在上述列表中的比例会被省略并伴随警告。请使用 `resolution` 选择像素面积档位。不支持的选项会被省略并伴随警告；蒙版会被拒绝。
+
+提供商会持续轮询 `Pending`、`Reasoning` 和 `Generating` 状态，直到图像就绪。对于可能超过默认 60 秒轮询超时的请求，请调高 `pollTimeoutMillis`。遇到审核或任务失败时轮询会停止，随后在不发送 API 凭证的情况下下载签名的图像 URL。
+
+### 图像编辑
+
+Black Forest Labs 的 Kontext 模型支持使用参考图像的强大图像编辑能力。通过 `prompt.images` 传入输入图像，即可对现有图像进行变换、合成或编辑。
+
+#### 单图编辑
+
+使用文本提示词变换现有图像：
+
+```ts
+import {
+  blackForestLabs,
+  BlackForestLabsImageModelOptions,
+} from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { images } = await generateImage({
+  model: blackForestLabs.image('flux-kontext-pro'),
+  prompt: {
+    text: 'A baby elephant with a shirt that has the logo from the input image.',
+    images: [
+      'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png',
+    ],
+  },
+  providerOptions: {
+    blackForestLabs: {
+      width: 1024,
+      height: 768,
+    } satisfies BlackForestLabsImageModelOptions,
+  },
+});
+```
+
+#### 多参考图编辑
+
+组合多张参考图像以实现复杂变换。Black Forest Labs 最多支持 10 张输入图像：
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { images } = await generateImage({
+  model: blackForestLabs.image('flux-kontext-pro'),
+  prompt: {
+    text: 'Combine the style of image 1 with the subject of image 2',
+    images: [
+      'https://example.com/style-reference.jpg',
+      'https://example.com/subject-reference.jpg',
+    ],
+  },
+});
+```
+
+<Note>
+  输入图像可以以 URL 或 base64 编码字符串的形式提供。每张图像最大支持 20MB 或 20 兆像素。
+</Note>
+
+#### FLUX.2 编辑
+
+FLUX.2 模型在同一个 `prompt.images` 字段上接受参考图像，因此无需单独的编辑模型 ID：
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: blackForestLabs.image('flux-2-pro'),
+  prompt: {
+    text: 'Place this logo on a plain ceramic mug.',
+    images: ['https://example.com/logo.png'],
+  },
+  providerOptions: {
+    blackForestLabs: {
+      pollTimeoutMillis: 240000,
+    },
+  },
+});
+```
+
+`flux-2-flex` 还接受 `steps` 和 `guidance`，让你在生成时间与质量之间权衡：
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: blackForestLabs.image('flux-2-flex'),
+  prompt: 'A detailed macro shot of a dew-covered leaf',
+  providerOptions: {
+    blackForestLabs: {
+      steps: 50,
+      guidance: 4,
+      pollTimeoutMillis: 240000,
+    },
+  },
+});
+```
+
+#### 局部重绘（inpainting）
+
+`flux-pro-1.0-fill` 模型支持局部重绘（inpainting），可以用新内容填充图像中被蒙版遮盖的区域。通过 `prompt.images` 传入源图像，通过 `prompt.mask` 传入蒙版图像：
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { images } = await generateImage({
+  model: blackForestLabs.image('flux-pro-1.0-fill'),
+  prompt: {
+    text: 'A beautiful garden with flowers',
+    images: ['https://example.com/source-image.jpg'],
+    mask: 'https://example.com/mask-image.png',
+  },
+});
+```
+
+蒙版图像应为灰度图，其中白色区域表示要填充的区域，黑色区域表示要保留的区域。
+
+### 提供商选项
+
+Black Forest Labs 图像模型通过 `providerOptions.blackForestLabs` 对象支持灵活的提供商选项。支持的参数取决于所用的模型 ID：
+
+- **resolution** _"768sq" | "1k" | "1.5k" | "2k" | "4k"_ - FLUX 3 输出分辨率档位。默认为 `"1k"`；具体尺寸随宽高比变化。
+- **grounding** _boolean_ - FLUX 3 的 web 与图像搜索 grounding。默认为 `true`。
+- **version** _"latest"_ - FLUX 3 端点版本。目前仅有 `"latest"`。
+- **width** _number_ - 输出宽度（像素，256–1920）。设置后会覆盖从 `size` 推导出的任何宽度。
+- **height** _number_ - 输出高度（像素，256–1920）。设置后会覆盖从 `size` 推导出的任何高度。
+- **outputFormat** _string_ - 输出图像的目标格式（`"jpeg"` 或 `"png"`）。
+- **steps** _number_ - 推理步数。更高的值可能提升质量，但会增加生成时间。
+- **guidance** _number_ - 生成的引导系数。更高的值会更贴近提示词。
+- **imagePrompt** _string_ - 用作生成附加视觉上下文的 base64 编码图像。
+- **imagePromptStrength** _number_ - 图像提示词对生成的影响强度（0.0 到 1.0）。
+- **promptUpsampling** _boolean_ - 设为 true 时对提示词执行上采样。
+- **raw** _boolean_ - 启用 raw 模式，获得更自然、更真实的美学效果。
+- **safetyTolerance** _number_ - 输入与输出的审核级别（0 最严格，6 更宽松）。FLUX 3 只接受 0–4，默认为 2。
+- **pollIntervalMillis** _number_ - 轮询尝试之间的间隔（毫秒）（默认 500 毫秒）。
+- **pollTimeoutMillis** _number_ - 轮询超时前的整体超时时间（毫秒）（默认 60 秒）。
+- **webhookUrl** _string_ - 异步完成通知的 URL。必须是有效的 HTTP/HTTPS URL。
+- **webhookSecret** _string_ - 用于 webhook 签名验证的密钥，通过 `X-Webhook-Secret` 请求头发送。
+
+<Note>
+  要为编辑传入参考图像，请使用 `prompt.images` 而不是提供商选项。它最多支持 10 张图像，可以是 URL 或 base64 编码字符串。
+</Note>
+
+### 提供商元数据
+
+`generateImage` 响应在 `providerMetadata.blackForestLabs.images[]` 中包含提供商特有的元数据。每个图像对象可能包含以下属性：
+
+- **seed** _number_ - 生成所用的种子。可用于复现结果。
+- **start_time** _number_ - 生成开始时的 Unix 时间戳。
+- **end_time** _number_ - 生成完成时的 Unix 时间戳。
+- **duration** _number_ - 生成时长（秒）。
+- **cost** _number_ - 生成请求的费用。
+- **inputMegapixels** _number_ - 输入图像尺寸（兆像素）。
+- **outputMegapixels** _number_ - 输出图像尺寸（兆像素）。
+
+```ts
+import { blackForestLabs } from '@ai-sdk/black-forest-labs';
+import { generateImage } from 'ai';
+
+const { image, providerMetadata } = await generateImage({
+  model: blackForestLabs.image('flux-pro-1.1'),
+  prompt: 'A serene mountain landscape at sunset',
+});
+
+// Access provider metadata
+const metadata = providerMetadata?.blackForestLabs?.images?.[0];
+console.log('Seed:', metadata?.seed);
+console.log('Cost:', metadata?.cost);
+console.log('Duration:', metadata?.duration);
+```
+
+### 区域端点
+
+默认情况下，请求发送到 `https://api.bfl.ai/v1`。你可以在创建提供商实例时设置 `baseURL` 来选择[区域端点](https://docs.bfl.ai/api_integration/integration_guidelines#regional-endpoints)：
+
+```ts
+import { createBlackForestLabs } from '@ai-sdk/black-forest-labs';
+
+const blackForestLabs = createBlackForestLabs({
+  baseURL: 'https://api.eu.bfl.ai/v1', // or https://api.us.bfl.ai/v1
+});
+```
+
+## 视频模型
+
+你可以使用 [`experimental_generateVideo`](/docs/reference/ai-sdk-core/generate-video) 函数配合 FLUX 3 视频模型生成视频：
+
+```ts
+import {
+  blackForestLabs,
+  type BlackForestLabsVideoModelOptions,
+} from '@ai-sdk/black-forest-labs';
+import { experimental_generateVideo as generateVideo } from 'ai';
+
+const { video } = await generateVideo({
+  model: blackForestLabs.video('flux-3-video'),
+  prompt: 'A white kitten chases a butterfly across a sunlit garden.',
+  aspectRatio: '16:9',
+  duration: 8,
+  poll: {
+    intervalMs: 2000,
+    timeoutMs: 600000, // 10 minutes
+  },
+  providerOptions: {
+    blackForestLabs: {
+      resolution: 'fhd',
+    } satisfies BlackForestLabsVideoModelOptions,
+  },
+});
+```
+
+FLUX 3 每次调用生成一段视频。生成是异步的——模型提交一个任务并轮询直到完成，然后将签名的 MP4 URL 交给 AI SDK Core。`generateVideo` 会在解析前下载它，因此 `video` 是一个 `GeneratedFile`。签名 URL 仍可通过 `providerMetadata.blackForestLabs.videos[0].videoUrl` 获取。
+
+使用顶层 `poll` 选项可以让 AI SDK Core 编排轮询并设置间隔与超时。FLUX 3 视频 API 目前不暴露 webhook 回调输入，因此顶层 `webhook` 会回退为轮询。
+
+`duration` 接受 5 到 20 秒的整数。小数值会被四舍五入，超出范围的值会被截断（clamp），两者都会伴随警告。省略它则由 FLUX 3 根据内容确定时长。
+
+默认会生成音频，因此只有在想关闭音频时才需要设置 `generateAudio`。API 不支持 `fps` 和 `seed`，会以警告形式报告。
+
+<Note>
+  提供商元数据中的 URL 是有时限的。请将返回的 `video` 字节持久化到你自己的存储中。
+</Note>
+
+### 分辨率与宽高比
+
+API 接受命名的分辨率档位 `hd` 或 `fhd`（默认为 `hd`），其中 `fhd` 由视频上采样器完成。确切的帧尺寸取决于宽高比。
+
+顶层 `resolution` 选项的格式是 `{width}x{height}`，因此会按较短边映射到某个档位——`1280x720` 映射为 `hd`，`1920x1080` 映射为 `fhd`。其他值在较短边不超过 720 像素时映射为 `hd`，超过 720 则映射为 `fhd`，并伴随报告映射结果的警告。可以使用 `providerOptions.blackForestLabs.resolution` 直接设置档位。
+
+`aspectRatio` 接受 `21:9`、`2:1`、`16:9`、`4:3`、`1:1`、`3:4` 和 `9:16`。API 默认值为 `auto`，会根据提示词和任何条件媒体推断比例；由于顶层选项必须为 `{width}:{height}` 格式，`auto` 只能通过 `providerOptions.blackForestLabs.aspectRatio` 请求。
+
+### 生成模式
+
+FLUX 3 是一个带 `mode` 判别值的单一端点。模式会根据你传入的输入推断：
+
+- **文生视频**（text-to-video）——只传 `prompt`。
+- **图生视频**（image-to-video）——传入 `image`（或带有 `frameType: 'first_frame'` 的 `frameImages` 条目）来让起始图像动起来。再加一个 `last_frame` 可以让片段在该图像上收尾。无法表达没有 `first_frame` 的 `last_frame`，这种情况会被丢弃并伴随警告。
+- **关键帧**（keyframes）——超过两张图像，或图像需要固定在特定秒数时，传入 `providerOptions.blackForestLabs.keyframes`。它的优先级高于 `image` 和 `frameImages`。
+- **视频续写**（video continuation）——在 `inputReferences` 中传入视频类型的条目，从现有 MP4 的末尾帧继续生成。FLUX 3 只接受单个视频；关键帧与续写互斥。
+- **草稿增强**（draft enhance）——传入 `providerOptions.blackForestLabs.draftCache`。参见[草稿模式](#草稿模式)。
+
+FLUX 3 没有参考图像输入，因此在 `inputReferences` 中传入的图像会被忽略，并伴随指向 `image`、`frameImages` 或 `keyframes` 的警告。
+
+### 关键帧
+
+关键帧是按位置排列的：一张图像作为开头，两张分别作为开头和结尾，更多张时第一张和最后一张是端点，其余均匀分布在两者之间。每张图像是一个 `http(s)` URL 或 base64 字符串，一个请求接受 1 到 10 张。
+
+三个或更多不带时间的关键帧需要显式指定 `duration`；发送这种组合时提供商会报告警告，因为 API 会拒绝它。
+
+也可以按时间顺序传入 `[seconds, image]` 对，将每张图像固定在片段的某一秒：
+
+```ts
+import {
+  blackForestLabs,
+  type BlackForestLabsVideoModelOptions,
+} from '@ai-sdk/black-forest-labs';
+import { experimental_generateVideo as generateVideo } from 'ai';
+import { readFileSync } from 'node:fs';
+
+const asBase64 = (file: string) => readFileSync(file).toString('base64');
+
+const { video } = await generateVideo({
+  model: blackForestLabs.video('flux-3-video'),
+  prompt: 'The cat, then the dog, then the owl each take a turn in the room.',
+  duration: 12,
+  providerOptions: {
+    blackForestLabs: {
+      keyframes: [
+        [0, asBase64('cat.png')],
+        [4.5, asBase64('dog.png')],
+        [9, asBase64('owl.png')],
+      ],
+    } satisfies BlackForestLabsVideoModelOptions,
+  },
+});
+```
+
+### 草稿模式
+
+设置 `draft: true` 会渲染一个快速、较低质量的预览，并留下一个加密的数据包，报告为 `providerMetadata.blackForestLabs.videos[0].draftCache`。将该数据包作为 `draftCache` 传回，就能以完整质量复现同一次生成。
+
+该数据包锁定了原始的模式、提示词、种子和条件媒体，因此增强请求除 `safetyTolerance` 外不接受任何其他选项。调用上设置的任何其他选项都会以 `unsupported` 警告报告。`generateVideo` 要求提供 `prompt` 参数，因此传一个空字符串表示无需补充内容。
+
+```ts
+import {
+  blackForestLabs,
+  type BlackForestLabsVideoModelOptions,
+} from '@ai-sdk/black-forest-labs';
+import { experimental_generateVideo as generateVideo } from 'ai';
+
+const draft = await generateVideo({
+  model: blackForestLabs.video('flux-3-video'),
+  prompt: 'A white kitten chases a butterfly across a sunlit garden.',
+  duration: 6,
+  providerOptions: {
+    blackForestLabs: { draft: true } satisfies BlackForestLabsVideoModelOptions,
+  },
+});
+
+const draftCacheUrl = (
+  draft.providerMetadata.blackForestLabs?.videos as
+    | Array<{ draftCache?: string }>
+    | undefined
+)?.[0]?.draftCache;
+
+// The download URL expires; sending the base64 `.bin` is the durable path,
+// though the URL itself also works while the link is still valid.
+const response = await fetch(draftCacheUrl!);
+const arrayBuffer = await response.arrayBuffer();
+
+const enhanced = await generateVideo({
+  model: blackForestLabs.video('flux-3-video'),
+  prompt: '',
+  providerOptions: {
+    blackForestLabs: {
+      draftCache: Buffer.from(arrayBuffer).toString('base64'),
+    } satisfies BlackForestLabsVideoModelOptions,
+  },
+});
+```
+
+<Note>
+  草稿和它的增强是两次独立的生成，各自单独计费。
+</Note>
+
+### 视频提供商选项
+
+以下可选提供商选项可用于 FLUX 3 视频：
+
+- **resolution** _'hd' | 'fhd'_
+
+  输出分辨率档位。优先于顶层 `resolution`。
+
+- **aspectRatio** _'21:9' | '2:1' | '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | 'auto'_
+
+  生成视频的宽高比。优先于顶层 `aspectRatio`，且与后者不同，可以设为 `auto`。
+
+- **keyframes** _Array&lt;string | [number, string]&gt;_
+
+  图生视频的关键帧，用于 `image` 和 `frameImages` 无法表达的情形：超过两张图像，或图像需要固定在特定秒数。优先级高于两者。
+
+- **safetyTolerance** _number_
+
+  审核严格程度，从 0（最严格）到 4。默认为 2。无论请求如何，色情内容上限为 3、仇恨内容上限为 2，任何携带条件媒体的请求上限为 2。
+
+- **draft** _boolean_
+
+  渲染快速、较低质量的预览而非成品视频。默认为 `false`。
+
+- **draftCache** _string_
+
+  来自先前 `draft` 生成的加密草稿缓存数据包，用于将请求切换到草稿增强模式。
+
+- **version** _string_
+
+  要固定的模型版本。目前仅有 `latest`。
+
+### 视频提供商元数据
+
+FLUX 3 视频结果包含 `providerMetadata.blackForestLabs.videos[]`。每个视频对象可能包含以下属性：
+
+- **id** _string_ - Black Forest Labs 生成请求的 ID。
+- **videoUrl** _string_ - 签名的 MP4 URL（与 `video` 相同的 URL）。有时限。
+- **draftCache** _string_ - 草稿数据包的下载 URL。仅在 `draft` 生成时存在。
+- **seed** _number_ - 生成所用的种子（当 API 报告时）。
+- **start_time** _number_ - 生成开始时的 Unix 时间戳。
+- **end_time** _number_ - 生成完成时的 Unix 时间戳。
+- **duration** _number_ - API 报告的时长（秒）。
+- **cost** _number_ - 生成请求的费用（以 credits 计）。
+- **inputMegapixels** _number_ - 输入尺寸（兆像素）。
+- **outputMegapixels** _number_ - 输出尺寸（兆像素）。
+
+### 视频模型能力
+
+| 模型           | 说明                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `flux-3-video` | 最高全高清、20 秒，带同步音频。支持文生视频、关键帧和视频续写。                                          |

@@ -1,0 +1,802 @@
+---
+title: 生成文本
+description: 了解如何使用 AI SDK 生成文本。
+---
+
+# 生成与流式输出文本
+
+大型语言模型（LLM）能够根据提示词（prompt）生成文本，提示词中可以包含指令和待处理的信息。
+例如，你可以让模型设计一份菜谱、起草一封邮件，或总结一篇文档。
+
+AI SDK Core 提供两个函数，用于从语言模型生成文本并进行流式输出：
+
+- [`generateText`](#generatetext)：根据给定的提示词和模型生成文本。
+- [`streamText`](#streamtext)：根据给定的提示词和模型流式输出文本。
+
+[工具调用](./tools-and-tool-calling)、[结构化数据生成](./generating-structured-data)等高级语言模型特性都构建在文本生成之上。
+
+## `generateText`
+
+你可以使用 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 函数生成文本。该函数非常适合非交互式场景——需要撰写文本（例如起草邮件或总结网页）——也适合使用工具的智能体（agent）。
+
+```tsx
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+你可以使用更[高级的提示词](/docs/foundations/prompts)，以更复杂的指令和内容生成文本：
+
+```tsx
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { text } = await generateText({
+  model: __MODEL__,
+  instructions:
+    'You are a professional writer. ' +
+    'You write simple, clear, and concise content.',
+  prompt: `Summarize the following article in 3-5 sentences: ${article}`,
+});
+```
+
+`generateText` 的结果对象包含生成的输出和元数据：
+
+- `result.content`：所有步骤中生成的内容。
+- `result.text`：最终步骤生成的文本。
+- `result.files`：所有步骤中生成的文件。
+- `result.sources`：所有步骤中作为引用使用的来源（仅部分模型支持）。
+- `result.toolCalls`：所有步骤中发起的工具调用。
+- `result.toolResults`：所有步骤中工具调用的结果。
+- `result.finishReason`：模型完成文本生成的原因。
+- `result.rawFinishReason`：生成结束的原始原因（来自提供商）。
+- `result.usage`：所有步骤的总用量（针对多步生成）。
+- `result.warnings`：所有步骤中来自模型提供商的警告（例如不支持的设置）。
+- `result.steps`：所有步骤的详情，可用于获取中间步骤的信息，包括每步的 `performance`。
+- `result.finalStep`：最终步骤的详情，包括 `performance`。
+- `result.output`：使用 `output` 规范生成的结构化输出。
+
+每个步骤都包含 `performance`，提供耗时与吞吐信息：
+
+- `effectiveOutputTokensPerSecond`：每秒有效输出 token 数，按 `outputTokens / requestSeconds` 计算。
+- `outputTokensPerSecond`：针对流式步骤，首个输出分块之后每秒的输出 token 数，按 `outputTokens / outputStreamSeconds` 计算。对于 `generateText`，该值为 `undefined`。
+- `inputTokensPerSecond`：针对流式步骤，首个输出分块之前每秒的输入 token 数，按 `inputTokens / ttftSeconds` 计算。对于 `generateText`，该值为 `undefined`。
+- `effectiveTotalTokensPerSecond`：每秒有效总 token 数，按 `(inputTokens + outputTokens) / requestSeconds` 计算。
+- `stepTimeMs`：该步骤的总耗时，包括语言模型响应时间和工具执行时间，单位为毫秒。
+- `responseTimeMs`：等待语言模型响应的时间，单位为毫秒。
+- `toolExecutionMs`：该步骤中每次客户端工具调用的执行时间，单位为毫秒，以工具调用 ID 为键。
+- `timeToFirstOutputMs`：针对流式步骤，从开始到收到首个输出分块的时间，单位为毫秒。对于 `generateText`，该值为 `undefined`。
+- `timeBetweenOutputChunksMs`：针对至少有两个输出分块的流式步骤，输出分块间隔时间的统计值，单位为毫秒。
+
+### 访问响应请求头与响应体
+
+有时你需要访问模型提供商返回的完整响应，
+例如访问提供商特有的请求头或响应体内容。
+
+你可以使用 `finalStep.response` 属性访问原始响应请求头和响应体：
+
+```ts
+import { generateText } from 'ai';
+
+const result = await generateText({
+  // ...
+});
+
+console.log(JSON.stringify(result.finalStep.response.headers, null, 2));
+console.log(JSON.stringify(result.finalStep.response.body, null, 2));
+```
+
+### `onEnd` 回调
+
+使用 `generateText` 时，你可以提供 `onEnd` 回调，它会在最后一个步骤完成后触发（
+[API 参考](/docs/reference/ai-sdk-core/generate-text#on-end)
+）。
+其中包含文本、用量信息、结束原因、消息、步骤、总用量等：
+
+```tsx highlight="7-10"
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  onEnd({ text, finishReason, usage, responseMessages, steps, totalUsage }) {
+    // your own logic, e.g. for saving the chat history or recording usage
+
+    const messages = responseMessages; // messages that were generated
+  },
+});
+```
+
+### 生命周期回调（实验性）
+
+<Note type="warning">
+  实验性回调在增量版本发布中可能出现破坏性变更。
+</Note>
+
+`generateText` 提供了多个实验性生命周期回调，让你可以介入生成过程的不同阶段。
+它们适用于日志记录、可观测性、调试和自定义遥测（telemetry）。
+回调内部抛出的错误会被静默捕获，不会中断生成流程。
+
+```tsx
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'What is the weather in San Francisco?',
+  tools: {
+    // ... your tools
+  },
+
+  onStart({ modelId }) {
+    console.log('Generation started', { modelId });
+  },
+
+  onStepStart({ stepNumber, modelId, messages }) {
+    console.log(`Step ${stepNumber} starting`, { modelId });
+  },
+
+  onLanguageModelCallStart({ modelId, messages }) {
+    console.log('Model call starting', {
+      modelId,
+      messageCount: messages.length,
+    });
+  },
+
+  onLanguageModelCallEnd({ modelId, finishReason, content }) {
+    console.log('Model call finished', {
+      modelId,
+      finishReason,
+      contentParts: content.length,
+    });
+  },
+
+  onToolExecutionStart({ toolCall }) {
+    console.log(`Tool call starting: ${toolCall.toolName}`, {
+      toolCallId: toolCall.toolCallId,
+    });
+  },
+
+  onToolExecutionEnd({ toolCall, toolExecutionMs, toolOutput }) {
+    console.log(
+      `Tool call finished: ${toolCall.toolName} (${toolExecutionMs}ms)`,
+      {
+        success: toolOutput.type === 'tool-result',
+      },
+    );
+  },
+
+  onStepEnd({ stepNumber, finishReason, usage, performance }) {
+    console.log(`Step ${stepNumber} finished`, {
+      finishReason,
+      usage,
+      performance,
+    });
+  },
+});
+```
+
+可用的生命周期回调如下：
+
+- **`onStart`**：在 `generateText` 操作开始时、任何语言模型调用之前调用一次。接收模型信息、消息、设置和 `runtimeContext`。
+- **`onStepStart`**：在每个步骤（语言模型调用）之前调用。接收步骤编号、模型、即将发送的消息、工具和先前的步骤。
+- **`onLanguageModelCallStart`**：在提供商模型调用开始前立即调用。适用于希望在后续工具执行之外单独观察模型调用的情况。
+- **`onLanguageModelCallEnd`**：在模型响应完成规范化与解析之后、任何客户端工具执行开始之前调用。接收模型调用的内容部分、用量、结束原因和提供商元数据。
+- **`onToolExecutionStart`**：在工具的 `execute` 函数运行前立即调用。接收工具调用对象、消息和 `toolContext`。
+- **`onToolExecutionEnd`**：在工具的 `execute` 函数完成或出错后立即调用。接收工具调用对象、`toolExecutionMs`，以及 `toolOutput` 可辨识联合（`type: 'tool-result'` 携带 `output`，或 `type: 'tool-error'` 携带 `error`）。
+- **`onStepEnd`**：在每个步骤完成后调用。包含 `stepNumber`（已完成步骤从零开始的索引）。
+
+## `streamText`
+
+取决于模型和提示词，大型语言模型（LLM）可能需要长达一分钟才能完成响应生成。对于聊天机器人或实时应用等交互式场景，这种延迟可能难以接受，因为用户期望立即得到响应。
+
+AI SDK Core 提供了 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 函数，简化从语言模型流式输出文本的过程：
+
+```ts
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+
+// example: use textStream as an async iterable
+for await (const textPart of result.textStream) {
+  console.log(textPart);
+}
+```
+
+<Note>
+  `result.textStream` 既是 `ReadableStream` 也是 `AsyncIterable`。
+</Note>
+
+<Note type="warning">
+  `streamText` 会立即开始流式输出并抑制错误，以防止服务器崩溃。
+  请使用 `onError` 回调记录错误。
+</Note>
+
+你可以单独使用 `streamText`，也可以与 [AI SDK
+UI](/examples/next-pages/basics/streaming-text-generation) 和 [AI SDK
+RSC](/examples/next-app/basics/streaming-text-generation) 结合使用。
+`result.stream` 可以传给多个独立的辅助函数，以便更轻松地集成到 [AI SDK UI](/docs/ai-sdk-ui)：
+
+- `createUIMessageStreamResponse({ stream: toUIMessageStream({ stream: result.stream }) })`: Creates a UI Message stream HTTP response (with tool calls etc.) that can be used in a Next.js App Router API route.
+- `pipeUIMessageStreamToResponse({ stream: toUIMessageStream({ stream: result.stream }), response })`: Writes UI Message stream delta output to a Node.js response-like object.
+- `createTextStreamResponse({ stream: toTextStream({ stream: result.stream }) })`: Creates a simple text stream HTTP response.
+- `pipeTextStreamToResponse({ stream: toTextStream({ stream: result.stream }), response })`: Writes text delta output to a Node.js response-like object.
+
+<Note>
+  `streamText` is using backpressure and only generates tokens as they are
+  requested. You need to consume the stream in order for it to finish.
+</Note>
+
+It also provides several promises that resolve when the stream is finished:
+
+- `result.content`: The content that was generated in all steps.
+- `result.text`: The generated text from the final step.
+- `result.finalStep`: Details for the final step, including per-step `performance`.
+- `result.files`: Files that have been generated by the model in all steps.
+- `result.sources`: Sources that have been used as references in all steps (only available for some models).
+- `result.toolCalls`: The tool calls that have been executed in all steps.
+- `result.toolResults`: The tool results that have been generated in all steps.
+- `result.finishReason`: The reason the model finished generating text.
+- `result.rawFinishReason`: The raw reason why the generation finished (from the provider).
+- `result.usage`: The total usage across all steps (for multi-step generations).
+- `result.totalUsage`: Deprecated. Use `result.usage` instead.
+- `result.warnings`: Warnings from the model provider in all steps (e.g. unsupported settings).
+- `result.steps`: Details for all steps, useful for getting information about intermediate steps, including per-step `performance`.
+
+For `streamText`, `timeToFirstOutputMs` is set when the first generated output chunk is received for a step. `timeBetweenOutputChunksMs` includes `min`, `p10`, `median`, `avg`, `p90`, and `max` when at least two output chunks are received.
+
+### `onError` callback
+
+`streamText` immediately starts streaming to enable sending data without waiting for the model.
+Errors become part of the stream and are not thrown to prevent e.g. servers from crashing.
+
+To log errors, you can provide an `onError` callback that is triggered when an error occurs.
+
+```tsx highlight="7-9"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  onError({ error }) {
+    console.error(error); // your error logging logic here
+  },
+});
+```
+
+### `onChunk` callback
+
+When using `streamText`, you can provide an `onChunk` callback that is triggered for each chunk of the stream.
+
+It receives all stream part types from `stream`, including:
+
+- `start`
+- `start-step`
+- `text-start`
+- `text-delta`
+- `text-end`
+- `reasoning-start`
+- `reasoning-delta`
+- `reasoning-end`
+- `custom`
+- `source`
+- `file`
+- `reasoning-file`
+- `tool-call`
+- `tool-input-start`
+- `tool-input-delta`
+- `tool-input-end`
+- `tool-result`
+- `tool-error`
+- `tool-output-denied`
+- `tool-approval-request`
+- `tool-approval-response`
+- `finish-step`
+- `finish`
+- `abort`
+- `error`
+- `raw`
+
+```tsx highlight="7-12"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  onChunk({ chunk }) {
+    // implement your own logic here, e.g.:
+    if (chunk.type === 'text-delta') {
+      console.log(chunk.text);
+    }
+  },
+});
+```
+
+### `onEnd` callback
+
+When using `streamText`, you can provide an `onEnd` callback that is triggered when the stream is finished (
+[API Reference](/docs/reference/ai-sdk-core/stream-text#on-end)
+).
+It contains the text, usage information, finish reason, messages, steps, total usage, and more:
+
+```tsx highlight="7-10"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+  onEnd({ text, finishReason, usage, responseMessages, steps, totalUsage }) {
+    // your own logic, e.g. for saving the chat history or recording usage
+
+    const messages = responseMessages; // messages that were generated
+  },
+});
+```
+
+### 生命周期回调（实验性）
+
+<Note type="warning">
+  实验性回调在增量版本发布中可能出现破坏性变更。
+</Note>
+
+`streamText` provides several experimental lifecycle callbacks that let you hook into different phases of the streaming process.
+These are useful for logging, observability, debugging, and custom telemetry.
+Errors thrown inside these callbacks are silently caught and do not break the streaming flow.
+
+```tsx
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'What is the weather in San Francisco?',
+  tools: {
+    // ... your tools
+  },
+
+  onStart({ modelId, instructions, messages }) {
+    console.log('Streaming started', { modelId });
+  },
+
+  onStepStart({ stepNumber, modelId, messages }) {
+    console.log(`Step ${stepNumber} starting`, { modelId });
+  },
+
+  onLanguageModelCallStart({ modelId, messages }) {
+    console.log('Model call starting', {
+      modelId,
+      messageCount: messages.length,
+    });
+  },
+
+  onLanguageModelCallEnd({ modelId, finishReason, content }) {
+    console.log('Model call finished', {
+      modelId,
+      finishReason,
+      contentParts: content.length,
+    });
+  },
+
+  onToolExecutionStart({ toolCall }) {
+    console.log(`Tool call starting: ${toolCall.toolName}`, {
+      toolCallId: toolCall.toolCallId,
+    });
+  },
+
+  onToolExecutionEnd({ toolCall, toolExecutionMs, toolOutput }) {
+    console.log(
+      `Tool call finished: ${toolCall.toolName} (${toolExecutionMs}ms)`,
+      {
+        success: toolOutput.type === 'tool-result',
+      },
+    );
+  },
+
+  onStepEnd({ finishReason, usage }) {
+    console.log('Step finished', { finishReason, usage });
+  },
+});
+```
+
+The available lifecycle callbacks are:
+
+- **`onStart`**: Called once when the `streamText` operation begins, before any LLM calls. Receives model info, messages, settings, and `runtimeContext`.
+- **`onStepStart`**: Called before each step (LLM call). Receives the step number, model, messages being sent, tools, and prior steps.
+- **`onLanguageModelCallStart`**: Called immediately before the provider model call begins. Useful when you want to observe the model invocation separately from later tool execution.
+- **`onLanguageModelCallEnd`**: Called after the model response has been normalized and parsed, but before any client-side tool execution begins. Receives the model-call content parts, usage, finish reason, and provider metadata.
+- **`onToolExecutionStart`**: Called right before a tool's `execute` function runs. Receives the tool call object, messages, and `toolContext`.
+- **`onToolExecutionEnd`**: Called right after a tool's `execute` function completes or errors. Receives the tool call object, `toolExecutionMs`, and a `toolOutput` discriminated union (`type: 'tool-result'` with `output`, or `type: 'tool-error'` with `error`).
+- **`onStepEnd`**: Called after each step finishes. Receives the finish reason, usage, and other step details.
+
+### `stream` property
+
+You can read a stream with all events using the `stream` property.
+This can be useful if you want to implement your own UI or handle the stream in a different way.
+Here is an example of how to use the `stream` property:
+
+```tsx
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const result = streamText({
+  model: __MODEL__,
+  tools: {
+    cityAttractions: {
+      inputSchema: z.object({ city: z.string() }),
+      execute: async ({ city }) => ({
+        attractions: ['attraction1', 'attraction2', 'attraction3'],
+      }),
+    },
+  },
+  prompt: 'What are some San Francisco tourist attractions?',
+});
+
+for await (const part of result.stream) {
+  switch (part.type) {
+    case 'start': {
+      // handle start of stream
+      break;
+    }
+    case 'start-step': {
+      // handle start of step
+      break;
+    }
+    case 'text-start': {
+      // handle text start
+      break;
+    }
+    case 'text-delta': {
+      // handle text delta here
+      break;
+    }
+    case 'text-end': {
+      // handle text end
+      break;
+    }
+    case 'reasoning-start': {
+      // handle reasoning start
+      break;
+    }
+    case 'reasoning-delta': {
+      // handle reasoning delta here
+      break;
+    }
+    case 'reasoning-end': {
+      // handle reasoning end
+      break;
+    }
+    case 'source': {
+      // handle source here
+      break;
+    }
+    case 'file': {
+      // handle file here
+      break;
+    }
+    case 'tool-call': {
+      switch (part.toolName) {
+        case 'cityAttractions': {
+          // handle tool call here
+          break;
+        }
+      }
+      break;
+    }
+    case 'tool-input-start': {
+      // handle tool input start
+      break;
+    }
+    case 'tool-input-delta': {
+      // handle tool input delta
+      break;
+    }
+    case 'tool-input-end': {
+      // handle tool input end
+      break;
+    }
+    case 'tool-result': {
+      switch (part.toolName) {
+        case 'cityAttractions': {
+          // handle tool result here
+          break;
+        }
+      }
+      break;
+    }
+    case 'tool-error': {
+      // handle tool error
+      break;
+    }
+    case 'finish-step': {
+      // handle finish step
+      break;
+    }
+    case 'finish': {
+      // handle finish here
+      break;
+    }
+    case 'error': {
+      // handle error here
+      break;
+    }
+    case 'raw': {
+      // handle raw value
+      break;
+    }
+  }
+}
+```
+
+### Stream transformation
+
+You can use the `experimental_transform` option to transform the stream.
+This is useful for e.g. filtering, changing, or smoothing the text stream.
+
+The transformations are applied before the callbacks are invoked and the promises are resolved.
+If you e.g. have a transformation that changes all text to uppercase, the `onEnd` callback will receive the transformed text.
+
+#### Smoothing streams
+
+The AI SDK Core provides a [`smoothStream` function](/docs/reference/ai-sdk-core/smooth-stream) that
+can be used to smooth out text and reasoning streaming.
+
+```tsx highlight="6"
+import { smoothStream, streamText } from 'ai';
+
+const result = streamText({
+  model,
+  prompt,
+  experimental_transform: smoothStream(),
+});
+```
+
+#### Custom transformations
+
+You can also implement your own custom transformations.
+The transformation function receives the tools that are available to the model,
+and returns a function that is used to transform the stream.
+Tools can either be generic or limited to the tools that you are using.
+
+Here is an example of how to implement a custom transformation that converts
+all text to uppercase:
+
+```ts
+import { streamText, type TextStreamPart, type ToolSet } from 'ai';
+
+const upperCaseTransform =
+  <TOOLS extends ToolSet>() =>
+  (options: { tools: TOOLS; stopStream: () => void }) =>
+    new TransformStream<TextStreamPart<TOOLS>, TextStreamPart<TOOLS>>({
+      transform(chunk, controller) {
+        controller.enqueue(
+          // for text-delta chunks, convert the text to uppercase:
+          chunk.type === 'text-delta'
+            ? { ...chunk, text: chunk.text.toUpperCase() }
+            : chunk,
+        );
+      },
+    });
+```
+
+You can also stop the stream using the `stopStream` function.
+This is e.g. useful if you want to stop the stream when model guardrails are violated, e.g. by generating inappropriate content.
+
+When you invoke `stopStream`, it is important to simulate the `finish-step` and `finish` events to guarantee that a well-formed stream is returned
+and all callbacks are invoked.
+
+```ts
+import { streamText, type TextStreamPart, type ToolSet } from 'ai';
+
+const stopWordTransform =
+  <TOOLS extends ToolSet>() =>
+  ({ stopStream }: { stopStream: () => void }) =>
+    new TransformStream<TextStreamPart<TOOLS>, TextStreamPart<TOOLS>>({
+      // note: this is a simplified transformation for testing;
+      // in a real-world version more there would need to be
+      // stream buffering and scanning to correctly emit prior text
+      // and to detect all STOP occurrences.
+      transform(chunk, controller) {
+        if (chunk.type !== 'text-delta') {
+          controller.enqueue(chunk);
+          return;
+        }
+
+        if (chunk.text.includes('STOP')) {
+          // stop the stream
+          stopStream();
+
+          // simulate the finish-step event
+          controller.enqueue({
+            type: 'finish-step',
+            finishReason: 'stop',
+            rawFinishReason: 'stop',
+            usage: {
+              inputTokens: undefined,
+              inputTokenDetails: {
+                cacheReadTokens: undefined,
+                cacheWriteTokens: undefined,
+                noCacheTokens: undefined,
+              },
+              outputTokens: undefined,
+              outputTokenDetails: {
+                reasoningTokens: undefined,
+                textTokens: undefined,
+              },
+              totalTokens: undefined,
+            },
+            performance: {
+              effectiveOutputTokensPerSecond: 0,
+              outputTokensPerSecond: undefined,
+              inputTokensPerSecond: undefined,
+              effectiveTotalTokensPerSecond: 0,
+              stepTimeMs: 0,
+              responseTimeMs: 0,
+              toolExecutionMs: {},
+              timeToFirstOutputMs: undefined,
+            },
+            response: {
+              id: 'response-id',
+              modelId: 'mock-model-id',
+              timestamp: new Date(0),
+            },
+            providerMetadata: undefined,
+          });
+
+          // simulate the finish event
+          controller.enqueue({
+            type: 'finish',
+            finishReason: 'stop',
+            rawFinishReason: 'stop',
+            totalUsage: {
+              inputTokens: undefined,
+              inputTokenDetails: {
+                cacheReadTokens: undefined,
+                cacheWriteTokens: undefined,
+                noCacheTokens: undefined,
+              },
+              outputTokens: undefined,
+              outputTokenDetails: {
+                reasoningTokens: undefined,
+                textTokens: undefined,
+              },
+              totalTokens: undefined,
+            },
+          });
+
+          return;
+        }
+
+        controller.enqueue(chunk);
+      },
+    });
+```
+
+#### Multiple transformations
+
+You can also provide multiple transformations. They are applied in the order they are provided.
+
+```tsx highlight="4"
+const result = streamText({
+  model,
+  prompt,
+  experimental_transform: [firstTransform, secondTransform],
+});
+```
+
+## Sources
+
+Some providers such as [Perplexity](/providers/ai-sdk-providers/perplexity#来源) and
+[Google](/providers/ai-sdk-providers/google#sources) include sources in the response.
+
+Currently sources are limited to web pages that ground the response.
+You can access them using the `sources` property of the result.
+
+Each `url` source contains the following properties:
+
+- `id`: The ID of the source.
+- `url`: The URL of the source.
+- `title`: The optional title of the source.
+- `providerMetadata`: Provider metadata for the source.
+
+When you use `generateText`, you can access the sources using the `sources` property:
+
+```ts
+const result = await generateText({
+  model: 'google/gemini-3.8-flash',
+  tools: {
+    google_search: google.tools.googleSearch({}),
+  },
+  prompt: 'List the top 5 San Francisco news from the past week.',
+});
+
+for (const source of result.sources) {
+  if (source.sourceType === 'url') {
+    console.log('ID:', source.id);
+    console.log('Title:', source.title);
+    console.log('URL:', source.url);
+    console.log('Provider metadata:', source.providerMetadata);
+    console.log();
+  }
+}
+```
+
+When you use `streamText`, you can access the sources using the `stream` property:
+
+```tsx
+const result = streamText({
+  model: 'google/gemini-3.8-flash',
+  tools: {
+    google_search: google.tools.googleSearch({}),
+  },
+  prompt: 'List the top 5 San Francisco news from the past week.',
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'source' && part.sourceType === 'url') {
+    console.log('ID:', part.id);
+    console.log('Title:', part.title);
+    console.log('URL:', part.url);
+    console.log('Provider metadata:', part.providerMetadata);
+    console.log();
+  }
+}
+```
+
+The sources are also available in the `result.sources` promise.
+
+## Examples
+
+You can see `generateText` and `streamText` in action using various frameworks in the following examples:
+
+### `generateText`
+
+<ExampleLinks
+  examples={[
+    {
+      title: 'Learn to generate text in Node.js',
+      link: '/examples/node/generating-text/generate-text',
+    },
+    {
+      title:
+        'Learn to generate text in Next.js with Route Handlers (AI SDK UI)',
+      link: '/examples/next-pages/basics/generating-text',
+    },
+    {
+      title:
+        'Learn to generate text in Next.js with Server Actions (AI SDK RSC)',
+      link: '/examples/next-app/basics/generating-text',
+    },
+  ]}
+/>
+
+### `streamText`
+
+<ExampleLinks
+  examples={[
+    {
+      title: 'Learn to stream text in Node.js',
+      link: '/examples/node/generating-text/stream-text',
+    },
+    {
+      title: 'Learn to stream text in Next.js with Route Handlers (AI SDK UI)',
+      link: '/examples/next-pages/basics/streaming-text-generation',
+    },
+    {
+      title: 'Learn to stream text in Next.js with Server Actions (AI SDK RSC)',
+      link: '/examples/next-app/basics/streaming-text-generation',
+    },
+  ]}
+/>

@@ -1,0 +1,72 @@
+---
+title: 使用图像提示词生成文本
+description: 了解如何在 Node 中结合 AI SDK 使用图像提示词生成文本
+tags: ['node', 'multimodal']
+---
+
+# Generate Text with Image Prompt
+
+一些支持视觉能力的语言模型可以接受图像作为提示词（prompt）的一部分。以下是可用于将图像作为输入的不同[格式](/docs/reference/ai-sdk-core/generate-text#content-image)。
+
+## URL
+
+```ts file='index.ts'
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: 'openai/gpt-4.1',
+  maxOutputTokens: 512,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'what are the red things in this image?',
+        },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: new URL(
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/2024_Solar_Eclipse_Prominences.jpg/720px-2024_Solar_Eclipse_Prominences.jpg',
+          ),
+        },
+      ],
+    },
+  ],
+});
+
+console.log(result);
+```
+
+## 文件缓冲区
+
+```ts file='index.ts'
+import { generateText } from 'ai';
+import fs from 'fs';
+
+const result = await generateText({
+  model: 'openai/gpt-4.1',
+  maxOutputTokens: 512,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'what are the red things in this image?',
+        },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: fs.readFileSync('./node/attachments/eclipse.jpg', {
+            encoding: 'base64',
+          }),
+        },
+      ],
+    },
+  ],
+});
+
+console.log(result);
+```

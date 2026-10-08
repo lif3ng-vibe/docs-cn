@@ -1,0 +1,3430 @@
+---
+title: 从 AI SDK 4.x 迁移到 5.0
+description: 了解如何将 AI SDK 4.x 升级到 5.0。
+---
+
+# Migrate AI SDK 4.x to 5.0
+
+## 推荐的迁移流程
+
+1. 备份你的项目。如果你使用版本控制系统，请确保此前所有版本均已提交。
+1. 升级到 AI SDK 5.0。
+1. 使用以下任一方式自动迁移代码：
+   - 使用 [AI SDK 5 迁移 MCP 服务器](#ai-sdk-5-迁移-mcp-服务器) 在 Cursor 或其他支持 MCP 的编码智能体（agent）中进行 AI 辅助迁移
+   - 使用 [Codemods](#codemods) 自动转换代码
+1. 按照下方的破坏性变更指南操作。
+1. 验证项目按预期工作。
+1. 提交你的变更。
+
+## AI SDK 5 迁移 MCP 服务器
+
+[AI SDK 5 迁移模型上下文协议（MCP）服务器](https://github.com/vercel-labs/ai-sdk-5-migration-mcp-server)提供了一种借助编码智能体自动迁移项目的方式。该服务器为 Cursor 设计，但应可在任何支持 MCP 的编码智能体中使用。
+
+开始使用：在项目中创建或编辑 `.cursor/mcp.json`：
+
+```json
+{
+  "mcpServers": {
+    "ai-sdk-5-migration": {
+      "url": "https://ai-sdk-5-migration-mcp-server.vercel.app/api/mcp"
+    }
+  }
+}
+```
+
+保存后，打开命令面板（macOS 上为 Cmd+Shift+P，Windows/Linux 上为 Ctrl+Shift+P），搜索"View: Open MCP Settings"。确认新服务器已出现并处于开启状态。
+
+然后使用以下提示词（prompt）：
+
+```
+Please migrate this project to AI SDK 5 using the ai-sdk-5-migration mcp server. Start by creating a checklist.
+```
+
+更多信息请参阅 [AI SDK 5 迁移 MCP 服务器仓库](https://github.com/vercel-labs/ai-sdk-5-migration-mcp-server)。
+
+## AI SDK 5.0 包版本
+
+你需要在 `package.json` 文件中将以下包更新到相应版本：
+
+- `ai` 包：`5.0.0`
+- `@ai-sdk/provider` 包：`2.0.0`
+- `@ai-sdk/provider-utils` 包：`3.0.0`
+- `@ai-sdk/*` 包：`2.0.0`（其他 `@ai-sdk` 包）
+
+此外，还需要更新以下 peer 依赖：
+
+- `zod` 包：`4.1.8` 或更高版本（推荐，以避免 TypeScript 性能问题）
+
+升级命令示例：
+
+```
+npm install ai @ai-sdk/react @ai-sdk/openai zod@^4.1.8
+```
+
+<Note>
+  如果升级后遇到 TypeScript 性能问题，请确保使用 Zod 4.1.8 或更高版本。如果问题仍然存在，请更新 `tsconfig.json`，使用 `moduleResolution: "nodenext"`。更多详情请参阅 [TypeScript 性能故障排查指南](/docs/troubleshooting/typescript-performance-zod)。
+</Note>
+
+## Codemods
+
+当某个功能被弃用、移除或发生其他变更时，AI SDK 提供 Codemod 转换来帮助你升级代码库。
+
+Codemod 是自动在代码库上运行的转换。它们让你无需手动遍历每个文件，即可轻松应用大量变更。
+
+<Note>
+  Codemod 旨在辅助你完成升级过程。它们可能无法覆盖你需要做出的所有变更，你可能还需要手动进行额外修改。
+</Note>
+
+从项目根目录运行以下命令，即可执行 5.0 升级流程提供的全部 codemod：
+
+```sh
+npx @ai-sdk/codemod upgrade
+```
+
+仅运行 v5 codemod（v4 → v5 迁移）：
+
+```sh
+npx @ai-sdk/codemod v5
+```
+
+也可以指定 codemod 名称单独运行：
+
+```sh
+npx @ai-sdk/codemod <codemod-name> <path>
+```
+
+例如，运行某个特定的 v5 codemod：
+
+```sh
+npx @ai-sdk/codemod v5/rename-format-stream-part src/
+```
+
+另请参阅 [codemod 对照表](#codemod-对照表)。此外，最新的一批 codemod 可在 [`@ai-sdk/codemod`](https://github.com/vercel/ai/tree/main/packages/codemod/src/codemods) 仓库中找到。
+
+## AI SDK Core 变更
+
+### generateText 与 streamText 变更
+
+#### 最大输出 token 数
+
+为清晰起见，`maxTokens` 参数已更名为 `maxOutputTokens`。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: __MODEL__,
+  maxTokens: 1024,
+  prompt: 'Hello, world!',
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: __MODEL__,
+  maxOutputTokens: 1024,
+  prompt: 'Hello, world!',
+});
+```
+
+### 消息与类型系统变更
+
+#### 核心类型重命名
+
+##### `CoreMessage` → `ModelMessage`
+
+```tsx filename="AI SDK 4.0"
+import { CoreMessage } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { ModelMessage } from 'ai';
+```
+
+##### `Message` → `UIMessage`
+
+```tsx filename="AI SDK 4.0"
+import { Message, CreateMessage } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { UIMessage, CreateUIMessage } from 'ai';
+```
+
+##### `convertToCoreMessages` → `convertToModelMessages`
+
+```tsx filename="AI SDK 4.0"
+import { convertToCoreMessages, streamText } from 'ai';
+
+const result = await streamText({
+  model: __MODEL__,
+  messages: convertToCoreMessages(messages),
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { convertToModelMessages, streamText } from 'ai';
+
+const result = await streamText({
+  model: __MODEL__,
+  messages: convertToModelMessages(messages),
+});
+```
+
+<Note>
+  有关模型消息的更多信息，请参阅 [Model Message 参考](/docs/reference/ai-sdk-core/model-message)。
+</Note>
+
+### UIMessage 变更
+
+#### content → parts 数组
+
+对于 `UIMessage`（此前称为 `Message`），`.content` 属性已被 `parts` 数组结构取代。
+
+```tsx filename="AI SDK 4.0"
+import { type Message } from 'ai'; // v4 Message type
+
+// Messages (useChat) - had content property
+const message: Message = {
+  id: '1',
+  role: 'user',
+  content: 'Bonjour!',
+};
+```
+
+```tsx filename="AI SDK 5.0"
+import { type UIMessage, type ModelMessage } from 'ai';
+
+// UIMessages (useChat) - now use parts array
+const uiMessage: UIMessage = {
+  id: '1',
+  role: 'user',
+  parts: [{ type: 'text', text: 'Bonjour!' }],
+};
+```
+
+#### data 角色已移除
+
+`data` 角色已从 UI 消息中移除。
+
+```tsx filename="AI SDK 4.0"
+const message = {
+  role: 'data',
+  content: 'Some content',
+  data: { customField: 'value' },
+};
+```
+
+```tsx filename="AI SDK 5.0"
+// V5: Use UI message streams with custom data parts
+const stream = createUIMessageStream({
+  execute({ writer }) {
+    // Write custom data instead of message annotations
+    writer.write({
+      type: 'data-custom',
+      id: 'custom-1',
+      data: { customField: 'value' },
+    });
+  },
+});
+```
+
+#### UIMessage 推理结构
+
+UI 消息上的 reasoning 属性已移至 parts 中。
+
+```tsx filename="AI SDK 4.0"
+const message: Message = {
+  role: 'assistant',
+  content: 'Hello',
+  reasoning: 'I will greet the user',
+};
+```
+
+```tsx filename="AI SDK 5.0"
+const message: UIMessage = {
+  role: 'assistant',
+  parts: [
+    {
+      type: 'reasoning',
+      text: 'I will greet the user',
+    },
+    {
+      type: 'text',
+      text: 'Hello',
+    },
+  ],
+};
+```
+
+#### 推理部分属性重命名
+
+推理 UI 部分上的 `reasoning` 属性已更名为 `text`。
+
+```tsx filename="AI SDK 4.0"
+{
+  message.parts.map((part, index) => {
+    if (part.type === 'reasoning') {
+      return (
+        <div key={index} className="reasoning-display">
+          {part.reasoning}
+        </div>
+      );
+    }
+  });
+}
+```
+
+```tsx filename="AI SDK 5.0"
+{
+  message.parts.map((part, index) => {
+    if (part.type === 'reasoning') {
+      return (
+        <div key={index} className="reasoning-display">
+          {part.text}
+        </div>
+      );
+    }
+  });
+}
+```
+
+### 文件部分（file part）变更
+
+文件部分现在使用 `.url`，取代原先的 `.data` 和 `.mimeType`。
+
+```tsx filename="AI SDK 4.0"
+{
+  messages.map(message => (
+    <div key={message.id}>
+      {message.parts.map((part, index) => {
+        if (part.type === 'text') {
+          return <div key={index}>{part.text}</div>;
+        } else if (part.type === 'file' && part.mimeType.startsWith('image/')) {
+          return (
+            <img
+              key={index}
+              src={`data:${part.mimeType};base64,${part.data}`}
+            />
+          );
+        }
+      })}
+    </div>
+  ));
+}
+```
+
+```tsx filename="AI SDK 5.0"
+{
+  messages.map(message => (
+    <div key={message.id}>
+      {message.parts.map((part, index) => {
+        if (part.type === 'text') {
+          return <div key={index}>{part.text}</div>;
+        } else if (
+          part.type === 'file' &&
+          part.mediaType.startsWith('image/')
+        ) {
+          return <img key={index} src={part.url} />;
+        }
+      })}
+    </div>
+  ));
+}
+```
+
+### Stream Data 移除
+
+`StreamData` 类已被完全移除，由用于自定义数据的 UI 消息流取代。
+
+```tsx filename="AI SDK 4.0"
+import { StreamData } from 'ai';
+
+const streamData = new StreamData();
+streamData.append('custom-data');
+streamData.close();
+```
+
+```tsx filename="AI SDK 5.0"
+import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+
+const stream = createUIMessageStream({
+  execute({ writer }) {
+    // Write custom data parts
+    writer.write({
+      type: 'data-custom',
+      id: 'custom-1',
+      data: 'custom-data',
+    });
+
+    // Can merge with LLM streams
+    const result = streamText({
+      model: __MODEL__,
+      messages,
+    });
+
+    writer.merge(result.toUIMessageStream());
+  },
+});
+
+return createUIMessageStreamResponse({ stream });
+```
+
+### 自定义数据流式传输：writeMessageAnnotation/writeData 已移除
+
+`DataStreamWriter` 中的 `writeMessageAnnotation` 和 `writeData` 方法已被移除。请改为在新的 `UIMessage` 流架构中使用自定义数据部分（data part）。
+
+```tsx filename="AI SDK 4.0"
+import { createDataStreamResponse, streamText } from 'ai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  return createDataStreamResponse({
+    execute: dataStream => {
+      // Write general data
+      dataStream.writeData('call started');
+
+      const result = streamText({
+        model: __MODEL__,
+        messages,
+        onChunk() {
+          // Write message annotations
+          dataStream.writeMessageAnnotation({
+            status: 'streaming',
+            timestamp: Date.now(),
+          });
+        },
+        onFinish() {
+          // Write final annotations
+          dataStream.writeMessageAnnotation({
+            id: generateId(),
+            completed: true,
+          });
+
+          dataStream.writeData('call completed');
+        },
+      });
+
+      result.mergeIntoDataStream(dataStream);
+    },
+  });
+}
+```
+
+```tsx filename="AI SDK 5.0"
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  generateId,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      const statusId = generateId();
+
+      // Write general data (transient - not added to message history)
+      writer.write({
+        type: 'data-status',
+        id: statusId,
+        data: { status: 'call started' },
+      });
+
+      const result = streamText({
+        model: __MODEL__,
+        messages,
+        onChunk() {
+          // Write data parts that update during streaming
+          writer.write({
+            type: 'data-status',
+            id: statusId,
+            data: {
+              status: 'streaming',
+              timestamp: Date.now(),
+            },
+          });
+        },
+        onFinish() {
+          // Write final data parts
+          writer.write({
+            type: 'data-status',
+            id: statusId,
+            data: {
+              status: 'completed',
+            },
+          });
+        },
+      });
+
+      writer.merge(result.toUIMessageStream());
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
+}
+```
+
+<Note>
+  有关 v5 中流式传输自定义数据的更多详细信息，请参阅[流式数据指南](/docs/ai-sdk-ui/streaming-data)。
+</Note>
+
+##### providerMetadata → providerOptions
+
+输入参数 `providerMetadata` 已更名为 `providerOptions`。注意，结果中返回的元数据仍称为 `providerMetadata`。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: 'openai/gpt-5',
+  prompt: 'Hello',
+  providerMetadata: {
+    openai: { store: false },
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: 'openai/gpt-5',
+  prompt: 'Hello',
+  providerOptions: {
+    // Input parameter renamed
+    openai: { store: false },
+  },
+});
+
+// Returned metadata still uses providerMetadata:
+console.log(result.providerMetadata?.openai);
+```
+
+#### 工具定义变更（parameters → inputSchema）
+
+工具定义已更新为使用 `inputSchema` 取代 `parameters`，错误类也已更名。
+
+```tsx filename="AI SDK 4.0"
+import { tool } from 'ai';
+
+const weatherTool = tool({
+  description: 'Get the weather for a city',
+  parameters: z.object({
+    city: z.string(),
+  }),
+  execute: async ({ city }) => {
+    return `Weather in ${city}`;
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { tool } from 'ai';
+
+const weatherTool = tool({
+  description: 'Get the weather for a city',
+  inputSchema: z.object({
+    city: z.string(),
+  }),
+  execute: async ({ city }) => {
+    return `Weather in ${city}`;
+  },
+});
+```
+
+#### 工具结果内容：experimental_toToolResultContent → toModelOutput
+
+`experimental_toToolResultContent` 选项已更名为 `toModelOutput`，不再是实验性功能。
+
+```tsx filename="AI SDK 4.0"
+const screenshotTool = tool({
+  description: 'Take a screenshot',
+  parameters: z.object({}),
+  execute: async () => {
+    const imageData = await takeScreenshot();
+    return imageData; // base64 string
+  },
+  experimental_toToolResultContent: result => [{ type: 'image', data: result }],
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const screenshotTool = tool({
+  description: 'Take a screenshot',
+  inputSchema: z.object({}),
+  execute: async () => {
+    const imageData = await takeScreenshot();
+    return imageData;
+  },
+  toModelOutput: result => ({
+    type: 'content',
+    value: [{ type: 'media', mediaType: 'image/png', data: result }],
+  }),
+});
+```
+
+### 工具属性变更（args/result → input/output）
+
+工具调用与结果的属性已更名，以便与 schema 保持更好的一致性。
+
+```tsx filename="AI SDK 4.0"
+// Tool calls used "args" and "result"
+for await (const part of result.fullStream) {
+  switch (part.type) {
+    case 'tool-call':
+      console.log('Tool args:', part.args);
+      break;
+    case 'tool-result':
+      console.log('Tool result:', part.result);
+      break;
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// Tool calls now use "input" and "output"
+for await (const part of result.fullStream) {
+  switch (part.type) {
+    case 'tool-call':
+      console.log('Tool input:', part.input);
+      break;
+    case 'tool-result':
+      console.log('Tool output:', part.output);
+      break;
+  }
+}
+```
+
+### 工具执行错误处理
+
+`ToolExecutionError` 类已被移除。工具执行错误现在会作为 `tool-error` 内容部分出现在结果步骤中，从而在多步场景中支持自动化的 LLM 往返。
+
+```tsx filename="AI SDK 4.0"
+import { ToolExecutionError } from 'ai';
+
+try {
+  const result = await generateText({
+    // ...
+  });
+} catch (error) {
+  if (error instanceof ToolExecutionError) {
+    console.log('Tool execution failed:', error.message);
+    console.log('Tool name:', error.toolName);
+    console.log('Tool input:', error.toolInput);
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// Tool execution errors now appear in result steps
+const { steps } = await generateText({
+  // ...
+});
+
+// check for tool errors in the steps
+const toolErrors = steps.flatMap(step =>
+  step.content.filter(part => part.type === 'tool-error'),
+);
+
+toolErrors.forEach(toolError => {
+  console.log('Tool error:', toolError.error);
+  console.log('Tool name:', toolError.toolName);
+  console.log('Tool input:', toolError.input);
+});
+```
+
+在流式场景中，工具执行错误会以 `tool-error` 部分的形式出现在流中，而其他错误则以 `error` 部分的形式出现。
+
+### 工具调用流式传输默认开启（toolCallStreaming 已移除）
+
+`toolCallStreaming` 选项在 AI SDK 5.0 中已被移除。工具调用流式传输现在默认始终启用。
+
+```tsx filename="AI SDK 4.0"
+const result = streamText({
+  model: __MODEL__,
+  messages,
+  toolCallStreaming: true, // Optional parameter to enable streaming
+  tools: {
+    weatherTool,
+    searchTool,
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = streamText({
+  model: __MODEL__,
+  messages: convertToModelMessages(messages),
+  // toolCallStreaming removed - streaming is always enabled
+  tools: {
+    weatherTool,
+    searchTool,
+  },
+});
+```
+
+### 工具部分类型变更（UIMessage）
+
+在 v5 中，UI 工具部分使用类型化命名：`tool-${toolName}`，取代通用类型。
+
+```tsx filename="AI SDK 4.0"
+// Generic tool-invocation type
+{
+  message.parts.map(part => {
+    if (part.type === 'tool-invocation') {
+      return <div>{part.toolInvocation.toolName}</div>;
+    }
+  });
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// Type-safe tool parts with specific names
+{
+  message.parts.map(part => {
+    switch (part.type) {
+      case 'tool-getWeatherInformation':
+        return <div>Getting weather...</div>;
+      case 'tool-askForConfirmation':
+        return <div>Asking for confirmation...</div>;
+    }
+  });
+}
+```
+
+### 动态工具支持
+
+AI SDK 5.0 引入动态工具，用于处理在开发时类型未知的工具，例如没有 schema 的 MCP 工具或运行时由用户定义的函数。
+
+#### 新增 dynamicTool 辅助函数
+
+新增的 `dynamicTool` 辅助函数允许你定义输入与输出类型在编译期未知的工具。
+
+```tsx filename="AI SDK 5.0"
+import { dynamicTool } from 'ai';
+import { z } from 'zod';
+
+// Define a dynamic tool
+const runtimeTool = dynamicTool({
+  description: 'A tool defined at runtime',
+  inputSchema: z.object({}),
+  execute: async input => {
+    // Input and output are typed as 'unknown'
+    const { query } = input as { query: string };
+    return { result: `Processed: ${query}` };
+  },
+});
+```
+
+#### 无 schema 的 MCP 工具
+
+未提供 schema 的 MCP 工具现在会自动被视为动态工具：
+
+```tsx filename="AI SDK 5.0"
+import { MCPClient } from 'ai';
+
+const client = new MCPClient({
+  /* ... */
+});
+const tools = await client.getTools();
+
+// Tools without schemas are now 'dynamic' type
+// and won't break type inference when mixed with static tools
+```
+
+#### 混合使用工具时的类型安全处理
+
+同时使用静态工具和动态工具时，请使用 `dynamic` 标志进行类型收窄：
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: __MODEL__,
+  tools: {
+    // Static tool with known types
+    weather: weatherTool,
+    // Dynamic tool with unknown types
+    customDynamicTool: dynamicTool({
+      /* ... */
+    }),
+  },
+  onStepFinish: step => {
+    // Handle tool calls with type safety
+    for (const toolCall of step.toolCalls) {
+      if (toolCall.dynamic) {
+        // Dynamic tool: input/output are 'unknown'
+        console.log('Dynamic tool called:', toolCall.toolName);
+        continue;
+      }
+
+      // Static tools have full type inference
+      switch (toolCall.toolName) {
+        case 'weather':
+          // TypeScript knows the exact types
+          console.log(toolCall.input.location); // string
+          break;
+      }
+    }
+  },
+});
+```
+
+#### 新增 dynamic-tool UI 部分
+
+UI 消息现在包含 `dynamic-tool` 部分类型，用于渲染动态工具调用：
+
+```tsx filename="AI SDK 5.0"
+{
+  message.parts.map((part, index) => {
+    switch (part.type) {
+      // Static tools use specific types
+      case 'tool-weather':
+        return <div>Weather: {part.input.city}</div>;
+
+      // Dynamic tools use the generic dynamic-tool type
+      case 'dynamic-tool':
+        return (
+          <div>
+            Dynamic tool: {part.toolName}
+            <pre>{JSON.stringify(part.input, null, 2)}</pre>
+          </div>
+        );
+    }
+  });
+}
+```
+
+#### 破坏性变更：工具调用与结果需要进行类型收窄
+
+在遍历 `toolCalls` 和 `toolResults` 时，现在需要先检查 `dynamic` 标志才能正确进行类型收窄：
+
+```tsx filename="AI SDK 4.0"
+// Direct type checking worked without dynamic flag
+onStepFinish: step => {
+  for (const toolCall of step.toolCalls) {
+    switch (toolCall.toolName) {
+      case 'weather':
+        console.log(toolCall.input.location); // typed as string
+        break;
+      case 'search':
+        console.log(toolCall.input.query); // typed as string
+        break;
+    }
+  }
+};
+```
+
+```tsx filename="AI SDK 5.0"
+// Must check dynamic flag first for type narrowing
+onStepFinish: step => {
+  for (const toolCall of step.toolCalls) {
+    // Check if it's a dynamic tool first
+    if (toolCall.dynamic) {
+      console.log('Dynamic tool:', toolCall.toolName);
+      console.log('Input:', toolCall.input); // typed as unknown
+      continue;
+    }
+
+    // Now TypeScript knows it's a static tool
+    switch (toolCall.toolName) {
+      case 'weather':
+        console.log(toolCall.input.location); // typed as string
+        break;
+      case 'search':
+        console.log(toolCall.input.query); // typed as string
+        break;
+    }
+  }
+};
+```
+
+### 工具 UI 部分状态变更
+
+工具 UI 部分现在使用更细粒度的状态，以更好地表达流式生命周期和错误处理。
+
+```tsx filename="AI SDK 4.0"
+// Old states
+{
+  message.parts.map(part => {
+    if (part.type === 'tool-invocation') {
+      switch (part.toolInvocation.state) {
+        case 'partial-call':
+          return <div>Loading...</div>;
+        case 'call':
+          return (
+            <div>
+              Tool called with {JSON.stringify(part.toolInvocation.args)}
+            </div>
+          );
+        case 'result':
+          return <div>Result: {part.toolInvocation.result}</div>;
+      }
+    }
+  });
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// New granular states
+{
+  message.parts.map(part => {
+    switch (part.type) {
+      case 'tool-getWeatherInformation':
+        switch (part.state) {
+          case 'input-streaming':
+            return <pre>{JSON.stringify(part.input, null, 2)}</pre>;
+          case 'input-available':
+            return <div>Getting weather for {part.input.city}...</div>;
+          case 'output-available':
+            return <div>Weather: {part.output}</div>;
+          case 'output-error':
+            return <div>Error: {part.errorText}</div>;
+        }
+    }
+  });
+}
+```
+
+**状态变更**：
+
+- `partial-call` → `input-streaming`（工具输入正在流式传输）
+- `call` → `input-available`（工具输入已完成，准备执行）
+- `result` → `output-available`（工具执行成功）
+- 新增：`output-error`（工具执行失败）
+
+#### 渲染工具调用（兜底模式）
+
+在 v4 中，你通常使用通用的 `tool-invocation` 类型渲染工具调用。在 v5 中，**推荐的做法是使用每个工具的类型化部分名称（例如 `tool-getWeather`）进行专门处理**。不过，如果你需要以相同方式渲染所有工具调用的兜底模式，可以使用 `isToolUIPart` 和 `getToolName` 辅助函数作为回退。
+
+```tsx filename="AI SDK 4.0"
+{
+  message.parts.map((part, index) => {
+    switch (part.type) {
+      case 'text':
+        return <div key={index}>{part.text}</div>;
+      case 'tool-invocation':
+        const { toolInvocation } = part;
+        return (
+          <details key={`tool-${toolInvocation.toolCallId}`}>
+            <summary>
+              <span>{toolInvocation.toolName}</span>
+              {toolInvocation.state === 'result' ? (
+                <span>Click to expand</span>
+              ) : (
+                <span>calling...</span>
+              )}
+            </summary>
+            {toolInvocation.state === 'result' ? (
+              <div>
+                <pre>{JSON.stringify(toolInvocation.result, null, 2)}</pre>
+              </div>
+            ) : null}
+          </details>
+        );
+    }
+  });
+}
+```
+
+```tsx filename="AI SDK 5.0"
+import { isToolUIPart, getToolName } from 'ai';
+
+{
+  message.parts.map((part, index) => {
+    switch (part.type) {
+      case 'text':
+        return <div key={index}>{part.text}</div>;
+      default:
+        if (isToolUIPart(part)) {
+          const toolInvocation = part;
+          return (
+            <details key={`tool-${toolInvocation.toolCallId}`}>
+              <summary>
+                <span>{getToolName(toolInvocation)}</span>
+                {toolInvocation.state === 'output-available' ? (
+                  <span>Click to expand</span>
+                ) : (
+                  <span>calling...</span>
+                )}
+              </summary>
+              {toolInvocation.state === 'output-available' ? (
+                <div>
+                  <pre>{JSON.stringify(toolInvocation.output, null, 2)}</pre>
+                </div>
+              ) : null}
+            </details>
+          );
+        }
+    }
+  });
+}
+```
+
+#### 媒体类型标准化
+
+为保持一致，`mimeType` 已更名为 `mediaType`。模型消息同时支持图像与文件类型。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: someModel,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What do you see?' },
+        {
+          type: 'image',
+          image: new Uint8Array([0, 1, 2, 3]),
+          mimeType: 'image/png',
+        },
+        {
+          type: 'file',
+          data: contents,
+          mimeType: 'application/pdf',
+        },
+      ],
+    },
+  ],
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: someModel,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What do you see?' },
+        {
+          type: 'image',
+          image: new Uint8Array([0, 1, 2, 3]),
+          mediaType: 'image/png',
+        },
+        {
+          type: 'file',
+          data: contents,
+          mediaType: 'application/pdf',
+        },
+      ],
+    },
+  ],
+});
+```
+
+### 推理支持
+
+#### 推理文本属性重命名
+
+对于多步生成，`.reasoning` 属性已更名为 `.reasoningText`。
+
+```tsx filename="AI SDK 4.0"
+for (const step of steps) {
+  console.log(step.reasoning);
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for (const step of steps) {
+  console.log(step.reasoningText);
+}
+```
+
+#### generateText 推理属性变更
+
+在 `generateText()` 和 `streamText()` 的结果中，推理相关属性已更名。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  prompt: 'Explain your reasoning',
+});
+
+console.log(result.reasoning); // String reasoning text
+console.log(result.reasoningDetails); // Array of reasoning details
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  prompt: 'Explain your reasoning',
+});
+
+console.log(result.reasoningText); // String reasoning text
+console.log(result.reasoning); // Array of reasoning details
+```
+
+### 续写步骤移除
+
+`experimental_continueSteps` 选项已从 `generateText()` 中移除。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  experimental_continueSteps: true,
+  // ...
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  // experimental_continueSteps has been removed
+  // Use newer models with higher output token limits instead
+  // ...
+});
+```
+
+### 图像生成变更
+
+图像模型设置已移至 `providerOptions`。
+
+```tsx filename="AI SDK 4.0"
+await generateImage({
+  model: luma.image('photon-flash-1', {
+    maxImagesPerCall: 5,
+    pollIntervalMillis: 500,
+  }),
+  prompt,
+  n: 10,
+});
+```
+
+```tsx filename="AI SDK 5.0"
+await generateImage({
+  model: luma.image('photon-flash-1'),
+  prompt,
+  n: 10,
+  maxImagesPerCall: 5,
+  providerOptions: {
+    luma: { pollIntervalMillis: 500 },
+  },
+});
+```
+
+### 步骤结果变更
+
+#### 步骤类型移除
+
+`stepType` 属性已从步骤结果中移除。
+
+```tsx filename="AI SDK 4.0"
+steps.forEach(step => {
+  switch (step.stepType) {
+    case 'initial':
+      console.log('Initial step');
+      break;
+    case 'tool-result':
+      console.log('Tool result step');
+      break;
+    case 'done':
+      console.log('Final step');
+      break;
+  }
+});
+```
+
+```tsx filename="AI SDK 5.0"
+steps.forEach((step, index) => {
+  if (index === 0) {
+    console.log('Initial step');
+  } else if (step.toolResults.length > 0) {
+    console.log('Tool result step');
+  } else {
+    console.log('Final step');
+  }
+});
+```
+
+### 步骤控制：maxSteps → stopWhen
+
+对于 `generateText` 和 `streamText` 等核心函数，`maxSteps` 参数已被 `stopWhen` 取代，后者对多步执行提供更灵活的控制。`stopWhen` 参数定义**在最后一个步骤包含工具结果时**停止生成的条件。当以数组形式提供多个条件时，只要满足其中任一条件生成即停止。
+
+```tsx filename="AI SDK 4.0"
+// V4: Simple numeric limit
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  maxSteps: 5, // Stop after a maximum of 5 steps
+});
+
+// useChat with maxSteps
+const { messages } = useChat({
+  maxSteps: 3, // Stop after a maximum of 3 steps
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { isStepCount, hasToolCall } from 'ai';
+
+// V5: Server-side - flexible stopping conditions with stopWhen
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  // Only triggers when last step has tool results
+  stopWhen: isStepCount(5), // Stop at step 5 if tools were called
+});
+
+// Server-side - stop when a specific tool is called
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  stopWhen: hasToolCall('finalizeTask'), // Stop when finalizeTask tool is called
+});
+```
+
+**常用停止模式**：
+
+```tsx filename="AI SDK 5.0"
+// Stop after N steps (equivalent to old maxSteps)
+// Note: Only applies when the last step has tool results
+stopWhen: isStepCount(5);
+
+// Stop when a specific tool is called
+stopWhen: hasToolCall('finalizeTask');
+
+// Stop when either tool is called
+stopWhen: hasToolCall('submitOrder', 'finalizeTask');
+
+// Multiple conditions (stops if ANY condition is met)
+stopWhen: [
+  isStepCount(10), // Maximum 10 steps
+  hasToolCall('submitOrder'), // Or when order is submitted
+];
+
+// Custom condition based on step content
+stopWhen: ({ steps }) => {
+  const lastStep = steps[steps.length - 1];
+  // Custom logic - only triggers if last step has tool results
+  return lastStep?.text?.includes('COMPLETE');
+};
+```
+
+**重要提示**：`stopWhen` 条件仅在最后一个步骤包含工具结果时才会被评估。
+
+#### 用量与总用量
+
+用量属性现在会区分单步用量与总用量。
+
+```tsx filename="AI SDK 4.0"
+// usage contained total token usage across all steps
+console.log(result.usage);
+```
+
+```tsx filename="AI SDK 5.0"
+// usage contains token usage from the final step only
+console.log(result.usage);
+// totalUsage contains total token usage across all steps
+console.log(result.totalUsage);
+```
+
+## AI SDK UI 变更
+
+### 包结构变更
+
+### 拆分出 `@ai-sdk/rsc` 包
+
+`ai/rsc` 导出已被拆分到独立的包 `@ai-sdk/rsc` 中。
+
+```tsx filename="AI SDK 4.0"
+import { createStreamableValue } from 'ai/rsc';
+```
+
+```tsx filename="AI SDK 5.0"
+import { createStreamableValue } from '@ai-sdk/rsc';
+```
+
+<Note>别忘了安装新包：`npm install @ai-sdk/rsc`</Note>
+
+### React UI Hook 移至 `@ai-sdk/react`
+
+已弃用的 `ai/react` 导出已被移除，请改用 `@ai-sdk/react`。
+
+```tsx filename="AI SDK 4.0"
+import { useChat } from 'ai/react';
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+```
+
+<Note>
+  别忘了安装新包：`npm install @ai-sdk/react`
+</Note>
+
+### useChat 变更
+
+`useChat` Hook 在 v5 中经历了重大变化：全新的传输（transport）架构、移除受管输入状态等等。
+
+#### maxSteps 移除
+
+`maxSteps` 参数已从 `useChat` 中移除。现在你应使用服务端 `stopWhen` 条件控制多步工具执行，并在客户端工具调用时手动提交工具结果、触发新消息。
+
+```tsx filename="AI SDK 4.0"
+const { messages, sendMessage } = useChat({
+  maxSteps: 5, // Automatic tool result submission
+});
+```
+
+```tsx filename="AI SDK 5.0"
+// Server-side: Use stopWhen for multi-step control
+import { streamText, convertToModelMessages, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await streamText({
+  model: __MODEL__,
+  messages: convertToModelMessages(messages),
+  stopWhen: isStepCount(5), // Stop after 5 steps with tool calls
+});
+
+// Client-side: Configure automatic submission
+import { useChat } from '@ai-sdk/react';
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai';
+
+const { messages, sendMessage, addToolOutput } = useChat({
+  // Automatically submit when all tool results are available
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+
+  async onToolCall({ toolCall }) {
+    const result = await executeToolCall(toolCall);
+
+    // Important: Don't await addToolOutput inside onToolCall to avoid deadlocks
+    addToolOutput({
+      tool: toolCall.toolName,
+      toolCallId: toolCall.toolCallId,
+      output: result,
+    });
+  },
+});
+```
+
+<Note>
+  重要：使用 `sendAutomaticallyWhen` 时，不要在 `onToolCall` 内对 `addToolOutput` 使用 `await`，否则可能导致死锁。当你未使用自动提交、需要确保消息在手动调用 `sendMessage()` 之前已更新时，`await` 才有用。
+</Note>
+
+这一变更为处理工具调用提供了更大的灵活性，并使客户端行为与服务端多步执行模式保持一致。
+
+有关新工具提交方式的更多细节，请参阅下方的[工具结果提交变更](#工具结果提交变更)章节。
+
+#### 初始消息重命名
+
+`initialMessages` 选项已更名为 `messages`。
+
+```tsx filename="AI SDK 4.0"
+import { useChat, type Message } from '@ai-sdk/react';
+
+function ChatComponent({ initialMessages }: { initialMessages: Message[] }) {
+  const { messages } = useChat({
+    initialMessages: initialMessages,
+    // ...
+  });
+
+  // your component
+}
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat, type UIMessage } from '@ai-sdk/react';
+
+function ChatComponent({ initialMessages }: { initialMessages: UIMessage[] }) {
+  const { messages } = useChat({
+    messages: initialMessages,
+    // ...
+  });
+
+  // your component
+}
+```
+
+#### 共享聊天实例
+
+在 v4 中，你可以在多个 `useChat` Hook 中使用相同的 `id` 参数来在组件间共享聊天状态。
+
+```tsx filename="AI SDK 4.0"
+// Component A
+const { messages } = useChat({
+  id: 'shared-chat',
+  api: '/api/chat',
+});
+
+// Component B - would share the same chat state
+const { messages } = useChat({
+  id: 'shared-chat',
+  api: '/api/chat',
+});
+```
+
+在 v5 中，你需要通过传递共享的 `Chat` 实例来显式共享聊天实例。
+
+```tsx filename="AI SDK 5.0"
+// e.g. Store Chat instance in React Context and create a custom hook
+
+// Component A
+const { chat } = useSharedChat(); // Custom hook that accesses shared Chat from context
+
+const { messages, sendMessage } = useChat({
+  chat, // Pass the shared chat instance
+});
+
+// Component B - shares the same chat instance
+const { chat } = useSharedChat(); // Same hook to access shared Chat from context
+
+const { messages } = useChat({
+  chat, // Same shared chat instance
+});
+```
+
+有关跨组件共享聊天状态的完整示例，请参阅 [Share Chat State Across Components](/cookbook/next/use-shared-chat-context) 菜谱。
+
+#### 聊天传输架构
+
+配置现在通过传输（transport）对象处理，而不是直接使用 API 选项。
+
+```tsx filename="AI SDK 4.0"
+import { useChat } from '@ai-sdk/react';
+
+const { messages } = useChat({
+  api: '/api/chat',
+  credentials: 'include',
+  headers: { 'Custom-Header': 'value' },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    credentials: 'include',
+    headers: { 'Custom-Header': 'value' },
+  }),
+});
+```
+
+#### 移除受管输入状态
+
+`useChat` Hook 不再在内部管理输入状态。你现在必须手动管理输入状态。
+
+```tsx filename="AI SDK 4.0"
+import { useChat } from '@ai-sdk/react';
+
+export default function Page() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: '/api/chat',
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={input} onChange={handleInputChange} />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    sendMessage({ text: input });
+    setInput('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={input} onChange={e => setInput(e.target.value)} />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+#### 消息发送：`append` → `sendMessage`
+
+`append` 函数已被 `sendMessage` 取代，且需要结构化的消息格式。
+
+```tsx filename="AI SDK 4.0"
+const { append } = useChat();
+
+// Simple text message
+append({ role: 'user', content: 'Hello' });
+
+// With custom body
+append(
+  {
+    role: 'user',
+    content: 'Hello',
+  },
+  { body: { imageUrl: 'https://...' } },
+);
+```
+
+```tsx filename="AI SDK 5.0"
+const { sendMessage } = useChat();
+
+// Simple text message (most common usage)
+sendMessage({ text: 'Hello' });
+
+// Or with explicit parts array
+sendMessage({
+  parts: [{ type: 'text', text: 'Hello' }],
+});
+
+// With custom body (via request options)
+sendMessage(
+  { role: 'user', parts: [{ type: 'text', text: 'Hello' }] },
+  { body: { imageUrl: 'https://...' } },
+);
+```
+
+#### 消息重新生成：`reload` → `regenerate`
+
+`reload` 函数已更名为 `regenerate`，功能得到增强。
+
+```tsx filename="AI SDK 4.0"
+const { reload } = useChat();
+
+// Regenerate last message
+reload();
+```
+
+```tsx filename="AI SDK 5.0"
+const { regenerate } = useChat();
+
+// Regenerate last message
+regenerate();
+
+// Regenerate specific message
+regenerate({ messageId: 'message-123' });
+```
+
+#### onResponse 移除
+
+`onResponse` 回调已从 `useChat` 和 `useCompletion` 中移除。
+
+```tsx filename="AI SDK 4.0"
+const { messages } = useChat({
+  onResponse(response) {
+    // handle response
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { messages } = useChat({
+  // onResponse is no longer available
+});
+```
+
+#### sendExtraMessageFields 成为默认行为
+
+`sendExtraMessageFields` 选项已被移除，现已成为默认行为。
+
+```tsx filename="AI SDK 4.0"
+const { messages } = useChat({
+  sendExtraMessageFields: true,
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { messages } = useChat({
+  // sendExtraMessageFields is now the default
+});
+```
+
+#### keepLastMessageOnError 移除
+
+`keepLastMessageOnError` 选项已被移除，因为不再需要。
+
+```tsx filename="AI SDK 4.0"
+const { messages } = useChat({
+  keepLastMessageOnError: true,
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { messages } = useChat({
+  // keepLastMessageOnError is no longer needed
+});
+```
+
+#### 聊天请求选项变更
+
+`data` 和 `allowEmptySubmit` 选项已从 `ChatRequestOptions` 中移除。
+
+```tsx filename="AI SDK 4.0"
+handleSubmit(e, {
+  data: { imageUrl: 'https://...' },
+  body: { custom: 'value' },
+  allowEmptySubmit: true,
+});
+```
+
+```tsx filename="AI SDK 5.0"
+sendMessage(
+  {
+    /* yourMessage */
+  },
+  {
+    body: {
+      custom: 'value',
+      imageUrl: 'https://...', // Move data to body
+    },
+  },
+);
+```
+
+#### RequestOptions 类型重命名
+
+`RequestOptions` 已更名为 `CompletionRequestOptions`。
+
+```tsx filename="AI SDK 4.0"
+import type { RequestOptions } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import type { CompletionRequestOptions } from 'ai';
+```
+
+#### addToolResult 重命名为 addToolOutput
+
+`addToolResult` 方法已更名为 `addToolOutput`。此外，`result` 参数也已更名为 `output`，以便与其他工具相关 API 保持一致。
+
+```tsx filename="AI SDK 4.0"
+const { addToolResult } = useChat();
+
+// Add tool result with 'result' parameter
+addToolResult({
+  toolCallId: 'tool-call-123',
+  result: 'Weather: 72°F, sunny',
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { addToolOutput } = useChat();
+
+// Add tool output with 'output' parameter and 'tool' name for type safety
+addToolOutput({
+  tool: 'getWeather',
+  toolCallId: 'tool-call-123',
+  output: 'Weather: 72°F, sunny',
+});
+```
+
+<Note>
+  `addToolResult` 仍可用，但已弃用。它将在版本 6 中移除。
+</Note>
+
+#### 工具结果提交变更
+
+`useChat` 和 `Chat` 组件中的自动工具结果提交行为已更新。你现在对工具结果的提交时机拥有更多控制与灵活性。
+
+- `onToolCall` 不再支持通过返回值自动提交工具结果
+- 你必须显式调用 `addToolOutput` 来提供工具结果
+- 配合 `lastAssistantMessageIsCompleteWithToolCalls` 辅助函数使用 `sendAutomaticallyWhen` 实现自动提交
+- 重要：不要在 `onToolCall` 内对 `addToolOutput` 使用 `await`，以免死锁
+- `maxSteps` 参数已从 `Chat` 组件和 `useChat` Hook 中移除
+- 多步工具执行请改用服务端 `stopWhen` 条件（参见 [maxSteps 移除](#maxsteps-移除)）
+
+```tsx filename="AI SDK 4.0"
+const { messages, sendMessage, addToolResult } = useChat({
+  maxSteps: 5, // Removed in v5
+
+  // Automatic submission by returning a value
+  async onToolCall({ toolCall }) {
+    if (toolCall.toolName === 'getLocation') {
+      const cities = ['New York', 'Los Angeles', 'Chicago', 'San Francisco'];
+      return cities[Math.floor(Math.random() * cities.length)];
+    }
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai';
+
+const { messages, sendMessage, addToolOutput } = useChat({
+  // Automatic submission with helper
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+
+  async onToolCall({ toolCall }) {
+    if (toolCall.toolName === 'getLocation') {
+      const cities = ['New York', 'Los Angeles', 'Chicago', 'San Francisco'];
+
+      // Important: Don't await inside onToolCall to avoid deadlocks
+      addToolOutput({
+        tool: 'getLocation',
+        toolCallId: toolCall.toolCallId,
+        output: cities[Math.floor(Math.random() * cities.length)],
+      });
+    }
+  },
+});
+```
+
+#### 加载状态变更
+
+已弃用的 `isLoading` 辅助属性已被移除，请改用 `status`。
+
+```tsx filename="AI SDK 4.0"
+const { isLoading } = useChat();
+```
+
+```tsx filename="AI SDK 5.0"
+const { status } = useChat();
+// Use state instead of isLoading for more granular control
+```
+
+#### 恢复流支持
+
+恢复（resume）功能已从 `experimental_resume` 迁移到 `resumeStream`。
+
+```tsx filename="AI SDK 4.0"
+// Resume was experimental
+const { messages } = useChat({
+  experimental_resume: true,
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { messages } = useChat({
+  resumeStream: true, // Resume interrupted streams
+});
+```
+
+#### 动态 body 值
+
+在 v4 中，useChat 配置里的 `body` 选项会随组件状态变化动态更新。在 v5 中，`body` 值仅在首次渲染时捕获，并在组件整个生命周期内保持不变。
+
+```tsx filename="AI SDK 4.0"
+const [temperature, setTemperature] = useState(0.7);
+
+const { messages } = useChat({
+  api: '/api/chat',
+  body: {
+    temperature, // This would update dynamically in v4
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const [temperature, setTemperature] = useState(0.7);
+
+// Option 1: Use request-level configuration (Recommended)
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({ api: '/api/chat' }),
+});
+
+// Pass dynamic values at request time
+sendMessage(
+  { text: input },
+  {
+    body: {
+      temperature, // Current temperature value at request time
+    },
+  },
+);
+
+// Option 2: Use function configuration with useRef
+const temperatureRef = useRef(temperature);
+temperatureRef.current = temperature;
+
+const { messages } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    body: () => ({
+      temperature: temperatureRef.current,
+    }),
+  }),
+});
+```
+
+有关请求配置的更多细节，请参阅[聊天机器人指南](/docs/ai-sdk-ui/chatbot#请求配置)。
+
+#### 用量信息
+
+在 v4 中，用量信息可通过 `onFinish` 回调的 options 参数直接获取。在 v5 中，用量数据通过 `toUIMessageStreamResponse` 中的 `messageMetadata` 函数以元数据形式附加到各条消息上。
+
+```tsx filename="AI SDK 4.0"
+const { messages } = useChat({
+  onFinish(message, options) {
+    const usage = options.usage;
+    console.log('Usage:', usage);
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import {
+  convertToModelMessages,
+  streamText,
+  UIMessage,
+  type LanguageModelUsage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Create a new metadata type (optional for type-safety)
+type MyMetadata = {
+  totalUsage: LanguageModelUsage;
+};
+
+// Create a new custom message type with your own metadata
+export type MyUIMessage = UIMessage<MyMetadata>;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: MyUIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: convertToModelMessages(messages),
+  });
+
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    messageMetadata: ({ part }) => {
+      // Send total usage when generation is finished
+      if (part.type === 'finish') {
+        return { totalUsage: part.totalUsage };
+      }
+    },
+  });
+}
+```
+
+然后，在客户端即可访问消息级元数据。
+
+```tsx filename="AI SDK 5.0 - Client"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import type { MyUIMessage } from './api/chat/route';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  // Use custom message type defined on the server (optional for type-safety)
+  const { messages } = useChat<MyUIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(m => (
+        <div key={m.id} className="whitespace-pre-wrap">
+          {m.role === 'user' ? 'User: ' : 'AI: '}
+          {m.parts.map(part => {
+            if (part.type === 'text') {
+              return part.text;
+            }
+          })}
+          {/* Render usage via metadata */}
+          {m.metadata?.totalUsage && (
+            <div>Total usage: {m.metadata?.totalUsage.totalTokens} tokens</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+你也可以在 `useChat` 的 `onFinish` 回调中访问元数据：
+
+```tsx filename="AI SDK 5.0 - onFinish"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import type { MyUIMessage } from './api/chat/route';
+import { DefaultChatTransport } from 'ai';
+
+export default function Chat() {
+  // Use custom message type defined on the server (optional for type-safety)
+  const { messages } = useChat<MyUIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+    onFinish: ({ message }) => {
+      // Access message metadata via onFinish callback
+      console.log(message.metadata?.totalUsage);
+    },
+  });
+}
+```
+
+#### 请求体构造：experimental_prepareRequestBody → prepareSendMessagesRequest
+
+传输配置中的 `experimental_prepareRequestBody` 选项已被 `prepareSendMessagesRequest` 取代。
+
+```tsx filename="AI SDK 4.0"
+import { useChat } from '@ai-sdk/react';
+
+const { messages } = useChat({
+  api: '/api/chat',
+  // Only send the last message to the server:
+  experimental_prepareRequestBody({ messages, id }) {
+    return { message: messages[messages.length - 1], id };
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    // Only send the last message to the server:
+    prepareSendMessagesRequest({ messages, id }) {
+      return { body: { message: messages[messages.length - 1], id } };
+    },
+  }),
+});
+```
+
+### `@ai-sdk/vue` 变更
+
+Vue.js 集成已完全重构，以 `Chat` 类取代 `useChat` 组合式函数。
+
+#### useChat 由 Chat 类取代
+
+```typescript filename="@ai-sdk/vue v1"
+<script setup>
+import { useChat } from '@ai-sdk/vue';
+
+const { messages, input, handleSubmit } = useChat({
+  api: '/api/chat',
+});
+</script>
+```
+
+```typescript filename="@ai-sdk/vue v2"
+<script setup>
+import { Chat } from '@ai-sdk/vue';
+import { DefaultChatTransport } from 'ai';
+import { ref } from 'vue';
+
+const input = ref('');
+const chat = new Chat({
+  transport: new DefaultChatTransport({ api: '/api/chat' }),
+});
+
+const handleSubmit = (e: Event) => {
+  e.preventDefault();
+  chat.sendMessage({ text: input.value });
+  input.value = '';
+};
+</script>
+```
+
+#### 消息结构变更
+
+消息现在使用 `parts` 数组，而不是 `content` 字符串。
+
+```typescript filename="@ai-sdk/vue v1"
+<template>
+  <div v-for="message in messages" :key="message.id">
+    <div>{{ message.role }}: {{ message.content }}</div>
+  </div>
+</template>
+```
+
+```typescript filename="@ai-sdk/vue v2"
+<template>
+  <div v-for="message in chat.messages" :key="message.id">
+    <div>{{ message.role }}:</div>
+    <div v-for="part in message.parts" :key="part.type">
+      <span v-if="part.type === 'text'">{{ part.text }}</span>
+    </div>
+  </div>
+</template>
+```
+
+### `@ai-sdk/svelte` 变更
+
+Svelte 集成也已更新，引入了新的构造模式和只读属性。
+
+#### 构造函数 API 变更
+
+```js filename="@ai-sdk/svelte v1"
+import { Chat } from '@ai-sdk/svelte';
+
+const chatInstance = Chat({
+  api: '/api/chat',
+});
+```
+
+```js filename="@ai-sdk/svelte v2"
+import { Chat } from '@ai-sdk/svelte';
+import { DefaultChatTransport } from 'ai';
+
+const chatInstance = Chat(() => ({
+  transport: new DefaultChatTransport({ api: '/api/chat' }),
+}));
+```
+
+##### 属性变为只读
+
+属性现在为只读，必须使用 setter 方法更新。
+
+```js filename="@ai-sdk/svelte v1"
+// Direct property mutation was allowed
+chatInstance.messages = [...chatInstance.messages, newMessage];
+```
+
+```js filename="@ai-sdk/svelte v2"
+// Must use setter methods
+chatInstance.setMessages([...chatInstance.messages, newMessage]);
+```
+
+##### 移除受管输入
+
+与 React 和 Vue 一样，Svelte 集成也移除了输入管理。
+
+```js filename="@ai-sdk/svelte v1"
+// Input was managed internally
+const { messages, input, handleSubmit } = chatInstance;
+```
+
+```js filename="@ai-sdk/svelte v2"
+// Must manage input state manually
+let input = '';
+const { messages, sendMessage } = chatInstance;
+
+const handleSubmit = () => {
+  sendMessage({ text: input });
+  input = '';
+};
+```
+
+#### `@ai-sdk/ui-utils` 包移除
+
+`@ai-sdk/ui-utils` 包已被移除，其导出内容已移入主包 `ai`。
+
+```tsx filename="AI SDK 4.0"
+import { getTextFromDataUrl } from '@ai-sdk/ui-utils';
+```
+
+```tsx filename="AI SDK 5.0"
+import { getTextFromDataUrl } from 'ai';
+```
+
+**说明**：`processDataStream` 已在 v5.0 中被完全移除。处理 UI 消息流请改用 `readUIMessageStream`，大多数场景则可使用可配置性更强的 Chat/useChat API。
+
+### useCompletion 变更
+
+`data` 属性已从 `useCompletion` Hook 中移除。
+
+```tsx filename="AI SDK 4.0"
+const {
+  completion,
+  handleSubmit,
+  data, // No longer available
+} = useCompletion();
+```
+
+```tsx filename="AI SDK 5.0"
+const {
+  completion,
+  handleSubmit,
+  // data property removed entirely
+} = useCompletion();
+```
+
+### useAssistant 移除
+
+`useAssistant` Hook 已被移除。
+
+```tsx filename="AI SDK 4.0"
+import { useAssistant } from '@ai-sdk/react';
+```
+
+```tsx filename="AI SDK 5.0"
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+function Chat() {
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  // ...
+}
+```
+
+`useAssistant` Hook 专用于 OpenAI Assistants API。OpenAI 已弃用该 API，转而支持 Responses API。如上所示为你的路由配置 `useChat`，然后从路由返回 UI 消息流：
+
+```tsx filename="app/api/chat/route.ts"
+import { openai } from '@ai-sdk/openai';
+import { convertToModelMessages, streamText, type UIMessage } from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: openai.responses('gpt-4o-mini'),
+    prompt: convertToModelMessages(messages),
+  });
+
+  return result.toUIMessageStreamResponse();
+}
+```
+
+有关持久化对话状态与内置工具，请参阅 [OpenAI Responses API 指南](/cookbook/guides/openai-responses)。
+
+如果需要将 `useChat` 连接到其他后端，请参阅[传输文档](/docs/ai-sdk-ui/transport)与[流协议](/docs/ai-sdk-ui/stream-protocol)。有关迁移现有 OpenAI Assistants 数据和 API 调用，请参阅 OpenAI 的 [Assistants 迁移指南](https://platform.openai.com/docs/assistants/migration)。
+
+#### 附件 → 文件部分
+
+`experimental_attachments` 属性已被 parts 数组取代。
+
+```tsx filename="AI SDK 4.0"
+{
+  messages.map(message => (
+    <div className="flex flex-col gap-2">
+      {message.content}
+
+      <div className="flex flex-row gap-2">
+        {message.experimental_attachments?.map((attachment, index) =>
+          attachment.contentType?.includes('image/') ? (
+            <img src={attachment.url} alt={attachment.name} />
+          ) : attachment.contentType?.includes('text/') ? (
+            <div className="w-32 h-24 p-2 overflow-hidden text-xs border rounded-md ellipsis text-zinc-500">
+              {getTextFromDataUrl(attachment.url)}
+            </div>
+          ) : null,
+        )}
+      </div>
+    </div>
+  ));
+}
+```
+
+```tsx filename="AI SDK 5.0"
+{
+  messages.map(message => (
+    <div>
+      {message.parts.map((part, index) => {
+        if (part.type === 'text') {
+          return <div key={index}>{part.text}</div>;
+        }
+
+        if (part.type === 'file' && part.mediaType?.startsWith('image/')) {
+          return (
+            <div key={index}>
+              <img src={part.url} />
+            </div>
+          );
+        }
+      })}
+    </div>
+  ));
+}
+```
+
+<Note>
+  部分模型不支持将文本文件（text/plain、text/markdown、text/csv 等）作为文件部分。对于文本文件，你可以改为读取内容并以文本部分发送：
+
+```tsx
+// Instead of this:
+{ type: 'file', data: buffer, mediaType: 'text/plain' }
+
+// Do this:
+{ type: 'text', text: buffer.toString('utf-8') }
+```
+
+</Note>
+
+### 嵌入变更
+
+#### 嵌入的提供商选项
+
+嵌入模型设置现在使用提供商选项，而不是模型参数。
+
+```tsx filename="AI SDK 4.0"
+const { embedding } = await embed({
+  model: openai('text-embedding-3-small', {
+    dimensions: 10,
+  }),
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const { embedding } = await embed({
+  model: openai('text-embedding-3-small'),
+  providerOptions: {
+    openai: {
+      dimensions: 10,
+    },
+  },
+});
+```
+
+#### rawResponse → response
+
+`rawResponse` 属性已更名为 `response`。
+
+```tsx filename="AI SDK 4.0"
+const { rawResponse } = await embed(/* */);
+```
+
+```tsx filename="AI SDK 5.0"
+const { response } = await embed(/* */);
+```
+
+#### embedMany 中的并行请求
+
+`embedMany` 现在会发出并行请求，并支持可配置的 `maxParallelCalls` 选项。
+
+```tsx filename="AI SDK 5.0"
+const { embeddings, usage } = await embedMany({
+  maxParallelCalls: 2, // Limit parallel requests
+  model: 'openai/text-embedding-3-small',
+  values: [
+    'sunny day at the beach',
+    'rainy afternoon in the city',
+    'snowy night in the mountains',
+  ],
+});
+```
+
+#### LangChain Adapter 移至 `@ai-sdk/langchain`
+
+`LangChainAdapter` 已移至 `@ai-sdk/langchain`，API 也已更新为使用 UI 消息流。
+
+```tsx filename="AI SDK 4.0"
+import { LangChainAdapter } from 'ai';
+
+const response = LangChainAdapter.toDataStreamResponse(stream);
+```
+
+```tsx filename="AI SDK 5.0"
+import { toUIMessageStream } from '@ai-sdk/langchain';
+import { createUIMessageStreamResponse } from 'ai';
+
+const response = createUIMessageStreamResponse({
+  stream: toUIMessageStream(stream),
+});
+```
+
+<Note>
+  别忘了安装新包：`npm install @ai-sdk/langchain`
+</Note>
+
+#### LlamaIndex Adapter 移至 `@ai-sdk/llamaindex`
+
+`LlamaIndexAdapter` 已被拆分到独立的包 `@ai-sdk/llamaindex`，并遵循相同的 UI 消息流模式。
+
+```tsx filename="AI SDK 4.0"
+import { LlamaIndexAdapter } from 'ai';
+
+const response = LlamaIndexAdapter.toDataStreamResponse(stream);
+```
+
+```tsx filename="AI SDK 5.0"
+import { toUIMessageStream } from '@ai-sdk/llamaindex';
+import { createUIMessageStreamResponse } from 'ai';
+
+const response = createUIMessageStreamResponse({
+  stream: toUIMessageStream(stream),
+});
+```
+
+<Note>
+  别忘了安装新包：`npm install @ai-sdk/llamaindex`
+</Note>
+
+## 流式架构
+
+v5 对流式架构进行了彻底重设计，以支持更细的内容区分、多个部分的并发流式传输，以及更佳的实时用户体验。
+
+### 流式协议变更
+
+#### 流式协议：单块 → start/delta/end 模式
+
+基础流式模式已从单块变为三阶段模式，每个内容块都带有唯一 ID。
+
+```tsx filename="AI SDK 4.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'text-delta': {
+      process.stdout.write(chunk.textDelta);
+      break;
+    }
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'text-start': {
+      // New: Initialize a text block with unique ID
+      console.log(`Starting text block: ${chunk.id}`);
+      break;
+    }
+    case 'text-delta': {
+      // Changed: Now includes ID and uses 'delta' property
+      process.stdout.write(chunk.delta); // Changed from 'textDelta'
+      break;
+    }
+    case 'text-end': {
+      // New: Finalize the text block
+      console.log(`Completed text block: ${chunk.id}`);
+      break;
+    }
+  }
+}
+```
+
+#### 推理流式模式
+
+推理内容现在遵循相同的 start/delta/end 模式：
+
+```tsx filename="AI SDK 4.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'reasoning': {
+      // Single chunk with full reasoning text
+      console.log('Reasoning:', chunk.text);
+      break;
+    }
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'reasoning-start': {
+      console.log(`Starting reasoning block: ${chunk.id}`);
+      break;
+    }
+    case 'reasoning-delta': {
+      process.stdout.write(chunk.delta);
+      break;
+    }
+    case 'reasoning-end': {
+      console.log(`Completed reasoning block: ${chunk.id}`);
+      break;
+    }
+  }
+}
+```
+
+#### 工具输入流式传输
+
+工具输入现在可以在生成过程中流式传输：
+
+```tsx filename="AI SDK 5.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'tool-input-start': {
+      console.log(`Starting tool input for ${chunk.toolName}: ${chunk.id}`);
+      break;
+    }
+    case 'tool-input-delta': {
+      // Stream the JSON input as it's being generated
+      process.stdout.write(chunk.delta);
+      break;
+    }
+    case 'tool-input-end': {
+      console.log(`Completed tool input: ${chunk.id}`);
+      break;
+    }
+    case 'tool-call': {
+      // Final tool call with complete input
+      console.log('Tool call:', chunk.toolName, chunk.input);
+      break;
+    }
+  }
+}
+```
+
+#### onChunk 回调变更
+
+`onChunk` 回调现在接收新的流式 chunk 类型，带有 ID 并遵循 start/delta/end 模式。
+
+```tsx filename="AI SDK 4.0"
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Write a story',
+  onChunk({ chunk }) {
+    switch (chunk.type) {
+      case 'text-delta': {
+        // Single property with text content
+        console.log('Text delta:', chunk.textDelta);
+        break;
+      }
+    }
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Write a story',
+  onChunk({ chunk }) {
+    switch (chunk.type) {
+      case 'text-delta': {
+        // Text chunks now use single 'text' type
+        console.log('Text chunk:', chunk.text);
+        break;
+      }
+      case 'reasoning': {
+        // Reasoning chunks use single 'reasoning' type
+        console.log('Reasoning chunk:', chunk.text);
+        break;
+      }
+      case 'source': {
+        console.log('Source chunk:', chunk);
+        break;
+      }
+      case 'tool-call': {
+        console.log('Tool call:', chunk.toolName, chunk.input);
+        break;
+      }
+      case 'tool-input-start': {
+        console.log(
+          `Tool input started for ${chunk.toolName}:`,
+          chunk.toolCallId,
+        );
+        break;
+      }
+      case 'tool-input-delta': {
+        console.log(`Tool input delta for ${chunk.toolCallId}:`, chunk.delta);
+        break;
+      }
+      case 'tool-result': {
+        console.log('Tool result:', chunk.output);
+        break;
+      }
+      case 'raw': {
+        console.log('Raw chunk:', chunk);
+        break;
+      }
+    }
+  },
+});
+```
+
+#### 文件流部分重构
+
+流中的文件部分已被扁平化。
+
+```tsx filename="AI SDK 4.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'file': {
+      console.log('Media type:', chunk.file.mediaType);
+      console.log('File data:', chunk.file.data);
+      break;
+    }
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'file': {
+      console.log('Media type:', chunk.mediaType);
+      console.log('File data:', chunk.data);
+      break;
+    }
+  }
+}
+```
+
+#### 来源流部分重构
+
+流中的来源部分已被扁平化。
+
+```tsx filename="AI SDK 4.0"
+for await (const part of result.fullStream) {
+  if (part.type === 'source' && part.source.sourceType === 'url') {
+    console.log('ID:', part.source.id);
+    console.log('Title:', part.source.title);
+    console.log('URL:', part.source.url);
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for await (const part of result.fullStream) {
+  if (part.type === 'source' && part.sourceType === 'url') {
+    console.log('ID:', part.id);
+    console.log('Title:', part.title);
+    console.log('URL:', part.url);
+  }
+}
+```
+
+#### 完成事件变更
+
+为保持一致，流完成事件已更名。
+
+```tsx filename="AI SDK 4.0"
+for await (const part of result.fullStream) {
+  switch (part.type) {
+    case 'step-finish': {
+      console.log('Step finished:', part.finishReason);
+      break;
+    }
+    case 'finish': {
+      console.log('Usage:', part.usage);
+      break;
+    }
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+for await (const part of result.fullStream) {
+  switch (part.type) {
+    case 'finish-step': {
+      // Renamed from 'step-finish'
+      console.log('Step finished:', part.finishReason);
+      break;
+    }
+    case 'finish': {
+      console.log('Total Usage:', part.totalUsage); // Changed from 'usage'
+      break;
+    }
+  }
+}
+```
+
+### 流式协议变更
+
+#### 专有协议 → 服务器推送事件（SSE）
+
+数据流协议已更新为使用服务器推送事件（SSE）。
+
+```tsx filename="AI SDK 4.0"
+import { createDataStream, formatDataStreamPart } from 'ai';
+
+const dataStream = createDataStream({
+  execute: writer => {
+    writer.writeData('initialized call');
+    writer.write(formatDataStreamPart('text', 'Hello'));
+    writer.writeSource({
+      type: 'source',
+      sourceType: 'url',
+      id: 'source-1',
+      url: 'https://example.com',
+      title: 'Example Source',
+    });
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { createUIMessageStream } from 'ai';
+
+const stream = createUIMessageStream({
+  execute: ({ writer }) => {
+    writer.write({ type: 'data', value: ['initialized call'] });
+    writer.write({ type: 'text', value: 'Hello' });
+    writer.write({
+      type: 'source-url',
+      value: {
+        type: 'source',
+        id: 'source-1',
+        url: 'https://example.com',
+        title: 'Example Source',
+      },
+    });
+  },
+});
+```
+
+#### 数据流响应辅助函数重命名
+
+流式 API 已从数据流彻底重构为 UI 消息流。
+
+```tsx filename="AI SDK 4.0"
+// Express/Node.js servers
+app.post('/stream', async (req, res) => {
+  const result = streamText({
+    model: __MODEL__,
+    prompt: 'Generate content',
+  });
+
+  result.pipeDataStreamToResponse(res);
+});
+
+// Next.js API routes
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Generate content',
+});
+
+return result.toDataStreamResponse();
+```
+
+```tsx filename="AI SDK 5.0"
+// Express/Node.js servers
+app.post('/stream', async (req, res) => {
+  const result = streamText({
+    model: __MODEL__,
+    prompt: 'Generate content',
+  });
+
+  result.pipeUIMessageStreamToResponse(res);
+});
+
+// Next.js API routes
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Generate content',
+});
+
+return result.toUIMessageStreamResponse();
+```
+
+#### 流转换函数重命名
+
+为保持一致，多个流相关函数已更名。
+
+```tsx filename="AI SDK 4.0"
+import { DataStreamToSSETransformStream } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { JsonToSseTransformStream } from 'ai';
+```
+
+#### 错误处理：getErrorMessage → onError
+
+`toDataStreamResponse` 中的 `getErrorMessage` 选项已被 `toUIMessageStreamResponse` 中的 `onError` 取代，让你对转发给客户端的错误信息拥有更多控制。
+
+默认情况下，为防止泄露敏感信息，错误消息不会发送给客户端。`onError` 回调允许你显式控制哪些错误信息会转发给客户端。
+
+```tsx filename="AI SDK 4.0"
+return result.toDataStreamResponse({
+  getErrorMessage: error => {
+    // Return sanitized error data to send to client
+    // Only return what you want the client to see!
+    return {
+      errorCode: 'STREAM_ERROR',
+      message: 'An error occurred while processing your request',
+      // In production, avoid sending error.message directly to prevent information leakage
+    };
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+return result.toUIMessageStreamResponse({
+  onError: error => {
+    // Return sanitized error data to send to client
+    // Only return what you want the client to see!
+    return {
+      errorCode: 'STREAM_ERROR',
+      message: 'An error occurred while processing your request',
+      // In production, avoid sending error.message directly to prevent information leakage
+    };
+  },
+});
+```
+
+### 工具函数变更
+
+#### ID 生成变更
+
+`createIdGenerator()` 函数现在需要 `size` 参数。
+
+```tsx filename="AI SDK 4.0"
+const generator = createIdGenerator({ prefix: 'msg' });
+const id = generator(16); // Custom size at call time
+```
+
+```tsx filename="AI SDK 5.0"
+const generator = createIdGenerator({ prefix: 'msg', size: 16 });
+const id = generator(); // Fixed size from creation
+```
+
+#### IDGenerator → IdGenerator
+
+类型名称已更新。
+
+```tsx filename="AI SDK 4.0"
+import { IDGenerator } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { IdGenerator } from 'ai';
+```
+
+### 提供商接口变更
+
+#### Language Model V2 导入
+
+`LanguageModelV3` 现在必须从 `@ai-sdk/provider` 导入。
+
+```tsx filename="AI SDK 4.0"
+import { LanguageModelV3 } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { LanguageModelV3 } from '@ai-sdk/provider';
+```
+
+#### 中间件重命名
+
+`LanguageModelV1Middleware` 已更名并移动位置。
+
+```tsx filename="AI SDK 4.0"
+import { LanguageModelV1Middleware } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { LanguageModelV3Middleware } from '@ai-sdk/provider';
+```
+
+#### 用量 token 属性
+
+为保持一致，token 用量属性已更名。
+
+```tsx filename="AI SDK 4.0"
+// In language model implementations
+{
+  usage: {
+    promptTokens: 10,
+    completionTokens: 20
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// In language model implementations
+{
+  usage: {
+    inputTokens: 10,
+    outputTokens: 20,
+    totalTokens: 30 // Now required
+  }
+}
+```
+
+#### 流部分类型变更
+
+`LanguageModelV3StreamPart` 类型已扩展，以支持带 ID 和 start/delta/end 模式的新流式架构。
+
+```tsx filename="AI SDK 4.0"
+// V4: Simple stream parts
+type LanguageModelV3StreamPart =
+  | { type: 'text-delta'; textDelta: string }
+  | { type: 'reasoning'; text: string }
+  | { type: 'tool-call'; toolCallId: string; toolName: string; input: string };
+```
+
+```tsx filename="AI SDK 5.0"
+// V5: Enhanced stream parts with IDs and lifecycle events
+type LanguageModelV3StreamPart =
+  // Text blocks with start/delta/end pattern
+  | {
+      type: 'text-start';
+      id: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'text-delta';
+      id: string;
+      delta: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'text-end';
+      id: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+
+  // Reasoning blocks with start/delta/end pattern
+  | {
+      type: 'reasoning-start';
+      id: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'reasoning-delta';
+      id: string;
+      delta: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'reasoning-end';
+      id: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+
+  // Tool input streaming
+  | {
+      type: 'tool-input-start';
+      id: string;
+      toolName: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'tool-input-delta';
+      id: string;
+      delta: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+  | {
+      type: 'tool-input-end';
+      id: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+
+  // Enhanced tool calls
+  | {
+      type: 'tool-call';
+      toolCallId: string;
+      toolName: string;
+      input: string;
+      providerMetadata?: SharedV2ProviderMetadata;
+    }
+
+  // Stream lifecycle events
+  | { type: 'stream-start'; warnings: Array<SharedV3Warning> }
+  | {
+      type: 'finish';
+      usage: LanguageModelV3Usage;
+      finishReason: LanguageModelV3FinishReason;
+      providerMetadata?: SharedV2ProviderMetadata;
+    };
+```
+
+#### rawResponse → response
+
+提供商响应对象已更新。
+
+```tsx filename="AI SDK 4.0"
+// In language model implementations
+{
+  rawResponse: {
+    /* ... */
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0"
+// In language model implementations
+{
+  response: {
+    /* ... */
+  }
+}
+```
+
+#### `wrapLanguageModel` 现已稳定
+
+```tsx filename="AI SDK 4.0"
+import { experimental_wrapLanguageModel } from 'ai';
+```
+
+```tsx filename="AI SDK 5.0"
+import { wrapLanguageModel } from 'ai';
+```
+
+#### `activeTools` 不再是实验性功能
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  tools: { weatherTool, locationTool },
+  experimental_activeTools: ['weatherTool'],
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  tools: { weatherTool, locationTool },
+  activeTools: ['weatherTool'], // No longer experimental
+});
+```
+
+#### `prepareStep` 不再是实验性功能
+
+`experimental_prepareStep` 选项已转正，不再需要实验性前缀。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  tools: { weatherTool, locationTool },
+  experimental_prepareStep: ({ steps, stepNumber, model }) => {
+    console.log('Preparing step:', stepNumber);
+    return {
+      activeTools: ['weatherTool'],
+      system: 'Be helpful and concise.',
+    };
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: __MODEL__,
+  messages,
+  tools: { weatherTool, locationTool },
+  prepareStep: ({ steps, stepNumber, model }) => {
+    console.log('Preparing step:', stepNumber);
+    return {
+      activeTools: ['weatherTool'],
+      system: 'Be helpful and concise.',
+      // Can also configure toolChoice, model, etc.
+    };
+  },
+});
+```
+
+`prepareStep` 函数接收 `{ steps, stepNumber, model }`，可以返回：
+
+- `model`：此步骤使用的其他模型
+- `activeTools`：要启用哪些工具
+- `toolChoice`：工具选择策略
+- `system`：此步骤的系统消息
+- `undefined`：使用默认设置
+
+### 移除 temperature 默认值
+
+temperature 不再默认设为 `0`。
+
+```tsx filename="AI SDK 4.0"
+await generateText({
+  model: __MODEL__,
+  prompt: 'Write a creative story',
+  // Implicitly temperature: 0
+});
+```
+
+```tsx filename="AI SDK 5.0"
+await generateText({
+  model: __MODEL__,
+  prompt: 'Write a creative story',
+  temperature: 0, // Must explicitly set
+});
+```
+
+## 消息持久化变更
+
+<Note>
+  如果你已将消息持久化到数据库，请参阅[数据迁移指南](/docs/migration-guides/migration-guide-5-0-data)，获取将已存储消息数据迁移到 v5 格式的全面指引。
+</Note>
+
+在 v4 中，你通常会在 `streamText` 的 `onFinish` 回调里使用 `appendResponseMessages` 或 `appendClientMessage` 等辅助函数来格式化消息：
+
+```tsx filename="AI SDK 4.0"
+import {
+  streamText,
+  convertToModelMessages,
+  appendClientMessage,
+  appendResponseMessages,
+} from 'ai';
+
+const updatedMessages = appendClientMessage({
+  messages,
+  message: lastUserMessage,
+});
+
+const result = streamText({
+  model: __MODEL__,
+  messages: updatedMessages,
+  experimental_generateMessageId: () => generateId(), // ID generation on streamText
+  onFinish: async ({ responseMessages, usage }) => {
+    // Use helper functions to format messages
+    const finalMessages = appendResponseMessages({
+      messages: updatedMessages,
+      responseMessages,
+    });
+
+    // Save formatted messages to database
+    await saveMessages(finalMessages);
+  },
+});
+```
+
+在 v5 中，消息持久化现在通过 `toUIMessageStreamResponse` 方法处理，它会自动将响应消息格式化为 `UIMessage` 格式：
+
+```tsx filename="AI SDK 5.0"
+import { streamText, convertToModelMessages, UIMessage } from 'ai';
+
+const messages: UIMessage[] = [
+  // Your existing messages in UIMessage format
+];
+
+const result = streamText({
+  model: __MODEL__,
+  messages: convertToModelMessages(messages),
+  // experimental_generateMessageId removed from here
+});
+
+return result.toUIMessageStreamResponse({
+  originalMessages: messages, // IMPORTANT: Required to prevent duplicate messages
+  generateMessageId: () => generateId(), // IMPORTANT: Required for proper message ID generation
+  onFinish: ({ messages, responseMessage }) => {
+    // messages contains all messages (original + response) in UIMessage format
+    saveChat({ chatId, messages });
+
+    // responseMessage contains just the generated message in UIMessage format
+    saveMessage({ chatId, message: responseMessage });
+  },
+});
+```
+
+<Note>
+  **重要提示**：使用 `toUIMessageStreamResponse` 时，应始终同时提供 `originalMessages` 和 `generateMessageId` 参数。否则，UI 中可能出现重复的助手消息。更多详情请参阅[故障排查：助手消息重复](/docs/troubleshooting/repeated-assistant-messages)。
+</Note>
+
+### 消息 ID 生成
+
+`experimental_generateMessageId` 选项已从 `streamText` 配置移至 `toUIMessageStreamResponse`，因为它面向的是 `UIMessage` 而非 `ModelMessage`。
+
+```tsx filename="AI SDK 4.0"
+const result = streamText({
+  model: __MODEL__,
+  messages,
+  experimental_generateMessageId: () => generateId(),
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = streamText({
+  model: __MODEL__,
+  messages: convertToModelMessages(messages),
+});
+
+return result.toUIMessageStreamResponse({
+  generateMessageId: () => generateId(), // No longer experimental
+  // ...
+});
+```
+
+有关消息 ID 与持久化的更多细节，请参阅[聊天机器人消息持久化指南](/docs/ai-sdk-ui/chatbot-message-persistence#消息-id)。
+
+### 使用 createUIMessageStream
+
+对于更复杂的场景（尤其是涉及数据部分时），可以使用 `createUIMessageStream`：
+
+```tsx filename="AI SDK 5.0 - Advanced"
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  convertToModelMessages,
+  UIMessage,
+} from 'ai';
+
+const stream = createUIMessageStream({
+  originalMessages: messages,
+  generateId: generateId, // Required for proper message ID generation
+  execute: ({ writer }) => {
+    // Write custom data parts
+    writer.write({
+      type: 'data',
+      data: { status: 'processing', timestamp: Date.now() },
+    });
+
+    // Stream the AI response
+    const result = streamText({
+      model: __MODEL__,
+      messages: convertToModelMessages(messages),
+    });
+
+    writer.merge(result.toUIMessageStream());
+  },
+  onFinish: ({ messages }) => {
+    // messages contains all messages (original + response + data parts) in UIMessage format
+    saveChat({ chatId, messages });
+  },
+});
+
+return createUIMessageStreamResponse({ stream });
+```
+
+## 提供商与模型变更
+
+### OpenAI
+
+#### 默认提供商实例使用 Responses API
+
+在 AI SDK 5 中，默认的 OpenAI 提供商实例使用 Responses API，而 AI SDK 4 使用的是 Chat Completions API。Chat Completions API 仍受到完全支持，你可以通过 `openai.chat(...)` 使用它。
+
+```tsx filename="AI SDK 4.0"
+import { openai } from '@ai-sdk/openai';
+
+const defaultModel = openai('gpt-4.1-mini'); // Chat Completions API
+```
+
+```tsx filename="AI SDK 5.0"
+import { openai } from '@ai-sdk/openai';
+
+const defaultModel = openai('gpt-4.1-mini'); // Responses API
+
+// Specify a specific API when needed:
+const chatCompletionsModel = openai.chat('gpt-4.1-mini');
+const responsesModel = openai.responses('gpt-4.1-mini');
+```
+
+<Note>
+  Responses API 与 Chat Completions API 的行为和默认值不同。如果你依赖 Chat Completions API，请将模型实例切换为 `openai.chat(...)`，并检查你的配置。
+</Note>
+
+#### Responses API 的严格 schema（strictSchemas）
+
+在 AI SDK 4.0 中，你可以在 Responses 模型上设置 `strictSchemas` 选项（默认为 `true`）。该选项在 AI SDK 5.0 中已更名为 `strictJsonSchema`，且默认值变为 `false`。
+
+```tsx filename="AI SDK 4.0"
+import { z } from 'zod';
+import { generateObject } from 'ai';
+import { openai, type OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+
+const result = await generateObject({
+  model: openai.responses('gpt-4.1'),
+  schema: z.object({
+    // ...
+  }),
+  providerOptions: {
+    openai: {
+      strictSchemas: true, // default behavior in AI SDK 4
+    } satisfies OpenAIResponsesProviderOptions,
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { z } from 'zod';
+import { generateObject } from 'ai';
+import { openai, type OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+
+const result = await generateObject({
+  model: openai('gpt-4.1-2024'), // uses Responses API
+  schema: z.object({
+    // ...
+  }),
+  providerOptions: {
+    openai: {
+      strictJsonSchema: true, // defaults to false, opt back in to the AI SDK 4 strict behavior
+    } satisfies OpenAIResponsesProviderOptions,
+  },
+});
+```
+
+如果你调用 `openai.chat(...)` 直接使用 Chat Completions API，可以用 `OpenAIChatLanguageModelOptions` 对其进行类型标注。AI SDK 5 同样在那里增加了相同的 `strictJsonSchema` 选项。
+
+#### 结构化输出
+
+`structuredOutputs` 选项现在通过提供商选项配置，而不是作为模型实例上的设置。
+
+```tsx filename="AI SDK 4.0"
+import { z } from 'zod';
+import { generateObject } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateObject({
+  model: openai('gpt-4.1', { structuredOutputs: true }), // use Chat Completions API
+  schema: z.object({ name: z.string() }),
+});
+```
+
+```tsx filename="AI SDK 5.0 (Chat Completions API)"
+import { z } from 'zod';
+import { generateObject } from 'ai';
+import { openai, type OpenAIChatLanguageModelOptions } from '@ai-sdk/openai';
+
+const result = await generateObject({
+  model: openai.chat('gpt-4.1'), // use Chat Completions API
+  schema: z.object({ name: z.string() }),
+  providerOptions: {
+    openai: {
+      structuredOutputs: true,
+    } satisfies OpenAIChatLanguageModelOptions,
+  },
+});
+```
+
+#### compatibility 选项移除
+
+`compatibility` 选项已被移除；严格兼容模式现在是默认行为。
+
+```tsx filename="AI SDK 4.0"
+const openai = createOpenAI({
+  compatibility: 'strict',
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const openai = createOpenAI({
+  // strict compatibility is now the default
+});
+```
+
+#### 旧式函数调用移除
+
+`useLegacyFunctionCalls` 选项已被移除。
+
+```tsx filename="AI SDK 4.0"
+const result = streamText({
+  model: openai('gpt-4.1', { useLegacyFunctionCalls: true }),
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = streamText({
+  model: openai('gpt-4.1'),
+});
+```
+
+#### 模拟流式
+
+`simulateStreaming` 模型选项已被中间件取代。
+
+```tsx filename="AI SDK 4.0"
+const result = generateText({
+  model: openai('gpt-4.1', { simulateStreaming: true }),
+  prompt: 'Hello, world!',
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { simulateStreamingMiddleware, wrapLanguageModel } from 'ai';
+
+const model = wrapLanguageModel({
+  model: openai('gpt-4.1'),
+  middleware: simulateStreamingMiddleware(),
+});
+
+const result = generateText({
+  model,
+  prompt: 'Hello, world!',
+});
+```
+
+### Google
+
+#### 搜索溯源现为提供商定义的工具
+
+搜索溯源（Search Grounding）现已更名为"Google Search"，并成为提供商定义的工具（provider defined tool）。
+
+```tsx filename="AI SDK 4.0"
+const { text, providerMetadata } = await generateText({
+  model: google('gemini-1.5-pro', {
+    useSearchGrounding: true,
+  }),
+  prompt: 'List the top 5 San Francisco news from the past week.',
+});
+```
+
+```tsx filename="AI SDK 5.0"
+import { google } from '@ai-sdk/google';
+const { text, sources, providerMetadata } = await generateText({
+  model: google('gemini-1.5-pro'),
+  prompt:
+    'List the top 5 San Francisco news from the past week.'
+  tools: {
+    google_search: google.tools.googleSearch({}),
+  },
+});
+```
+
+### Amazon Bedrock
+
+#### 蛇形命名 → 驼峰命名
+
+提供商选项已更新为使用 camelCase。
+
+```tsx filename="AI SDK 4.0"
+const result = await generateText({
+  model: bedrock('amazon.titan-tg1-large'),
+  prompt: 'Hello, world!',
+  providerOptions: {
+    bedrock: {
+      reasoning_config: {
+        /* ... */
+      },
+    },
+  },
+});
+```
+
+```tsx filename="AI SDK 5.0"
+const result = await generateText({
+  model: bedrock('amazon.titan-tg1-large'),
+  prompt: 'Hello, world!',
+  providerOptions: {
+    bedrock: {
+      reasoningConfig: {
+        /* ... */
+      },
+    },
+  },
+});
+```
+
+### Provider-Utils 变更
+
+已弃用的 `CoreTool*` 类型已被移除。
+
+```tsx filename="AI SDK 4.0"
+import {
+  CoreToolCall,
+  CoreToolResult,
+  CoreToolResultUnion,
+  CoreToolCallUnion,
+  CoreToolChoice,
+} from '@ai-sdk/provider-utils';
+```
+
+```tsx filename="AI SDK 5.0"
+import {
+  ToolCall,
+  ToolResult,
+  TypedToolResult,
+  TypedToolCall,
+  ToolChoice,
+} from '@ai-sdk/provider-utils';
+```
+
+## 故障排查
+
+### Zod 引发的 TypeScript 性能问题
+
+如果在 AI SDK 5.0 中使用 Zod 时遇到 TypeScript 服务器崩溃、类型检查缓慢，或"Type instantiation is excessively deep and possibly infinite"之类的错误：
+
+1. **首先，确保你使用的是 Zod 4.1.8 或更高版本**——该版本修复了导致 TypeScript 性能问题的模块解析问题。
+
+2. 如果问题仍然存在，请更新 `tsconfig.json` 以使用 `moduleResolution: "nodenext"`：
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "nodenext"
+    // ... other options
+  }
+}
+```
+
+这可以解决 TypeScript 性能问题，同时让你继续使用标准的 Zod 导入。如果问题仍未解决，你可以尝试使用带版本号的导入路径作为替代方案。详细的故障排查步骤请参阅 [Zod 引发的 TypeScript 性能问题](/docs/troubleshooting/typescript-performance-zod)。
+
+## Codemod 对照表
+
+下表列出了 AI SDK 5.0 升级过程中可用的 codemod。更多信息请参阅 [Codemods](#codemods) 章节。
+
+| 变更                                             | Codemod                                               |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| **AI SDK Core 变更**                             |                                                       |
+| 扁平化 streamText 文件属性                       | `v5/flatten-streamtext-file-properties`               |
+| ID 生成变更                                      | `v5/require-createIdGenerator-size-argument`          |
+| IDGenerator → IdGenerator                        | `v5/rename-IDGenerator-to-IdGenerator`                |
+| 从 provider 包导入 LanguageModelV3               | `v5/import-LanguageModelV3-from-provider-package`     |
+| 迁移到数据流协议 v2                              | `v5/migrate-to-data-stream-protocol-v2`               |
+| 移动图像模型 maxImagesPerCall                    | `v5/move-image-model-maxImagesPerCall`                |
+| 移动 LangChain adapter                           | `v5/move-langchain-adapter`                           |
+| 将 maxSteps 移至 stopWhen                        | `v5/move-maxsteps-to-stopwhen`                        |
+| 移动提供商选项                                   | `v5/move-provider-options`                            |
+| 将 React 移入 AI SDK                             | `v5/move-react-to-ai-sdk`                             |
+| 将 UI utils 移入 ai 包                           | `v5/move-ui-utils-to-ai`                              |
+| 移除实验性 wrapLanguageModel                     | `v5/remove-experimental-wrap-language-model`          |
+| 移除实验性 activeTools                           | `v5/remove-experimental-activetools`                  |
+| 移除实验性 prepareStep                           | `v5/remove-experimental-preparestep`                  |
+| 移除实验性 continueSteps                         | `v5/remove-experimental-continuesteps`                |
+| 移除实验性 temperature                           | `v5/remove-experimental-temperature`                  |
+| 移除实验性 truncate                              | `v5/remove-experimental-truncate`                     |
+| 移除实验性 OpenAI compatibility                  | `v5/remove-experimental-openai-compatibility`         |
+| 移除实验性 OpenAI legacy function calls          | `v5/remove-experimental-openai-legacy-function-calls` |
+| 移除实验性 OpenAI structured outputs             | `v5/remove-experimental-openai-structured-outputs`    |
+| 移除实验性 OpenAI store                          | `v5/remove-experimental-openai-store`                 |
+| 移除实验性 OpenAI user                           | `v5/remove-experimental-openai-user`                  |
+| 移除实验性 OpenAI parallel tool calls            | `v5/remove-experimental-openai-parallel-tool-calls`   |
+| 移除实验性 OpenAI response format                | `v5/remove-experimental-openai-response-format`       |
+| 移除实验性 OpenAI logit bias                     | `v5/remove-experimental-openai-logit-bias`            |
+| 移除实验性 OpenAI logprobs                       | `v5/remove-experimental-openai-logprobs`              |
+| 移除实验性 OpenAI seed                           | `v5/remove-experimental-openai-seed`                  |
+| 移除实验性 OpenAI service tier                   | `v5/remove-experimental-openai-service-tier`          |
+| 移除实验性 OpenAI top logprobs                   | `v5/remove-experimental-openai-top-logprobs`          |
+| 移除实验性 OpenAI transform                      | `v5/remove-experimental-openai-transform`             |
+| 移除实验性 OpenAI stream options                 | `v5/remove-experimental-openai-stream-options`        |
+| 移除实验性 OpenAI prediction                     | `v5/remove-experimental-openai-prediction`            |
+| 移除实验性 Anthropic caching                     | `v5/remove-experimental-anthropic-caching`            |
+| 移除实验性 Anthropic computer use                | `v5/remove-experimental-anthropic-computer-use`       |
+| 移除实验性 Anthropic PDF support                 | `v5/remove-experimental-anthropic-pdf-support`        |
+| 移除实验性 Anthropic prompt caching              | `v5/remove-experimental-anthropic-prompt-caching`     |
+| 移除实验性 Google search grounding               | `v5/remove-experimental-google-search-grounding`      |
+| 移除实验性 Google code execution                 | `v5/remove-experimental-google-code-execution`        |
+| 移除实验性 Google cached content                 | `v5/remove-experimental-google-cached-content`        |
+| 移除实验性 Google custom headers                 | `v5/remove-experimental-google-custom-headers`        |
+| 重命名 format stream part                        | `v5/rename-format-stream-part`                        |
+| 重命名 parse stream part                         | `v5/rename-parse-stream-part`                         |
+| 用 file 类型取代 image 类型                      | `v5/replace-image-type-with-file-type`                |
+| 替换 LlamaIndex adapter                          | `v5/replace-llamaindex-adapter`                       |
+| 用 onFinal 取代 onCompletion                     | `v5/replace-oncompletion-with-onfinal`                |
+| 用提供商选项取代提供商元数据                     | `v5/replace-provider-metadata-with-provider-options`  |
+| 用 response 取代 rawResponse                     | `v5/replace-rawresponse-with-response`                |
+| 替换已脱敏推理类型                               | `v5/replace-redacted-reasoning-type`                  |
+| 替换模拟流式                                     | `v5/replace-simulate-streaming`                       |
+| 用 text 取代 textDelta                           | `v5/replace-textdelta-with-text`                      |
+| 替换用量 token 属性                              | `v5/replace-usage-token-properties`                   |
+| 重构文件流部分                                   | `v5/restructure-file-stream-parts`                    |
+| 重构来源流部分                                   | `v5/restructure-source-stream-parts`                  |
+| RSC 包                                           | `v5/rsc-package`                                      |
+
+## v5 Beta 版本之间的变更
+
+本节记录 AI SDK 5.0 各 beta 版本之间的破坏性变更。如果你是从较早的 v5 beta 版本升级到较新的版本，请查看本节中可能影响代码的变更。
+
+### fullStream 类型重命名：text/reasoning → text-delta/reasoning-delta
+
+为与 UI 流和语言模型流保持一致，`fullStream` 中的 chunk 类型已更名。
+
+```tsx filename="AI SDK 5.0 (before beta.26)"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'text-delta': {
+      process.stdout.write(chunk.text);
+      break;
+    }
+    case 'reasoning': {
+      console.log('Reasoning:', chunk.text);
+      break;
+    }
+  }
+}
+```
+
+```tsx filename="AI SDK 5.0 (beta.26 and later)"
+for await (const chunk of result.fullStream) {
+  switch (chunk.type) {
+    case 'text-delta': {
+      process.stdout.write(chunk.text);
+      break;
+    }
+    case 'reasoning-delta': {
+      console.log('Reasoning:', chunk.text);
+      break;
+    }
+  }
+}
+```

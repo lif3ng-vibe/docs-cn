@@ -1,0 +1,127 @@
+---
+title: 概述
+description: 了解如何使用 AI SDK 构建智能体。
+---
+
+# 智能体
+
+智能体（agent）是**大型语言模型（LLM）**，它在**循环**中使用**工具**来完成任务。
+
+这些组件协同工作：
+
+- **LLM** 处理输入并决定下一步动作
+- **工具**将能力扩展到文本生成之外（读取文件、调用 API、写入数据库）
+- **循环**通过以下方式编排执行：
+  - **上下文管理**——维护对话历史，并决定模型在每一步看到的内容（输入）
+  - **停止条件**——判断循环（任务）何时完成
+
+## 智能体状态与上下文
+
+智能体通常需要不应直接放入提示词（prompt）中的服务端状态，例如租户设置、请求 ID、功能开关、凭证或任务进度。
+
+使用 `runtimeContext` 作为智能体的共享运行时状态。它会流经智能体循环，在 `prepareStep` 和生命周期回调中可用，并且可以在步骤之间更新。对于每个工具各自的取值（如 API 密钥或作用域受限的权限），使用 `toolsContext`；每个工具只接收基于其 `contextSchema` 的属于自身的类型化 `context`。
+
+更多内容请参阅[运行时与工具上下文](/docs/ai-sdk-core/runtime-and-tool-context)。
+
+## ToolLoopAgent 类
+
+ToolLoopAgent 类负责处理这三个组件。下面是一个在循环中使用多个工具来完成任务的智能体：
+
+```ts
+import { ToolLoopAgent, tool } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const weatherAgent = new ToolLoopAgent({
+  model: __MODEL__,
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location (in Fahrenheit)',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+    convertFahrenheitToCelsius: tool({
+      description: 'Convert temperature from Fahrenheit to Celsius',
+      inputSchema: z.object({
+        temperature: z.number().describe('Temperature in Fahrenheit'),
+      }),
+      execute: async ({ temperature }) => {
+        const celsius = Math.round((temperature - 32) * (5 / 9));
+        return { celsius };
+      },
+    }),
+  },
+});
+
+const result = await weatherAgent.generate({
+  prompt: 'What is the weather in San Francisco in celsius?',
+});
+
+console.log(result.text); // agent's final answer
+console.log(result.steps); // steps taken by the agent
+```
+
+该智能体会自动：
+
+1. 调用 `weather` 工具获取以华氏度表示的温度
+2. 调用 `convertFahrenheitToCelsius` 进行转换
+3. 生成包含结果的最终文本响应
+
+ToolLoopAgent 负责处理循环、上下文管理和停止条件。
+
+## 为什么使用 ToolLoopAgent？
+
+ToolLoopAgent 是使用 AI SDK 构建智能体的推荐方式，因为它：
+
+- **减少样板代码**——自动管理循环和消息数组
+- **提升可复用性**——定义一次，在整个应用中使用
+- **简化维护**——在一个地方更新智能体配置
+
+对于大多数使用场景，请从 ToolLoopAgent 开始。当你需要对每个步骤进行显式控制以构建复杂的结构化工作流时，使用核心函数（`generateText`、`streamText`）。
+
+## HarnessAgent 类
+
+当你想运行一个事先配置好的成熟 harness（如 Claude Code、Codex 或 Pi），而不是围绕语言模型自己搭建循环时，可以使用 `HarnessAgent`。Harness 是与提供商和模型不同的独立抽象，但会流式输出到兼容 AI SDK 的结果和 UI 原语中。
+
+更多内容请参阅 [Harnesses](/docs/ai-sdk-harnesses) 和
+[HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)。
+
+本节的其余部分聚焦于 `ToolLoopAgent`，它是 AI SDK 中用于构建你自己的模型与工具循环的智能体类。
+
+## 终端 UI
+
+使用 `@ai-sdk/tui` 可以在交互式终端 UI 中运行 `ToolLoopAgent`。它适用于本地智能体开发、演示和内部工具——在这些场景下，你希望拥有提示词输入、流式响应、工具卡片、推理部分、滚动以及工具审批提示，而又不想自己构建一个自定义界面。
+
+```ts
+import { runAgentTUI } from '@ai-sdk/tui';
+
+await runAgentTUI({
+  title: 'Weather Agent',
+  agent: weatherAgent,
+});
+```
+
+更多内容请参阅[终端 UI](/docs/agents/terminal-ui)。
+
+## 结构化工作流
+
+智能体灵活而强大，但具有非确定性。当你需要可靠、可复现的结果以及显式的控制流时，请将核心函数与结构化工作流模式结合使用，包括：
+
+- 用于显式分支的条件语句
+- 用于可复用逻辑的标准函数
+- 用于健壮性的错误处理
+- 用于可预测性的显式控制流
+
+了解更多请[探索工作流模式](/docs/agents/workflows)。
+
+## 下一步
+
+- **[构建智能体](/docs/agents/building-agents)**——使用 ToolLoopAgent 创建智能体的指南
+- **[运行时与工具上下文](/docs/ai-sdk-core/runtime-and-tool-context)**——如何传递共享的智能体状态和每工具上下文
+- **[工作流模式](/docs/agents/workflows)**——使用核心函数为复杂工作流构建的结构化模式
+- **[循环控制](/docs/agents/loop-control)**——通过 stopWhen 和 prepareStep 进行执行控制

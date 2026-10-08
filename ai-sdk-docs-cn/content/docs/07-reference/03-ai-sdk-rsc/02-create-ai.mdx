@@ -1,0 +1,88 @@
+---
+title: createAI
+description: 来自 AI SDK RSC 的 createAI 函数参考
+---
+
+# `createAI`
+
+<Note type="warning">
+  AI SDK RSC 目前为实验性功能。我们建议在生产环境中使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指引，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+创建一个客户端-服务器上下文提供器（context provider），可用于包裹应用树的一部分，以便轻松管理应用的 UI 状态与 AI 状态。
+
+## 导入
+
+<Snippet text={`import { createAI } from "@ai-sdk/rsc"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'actions',
+      type: 'Record<string, Action>',
+      description: '可从客户端调用的服务器端操作。',
+    },
+    {
+      name: 'initialAIState',
+      type: 'any',
+      description: '在客户端使用的初始 AI 状态。',
+    },
+    {
+      name: 'initialUIState',
+      type: 'any',
+      description: '在客户端使用的初始 UI 状态。',
+    },
+    {
+      name: 'onGetUIState',
+      type: '() => Promise<UIState | undefined>',
+      description: '在 SSR 期间被调用，用于比较并更新 UI 状态。',
+    },
+    {
+      name: 'onSetAIState',
+      type: '(Event) => void',
+      description:
+        '在你的操作中，每当可变 AI 状态调用 update() 或 done() 时就会被触发，因此你可以安全地将 AI 状态存储到数据库中。',
+      properties: [
+        {
+          type: 'Event',
+          parameters: [
+            {
+              name: 'state',
+              type: 'AIState',
+              description: '更新后产生的 AI 状态。',
+            },
+            {
+              name: 'done',
+              type: 'boolean',
+              description:
+                'AI 状态更新是否已最终完成。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+它会返回一个 `<AI/>` 上下文提供器。
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title: '学习在 Next.js 中管理 AI 与 UI 状态',
+      link: '/examples/next-app/state-management/ai-ui-states',
+    },
+    {
+      title: '学习在 Next.js 中持久化并恢复 UI/AI 状态',
+      link: '/examples/next-app/state-management/save-and-restore-states',
+    },
+  ]}
+/>

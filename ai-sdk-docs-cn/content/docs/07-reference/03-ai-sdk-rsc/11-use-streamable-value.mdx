@@ -1,0 +1,45 @@
+---
+title: useStreamableValue
+description: AI SDK RSC 中 useStreamableValue 函数的参考文档
+---
+
+# `useStreamableValue`
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+它是一个 React Hook，接收一个使用 [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value) 创建的可流式传输值，并返回当前值、错误与挂起状态。
+
+## 导入
+
+<Snippet
+  text={`import { useStreamableValue } from "@ai-sdk/rsc"`}
+  prompt={false}
+/>
+
+## 示例
+
+这对于消费从组件 props 接收到的可流式传输值非常有用。
+
+```tsx
+function MyComponent({ streamableValue }) {
+  const [data, error, pending] = useStreamableValue(streamableValue);
+
+  if (pending) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>Data: {data}</div>;
+}
+```
+
+## API 签名
+
+### 参数
+
+它接受一个使用 `createStreamableValue` 创建的可流式传输值。
+
+### 返回值
+
+它是一个数组：第一个元素包含数据，第二个元素包含流式传输过程中任何时候抛出的错误，第三个元素是一个布尔值，指示该值是否处于挂起状态。

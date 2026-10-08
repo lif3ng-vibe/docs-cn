@@ -1,0 +1,232 @@
+---
+title: FriendliAI
+description: 了解如何在 AI SDK 中使用 FriendliAI 提供商。
+---
+
+# FriendliAI 提供商
+
+[FriendliAI](https://friendli.ai/) 提供商既支持通过 [Friendli Serverless Endpoints](https://friendli.ai/products/serverless-endpoints) 使用开源 LLM，也支持通过 [Dedicated Endpoints](https://friendli.ai/products/dedicated-endpoints) 使用自定义模型。
+
+它创建的语言模型对象可与 `generateText` 和 `streamText` 函数配合使用，并支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 生成结构化数据。
+
+## 安装
+
+Friendli 提供商通过 `@friendliai/ai-provider` 模块提供。
+可通过以下方式安装：
+
+<InstallPackages packages="@friendliai/ai-provider" />
+
+### 凭据
+
+使用模型所需的 token 可从 [Friendli suite](https://suite.friendli.ai/) 获取。
+
+要使用该提供商，你需要将 `FRIENDLI_TOKEN` 环境变量设置为你的个人访问 token。
+
+```bash
+export FRIENDLI_TOKEN="YOUR_FRIENDLI_TOKEN"
+```
+
+更多信息请查看 [FriendliAI 文档](https://friendli.ai/docs/guides/personal_access_tokens)。
+
+## 提供商实例
+
+你可以从 `@friendliai/ai-provider` 导入默认提供商实例 `friendli`：
+
+```ts
+import { friendli } from '@friendliai/ai-provider';
+```
+
+## 语言模型
+
+你可以使用提供商实例创建 [FriendliAI 模型](https://friendli.ai/docs/guides/serverless_endpoints/text_generation#model-supports)。
+第一个参数是模型 id，例如 `meta-llama-3.1-8b-instruct`。
+
+```ts
+const model = friendli('meta-llama-3.1-8b-instruct');
+```
+
+### 示例：生成文本
+
+你可以使用 FriendliAI 语言模型，通过 `generateText` 函数生成文本：
+
+```ts
+import { friendli } from '@friendliai/ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: friendli('meta-llama-3.1-8b-instruct'),
+  prompt: 'What is the meaning of life?',
+});
+
+console.log(text);
+```
+
+### 示例：推理
+
+FriendliAI 使用 `<think>` 标签将 `deepseek-r1` 的思考过程暴露在生成的文本中。
+你可以使用 `extractReasoningMiddleware` 提取这些推理（reasoning）内容，并将其作为结果上的 `reasoning` 属性暴露出来：
+
+```ts
+import { friendli } from '@friendliai/ai-provider';
+import { wrapLanguageModel, extractReasoningMiddleware } from 'ai';
+
+const enhancedModel = wrapLanguageModel({
+  model: friendli('deepseek-r1'),
+  middleware: extractReasoningMiddleware({ tagName: 'think' }),
+});
+
+const { text, reasoning } = await generateText({
+  model: enhancedModel,
+  prompt: 'Explain quantum entanglement.',
+});
+```
+
+### 示例：结构化输出（regex）
+
+regex 选项允许你通过指定模式来控制 LLM 输出的格式。在以下场景中尤为有用：
+
+- CSV 等特定格式
+- 将输出限制为特定字符，如韩文或日文
+
+该功能在 `generateText` 与 `streamText` 函数中均可用。
+
+如需深入了解如何高效地在 LLM 中使用 regex 模式，请查阅博客文章 [Structured Output LLM Agents](https://friendli.ai/blog/structured-output-llm-agents) 中的详细指南。
+
+```ts highlight="6"
+import { friendli } from '@friendliai/ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: friendli('meta-llama-3.1-8b-instruct', {
+    regex: new RegExp('[\n ,.?!0-9\uac00-\ud7af]*'),
+  }),
+  prompt: 'Who is the first king of the Joseon Dynasty?',
+});
+
+console.log(text);
+```
+
+### 示例：结构化输出（json）
+
+结构化输出是一种引导式生成。JSON schema 被用作语法，输出将始终符合该 schema。
+
+```ts
+import { friendli } from '@friendliai/ai-provider';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: friendli('meta-llama-3.3-70b-instruct'),
+  output: Output.object({
+    schemaName: 'CalendarEvent',
+    schema: z.object({
+      name: z.string(),
+      date: z.string(),
+      participants: z.array(z.string()),
+    }),
+  }),
+  system: 'Extract the event information.',
+  prompt: 'Alice and Bob are going to a science fair on Friday.',
+});
+
+console.log(output);
+```
+
+### 示例：使用内置工具
+
+<Note type="warning">内置工具目前处于 beta 阶段。</Note>
+
+如果你使用 `@friendliai/ai-provider`，可以通过 `tools` 选项使用[内置工具](https://friendli.ai/docs/guides/serverless_endpoints/tools/built_in_tools)。
+
+内置工具让模型能够使用工具来生成更好的回答。例如，`web:search` 工具可以针对当前问题提供最新答案。
+
+```ts highlight="1,5,6,7"
+import { friendli } from '@friendliai/ai-provider';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: friendli('meta-llama-3.3-70b-instruct', {
+    tools: [{ type: 'web:search' }, { type: 'math:calculator' }],
+  }),
+  prompt:
+    'Find the current USD to CAD exchange rate and calculate how much $5,000 USD would be in Canadian dollars.',
+});
+
+for await (const textPart of result.textStream) {
+  console.log(textPart);
+}
+```
+
+### 示例：使用 Dedicated Endpoints 生成文本
+
+要通过专用端点（Dedicated Endpoint）使用自定义模型，可以将端点 id 传给 `friendli` 实例，例如 `zbimjgovmlcb`
+
+```ts
+import { friendli } from '@friendliai/ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: friendli('YOUR_ENDPOINT_ID'),
+  prompt: 'What is the meaning of life?',
+});
+
+console.log(text);
+```
+
+你可以使用下面的代码强制请求走专用端点。默认情况下会自动检测。
+
+```ts highlight="5,6,7"
+import { friendli } from '@friendliai/ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: friendli('YOUR_ENDPOINT_ID', {
+    endpoint: 'dedicated',
+  }),
+  prompt: 'What is the meaning of life?',
+});
+
+console.log(text);
+```
+
+FriendliAI 语言模型也可用于 `streamText` 函数，并支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 生成结构化数据
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### 模型能力
+
+| 模型                          | 图像输入   | 对象生成   | 工具使用   | 工具流式传输 |
+| ----------------------------- | ---------- | ---------- | ---------- | ------------ |
+| `deepseek-r1`                 | <Cross />  | <Check />  | <Cross />  | <Cross />    |
+| `meta-llama-3.3-70b-instruct` | <Cross />  | <Check />  | <Check />  | <Check />    |
+| `meta-llama-3.1-8b-instruct`  | <Cross />  | <Check />  | <Check />  | <Check />    |
+
+<Note>
+  要访问[更多模型](https://friendli.ai/models)，请访问
+  [Friendli Dedicated Endpoints
+  文档](https://friendli.ai/docs/guides/dedicated_endpoints/quickstart)
+  来部署你的自定义模型。
+</Note>
+
+### OpenAI 兼容性
+
+由于这些 API 与 OpenAI 兼容，你也可以使用 `@ai-sdk/openai`。
+
+```ts
+import { createOpenAI } from '@ai-sdk/openai';
+
+const friendli = createOpenAI({
+  baseURL: 'https://api.friendli.ai/serverless/v1',
+  apiKey: process.env.FRIENDLI_TOKEN,
+});
+```
+
+如果你使用的是专用端点（dedicated endpoints）：
+
+```ts
+import { createOpenAI } from '@ai-sdk/openai';
+
+const friendli = createOpenAI({
+  baseURL: 'https://api.friendli.ai/dedicated/v1',
+  apiKey: process.env.FRIENDLI_TOKEN,
+});
+```

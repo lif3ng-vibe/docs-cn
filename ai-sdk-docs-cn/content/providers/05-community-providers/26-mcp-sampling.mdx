@@ -1,0 +1,479 @@
+---
+title: MCP Sampling AI Provider
+description: 了解如何使用 MCP Sampling AI 提供商。
+---
+
+# MCP Sampling AI 提供商
+
+[MCP Sampling AI 提供商](https://github.com/mcpc-tech/mcpc/tree/main/packages/mcp-sampling-ai-provider)允许 MCP 服务器复用你现有的客户端订阅（如 VS Code Copilot），通过 AI SDK 使用 AI 模型。它可以将你的 MCP 服务器转变为能够推理和决策的智能体工具，而无需单独的 API key 或订阅。
+
+该提供商实现了 `LanguageModelV4`，通过 MCP 的 [sampling 特性](https://modelcontextprotocol.io/specification/2025-06-18/client/sampling)将请求转发给 MCP 客户端，具有以下独特优势：
+
+- **服务端 AI 集成**：让 MCP 服务器通过 AI SDK 的标准接口直接调用语言模型
+- **无需直接管理模型**：将 AI 请求转发给 MCP 客户端，免去管理多个 API key 的麻烦
+- **模型灵活性**：由 MCP 客户端根据偏好（成本、速度、智能水平）决定使用哪个模型
+- **无缝兼容 AI SDK**：支持 `generateText`、`streamText`、搭配 [`Output`](/docs/reference/ai-sdk-core/output) 的结构化输出，以及实验性的工具调用
+- **客户端 Sampling 支持**：使用内置辅助函数为任意 MCP 客户端添加 sampling 能力
+- **智能体工具**：将简单的 MCP 工具转变为能够推理和决策的智能体（agent）
+
+更多信息请查看 [MCP 规范](https://modelcontextprotocol.io/specification/2025-06-18/client/sampling)中的 MCP Sampling 部分。
+
+## 前置条件
+
+**警告**：该提供商有特定的运行要求：
+
+1. **必须在 MCP 服务器内部运行** - 这不是一个独立的 AI SDK 提供商，它的工作方式是将请求转发给 MCP 客户端。
+2. **客户端必须支持 MCP Sampling** - 所连接的 MCP 客户端必须实现 sampling 能力，你也可以自行实现（见下文[客户端 Sampling](#客户端-sampling无原生支持的客户端)）。
+
+### 支持 Sampling 的客户端
+
+- VS Code（含 GitHub Copilot）- 已支持
+- Claude Desktop - 跟进中（[Issue #1785](https://github.com/anthropics/claude-code/issues/1785)）
+- Cursor - 跟进中（[Issue #3023](https://github.com/cursor/cursor/issues/3023)）
+
+更多选择请查看 [MCP 客户端完整列表](https://modelcontextprotocol.io/clients)。
+
+**替代方案**：使用 `setupClientSampling()` 为任意 MCP 客户端添加 sampling 能力（见下方示例）。
+
+## 安装
+
+MCP Sampling AI 提供商包含在 `@mcpc-tech/mcp-sampling-ai-provider` 模块中，可通过以下方式安装：
+
+<Tabs items={['pnpm', 'npm', 'yarn', 'bun', 'deno']}>
+  <Tab>
+    <Snippet text="pnpm add @mcpc-tech/mcp-sampling-ai-provider" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="npm install @mcpc-tech/mcp-sampling-ai-provider" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="yarn add @mcpc-tech/mcp-sampling-ai-provider" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="bun add @mcpc-tech/mcp-sampling-ai-provider" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="deno add jsr:@mcpc/mcp-sampling-ai-provider" dark />
+  </Tab>
+</Tabs>
+
+## 提供商实例
+
+要创建 MCP Sampling 提供商实例，请将 `createMCPSamplingProvider` 函数与你的 MCP 服务器实例配合使用：
+
+```typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { createMCPSamplingProvider } from '@mcpc-tech/mcp-sampling-ai-provider';
+
+// Create an MCP server with sampling capability
+const server = new Server(
+  { name: 'my-agent', version: '1.0.0' },
+  { capabilities: { sampling: {}, tools: {} } },
+);
+
+const provider = createMCPSamplingProvider({ server });
+```
+
+### 配置
+
+该提供商接受以下配置：
+
+- **server** _MCP Server instance_
+
+  已启用 sampling 能力的 MCP 服务器实例。
+
+## 语言模型
+
+使用 `languageModel()` 方法创建语言模型实例：
+
+```typescript
+const model = provider.languageModel({
+  modelPreferences: {
+    hints: [{ name: 'gpt-5-mini' }],
+    costPriority: 0.5,
+    speedPriority: 0.8,
+    intelligencePriority: 0.9,
+  },
+});
+```
+
+### 模型偏好
+
+`languageModel()` 方法接受可选的模型偏好设置：
+
+- **hints** _Array\<\{ name: string \}\>_
+
+  模型名称提示数组（例如 `[{ name: "gpt-5-mini" }]`）。这些提示会向 MCP 客户端建议首选模型。
+
+- **costPriority** _number (0-1)_
+
+  值越高越偏好更便宜的模型。默认值为 0。
+
+- **speedPriority** _number (0-1)_
+
+  值越高越偏好更快的模型。默认值为 0。
+
+- **intelligencePriority** _number (0-1)_
+
+  值越高越偏好能力更强的模型。默认值为 0。
+
+更多细节请查看 [MCP Model Preferences](https://modelcontextprotocol.io/specification/2025-06-18/client/sampling#model-preferences)。
+
+## 示例
+
+### `generateText`
+
+在 MCP 服务器工具中使用 MCP Sampling 提供商生成文本：
+
+```typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import { createMCPSamplingProvider } from '@mcpc-tech/mcp-sampling-ai-provider';
+import { generateText } from 'ai';
+
+// Create MCP server with sampling capability
+const server = new Server(
+  { name: 'translator', version: '1.0.0' },
+  { capabilities: { sampling: {}, tools: {} } },
+);
+
+// List available tools
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'translate',
+        description: 'Translate text to a target language using AI',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            text: {
+              type: 'string',
+              description: 'The text to translate',
+            },
+            target_lang: {
+              type: 'string',
+              description: 'The target language (e.g., "Spanish", "French")',
+            },
+          },
+          required: ['text', 'target_lang'],
+        },
+      },
+    ],
+  };
+});
+
+// Register a translation tool that uses AI
+server.setRequestHandler(CallToolRequestSchema, async request => {
+  if (request.params.name === 'translate') {
+    // Create provider from the server
+    const provider = createMCPSamplingProvider({ server });
+
+    // Use AI SDK to translate text
+    const { text } = await generateText({
+      model: provider.languageModel({
+        modelPreferences: { hints: [{ name: 'gpt-5-mini' }] },
+      }),
+      prompt: `Translate to ${request.params.arguments?.target_lang}: ${request.params.arguments?.text}`,
+    });
+
+    return { content: [{ type: 'text', text }] };
+  }
+});
+
+// Connect and start
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+### `streamText`
+
+使用 MCP Sampling 提供商流式生成文本响应：
+
+```typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import { createMCPSamplingProvider } from '@mcpc-tech/mcp-sampling-ai-provider';
+import { streamText } from 'ai';
+
+const server = new Server(
+  { name: 'ai-assistant', version: '1.0.0' },
+  { capabilities: { sampling: {}, tools: {} } },
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'generate-story',
+        description: 'Generate a story or poem using AI',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(CallToolRequestSchema, async request => {
+  if (request.params.name === 'generate-story') {
+    const provider = createMCPSamplingProvider({ server });
+
+    const result = streamText({
+      model: provider.languageModel({
+        modelPreferences: {
+          hints: [{ name: 'gpt-5-mini' }],
+          speedPriority: 0.9,
+        },
+      }),
+      prompt: 'Write a short poem about coding.',
+    });
+
+    const text = await result.text;
+
+    return { content: [{ type: 'text', text }] };
+  }
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+### 结构化输出
+
+使用 MCP Sampling 提供商生成结构化对象：
+
+```typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import { createMCPSamplingProvider } from '@mcpc-tech/mcp-sampling-ai-provider';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const server = new Server(
+  { name: 'recipe-generator', version: '1.0.0' },
+  { capabilities: { sampling: {}, tools: {} } },
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'generate-recipe',
+        description: 'Generate a recipe using AI',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(CallToolRequestSchema, async request => {
+  if (request.params.name === 'generate-recipe') {
+    const provider = createMCPSamplingProvider({ server });
+
+    const recipeSchema = z.object({
+      recipe: z.object({
+        name: z.string(),
+        cuisine: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    });
+
+    const { output } = await generateText({
+      model: provider.languageModel({
+        modelPreferences: { hints: [{ name: 'gpt-5-mini' }] },
+      }),
+      output: Output.object({ schema: recipeSchema }),
+      prompt: 'Generate a delicious lasagna recipe.',
+    });
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(output, null, 2) }],
+    };
+  }
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+### 工具调用（实验性）
+
+在 MCP Sampling 提供商中使用工具。注意：这是通过 system prompt 实现的，可靠性可能不如原生工具支持：
+
+```typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import { createMCPSamplingProvider } from '@mcpc-tech/mcp-sampling-ai-provider';
+import { generateText, isStepCount } from 'ai';
+import { z } from 'zod';
+
+const server = new Server(
+  { name: 'weather-agent', version: '1.0.0' },
+  { capabilities: { sampling: {}, tools: {} } },
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'ask-weather',
+        description: 'Ask a weather-related question',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            question: {
+              type: 'string',
+              description: 'The weather question to ask',
+            },
+          },
+        },
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(CallToolRequestSchema, async request => {
+  if (request.params.name === 'ask-weather') {
+    const provider = createMCPSamplingProvider({ server });
+
+    const result = await generateText({
+      model: provider.languageModel({
+        modelPreferences: { hints: [{ name: 'gpt-5-mini' }] },
+      }),
+      tools: {
+        getWeather: {
+          description: 'Get the weather for a location',
+          inputSchema: z.object({
+            city: z.string().describe('The city name'),
+          }),
+          execute: async ({ city }) => {
+            return `The weather in ${city} is sunny and 72°F`;
+          },
+        },
+      },
+      prompt:
+        request.params.arguments?.question ||
+        'What is the weather in San Francisco?',
+      stopWhen: isStepCount(5),
+    });
+
+    return { content: [{ type: 'text', text: result.text }] };
+  }
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+### 更多示例
+
+更完整的可运行示例请查看[示例目录](https://github.com/mcpc-tech/mcpc/tree/main/packages/mcp-sampling-ai-provider/examples)：
+
+- [generate_text_example.ts](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples/generate_text_example.ts) - 基本文本生成
+- [stream_text_example.ts](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples/stream_text_example.ts) - 流式响应
+- [generate_object_example.ts](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples/generate_object_example.ts) - 结构化输出
+- [client-sampling-example.ts](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples/client-sampling-example.ts) - 客户端 sampling 实现
+
+## 客户端 Sampling（无原生支持的客户端）
+
+如果你的 MCP 客户端不原生支持 sampling，可以使用 `setupClientSampling` 搭配模型偏好来添加 sampling 能力：
+
+```typescript
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import {
+  convertAISDKFinishReasonToMCP,
+  selectModelFromPreferences,
+  setupClientSampling,
+} from '@mcpc-tech/mcp-sampling-ai-provider';
+import { generateText } from 'ai';
+
+const client = new Client(
+  { name: 'my-client', version: '1.0.0' },
+  { capabilities: { sampling: {} } },
+);
+
+setupClientSampling(client, {
+  handler: async params => {
+    const modelId = selectModelFromPreferences(params.modelPreferences, {
+      hints: {
+        'gpt-5': 'openai/gpt-5-mini',
+        'gpt-mini': 'openai/gpt-5-mini',
+      },
+      priorities: {
+        speed: 'openai/gpt-5-mini',
+        intelligence: 'openai/gpt-5-mini',
+      },
+      default: 'openai/gpt-5-mini',
+    });
+
+    const result = await generateText({
+      model: modelId,
+      messages: params.messages,
+    });
+
+    return {
+      model: modelId,
+      role: 'assistant',
+      content: { type: 'text', text: result.text },
+      stopReason: convertAISDKFinishReasonToMCP(result.finishReason),
+    };
+  },
+});
+
+const transport = new StdioClientTransport({
+  command: 'npx',
+  args: ['-y', 'example_mcp_server.ts'],
+});
+
+await client.connect(transport);
+```
+
+完整示例请查看[这里](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples/client-sampling-example.ts)。
+
+## 工作原理
+
+请求流程非常直接：
+
+1. AI SDK 调用语言模型
+2. 提供商将请求转换为 MCP `sampling/createMessage` 格式
+3. MCP 客户端处理 sampling 请求
+4. 提供商将响应转换回 AI SDK 格式
+
+MCP 客户端（如 VS Code、Claude Desktop）会根据提供的 `modelPreferences` 决定实际使用哪个模型。
+
+## 限制
+
+- **无 token 计数**：MCP 不提供 token 用量信息（返回 0）
+- **无原生流式**：MCP sampling 不支持流式 - 提供商会先调用 `doGenerate`，再将完整响应以流事件的形式发出
+- **实验性工具/JSON 支持**：通过 systemPrompt 实现，因为 MCP sampling 原生不支持这些特性
+
+## 更多资源
+
+- [MCP Sampling AI 提供商仓库](https://github.com/mcpc-tech/mcpc/tree/main/packages/mcp-sampling-ai-provider)
+- [NPM 包](https://www.npmjs.com/package/@mcpc-tech/mcp-sampling-ai-provider)
+- [JSR 包](https://jsr.io/@mcpc/mcp-sampling-ai-provider)
+- [MCP 规范](https://modelcontextprotocol.io/)
+- [示例代码](https://github.com/mcpc-tech/mcpc/blob/main/packages/mcp-sampling-ai-provider/examples)

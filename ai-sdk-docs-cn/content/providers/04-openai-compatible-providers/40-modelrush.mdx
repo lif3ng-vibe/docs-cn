@@ -1,0 +1,79 @@
+---
+title: ModelRush
+description: 在 AI SDK 中使用 ModelRush 的 OpenAI 兼容 API。
+---
+
+# ModelRush 提供商
+
+[ModelRush](https://modelrush.ai/) 通过 OpenAI 兼容 API 提供对 AI 模型的访问。你可以通过 `@ai-sdk/openai-compatible` 模块，在 AI SDK 中使用它的 Chat Completions 端点。
+
+## 设置
+
+安装 OpenAI Compatible 提供商（provider）：
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+创建一个 ModelRush API key，并将其设置为服务器端环境变量：
+
+```bash
+export MODELRUSH_API_KEY=your-api-key
+```
+
+创建 API key 的步骤请参见 [ModelRush 快速上手](https://modelrush.ai/docs/quickstart)。
+
+## 提供商实例
+
+使用 `createOpenAICompatible` 创建一个 ModelRush 提供商实例：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const modelrush = createOpenAICompatible({
+  name: 'modelrush',
+  apiKey: process.env.MODELRUSH_API_KEY,
+  baseURL: 'https://api.modelrush.ai/v1',
+});
+```
+
+## 语言模型
+
+使用 `.chatModel()` 工厂方法和一个 ModelRush 模型 ID 创建聊天模型：
+
+```ts
+const model = modelrush.chatModel('modelrush/deepseek-v4-flash-0731');
+```
+
+### 示例
+
+使用 `generateText` 通过该模型生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const modelrush = createOpenAICompatible({
+  name: 'modelrush',
+  apiKey: process.env.MODELRUSH_API_KEY,
+  baseURL: 'https://api.modelrush.ai/v1',
+});
+
+const { text } = await generateText({
+  model: modelrush.chatModel('modelrush/deepseek-v4-flash-0731'),
+  prompt: 'Explain what an API gateway does in one sentence.',
+});
+
+console.log(text);
+```
+
+## 支持的模型与能力
+
+此集成使用 ModelRush 的 OpenAI 兼容 Chat Completions 端点进行文本生成。示例模型 `modelrush/deepseek-v4-flash-0731` 接收文本聊天消息并返回文本。
+
+请使用 [ModelRush models 端点](https://modelrush.ai/docs/api/models)或[模型目录](https://modelrush.ai/models)查找当前的模型 ID 以及各模型的能力与限制。ModelRush 的其他模态不在本 OpenAI 兼容聊天集成的范围内。
+
+## 相关资源
+
+- [ModelRush AI SDK 示例](https://github.com/Moonveil-AI/modelrush-developer-tools/tree/main/examples/ai-sdk)
+- [ModelRush 快速上手](https://modelrush.ai/docs/quickstart)
+- [ModelRush Chat Completions 文档](https://modelrush.ai/docs/models/chat)
+- [AI SDK OpenAI Compatible 提供商](/providers/openai-compatible-providers)

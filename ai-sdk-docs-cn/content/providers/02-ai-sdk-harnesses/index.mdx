@@ -1,0 +1,97 @@
+---
+title: AI SDK Harnesses
+description: 了解如何使用 AI SDK harness 适配器。
+---
+
+# AI SDK Harnesses
+
+AI SDK harness 适配器将 `HarnessAgent` 连接到成熟的智能体（agent）运行时。
+它们与模型提供商相互独立，但会暴露兼容 AI SDK 的流式与响应原语。
+
+<IndexCards
+  cards={[
+    {
+      title: 'Claude Code',
+      description: '通过 AI SDK harness 抽象使用 Claude Code。',
+      href: '/providers/ai-sdk-harnesses/claude-code',
+    },
+    {
+      title: 'Cline',
+      description: '通过 AI SDK harness 抽象使用 Cline SDK。',
+      href: '/providers/ai-sdk-harnesses/cline',
+    },
+    {
+      title: 'Codex',
+      description: '通过 AI SDK harness 抽象使用 Codex。',
+      href: '/providers/ai-sdk-harnesses/codex',
+    },
+    {
+      title: 'Cursor',
+      description: '通过 AI SDK harness 抽象使用 Cursor。',
+      href: '/providers/ai-sdk-harnesses/cursor',
+    },
+    {
+      title: 'fx',
+      description: '通过 AI SDK harness 抽象使用 fx。',
+      href: '/providers/ai-sdk-harnesses/fx',
+    },
+    {
+      title: 'GitHub Copilot',
+      description: '通过 AI SDK harness 抽象使用 GitHub Copilot。',
+      href: '/providers/ai-sdk-harnesses/github-copilot',
+    },
+    {
+      title: 'Grok Build',
+      description: '通过 AI SDK harness 抽象使用 Grok Build。',
+      href: '/providers/ai-sdk-harnesses/grok-build',
+    },
+    {
+      title: 'OpenCode',
+      description: '通过 AI SDK harness 抽象使用 OpenCode。',
+      href: '/providers/ai-sdk-harnesses/opencode',
+    },
+    {
+      title: 'Pi',
+      description: '通过 AI SDK harness 抽象使用 Pi。',
+      href: '/providers/ai-sdk-harnesses/pi',
+    },
+    {
+      title: 'Agent Client Protocol',
+      description:
+        '通过 AI SDK harness 抽象使用任何兼容 ACP 的 harness。',
+      href: '/providers/ai-sdk-harnesses/acp',
+    },
+  ]}
+/>
+
+## 用法
+
+所有 harness 适配器都与 `HarnessAgent` 一起使用：
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { codex } from '@ai-sdk/harness-codex';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+
+const agent = new HarnessAgent({
+  harness: codex,
+  model: 'gpt-5.6-luna',
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+try {
+  console.log(
+    (await agent.generate({ session, prompt: 'Inspect this project.' })).text,
+  );
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+}
+```
+
+阅读 [Harnesses](/docs/ai-sdk-harnesses) 文档，了解会话、工具、UI 与终端用法。

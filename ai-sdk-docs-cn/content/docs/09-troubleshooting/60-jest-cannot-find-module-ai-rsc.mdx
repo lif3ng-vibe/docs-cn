@@ -1,0 +1,22 @@
+---
+title: "Jest：无法找到模块 '@ai-sdk/rsc'"
+description: "排查 Jest 报出的无法找到模块 '@ai-sdk/rsc' 这一 AI SDK 错误"
+---
+
+# Jest: cannot find module '@ai-sdk/rsc'
+
+## 问题
+
+我在使用 AI SDK RSC，并用 Jest 为我的 RSC 组件编写测试。
+
+出现了如下错误：`Cannot find module '@ai-sdk/rsc'`。
+
+## 解决方案
+
+通过 jest config 的 `moduleNameMapper` 配置模块解析：
+
+```json filename="jest.config.js"
+"moduleNameMapper": {
+  "^@ai-sdk/rsc$": "<rootDir>/node_modules/@ai-sdk/rsc/dist"
+}
+```

@@ -1,0 +1,101 @@
+---
+title: experimental_getBatchResults
+description: experimental_getBatchResults 的 API 参考。
+---
+
+# `experimental_getBatchResults()`
+
+<Note type="warning">
+  批处理（batch）支持为实验性功能，API 可能在补丁版本中变更。
+</Note>
+
+以异步可迭代对象的形式返回异步批处理中各请求的终态结果。有关批处理生命周期的完整指南，请参阅
+[批处理](/docs/ai-sdk-core/batch)。
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { experimental_getBatchResults as getBatchResults } from 'ai';
+
+for await (const item of getBatchResults({ provider: anthropic, batch })) {
+  if (item.status === 'succeeded') {
+    console.log(item.id, item.text);
+  } else {
+    console.error(item.id, item.error);
+  }
+}
+```
+
+## 导入
+
+<Snippet
+  text={`import { experimental_getBatchResults } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'provider',
+      type: 'Experimental_BatchProvider',
+      isOptional: true,
+      description:
+        '用于访问批处理的提供商。默认为全局提供商；未配置全局提供商时使用 AI Gateway。',
+    },
+    {
+      name: 'batch',
+      type: 'Experimental_BatchReference',
+      description:
+        'experimental_startBatch 返回的可序列化引用。',
+    },
+    {
+      name: 'tools',
+      type: 'ToolSet',
+      isOptional: true,
+      description:
+        '批处理中各请求提供的客户端定义工具。用于校验和规范化返回的工具调用；execute 函数绝不会被调用。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '结果检索的额外提供商专属选项。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '结果检索的最大重试次数。设为 0 可禁用重试。默认值：2。',
+    },
+    {
+      name: 'abortSignal',
+      type: 'AbortSignal',
+      isOptional: true,
+      description: '可选的中止信号，用于取消结果检索。',
+    },
+    {
+      name: 'timeout',
+      type: 'number | { totalMs?: number }',
+      isOptional: true,
+      description: '结果检索允许的最长时间。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string | undefined>',
+      isOptional: true,
+      description: '请求的额外 HTTP 请求头。',
+    },
+  ]}
+/>
+
+### 返回值
+
+返回一个 `AsyncIterableStream<Experimental_BatchItemResult>`，其中包含成功、失败、已取消或已过期请求的结果。该流既可以作为异步可迭代对象消费，也可以作为 `ReadableStream` 消费。
+
+成功的条目包含 `id`、`status: 'succeeded'`、`text`、规范化的 `content`（包括文本、推理、来源、文件、工具调用和工具结果）、
+`finishReason`、`usage`，以及可选的响应元数据和提供商元数据。`text` 是各文本部分的拼接结果，当结果不含文本部分时可以是空字符串。
+失败、已取消和已过期的条目包含请求 `id`、各自的终态，以及可选的错误详情。

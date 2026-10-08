@@ -1,0 +1,28 @@
+---
+title: AI_InvalidArgumentError
+description: 了解如何解决 AI_InvalidArgumentError
+---
+
+# AI_InvalidArgumentError
+
+此错误在提供了无效参数时发生。
+
+例如，当 `getTextFromDataUrl` 的 `dataUrl` 参数格式错误或无法解码时，它会抛出此错误。上层 API 所使用的工具校验逻辑也会抛出此错误，因此你可以用一个稳定的错误守卫来统一处理无效参数。
+
+## 属性
+
+- `parameter`：无效参数的名称
+- `value`：无效的值
+- `message`：错误消息
+
+## 排查此错误
+
+可以使用以下方式检查错误是否为 `AI_InvalidArgumentError` 的实例：
+
+```typescript
+import { InvalidArgumentError } from 'ai';
+
+if (InvalidArgumentError.isInstance(error)) {
+  console.error(`Invalid ${error.parameter}:`, error.message);
+}
+```

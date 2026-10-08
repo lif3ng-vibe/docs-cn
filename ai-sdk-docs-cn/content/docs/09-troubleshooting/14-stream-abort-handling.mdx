@@ -1,0 +1,83 @@
+---
+title: 流被中止时未调用 onEnd
+description: 排查使用 toUIMessageStream 时流被中止导致 onEnd 回调未执行的问题
+---
+
+# onEnd not called when stream is aborted
+
+## 问题
+
+将 `toUIMessageStream` 与 `onEnd` 回调一起使用时，流被中止时该回调可能不会执行。这是因为中止处理器会立即终止响应，导致 `onEnd` 回调无法被触发。
+
+```tsx
+// Server-side code where onEnd isn't called on abort
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    abortSignal: req.signal,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      onEnd: async ({ isAborted }) => {
+        // This isn't called when the stream is aborted!
+        if (isAborted) {
+          console.log('Stream was aborted');
+          // Handle abort-specific cleanup
+        } else {
+          console.log('Stream completed normally');
+          // Handle normal completion
+        }
+      },
+    }),
+  });
+}
+```
+
+## 背景
+
+流被中止时，响应会立即终止。如果没有恰当的处理，`onEnd` 回调将没有机会执行，从而无法进行重要的清理操作，例如保存部分结果或记录中止事件。
+
+## 解决方案
+
+在 `createUIMessageStreamResponse` 配置中添加 `consumeSseStream: consumeStream`。这可以确保中止事件被正确捕获并转发给 `onEnd` 回调，使其即使在流被中止时也能执行。
+
+```tsx
+// other imports...
+import {
+  consumeStream,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    abortSignal: req.signal,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      onEnd: async ({ isAborted }) => {
+        // Now this WILL be called even when aborted!
+        if (isAborted) {
+          console.log('Stream was aborted');
+          // Handle abort-specific cleanup
+        } else {
+          console.log('Stream completed normally');
+          // Handle normal completion
+        }
+      },
+    }),
+    consumeSseStream: consumeStream, // This enables onEnd to be called on abort
+  });
+}
+```

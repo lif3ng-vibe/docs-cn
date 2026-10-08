@@ -1,0 +1,97 @@
+---
+title: SAP AI Core
+description: 了解如何使用适用于 AI SDK 的 SAP AI Core 提供商。
+---
+
+# SAP AI Core 提供商
+
+[jerome-benoit/sap-ai-provider](https://github.com/jerome-benoit/sap-ai-provider) 是一个面向 SAP AI Core 的社区提供商，构建于官方 **@sap-ai-sdk/orchestration** 与 **@sap-ai-sdk/foundation-models** 包之上。
+
+该仓库发布了两个 npm 包：
+
+- `@jerome-benoit/sap-ai-provider` - 面向 AI SDK 5.x 与 6.x 的 Language Model V4（推荐）
+- `@jerome-benoit/sap-ai-provider-v2` - 面向 AI SDK 5.x 的 Language Model V2
+
+## 特性
+
+两个提供商均提供：
+
+- **双 API 支持**：可在 Orchestration API（含数据脱敏、内容过滤、文档接地（grounding）、翻译）或 Foundation Models API（`logprobs`、`seed`、`dataSources`）之间选择
+- **工具调用**与**多模态输入**（图像）
+- **流式支持**，用于实时文本生成
+- **文本嵌入**，面向 RAG 与语义搜索
+
+## 安装
+
+### @jerome-benoit/sap-ai-provider（推荐）
+
+<InstallPackages packages="@jerome-benoit/sap-ai-provider" />
+
+### @jerome-benoit/sap-ai-provider-v2
+
+<InstallPackages packages="@jerome-benoit/sap-ai-provider-v2" />
+
+认证通过 `AICORE_SERVICE_KEY` 环境变量（本地）或 `VCAP_SERVICES`（SAP BTP）自动处理。
+
+## 提供商实例
+
+你可以从 `@jerome-benoit/sap-ai-provider` 导入默认提供商实例 `sapai`：
+
+```ts
+import { sapai } from '@jerome-benoit/sap-ai-provider';
+```
+
+如果需要自定义配置，可以导入 `createSAPAIProvider`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createSAPAIProvider } from '@jerome-benoit/sap-ai-provider';
+
+const sapai = createSAPAIProvider({
+  resourceGroup: 'default',
+  api: 'orchestration', // or 'foundation-models'
+});
+```
+
+你可以使用以下可选设置来自定义 SAP AI 提供商实例：
+
+- **resourceGroup** _string_
+
+  SAP AI Core 资源组。默认为 `'default'`。
+
+- **deploymentId** _string_
+
+  指定的部署 ID。未提供时，SDK 会自动解析部署。
+
+- **api** _'orchestration' | 'foundation-models'_
+
+  要使用的 API。默认为 `'orchestration'`。可以通过 `providerOptions` 按模型或按调用覆盖。
+
+- **name** _string_
+
+  用作 `providerOptions` 键的提供商名称。默认为 `'sap-ai'`。
+
+- **defaultSettings** _object_
+
+  默认模型设置，包括 `modelParams`、`masking`、`filtering`、`grounding` 与 `translation`。
+
+## 语言模型
+
+你可以使用提供商实例创建调用 SAP AI Core API 的模型。第一个参数是模型 id。模型命名遵循 SAP AI Core 的厂商前缀约定：
+
+```ts
+const model = sapai('gpt-4.1');
+const claudeModel = sapai('anthropic--claude-3.5-sonnet');
+const geminiModel = sapai('gemini-2.0-flash');
+```
+
+<Note>
+  模型可用性取决于你的 SAP AI Core 租户配置与所在区域。
+</Note>
+
+## 嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 SAP AI Core 嵌入 API 的模型：
+
+```ts
+const model = sapai.embeddingModel('text-embedding-3-small');
+```

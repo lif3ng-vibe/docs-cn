@@ -1,0 +1,200 @@
+---
+title: Cloudflare AI Gateway
+description: 了解如何在 AI SDK 中使用 Cloudflare AI Gateway 提供商。
+---
+
+# Cloudflare AI Gateway
+
+Cloudflare AI Gateway 提供商是一个将 Cloudflare 的 AI Gateway 与 Vercel AI SDK 集成的库。它通过统一接口无缝访问来自多家提供商的多种 AI 模型，并提供自动回退（fallback）以保障高可用性。
+
+## 特性
+
+- **运行时无关**：兼容 Node.js、Edge Runtime 以及 Vercel AI SDK 支持的其他 JavaScript 运行时。
+- **自动回退**：某个模型失败时自动切换到下一个可用模型，确保服务韧性。
+- **多提供商支持**：支持 OpenAI、Anthropic、DeepSeek、Google AI Studio、Grok、Mistral、Perplexity AI、Replicate 与 Groq 的模型。
+- **Cloudflare AI Gateway 集成**：借助 Cloudflare 的 AI Gateway 实现请求管理、缓存与速率限制。
+- **配置简化**：上手简单，支持 API key 身份验证或 Cloudflare AI 绑定。
+
+## 安装
+
+Cloudflare AI Gateway 提供商包含在 `ai-gateway-provider` 模块中。可通过以下方式安装：
+
+<InstallPackages packages="ai-gateway-provider" />
+
+## 提供商实例
+
+使用 `createAiGateway` 函数创建 `aigateway` 提供商实例。你可以使用 API key 或 Cloudflare AI 绑定进行身份验证。
+
+### API Key 身份验证
+
+```typescript
+import { createAiGateway } from 'ai-gateway-provider';
+
+const aigateway = createAiGateway({
+  accountId: 'your-cloudflare-account-id',
+  gateway: 'your-gateway-name',
+  apiKey: 'your-cloudflare-api-key', // Only required if your gateway has authentication enabled
+  options: {
+    skipCache: true, // Optional request-level settings
+  },
+});
+```
+
+### Cloudflare AI 绑定
+
+此方式仅在 Cloudflare Workers 内部可用。
+
+在 `wrangler.toml` 中配置 AI 绑定：
+
+```bash
+[AI]
+binding = "AI"
+```
+
+在你的 worker 中，使用该绑定创建新实例：
+
+```typescript
+import { createAiGateway } from 'ai-gateway-provider';
+
+const aigateway = createAiGateway({
+  binding: env.AI.gateway('my-gateway'),
+  options: {
+    skipCache: true, // Optional request-level settings
+  },
+});
+```
+
+## 语言模型
+
+向 `aigateway` 提供商传入一个模型数组即可创建模型实例。提供商会按顺序尝试使用这些模型，某个模型失败时回退到下一个。
+
+```typescript
+import { createAiGateway } from 'ai-gateway-provider';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+
+const aigateway = createAiGateway({
+  accountId: 'your-cloudflare-account-id',
+  gateway: 'your-gateway-name',
+  apiKey: 'your-cloudflare-api-key',
+});
+
+const openai = createOpenAI({ apiKey: 'openai-api-key' });
+const anthropic = createAnthropic({ apiKey: 'anthropic-api-key' });
+
+const model = aigateway([
+  anthropic('claude-haiku-4-5'), // Primary model
+  openai('gpt-4o-mini'), // Fallback model
+]);
+```
+
+### 请求选项
+
+可按请求自定义 Cloudflare AI Gateway 设置：
+
+- `cacheKey`：请求的自定义缓存键。
+- `cacheTtl`：缓存存活时间（秒）。
+- `skipCache`：跳过缓存。
+- `metadata`：请求的自定义元数据。
+- `collectLog`：启用/禁用日志收集。
+- `eventId`：自定义事件标识符。
+- `requestTimeoutMs`：请求超时时间（毫秒）。
+- `retries`：
+  - `maxAttempts`：重试次数（1-5）。
+  - `retryDelayMs`：重试间隔。
+  - `backoff`：重试策略（`constant`、`linear`、`exponential`）。
+
+示例：
+
+```typescript
+const aigateway = createAiGateway({
+  accountId: 'your-cloudflare-account-id',
+  gateway: 'your-gateway-name',
+  apiKey: 'your-cloudflare-api-key',
+  options: {
+    cacheTtl: 3600, // Cache for 1 hour
+    metadata: { userId: 'user123' },
+    retries: {
+      maxAttempts: 3,
+      retryDelayMs: 1000,
+      backoff: 'exponential',
+    },
+  },
+});
+```
+
+## 示例
+
+### `generateText`
+
+使用 Cloudflare AI Gateway 提供商生成非流式文本：
+
+```typescript
+import { createAiGateway } from 'ai-gateway-provider';
+import { createOpenAI } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const aigateway = createAiGateway({
+  accountId: 'your-cloudflare-account-id',
+  gateway: 'your-gateway-name',
+  apiKey: 'your-cloudflare-api-key',
+});
+
+const openai = createOpenAI({ apiKey: 'openai-api-key' });
+
+const { text } = await generateText({
+  model: aigateway([openai('gpt-4o-mini')]),
+  prompt: 'Write a greeting.',
+});
+
+console.log(text); // Output: "Hello"
+```
+
+### `streamText`
+
+使用 Cloudflare AI Gateway 提供商流式生成文本响应：
+
+```typescript
+import { createAiGateway } from 'ai-gateway-provider';
+import { createOpenAI } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const aigateway = createAiGateway({
+  accountId: 'your-cloudflare-account-id',
+  gateway: 'your-gateway-name',
+  apiKey: 'your-cloudflare-api-key',
+});
+
+const openai = createOpenAI({ apiKey: 'openai-api-key' });
+
+const result = await streamText({
+  model: aigateway([openai('gpt-4o-mini')]),
+  prompt: 'Write a multi-part greeting.',
+});
+
+let accumulatedText = '';
+for await (const chunk of result.textStream) {
+  accumulatedText += chunk;
+}
+
+console.log(accumulatedText); // Output: "Hello world!"
+```
+
+## 支持的提供商
+
+- OpenAI
+- Anthropic
+- DeepSeek
+- Google AI Studio
+- Grok
+- Mistral
+- Perplexity AI
+- Replicate
+- Groq
+
+## 错误处理
+
+该提供商会抛出以下自定义错误：
+
+- `AiGatewayUnauthorizedError`：在启用了身份验证时 API key 无效或缺失。
+- `AiGatewayDoesNotExist`：指定的 Cloudflare AI Gateway 不存在。

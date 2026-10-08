@@ -1,0 +1,300 @@
+---
+title: experimental_MCPAppRenderer
+description: 使用 @ai-sdk/react 渲染 MCP Apps 的 API 参考。
+---
+
+# `experimental_MCPAppRenderer`
+
+<Note type="warning">
+  `experimental_MCPAppRenderer` 为实验性功能，未来版本中可能会发生变化。
+</Note>
+
+`experimental_MCPAppRenderer` 为 AI SDK 的工具 UI 片段渲染 MCP App。它会检测工具片段上的 MCP App 元数据，加载应用资源，在沙盒代理 iframe 中渲染应用，并在 iframe 与宿主应用之间桥接 MCP Apps 的 JSON-RPC 消息。
+
+对于没有 MCP App 元数据的工具片段，组件会渲染 `fallback`。
+
+## 导入
+
+<Snippet
+  text={`import { experimental_MCPAppRenderer as MCPAppRenderer } from "@ai-sdk/react"`}
+  prompt={false}
+/>
+
+## 示例
+
+```tsx
+'use client';
+
+import {
+  experimental_MCPAppRenderer as MCPAppRenderer,
+  type MCPAppBridgeHandlers,
+  type MCPAppMetadata,
+  type MCPAppResource,
+  type MCPAppSandboxConfig,
+} from '@ai-sdk/react';
+import { isToolUIPart } from 'ai';
+
+const sandbox = {
+  url: '/mcp-app-sandbox',
+  className: 'h-80 w-full rounded-lg border',
+  style: { border: 0 },
+} satisfies MCPAppSandboxConfig;
+
+async function loadResource(app: MCPAppMetadata): Promise<MCPAppResource> {
+  const response = await fetch('/api/mcp-app-host/read-resource', {
+    method: 'POST',
+    body: JSON.stringify({ uri: app.resourceUri }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load MCP App resource');
+  }
+
+  return response.json();
+}
+
+const handlers: MCPAppBridgeHandlers = {
+  callTool: params =>
+    fetch('/api/mcp-app-host/call-tool', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }).then(response => response.json()),
+  openLink: ({ url }) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return {};
+  },
+};
+
+export function MessagePart({ part }: { part: unknown }) {
+  if (!isToolUIPart(part)) {
+    return null;
+  }
+
+  return (
+    <MCPAppRenderer
+      part={part}
+      loadResource={loadResource}
+      handlers={handlers}
+      sandbox={sandbox}
+      fallback={null}
+    />
+  );
+}
+```
+
+## 属性
+
+<PropertiesTable
+  content={[
+    {
+      name: 'part',
+      type: 'ToolUIPart<UITools> | DynamicToolUIPart',
+      description:
+        'AI SDK 的工具 UI 片段。渲染器会在 `part.toolMetadata.mcp.app` 中查找 MCP App 元数据。',
+    },
+    {
+      name: 'sandbox',
+      type: 'MCPAppSandboxConfig',
+      description:
+        '用于承载应用的外层沙盒代理 iframe 的配置。',
+    },
+    {
+      name: 'resource',
+      type: 'MCPAppResource',
+      isOptional: true,
+      description:
+        '预加载的 MCP App 资源。`resource` 与 `loadResource` 二者提供其一即可。',
+    },
+    {
+      name: 'loadResource',
+      type: '(app: MCPAppMetadata) => Promise<MCPAppResource>',
+      isOptional: true,
+      description:
+        '根据工具片段上的应用元数据加载 MCP App 资源。',
+    },
+    {
+      name: 'handlers',
+      type: 'MCPAppBridgeHandlers',
+      isOptional: true,
+      description:
+        '用于处理 iframe 请求的回调，例如 `tools/call`、`resources/read`、`ui/open-link` 以及显示模式变更。',
+    },
+    {
+      name: 'hostInfo',
+      type: '{ name: string; version: string }',
+      isOptional: true,
+      description:
+        '在 `ui/initialize` 握手期间返回给应用的宿主身份信息。',
+    },
+    {
+      name: 'hostContext',
+      type: 'MCPAppHostContext',
+      isOptional: true,
+      description:
+        '发送给应用的宿主上下文，例如主题、显示模式以及可用的显示模式。',
+    },
+    {
+      name: 'fallback',
+      type: 'ReactNode',
+      isOptional: true,
+      description:
+        '在资源加载中、加载失败、或工具片段不是 MCP App 时渲染的内容。',
+    },
+  ]}
+/>
+
+## 沙盒配置
+
+<PropertiesTable
+  content={[
+    {
+      name: 'url',
+      type: 'string | URL',
+      description:
+        '沙盒代理 iframe 的 URL。代理从宿主接收应用 HTML，并创建内层应用 iframe。',
+    },
+    {
+      name: 'title',
+      type: 'string',
+      isOptional: true,
+      description: 'iframe 的无障碍标题。',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      isOptional: true,
+      description: '应用到外层 iframe 的类名。',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      isOptional: true,
+      description: '应用到外层 iframe 的内联样式。',
+    },
+    {
+      name: 'targetOrigin',
+      type: 'string',
+      isOptional: true,
+      description:
+        '`postMessage` 使用的目标 origin。默认为 `*`；生产环境中应将其设置为你的沙盒 origin。',
+    },
+    {
+      name: 'outerSandbox',
+      type: 'string',
+      isOptional: true,
+      description:
+        '外层代理 iframe 的 sandbox 属性。默认为 `allow-scripts allow-same-origin allow-forms`。',
+    },
+    {
+      name: 'innerSandbox',
+      type: 'string',
+      isOptional: true,
+      description:
+        '发送给代理、用于内层应用 iframe 的 sandbox 属性。默认为 `allow-scripts allow-forms`。',
+    },
+  ]}
+/>
+
+## 桥接处理器
+
+`experimental_MCPAppRenderer` 使用这些处理器响应 iframe 请求。在生产环境中，由服务器支持的处理器应在调用 MCP 服务器之前校验授权与 MCP Apps 工具可见性。
+
+<PropertiesTable
+  content={[
+    {
+      name: 'allowedTools',
+      type: 'string[]',
+      isOptional: true,
+      description:
+        '可选的客户端白名单，在转发 `tools/call` 请求之前进行检查。',
+    },
+    {
+      name: 'callTool',
+      type: '(params: MCPAppToolCallParams) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `tools/call` 请求。',
+    },
+    {
+      name: 'readResource',
+      type: '(params: { uri: string }) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `resources/read` 请求。',
+    },
+    {
+      name: 'listResources',
+      type: '(params?: unknown) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `resources/list` 请求。',
+    },
+    {
+      name: 'openLink',
+      type: '(params: { url: string }) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `ui/open-link` 请求。',
+    },
+    {
+      name: 'sendMessage',
+      type: '(params: unknown) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `ui/message` 请求。',
+    },
+    {
+      name: 'updateModelContext',
+      type: '(params: unknown) => Promise<unknown> | unknown',
+      isOptional: true,
+      description: '处理由应用发起的 `ui/update-model-context` 请求。',
+    },
+    {
+      name: 'requestDisplayMode',
+      type: "(params: { mode: 'inline' | 'fullscreen' | 'pip' }) => Promise<{ mode: MCPAppDisplayMode }> | { mode: MCPAppDisplayMode }",
+      isOptional: true,
+      description: '处理由应用发起的 `ui/request-display-mode` 请求。',
+    },
+    {
+      name: 'onSizeChange',
+      type: '(params: { width?: number; height?: number }) => void',
+      isOptional: true,
+      description: '当应用发送尺寸变更通知时调用。',
+    },
+    {
+      name: 'onInitialized',
+      type: '() => void',
+      isOptional: true,
+      description: '在应用发送 `ui/notifications/initialized` 之后调用。',
+    },
+    {
+      name: 'onRequestTeardown',
+      type: '(params: unknown) => void',
+      isOptional: true,
+      description: '当应用请求卸载时调用。',
+    },
+    {
+      name: 'onLog',
+      type: '(params: unknown) => void',
+      isOptional: true,
+      description: '当应用发送日志通知时调用。',
+    },
+    {
+      name: 'onError',
+      type: '(error: Error) => void',
+      isOptional: true,
+      description:
+        '当受支持的 iframe 请求在处理过程中失败时调用。',
+    },
+  ]}
+/>
+
+## 另请参阅
+
+<ExampleLinks
+  examples={[
+    {
+      title: 'MCP Apps 指南',
+      link: '/docs/ai-sdk-core/mcp-apps',
+    },
+    {
+      title: 'MCP Apps 辅助函数',
+      link: '/docs/reference/ai-sdk-core/mcp-apps',
+    },
+  ]}
+/>

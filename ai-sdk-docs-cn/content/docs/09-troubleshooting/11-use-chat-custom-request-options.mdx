@@ -1,0 +1,146 @@
+---
+title: useChat 的自定义请求头、body 和 credentials 不生效
+description: 排查 useChat Hook 中自定义请求配置相关的错误
+---
+
+# Custom headers, body, and credentials not working with useChat
+
+## 问题
+
+使用 `useChat` Hook 时，直接在 Hook 上配置的自定义请求选项（如请求头、body 字段和 credentials）并未随请求一起发送：
+
+```tsx
+// These options are not sent with the request
+const { messages, sendMessage } = useChat({
+  headers: {
+    Authorization: 'Bearer token123',
+  },
+  body: {
+    user_id: '123',
+  },
+  credentials: 'include',
+});
+```
+
+## 背景
+
+`useChat` Hook 已经更改了配置请求选项的 API。Hook 本身上的 `headers`、`body` 和 `credentials` 等直接选项已不再支持。取而代之的是，你需要使用带有 `DefaultChatTransport` 的 `transport` 配置，或者在请求级别传递选项。
+
+## 解决方案
+
+使用 `useChat` 正确配置请求选项有三种方式：
+
+### 方案 1：请求级配置（推荐用于动态值）
+
+对于随时间变化的动态值，推荐的做法是在调用 `sendMessage` 时传递选项：
+
+```tsx
+const { messages, sendMessage } = useChat();
+
+// Send options with each message
+sendMessage(
+  { text: input },
+  {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`, // Dynamic auth token
+      'X-Request-ID': generateRequestId(),
+    },
+    body: {
+      temperature: 0.7,
+      max_tokens: 100,
+      user_id: getCurrentUserId(), // Dynamic user ID
+      sessionId: getCurrentSessionId(), // Dynamic session
+    },
+  },
+);
+```
+
+这种方式可以确保每次请求都携带最新的值。
+
+### 方案 2：使用静态值的 Hook 级配置
+
+对于组件生命周期内不会变化的静态值，请使用 `DefaultChatTransport`：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    headers: {
+      'X-API-Version': 'v1', // Static API version
+      'X-App-ID': 'my-app', // Static app identifier
+    },
+    body: {
+      model: 'gpt-6-astra', // Default model
+      stream: true, // Static configuration
+    },
+    credentials: 'include', // Static credentials policy
+  }),
+});
+```
+
+### 方案 3：使用可求值函数的 Hook 级配置
+
+如果你需要在 Hook 级别使用动态值，可以使用返回配置值的函数。不过，为了更好的可靠性，通常更推荐请求级配置：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    headers: () => ({
+      Authorization: `Bearer ${getAuthToken()}`,
+      'X-User-ID': getCurrentUserId(),
+    }),
+    body: () => ({
+      sessionId: getCurrentSessionId(),
+      preferences: getUserPreferences(),
+    }),
+    credentials: () => (isAuthenticated() ? 'include' : 'same-origin'),
+  }),
+});
+```
+
+<Note>
+  对于随时间变化的组件状态，推荐使用请求级配置（方案 1）。如果使用 Hook 级函数，可以考虑用 `useRef` 存储当前值，并在配置函数中引用 `ref.current`。
+</Note>
+
+### 组合 Hook 级与请求级选项
+
+请求级选项的优先级高于 Hook 级选项：
+
+```tsx
+// Hook-level default configuration
+const { messages, sendMessage } = useChat({
+  transport: new DefaultChatTransport({
+    api: '/api/chat',
+    headers: {
+      'X-API-Version': 'v1',
+    },
+    body: {
+      model: 'gpt-6-astra',
+    },
+  }),
+});
+
+// Override or add options per request
+sendMessage(
+  { text: input },
+  {
+    headers: {
+      'X-API-Version': 'v2', // This overrides the hook-level header
+      'X-Request-ID': '123', // This is added
+    },
+    body: {
+      model: 'gpt-4.1-mini', // Supports the temperature setting below
+      temperature: 0.5, // This is added
+    },
+  },
+);
+```
+
+有关请求配置的更多细节，请参阅[请求配置](/docs/ai-sdk-ui/chatbot#请求配置)文档。

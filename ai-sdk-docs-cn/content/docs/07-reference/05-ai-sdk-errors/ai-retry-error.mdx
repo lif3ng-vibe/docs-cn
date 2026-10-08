@@ -1,0 +1,27 @@
+---
+title: AI_RetryError
+description: 了解如何修复 AI_RetryError
+---
+
+# AI_RetryError
+
+此错误在重试操作失败时发生。
+
+## 属性
+
+- `reason`：重试失败的原因
+- `lastError`：重试过程中最近一次发生的错误
+- `errors`：所有重试尝试中发生的错误数组
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_RetryError` 的实例：
+
+```typescript
+import { RetryError } from 'ai';
+
+if (RetryError.isInstance(error)) {
+  // Handle the error
+}
+```

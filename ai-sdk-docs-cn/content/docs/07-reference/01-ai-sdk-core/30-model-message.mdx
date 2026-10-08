@@ -1,0 +1,501 @@
+---
+title: ModelMessage
+description: AI SDK Core 的消息类型（API 参考）
+---
+
+# `ModelMessage`
+
+`ModelMessage` 表示 AI SDK Core 函数所使用的基础消息结构。
+它涵盖了可在任何 AI SDK Core 函数的 `messages` 字段中使用的各种消息类型。
+
+你可以通过 `modelMessageSchema` 导出项访问 `ModelMessage` 的 Zod schema。
+
+## `ModelMessage` 类型
+
+### `SystemModelMessage`
+
+一种可以包含系统信息的系统消息。
+
+```typescript
+type SystemModelMessage = {
+  role: 'system';
+  content: string;
+};
+```
+
+你可以通过 `systemModelMessageSchema` 导出项访问 `SystemModelMessage` 的 Zod schema。
+
+<Note>
+  对于系统指令，请使用顶层的 `instructions` 属性而不是系统消息。默认情况下，
+  AI SDK 函数会拒绝 `prompt` 或 `messages` 中出现的系统消息，除非将
+  `allowSystemInMessages` 设置为 `true`。如果用户能够注入系统消息，启用该选项
+  可能带来提示词注入（prompt injection）风险。
+</Note>
+
+### `UserModelMessage`
+
+一种可以包含文本，或文本、图像与文件组合的用户消息。
+
+```typescript
+type UserModelMessage = {
+  role: 'user';
+  content: UserContent;
+};
+
+type UserContent = string | Array<TextPart | ImagePart | FilePart>;
+```
+
+你可以通过 `userModelMessageSchema` 导出项访问 `UserModelMessage` 的 Zod schema。
+
+### `AssistantModelMessage`
+
+一种可以包含文本、工具调用，或二者组合的助手消息。
+
+```typescript
+type AssistantModelMessage = {
+  role: 'assistant';
+  content: AssistantContent;
+};
+
+type AssistantContent = string | Array<TextPart | CustomPart | ToolCallPart>;
+```
+
+你可以通过 `assistantModelMessageSchema` 导出项访问 `AssistantModelMessage` 的 Zod schema。
+
+### `ToolModelMessage`
+
+一种包含一个或多个工具调用结果的工具消息。
+
+```typescript
+type ToolModelMessage = {
+  role: 'tool';
+  content: ToolContent;
+};
+
+type ToolContent = Array<ToolResultPart>;
+```
+
+你可以通过 `toolModelMessageSchema` 导出项访问 `ToolModelMessage` 的 Zod schema。
+
+## `ModelMessage` 的组成部分
+
+### `TextPart`
+
+表示提示词中的文本内容部分。它包含一段文本。
+
+```typescript
+export interface TextPart {
+  type: 'text';
+  /**
+   * The text content.
+   */
+  text: string;
+}
+```
+
+### `ImagePart` <Note type="warning">已弃用</Note>
+
+<Note type="warning">
+  `ImagePart` 已弃用。请改用 [`FilePart`](#filepart) 并指定 `mediaType:
+  'image'`（或更具体的 `image/*` 子类型）。
+</Note>
+
+表示用户消息中的图像部分。
+
+```typescript
+/**
+ * @deprecated Use `FilePart` with `mediaType: 'image'` instead.
+ */
+export interface ImagePart {
+  type: 'image';
+
+  /**
+   * Image data. Can either be:
+   * - data: a base64-encoded string, a Uint8Array, an ArrayBuffer, or a Buffer
+   * - URL: a URL that points to the image
+   * - ProviderReference: a provider reference from `uploadFile`
+   */
+  image: DataContent | URL | ProviderReference;
+
+  /**
+   * Optional IANA media type of the image.
+   * We recommend leaving this out as it will be detected automatically.
+   */
+  mediaType?: string;
+}
+```
+
+### `FilePart`
+
+表示用户消息中的文件部分。
+
+```typescript
+export interface FilePart {
+  type: 'file';
+
+  /**
+   * File data. Use the tagged `FileData` shape.
+   * Bare `DataContent`, `URL`, and `ProviderReference` shorthands are also supported.
+   */
+  data: FileData | DataContent | URL | ProviderReference;
+
+  /**
+   * Optional filename of the file.
+   */
+  filename?: string;
+
+  /**
+   * Either a full IANA media type (`type/subtype`, e.g. `image/png`) or just
+   * the top-level IANA segment (e.g. `image`, `audio`, `video`, `text`).
+   */
+  mediaType: string;
+}
+
+export type FileData =
+  // Raw bytes as a base64 string, Uint8Array, ArrayBuffer, or Buffer.
+  | { type: 'data'; data: DataContent }
+  // A URL that points to the file.
+  | { type: 'url'; url: URL }
+  // A provider reference from `uploadFile`.
+  | { type: 'reference'; reference: ProviderReference }
+  // Inline text content.
+  | { type: 'text'; text: string };
+```
+
+### `CustomPart`
+
+表示提供商特有的自定义内容部分。`kind` 字段以 `{provider}.{provider-type}` 的格式标识内容类型。
+
+```typescript
+export interface CustomPart {
+  type: 'custom';
+
+  /**
+   * The kind of custom content, in the format `{provider}.{provider-type}`.
+   */
+  kind: `${string}.${string}`;
+
+  /**
+   * Additional provider-specific metadata.
+   */
+  providerOptions?: ProviderOptions;
+}
+```
+
+### `ToolCallPart`
+
+表示提示词中的工具调用内容部分，通常由 AI 模型生成。
+
+```typescript
+export interface ToolCallPart {
+  type: 'tool-call';
+
+  /**
+   * ID of the tool call. This ID is used to match the tool call with the tool result.
+   */
+  toolCallId: string;
+
+  /**
+   * Name of the tool that is being called.
+   */
+  toolName: string;
+
+  /**
+   * Arguments of the tool call. This is a JSON-serializable object that matches the tool's input schema.
+   */
+  args: unknown;
+}
+```
+
+### `ToolResultPart`
+
+表示工具消息中某次工具调用的结果。
+
+```typescript
+export interface ToolResultPart {
+  type: 'tool-result';
+
+  /**
+   * ID of the tool call that this result is associated with.
+   */
+  toolCallId: string;
+
+  /**
+   * Name of the tool that generated this result.
+   */
+  toolName: string;
+
+  /**
+   * Result of the tool call. This is a JSON-serializable object.
+   */
+  output: ToolResultOutput;
+
+  /**
+  Additional provider-specific metadata. They are passed through
+  to the provider from the AI SDK and enable provider-specific
+  functionality that can be fully encapsulated in the provider.
+  */
+  providerOptions?: ProviderOptions;
+}
+```
+
+### `ToolResultOutput`
+
+```ts
+/**
+ * Output of a tool result.
+ */
+export type ToolResultOutput =
+  | {
+      /**
+       * Text tool output that should be directly sent to the API.
+       */
+      type: 'text';
+      value: string;
+
+      /**
+       * Provider-specific options.
+       */
+      providerOptions?: ProviderOptions;
+    }
+  | {
+      type: 'json';
+      value: JSONValue;
+
+      /**
+       * Provider-specific options.
+       */
+      providerOptions?: ProviderOptions;
+    }
+  | {
+      /**
+       * Type when the user has denied the execution of the tool call.
+       */
+      type: 'execution-denied';
+
+      /**
+       * Optional reason for the execution denial.
+       */
+      reason?: string;
+
+      /**
+       * Provider-specific options.
+       */
+      providerOptions?: ProviderOptions;
+    }
+  | {
+      type: 'error-text';
+      value: string;
+
+      /**
+       * Provider-specific options.
+       */
+      providerOptions?: ProviderOptions;
+    }
+  | {
+      type: 'error-json';
+      value: JSONValue;
+
+      /**
+       * Provider-specific options.
+       */
+      providerOptions?: ProviderOptions;
+    }
+  | {
+      type: 'content';
+      value: Array<
+        | {
+            type: 'text';
+
+            /**
+Text content.
+*/
+            text: string;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use image-data or file-data instead.
+             */
+            type: 'media';
+            data: string;
+            mediaType: string;
+          }
+        | {
+            type: 'file-data';
+
+            /**
+Base-64 encoded media data.
+*/
+            data: string;
+
+            /**
+IANA media type.
+@see https://www.iana.org/assignments/media-types/media-types.xhtml
+*/
+            mediaType: string;
+
+            /**
+             * Optional filename of the file.
+             */
+            filename?: string;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            type: 'file-url';
+
+            /**
+             * URL of the file.
+             */
+            url: string;
+
+            /**
+             * IANA media type of the file.
+             * Used by providers to determine how to handle the file (e.g. image vs document).
+             * Optional; if omitted, the SDK will attempt to infer it from the URL file extension.
+             */
+            mediaType?: string;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use file-reference instead.
+             */
+            type: 'file-id';
+
+            /**
+             * ID of the file.
+             *
+             * If you use multiple providers, you need to
+             * specify the provider specific ids using
+             * the Record option. The key is the provider
+             * name, e.g. 'openai' or 'anthropic'.
+             */
+            fileId: string | Record<string, string>;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            type: 'file-reference';
+
+            /**
+             * Provider-specific references for the file.
+             * The key is the provider name, e.g. 'openai' or 'anthropic'.
+             */
+            providerReference: ProviderReference;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use file-data instead.
+             * Images that are referenced using base64 encoded data.
+             */
+            type: 'image-data';
+
+            /**
+Base-64 encoded image data.
+*/
+            data: string;
+
+            /**
+IANA media type.
+@see https://www.iana.org/assignments/media-types/media-types.xhtml
+*/
+            mediaType: string;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use file-url instead.
+             * Images that are referenced using a URL.
+             */
+            type: 'image-url';
+
+            /**
+             * URL of the image.
+             */
+            url: string;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use file-reference instead.
+             * Images that are referenced using a provider file id.
+             */
+            type: 'image-file-id';
+
+            /**
+             * Image that is referenced using a provider file id.
+             *
+             * If you use multiple providers, you need to
+             * specify the provider specific ids using
+             * the Record option. The key is the provider
+             * name, e.g. 'openai' or 'anthropic'.
+             */
+            fileId: string | Record<string, string>;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * @deprecated Use file-reference instead.
+             * Images that are referenced using a provider reference.
+             */
+            type: 'image-file-reference';
+
+            /**
+             * Provider-specific references for the image file.
+             * The key is the provider name, e.g. 'openai' or 'anthropic'.
+             */
+            providerReference: ProviderReference;
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+        | {
+            /**
+             * Custom content part. This can be used to implement
+             * provider-specific content parts.
+             */
+            type: 'custom';
+
+            /**
+             * Provider-specific options.
+             */
+            providerOptions?: ProviderOptions;
+          }
+      >;
+    };
+```

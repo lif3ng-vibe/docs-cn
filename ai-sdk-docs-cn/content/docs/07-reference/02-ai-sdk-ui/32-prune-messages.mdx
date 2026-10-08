@@ -1,0 +1,115 @@
+---
+title: pruneMessages
+description: pruneMessages 的 API 参考。
+---
+
+# `pruneMessages()`
+
+`pruneMessages` 函数用于修剪或过滤 `ModelMessage` 对象数组。它可用于精简消息上下文（以节省 token）、移除中间推理内容，或在发送给 LLM 之前裁剪工具调用与空消息。
+
+```ts filename="app/api/chat/route.ts"
+import {
+  createUIMessageStreamResponse,
+  pruneMessages,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const prunedMessages = pruneMessages({
+    messages,
+    reasoning: 'before-last-message',
+    toolCalls: 'before-last-2-messages',
+    emptyMessages: 'remove',
+  });
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: prunedMessages,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+## 导入
+
+<Snippet text={`import { pruneMessages } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'messages',
+      type: 'ModelMessage[]',
+      description: '待修剪的 ModelMessage 对象数组。',
+    },
+    {
+      name: 'reasoning',
+      type: `'all' | 'before-last-message' | 'none'`,
+      description:
+        '如何从助手消息中移除推理内容。默认："none"。',
+    },
+    {
+      name: 'toolCalls',
+      type: `'all' | 'before-last-message' | \`before-last-\${number}-messages\` | 'none' | Array<{ type: 'all' | 'before-last-message' | \`before-last-\${number}-messages\`; tools?: string[] }>`,
+      description:
+        '如何修剪工具调用/结果/审批内容。可以指定一个策略字符串，或提供一个数组进行按工具的精细控制。默认：[]（空数组，等同于 "none"）。',
+    },
+    {
+      name: 'emptyMessages',
+      type: `'keep' | 'remove'`,
+      description:
+        '修剪后内容为空的消息是保留还是移除。默认："remove"。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个 [`ModelMessage`](/docs/reference/ai-sdk-core/model-message) 对象数组，按所提供的选项修剪。
+
+<PropertiesTable
+  content={[
+    {
+      name: 'ModelMessage[]',
+      type: 'Array',
+      description: '修剪后的 ModelMessage 对象列表',
+    },
+  ]}
+/>
+
+## 示例用法
+
+```ts
+import { pruneMessages } from 'ai';
+
+const pruned = pruneMessages({
+  messages,
+  reasoning: 'all', // Remove all reasoning parts
+  toolCalls: 'before-last-message', // Remove tool calls except those in the last message
+});
+```
+
+## 修剪选项
+
+- **reasoning**：从助手消息中移除推理部分。使用 `'all'` 移除全部，`'before-last-message'` 保留最后一条消息中的推理，或 `'none'` 保留全部推理。
+- **toolCalls**：从助手/工具消息中修剪工具调用、工具结果与工具审批分块。默认为空数组（不修剪）。可选值包括：
+  - `'all'`：修剪所有此类内容。
+  - `'before-last-message'`：保留最后一条消息中的内容，修剪其余。
+  - `'before-last-N-messages'`：保留最后 N 条消息中的内容，修剪其余。
+  - `'none'`：不修剪。
+  - 或提供一个数组进行按工具的精细控制，例如 `[{ type: 'before-last-message', tools: ['search', 'calculator'] }]` 只修剪指定的工具。
+- **emptyMessages**：设置为 `'remove'`（默认）以排除修剪后没有任何内容的消息。
+
+> **提示**：`pruneMessages` 通常在把上下文窗口发送给 LLM 之前使用，以减少消息/token 数量，尤其是在一系列工具调用与审批之后。
+
+有关高级用法和所有可能的消息部分的完整列表，请参阅 [`ModelMessage`](/docs/reference/ai-sdk-core/model-message) 与 [`pruneMessages` 实现](https://github.com/vercel/ai/blob/main/packages/ai/src/generate-text/prune-messages.ts)。

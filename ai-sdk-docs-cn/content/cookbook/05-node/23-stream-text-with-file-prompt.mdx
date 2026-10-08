@@ -1,0 +1,44 @@
+---
+title: 使用文件提示词进行流式生成
+description: 了解如何在 Node 中结合 AI SDK 使用文件提示词进行文本流式生成
+tags: ['node', 'streaming', 'multimodal']
+---
+
+# Stream Text with File Prompt
+
+在 AI 应用中处理文件通常需要分析文档、处理结构化数据或从各种文件格式中提取信息。文件提示词（prompt）允许你将文件内容直接发送给模型，从而完成文档分析、数据提取或基于文件内容生成响应等任务。
+
+```ts
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+import 'dotenv/config';
+import fs from 'node:fs';
+
+async function main() {
+  const result = streamText({
+    model: __MODEL__,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'What is an embedding model according to this document?',
+          },
+          {
+            type: 'file',
+            data: fs.readFileSync('./data/ai.pdf'),
+            mediaType: 'application/pdf',
+          },
+        ],
+      },
+    ],
+  });
+
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
+  }
+}
+
+main().catch(console.error);
+```

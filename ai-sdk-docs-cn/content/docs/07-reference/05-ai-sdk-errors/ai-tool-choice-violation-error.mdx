@@ -1,0 +1,33 @@
+---
+title: ToolChoiceViolationError
+description: 了解如何修复 AI SDK 的 ToolChoiceViolationError
+---
+
+# ToolChoiceViolationError
+
+当 `generateText` 的响应不满足强制的工具选择（tool choice）要求时，会发生此错误。它在 `toolChoice` 设置为 `'required'` 但响应中不包含任何结构化工具调用时抛出，或者在被明确选定的工具未被调用时抛出。
+
+此错误不会自动把文本或推理内容解释为可执行的工具调用。你可以检查 `content`，自行实现可选的恢复逻辑，包括在执行任何恢复出的调用之前先进行 schema 校验。
+
+## 属性
+
+- `toolChoice`：响应未满足的生效工具选择
+- `finishReason`：模型完成响应生成的原因
+- `provider`：返回响应的提供商（provider）
+- `modelId`：返回响应的模型
+- `content`：模型返回的规范化内容
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `ToolChoiceViolationError` 的实例：
+
+```typescript
+import { ToolChoiceViolationError } from 'ai';
+
+if (ToolChoiceViolationError.isInstance(error)) {
+  const serializedCall = error.content.find(part => part.type === 'text')?.text;
+
+  // Parse and validate serializedCall before treating it as a tool call.
+}
+```

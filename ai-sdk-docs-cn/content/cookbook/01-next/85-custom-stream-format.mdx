@@ -1,0 +1,168 @@
+---
+title: Streaming with Custom Format
+description: 构建自定义格式来流式传输 LLM 响应
+tags: ['next', 'streaming', 'tool use']
+---
+
+# Streaming with Custom Format
+
+创建自定义流来控制流式传输的格式与工具调用的结构，而不使用内置的 AI SDK 数据流格式（`toUIMessageStream()`）。
+
+`stream`（位于 `StreamTextResult` 上）让你可以直接访问所有模型事件。你可以对这些事件进行转换、过滤和组织，形成自己的流式格式。这让你既能享受 AI SDK 统一提供商接口的好处，又不必受限于对流消费方式的任何预设。
+
+你可以：
+
+- 定义自己的流块（chunk）格式
+- 控制步骤和工具调用的组织方式
+- 在客户端手动解析流
+- 基于流数据构建自定义 UI
+
+若要同时完全掌控流式格式和执行循环，可以将此模式与[手动智能体循环](/cookbook/node/manual-agent-loop)结合使用。
+
+## 实现
+
+### 服务器
+
+创建一个 Route Handler，调用模型后以自定义格式流式返回响应：
+
+```tsx filename="app/api/stream/route.ts"
+import { tools } from '@/ai/tools'; // your tools
+import { isStepCount, streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+export type StreamEvent =
+  | { type: 'text'; text: string }
+  | { type: 'tool-call'; toolName: string; input: unknown }
+  | { type: 'tool-result'; toolName: string; result: unknown };
+
+const encoder = new TextEncoder();
+
+function formatEvent(event: StreamEvent): Uint8Array {
+  return encoder.encode('data: ' + JSON.stringify(event) + '\n\n');
+}
+
+export async function POST(request: Request) {
+  const { prompt } = await request.json();
+
+  const result = streamText({
+    prompt,
+    model: __MODEL__,
+    tools,
+    stopWhen: isStepCount(5),
+  });
+
+  const transformStream = new TransformStream({
+    transform(chunk, controller) {
+      switch (chunk.type) {
+        case 'text-delta':
+          controller.enqueue(formatEvent({ type: 'text', text: chunk.text }));
+          break;
+        case 'tool-call':
+          controller.enqueue(
+            formatEvent({
+              type: 'tool-call',
+              toolName: chunk.toolName,
+              input: chunk.input,
+            }),
+          );
+          break;
+        case 'tool-result':
+          controller.enqueue(
+            formatEvent({
+              type: 'tool-result',
+              toolName: chunk.toolName,
+              result: chunk.output,
+            }),
+          );
+          break;
+      }
+    },
+  });
+
+  return new Response(result.stream.pipeThrough(transformStream), {
+    headers: { 'Content-Type': 'text/event-stream' },
+  });
+}
+```
+
+该路由使用 `streamText` 借助工具处理提示词。每个事件（文本、工具调用、工具结果）都被编码为带有 `data: ` 前缀的 Server-Sent Event 并发送到客户端。
+
+### 客户端
+
+创建一个解析并显示流的简单界面：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { StreamEvent } from './api/stream/route';
+
+export default function Home() {
+  const [prompt, setPrompt] = useState('');
+  const [events, setEvents] = useState<StreamEvent[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  const handleSubmit = async () => {
+    setEvents([]);
+    setIsStreaming(true);
+    setPrompt('');
+
+    const response = await fetch('/api/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (reader) {
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim()) {
+            const dataStr = line.replace(/^data: /, '');
+            const event = JSON.parse(dataStr) as StreamEvent;
+            setEvents(prev => [...prev, event]);
+          }
+        }
+      }
+    }
+
+    setIsStreaming(false);
+  };
+
+  return (
+    <div>
+      <input
+        value={prompt}
+        onChange={e => setPrompt(e.target.value)}
+        placeholder="Enter a prompt..."
+      />
+      <button onClick={handleSubmit} disabled={isStreaming}>
+        {isStreaming ? 'Streaming...' : 'Send'}
+      </button>
+
+      <pre>{JSON.stringify(events, null, 2)}</pre>
+    </div>
+  );
+}
+```
+
+## 工作原理
+
+客户端使用 Fetch API 从服务器流式接收响应。由于服务器发送的是 Server-Sent Event（以换行分隔、带 `data: ` 前缀），客户端需要：
+
+1. 使用 `getReader()` 从流中读取数据块
+2. 将二进制数据块解码为文本
+3. 按换行符切分以识别完整的事件
+4. 去掉 `data: ` 前缀并解析 JSON，然后将其追加到事件列表中
+
+事件按到达顺序依次渲染，为你呈现 AI 响应的线性表示。

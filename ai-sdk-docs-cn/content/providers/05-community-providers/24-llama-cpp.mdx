@@ -1,0 +1,282 @@
+---
+title: llama.cpp
+description: 了解如何使用 llama.cpp 提供商。
+---
+
+# llama.cpp 提供商
+
+[lgrammel/ai-sdk-llama-cpp](https://github.com/lgrammel/ai-sdk-llama-cpp) 是一个社区提供商，通过原生 C++ 绑定，在 Node.js 中直接使用 [llama.cpp](https://github.com/ggerganov/llama.cpp) 进行本地 LLM 推理。
+
+该提供商将 llama.cpp 直接加载到 Node.js 内存中，无需外部服务器，同时提供原生性能与 GPU 加速。
+
+## 特性
+
+- **原生性能**：基于 node-addon-api（N-API）的直接 C++ 绑定
+- **GPU 加速**：在 macOS 上自动支持 Metal
+- **流式与非流式**：完整支持 `generateText` 与 `streamText`
+- **结构化输出**：使用 `Output` 生成带 schema 校验的 JSON 对象
+- **嵌入**：使用 `embed` 和 `embedMany` 生成嵌入
+- **聊天模板**：自动或可配置的聊天模板格式化（llama3、chatml、gemma 等）
+- **GGUF 支持**：加载任意 GGUF 格式的模型
+
+<Note>
+  该提供商目前仅支持 **macOS**（Apple Silicon 或 Intel），
+  不支持 Windows 和 Linux。
+</Note>
+
+## 前置条件
+
+安装前请确保具备以下条件：
+
+- **macOS**（Apple Silicon 或 Intel）
+- **Node.js** >= 22.0.0
+- **CMake** >= 3.15
+- **Xcode Command Line Tools**
+
+```bash
+# Install Xcode Command Line Tools (includes Clang)
+xcode-select --install
+
+# Install CMake via Homebrew
+brew install cmake
+```
+
+## 安装
+
+llama.cpp 提供商包含在 `ai-sdk-llama-cpp` 模块中，可通过以下方式安装：
+
+<InstallPackages packages="ai-sdk-llama-cpp" />
+
+安装过程会自动将 llama.cpp 编译为支持 Metal 的静态库，并构建原生 Node.js 插件（addon）。
+
+## 提供商实例
+
+你可以从 `ai-sdk-llama-cpp` 导入 `llamaCpp` 并创建模型实例：
+
+```ts
+import { llamaCpp } from 'ai-sdk-llama-cpp';
+
+const model = llamaCpp({
+  modelPath: './models/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+});
+```
+
+### 配置选项
+
+你可以使用以下选项自定义模型实例：
+
+- **modelPath** _string_（必填）
+
+  GGUF 模型文件的路径。
+
+- **contextSize** _number_
+
+  最大上下文大小。默认值：`2048`。
+
+- **gpuLayers** _number_
+
+  卸载到 GPU 的层数。默认值：`99`（全部层）。设为 `0` 可禁用 GPU。
+
+- **threads** _number_
+
+  CPU 线程数。默认值：`4`。
+
+- **debug** _boolean_
+
+  启用 llama.cpp 的详细调试输出。默认值：`false`。
+
+- **chatTemplate** _string_
+
+  用于格式化消息的聊天模板。默认值：`"auto"`（使用 GGUF 模型文件内嵌的模板）。可用模板包括：`llama3`、`chatml`、`gemma`、`mistral-v1`、`mistral-v3`、`phi3`、`phi4`、`deepseek` 等。
+
+```ts
+const model = llamaCpp({
+  modelPath: './models/your-model.gguf',
+  contextSize: 4096,
+  gpuLayers: 99,
+  threads: 8,
+  chatTemplate: 'llama3',
+});
+```
+
+## 语言模型
+
+### 文本生成
+
+你可以搭配 `generateText` 函数使用 llama.cpp 模型生成文本：
+
+```ts
+import { generateText } from 'ai';
+import { llamaCpp } from 'ai-sdk-llama-cpp';
+
+const model = llamaCpp({
+  modelPath: './models/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+});
+
+try {
+  const { text } = await generateText({
+    model,
+    prompt: 'Explain quantum computing in simple terms.',
+  });
+
+  console.log(text);
+} finally {
+  await model.dispose();
+}
+```
+
+### 流式
+
+该提供商完整支持搭配 `streamText` 的流式输出：
+
+```ts
+import { streamText } from 'ai';
+import { llamaCpp } from 'ai-sdk-llama-cpp';
+
+const model = llamaCpp({
+  modelPath: './models/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+});
+
+try {
+  const result = streamText({
+    model,
+    prompt: 'Write a haiku about programming.',
+  });
+
+  for await (const chunk of result.textStream) {
+    process.stdout.write(chunk);
+  }
+} finally {
+  await model.dispose();
+}
+```
+
+### 结构化输出
+
+使用 [`Output`](/docs/reference/ai-sdk-core/output) 生成符合 schema 的类型安全 JSON 对象：
+
+```ts
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+import { llamaCpp } from 'ai-sdk-llama-cpp';
+
+const model = llamaCpp({
+  modelPath: './models/your-model.gguf',
+});
+
+try {
+  const { output: recipe } = await generateText({
+    model,
+    output: Output.object({
+      schema: z.object({
+        name: z.string(),
+        ingredients: z.array(
+          z.object({
+            name: z.string(),
+            amount: z.string(),
+          }),
+        ),
+        steps: z.array(z.string()),
+      }),
+    }),
+    prompt: 'Generate a recipe for chocolate chip cookies.',
+  });
+
+  console.log(recipe);
+} finally {
+  await model.dispose();
+}
+```
+
+结构化输出功能使用 GBNF 文法约束，确保模型生成符合你 schema 的有效 JSON。
+
+### 生成参数
+
+支持标准的 AI SDK 生成参数：
+
+```ts
+const { text } = await generateText({
+  model,
+  prompt: 'Hello!',
+  maxTokens: 256,
+  temperature: 0.7,
+  topP: 0.9,
+  topK: 40,
+  stopSequences: ['\n'],
+});
+```
+
+## 嵌入模型
+
+你可以使用 `llamaCpp.embedding()` 工厂方法创建嵌入模型：
+
+```ts
+import { embed, embedMany } from 'ai';
+import { llamaCpp } from 'ai-sdk-llama-cpp';
+
+const model = llamaCpp.embedding({
+  modelPath: './models/nomic-embed-text-v1.5.Q4_K_M.gguf',
+});
+
+try {
+  const { embedding } = await embed({
+    model,
+    value: 'Hello, world!',
+  });
+
+  const { embeddings } = await embedMany({
+    model,
+    values: ['Hello, world!', 'Goodbye, world!'],
+  });
+} finally {
+  model.dispose();
+}
+```
+
+## 模型下载
+
+你需要单独下载 GGUF 格式的模型。常用来源：
+
+- [Hugging Face](https://huggingface.co/models?search=gguf) - 搜索 GGUF 模型
+- [TheBloke 的模型](https://huggingface.co/TheBloke) - 流行的量化模型
+
+下载示例：
+
+```bash
+# Create models directory
+mkdir -p models
+
+# Download a model (example: Llama 3.2 1B)
+wget -P models/ https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf
+```
+
+## 资源管理
+
+<Note type="warning">
+  使用完毕后务必调用 `model.dispose()` 来卸载模型并释放 GPU/CPU
+  资源。加载多个模型时这一点尤其重要，可防止内存泄漏。
+</Note>
+
+```ts
+const model = llamaCpp({
+  modelPath: './models/your-model.gguf',
+});
+
+try {
+  // Use the model...
+} finally {
+  await model.dispose();
+}
+```
+
+## 限制
+
+- **仅限 macOS**：不支持 Windows 和 Linux
+- **不支持工具/函数调用**：不支持工具调用
+- **不支持图像输入**：仅支持文本提示词（prompt）
+
+## 更多资源
+
+- [GitHub 仓库](https://github.com/lgrammel/ai-sdk-llama-cpp)
+- [npm 包](https://www.npmjs.com/package/ai-sdk-llama-cpp)
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) - 底层推理引擎

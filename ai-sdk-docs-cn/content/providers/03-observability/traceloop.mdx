@@ -1,0 +1,55 @@
+---
+title: Traceloop
+description: 使用 Traceloop 监控与评估 LLM 应用
+---
+
+# Traceloop
+
+[Traceloop](https://www.traceloop.com/) 是一个用于构建可靠 AI 应用的开发平台。
+与 AI SDK 集成后，你可以使用 Traceloop 对 LLM 提供商（provider）、提示词（prompt）与流程进行追踪、监控和实验。
+
+## 设置
+
+Traceloop 通过 [OpenTelemetry](https://opentelemetry.io/docs/) 支持 [AI SDK 遥测数据](/docs/ai-sdk-core/telemetry)。
+你需要先在 https://app.traceloop.com 注册并获取一个 API Key。
+
+### Next.js
+
+要让 AI SDK 将遥测数据发送到 Traceloop，请在 Next.js 应用的 `.env` 文件中设置这些环境变量：
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://api.traceloop.com
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <Your API Key>"
+```
+
+安装 `@ai-sdk/otel`，并在 `instrumentation.ts` 文件中注册 `LegacyOpenTelemetry`：
+
+```typescript filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new LegacyOpenTelemetry());
+```
+
+然后即可使用 `telemetry` 选项，在受支持的 AI SDK 函数调用上启用遥测：
+
+```typescript highlight="7-12"
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'What is 2 + 2?',
+  telemetry: {
+    metadata: {
+      query: 'weather',
+      location: 'San Francisco',
+    },
+  },
+});
+```
+
+## 相关资源
+
+- [Traceloop 演示聊天机器人](https://www.traceloop.com/docs/demo)
+- [Traceloop 文档](https://www.traceloop.com/docs)

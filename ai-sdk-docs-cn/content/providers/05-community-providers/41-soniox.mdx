@@ -1,0 +1,143 @@
+---
+title: 'Soniox'
+description: '了解如何在 AI SDK 中使用 Soniox 提供商。'
+---
+
+# Soniox 提供商
+
+[Soniox 提供商](https://github.com/soniox/vercel-ai-sdk-provider)将 Soniox 语音转写模型接入 Vercel AI SDK。
+更多信息请参阅 [Soniox 文档](https://soniox.com/docs)。
+
+## 安装
+
+<InstallPackages packages="@soniox/vercel-ai-sdk-provider" />
+
+## 身份验证
+
+在环境中设置 `SONIOX_API_KEY`，或在创建提供商时传入 `apiKey`。
+你可以从 [Soniox 控制台](https://console.soniox.com)获取 API key。
+
+## 示例
+
+```ts
+import { soniox } from '@soniox/vercel-ai-sdk-provider';
+import { transcribe } from 'ai';
+
+const { text } = await transcribe({
+  model: soniox.transcription('stt-async-v3'),
+  audio: new URL('https://soniox.com/media/examples/coffee_shop.mp3'),
+});
+```
+
+## 提供商选项
+
+使用 `createSoniox` 自定义提供商实例：
+
+```ts
+import { createSoniox } from '@soniox/vercel-ai-sdk-provider';
+
+const soniox = createSoniox({
+  apiKey: process.env.SONIOX_API_KEY,
+  apiBaseUrl: 'https://api.soniox.com',
+});
+```
+
+选项：
+
+- `apiKey`：覆盖 `SONIOX_API_KEY`。
+- `apiBaseUrl`：自定义 API 基础 URL。区域 API 端点列表见[此处](https://soniox.com/docs/stt/data-residency#regional-endpoints)。
+- `headers`：额外的请求头。
+- `fetch`：自定义 fetch 实现。
+- `pollingIntervalMs`：转写轮询间隔（毫秒）。默认为 1000ms。
+
+## 转写选项
+
+每次请求的选项通过 `providerOptions` 传入：
+
+```ts
+const { text } = await transcribe({
+  model: soniox.transcription('stt-async-v3'),
+  audio,
+  providerOptions: {
+    soniox: {
+      languageHints: ['en', 'es'],
+      enableLanguageIdentification: true,
+      enableSpeakerDiarization: true,
+      context: {
+        terms: ['Soniox', 'Vercel'],
+      },
+    },
+  },
+});
+```
+
+可用选项：
+
+- `languageHints` - 用于引导识别倾向的 ISO 语言代码数组
+- `languageHintsStrict` - 为 true 时，更严格地依赖语言提示（注意：并非所有模型都支持）
+- `enableLanguageIdentification` - 自动检测所使用的口语语言
+- `enableSpeakerDiarization` - 识别并分离不同的说话人
+- `context` - 用于提升准确率的附加上下文
+- `clientReferenceId` - 可选的客户端自定义引用 ID
+- `webhookUrl` - 用于转写完成通知的 Webhook URL
+- `webhookAuthHeaderName` - Webhook 认证请求头名称
+- `webhookAuthHeaderValue` - Webhook 认证请求头值
+- `translation` - 翻译配置
+
+更多细节请查阅 [Soniox API 参考](https://soniox.com/docs/stt/api-reference/transcriptions/create_transcription)。
+
+## 语言提示
+
+Soniox 可以自动检测并以[**60 多种语言**](https://soniox.com/docs/stt/concepts/supported-languages)转写语音。当你已知音频中可能出现哪些语言时，可以提供 `languageHints`，将识别倾向偏向这些语言，从而提升准确率。
+
+语言提示**不会限制**识别范围——它们只会将模型**倾向**到指定语言，同时仍允许检测到出现的其他语言。
+
+```ts
+const { text } = await transcribe({
+  model: soniox.transcription('stt-async-v3'),
+  audio,
+  providerOptions: {
+    soniox: {
+      languageHints: ['en', 'es'], // ISO language codes
+    },
+  },
+});
+```
+
+更多细节请参阅 [Soniox 语言提示文档](https://soniox.com/docs/stt/concepts/language-hints)。
+
+## 上下文
+
+提供自定义上下文可以提升转写与翻译的准确率。上下文能帮助模型理解你的业务领域、识别重要术语，并应用自定义词汇。
+
+`context` 对象支持四个可选部分：
+
+```ts
+const { text } = await transcribe({
+  model: soniox.transcription('stt-async-v3'),
+  audio,
+  providerOptions: {
+    soniox: {
+      context: {
+        // Structured key-value information (domain, topic, intent, etc.)
+        general: [
+          { key: 'domain', value: 'Healthcare' },
+          { key: 'topic', value: 'Diabetes management consultation' },
+          { key: 'doctor', value: 'Dr. Martha Smith' },
+        ],
+        // Longer free-form background text or related documents
+        text: 'The patient has a history of...',
+        // Domain-specific or uncommon words
+        terms: ['Celebrex', 'Zyrtec', 'Xanax'],
+        // Custom translations for ambiguous terms
+        translationTerms: [
+          { source: 'Mr. Smith', target: 'Sr. Smith' },
+          { source: 'MRI', target: 'RM' },
+        ],
+      },
+    },
+  },
+});
+```
+
+更多细节请参阅 [Soniox 上下文文档](https://soniox.com/docs/stt/concepts/context)。

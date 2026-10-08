@@ -1,0 +1,44 @@
+---
+title: 从 AI SDK 3.1 迁移到 3.2
+description: 了解如何将 AI SDK 3.1 升级到 3.2。
+---
+
+# Migrate AI SDK 3.1 to 3.2
+
+<Note>
+  欲了解本次发布的更多信息，请查阅 [AI SDK 3.2 发布博客文章](https://vercel.com/blog/introducing-vercel-ai-sdk-3-2)。
+</Note>
+
+本指南将帮助你升级到 AI SDK 3.2：
+
+- 实验性的 `StreamingReactResponse` 功能已被移除
+- 若干功能已被弃用
+- UI 框架集成已迁移到各自的 Node 模块
+
+## 升级
+
+### AI SDK
+
+要更新到 AI SDK 3.2，请使用你偏好的包管理器运行以下命令：
+
+<Snippet text="pnpm add ai@3.2" />
+
+## 移除的功能
+
+实验性的 `StreamingReactResponse` 已被移除。你可以使用 [AI SDK RSC](/docs/ai-sdk-rsc/overview) 构建流式 UI。
+
+## 弃用的功能
+
+`nanoid` 导出已被弃用。请改用 [`generateId`](/docs/reference/ai-sdk-core/generate-id)。
+
+## UI 包拆分
+
+AI SDK UI 支持多个框架：[React](https://react.dev/)、[Svelte](https://svelte.dev/)、[Vue.js](https://vuejs.org/) 和 [SolidJS](https://www.solidjs.com/)。
+
+除 React 和 RSC 之外的集成已迁移到独立的 Node 模块。你需要按如下方式更新 import 和 require 语句：
+
+- 将 `ai/svelte` 改为 `@ai-sdk/svelte`
+- 将 `ai/vue` 改为 `@ai-sdk/vue`
+- 将 `ai/solid` 改为 `@ai-sdk/solid`
+
+旧导出仍然可用，但将在未来版本中移除。

@@ -1,0 +1,132 @@
+---
+title: Experimental_SandboxSession
+description: Experimental_SandboxSession 接口的 API 参考。
+---
+
+# `Experimental_SandboxSession`
+
+`Experimental_SandboxSession` 接口描述了一个工具可用来运行命令的执行环境。通过 `experimental_sandbox` 选项将实验性沙箱传递给 `generateText`、`streamText`、`ToolLoopAgent.generate`、`ToolLoopAgent.stream` 或智能体 UI 流辅助函数，即可让它在工具描述函数与工具执行中可用。
+
+<Note type="warning">
+  该 API 是实验性的，可能在补丁版本中发生变化。传入实验性沙箱并不会把工具本身
+  沙箱化。除非工具显式地将工作委托给实验性沙箱，否则工具代码仍运行在你的应用
+  进程中。
+</Note>
+
+## 导入
+
+<Snippet
+  text={`import type { Experimental_SandboxSession } from "ai"`}
+  prompt={false}
+/>
+
+## 类型定义
+
+```ts
+type Experimental_SandboxSession = {
+  readonly description: string;
+  readonly run: (options: {
+    command: string;
+    workingDirectory?: string;
+    env?: Record<string, string>;
+    abortSignal?: AbortSignal;
+  }) => PromiseLike<{
+    exitCode: number;
+    stdout: string;
+    stderr: string;
+  }>;
+};
+```
+
+## 属性
+
+<PropertiesTable
+  content={[
+    {
+      name: 'description',
+      type: 'string',
+      description:
+        '实验性沙箱环境的描述。当模型需要了解根目录、暴露的端口、公共主机名或其他环境约束等细节时，请将其包含在你的提示词或指令中。AI SDK 不会自动把它添加到提示词里。',
+    },
+    {
+      name: 'run',
+      type: '(options: { command: string; workingDirectory?: string; env?: Record<string, string>; abortSignal?: AbortSignal }) => PromiseLike<{ exitCode: number; stdout: string; stderr: string }>',
+      description:
+        '在实验性沙箱中执行一条命令，并以命令的退出码、标准输出和标准错误完成。',
+      properties: [
+        {
+          type: 'options',
+          parameters: [
+            {
+              name: 'command',
+              type: 'string',
+              description:
+                '要在实验性沙箱中执行的命令。',
+            },
+            {
+              name: 'workingDirectory',
+              type: 'string | undefined',
+              description:
+                '可选的工作目录，命令将在其中执行。省略时，实验性沙箱实现会使用其默认工作目录。',
+            },
+            {
+              name: 'env',
+              type: 'Record<string, string> | undefined',
+              description:
+                '为命令设置的可选环境变量。会与实验性沙箱的默认环境合并，这些值优先生效。将密钥通过此选项传入而不是内联到命令中，可避免其在日志中泄露。无法设置环境变量的实现会拒绝该选项。',
+            },
+            {
+              name: 'abortSignal',
+              type: 'AbortSignal | undefined',
+              description:
+                '可选的中止信号，实验性沙箱实现可用它来取消命令。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+## 示例
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  tools: { shell },
+  experimental_sandbox,
+  prompt: 'Run the test suite.',
+});
+```
+
+在工具内部，从 `execute` 的第二个参数读取实验性沙箱：
+
+```ts
+const shell = tool({
+  inputSchema: z.object({
+    command: z.string(),
+    workingDirectory: z.string().optional(),
+  }),
+  execute: async (
+    { command, workingDirectory },
+    { abortSignal, experimental_sandbox },
+  ) => {
+    if (!experimental_sandbox) {
+      throw new Error('Experimental sandbox is not available');
+    }
+
+    return experimental_sandbox.run({
+      command,
+      workingDirectory,
+      abortSignal,
+    });
+  },
+});
+```
+
+## 另请参阅
+
+- [Tool Calling: Experimental Sandbox](/docs/ai-sdk-core/tools-and-tool-calling#实验性沙箱)
+- [`generateText`](/docs/reference/ai-sdk-core/generate-text)
+- [`streamText`](/docs/reference/ai-sdk-core/stream-text)
+- [`ToolLoopAgent`](/docs/reference/ai-sdk-core/tool-loop-agent)

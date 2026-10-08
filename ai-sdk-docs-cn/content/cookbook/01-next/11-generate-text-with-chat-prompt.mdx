@@ -1,0 +1,110 @@
+---
+title: 使用聊天提示词生成文本
+description: 学习如何使用 AI SDK 和 Next.js 通过聊天提示词生成文本
+tags: ['next', 'streaming', 'chat']
+---
+
+# Generate Text with Chat Prompt
+
+前面你已经能够使用单条消息提示词、系统提示词或两者的组合来生成文本和对象。然而，有时你可能希望基于一系列消息生成文本。
+
+聊天补全（chat completion）允许你基于一系列消息生成文本。这一系列消息可以是任意数量系统之间的任意交互序列，但最流行、最贴近实际的用例，是表示用户与模型之间对话的一系列消息。
+
+<Browser>
+  <ChatGeneration
+    history={[
+      { role: 'User', content: '最近怎么样？' },
+      { role: 'Assistant', content: '一切都好，有什么可以帮你的吗？' },
+    ]}
+    inputMessage={{ role: 'User', content: '天空为什么是蓝色的？' }}
+    outputMessage={{
+      role: 'Assistant',
+      content: '天空是蓝色的，这是因为瑞利散射。',
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们先创建一个简单的聊天界面，包含一个输入框，用于发送用户消息并显示对话历史。你将调用 `/api/chat` 端点来生成助手的响应。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import type { ModelMessage } from 'ai';
+import { useState } from 'react';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ModelMessage[]>([]);
+
+  return (
+    <div>
+      <input
+        value={input}
+        onChange={event => {
+          setInput(event.target.value);
+        }}
+        onKeyDown={async event => {
+          if (event.key === 'Enter') {
+            setMessages(currentMessages => [
+              ...currentMessages,
+              { role: 'user', content: input },
+            ]);
+
+            const response = await fetch('/api/chat', {
+              method: 'POST',
+              body: JSON.stringify({
+                messages: [...messages, { role: 'user', content: input }],
+              }),
+            });
+
+            const { messages: newMessages } = await response.json();
+
+            setMessages(currentMessages => [
+              ...currentMessages,
+              ...newMessages,
+            ]);
+          }
+        }}
+      />
+
+      {messages.map((message, index) => (
+        <div key={`${message.role}-${index}`}>
+          {typeof message.content === 'string'
+            ? message.content
+            : message.content
+                .filter(part => part.type === 'text')
+                .map((part, partIndex) => (
+                  <div key={partIndex}>{part.text}</div>
+                ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## 服务器
+
+接下来，我们创建 `/api/chat` 端点，它会基于对话历史生成助手的响应。
+
+```typescript filename='app/api/chat/route.ts'
+import { generateText, type ModelMessage } from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: ModelMessage[] } = await req.json();
+
+  const { responseMessages } = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a helpful assistant.',
+    messages,
+  });
+
+  return Response.json({ messages: responseMessages });
+}
+```
+
+---
+
+<GithubLink link="https://github.com/vercel/ai/blob/main/examples/next-openai-pages/pages/chat/generate-chat/index.tsx" />

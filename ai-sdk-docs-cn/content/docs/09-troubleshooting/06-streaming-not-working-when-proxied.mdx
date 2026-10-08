@@ -1,0 +1,32 @@
+---
+title: 经代理后流式输出不工作
+description: 排查经代理应用中的流式输出问题。
+---
+
+# Streaming Not Working When Proxied
+
+## 问题
+
+使用 AI SDK 的流式输出在本地开发环境或某些代理环境中部署后不工作。
+响应不再以流式返回，而是等待一段时间后一次性返回完整响应。
+
+## 原因
+
+这个问题由代理中间件引起。
+
+如果中间件被配置为压缩响应，就会导致流式输出失败。
+
+## 解决方案
+
+你可以尝试以下方法，该方案只影响流式 API：
+
+- 添加 `'Content-Encoding': 'none'` 请求头
+
+  ```tsx
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+    headers: {
+      'Content-Encoding': 'none',
+    },
+  });
+  ```

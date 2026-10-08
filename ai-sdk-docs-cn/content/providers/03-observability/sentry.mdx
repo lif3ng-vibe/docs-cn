@@ -1,0 +1,165 @@
+---
+title: Sentry
+description: 使用 Sentry 监控 AI SDK 调用与智能体（agent）追踪
+---
+
+# Sentry 可观测性
+
+[Sentry](https://sentry.io/) 帮助你监控 AI 应用的错误、追踪（trace）、延迟和 token 用量。Sentry 的 Next.js 与 Node.js SDK 通过原生 Node.js 遥测（telemetry）通道对 AI SDK v7 进行埋点，因此你无需 `@ai-sdk/otel` 或 `registerTelemetry` 即可将 AI SDK 追踪发送到 Sentry。
+
+Sentry 会捕获 `generateText`、`streamText`、模型调用、工具调用、嵌入（embedding）、重排序（rerank）、token 用量和错误对应的 span。配合 AI SDK 的 `telemetry` 选项添加 `functionId`，可以让追踪在 Sentry 中更易查找与分组。
+
+<Note>
+  AI SDK v7 支持要求 `@sentry/node`、`@sentry/nextjs` 或其他 Sentry 服务器 SDK 版本为
+  `10.62.0` 或更高。原生遥测通道仅在 Node.js 运行时可用；请使用 Node.js 路由或服务器进程
+  来产生这些追踪。
+</Note>
+
+## 设置
+
+如果你的应用已经配置了 Sentry，可直接跳到[用法](#用法)。否则，请先为你的运行时安装并初始化 Sentry SDK，再执行 AI SDK 调用。
+
+### Next.js
+
+Sentry 向导可以为你创建完整的 Next.js 配置。下面的代码片段只展示与 AI SDK 追踪相关的服务端部分：
+
+```bash
+pnpm add @sentry/nextjs
+```
+
+创建或更新你的 Sentry 服务器配置，并通过 `tracesSampleRate` 或 `tracesSampler` 启用追踪：
+
+```ts filename="sentry.server.config.ts"
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 1.0,
+});
+```
+
+如果你是在 Next.js 中手动配置 Sentry，请确保 `instrumentation.ts` 会为 Node.js 运行时加载服务器配置：
+
+```ts filename="instrumentation.ts"
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    await import('./sentry.server.config');
+  }
+}
+```
+
+### Node.js
+
+```bash
+pnpm add @sentry/node
+```
+
+在服务器入口文件的开头初始化 Sentry，并通过 `tracesSampleRate` 或 `tracesSampler` 启用追踪：
+
+```ts filename="instrumentation.ts"
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+});
+```
+
+Vercel AI 集成在 Sentry 服务器 SDK 中默认启用。如果你禁用了默认集成，请显式加回：
+
+```ts
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.vercelAIIntegration()],
+});
+```
+
+## 用法
+
+照常使用 AI SDK 即可。对 Sentry 而言，不需要 `registerTelemetry(new OpenTelemetry())` 调用，也不需要 `telemetry.isEnabled: true` 标志。
+
+```ts filename="app/api/generate/route.ts"
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+export const runtime = 'nodejs';
+
+export async function POST() {
+  const result = await generateText({
+    model: anthropic('claude-sonnet-5-5'),
+    prompt: 'What is the weather in Tokyo?',
+    telemetry: {
+      functionId: 'anthropic-weather-demo',
+    },
+  });
+
+  return Response.json({ text: result.text });
+}
+```
+
+对于独立的 Node.js 脚本，请把 AI SDK 调用包在一个 Sentry span 中，让 AI span 拥有父级追踪，然后在进程退出前 flush：
+
+```ts filename="index.ts"
+import './instrumentation';
+import * as Sentry from '@sentry/node';
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+await Sentry.startSpan({ name: 'ai-sdk-demo' }, async () => {
+  const result = await generateText({
+    model: openai('gpt-6-luna'),
+    prompt: 'Write a haiku about observability.',
+    telemetry: {
+      functionId: 'haiku-demo',
+    },
+  });
+
+  console.log(result.text);
+});
+
+await Sentry.flush(2000);
+```
+
+请求执行完成后，打开 Sentry，在你的追踪中查找 `gen_ai.invoke_agent`、`gen_ai.generate_content` 和 `gen_ai.execute_tool` span。
+
+## 记录提示词与响应
+
+默认情况下，Sentry 会记录模型、提供商（provider）、延迟、token 用量和错误等元数据。只有在你主动选择开启后，才会发送提示词与响应内容。
+
+使用 Sentry 的 `dataCollection.genAI` 选项全局开启内容捕获：
+
+```ts
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: {
+      inputs: true,
+      outputs: true,
+    },
+  },
+});
+```
+
+或者通过 `telemetry` 选项仅为某次 AI SDK 调用开启：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Summarize this support ticket.',
+  telemetry: {
+    functionId: 'support-summary',
+    recordInputs: true,
+    recordOutputs: true,
+  },
+});
+```
+
+对于涉及敏感信息的调用，若不想让 Sentry 采集 AI 遥测，可将 `telemetry.isEnabled` 设为 `false`。
+
+## 相关资源
+
+- [Sentry Vercel AI SDK 集成文档（Next.js）](https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/)
+- [Sentry Vercel AI SDK 集成文档（Node.js）](https://docs.sentry.io/platforms/javascript/guides/node/configuration/integrations/vercelai/)
+- [AI SDK 遥测文档](/docs/ai-sdk-core/telemetry)

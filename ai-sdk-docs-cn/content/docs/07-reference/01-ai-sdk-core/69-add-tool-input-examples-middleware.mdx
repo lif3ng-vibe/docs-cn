@@ -1,0 +1,154 @@
+---
+title: addToolInputExamplesMiddleware
+description: 将工具输入示例追加到工具描述中的中间件。
+---
+
+# `addToolInputExamplesMiddleware`
+
+`addToolInputExamplesMiddleware` 是一个中间件函数，它将输入示例追加到工具描述中。这对于**原生不支持 `inputExamples` 属性**的语言模型提供商尤其有用——中间件会序列化这些示例并将其注入工具的 `description` 中，让模型能够从中学习。
+
+## 导入
+
+<Snippet
+  text={`import { addToolInputExamplesMiddleware } from "ai"`}
+  prompt={false}
+/>
+
+## API
+
+### 签名
+
+```ts
+function addToolInputExamplesMiddleware(options?: {
+  prefix?: string;
+  format?: (example: { input: JSONObject }, index: number) => string;
+  remove?: boolean;
+}): LanguageModelMiddleware;
+```
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'prefix',
+      type: 'string',
+      isOptional: true,
+      description:
+        "前置在输入示例部分之前的前缀。默认为 `'Input Examples:'`。",
+    },
+    {
+      name: 'format',
+      type: '(example: { input: JSONObject }, index: number) => string',
+      isOptional: true,
+      description:
+        '每个示例的可选自定义格式化函数。接收示例对象及其索引。默认：JSON.stringify(example.input)。',
+    },
+    {
+      name: 'remove',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '在将示例添加到描述后，是否从工具中移除 `inputExamples` 属性。默认：true。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个 [LanguageModelMiddleware](/docs/ai-sdk-core/middleware)，它会：
+
+- 定位带有 `inputExamples` 属性的函数工具。
+- 序列化每个输入示例（默认为 JSON，或使用你的自定义格式化函数）。
+- 在工具描述末尾追加一个包含所有已格式化示例的部分，并以 `prefix` 作为前缀。
+- 从工具中移除 `inputExamples` 属性（除非设置 `remove: false`）。
+- 原样传递所有其他工具（包括没有示例的工具）。
+
+## 用法示例
+
+```ts
+import {
+  generateText,
+  tool,
+  wrapLanguageModel,
+  addToolInputExamplesMiddleware,
+} from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const model = wrapLanguageModel({
+  model: __MODEL__,
+  middleware: addToolInputExamplesMiddleware({
+    prefix: 'Input Examples:',
+    format: (example, index) =>
+      `${index + 1}. ${JSON.stringify(example.input)}`,
+  }),
+});
+
+const result = await generateText({
+  model,
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({ location: z.string() }),
+      inputExamples: [
+        { input: { location: 'San Francisco' } },
+        { input: { location: 'London' } },
+      ],
+    }),
+  },
+  prompt: 'What is the weather in Tokyo?',
+});
+```
+
+## 工作原理
+
+1. 对于每个定义了 `inputExamples` 的函数工具，此中间件会：
+   - 使用 `format` 函数格式化每个示例（默认为 JSON.stringify）。
+   - 构建如下部分：
+
+     ```
+     Input Examples:
+     {"location":"San Francisco"}
+     {"location":"London"}
+     ```
+
+   - 将此部分追加到工具 `description` 的末尾。
+
+2. 默认情况下，追加后会移除 `inputExamples` 属性以防止重复（可通过 `remove: false` 禁用）。
+3. 没有输入示例的工具或非函数工具保持不变。
+
+> **提示**：此中间件对 OpenAI 或 Anthropic 等原生不支持 `inputExamples` 的提供商尤其有用。
+
+## 示例效果
+
+如果你的原始工具定义是：
+
+```ts
+{
+  type: 'function',
+  name: 'weather',
+  description: 'Get the weather in a location',
+  inputSchema: { ... },
+  inputExamples: [
+    { input: { location: 'San Francisco' } },
+    { input: { location: 'London' } }
+  ]
+}
+```
+
+应用中间件后（使用默认设置），传递给模型的工具将如下所示：
+
+```ts
+{
+  type: 'function',
+  name: 'weather',
+  description: `Get the weather in a location
+
+Input Examples:
+{"location":"San Francisco"}
+{"location":"London"}`,
+  inputSchema: { ... }
+  // inputExamples is removed by default
+}
+```

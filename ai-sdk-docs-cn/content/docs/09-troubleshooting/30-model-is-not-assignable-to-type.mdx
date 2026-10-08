@@ -1,0 +1,20 @@
+---
+title: 模型无法赋值给 "LanguageModelV1" 类型
+description: 排查与模型不兼容相关的错误。
+---
+
+# Model is not assignable to type "LanguageModelV1"
+
+## 问题
+
+我升级了 AI SDK，现在出现如下错误：`Type 'SomeModel' is not assignable to type 'LanguageModelV1'.`
+
+<Note>使用 `EmbeddingModelV4` 也可能出现类似错误。</Note>
+
+## 背景
+
+模型规范有时会加入新特性，这可能导致与较旧提供商版本的不兼容。
+
+## 解决方案
+
+把你的提供商包和 AI SDK 都更新到最新版本。

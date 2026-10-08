@@ -1,0 +1,140 @@
+---
+title: OLLM
+description: 适用于 AI SDK 的 OLLM 提供商
+---
+
+# OLLM
+
+[OLLM](https://ollm.com/) 是全球首个聚合高安全、零知识 LLM 提供商的企业级路由。它提供统一的 API 网关来访问 AI 模型，并保证每一层都有军事级加密。适用于 AI SDK 的 OLLM 提供商可与所有这些模型无缝集成，并提供独特优势：
+
+- **可验证的隐私**：所有模型均在机密计算（confidential computing）环境下运行，实现最高安全性
+- **通用模型访问**：一个 API key 即可访问多个提供商的模型
+- **机密计算**：所有模型均采用 TEE（可信执行环境）实现硬件级加密
+- **军事级安全**：技术栈的每一层都进行端到端加密
+- **简单集成**：所有模型均兼容 OpenAI API
+
+在 [OLLM 网站](https://ollm.com)了解 OLLM 的更多能力。
+
+## 安装
+
+OLLM 提供商通过 `@ofoundation/ollm` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="@ofoundation/ollm" />
+
+## 提供商实例
+
+使用 `createOLLM` 函数创建 OLLM 提供商实例：
+
+```typescript
+import { createOLLM } from '@ofoundation/ollm';
+
+const ollm = createOLLM({
+  apiKey: 'YOUR_OLLM_API_KEY',
+});
+```
+
+你可以在 [OLLM 控制台](https://console.ollm.com/dashboard/api-keys)获取 OLLM API key。
+
+## 语言模型
+
+所有 OLLM 模型默认都在机密计算环境下运行。对话模型使用 `ollm.chatModel()`：
+
+```typescript
+// Confidential computing chat models
+const confidentialModel = ollm.chatModel('near/GLM-4.7');
+```
+
+可用模型的完整列表请参阅 [OLLM 模型](https://ollm.com/models)。
+
+## 示例
+
+以下是在 AI SDK 中使用 OLLM 的示例：
+
+### `generateText`
+
+```typescript
+import { createOLLM } from '@ofoundation/ollm';
+import { generateText } from 'ai';
+
+const ollm = createOLLM({
+  apiKey: 'YOUR_OLLM_API_KEY',
+});
+
+const { text } = await generateText({
+  model: ollm.chatModel('near/GLM-4.6'),
+  prompt: 'What is OLLM?',
+});
+
+console.log(text);
+```
+
+### `streamText`
+
+```typescript
+import { createOLLM } from '@ofoundation/ollm';
+import { streamText } from 'ai';
+
+const ollm = createOLLM({
+  apiKey: 'YOUR_OLLM_API_KEY',
+});
+
+const result = streamText({
+  model: ollm.chatModel('near/GLM-4.6'),
+  prompt: 'Write a short story about secure AI.',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 使用系统消息
+
+```typescript
+import { createOLLM } from '@ofoundation/ollm';
+import { generateText } from 'ai';
+
+const ollm = createOLLM({
+  apiKey: 'YOUR_OLLM_API_KEY',
+});
+
+const { text } = await generateText({
+  model: ollm.chatModel('near/GLM-4.6'),
+  system: 'You are a helpful assistant that responds concisely.',
+  prompt: 'What is TypeScript in one sentence?',
+});
+
+console.log(text);
+```
+
+## 高级特性
+
+OLLM 提供多项高级特性，以企业级安全性增强你的 AI 应用：
+
+1. **零数据保留（ZDR）**：提供商绝不会存储或记录你的提示词与补全。
+
+2. **机密计算**：基于 TEE 技术的硬件级加密，确保你的数据即使在被处理时也受到保护。
+
+3. **可验证的隐私**：通过密码学证明你的数据是安全处理的。
+
+4. **模型灵活性**：无需更改代码或管理多个 API key，即可在数百个模型之间切换。
+
+5. **成本管理**：通过控制台实时跟踪每个模型的用量与成本。
+
+6. **企业支持**：面向大用量用户提供自定义 SLA 与专属支持。
+
+7. **工具集成**：可与流行的 AI 开发工具无缝协作，包括：
+   - Cursor
+   - Windsurf
+   - VS Code
+   - Cline
+   - Roo Code
+   - Replit
+
+有关这些特性与高级配置选项的更多信息，请访问 [OLLM 文档](https://ollm.com/docs)。
+
+## 更多资源
+
+- [OLLM 文档](https://ollm.com/)
+- [OLLM 控制台](https://console.ollm.com/dashboard)
+- [OLLM 模型](https://console.ollm.com/explorer/models)

@@ -1,0 +1,380 @@
+---
+title: Cohere
+description: 了解如何在 AI SDK 中使用 Cohere 提供商。
+---
+
+# Cohere 提供商
+
+[Cohere](https://cohere.com/) 提供商为 Cohere chat API 提供语言模型和嵌入模型支持。
+
+## 安装
+
+Cohere 提供商包含在 `@ai-sdk/cohere` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/cohere" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/cohere` 导入默认提供商实例 `cohere`：
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/cohere` 导入 `createCohere`，
+并使用你的设置创建提供商实例：
+
+```ts
+import { createCohere } from '@ai-sdk/cohere';
+
+const cohere = createCohere({
+  // custom settings
+});
+```
+
+你可以使用以下可选设置来定制 Cohere 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.cohere.com/v2`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认值为 `COHERE_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作中间件来拦截请求，
+  或在测试等场景下提供自定义 fetch 实现。
+
+- **generateId** _() => string_
+
+  为每个请求生成唯一 ID 的可选函数。
+  默认使用 SDK 内置的 ID 生成器。
+
+## 语言模型
+
+你可以使用提供商实例创建调用 [Cohere chat API](https://docs.cohere.com/v2/docs/chat-api) 的模型。
+第一个参数是模型 id，例如 `command-a-03-2025`。
+部分 Cohere chat 模型支持工具调用。
+
+```ts
+const model = cohere('command-a-03-2025');
+```
+
+### 示例
+
+你可以使用 Cohere 语言模型和 `generateText` 函数生成文本：
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: cohere('command-a-03-2025'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+Cohere 语言模型也可以用于 `streamText` 函数，
+并支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 进行结构化数据生成
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### 模型能力
+
+| 模型                          | 图像输入    | 对象生成          | 工具使用   | 工具流式       |
+| ----------------------------- | ----------- | ----------------- | ---------- | -------------- |
+| `command-a-03-2025`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-a-reasoning-08-2025` | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-a-vision-07-2025`    | <Check />   | <Check />         | <Check />  | <Check />      |
+| `command-r7b-12-2024`         | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-r-plus-04-2024`      | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-r-plus`              | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-r-08-2024`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-r-03-2024`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command-r`                   | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `command`                     | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `command-nightly`             | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `command-light`               | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+| `command-light-nightly`       | <Cross />   | <Cross />         | <Cross />  | <Cross />      |
+
+<Note>
+  上表列出的是热门模型。完整可用模型列表请参见 [Cohere
+  文档](https://docs.cohere.com/v2/docs/models#command)。如有需要，你也可以将任何可用的提供商模型 ID 以字符串形式传入。
+</Note>
+
+#### 图像输入
+
+`command-a-vision-07-2025` 等具备视觉能力的 Cohere 模型接受图像输入作为消息内容的一部分。你可以以原始字节、base64 编码字符串或 URL 的形式传入图像：
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { generateText } from 'ai';
+import { readFileSync } from 'node:fs';
+
+const { text } = await generateText({
+  model: cohere('command-a-vision-07-2025'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: readFileSync('./data/comic-cat.png'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+你可以在文件部件上使用 `cohere` 提供商选项，将[图像输入细节](https://docs.cohere.com/docs/image-inputs)设置为 `high`、`low` 或 `auto`：
+
+```ts highlight="2,16-18"
+import { cohere } from '@ai-sdk/cohere';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: cohere('command-a-vision-07-2025'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: 'https://github.com/vercel/ai/blob/main/examples/ai-functions/data/comic-cat.png?raw=true',
+
+          // Cohere specific options - image detail:
+          providerOptions: {
+            cohere: { detail: 'high' },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### 推理
+
+Cohere 通过 `command-a-reasoning-08-2025` 模型引入了推理能力。详情见 https://docs.cohere.com/docs/reasoning。
+
+```ts
+import { cohere, type CohereLanguageModelChatOptions } from '@ai-sdk/cohere';
+import { generateText } from 'ai';
+
+async function main() {
+  const { text, reasoning } = await generateText({
+    model: cohere('command-a-reasoning-08-2025'),
+    prompt:
+      "Alice has 3 brothers and she also has 2 sisters. How many sisters does Alice's brother have?",
+    // optional: reasoning options
+    providerOptions: {
+      cohere: {
+        thinking: {
+          type: 'enabled',
+          tokenBudget: 100,
+        },
+      } satisfies CohereLanguageModelChatOptions,
+    },
+  });
+
+  console.log(reasoning);
+  console.log(text);
+}
+
+main().catch(console.error);
+```
+
+## 嵌入模型
+
+你可以使用 `.embedding()` 工厂方法创建调用 [Cohere embed API](https://docs.cohere.com/v2/reference/embed) 的模型。
+
+```ts
+const model = cohere.embedding('embed-v4.0');
+```
+
+你可以使用 Cohere 嵌入模型和 `embed` 函数生成嵌入：
+
+```ts
+import { cohere, type CohereEmbeddingModelOptions } from '@ai-sdk/cohere';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: cohere.embedding('embed-v4.0'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    cohere: {
+      inputType: 'search_document',
+    } satisfies CohereEmbeddingModelOptions,
+  },
+});
+```
+
+Cohere 嵌入模型支持额外的提供商选项，可通过 `providerOptions.cohere` 传入：
+
+```ts
+import { cohere, type CohereEmbeddingModelOptions } from '@ai-sdk/cohere';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: cohere.embedding('embed-v4.0'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    cohere: {
+      inputType: 'search_document',
+      truncate: 'END',
+    } satisfies CohereEmbeddingModelOptions,
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **embeddingType** _'float' | 'int8' | 'uint8' | 'binary' | 'ubinary'_
+
+  每次调用选择一种嵌入格式。默认值为 `float`，保持
+  现有行为。非 float 格式需要 Embed v3.0 或更新版本。例如：
+
+  ```ts
+  const { embedding } = await embed({
+    model: cohere.embedding('embed-v4.0'),
+    value: 'sunny day at the beach',
+    providerOptions: {
+      cohere: {
+        embeddingType: 'int8',
+      } satisfies CohereEmbeddingModelOptions,
+    },
+  });
+  ```
+
+  所选格式会以数字数组的形式在 `embedding`（`embedMany` 则为
+  `embeddings`）中返回。提供商原样返回这些值，
+  不做转换或解包。`binary` 和 `ubinary` 包含打包后的字节：
+  每个数字表示八个维度。请使用支持二进制向量（binary-aware）的向量数据库，
+  或在比较向量之前解包这些位；不要把打包后的字节直接
+  传给 `cosineSimilarity`。压缩格式可能影响检索质量，
+  紧凑存储也需要数据库端有相应的表示形式。
+
+- **inputType** _'search_document' | 'search_query' | 'classification' | 'clustering'_
+
+  指定传给模型的输入类型。默认值为 `search_query`。
+  - `search_document`：用于存入向量数据库、面向搜索用例的嵌入。
+  - `search_query`：用于对向量数据库发起搜索查询以找到相关文档的查询嵌入。
+  - `classification`：用于经过文本分类器的嵌入。
+  - `clustering`：用于经过聚类算法的嵌入。
+
+- **outputDimension** _256 | 512 | 768 | 1024 | 1536 | 2048_
+
+  输出嵌入的维度数量。Embed v4.0
+  及更新的模型可用。Embed v4.0 支持 `256`、`512`、`1024` 和 `1536`
+  （默认）。Embed v5.0 Pro 和 Fast 还支持 `768` 和 `2048`（默认）。
+  省略时，API 使用该模型的默认维度。
+
+- **truncate** _'NONE' | 'START' | 'END'_
+
+  指定 API 如何处理超过最大 token 长度的输入。
+  默认值为 `END`。
+  - `NONE`：选择该项时，输入超过最大输入 token 长度将返回错误。
+  - `START`：从输入开头丢弃，直到剩余输入恰好等于该模型的最大输入 token 长度。
+  - `END`：从输入末尾丢弃，直到剩余输入恰好等于该模型的最大输入 token 长度。
+
+### 模型能力
+
+| 模型                            | Embedding Dimensions                      |
+| ------------------------------- | ----------------------------------------- |
+| `embed-v5.0-pro`                | 256, 512, 768, 1024, 1536, 2048 (default) |
+| `embed-v5.0-fast`               | 256, 512, 768, 1024, 1536, 2048 (default) |
+| `embed-v4.0`                    | 256, 512, 1024, 1536 (default)            |
+| `embed-english-v3.0`            | 1024                                      |
+| `embed-multilingual-v3.0`       | 1024                                      |
+| `embed-english-light-v3.0`      | 384                                       |
+| `embed-multilingual-light-v3.0` | 384                                       |
+| `embed-english-v2.0`            | 4096                                      |
+| `embed-english-light-v2.0`      | 1024                                      |
+| `embed-multilingual-v2.0`       | 768                                       |
+
+## 重排序模型
+
+你可以使用 `.reranking()` 工厂方法创建调用 [Cohere rerank API](https://docs.cohere.com/v2/reference/rerank) 的模型。
+
+```ts
+const model = cohere.reranking('rerank-v4.0-pro');
+```
+
+你可以使用 Cohere 重排序模型和 `rerank` 函数对文档重排序：
+
+```ts
+import { cohere } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const documents = [
+  'sunny day at the beach',
+  'rainy afternoon in the city',
+  'snowy night in the mountains',
+];
+
+const { ranking } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents,
+  query: 'talk about rain',
+  topN: 2,
+});
+
+console.log(ranking);
+// [
+//   { originalIndex: 1, score: 0.9, document: 'rainy afternoon in the city' },
+//   { originalIndex: 0, score: 0.3, document: 'sunny day at the beach' }
+// ]
+```
+
+Cohere 重排序模型支持额外的提供商选项，可通过 `providerOptions.cohere` 传入：
+
+```ts
+import { cohere, type CohereRerankingModelOptions } from '@ai-sdk/cohere';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: cohere.reranking('rerank-v4.0-pro'),
+  documents: ['sunny day at the beach', 'rainy afternoon in the city'],
+  query: 'talk about rain',
+  providerOptions: {
+    cohere: {
+      maxTokensPerDoc: 1000,
+      priority: 1,
+    } satisfies CohereRerankingModelOptions,
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **maxTokensPerDoc** _number_
+
+  每个文档的最大 token 数。默认值为 `4096`。
+
+- **priority** _number_
+
+  请求的优先级。默认值为 `0`。
+
+### 模型能力
+
+| 模型                       |
+| -------------------------- |
+| `rerank-v4.0-pro`          |
+| `rerank-v4.0-fast`         |
+| `rerank-v3.5`              |
+| `rerank-english-v3.0`      |
+| `rerank-multilingual-v3.0` |

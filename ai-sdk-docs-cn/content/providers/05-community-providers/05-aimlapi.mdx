@@ -1,0 +1,82 @@
+---
+title: AI/ML API
+description: 了解如何使用 AI/ML API 提供商。
+---
+
+# AI/ML API 提供商
+
+[AI/ML API](https://aimlapi.com/?utm_source=aimlapi-vercel-ai&utm_medium=github&utm_campaign=integration) 提供商通过 OpenAI 兼容 API 提供对 300 多个 AI 模型的访问。
+
+## 设置
+
+AI/ML API 提供商（provider）通过 `@ai-ml.api/aimlapi-vercel-ai` 模块提供。安装方式如下：
+
+<InstallPackages packages="@ai-ml.api/aimlapi-vercel-ai" />
+
+### API Key
+
+将你的 key 设置到 `AIMLAPI_API_KEY` 环境变量中：
+
+```bash
+export AIMLAPI_API_KEY="sk-..."
+```
+
+## 提供商实例
+
+你可以导入默认的提供商实例 `aimlapi`：
+
+```ts
+import { aimlapi } from '@ai-ml.api/aimlapi-vercel-ai';
+```
+
+## 语言模型
+
+使用 `aimlapi` 创建文本生成模型，并将其与 `generateText` 一起使用：
+
+```ts
+import { aimlapi } from '@ai-ml.api/aimlapi-vercel-ai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: aimlapi('gpt-4o'),
+  system: 'You are a friendly assistant!',
+  prompt: 'Why is the sky blue?',
+});
+```
+
+## 图像生成
+
+你可以在图像模型上调用 `doGenerate` 来生成图像：
+
+```ts
+import { aimlapi } from '@ai-ml.api/aimlapi-vercel-ai';
+
+const model = aimlapi.imageModel('flux-pro');
+
+const res = await model.doGenerate({
+  prompt: 'a red balloon floating over snowy mountains, cinematic',
+  n: 1,
+  aspectRatio: '16:9',
+  seed: 42,
+  size: '1024x768',
+  providerOptions: {},
+});
+
+console.log(`✅ Generated image url: ${res.images[0]}`);
+```
+
+## 嵌入
+
+AI/ML API 也支持嵌入（embedding）模型：
+
+```ts
+import { aimlapi } from '@ai-ml.api/aimlapi-vercel-ai';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: aimlapi.embeddingModel('text-embedding-3-large'),
+  value: 'sunny day at the beach',
+});
+```
+
+更多信息与完整模型列表，请访问 [AI/ML API 控制台](https://aimlapi.com/app?utm_source=aimlapi-vercel-ai&utm_medium=github&utm_campaign=integration)与 [AI/ML API 文档](https://docs.aimlapi.com/?utm_source=aimlapi-vercel-ai&utm_medium=github&utm_campaign=integration)。

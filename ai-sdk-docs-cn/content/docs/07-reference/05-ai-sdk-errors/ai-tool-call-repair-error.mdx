@@ -1,0 +1,26 @@
+---
+title: ToolCallRepairError
+description: 了解如何修复 AI SDK 的 ToolCallRepairError
+---
+
+# ToolCallRepairError
+
+当尝试修复无效的工具调用（tool call）时发生失败，会产生此错误。这通常发生在 AI 尝试修复 `NoSuchToolError` 或 `InvalidToolInputError` 时。
+
+## 属性
+
+- `originalError`：触发修复尝试的原始错误（`NoSuchToolError` 或 `InvalidToolInputError`）
+- `message`：错误消息
+- `cause`：导致修复失败的底层错误
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `ToolCallRepairError` 的实例：
+
+```typescript
+import { ToolCallRepairError } from 'ai';
+
+if (ToolCallRepairError.isInstance(error)) {
+  // Handle the error
+}
+```

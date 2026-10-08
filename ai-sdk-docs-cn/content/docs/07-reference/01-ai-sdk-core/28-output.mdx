@@ -1,0 +1,367 @@
+---
+title: Output
+description: Output 的 API 参考。
+---
+
+# `Output`
+
+`Output` 对象为 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 和 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 的结构化数据生成提供输出规格（output specification）。它允许你指定生成数据的预期结构，并自动处理校验。
+
+```ts
+import { generateText, Output } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: __MODEL__,
+  output: Output.object({
+    schema: z.object({
+      name: z.string(),
+      age: z.number(),
+    }),
+  }),
+  prompt: 'Generate a user profile.',
+});
+```
+
+## 导入
+
+<Snippet text={`import { Output } from "ai"`} prompt={false} />
+
+## 输出类型
+
+### `Output.text()`
+
+纯文本生成的输出规格。未指定 `output` 时的默认行为。
+
+```ts
+import { generateText, Output } from 'ai';
+
+const { output } = await generateText({
+  model: yourModel,
+  output: Output.text(),
+  prompt: 'Tell me a joke.',
+});
+// output is a string
+```
+
+#### 参数
+
+无需参数。
+
+#### 返回值
+
+一个 `Output<string, string>` 规格，生成纯文本，不做 schema 校验。
+
+---
+
+### `Output.object()`
+
+使用 schema 生成带类型对象的输出规格。输出会依据提供的 schema 进行校验，以确保类型安全。
+
+```ts
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: yourModel,
+  output: Output.object({
+    schema: z.object({
+      name: z.string(),
+      age: z.number().nullable(),
+      labels: z.array(z.string()),
+    }),
+  }),
+  prompt: 'Generate information for a test user.',
+});
+// output matches the schema type
+```
+
+#### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'schema',
+      type: 'FlexibleSchema<OBJECT>',
+      description:
+        '定义要生成对象结构的 schema。支持 Zod schema、Standard JSON schema 和自定义 JSON schema。',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选名称。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 名称。',
+    },
+    {
+      name: 'description',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选描述。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 描述。',
+    },
+  ]}
+/>
+
+#### 返回值
+
+一个 `Output<OBJECT, DeepPartial<OBJECT>>` 规格，其中：
+
+- 完整输出会依据 schema 完全校验
+- 部分输出（流式过程中）是 schema 类型的深度部分（deep partial）版本
+
+<Note>
+  通过 `streamText` 流式传输的部分输出无法依据你提供的 schema 进行校验，
+  因为不完整的数据可能尚不符合预期结构。
+</Note>
+
+---
+
+### `Output.array()`
+
+生成带类型元素数组的输出规格。每个元素都会依据提供的元素 schema 进行校验。
+
+```ts
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: yourModel,
+  output: Output.array({
+    element: z.object({
+      location: z.string(),
+      temperature: z.number(),
+      condition: z.string(),
+    }),
+    minItems: 2,
+    maxItems: 2,
+  }),
+  prompt: 'List the weather for San Francisco and Paris.',
+});
+// output is an array of weather objects
+```
+
+#### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'element',
+      type: 'FlexibleSchema<ELEMENT>',
+      description:
+        '定义每个数组元素结构的 schema。支持 Zod schema、Valibot schema 或 JSON schema。',
+    },
+    {
+      name: 'minItems',
+      type: 'number',
+      isOptional: true,
+      description:
+        '要生成的最小元素数量。必须是非负整数。',
+    },
+    {
+      name: 'maxItems',
+      type: 'number',
+      isOptional: true,
+      description:
+        '要生成的最大元素数量。必须是非负整数，且大于等于 minItems。',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选名称。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 名称。',
+    },
+    {
+      name: 'description',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选描述。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 描述。',
+    },
+  ]}
+/>
+
+#### 返回值
+
+一个 `Output<Array<ELEMENT>, Array<ELEMENT>>` 规格，其中：
+
+- 完整输出是一个数组，所有元素均已校验
+- 完整输出会依据 `minItems` 与 `maxItems` 校验
+- 部分输出只包含已完整校验的元素（不完整的元素会被排除）
+
+将 `minItems` 与 `maxItems` 设为相同的值即可要求精确的元素数量。
+当提供商支持这些边界时，它们会包含在面向提供商的 schema 中。
+AI SDK 也会对最终完成的输出进行校验，因此
+忽略这些 schema 关键字的提供商也无法返回越界
+结果。
+
+#### 使用 `elementStream` 流式处理
+
+在 `streamText` 中使用 `Output.array()` 时，可以用 `elementStream` 在元素生成的同时进行迭代：
+
+```ts
+import { streamText, Output } from 'ai';
+import { z } from 'zod';
+
+const { elementStream } = streamText({
+  model: yourModel,
+  output: Output.array({
+    element: z.object({
+      name: z.string(),
+      class: z.string(),
+      description: z.string(),
+    }),
+  }),
+  prompt: 'Generate 3 hero descriptions for a fantasy role playing game.',
+});
+
+for await (const hero of elementStream) {
+  console.log(hero); // Each hero is complete and validated
+}
+```
+
+<Note>
+  `elementStream` 发出的每个元素都是完整的，并已依据你的元素 schema 校验，
+  从而确保每个条目在生成时的类型安全。如果
+  模型生成的元素超过 `maxItems`，`elementStream` 会在发出
+  第一个多余元素之前报错。提供商的生成不会自动中止，
+  最终的 `output` promise 也会 reject。
+</Note>
+
+---
+
+### `Output.choice()`
+
+从预定义字符串选项集合中进行选择的输出规格。适用于分类任务或固定枚举值的回答。
+
+```ts
+import { generateText, Output } from 'ai';
+
+const { output } = await generateText({
+  model: yourModel,
+  output: Output.choice({
+    options: ['sunny', 'rainy', 'snowy'] as const,
+  }),
+  prompt: 'Is the weather sunny, rainy, or snowy today?',
+});
+// output is 'sunny' | 'rainy' | 'snowy'
+```
+
+#### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'options',
+      type: 'Array<CHOICE>',
+      description:
+        '模型可以从中选择的字符串选项数组。输出将恰好是这些值之一。',
+    },
+    {
+      name: 'name',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选名称。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 名称。',
+    },
+    {
+      name: 'description',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选描述。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 描述。',
+    },
+  ]}
+/>
+
+#### 返回值
+
+一个 `Output<CHOICE, CHOICE>` 规格，其中：
+
+- 完整输出会被校验为恰好是所提供选项之一
+
+---
+
+### `Output.json()`
+
+非结构化 JSON 生成的输出规格。当你想生成任意 JSON 而不强制特定 schema 时使用。
+
+```ts
+import { generateText, Output } from 'ai';
+
+const { output } = await generateText({
+  model: yourModel,
+  output: Output.json(),
+  prompt:
+    'For each city, return the current temperature and weather condition as a JSON object.',
+});
+// output is any valid JSON value
+```
+
+#### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'name',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选名称。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 名称。',
+    },
+    {
+      name: 'description',
+      type: 'string',
+      isOptional: true,
+      description:
+        '要生成的输出的可选描述。部分提供商会将其用于对 LLM 的额外引导，例如通过工具或 schema 描述。',
+    },
+  ]}
+/>
+
+#### 返回值
+
+一个 `Output<JSONValue, JSONValue>` 规格，它：
+
+- 校验输出是有效的 JSON
+- 不强制任何特定结构
+
+<Note>
+  使用 `Output.json()` 时，AI SDK 只检查响应是否为有效的 JSON；
+  它不会校验值的结构或类型。如果需要 schema
+  校验，请改用 `Output.object()` 或 `Output.array()`。
+</Note>
+
+## 错误处理
+
+当带结构化输出的 `generateText` 无法生成有效对象时，会抛出 [`NoObjectGeneratedError`](/docs/reference/ai-sdk-errors/ai-no-object-generated-error)。
+
+```ts
+import { generateText, Output, NoObjectGeneratedError } from 'ai';
+
+try {
+  await generateText({
+    model: yourModel,
+    output: Output.object({ schema }),
+    prompt: 'Generate a user profile.',
+  });
+} catch (error) {
+  if (NoObjectGeneratedError.isInstance(error)) {
+    console.log('NoObjectGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Text:', error.text);
+    console.log('Response:', error.response);
+    console.log('Usage:', error.usage);
+  }
+}
+```
+
+## 另请参阅
+
+- [生成结构化数据](/docs/ai-sdk-core/generating-structured-data)
+- [`generateText()`](/docs/reference/ai-sdk-core/generate-text)
+- [`streamText()`](/docs/reference/ai-sdk-core/stream-text)
+- [`zod-schema`](/docs/reference/ai-sdk-core/zod-schema)
+- [`json-schema`](/docs/reference/ai-sdk-core/json-schema)

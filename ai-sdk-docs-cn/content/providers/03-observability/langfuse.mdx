@@ -1,0 +1,303 @@
+---
+title: Langfuse
+description: 使用 Langfuse 监控、评估并调试你的 AI SDK 应用
+---
+
+# Langfuse 可观测性
+
+[Langfuse](https://langfuse.com/)（[GitHub](https://github.com/langfuse/langfuse)）是一个开源的 LLM 工程平台，帮助团队协作开发、监控并调试 AI 应用。Langfuse 与 AI SDK 集成后可提供：
+
+- [应用追踪数据](https://langfuse.com/docs/tracing)
+- 使用模式
+- 按用户与模型统计的成本数据
+- 重放会话以调试问题
+- [评估](https://langfuse.com/docs/scores/overview)
+
+## 安装
+
+AI SDK v7 使用基于回调的遥测（telemetry）系统。Langfuse 通过 `@langfuse/vercel-ai-sdk` 与之集成，而 `LangfuseSpanProcessor` 会把生成的 OpenTelemetry span 导出到 Langfuse。
+
+安装 AI SDK 与 Langfuse 集成包：
+
+```bash
+npm install ai @ai-sdk/openai @langfuse/client @langfuse/vercel-ai-sdk @langfuse/tracing @langfuse/otel @opentelemetry/sdk-node
+```
+
+`@langfuse/vercel-ai-sdk` 包面向 AI SDK v7，要求 Node.js 22 或更高版本。
+
+你可以通过环境变量设置 Langfuse 凭据，也可以直接在 `LangfuseSpanProcessor` 构造函数中传入。
+
+要获取 Langfuse API key，你可以[自托管 Langfuse](https://langfuse.com/docs/deployment/self-host)，或在[这里](https://cloud.langfuse.com)注册 Langfuse Cloud。在 Langfuse 仪表盘中创建一个项目，即可获得你的 `secretKey` 和 `publicKey`。
+
+<Tabs items={["环境变量", "构造函数"]}>
+
+<Tab>
+
+```bash filename=".env"
+LANGFUSE_SECRET_KEY="sk-lf-..."
+LANGFUSE_PUBLIC_KEY="pk-lf-..."
+LANGFUSE_BASE_URL="https://cloud.langfuse.com" # EU region, use "https://us.cloud.langfuse.com" for US region
+```
+
+</Tab>
+
+<Tab>
+
+```ts
+import { LangfuseSpanProcessor } from '@langfuse/otel';
+
+new LangfuseSpanProcessor({
+  secretKey: 'sk-lf-...',
+  publicKey: 'pk-lf-...',
+  baseUrl: 'https://cloud.langfuse.com', // EU region
+  // baseUrl: 'https://us.cloud.langfuse.com', // US region
+});
+```
+
+</Tab>
+</Tabs>
+
+现在向 OpenTelemetry 注册 Langfuse span 处理器，并在应用启动时注册一次 Langfuse 的 AI SDK 遥测集成。
+
+<Tabs items={["Next.js","Node.js"]}>
+<Tab>
+
+Next.js 在框架层面支持 OpenTelemetry 埋点。更多信息见 [Next.js OpenTelemetry 指南](https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry)。
+
+创建或更新你的 `instrumentation.ts` 文件：
+
+```ts filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { LangfuseVercelAiSdkIntegration } from '@langfuse/vercel-ai-sdk';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+
+export const langfuseSpanProcessor = new LangfuseSpanProcessor();
+
+const sdk = new NodeSDK({
+  spanProcessors: [langfuseSpanProcessor],
+});
+
+sdk.start();
+
+registerTelemetry(new LangfuseVercelAiSdkIntegration());
+```
+
+如果你在无服务器（serverless）路由中流式返回响应，请在响应排定之后刷新（flush）span 处理器，确保追踪数据在函数退出前被导出。
+
+</Tab>
+<Tab>
+
+把 `LangfuseSpanProcessor` 加入你的 OpenTelemetry 配置，并向 AI SDK 注册 `LangfuseVercelAiSdkIntegration`：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { registerTelemetry, generateText } from 'ai';
+import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { LangfuseVercelAiSdkIntegration } from '@langfuse/vercel-ai-sdk';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+
+const sdk = new NodeSDK({
+  spanProcessors: [new LangfuseSpanProcessor()],
+});
+
+sdk.start();
+registerTelemetry(new LangfuseVercelAiSdkIntegration());
+
+async function main() {
+  const result = await generateText({
+    model: openai('gpt-5.5'),
+    maxOutputTokens: 50,
+    prompt: 'Invent a new holiday and describe its traditions.',
+    telemetry: {
+      functionId: 'my-awesome-function',
+    },
+  });
+
+  console.log(result.text);
+
+  await sdk.shutdown(); // Flushes the trace to Langfuse
+}
+
+main().catch(console.error);
+```
+
+</Tab>
+</Tabs>
+
+完成了！集成注册后，AI SDK v7 调用默认会发出遥测数据，Langfuse 会把这些 span 映射为 trace、生成（generation）、工具调用、嵌入（embedding）与重排序（rerank）。
+
+## 示例应用
+
+关于当前的配置方式，请参阅 Langfuse 的 [Vercel AI SDK 集成指南](https://langfuse.com/integrations/frameworks/vercel-ai-sdk)。Langfuse 还维护了一个示例仓库 [langfuse/langfuse-vercel-ai-nextjs-example](https://github.com/langfuse/langfuse-vercel-ai-nextjs-example)。
+
+## 配置
+
+### 传递自定义属性
+
+使用 `@langfuse/tracing` 中的 `propagateAttributes`，把用户、会话、标签与 trace 元数据等 Langfuse trace 属性附加到回调内创建的所有观察记录（observation）上。
+
+```ts
+import { propagateAttributes } from '@langfuse/tracing';
+
+const result = await propagateAttributes(
+  {
+    traceName: 'story-generation',
+    userId: 'user-123',
+    sessionId: 'session-456',
+    tags: ['story', 'cat'],
+    metadata: {
+      route: 'api/story',
+      experiment: 'variant-a',
+    },
+  },
+  () =>
+    generateText({
+      model: openai('gpt-6-astra'),
+      prompt: 'Write a short story about a cat.',
+      telemetry: {
+        functionId: 'story-generation',
+      },
+    }),
+);
+```
+
+### 在 Langfuse 元数据中包含运行时上下文
+
+AI SDK v7 默认会从遥测事件中排除 `runtimeContext`，除非显式包含每个顶层键。Langfuse 会把被包含的运行时上下文键映射为观察记录元数据。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a short story about a cat.',
+  runtimeContext: {
+    route: 'api/story',
+    feature: 'cat-story',
+  },
+  telemetry: {
+    functionId: 'story-generation',
+    includeRuntimeContext: {
+      route: true,
+      feature: true,
+    },
+  },
+});
+```
+
+### 将 Langfuse 提示词关联到生成记录
+
+通过 `runtimeContext.langfusePrompt` 传入获取到的提示词（prompt）并在 telemetry 中包含该键，即可把 Langfuse 提示词管理（Prompt Management）的版本关联到 AI SDK 模型调用观察记录。
+
+```typescript
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+import { LangfuseClient } from '@langfuse/client';
+
+const langfuseClient = new LangfuseClient();
+const langfusePrompt = await langfuseClient.getPrompt('support-chat/default');
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: langfusePrompt.compile({ topic: 'RAG' }),
+  runtimeContext: {
+    route: 'support-chat',
+    langfusePrompt,
+  },
+  telemetry: {
+    functionId: 'support-chat',
+    includeRuntimeContext: {
+      route: true,
+      langfusePrompt: true,
+    },
+  },
+});
+```
+
+Langfuse 会把被包含的运行时上下文键映射为观察记录元数据，但 `langfusePrompt` 除外——它用于提示词关联。关于 Langfuse 提示词的更多信息见[这里](https://langfuse.com/docs/prompts/get-started)。
+
+### 在单个 trace 中归组多次执行
+
+创建一个活跃的 Langfuse 观察记录，并在其中运行多次 AI SDK 调用。这些 AI SDK 观察记录会成为活跃观察记录的子节点。
+
+```ts
+import { propagateAttributes, startActiveObservation } from '@langfuse/tracing';
+
+await startActiveObservation('holiday-traditions', async () => {
+  await propagateAttributes(
+    {
+      traceName: 'holiday-traditions',
+      userId: 'user-123',
+      sessionId: 'session-456',
+      tags: ['holiday-generator'],
+    },
+    async () => {
+      for (let i = 0; i < 3; i++) {
+        const result = await generateText({
+          model: openai('gpt-5.5'),
+          maxOutputTokens: 50,
+          prompt: 'Invent a new holiday and describe its traditions.',
+          telemetry: {
+            functionId: `holiday-tradition-${i}`,
+          },
+        });
+
+        console.log(result.text);
+      }
+    },
+  );
+});
+
+await sdk.shutdown();
+```
+
+生成的 trace 层级如下：
+
+![Vercel nested trace in Langfuse UI](https://langfuse.com/images/docs/vercel-nested-trace.png)
+
+### 禁用输入/输出追踪
+
+默认情况下，导出器会捕获每次请求的输入与输出。把 `recordInputs` 和 `recordOutputs` 选项设为 `false` 即可关闭该行为。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a short story about a cat.',
+  telemetry: {
+    recordInputs: false,
+    recordOutputs: false,
+  },
+});
+```
+
+### 对单次调用禁用遥测
+
+注册遥测集成后，遥测默认是启用的。你可以针对单次 AI SDK 调用选择退出：
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a short story about a cat.',
+  telemetry: {
+    isEnabled: false,
+  },
+});
+```
+
+## 故障排查
+
+- 确保你的应用运行在 Node.js 22 或更高版本上。
+- 使用最新的 AI SDK 包，并安装 `@langfuse/vercel-ai-sdk`；
+- 如果 Langfuse 中缺少 `runtimeContext` 值，请把每个顶层键加入 `telemetry.includeRuntimeContext`。
+- 在 Next.js 中，确保只有一个 instrumentation 文件。
+- 如果你使用 Sentry，请确保二者其一：
+  - 在 Sentry.init 中设置 `skipOpenTelemetrySetup: true`
+  - 按照 Sentry 文档手动配置 Sentry 与 OTEL
+
+## 另请参阅
+
+- 为 AI SDK 配置好 Langfuse Tracing 之后，你可以使用 Langfuse 的其他[平台功能](https://langfuse.com/docs)：
+  - [提示词管理（Prompt Management）](https://langfuse.com/docs/prompts)：协作管理与迭代提示词，并在生产环境中以低延迟使用。
+  - [评估](https://langfuse.com/docs/scores)：借助用户反馈、LLM-as-a-judge 评估器、人工评审或自定义评估流水线，在开发与生产环境中整体测试应用。
+  - [实验](https://langfuse.com/docs/datasets)：借助数据集与评估，以结构化的方式迭代提示词、模型与应用设计。
+- 关于 Langfuse 的 AI SDK v7 集成的更多信息，请参阅 [Langfuse Vercel AI SDK 集成指南](https://langfuse.com/integrations/frameworks/vercel-ai-sdk)。
+- 更多信息请参阅 AI SDK 的[遥测文档](/docs/ai-sdk-core/telemetry)。

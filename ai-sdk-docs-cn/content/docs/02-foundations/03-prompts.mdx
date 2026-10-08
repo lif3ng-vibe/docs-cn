@@ -1,0 +1,624 @@
+---
+title: 提示词
+description: 了解 AI SDK 中使用的提示词（prompt）结构。
+---
+
+# Prompts
+
+提示词（prompt）是你提供给[大型语言模型（LLM）](/docs/foundations/overview#大语言模型)的指令，用来告诉它要做什么。
+就像向别人问路一样：问题越清晰，得到的指引就越好。
+
+许多 LLM 提供商都提供了复杂的接口来指定提示词，其中涉及不同的角色和消息类型。
+尽管这些接口功能强大，却难以使用和理解。
+
+为了简化提示词的编写，AI SDK 支持文本、消息和系统提示词。
+
+## 文本提示词
+
+文本提示词就是字符串。
+它适用于简单的生成场景，
+例如针对同一提示词文本的多种变体反复生成内容。
+
+你可以使用 AI SDK 函数（如 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 或 [`generateText`](/docs/reference/ai-sdk-core/generate-text)）提供的 `prompt` 属性来设置文本提示词。
+文本可以用任意方式组织，并注入变量，例如使用模板字符串。
+
+```ts highlight="3"
+const result = await generateText({
+  model: __MODEL__,
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+你也可以使用模板字符串为提示词提供动态数据。
+
+```ts highlight="3-5"
+const result = await generateText({
+  model: __MODEL__,
+  prompt:
+    `I am planning a trip to ${destination} for ${lengthOfStay} days. ` +
+    `Please suggest the best tourist activities for me to do.`,
+});
+```
+
+## 系统提示词
+
+系统提示词是提供给模型的初始指令集，用于引导并约束模型的行为和响应。
+你可以使用 `instructions` 属性来设置系统提示词。
+系统提示词可以与 `prompt` 和 `messages` 属性配合使用。
+默认情况下，`prompt` 或 `messages` 中的系统消息会被拒绝；请使用 `instructions` 属性来传递系统指令，或者当你需要发送包含系统消息的既有消息历史时，设置 `allowSystemInMessages: true`。
+
+<Note type="warning">
+  启用 `allowSystemInMessages` 可能带来提示词注入（prompt injection）风险：
+  用户可以通过注入系统消息来覆盖或设置系统提示词。在大多数情况下，
+  只有可信的服务端代码才应通过 `instructions` 属性设置系统指令。
+</Note>
+
+```ts highlight="3-6"
+const result = await generateText({
+  model: __MODEL__,
+  instructions:
+    `You help planning travel itineraries. ` +
+    `Respond to the users' request with a list ` +
+    `of the best stops to make in their destination.`,
+  prompt:
+    `I am planning a trip to ${destination} for ${lengthOfStay} days. ` +
+    `Please suggest the best tourist activities for me to do.`,
+});
+```
+
+## 消息提示词
+
+消息提示词是由用户、助手和工具消息组成的数组。
+它非常适合聊天界面以及更复杂的多模态提示词。
+你可以使用 `messages` 属性来设置消息提示词。
+
+每条消息都有 `role` 和 `content` 属性。content 可以是文本（用于用户和助手消息），也可以是该消息类型相关部分（数据）组成的数组。
+
+```ts highlight="3-7"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    { role: 'user', content: 'Hi!' },
+    { role: 'assistant', content: 'Hello, how can I help?' },
+    { role: 'user', content: 'Where can I buy the best Currywurst in Berlin?' },
+  ],
+});
+```
+
+除了在 `content` 属性中发送文本，你还可以发送一个由文本和其他内容部分混合组成的数组。
+
+<Note type="warning">
+  并非所有语言模型都支持所有消息和内容类型。例如，
+  某些模型可能无法处理多模态输入或工具消息。
+  [了解部分模型的能力](./providers-and-models#model-capabilities)。
+</Note>
+
+### 提供商选项
+
+你可以在 3 个层级上透传额外的提供商专属元数据，以启用提供商的专属功能。
+
+#### 函数调用层级
+
+[`streamText`](/docs/reference/ai-sdk-core/stream-text#provider-options) 或 [`generateText`](/docs/reference/ai-sdk-core/generate-text#provider-options) 等函数接受一个 `providerOptions` 属性。
+
+当你不需要对提供商选项应用的位置进行精细控制时，应在函数调用层级添加提供商选项。
+
+```ts
+const { text } = await generateText({
+  model: azure('your-deployment-name'),
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'low',
+    },
+  },
+});
+```
+
+#### 消息层级
+
+若要在消息层级精细控制提供商选项的应用，你可以将 `providerOptions` 传递给消息对象：
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  instructions: {
+    role: 'system',
+    content: 'Cached system message',
+    providerOptions: {
+      // Sets a cache control breakpoint on the system message
+      anthropic: { cacheControl: { type: 'ephemeral' } },
+    },
+  },
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+#### 消息部分层级
+
+某些提供商专属选项需要在消息部分层级进行配置：
+
+```ts
+import { ModelMessage } from 'ai';
+
+const messages: ModelMessage[] = [
+  {
+    role: 'user',
+    content: [
+      {
+        type: 'text',
+        text: 'Describe the image in detail.',
+        providerOptions: {
+          openai: { imageDetail: 'low' },
+        },
+      },
+      {
+        type: 'file',
+        mediaType: 'image',
+        data: 'https://github.com/vercel/ai/blob/main/examples/ai-functions/data/comic-cat.png?raw=true',
+        // Sets image detail configuration for image part:
+        providerOptions: {
+          openai: { imageDetail: 'low' },
+        },
+      },
+    ],
+  },
+];
+```
+
+<Note type="warning">
+  像 [`useChat`](/docs/reference/ai-sdk-ui/use-chat) 这样的 AI SDK UI Hook
+  返回的是 `UIMessage` 对象数组，它不支持提供商选项。我们建议使用
+  [`convertToModelMessages`](/docs/reference/ai-sdk-ui/convert-to-model-messages)
+  函数将 `UIMessage` 对象转换为
+  [`ModelMessage`](/docs/reference/ai-sdk-core/model-message) 对象，
+  然后再应用或附加带有 `providerOptions` 的消息或消息部分。
+</Note>
+
+### 用户消息
+
+#### 文本部分
+
+文本内容是最常见的内容类型，它是传递给模型的字符串。
+
+如果你只需要在消息中发送文本内容，`content` 属性可以是字符串；
+你也可以用它发送多个内容部分。
+
+```ts highlight="7-10"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Where can I buy the best Currywurst in Berlin?',
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### 图像部分
+
+用户消息可以包含图像部分。图像可以是以下形式之一：
+
+- base64 编码图像：
+  - 包含 base64 编码内容的 `string`
+  - data URL `string`，例如 `data:image/png;base64,...`
+- 二进制图像：
+  - `ArrayBuffer`
+  - `Uint8Array`
+  - `Buffer`
+- URL：
+  - http(s) URL `string`，例如 `https://example.com/image.png`
+  - `URL` 对象，例如 `new URL('https://example.com/image.png')`
+
+##### 示例：二进制图像（Buffer）
+
+```ts highlight="8-11"
+const result = await generateText({
+  model,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: fs.readFileSync('./data/comic-cat.png'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+##### 示例：base64 编码图像（字符串）
+
+```ts highlight="8-11"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: fs.readFileSync('./data/comic-cat.png').toString('base64'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+##### 示例：图像 URL（字符串）
+
+```ts highlight="8-12"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe the image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: 'https://github.com/vercel/ai/blob/main/examples/ai-functions/data/comic-cat.png?raw=true',
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### File Parts
+
+<Note type="warning">
+  Only a few providers and models currently support file parts: [Google
+  Generative AI](/providers/ai-sdk-providers/google), [Google Vertex
+  AI](/providers/ai-sdk-providers/google-vertex),
+  [OpenAI](/providers/ai-sdk-providers/openai) (for `wav` and `mp3` audio with
+  `gpt-4o-audio-preview`), [Anthropic](/providers/ai-sdk-providers/anthropic),
+  [OpenAI](/providers/ai-sdk-providers/openai) (for `pdf`).
+</Note>
+
+User messages can include file parts. A file can be one of the following:
+
+- base64-encoded file:
+  - `string` with base-64 encoded content
+  - data URL `string`, e.g. `data:image/png;base64,...`
+- binary data:
+  - `ArrayBuffer`
+  - `Uint8Array`
+  - `Buffer`
+- URL:
+  - http(s) URL `string`, e.g. `https://example.com/some.pdf`
+  - `URL` object, e.g. `new URL('https://example.com/some.pdf')`
+
+You need to specify the MIME type of the file you are sending.
+
+##### Example: PDF file from Buffer
+
+```ts highlight="12-15"
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: google('gemini-3.8-flash'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is the file about?' },
+        {
+          type: 'file',
+          mediaType: 'application/pdf',
+          data: fs.readFileSync('./data/example.pdf'),
+          filename: 'example.pdf', // optional, not used by all providers
+        },
+      ],
+    },
+  ],
+});
+```
+
+##### Example: mp3 audio file from Buffer
+
+```ts highlight="12-14"
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-4o-audio-preview'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is the audio saying?' },
+        {
+          type: 'file',
+          mediaType: 'audio/mpeg',
+          data: fs.readFileSync('./data/galileo.mp3'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### Custom Download Function (Experimental)
+
+You can use custom download functions to implement throttling, retries, authentication, caching, and more.
+
+The default download implementation automatically downloads files in parallel when they are not supported by the model.
+
+Custom download function can be passed via the `experimental_download` property:
+
+```ts
+const result = await generateText({
+  model: __MODEL__,
+  experimental_download: async (
+    requestedDownloads: Array<{
+      url: URL;
+      isUrlSupportedByModel: boolean;
+    }>,
+  ): PromiseLike<
+    Array<{
+      data: Uint8Array;
+      mediaType: string | undefined;
+    } | null>
+  > => {
+    // ... download the files and return an array with similar order
+  },
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'file',
+          data: new URL('https://api.company.com/private/document.pdf'),
+          mediaType: 'application/pdf',
+        },
+      ],
+    },
+  ],
+});
+```
+
+<Note>
+  The `experimental_download` option is experimental and may change in future
+  releases.
+</Note>
+
+### Assistant Messages
+
+Assistant messages are messages that have a role of `assistant`.
+They are typically previous responses from the assistant
+and can contain text, reasoning, and tool call parts.
+
+#### Example: Assistant message with text content
+
+```ts highlight="5"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    { role: 'user', content: 'Hi!' },
+    { role: 'assistant', content: 'Hello, how can I help?' },
+  ],
+});
+```
+
+#### Example: Assistant message with text content in array
+
+```ts highlight="7"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    { role: 'user', content: 'Hi!' },
+    {
+      role: 'assistant',
+      content: [{ type: 'text', text: 'Hello, how can I help?' }],
+    },
+  ],
+});
+```
+
+#### Example: Assistant message with tool call content
+
+```ts highlight="7-14"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    { role: 'user', content: 'How many calories are in this block of cheese?' },
+    {
+      role: 'assistant',
+      content: [
+        {
+          type: 'tool-call',
+          toolCallId: '12345',
+          toolName: 'get-nutrition-data',
+          input: { cheese: 'Roquefort' },
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### Example: Assistant message with file content
+
+<Note>
+  This content part is for model-generated files. Only a few models support
+  this, and only for file types that they can generate.
+</Note>
+
+```ts highlight="9-11"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    { role: 'user', content: 'Generate an image of a roquefort cheese!' },
+    {
+      role: 'assistant',
+      content: [
+        {
+          type: 'file',
+          mediaType: 'image/png',
+          data: fs.readFileSync('./data/roquefort.jpg'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Tool messages
+
+<Note>
+  [Tools](/docs/foundations/tools) (also known as function calling) are programs
+  that you can provide an LLM to extend its built-in functionality. This can be
+  anything from calling an external API to calling functions within your UI.
+  Learn more about Tools in [the next section](/docs/foundations/tools).
+</Note>
+
+For models that support [tool](/docs/foundations/tools) calls, assistant messages can contain tool call parts, and tool messages can contain tool output parts.
+A single assistant message can call multiple tools, and a single tool message can contain multiple tool results.
+
+```ts highlight="14-42"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'How many calories are in this block of cheese?',
+        },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: fs.readFileSync('./data/roquefort.jpg'),
+        },
+      ],
+    },
+    {
+      role: 'assistant',
+      content: [
+        {
+          type: 'tool-call',
+          toolCallId: '12345',
+          toolName: 'get-nutrition-data',
+          input: { cheese: 'Roquefort' },
+        },
+        // there could be more tool calls here (parallel calling)
+      ],
+    },
+    {
+      role: 'tool',
+      content: [
+        {
+          type: 'tool-result',
+          toolCallId: '12345', // needs to match the tool call id
+          toolName: 'get-nutrition-data',
+          output: {
+            type: 'json',
+            value: {
+              name: 'Cheese, roquefort',
+              calories: 369,
+              fat: 31,
+              protein: 22,
+            },
+          },
+        },
+        // there could be more tool results here (parallel calling)
+      ],
+    },
+  ],
+});
+```
+
+#### Multi-modal Tool Results
+
+Tool results can be multi-part and multi-modal, e.g. a text and an image.
+You can use `output: { type: 'content', value: [...] }` to specify multi-part tool results.
+
+```ts highlight="14-27"
+const result = await generateText({
+  model: __MODEL__,
+  messages: [
+    // ...
+    {
+      role: 'tool',
+      content: [
+        {
+          type: 'tool-result',
+          toolCallId: '12345', // needs to match the tool call id
+          toolName: 'get-nutrition-data',
+          // for models that do not support multi-part tool results,
+          // you can include a regular output part:
+          output: {
+            type: 'json',
+            value: {
+              name: 'Cheese, roquefort',
+              calories: 369,
+              fat: 31,
+              protein: 22,
+            },
+          },
+        },
+        {
+          type: 'tool-result',
+          toolCallId: '12345', // needs to match the tool call id
+          toolName: 'get-nutrition-data',
+          // for models that support multi-part tool results,
+          // you can include a multi-part content part:
+          output: {
+            type: 'content',
+            value: [
+              {
+                type: 'text',
+                text: 'Here is the nutrition data for the cheese:',
+              },
+              {
+                type: 'file-data',
+                data: fs
+                  .readFileSync('./data/roquefort-nutrition-data.png')
+                  .toString('base64'),
+                mediaType: 'image/png',
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+### System Messages
+
+System messages are messages that are sent to the model before the user messages to guide the assistant's behavior.
+Sending system messages in `messages` requires `allowSystemInMessages: true`.
+You can alternatively use the `instructions` property.
+
+```ts highlight="3,5"
+const result = await generateText({
+  model: __MODEL__,
+  allowSystemInMessages: true,
+  messages: [
+    { role: 'system', content: 'You help planning travel itineraries.' },
+    {
+      role: 'user',
+      content:
+        'I am planning a trip to Berlin for 3 days. Please suggest the best tourist activities for me to do.',
+    },
+  ],
+});
+```

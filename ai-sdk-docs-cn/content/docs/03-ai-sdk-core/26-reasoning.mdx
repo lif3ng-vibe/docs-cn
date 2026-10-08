@@ -1,0 +1,198 @@
+---
+title: 推理
+description: 了解如何使用顶层 reasoning 参数跨提供商控制推理行为。
+---
+
+# Reasoning
+
+许多语言模型在生成响应之前，会先经历一个内部的"推理"（reasoning）阶段（有时也称为"思考"）。AI SDK 在 [`generateText`](/docs/reference/ai-sdk-core/generate-text) 和 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 上提供了一个顶层 `reasoning` 参数，通过一项统一、可移植的设置来跨提供商控制这一行为。
+
+## 基本用法
+
+```ts
+import { generateText } from 'ai';
+
+const { text, reasoning, reasoningText } = await generateText({
+  model: 'anthropic/claude-sonnet-5.5',
+  reasoning: 'medium',
+  prompt: 'How many people will live in the world in 2040?',
+});
+```
+
+`reasoning` 参数接受以下取值：
+
+| 取值                 | 行为                                                     |
+| -------------------- | -------------------------------------------------------- |
+| `'provider-default'` | 使用提供商的默认推理行为（省略该参数时的默认值）         |
+| `'none'`             | 禁用推理                                                 |
+| `'minimal'`          | 最基本的推理                                             |
+| `'low'`              | 快速、简洁的推理                                         |
+| `'medium'`           | 平衡的推理                                               |
+| `'high'`             | 深入的推理                                               |
+| `'xhigh'`            | 超高强度的推理                                           |
+| `'max'`              | 最大程度的推理                                           |
+
+## 流式
+
+`reasoning` 参数在 `streamText` 中的用法完全相同：
+
+```ts
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: 'google/gemini-3.8-flash',
+  reasoning: 'high',
+  prompt: 'Explain the Riemann hypothesis in simple terms.',
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    process.stdout.write(part.textDelta);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+## 优先级规则
+
+提供商专用设置的优先级高于由 `reasoning` 派生的对应字段。部分配置仍可借助可移植的 reasoning 来填充缺失字段；摘要与显示类设置可以与其同时使用。
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  reasoning: 'low', // ignored because providerOptions.openai.reasoningEffort is set
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'high', // this wins
+    },
+  },
+  prompt: 'Explain quantum entanglement.',
+});
+```
+
+这一设计让你默认使用可移植的 `reasoning` 参数，仅在需要提供商专有特性（如精确的 token 预算）时才回退到 `providerOptions`。
+
+## 提供商支持
+
+`reasoning` 参数获得包括 OpenAI、Anthropic、Google、xAI、Groq、DeepSeek、Moonshot AI、Fireworks、Amazon Bedrock、Mistral、Cohere、Alibaba、Open Responses、OpenAI Compatible 以及 Perplexity 在内的提供商支持。每个提供商都会将该取值转换为其原生的推理 API。
+
+拥有独立原生最高档位的提供商（如受支持的 OpenAI、Anthropic、DeepSeek 和 Moonshot AI 模型）会直接接收 `'max'`。Amazon Bedrock 在其 Anthropic 和 OpenAI effort 映射中保留 `'max'`，而 Amazon Nova 2 会将 `'xhigh'` 和 `'max'` 映射为 `'high'` 并附带兼容性警告。原生最高档位更低的提供商则会将 `'max'` 强制转换为最接近的支持档位，并在适配器支持警告传播时发出兼容性警告。OpenAI 兼容与 Open Responses 端点会直接接收 `'max'`，以便兼容的服务器自行解释该取值。
+
+一些提供商使用数值型 token 预算而非枚举来控制推理。在这些情况下，`'max'` 默认映射为模型最大输出 token 数的 95%，并受提供商的推理预算最小值与最大值限制。
+
+最大程度的推理会显著增加 token 用量、延迟、成本，以及触及请求或输出限制的概率。仅当模型额外的推理深度值得这些权衡时再使用它。
+
+不支持推理配置的提供商和模型会发出 `unsupported` 警告并忽略该参数。
+
+## 从 `providerOptions` 迁移
+
+如果你目前通过 `providerOptions` 来控制推理，可以迁移到顶层 `reasoning` 参数，以获得跨提供商的可移植性。
+
+### 迁移前（Anthropic）
+
+```ts
+const { text } = await generateText({
+  model: anthropic('claude-opus-5-5'),
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'adaptive' },
+      effort: 'high',
+    },
+  },
+  prompt: 'How many people will live in the world in 2040?',
+});
+```
+
+### 迁移后（Anthropic）
+
+```ts
+const { text } = await generateText({
+  model: anthropic('claude-opus-5-5'),
+  reasoning: 'high',
+  prompt: 'How many people will live in the world in 2040?',
+});
+```
+
+### 迁移前（Anthropic 旧模型）
+
+```ts
+const { text } = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 12000 },
+    },
+  },
+  prompt: 'How many people will live in the world in 2040?',
+});
+```
+
+### 迁移后（Anthropic 旧模型）
+
+```ts
+const { text } = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  reasoning: 'medium',
+  prompt: 'How many people will live in the world in 2040?',
+});
+```
+
+如果你需要强制使用精确的 token 预算（例如恰好 12000 个 token），请继续使用 `providerOptions`，而不是顶层 `reasoning` 参数。
+
+### 迁移前（Google 带 `includeThoughts`）
+
+```ts
+const { text } = await generateText({
+  model: google('gemini-3.8-flash'),
+  providerOptions: {
+    google: {
+      thinkingConfig: { thinkingLevel: 'high', includeThoughts: true },
+    },
+  },
+  prompt: 'Explain the Riemann hypothesis in simple terms.',
+});
+```
+
+### 迁移后（Google 带 `includeThoughts`）
+
+```ts
+const { text } = await generateText({
+  model: google('gemini-3.8-flash'),
+  reasoning: 'high',
+  providerOptions: {
+    google: { thinkingConfig: { includeThoughts: true } },
+  },
+  prompt: 'Explain the Riemann hypothesis in simple terms.',
+});
+```
+
+### 迁移前（OpenAI 带 `reasoningSummary`）
+
+```ts
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  providerOptions: {
+    openai: { reasoningEffort: 'high', reasoningSummary: 'auto' },
+  },
+  prompt: 'Explain quantum entanglement.',
+});
+```
+
+### 迁移后（OpenAI 带 `reasoningSummary`）
+
+```ts
+const { text } = await generateText({
+  model: openai.responses('gpt-6-astra'),
+  reasoning: 'high',
+  providerOptions: {
+    openai: { reasoningSummary: 'auto' },
+  },
+  prompt: 'Explain quantum entanglement.',
+});
+```
+
+你可以将 `providerOptions` 与 `reasoning` 结合使用，以获得提供商专有特性，例如推理摘要或显示类设置。显式的 effort 或 budget 取值会覆盖对应的映射字段；部分配置仍可借助可移植的 reasoning 填充缺失字段。详见[优先级规则](#优先级规则)。

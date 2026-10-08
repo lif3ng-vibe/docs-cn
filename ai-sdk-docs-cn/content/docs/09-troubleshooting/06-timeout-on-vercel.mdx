@@ -1,0 +1,60 @@
+---
+title: 部署到 Vercel 时出现超时
+description: 了解如何修复部署到 Vercel 时出现的超时与响应被截断问题。
+---
+
+# Getting Timeouts When Deploying on Vercel
+
+## 问题
+
+使用 AI SDK 的流式输出在我的本地开发环境中正常工作。
+但在部署到 Vercel 后，较长的响应会在 UI 中被截断，Vercel 日志里出现超时，或者我看到错误：`Uncaught (in promise) Error: Connection closed`。
+
+## 解决方案
+
+借助 Vercel 的 [Fluid Compute](https://vercel.com/docs/fluid-compute)，现在所有套餐的默认函数时长均为 **5 分钟**（300 秒）。这对大多数流式应用来说已经足够。
+
+如果你需要为运行时间更长的进程延长超时时间，可以调大 `maxDuration` 设置：
+
+### Next.js（App Router）
+
+将以下内容添加到你的路由文件，或你调用 Server Action 的页面中：
+
+```tsx
+export const maxDuration = 600;
+```
+
+<Note>
+  将 `maxDuration` 设置为超过 300 秒需要 Pro 或 Enterprise 套餐。
+</Note>
+
+### 其他框架
+
+对于其他框架，你可以在 `vercel.json` 文件中设置超时：
+
+```json
+{
+  "functions": {
+    "api/chat/route.ts": {
+      "maxDuration": 600
+    }
+  }
+}
+```
+
+<Note>
+  将 `maxDuration` 设置为超过 300 秒需要 Pro 或 Enterprise 套餐。
+</Note>
+
+### 最大时长限制
+
+可设置的最大时长取决于你的 Vercel 套餐：
+
+- **Hobby**：最长 300 秒（5 分钟）
+- **Pro**：最长 800 秒（约 13 分钟）
+- **Enterprise**：最长 800 秒（约 13 分钟）
+
+## 了解更多
+
+- [Fluid Compute Default Settings](https://vercel.com/docs/fluid-compute#default-settings-by-plan)
+- [Configuring Maximum Duration for Vercel Functions](https://vercel.com/docs/functions/configuring-functions/duration)

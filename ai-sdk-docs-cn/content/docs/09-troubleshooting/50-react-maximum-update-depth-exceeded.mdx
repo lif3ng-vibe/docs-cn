@@ -1,0 +1,36 @@
+---
+title: React 错误 "Maximum update depth exceeded"
+description: 排查 "Maximum update depth exceeded" 错误。
+---
+
+# React error "Maximum update depth exceeded"
+
+## 问题
+
+我在 React 项目中通过 `useChat` 或 `useCompletion` Hook 使用 AI SDK，当 AI 响应流式传入时出现如下错误：`Maximum update depth exceeded`。
+
+## 背景
+
+默认情况下，每到达一个数据块 UI 都会重新渲染。这可能使渲染不堪重负，尤其在较慢的设备上，或当复杂组件（如 Markdown）需要更新时。节流（throttling）可以缓解此问题。
+
+## 解决方案
+
+使用 `throttle` 选项对 UI 更新进行节流：
+
+### `useChat`
+
+```tsx filename="page.tsx" highlight="2-3"
+const { messages } = useChat({
+  // Throttle the messages and data updates to 50ms:
+  throttle: 50,
+});
+```
+
+### `useCompletion`
+
+```tsx filename="page.tsx" highlight="2-3"
+const { completion } = useCompletion({
+  // Throttle the completion and data updates to 50ms:
+  throttle: 50,
+});
+```

@@ -1,0 +1,47 @@
+---
+title: AI_InvalidPromptError
+description: 了解如何修复 AI_InvalidPromptError
+---
+
+# AI_InvalidPromptError
+
+当提供的提示词（prompt）无效时会引发此错误。
+
+## 潜在原因
+
+### UI 消息
+
+你把 `UIMessage[]` 作为 messages 传给了诸如 `streamText` 这样的函数。
+
+你需要先使用 `convertToModelMessages()` 将其转换为 `ModelMessage[]`。
+
+```typescript
+import { type UIMessage, generateText, convertToModelMessages } from 'ai';
+
+const messages: UIMessage[] = [
+  /* ... */
+];
+
+const result = await generateText({
+  // ...
+  messages: await convertToModelMessages(messages),
+});
+```
+
+## 属性
+
+- `prompt`：无效的提示词值
+- `message`：错误消息（在构造函数中必填）
+- `cause`：错误原因（可选）
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_InvalidPromptError` 的实例：
+
+```typescript
+import { InvalidPromptError } from 'ai';
+
+if (InvalidPromptError.isInstance(error)) {
+  // Handle the error
+}
+```

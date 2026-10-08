@@ -1,0 +1,24 @@
+---
+title: AI_EmptyResponseBodyError
+description: 了解如何解决 AI_EmptyResponseBodyError
+---
+
+# AI_EmptyResponseBodyError
+
+此错误在服务器返回空响应体时发生。
+
+## 属性
+
+- `message`：错误消息
+
+## 排查此错误
+
+可以使用以下方式检查错误是否为 `AI_EmptyResponseBodyError` 的实例：
+
+```typescript
+import { EmptyResponseBodyError } from 'ai';
+
+if (EmptyResponseBodyError.isInstance(error)) {
+  // Handle the error
+}
+```

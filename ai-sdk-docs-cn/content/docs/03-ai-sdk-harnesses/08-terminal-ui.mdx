@@ -1,0 +1,80 @@
+---
+title: 终端 UI
+description: 将 @ai-sdk/tui 与 HarnessAgent 一起使用。
+---
+
+# 在终端 UI 中使用 Harness
+
+`@ai-sdk/tui` 可以在终端中渲染 harness 流、工具调用、推理部分和审批提示。由于 `HarnessAgent` 的 `generate` 和 `stream` 调用需要会话，需要用一个小的 `AgentTUIAgent` 适配器包装它，在终端 UI 的生命周期内注入同一个会话。
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/tui @ai-sdk/harness @ai-sdk/harness-codex @ai-sdk/sandbox-vercel" />
+
+## 示例
+
+```ts filename='tui.ts'
+import { HarnessAgent, type HarnessAgentSession } from '@ai-sdk/harness/agent';
+import { codex } from '@ai-sdk/harness-codex';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+import { runAgentTUI, type AgentTUIAgent } from '@ai-sdk/tui';
+
+const agent = new HarnessAgent({
+  harness: codex,
+});
+
+function createTUIAgent({
+  agent,
+  session,
+}: {
+  agent: HarnessAgent<any, any, any>;
+  session: HarnessAgentSession;
+}): AgentTUIAgent {
+  return {
+    version: 'agent-v1',
+    id: agent.id,
+    tools: agent.tools,
+    generate(request) {
+      return agent.generate({
+        ...request,
+        session,
+      } as Parameters<typeof agent.generate>[0]);
+    },
+    stream(request) {
+      return agent.stream({
+        ...request,
+        session,
+      } as Parameters<typeof agent.stream>[0]);
+    },
+  } as AgentTUIAgent;
+}
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+
+try {
+  await runAgentTUI({
+    title: 'Codex',
+    agent: createTUIAgent({ agent, session }),
+    tools: 'auto-collapsed',
+    reasoning: 'collapsed',
+  });
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+}
+```
+
+终端 UI 会一直运行，直到用户按 `Esc` 或 `Ctrl+C` 退出。
+
+每次终端运行请使用一个会话。对于长期运行的终端工具，如果之后需要恢复，请持久化 `session.detach()` 或 `session.stop()` 返回的状态。
+
+## 相关内容
+
+- [Terminal UI](/docs/agents/terminal-ui)
+- [runAgentTUI API 参考](/docs/reference/ai-sdk-tui/run-agent-tui)
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)

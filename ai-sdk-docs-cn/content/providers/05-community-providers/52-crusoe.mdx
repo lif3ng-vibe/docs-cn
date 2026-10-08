@@ -1,0 +1,113 @@
+---
+title: Crusoe
+description: 了解如何使用 AI SDK 的 Crusoe 提供商。
+---
+
+# Crusoe 提供商
+
+[crusoe-ai-provider](https://github.com/acheamponge/crusoe-ai-provider) 为 [Crusoe Cloud Managed Inference](https://docs.crusoecloud.com/managed-inference/overview) 提供语言模型支持。它通过 OpenAI 兼容 API，在可持续、高能效的数据中心上提供 DeepSeek、GLM、Kimi、Llama、Nemotron、Qwen 等开放权重模型的访问。
+
+API 密钥可在 [Crusoe Cloud 控制台](https://console.crusoecloud.com/)获取。
+
+## 设置
+
+Crusoe 提供商通过 `crusoe-ai-provider` 模块提供。安装方式如下：
+
+<InstallPackages packages="crusoe-ai-provider" />
+
+### 环境变量
+
+创建一个包含 `CRUSOE_API_KEY` 变量的 `.env` 文件。
+
+## 提供商实例
+
+你可以从 `crusoe-ai-provider` 导入默认的提供商实例 `crusoe`：
+
+```ts
+import { crusoe } from 'crusoe-ai-provider';
+```
+
+如果你需要自定义配置，可以从 `crusoe-ai-provider` 导入 `createCrusoe`，并按自己的设置创建提供商实例：
+
+```ts
+import { createCrusoe } from 'crusoe-ai-provider';
+
+const crusoe = createCrusoe({
+  // Optional settings
+});
+```
+
+你可以使用以下可选设置来自定义 Crusoe 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.inference.crusoecloud.com/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认取 `CRUSOE_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  包含在请求中的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+
+## 语言模型
+
+你可以使用提供商实例创建语言模型：
+
+```ts
+import { crusoe } from 'crusoe-ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: crusoe('zai/GLM-5.2'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+Crusoe 语言模型也可以在 `streamText` 函数中使用：
+
+```ts
+import { crusoe } from 'crusoe-ai-provider';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: crusoe('deepseek-ai/DeepSeek-V4-Pro'),
+  prompt: 'Write a haiku about sustainable computing.',
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+## 模型能力
+
+| 模型                                            | 文本生成            | 流式                |
+| ----------------------------------------------- | ------------------- | ------------------- |
+| `deepseek-ai/DeepSeek-V3-0324`                  | <Check size={18} /> | <Check size={18} /> |
+| `deepseek-ai/DeepSeek-V4-Pro`                   | <Check size={18} /> | <Check size={18} /> |
+| `deepseek-ai/Deepseek-V4-Flash`                 | <Check size={18} /> | <Check size={18} /> |
+| `google/gemma-4-31b-it`                         | <Check size={18} /> | <Check size={18} /> |
+| `meta-llama/Llama-3.3-70B-Instruct`             | <Check size={18} /> | <Check size={18} /> |
+| `moonshotai/Kimi-K2.6`                          | <Check size={18} /> | <Check size={18} /> |
+| `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`         | <Check size={18} /> | <Check size={18} /> |
+| `nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B` | <Check size={18} /> | <Check size={18} /> |
+| `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B`      | <Check size={18} /> | <Check size={18} /> |
+| `nvidia/NVIDIA-Nemotron-3-Ultra-550B`           | <Check size={18} /> | <Check size={18} /> |
+| `openai/gpt-oss-120b`                           | <Check size={18} /> | <Check size={18} /> |
+| `Qwen/Qwen3-235B-A22B-Instruct-2507`            | <Check size={18} /> | <Check size={18} /> |
+| `zai/GLM-5.1`                                   | <Check size={18} /> | <Check size={18} /> |
+| `zai/GLM-5.2`                                   | <Check size={18} /> | <Check size={18} /> |
+
+<Note>
+  上表仅列出热门模型。完整的可用模型列表请参阅 [Crusoe Managed Inference
+  文档](https://docs.crusoecloud.com/managed-inference/overview)。Crusoe 上可用的任何模型 ID 都可以作为普通字符串传入。
+</Note>

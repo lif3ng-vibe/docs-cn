@@ -1,0 +1,40 @@
+---
+title: 客户端组件中的 Server Actions
+description: 排查与客户端组件中 Server Actions 相关的错误。
+---
+
+# Server Actions in Client Components
+
+你可以在客户端组件中使用 Server Action，但有时可能会遇到以下问题。
+
+## 问题
+
+不允许在客户端组件中定义内联的、带 `"use server"` 标注的 Server Action。
+
+## 解决方案
+
+要在客户端组件中使用 Server Action，你可以任选以下方式：
+
+- 从单独的文件导出，并在文件顶部加上 `"use server"`。
+- 通过 props 从服务器组件向下传递。
+- 结合使用 [`createAI`](/docs/reference/ai-sdk-rsc/create-ai) 和 [`useActions`](/docs/reference/ai-sdk-rsc/use-actions) 这两个 Hook 来访问它们。
+
+了解更多关于 [Server Actions and Mutations](https://nextjs.org/docs/app/api-reference/functions/server-actions#with-client-components) 的内容。
+
+```ts file='actions.ts'
+'use server';
+
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function getAnswer(question: string) {
+  'use server';
+
+  const { text } = await generateText({
+    model: __MODEL__,
+    prompt: question,
+  });
+
+  return { answer: text };
+}
+```

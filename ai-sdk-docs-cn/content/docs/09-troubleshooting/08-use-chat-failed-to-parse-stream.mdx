@@ -1,0 +1,26 @@
+---
+title: useChat 解析流失败
+description: 排查 "Failed to Parse Stream String" 错误相关的问题。
+---
+
+# `useChat` "Failed to Parse Stream String" Error
+
+## 问题
+
+我正在使用 [`useChat`](/docs/reference/ai-sdk-ui/use-chat) 或 [`useCompletion`](/docs/reference/ai-sdk-ui/use-completion)，遇到了 `"Failed to parse stream string. Invalid code"` 错误。我使用的是 AI SDK `3.0.20` 或更新版本。
+
+## 背景
+
+AI SDK 在 `3.0.20` 版本切换到了数据流协议。
+[`useChat`](/docs/reference/ai-sdk-ui/use-chat) 和 [`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 期望的是支持数据、工具调用等功能的流部分（stream part）。
+你看到的是流解析失败。
+这可能是由于后端使用了较旧版本的 AI SDK、通过自定义提供商提供了文本流，或使用了 LangChain 的原始流结果导致的。
+
+## 解决方案
+
+你可以通过 [`streamProtocol`](/docs/reference/ai-sdk-ui/use-completion#stream-protocol) 参数将 [`useChat`](/docs/reference/ai-sdk-ui/use-chat) 和 [`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 切换为原始文本流处理。
+将其设置为 `text`，如下所示：
+
+```tsx
+const { messages, append } = useChat({ streamProtocol: 'text' });
+```

@@ -1,0 +1,24 @@
+---
+title: AI_LoadSettingError
+description: 了解如何修复 AI_LoadSettingError
+---
+
+# AI_LoadSettingError
+
+当设置项未成功加载时会引发此错误。
+
+## 属性
+
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_LoadSettingError` 的实例：
+
+```typescript
+import { LoadSettingError } from 'ai';
+
+if (LoadSettingError.isInstance(error)) {
+  // Handle the error
+}
+```

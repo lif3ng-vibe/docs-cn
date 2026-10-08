@@ -1,0 +1,190 @@
+---
+title: 补全
+description: 了解如何使用 useCompletion Hook。
+---
+
+# Completion
+
+`useCompletion` Hook 允许你在应用中创建一个处理文本补全的用户界面。它支持从 AI 提供商流式传输文本补全、管理聊天输入的状态，并在收到新消息时自动更新 UI。
+
+<Note>
+  `useCompletion` Hook 现在是 `@ai-sdk/react` 包的一部分。
+</Note>
+
+在本指南中，你将学习如何在应用中使用 `useCompletion` Hook 生成文本补全，并将其实时流式传输给你的用户。
+
+## 示例
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useCompletion } from '@ai-sdk/react';
+
+export default function Page() {
+  const { completion, input, handleInputChange, handleSubmit } = useCompletion({
+    api: '/api/completion',
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="prompt"
+        value={input}
+        onChange={handleInputChange}
+        id="input"
+      />
+      <button type="submit">Submit</button>
+      <div>{completion}</div>
+    </form>
+  );
+}
+```
+
+```ts filename='app/api/completion/route.ts'
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { prompt }: { prompt: string } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    prompt,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+在 `Page` 组件中，每当用户提交消息时，`useCompletion` Hook 都会请求你的 AI 提供商端点。补全内容随后会实时流式传回并显示在 UI 中。
+
+这带来了无缝的文本补全体验：用户可以在 AI 响应可用时立即看到它，而不必等待整个响应接收完毕。
+
+## 自定义 UI
+
+`useCompletion` 还提供了通过代码管理提示词（prompt）、显示加载与错误状态，以及在不由用户交互触发的情况下更新消息的方式。
+
+### 加载与错误状态
+
+要在聊天机器人处理用户消息时显示加载指示器，可以使用 `useCompletion` Hook 返回的 `isLoading` 状态：
+
+```tsx
+const { isLoading, ... } = useCompletion()
+
+return(
+  <>
+    {isLoading ? <Spinner /> : null}
+  </>
+)
+```
+
+类似地，`error` 状态反映了 fetch 请求期间抛出的错误对象。它可用于显示错误消息，或显示 toast 通知：
+
+```tsx
+const { error, ... } = useCompletion()
+
+useEffect(() => {
+  if (error) {
+    toast.error(error.message)
+  }
+}, [error])
+
+// Or display the error message in the UI:
+return (
+  <>
+    {error ? <div>{error.message}</div> : null}
+  </>
+)
+```
+
+### 受控输入
+
+在初始示例中，我们使用 `handleSubmit` 和 `handleInputChange` 回调来管理输入变化和表单提交。这对常见用例非常方便，但你也可以使用非受控 API 来处理更高级的场景，例如表单校验或自定义组件。
+
+下面的示例演示了如何在自定义输入与提交按钮组件中使用 `setInput` 这类更细粒度的 API：
+
+```tsx
+const { input, setInput } = useCompletion();
+
+return (
+  <>
+    <MyCustomInput value={input} onChange={value => setInput(value)} />
+  </>
+);
+```
+
+### 取消
+
+另一个常见场景是在响应消息仍从 AI 提供商流式传回时中止它。你可以通过调用 `useCompletion` Hook 返回的 `stop` 函数来实现。
+
+```tsx
+const { stop, isLoading, ... } = useCompletion()
+
+return (
+  <>
+    <button onClick={stop} disabled={!isLoading}>Stop</button>
+  </>
+)
+```
+
+当用户点击“停止”按钮时，fetch 请求会被中止。这避免了不必要的资源消耗，并提升了应用的用户体验。
+
+### 节流 UI 更新
+
+<Note>此特性目前仅适用于 React。</Note>
+
+默认情况下，`useCompletion` Hook 每次收到新分块都会触发一次渲染。
+你可以使用 `throttle` 选项对 UI 更新进行节流。
+
+```tsx filename="page.tsx" highlight="2-3"
+const { completion, ... } = useCompletion({
+  // Throttle the completion and data updates to 50ms:
+  throttle: 50
+})
+```
+
+## 事件回调
+
+`useCompletion` 还提供了可选的事件回调，可用于处理聊天机器人生命周期的不同阶段。这些回调可用于触发额外操作，例如日志记录、分析或自定义 UI 更新。
+
+```tsx
+const { ... } = useCompletion({
+  onFinish: (prompt: string, completion: string) => {
+    console.log('Finished streaming completion:', completion)
+  },
+  onError: (error: Error) => {
+    console.error('An error occurred:', error)
+  },
+})
+```
+
+## 配置请求选项
+
+默认情况下，`useCompletion` Hook 会向 `/api/completion` 端点发送 HTTP POST 请求，并把提示词作为请求体的一部分。你可以通过向 `useCompletion` Hook 传递额外选项来自定义请求：
+
+```tsx
+const { messages, input, handleInputChange, handleSubmit } = useCompletion({
+  api: '/api/custom-completion',
+  headers: {
+    Authorization: 'your_token',
+  },
+  body: {
+    user_id: '123',
+  },
+  credentials: 'same-origin',
+});
+```
+
+在本示例中，`useCompletion` Hook 会向 `/api/custom-completion` 端点发送 POST 请求，并带上指定的请求头、额外的请求体字段以及该 fetch 请求的凭据。在服务器端，你可以利用这些附加信息处理请求。
+
+你可以为额外的请求体字段提供类型。该类型同时适用于
+Hook 上配置的 body 和传给 `complete` 的 body：

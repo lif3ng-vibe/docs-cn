@@ -1,0 +1,163 @@
+---
+title: 调用工具
+description: 了解如何结合 AI SDK 与 Node 调用工具
+tags: ['node', 'tool use']
+---
+
+# Call Tools
+
+某些模型允许开发者提供一份工具列表，这些工具可以在生成过程中的任意时刻被调用。
+这对于扩展语言模型的能力非常有用——让它能够运用逻辑或数据，与模型之外的系统进行交互。
+
+```ts
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: 'openai/gpt-6-astra',
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+    cityAttractions: tool({
+      inputSchema: z.object({ city: z.string() }),
+    }),
+  },
+  prompt:
+    'What is the weather in San Francisco and what attractions should I visit?',
+});
+```
+
+## 访问工具调用与工具结果
+
+如果模型决定调用工具，它会生成一个工具调用（tool call）。你可以通过检查结果上的 `toolCalls` 属性来访问该工具调用。
+
+```ts highlight="31-44"
+import { generateText, tool } from 'ai';
+import dotenv from 'dotenv';
+import { z } from 'zod';
+
+dotenv.config();
+
+async function main() {
+  const result = await generateText({
+    model: 'openai/gpt-4.1',
+    maxOutputTokens: 512,
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => ({
+          location,
+          temperature: 72 + Math.floor(Math.random() * 21) - 10,
+        }),
+      }),
+      cityAttractions: tool({
+        inputSchema: z.object({ city: z.string() }),
+      }),
+    },
+    prompt:
+      'What is the weather in San Francisco and what attractions should I visit?',
+  });
+
+  // typed tool calls:
+  for (const toolCall of result.toolCalls) {
+    if (toolCall.dynamic) {
+      continue;
+    }
+
+    switch (toolCall.toolName) {
+      case 'cityAttractions': {
+        toolCall.input.city; // string
+        break;
+      }
+
+      case 'weather': {
+        toolCall.input.location; // string
+        break;
+      }
+    }
+  }
+
+  console.log(JSON.stringify(result, null, 2));
+}
+
+main().catch(console.error);
+```
+
+## 访问工具结果
+
+你可以通过检查结果上的 `toolResults` 属性来访问工具调用的结果。
+
+```ts highlight="31-41"
+import { generateText, tool } from 'ai';
+import dotenv from 'dotenv';
+import { z } from 'zod';
+
+dotenv.config();
+
+async function main() {
+  const result = await generateText({
+    model: 'openai/gpt-4.1',
+    maxOutputTokens: 512,
+    tools: {
+      weather: tool({
+        description: 'Get the weather in a location',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: async ({ location }) => ({
+          location,
+          temperature: 72 + Math.floor(Math.random() * 21) - 10,
+        }),
+      }),
+      cityAttractions: tool({
+        inputSchema: z.object({ city: z.string() }),
+      }),
+    },
+    prompt:
+      'What is the weather in San Francisco and what attractions should I visit?',
+  });
+
+  // typed tool results for tools with execute method:
+  for (const toolResult of result.toolResults) {
+    if (toolResult.dynamic) {
+      continue;
+    }
+
+    switch (toolResult.toolName) {
+      case 'weather': {
+        toolResult.input.location; // string
+        toolResult.output.location; // string
+        toolResult.output.temperature; // number
+        break;
+      }
+    }
+  }
+
+  console.log(JSON.stringify(result, null, 2));
+}
+
+main().catch(console.error);
+```
+
+<Note>
+  只有当工具具有 `execute` 函数时，`toolResults` 才会可用。
+</Note>
+
+## 模型响应
+
+使用工具时需要注意：默认情况下，模型不会以工具调用结果作为响应。
+这是因为从技术上讲，模型已经生成了对提示词（prompt）的响应，即工具调用本身。
+许多用例会要求模型自动在原始提示词的上下文中总结工具调用的结果。
+你可以通过[使用 `stopWhen`](/cookbook/node/call-tools-multiple-steps) 来实现这一点，
+它会自动把 toolResults 发送给模型，从而触发再一次生成。

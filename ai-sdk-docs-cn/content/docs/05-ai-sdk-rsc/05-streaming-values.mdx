@@ -1,0 +1,157 @@
+---
+title: 流式传输值
+description: RSC 流式传输概述
+---
+
+import { UIPreviewCard, Card } from '@/components/home/card';
+import { EventPlanning } from '@/components/home/event-planning';
+import { Searching } from '@/components/home/searching';
+import { Weather } from '@/components/home/weather';
+
+# Streaming Values
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI
+  的指导，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+RSC API 提供了几个实用函数，让你可以将值从服务器流式传输到客户端。当你需要对流式传输的内容和方式有更细粒度的控制时，这会非常有用。
+
+<Note>
+  这些实用函数还可以与 [AI SDK Core](/docs/ai-sdk-core) 的
+  [`streamText`](/docs/reference/ai-sdk-core/stream-text)
+  等函数搭配使用，轻松地将 LLM 生成内容从服务器流式传输到客户端。
+</Note>
+
+RSC API 提供了两个可用于创建可流式传输值的函数：
+
+- [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value) - 创建一个可流式传输的（可序列化的）值，完全掌控流的创建、更新和关闭方式。
+- [`createStreamableUI`](/docs/reference/ai-sdk-rsc/create-streamable-ui) - 创建一个可流式传输的 React 组件，完全掌控流的创建、更新和关闭方式。
+
+## `createStreamableValue`
+
+RSC API 允许你使用 [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value) 将可序列化的 JavaScript 值（如字符串、数字、对象和数组）从服务器流式传输到客户端。
+
+当你想要流式传输以下内容时，这会非常有用：
+
+- 语言模型的实时文本生成。
+- 多模态模型图像与音频生成产生的 Buffer 值。
+- 多步智能体（agent）运行过程中的进度更新。
+
+## 创建可流式传输的值
+
+你可以从 `@ai-sdk/rsc` 导入 `createStreamableValue` 并用它创建一个可流式传输的值。
+
+```tsx file='app/actions.ts'
+'use server';
+
+import { createStreamableValue } from '@ai-sdk/rsc';
+
+export const runThread = async () => {
+  const streamableStatus = createStreamableValue('thread.init');
+
+  setTimeout(() => {
+    streamableStatus.update('thread.run.create');
+    streamableStatus.update('thread.run.update');
+    streamableStatus.update('thread.run.end');
+    streamableStatus.done('thread.end');
+  }, 1000);
+
+  return {
+    status: streamableStatus.value,
+  };
+};
+```
+
+## 读取可流式传输的值
+
+你可以在客户端使用 `readStreamableValue` 读取可流式传输的值。它返回一个异步迭代器，会在值更新时逐个产出可流式值的最新值：
+
+```tsx file='app/page.tsx'
+import { readStreamableValue } from '@ai-sdk/rsc';
+import { runThread } from '@/actions';
+
+export default function Page() {
+  return (
+    <button
+      onClick={async () => {
+        const { status } = await runThread();
+
+        for await (const value of readStreamableValue(status)) {
+          console.log(value);
+        }
+      }}
+    >
+      Ask
+    </button>
+  );
+}
+```
+
+通过这个[示例](/examples/next-app/basics/streaming-text-generation)，了解如何结合 Next.js App Router 与 `createStreamableValue` 来流式传输文本生成（使用 `streamText`）。
+
+## `createStreamableUI`
+
+`createStreamableUI` 会创建一个持有 React 组件的流。与 AI SDK Core API 不同，这个函数不会调用大语言模型，而是提供一个原语，让你可以对 React 组件的流式传输进行细粒度控制。
+
+## 使用 `createStreamableUI`
+
+让我们看看如何将 `createStreamableUI` 函数与 Server Action 结合使用。
+
+```tsx filename='app/actions.tsx'
+'use server';
+
+import { createStreamableUI } from '@ai-sdk/rsc';
+
+export async function getWeather() {
+  const weatherUI = createStreamableUI();
+
+  weatherUI.update(<div style={{ color: 'gray' }}>Loading...</div>);
+
+  setTimeout(() => {
+    weatherUI.done(<div>It&apos;s a sunny day!</div>);
+  }, 1000);
+
+  return weatherUI.value;
+}
+```
+
+首先，你创建一个空状态的可流式 UI，然后将其更新为加载中的消息。1 秒后，你将流标记为完成，并传入实际的天气信息作为最终值。`.value` 属性包含可以发送到客户端的实际 UI。
+
+## 读取可流式 UI
+
+在客户端，你可以调用 `getWeather` Server Action，并像渲染其他 React 组件一样渲染返回的 UI。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { readStreamableValue } from '@ai-sdk/rsc';
+import { getWeather } from '@/actions';
+
+export default function Page() {
+  const [weather, setWeather] = useState<React.ReactNode | null>(null);
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const weatherUI = await getWeather();
+          setWeather(weatherUI);
+        }}
+      >
+        What&apos;s the weather?
+      </button>
+
+      {weather}
+    </div>
+  );
+}
+```
+
+点击按钮时，会调用 `getWeather` 函数，返回的 UI 会被设置为 `weather` 状态并渲染到页面上。用户会先看到加载中的消息，1 秒后看到实际的天气信息。
+
+想了解如何在单个请求中处理多个流，请参阅[多个可流式对象](/docs/advanced/multiple-streamables)指南。
+
+想了解如何在更复杂的使用场景中处理状态，请参阅 [AI/UI 状态](/docs/ai-sdk-rsc/generative-ui-state)。

@@ -1,0 +1,187 @@
+---
+title: Interfaze
+description: AI SDK 的 Interfaze 提供商
+---
+
+# Interfaze
+
+[Interfaze](https://interfaze.ai) 是一个面向开发者和自动化场景的大语言模型（LLM）。Interfaze 提供商将其接入标准的 `generateText` 和 `streamText` API（包括通过 `Output` 获得结构化输出），并在 `providerMetadata` 上暴露 Interfaze 的额外能力——语义缓存命中标志、推理（reasoning）以及内部任务的 `precontext`。
+
+更多信息请参阅 [Interfaze 文档](https://interfaze.ai/docs)。
+
+## 设置
+
+Interfaze 提供商包含在 `@interfaze-ai/ai-sdk` 模块中。安装方式如下：
+
+<InstallPackages packages="@interfaze-ai/ai-sdk" />
+
+## 提供商实例
+
+导入默认的 `interfaze` 实例，或用 `createInterfaze` 构建一个：
+
+```ts
+import { createInterfaze, interfaze } from '@interfaze-ai/ai-sdk';
+
+const model = interfaze('interfaze-beta'); // reads INTERFAZE_API_KEY
+
+const custom = createInterfaze({ apiKey: 'sk_...' });
+```
+
+你可以在 [Interfaze 控制台](https://interfaze.ai)获取 API 密钥。
+
+## 语言模型
+
+使用提供商实例创建模型，并将其用于 `generateText` / `streamText`：
+
+```ts
+import { interfaze } from '@interfaze-ai/ai-sdk';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: interfaze('interfaze-beta'),
+  prompt: 'Which US public companies reported earnings today?',
+});
+```
+
+这里的回答由网络搜索支撑——来源落在 `providerMetadata.interfaze.precontext` 上（参见 [Interfaze 元数据](#interfaze-元数据)）。`streamText` 的用法相同。
+
+## 结构化输出
+
+Interfaze 支持 `generateText` 与 `streamText` 的结构化输出。使用 `Output.object` 搭配 Zod schema 生成带类型的对象，从图像提取数据时也一样（底层会运行 OCR）：
+
+```ts
+import { interfaze } from '@interfaze-ai/ai-sdk';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: interfaze('interfaze-beta'),
+  output: Output.object({
+    schema: z.object({
+      merchant: z.string(),
+      total: z.number(),
+      items: z.array(z.object({ name: z.string(), price: z.number() })),
+    }),
+  }),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Extract this receipt.' },
+        {
+          type: 'image',
+          image: new URL('https://jigsawstack.com/preview/vocr-example.jpg'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+## 推理
+
+设置 `reasoningEffort`（`'minimal' | 'low' | 'medium' | 'high'`，外加 Interfaze 特有的 `'on' | 'off' | 'auto'`）；推理文本会通过 `providerMetadata.interfaze.reasoning` 返回：
+
+```ts
+const { text, providerMetadata } = await generateText({
+  model: interfaze('interfaze-beta'),
+  prompt: 'Which region should we launch in first, and why?',
+  providerOptions: { interfaze: { reasoningEffort: 'high' } },
+});
+
+console.log(providerMetadata?.interfaze?.reasoning);
+```
+
+语义缓存命中时会重放缓存的答案且不含推理；如果每次调用都需要新的推理，请在提供商上设置 `bypassCache: true`。
+
+## 安全护栏
+
+通过 `guard` 启用安全类别；被拦截的请求会作为一次正常的补全返回，其文本为纯字符串 `unsafe <code>`（而非报错）：
+
+```ts
+const { text } = await generateText({
+  model: interfaze('interfaze-beta'),
+  prompt: '...',
+  providerOptions: { interfaze: { guard: ['S1', 'S10', 'S12_IMAGE'] } },
+});
+```
+
+## 多模态
+
+图像、音频、视频和文档都使用标准的 AI SDK 内容部件。传入公开 URL——Interfaze 会在服务器端抓取，因此发送过程中不会产生下载与重新编码的开销——或原始字节：
+
+| 类别 | 格式                                                                                                                                                 |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 图像 | `image/jpeg` `image/png` `image/webp` `image/bmp` `image/heic` `image/heif`                                                                          |
+| 音频 | `audio/wav` `audio/mpeg` `audio/mp4` `audio/ogg` `audio/flac`                                                                                        |
+| 视频 | `video/mp4` `video/quicktime` `video/webm` `video/3gpp` `video/x-msvideo` `video/x-matroska`                                                         |
+| 文档 | `application/pdf` `application/vnd.openxmlformats-officedocument.wordprocessingml.document` `application/json` `application/xml` `application/yaml` |
+| 文本 | `text/plain` `text/csv` `text/markdown` `text/tab-separated-values`                                                                                  |
+
+API 会拒绝 `image/gif` 和 `image/avif`。
+
+```ts
+await generateText({
+  model: interfaze('interfaze-beta'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Summarize this document.' },
+        {
+          type: 'file',
+          mediaType: 'application/pdf',
+          data: new URL('https://arxiv.org/pdf/1706.03762'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+视频是一个媒体类型为 `video/*` 的 `file` 部件；Interfaze 会在服务器端读取该 URL：
+
+```ts
+{
+  type: 'file',
+  mediaType: 'video/mp4',
+  data: new URL('https://…/clip.mp4'),
+}
+```
+
+## Interfaze 元数据
+
+Interfaze 会返回普通聊天提供商丢弃的字段。运行时，`generateText` 和 `streamText` 都可以通过 `providerMetadata.interfaze` 访问它们：
+
+```ts
+const result = await generateText({
+  model: interfaze('interfaze-beta'),
+  prompt: 'What is the weather in San Francisco?',
+});
+
+const metadata = result.providerMetadata?.interfaze;
+
+metadata?.vcache; // semantic-cache hit flag
+metadata?.reasoning; // reasoning text
+metadata?.precontext; // OCR / web / scrape / … output
+```
+
+precontext 仅用于输出——它报告 Interfaze 在回答时运行了哪些内部工具。对于 `streamText`，只有当提供商以 `showAdditionalInfo: true` 创建时，最终 `providerMetadata` 中才会包含它（参见 [客户端选项](#客户端选项)）。在消费完流之后 await `result.providerMetadata` 即可访问。
+
+## 客户端选项
+
+路由、缓存和流式行为在提供商上一次性设置：
+
+```ts
+const interfaze = createInterfaze({
+  showAdditionalInfo: true, // include precontext in final stream metadata
+  bypassMoA: true, // skip the mixture-of-agents router
+  bypassCache: true, // skip the semantic cache
+});
+```
+
+## 更多资源
+
+- [npm 上的 `@interfaze-ai/ai-sdk`](https://www.npmjs.com/package/@interfaze-ai/ai-sdk)
+- [GitHub 上的 `@interfaze-ai/ai-sdk`](https://github.com/InterfazeAI/interfaze-ai-sdk)
+- [Interfaze 文档](https://interfaze.ai/docs)

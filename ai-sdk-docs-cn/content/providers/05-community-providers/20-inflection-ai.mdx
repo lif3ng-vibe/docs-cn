@@ -1,0 +1,63 @@
+---
+title: Inflection AI
+description: 了解如何使用 AI SDK 的非官方 Inflection AI 提供商。
+---
+
+# AI SDK 非官方社区提供商：Inflection AI
+
+<Note type="warning">
+  该社区提供商尚未兼容 AI SDK 5。请等待提供商更新，或考虑使用
+  [兼容 AI SDK 5 的提供商](/providers/ai-sdk-providers)。
+</Note>
+
+面向 [AI SDK](/docs) 的 **[非官方 Inflection AI 提供商](https://www.npmjs.com/package/inflection-ai-sdk-provider)** 为 [Inflection AI API](https://developers.inflection.ai/) 提供语言模型支持。
+
+## 安装
+
+Inflection AI 提供商可通过 npm 上的 [`inflection-ai-sdk-provider`](https://www.npmjs.com/package/inflection-ai-sdk-provider) 模块获取，安装方式如下：
+
+```bash
+npm i inflection-ai-sdk-provider
+```
+
+## 提供商实例
+
+你可以从 `inflection-ai-sdk-provider` 导入默认的提供商实例 `inflection`：
+
+```ts
+import { inflection } from 'inflection-ai-sdk-provider';
+```
+
+## 示例
+
+```ts
+import { inflection } from 'inflection-ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: inflection('inflection_3_with_tools'),
+  prompt: 'how can I make quick chicken pho?',
+});
+```
+
+## 模型
+
+支持以下模型：
+
+- `inflection_3_pi` - "驱动我们 Pi 体验的模型，包含背景故事、情商、生产力与安全性。在客服聊天机器人等场景中表现出色。"
+- `inflection_3_productivity`- "针对遵循指令优化的模型。更适合需要 JSON 输出或严格遵循给定准则的任务。"
+- `inflection_3_with_tools` - 该模型似乎处于预览阶段，截至本 README 1.0.0 版本撰写时还没有官方描述。
+
+| 模型                        | 文本生成        | 流式      | 图像输入    | 对象生成          | 工具使用   | 工具流式       |
+| --------------------------- | --------------- | --------- | ----------- | ----------------- | ---------- | -------------- |
+| `inflection_3_pi`           | ✓               | ✓         | ✗           | ✗                 | ✗          | ✗              |
+| `inflection_3_productivity` | ✓               | ✓         | ✗           | ✗                 | ✗          | ✗              |
+| `inflection_3_with_tools`   | ✓               | ✓         | ✗           | ✗                 | ✗          | ✗              |
+
+目前除文本生成与流式文本之外的功能，API 支持还十分有限。如果情况有变，上表将会更新，该非官方提供商也会添加相应支持。
+
+## 文档
+
+更多信息请查看 Inflection AI 的 [API 文档](https://developers.inflection.ai/docs/api-reference)。
+
+你可以在 [GitHub 上](https://github.com/Umbrage-Studios/inflection-ai-sdk-provider)找到该提供商的源代码。

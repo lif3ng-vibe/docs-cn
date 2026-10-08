@@ -1,0 +1,97 @@
+---
+title: 从 AI SDK 4.1 迁移到 4.2
+description: 了解如何将 AI SDK 4.1 升级到 4.2。
+---
+
+# Migrate AI SDK 4.1 to 4.2
+
+<Note>
+  欲了解本次发布的更多信息，请查阅 [AI SDK 4.2 发布博客文章](https://vercel.com/blog/ai-sdk-4-2)。
+</Note>
+
+本指南将帮助你升级到 AI SDK 4.2：
+
+## 稳定 API
+
+以下 API 已转为稳定，不再带有 `experimental_` 前缀：
+
+- `customProvider`
+- `providerOptions`（针对提供商特定输入，由 `providerMetadata` 更名而来）
+- `providerMetadata`（用于提供商特定输出）
+- `streamText` 的 `toolCallStreaming` 选项
+
+## 依赖版本
+
+AI SDK 要求 `zod` 依赖为必选项，版本为 `^3.23.8`。
+
+## UI 消息部件
+
+在 AI SDK 4.2 中，我们重新设计了 `useChat` 处理带消息部件和多步骤的模型输出的方式。
+这是一项重大改进，可简化在 UI 中渲染复杂的多模态 AI 响应的过程。
+
+### 变更内容
+
+带工具调用的助手消息现在会合并为一条包含多个部件的消息，而不是为每个步骤创建单独的消息。
+这一变更针对 AI 应用中的两个关键发展：
+
+1. **多样化输出类型**：模型现在生成的不只是文本，还会产出推理步骤、来源和工具调用。
+2. **交错输出**：在多步智能体（agent）用例中，这些不同的输出类型经常交错出现。
+
+### 新方法的优势
+
+以前，`useChat` 将不同的输出类型分开存储，这使得当这些元素在响应中交错出现时，很难在 UI 中维持正确的顺序，
+并且带工具调用时会产生多条连续的助手消息。例如：
+
+```javascript
+message.content = "Final answer: 42";
+message.reasoning = "First I'll calculate X, then Y...";
+message.toolInvocations = [{toolName: "calculator", args: {...}}];
+```
+
+这种结构有其局限。新的消息部件方案用一个保留精确顺序的有序数组取代了分散的属性：
+
+```javascript
+message.parts = [
+  { type: "text", text: "Final answer: 42" },
+  { type: "reasoning", reasoning: "First I'll calculate X, then Y..." },
+  { type: "tool-invocation", toolInvocation: { toolName: "calculator", args: {...} } },
+];
+```
+
+### 迁移
+
+使用旧消息格式的现有应用需要更新其 UI 组件，以处理新的 `parts` 数组。
+旧格式中的字段为向后兼容仍然可用，但我们建议迁移到新格式，以更好地支持多模态和多步交互。
+
+你可以按照如下方式在新消息部件中使用 `useChat` Hook：
+
+```javascript
+function Chat() {
+  const { messages } = useChat();
+  return (
+    <div>
+      {messages.map(message =>
+        message.parts.map((part, i) => {
+          switch (part.type) {
+            case 'text':
+              return <p key={i}>{part.text}</p>;
+            case 'source':
+              return <p key={i}>{part.source.url}</p>;
+            case 'reasoning':
+              return <div key={i}>{part.reasoning}</div>;
+            case 'tool-invocation':
+              return <div key={i}>{part.toolInvocation.toolName}</div>;
+            case 'file':
+              return (
+                <img
+                  key={i}
+                  src={`data:${part.mediaType};base64,${part.data}`}
+                />
+              );
+          }
+        }),
+      )}
+    </div>
+  );
+}
+```

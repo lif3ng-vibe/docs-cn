@@ -1,0 +1,79 @@
+---
+title: 流式输出对象后记录最终对象
+description: 了解如何在使用 AI SDK 与 Node 流式输出对象后记录最终对象
+tags: ['node', 'streaming', 'structured data']
+---
+
+# Record Final Object after Streaming Object
+
+当你流式输出结构化数据时，可能需要记录最终对象以用于日志记录或其他目的。
+
+## `onEnd` 与 `output`
+
+将 `onEnd` 用于 token 用量等元数据，并 await `result.output` 来获取最终的结构化对象。
+
+```ts file='index.ts' highlight={"16-18,24-29"}
+import { streamText, Output } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: 'openai/gpt-6-astra',
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+  onEnd({ usage }) {
+    console.log('Token usage:', usage);
+  },
+});
+
+for await (const _ of result.partialOutputStream) {
+}
+
+try {
+  const output = await result.output;
+  console.log('Final object:', JSON.stringify(output, null, 2));
+} catch (error) {
+  console.error('Failed to parse output:', error);
+}
+```
+
+## `output` Promise
+
+`streamText` 的结果包含一个 `output` promise，其兑现值为最终对象。
+该对象具有完整的类型。当依据 schema 进行的类型校验失败时，该 promise 会以 `TypeValidationError` 拒绝。
+
+```ts file='index.ts' highlight={"21-26"}
+import { streamText, Output } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: 'openai/gpt-6-astra',
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a lasagna recipe.',
+});
+
+for await (const partialObject of result.partialOutputStream) {
+}
+
+try {
+  const { recipe } = await result.output;
+  console.log('Recipe:', JSON.stringify(recipe, null, 2));
+} catch (error) {
+  console.error(error);
+}
+```

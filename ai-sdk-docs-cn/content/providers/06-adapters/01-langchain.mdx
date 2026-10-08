@@ -1,0 +1,570 @@
+---
+title: LangChain
+description: 了解如何在 AI SDK 中使用 LangChain。
+---
+
+# LangChain
+
+[LangChain](https://docs.langchain.com/) 是一个用于构建由大语言模型驱动的应用的框架。
+它提供了一套工具与抽象，用于处理 AI 模型、提示词（prompt）、链（chain）、向量存储，
+以及用于检索增强生成（RAG）的其他数据源。
+
+[LangGraph](https://langchain-ai.github.io/langgraphjs/) 是构建在 LangChain 之上的库，用于创建
+有状态、多参与者的应用。它支持将复杂的智能体（agent）工作流定义为图，
+并支持循环、持久化与人机协同（human-in-the-loop）模式。
+
+`@ai-sdk/langchain` 适配器在 LangChain、LangGraph 与 AI SDK 之间提供了无缝集成，
+让你可以在 AI SDK UI 组件中使用 LangChain 模型和 LangGraph 智能体。
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/langchain @langchain/core" />
+
+<Note>`@langchain/core` 是必需的对等依赖（peer dependency）。</Note>
+
+## 特性
+
+- 使用 `toBaseMessages` 将 AI SDK `UIMessage` 转换为 LangChain `BaseMessage` 格式
+- 使用 `toUIMessageStream` 将 LangChain/LangGraph 流转换为 AI SDK `UIMessageStream`
+- 支持 `streamEvents()` 输出，实现细粒度的事件流式与可观测性
+- `LangSmithDeploymentTransport` 可直接连接已部署的 LangGraph 图
+- 完整支持文本、工具调用、工具结果与多模态内容
+- 支持带类型事件（`data-{type}`）的自定义数据流
+
+## 示例：基本聊天
+
+下面是一个将 AI SDK 与 LangChain 及 [Next.js](https://nextjs.org/docs) App Router 一起使用的基本示例。
+
+```tsx filename="app/api/chat/route.ts"
+import { toBaseMessages, toUIMessageStream } from '@ai-sdk/langchain';
+import { ChatOpenAI } from '@langchain/openai';
+import { createUIMessageStreamResponse, UIMessage } from 'ai';
+
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const model = new ChatOpenAI({
+    model: 'gpt-4.1-mini',
+    temperature: 0,
+  });
+
+  // Convert AI SDK UIMessages to LangChain messages
+  const langchainMessages = await toBaseMessages(messages);
+
+  // Stream the response from the model
+  const stream = await model.stream(langchainMessages);
+
+  // Convert the LangChain stream to UI message stream
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream(stream),
+  });
+}
+```
+
+然后，在页面组件中使用 AI SDK 的 [`useChat`](/docs/ai-sdk-ui/chatbot) Hook：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat();
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.parts.map((part, i) =>
+            part.type === 'text' ? <span key={i}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          const input = e.currentTarget.elements.namedItem(
+            'message',
+          ) as HTMLInputElement;
+          sendMessage({ text: input.value });
+          input.value = '';
+        }}
+      >
+        <input name="message" placeholder="Say something..." />
+        <button type="submit" disabled={status === 'streaming'}>
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}
+```
+
+## 示例：带工具的 LangChain 智能体
+
+使用 LangChain 的 [`createAgent`](https://docs.langchain.com/oss/javascript/langchain/agents) 创建带工具的智能体：
+
+```tsx filename="app/api/agent/route.ts"
+import { createUIMessageStreamResponse, UIMessage } from 'ai';
+import { createAgent } from 'langchain';
+import { ChatOpenAI, tools } from '@langchain/openai';
+import { toBaseMessages, toUIMessageStream } from '@ai-sdk/langchain';
+
+export const maxDuration = 60;
+
+const model = new ChatOpenAI({
+  model: 'gpt-4.1',
+  temperature: 0.7,
+});
+
+// Image generation tool configuration
+const imageGenerationTool = tools.imageGeneration({
+  size: '1024x1024',
+  quality: 'high',
+  outputFormat: 'png',
+});
+
+// Create a LangChain agent with tools
+const agent = createAgent({
+  model,
+  tools: [imageGenerationTool],
+  systemPrompt: 'You are a creative AI artist assistant.',
+});
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const langchainMessages = await toBaseMessages(messages);
+
+  const stream = await agent.stream(
+    { messages: langchainMessages },
+    { streamMode: ['values', 'messages', 'tools'] },
+  );
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream(stream),
+  });
+}
+```
+
+使用 `tools` 流模式可以流式获取 LangGraph 的工具进度。适配器会将 `on_tool_event` 事件转换为初步工具输出（`preliminary: true`），并将最终的 `on_tool_end` 事件转换为最终工具输出。
+
+## 示例：LangGraph
+
+将适配器与 [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) 搭配使用来构建智能体工作流：
+
+```tsx filename="app/api/langgraph/route.ts"
+import { toBaseMessages, toUIMessageStream } from '@ai-sdk/langchain';
+import { ChatOpenAI } from '@langchain/openai';
+import { createUIMessageStreamResponse, UIMessage } from 'ai';
+import { StateGraph, MessagesAnnotation } from '@langchain/langgraph';
+
+export const maxDuration = 30;
+
+const model = new ChatOpenAI({
+  model: 'gpt-4.1-mini',
+  temperature: 0,
+});
+
+async function callModel(state: typeof MessagesAnnotation.State) {
+  const response = await model.invoke(state.messages);
+  return { messages: [response] };
+}
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  // Create the LangGraph agent
+  const graph = new StateGraph(MessagesAnnotation)
+    .addNode('agent', callModel)
+    .addEdge('__start__', 'agent')
+    .addEdge('agent', '__end__')
+    .compile();
+
+  // Convert AI SDK UIMessages to LangChain messages
+  const langchainMessages = await toBaseMessages(messages);
+
+  // Stream from the graph using LangGraph's streaming format
+  const stream = await graph.stream(
+    { messages: langchainMessages },
+    { streamMode: ['values', 'messages'] },
+  );
+
+  // Convert the LangGraph stream to UI message stream
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream(stream),
+  });
+}
+```
+
+## 示例：使用 streamEvents 流式处理
+
+LangChain 的 [`streamEvents()`](https://docs.langchain.com/oss/javascript/langchain/streaming) 方法提供带元数据的细粒度语义事件。这对调试、可观测性以及迁移现有 LCEL 应用非常有用：
+
+```tsx filename="app/api/stream-events/route.ts"
+import { toBaseMessages, toUIMessageStream } from '@ai-sdk/langchain';
+import { ChatOpenAI } from '@langchain/openai';
+import { createUIMessageStreamResponse, UIMessage } from 'ai';
+
+export const maxDuration = 30;
+
+const model = new ChatOpenAI({
+  model: 'gpt-4.1-mini',
+  temperature: 0,
+});
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const langchainMessages = await toBaseMessages(messages);
+
+  // Use streamEvents() for granular event streaming
+  // Produces events like on_chat_model_stream, on_tool_start, on_tool_end
+  const streamEvents = model.streamEvents(langchainMessages, {
+    version: 'v2',
+  });
+
+  // The adapter automatically detects and handles streamEvents format
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream(streamEvents),
+  });
+}
+```
+
+<Note>
+  **何时使用 `streamEvents()` 而非 `graph.stream()`：** - **`streamEvents()`**：
+  最适合调试、可观测性、按事件类型过滤、用 `createAgent` 创建的智能体，以及迁移依赖
+  回调的现有 LCEL 应用 - **`graph.stream()` 搭配 `streamMode`**：最适合需要通过 `values`、`messages`、
+  `tools` 或 `custom` 模式获取结构化状态更新的 LangGraph 应用
+</Note>
+
+## 示例：自定义数据流
+
+LangChain 工具可以使用 `config.writer()` 发出自定义数据事件。适配器会将其转换为带类型的 `data-{type}` 部件，可在 UI 中渲染，或通过 `onData` 回调处理：
+
+```tsx filename="app/api/custom-data/route.ts"
+import { createUIMessageStreamResponse, UIMessage } from 'ai';
+import { createAgent, tool, type ToolRuntime } from 'langchain';
+import { ChatOpenAI } from '@langchain/openai';
+import { toBaseMessages, toUIMessageStream } from '@ai-sdk/langchain';
+import { z } from 'zod';
+
+export const maxDuration = 60;
+
+const model = new ChatOpenAI({ model: 'gpt-6-luna' });
+
+// Tool that emits progress updates during execution
+const analyzeDataTool = tool(
+  async ({ dataSource, analysisType }, config: ToolRuntime) => {
+    const steps = ['connecting', 'fetching', 'processing', 'generating'];
+
+    for (let i = 0; i < steps.length; i++) {
+      // Emit progress event - becomes 'data-progress' in the UI
+      // Include 'id' to persist in message.parts for rendering
+      config.writer?.({
+        type: 'progress',
+        id: `analysis-${Date.now()}`,
+        step: steps[i],
+        message: `${steps[i]}...`,
+        progress: Math.round(((i + 1) / steps.length) * 100),
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // Emit completion status
+    config.writer?.({
+      type: 'status',
+      id: `status-${Date.now()}`,
+      status: 'complete',
+      message: 'Analysis finished',
+    });
+
+    return JSON.stringify({ result: 'Analysis complete', confidence: 0.94 });
+  },
+  {
+    name: 'analyze_data',
+    description: 'Analyze data with progress updates',
+    schema: z.object({
+      dataSource: z.enum(['sales', 'inventory', 'customers']),
+      analysisType: z.enum(['trends', 'anomalies', 'summary']),
+    }),
+  },
+);
+
+const agent = createAgent({
+  model,
+  tools: [analyzeDataTool],
+});
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+  const langchainMessages = await toBaseMessages(messages);
+
+  // Enable 'custom' stream mode to receive custom data events
+  const stream = await agent.stream(
+    { messages: langchainMessages },
+    { streamMode: ['values', 'messages', 'custom'] },
+  );
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream(stream),
+  });
+}
+```
+
+在客户端通过 `onData` 回调处理自定义数据，或渲染持久化的数据部件：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+
+export default function Chat() {
+  const { messages, sendMessage } = useChat({
+    onData: dataPart => {
+      // Handle transient data events (without 'id')
+      console.log('Received:', dataPart.type, dataPart.data);
+    },
+  });
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.parts.map((part, i) => {
+            if (part.type === 'text') {
+              return <span key={i}>{part.text}</span>;
+            }
+            // Render persistent custom data parts (with 'id')
+            if (part.type === 'data-progress') {
+              return (
+                <div key={i}>
+                  Progress: {part.data.progress}% - {part.data.message}
+                </div>
+              );
+            }
+            if (part.type === 'data-status') {
+              return <div key={i}>Status: {part.data.message}</div>;
+            }
+            return null;
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+<Note>
+**自定义数据行为：**
+- 带 `id` 字段的数据是**持久化的**（加入 `message.parts` 用于渲染）
+- 不带 `id` 的数据是**瞬态的**（仅通过 `onData` 回调传递）
+- `type` 字段决定事件名称：`{ type: 'progress' }` → `data-progress`
+</Note>
+
+## 示例：LangSmith 部署传输
+
+使用 `LangSmithDeploymentTransport` 从浏览器直接连接 LangGraph 部署，无需后端 API 路由：
+
+```tsx filename="app/langsmith/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { LangSmithDeploymentTransport } from '@ai-sdk/langchain';
+import { useMemo } from 'react';
+
+export default function LangSmithChat() {
+  const transport = useMemo(
+    () =>
+      new LangSmithDeploymentTransport({
+        // Local development server
+        url: 'http://localhost:2024',
+        // Or for LangSmith deployment:
+        // url: 'https://your-deployment.us.langgraph.app',
+        // apiKey: process.env.NEXT_PUBLIC_LANGSMITH_API_KEY,
+      }),
+    [],
+  );
+
+  const { messages, sendMessage, status } = useChat({
+    transport,
+  });
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.parts.map((part, i) =>
+            part.type === 'text' ? <span key={i}>{part.text}</span> : null,
+          )}
+        </div>
+      ))}
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          const input = e.currentTarget.elements.namedItem(
+            'message',
+          ) as HTMLInputElement;
+          sendMessage({ text: input.value });
+          input.value = '';
+        }}
+      >
+        <input name="message" placeholder="Send a message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+`LangSmithDeploymentTransport` 构造函数接受以下选项：
+
+- `url`：LangSmith 部署 URL 或本地服务器 URL（必填）
+- `apiKey`：用于认证的 API 密钥（本地开发时可选）
+- `graphId`：要连接的图的 ID（默认为 `'agent'`）
+
+## API 参考
+
+### `toBaseMessages(messages)`
+
+将 AI SDK `UIMessage` 对象转换为 LangChain `BaseMessage` 对象。
+
+```ts
+import { toBaseMessages } from '@ai-sdk/langchain';
+
+const langchainMessages = await toBaseMessages(uiMessages);
+```
+
+**参数：**
+
+- `messages`：`UIMessage[]` - AI SDK UI 消息数组
+
+**返回值：** `Promise<BaseMessage[]>`
+
+### `convertModelMessages(modelMessages)`
+
+将 AI SDK `ModelMessage` 对象转换为 LangChain `BaseMessage` 对象。当你已经通过 `convertToModelMessages` 得到模型消息时很有用。
+
+```ts
+import { convertModelMessages } from '@ai-sdk/langchain';
+
+const langchainMessages = convertModelMessages(modelMessages);
+```
+
+**参数：**
+
+- `modelMessages`：`ModelMessage[]` - 模型消息数组
+
+**返回值：** `BaseMessage[]`
+
+### `toUIMessageStream(stream, options?)`
+
+将 LangChain/LangGraph 流转换为 AI SDK `UIMessageStream`。它会自动检测流的类型，并处理直接模型流、LangGraph 流以及 `streamEvents()` 输出。
+
+```ts
+import { toUIMessageStream } from '@ai-sdk/langchain';
+import { createUIMessageStreamResponse } from 'ai';
+
+// Works with direct model streams
+const modelStream = await model.stream(messages);
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream(modelStream),
+});
+
+// Works with LangGraph streams
+const graphStream = await graph.stream(
+  { messages },
+  { streamMode: ['values', 'messages', 'tools'] },
+);
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream(graphStream),
+});
+
+// Works with streamEvents() output
+const streamEvents = model.streamEvents(messages, { version: 'v2' });
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream(streamEvents),
+});
+```
+
+**参数：**
+
+- `stream`：`AsyncIterable<AIMessageChunk> | ReadableStream` - LangChain 模型流、LangGraph 流或 `streamEvents()` 输出
+- `options`：`ToUIMessageStreamOptions<TState>`（可选）
+  - `sendStart`：是否发出外层 `start` 块。默认为 `true`。
+  - `sendFinish`：是否发出外层 `finish` 块。默认为 `true`。
+  - `onStart`、`onToken`、`onText`、`onFinal`、`onFinish`、`onError` 和 `onAbort`：可选的流生命周期回调。
+
+**返回值：** `ReadableStream<UIMessageChunk>`
+
+#### 组装进调用方持有的流
+
+默认情况下，`toUIMessageStream` 会发出外层的 `start` 和 `finish` 块。当
+消息生命周期由调用方掌控时，应抑制这些块，以避免重复的边界。所有转换后的文本、推理、工具、数据和步骤块均保持
+不变。
+
+```ts
+import { toUIMessageStream } from '@ai-sdk/langchain';
+import { createUIMessageStream } from 'ai';
+
+const stream = createUIMessageStream({
+  async execute({ writer }) {
+    writer.write({ type: 'start' });
+
+    const reader = toUIMessageStream(langchainStream, {
+      sendStart: false,
+      sendFinish: false,
+    }).getReader();
+
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) break;
+      writer.write(chunk);
+    }
+
+    writer.write({ type: 'finish' });
+  },
+});
+```
+
+当调用方只掌控一个生命周期边界时，可以单独设置其中任一选项。如果某个边界被抑制，
+则在最终流协议需要时，由调用方负责补上该边界。
+
+### `LangSmithDeploymentTransport`
+
+面向 LangSmith/LangGraph 部署的 `ChatTransport` 实现。将其用于 `useChat` Hook 的 `transport` 选项。
+
+```ts
+import { LangSmithDeploymentTransport } from '@ai-sdk/langchain';
+import { useChat } from '@ai-sdk/react';
+import { useMemo } from 'react';
+
+const transport = useMemo(
+  () =>
+    new LangSmithDeploymentTransport({
+      url: 'https://your-deployment.us.langgraph.app',
+      apiKey: 'your-api-key',
+    }),
+  [],
+);
+
+const { messages, sendMessage } = useChat({
+  transport,
+});
+```
+
+**构造函数参数：**
+
+- `options`：`LangSmithDeploymentTransportOptions`
+  - `url`：`string` - LangSmith 部署 URL 或本地服务器 URL（必填）
+  - `apiKey?`：`string` - 用于认证的 API 密钥（可选）
+  - `graphId?`：`string` - 要连接的图的 ID（默认为 `'agent'`）
+
+**实现：** `ChatTransport`
+
+## 更多示例
+
+更多示例可以在 AI SDK 的 [examples/next-langchain](https://github.com/vercel/ai/tree/main/examples/next-langchain) 文件夹中找到。

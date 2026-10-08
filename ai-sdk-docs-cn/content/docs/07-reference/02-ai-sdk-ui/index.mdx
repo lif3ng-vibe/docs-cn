@@ -1,0 +1,98 @@
+---
+title: AI SDK UI
+description: AI SDK UI 参考文档
+collapsed: true
+---
+
+# AI SDK UI
+
+[AI SDK UI](/docs/ai-sdk-ui) 旨在帮助你轻松构建交互式聊天、补全与助手应用。
+它是一套与框架无关的工具集，可简化将高级 AI 功能集成到应用中的过程。
+
+AI SDK UI 包含以下 Hook：
+
+<IndexCards
+  cards={[
+    {
+      title: 'useChat',
+      description:
+        '使用 Hook 在聊天界面中与语言模型交互。',
+      href: '/docs/reference/ai-sdk-ui/use-chat',
+    },
+    {
+      title: 'useCompletion',
+      description:
+        '使用 Hook 在补全界面中与语言模型交互。',
+      href: '/docs/reference/ai-sdk-ui/use-completion',
+    },
+    {
+      title: 'useObject',
+      description: '使用 Hook 消费流式 JSON 对象。',
+      href: '/docs/reference/ai-sdk-ui/use-object',
+    },
+    {
+      title: 'experimental_useRealtime',
+      description: '使用 Hook 构建实时语音对话。',
+      href: '/docs/reference/ai-sdk-ui/use-realtime',
+    },
+    {
+      title: 'convertToModelMessages',
+      description:
+        '将 useChat 消息转换为模型消息（ModelMessage）供 AI 函数使用。',
+      href: '/docs/reference/ai-sdk-ui/convert-to-model-messages',
+    },
+    {
+      title: 'pruneMessages',
+      description: '从模型消息列表中裁剪模型消息。',
+      href: '/docs/reference/ai-sdk-ui/prune-messages',
+    },
+    {
+      title: 'createUIMessageStream',
+      description:
+        '创建 UI 消息流，向客户端流式传输额外数据。',
+      href: '/docs/reference/ai-sdk-ui/create-ui-message-stream',
+    },
+    {
+      title: 'createUIMessageStreamResponse',
+      description:
+        '创建响应对象，向客户端流式传输 UI 消息。',
+      href: '/docs/reference/ai-sdk-ui/create-ui-message-stream-response',
+    },
+    {
+      title: 'pipeUIMessageStreamToResponse',
+      description:
+        '将 UI 消息流管道输出到 Node.js ServerResponse 对象。',
+      href: '/docs/reference/ai-sdk-ui/pipe-ui-message-stream-to-response',
+    },
+    {
+      title: 'readUIMessageStream',
+      description:
+        '将 UIMessageChunk 对象流转换为 UIMessage 对象的 AsyncIterableStream。',
+      href: '/docs/reference/ai-sdk-ui/read-ui-message-stream',
+    },
+    {
+      title: 'experimental_MCPAppRenderer',
+      description: '在 React 中渲染交互式 MCP App 工具 UI。',
+      href: '/docs/reference/ai-sdk-ui/mcp-app-renderer',
+    },
+  ]}
+/>
+
+## UI 框架支持
+
+AI SDK UI 支持以下框架：[React](https://react.dev/)、[Svelte](https://svelte.dev/)、[Vue.js](https://vuejs.org/)、
+[Angular](https://angular.dev/) 与 [SolidJS](https://www.solidjs.com/)。
+
+以下是这些框架所支持功能的对比：
+
+|                                                                 | [useChat](/docs/reference/ai-sdk-ui/use-chat) | [useCompletion](/docs/reference/ai-sdk-ui/use-completion) | [useObject](/docs/reference/ai-sdk-ui/use-object) | [MCP Apps](/docs/ai-sdk-core/mcp-apps) |
+| --------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| React `@ai-sdk/react`                                           | <Check />                                     | <Check />                                                 | <Check />                                         | <Check />                              |
+| Vue.js `@ai-sdk/vue`                                            | <Check /> Chat                                | <Check />                                                 | <Check />                                         | <Cross />                              |
+| Svelte `@ai-sdk/svelte`                                         | <Check /> Chat                                | <Check /> Completion                                      | <Check /> StructuredObject                        | <Cross />                              |
+| Angular `@ai-sdk/angular`                                       | <Check /> Chat                                | <Check /> Completion                                      | <Check /> StructuredObject                        | <Cross />                              |
+| [SolidJS](https://github.com/kodehort/ai-sdk-solid)（社区）     | <Check />                                     | <Check />                                                 | <Check />                                         | <Cross />                              |
+
+<Note>
+  欢迎为非 React 框架[贡献代码](https://github.com/vercel/ai/blob/main/CONTRIBUTING.md)，实现缺失的功能。
+</Note>

@@ -1,0 +1,47 @@
+---
+title: 使用推理模型生成对象
+description: 了解如何在 Node 中结合 AI SDK 使用推理模型生成结构化数据
+tags: ['node', 'structured data', 'reasoning']
+---
+
+# Generate Object with a Reasoning Model
+
+[DeepSeek 的](/providers/ai-sdk-providers/deepseek) R1 等推理（reasoning）模型正日益流行，因为与非推理模型相比，它们能够更好地理解复杂查询并生成更优质的响应。
+你可能希望用这类模型来生成结构化数据。然而，大多数推理模型（如 R1 和 [OpenAI 的](/providers/ai-sdk-providers/openai) o1）并不支持工具调用（tool calling）或结构化输出（structured output）。
+
+一种解决方案是将推理模型的输出交给一个能够输出结构化数据的小型模型（如 gpt-4o-mini）处理。这些轻量级模型可以高效地提取结构化数据，同时在速度和成本上只增加极小的开销。
+
+```ts
+import { generateText, Output } from 'ai';
+import 'dotenv/config';
+import { z } from 'zod';
+
+async function main() {
+  const { text: rawOutput } = await generateText({
+    model: 'deepseek/deepseek-r1',
+    prompt:
+      'Predict the top 3 largest city by 2050. For each, return the name, the country, the reason why it will on the list, and the estimated population in millions.',
+  });
+
+  const { output } = await generateText({
+    model: 'openai/gpt-6-luna',
+    prompt: 'Extract the desired information from this text: \n' + rawOutput,
+    output: Output.array({
+      element: z.object({
+        name: z.string().describe('the name of the city'),
+        country: z.string().describe('the name of the country'),
+        reason: z
+          .string()
+          .describe(
+            'the reason why the city will be one of the largest cities by 2050',
+          ),
+        estimatedPopulation: z.number(),
+      }),
+    }),
+  });
+
+  console.log(output);
+}
+
+main().catch(console.error);
+```

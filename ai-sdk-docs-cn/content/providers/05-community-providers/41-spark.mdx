@@ -1,0 +1,47 @@
+---
+title: Spark
+description: 了解如何在 AI SDK 中使用 Spark 提供商。
+---
+
+# Spark 提供商
+
+<Note type="warning">
+  该社区提供商尚未兼容 AI SDK 5。请等待提供商更新，或考虑使用
+  [兼容 AI SDK 5 的提供商](/providers/ai-sdk-providers)。
+</Note>
+
+**[Spark 提供商](https://github.com/klren0312/spark-ai-provider)** 包含对 Spark API 的语言模型支持，让你可以使用 lite、generalv3、pro-128k、generalv3.5、max-32k 和 4.0Ultra 等模型。
+
+## 安装
+
+Spark 提供商通过 `spark-ai-provider` 模块提供。可通过以下方式安装：
+
+```bash
+npm i spark-ai-provider
+```
+
+## 提供商实例
+
+你可以从 `spark-ai-provider` 导入 `createSparkProvider` 来创建提供商实例：
+
+```ts
+import { createSparkProvider } from 'spark-ai-provider';
+```
+
+## 示例
+
+```ts
+import { createSparkProvider } from './index.mjs';
+import { generateText } from 'ai';
+const spark = createSparkProvider({
+  apiKey: '',
+});
+const { text } = await generateText({
+  model: spark('lite'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+## 文档
+
+更多信息请查阅 **[Spark 提供商文档](https://github.com/klren0312/spark-ai-provider)**。

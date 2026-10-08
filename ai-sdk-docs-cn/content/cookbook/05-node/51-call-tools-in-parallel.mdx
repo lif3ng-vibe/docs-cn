@@ -1,0 +1,49 @@
+---
+title: 并行调用工具
+description: 了解如何在 Node.js 中使用 AI SDK 并行调用工具
+tags: ['node', 'tool use']
+---
+
+# Call Tools in Parallel
+
+某些语言模型支持并行调用工具。当多个工具彼此独立、可以在同一次生成步骤中并行执行时，这一点尤为有用。
+
+```ts
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+__PROVIDER_IMPORT__;
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        city: z.string().describe('The city to get the weather for'),
+        unit: z
+          .enum(['C', 'F'])
+          .describe('The unit to display the temperature in'),
+      }),
+      execute: async ({ city, unit }) => {
+        // This function would normally make an API request to get the weather.
+        const weather = { value: 25, description: 'Sunny' };
+        return `It is currently ${weather.value}°${unit} and ${weather.description} in ${city}!`;
+      },
+    }),
+  },
+  prompt: 'What is the weather in Paris and New York?',
+});
+
+// The model will call the weather tool twice in parallel
+console.log(result.toolCalls);
+// [
+//   { toolName: 'weather', input: { city: 'Paris', unit: 'C' } },
+//   { toolName: 'weather', input: { city: 'New York', unit: 'C' } }
+// ]
+
+console.log(result.toolResults);
+// [
+//   { toolName: 'weather', input: { city: 'Paris', unit: 'C' }, output: 'It is currently 25°C and Sunny in Paris!' },
+//   { toolName: 'weather', input: { city: 'New York', unit: 'C' }, output: 'It is currently 25°C and Sunny in New York!' }
+// ]
+```

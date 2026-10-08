@@ -1,0 +1,534 @@
+---
+title: Agent Client Protocol
+description: 了解如何通过 AI SDK harness 适配器使用 Agent Client Protocol 实现。
+---
+
+# Agent Client Protocol Harness
+
+Agent Client Protocol（ACP）harness 适配器将 `HarnessAgent` 连接到任何兼容 ACP 版本 1 的 harness。通用适配器负责桥接、ACP 客户端、宿主工具中继、事件转换、审批与生命周期行为；内联 profile 则描述如何安装与配置某个 ACP 运行时。
+
+除 ACP harness 适配器之外，你只需要一个可从 NPM 安装或通过受信任 Bash 命令安装的 ACP 兼容实现。然后只需几行代码即可配置 ACP harness 适配器。
+
+<Note>
+  Harness 包目前处于**实验性**阶段。随着这一早期 API 的进一步打磨，各版本之间可能出现破坏性变更。
+</Note>
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/harness @ai-sdk/harness-acp @ai-sdk/sandbox-vercel" />
+
+## 基本用法
+
+定义一个 ACP harness profile，例如下文的[完整实现](#完整的-acp-harness-实现)之一，并将其传给 `HarnessAgent`：
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+import { codexACPHarness } from './codex-acp-harness';
+
+const agent = new HarnessAgent({
+  harness: codexACPHarness,
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+try {
+  const result = await agent.generate({
+    session,
+    prompt: 'Check the test failures and fix the production code.',
+  });
+  console.log(result.text);
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+}
+```
+
+## 适配器设置
+
+`createACP` 接受：
+
+- `harnessId`：该 profile 的稳定 kebab-case 标识。
+- `version`：ACP 协议版本。默认且目前仅支持 `'v1'`。
+- `source`：如何获取 ACP 实现：简单 NPM 包、锁定（locked）的 NPM 安装，或受信任的 Bash 安装命令。
+- `executable`：从所获取的实现中启动的裸命令名。
+- `args`：传给可执行文件的可选参数。
+- `forwardEnv`：要转发进沙箱的非凭据宿主环境变量名。
+- `credentialEnv`：宿主凭据环境变量名。需与 `credentialBrokering` 一起配置。
+- `credentialBrokering`：函数，接收生效的宿主运行时环境作为 `env`、转发给沙箱的环境作为 `sandboxEnv`，然后返回附加式出站请求变换。在精确请求头匹配中使用来自 `sandboxEnv` 的凭据，在变换后的请求头中使用来自 `env` 的真实凭据。
+- `credentialForwarding`：可选的同步或异步回调，在 harness 适配器将每个凭据转发进沙箱进程之前对其进行定制。它会收到本应转发的凭据值（真实凭据或掩码值）以及用于暴露该凭据的环境变量名。该回调只控制转发进沙箱进程的值，不会限制 harness 适配器能在宿主进程中发现、读取或以其他方式访问哪些凭据。
+- `env`：在自举（bootstrap）时写入的持久环境值。
+- `builtinTools`：可选的原生工具定义，用于静态类型标注与精确名称匹配。
+- `mcpServers`：以服务器名为键的 MCP 服务器定义。
+- `hostToolMcpTransport`：用于向 ACP 实现暴露宿主工具的 harness 自有 MCP 服务器的传输方式。默认为 `'stdio'`。对于只接受客户端提供 HTTP 或 SSE MCP 服务器的实现，将其设为 `'http'`，这要求实现声明 `agentCapabilities.mcpCapabilities.http`。
+- `authentication`：所声明的 ACP 身份验证方法、元数据与客户端能力。
+- `auth`：下游提供商身份验证模式：
+  - `auto`（默认）：当网关凭据与 `providerAuthentication` 配置可用时使用 AI Gateway；否则使用直接身份验证。
+  - `direct`：始终使用直接身份验证，即使网关凭据可用。
+  - `ai-gateway`：始终使用 AI Gateway，网关凭据不可用时抛出错误。这需要 `providerAuthentication` 配置。
+  - 身份验证环境：从所提供的记录中自动检测，而不是从宿主进程环境。
+- `providerAuthentication`：声明式的、针对特定运行时的网关环境。
+- `modelMapping`：必填的静态映射，把提供给 `HarnessAgent` 的 `model` 映射到实现使用的 ACP 操作。使用 `session-config-option`（以配置选项 ID 作为 `path`），或 `session-model`（以 `session/set_model` 请求属性作为 `path`）。
+- `skillsDirectory`：相对实现生效 `$HOME` 的原生技能目录。默认为 `.agents/skills`；使用不同位置的运行时可覆盖它。
+- `instructionMapping`：可选映射，把 `HarnessAgent` 指令映射到实现原生的系统或开发者提示词。`session-meta` 表示 ACP 会话请求 `_meta` 字段下的路径；`launch-env-json` 表示某个 JSON 启动环境变量内的路径；`filesystem` 配合相对 `path` 表示把指令写入实现生效 `$HOME` 下的文件。省略时，指令会被前置到首个用户提示词。
+- `outputSchemaMapping`：可选的实现专属映射，把结构化输出 JSON Schema 映射到 ACP `session/prompt` 请求 `_meta` 字段下的路径。ACP 并未标准化结构化输出，因此除非所选实现记录了该私有扩展，否则请省略。
+- `askUserQuestions`：在实现专属的 ACP 客户端提问请求与 Harness `askUserQuestions` 工具之间进行可选转换。仅当 ACP 实现暴露了等待客户端响应的原生请求时才配置它。
+- `permissionModeMapping`：把三种 Harness 权限模式映射到所声明的 ACP 会话模式或配置选项。ACP 实现不支持某模式时，把对应条目设为 `null`。省略时，适配器按工具类别把 `permissionMode` 应用到 ACP 权限请求。
+- `session.meta`：用于会话创建与恢复的可序列化的实现专属元数据。
+- `port`：覆盖暴露的桥接端口。
+- `startupTimeoutMs`：桥接启动超时。默认为 120 秒。
+- `reconnect`：已建立的桥接 WebSocket 连接断开后的重连时机。`maxElapsedMs` 控制总重试窗口（包括建立连接与退避延迟），默认为 30 秒。`initialDelayMs` 默认为 50 毫秒，`maxDelayMs` 默认为 2 秒。这些重试采用指数退避，与 `startupTimeoutMs` 相互独立。当沙箱、桥接进程或桥接端点永久不可用时，重试无法恢复。
+- `mintBridgeToken`：同步函数，接收沙箱 id 并返回桥接身份验证令牌。默认情况下，适配器会生成随机的 32 字节令牌。自定义实现必须返回足够保密的令牌。
+- `clientApp`：可选的客户端归因信息，含 `name` 与 `version`。默认为所安装的 `ai-sdk-harness-acp/<version>` 标识，可用于网关环境占位符。
+
+特定运行时的包名、环境变量、模式与会话元数据应放在内联 profile 中，而不是通用适配器里。
+
+## 结构化输出
+
+ACP 版本 1 未定义结构化输出能力。带有私有提示词元数据扩展的实现，其 profile 可以显式启用：
+
+```ts
+const harness = createACP({
+  harnessId: 'example-acp',
+  source: {
+    type: 'npm-simple',
+    packageName: '@example/acp-agent',
+  },
+  executable: 'example-acp',
+  modelMapping: {
+    type: 'session-config-option',
+    path: 'model',
+  },
+  outputSchemaMapping: {
+    type: 'session-prompt-meta',
+    path: ['outputSchema'],
+  },
+});
+```
+
+对于配置了 `output` 的 `HarnessAgent`，这会把生成的 JSON Schema 写入 `session/prompt.params._meta.outputSchema`。没有该映射的 profile 会抛出 `HarnessCapabilityUnsupportedError`，而不会假定任意的 ACP 实现都能理解该 schema；Codex ACP 不受支持，而 Grok Build harness 自带其经过验证的映射。
+
+### 实现来源
+
+简单 NPM 来源按名称安装单个包：
+
+```ts
+const source = {
+  type: 'npm-simple',
+  packageName: '@agentclientprotocol/codex-acp',
+  packageVersion: '1.1.4',
+} as const;
+```
+
+`packageVersion` 可选，提供时必须是精确版本。省略它将安装该包的 `latest` dist-tag。省略版本也不会进入 harness 标识，因此上游发布新版本不会使既有生命周期状态失效。
+
+简单来源只锁定所请求的 ACP 包，其传递依赖则在沙箱自举时解析。要冻结完整安装，请使用锁定来源并提供 `package.json` 与其 `pnpm-lock.yaml` 的内容：
+
+```ts
+const source = {
+  type: 'npm-locked',
+  packageJson: packageJsonContents,
+  pnpmLockYaml: pnpmLockYamlContents,
+  pnpmWorkspaceYaml: pnpmWorkspaceYamlContents,
+} as const;
+```
+
+锁定来源使用 `pnpm install --frozen-lockfile` 安装所提供的文件。`pnpmWorkspaceYaml` 可选；当锁定安装需要工作区级 pnpm 配置时提供它，例如为必需的依赖构建脚本指定精确版本的 `allowBuilds` 策略。
+
+清单、锁文件与可选的工作区配置是持久化的自举产物，并参与生命周期标识。不要在这些字符串中包含凭据。
+
+安装命令来源在 harness 确定性的自举目录中运行受信任的 Bash 命令：
+
+```ts
+const cursorSource = {
+  type: 'install-command',
+  command: 'curl https://cursor.com/install -fsS | bash',
+} as const;
+
+const fxSource = {
+  type: 'install-command',
+  command: 'curl -fsSL https://fx.sh/setup.sh | bash',
+} as const;
+```
+
+命令以 `set -euo pipefail` 运行，工作目录设为 `.harness-bootstrap/<harnessId>/implementation`，`HOME` 设为其紧下方的 `home` 目录。所有持久安装文件都必须保留在该 `HOME` 之下。命令必须把 `executable` 安装到 `$HOME/.local/bin`；适配器直接以无 shell 的方式启动该确定性路径，不会回退到沙箱中已存在的命令。
+
+安装命令不提供自动版本锁定。成功的自举会保持缓存，且确切的命令会参与自举与生命周期标识。请把命令视为可执行配置，不要在其中嵌入凭据，因为自举配方会被持久化。
+
+## 身份验证
+
+当 `providerAuthentication` 定义了底层 ACP 实现如何接受网关配置时，支持 AI Gateway 身份验证。适配器读取以下环境变量：
+
+- `VERCEL_OIDC_TOKEN`
+- `AI_GATEWAY_API_KEY`
+- `AI_GATEWAY_BASE_URL`
+
+使用默认的 `auth: 'auto'` 时，`AI_GATEWAY_API_KEY` 或 `VERCEL_OIDC_TOKEN` 可用则适配器使用 AI Gateway，否则使用直接身份验证。
+
+在运行时解析凭据的应用可以传入凭据，而无需改动 `process.env`：
+
+```ts
+const harness = createACP({
+  // ...implementation settings
+  auth: {
+    AI_GATEWAY_API_KEY: await resolveGatewayToken(),
+    AI_GATEWAY_BASE_URL: 'https://ai-gateway.vercel.sh',
+  },
+});
+```
+
+所提供的记录会替代宿主环境用于身份验证发现。`credentialEnv` 从该记录读取，而 `forwardEnv` 继续从宿主读取非身份验证的运行时配置。凭据值不会进入自举与生命周期标识。
+
+直接身份验证时，用底层 ACP 实现读取的宿主环境变量名配置 `credentialEnv`，并使用 `credentialBrokering` 把它们的值映射到出站请求头。当网络沙箱支持附加式请求变换时，ACP 进程看到的是来自 `sandboxEnv` 的值，它们默认是临时占位符。真实值会在请求离开沙箱后注入，且仅当请求包含完全匹配的期望值时。不支持该能力的沙箱保留转发真实值的旧行为。`forwardEnv` 只用于非凭据运行时配置。
+
+### 网关环境
+
+将 `providerAuthentication.gateway.env` 设为底层 ACP 实现用于提供商端点、凭据与归因的环境变量。`gateway-api-key`、`gateway-base-url`、`gateway-authorization`、`client-app`、`client-app-name` 与 `client-app-version` 等 profile 值是占位符，适配器只有在选定网关身份验证后才会解析它们。三个 client-app 占位符分别解析为组合的 `name/version` 标识、其名称与版本。结构化启动环境值在其占位符解析后序列化为 JSON。解析后的网关环境会覆盖传给 `credentialBrokering` 的环境中的同名直接值，因此一个回调可同时用于两种身份验证模式。
+
+## 沙箱
+
+每个 ACP harness 都需要至少暴露一个端口的网络沙箱，例如 `@ai-sdk/sandbox-vercel`：
+
+```ts
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+```
+
+默认情况下，适配器使用第一个暴露端口。在 `createACP` 上设置 `port` 可选择其他暴露端口。两者都不可用时，会话启动会抛出 `HarnessCapabilityUnsupportedError` 并提示配置一个端口。
+
+桥接包、ACP 安装与回放状态位于会话项目之外、适配器自有的目录中。技能写入实现 `$HOME` 下配置的原生目录。会话工作区初始为空。
+
+## 工具与审批
+
+仅当智能体提供了与工具键或 `nativeName` 匹配的程序化名称时，可选的 `builtinTools` 定义才会归类原生 ACP 工具。未匹配的原生与第三方 MCP 调用仍作为有效的提供商执行动态工具。
+
+宿主定义的 AI SDK 工具通过 harness 自有的 MCP 服务器暴露，并在宿主中执行。其递归 JSON Schema 会被保留。没有 `execute` 的工具会暂停，等待调用方通过 `continueStream` 提供结果。
+
+当 ACP 实现暴露原生权限控制时，请映射全部三种 Harness 权限模式，并把不支持的模式设为 `null`。选择 `null` 映射会抛出 `HarnessCapabilityUnsupportedError`。适配器会对照会话响应校验具体模式或配置选项。配置映射后，仍然出现的任何 ACP 权限请求都会变成 Harness 审批请求。没有映射时，适配器会为 `permissionMode` 允许的工具类别自动选择 `allow_once`，其余请求 Harness 审批。拒绝时选择 `reject_once`；绝不推断持久选择。宿主工具审批保持独立。
+
+## 完整的 ACP Harness 实现
+
+除非另有说明，这些 profile 支持通过下文所示运行时专属环境变量进行直接身份验证，以及通过 `AI_GATEWAY_API_KEY` 或 `VERCEL_OIDC_TOKEN` 进行 AI Gateway 身份验证。
+
+### Claude Code ACP
+
+Claude Code 接受不带 `/v1` 的 Anthropic 兼容网关根 URL。该 profile 使用运行时支持的启动环境：
+
+```ts
+import { createACP, type ACPPermissionModeMapping } from '@ai-sdk/harness-acp';
+import { createCredentialRequestTransformation } from '@ai-sdk/harness/utils';
+
+export const claudeCodeACPHarness = createACP({
+  harnessId: 'acp-claude-code',
+  // Define the runtime's built-in tool names and input schemas to expose
+  // provider-executed calls as typed HarnessAgent tools.
+  // builtinTools: { ... },
+  source: {
+    type: 'npm-simple',
+    packageName: '@agentclientprotocol/claude-agent-acp',
+    packageVersion: '0.61.0',
+  },
+  executable: 'claude-agent-acp',
+  modelMapping: {
+    type: 'session-config-option',
+    path: 'model',
+  },
+  skillsDirectory: '.claude/skills',
+  credentialEnv: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'],
+  credentialBrokering: ({ env, sandboxEnv }) => {
+    const apiKey = env.ANTHROPIC_API_KEY;
+    const authToken = env.ANTHROPIC_AUTH_TOKEN;
+    const sandboxApiKey = sandboxEnv?.ANTHROPIC_API_KEY;
+    const sandboxAuthToken = sandboxEnv?.ANTHROPIC_AUTH_TOKEN;
+    if (!apiKey && !authToken) return [];
+
+    const transformations = [];
+    if (apiKey && sandboxApiKey) {
+      transformations.push(
+        createCredentialRequestTransformation({
+          matchUrl: env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com',
+          matchHeaders: { 'x-api-key': sandboxApiKey },
+          transformHeaders: { 'x-api-key': apiKey },
+        }),
+      );
+    }
+    if (authToken && sandboxAuthToken) {
+      transformations.push(
+        createCredentialRequestTransformation({
+          matchUrl: env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com',
+          matchHeaders: {
+            Authorization: `Bearer ${sandboxAuthToken}`,
+          },
+          transformHeaders: { Authorization: `Bearer ${authToken}` },
+        }),
+      );
+    }
+    return transformations;
+  },
+  env: {
+    IS_SANDBOX: '1',
+  },
+  instructionMapping: {
+    type: 'session-meta',
+    path: ['systemPrompt', 'append'],
+  },
+  permissionModeMapping: {
+    'allow-reads': { type: 'session-mode', modeId: 'default' },
+    'allow-edits': { type: 'session-mode', modeId: 'acceptEdits' },
+    'allow-all': { type: 'session-mode', modeId: 'bypassPermissions' },
+  } as const satisfies ACPPermissionModeMapping,
+  providerAuthentication: {
+    gateway: {
+      env: {
+        ANTHROPIC_API_KEY: { $source: 'gateway-api-key' },
+        ANTHROPIC_AUTH_TOKEN: { $source: 'gateway-api-key' },
+        ANTHROPIC_BASE_URL: { $source: 'gateway-base-url' },
+        CLAUDE_AGENT_SDK_CLIENT_APP: { $source: 'client-app' },
+      },
+    },
+  },
+});
+```
+
+没有网关凭据时，该 profile 使用直接 `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN` 身份验证。网关环境通过 Claude 支持的 `CLAUDE_AGENT_SDK_CLIENT_APP` 设置提供带版本的归因。`IS_SANDBOX` 允许 Claude Code ACP 在沙箱进程以 root 运行时声明 `bypassPermissions`。
+
+### Codex ACP
+
+Codex ACP 通过其启动环境接受 API 密钥与 JSON 会话配置。其 OpenAI 兼容端点必须以 `/v1` 结尾：
+
+```ts
+import { createACP, type ACPPermissionModeMapping } from '@ai-sdk/harness-acp';
+import { createCredentialRequestTransformation } from '@ai-sdk/harness/utils';
+import { secureJsonParse } from '@ai-sdk/provider-utils';
+
+export const codexACPHarness = createACP({
+  harnessId: 'acp-codex',
+  // Define the runtime's built-in tool names and input schemas to expose
+  // provider-executed calls as typed HarnessAgent tools.
+  // builtinTools: { ... },
+  source: {
+    type: 'npm-simple',
+    packageName: '@agentclientprotocol/codex-acp',
+    packageVersion: '1.1.4',
+  },
+  executable: 'codex-acp',
+  modelMapping: {
+    type: 'session-config-option',
+    path: 'model',
+  },
+  forwardEnv: ['CODEX_CONFIG'],
+  credentialEnv: ['CODEX_API_KEY', 'OPENAI_API_KEY'],
+  credentialBrokering: ({ env, sandboxEnv }) => {
+    const environmentVariableName = env.CODEX_API_KEY
+      ? 'CODEX_API_KEY'
+      : 'OPENAI_API_KEY';
+    const credential = env[environmentVariableName];
+    const sandboxCredential = sandboxEnv?.[environmentVariableName];
+    if (!credential || !sandboxCredential) return [];
+    const config =
+      env.CODEX_CONFIG == null
+        ? undefined
+        : (secureJsonParse(env.CODEX_CONFIG) as {
+            model_provider?: string;
+            model_providers?: Record<string, { base_url?: string }>;
+          });
+    const baseUrl =
+      config?.model_providers?.[config.model_provider ?? '']?.base_url ??
+      'https://api.openai.com/v1';
+    return [
+      createCredentialRequestTransformation({
+        matchUrl: baseUrl,
+        matchHeaders: {
+          Authorization: `Bearer ${sandboxCredential}`,
+        },
+        transformHeaders: { Authorization: `Bearer ${credential}` },
+      }),
+    ];
+  },
+  instructionMapping: {
+    type: 'launch-env-json',
+    variable: 'CODEX_CONFIG',
+    path: ['developer_instructions'],
+  },
+  permissionModeMapping: {
+    'allow-reads': null,
+    'allow-edits': null,
+    'allow-all': { type: 'session-mode', modeId: 'agent-full-access' },
+  } as const satisfies ACPPermissionModeMapping,
+  authentication: {
+    methodId: 'api-key',
+  },
+  providerAuthentication: {
+    gateway: {
+      env: {
+        CODEX_API_KEY: { $source: 'gateway-api-key' },
+        CODEX_CONFIG: {
+          model: 'openai/gpt-5.6-sol',
+          model_provider: 'ai_gateway',
+          model_providers: {
+            ai_gateway: {
+              name: 'AI Gateway',
+              base_url: {
+                $source: 'gateway-base-url',
+                ensureSuffix: '/v1',
+              },
+              env_key: 'CODEX_API_KEY',
+              wire_api: 'responses',
+              supports_websockets: false,
+              http_headers: {
+                'User-Agent': { $source: 'client-app' },
+                'x-client-app': { $source: 'client-app' },
+              },
+            },
+          },
+          model_supports_reasoning_summaries: true,
+          preferred_auth_method: 'apikey',
+        },
+      },
+    },
+  },
+});
+```
+
+Codex ACP 仅支持 `permissionMode: 'allow-all'`。其受限会话模式会启用 Codex 的内部沙箱，而后者不得运行在已提供给 `HarnessAgent` 的沙箱内。
+
+`client-app` 占位符解析为带版本的 `ai-sdk-harness-acp/<version>` 标识，并作为 `User-Agent` 与 `x-client-app` 同时发送。
+没有网关凭据时，该 profile 使用直接 `CODEX_API_KEY` 或 `OPENAI_API_KEY` 身份验证。只有选定网关时，网关 `env` 值才会加入 ACP 进程，因此直接运行时配置保持不变。
+
+### Cursor ACP
+
+Cursor 通过 `agent acp` 暴露 ACP，并通过 Bash 安装器（而非 NPM 包）安装其 CLI：
+
+```ts
+import { createACP } from '@ai-sdk/harness-acp';
+
+export const cursorACPHarness = createACP({
+  harnessId: 'cursor-acp',
+  source: {
+    type: 'install-command',
+    command: 'curl https://cursor.com/install -fsS | bash',
+  },
+  executable: 'agent',
+  args: ['--disable-auto-update', 'acp'],
+  modelMapping: {
+    type: 'session-config-option',
+    path: 'model',
+  },
+  clientCapabilities: {
+    _meta: { parameterizedModelPicker: true },
+  },
+  credentialEnv: ['CURSOR_API_KEY'],
+  credentialBrokering: ({ env, sandboxEnv }) => {
+    if (!env.CURSOR_API_KEY || !sandboxEnv?.CURSOR_API_KEY) return [];
+    return [
+      {
+        match: {
+          host: 'api2.cursor.sh',
+          path: { exact: '/auth/exchange_user_api_key' },
+          method: ['POST'],
+          headers: [
+            {
+              key: { exact: 'Authorization' },
+              value: { exact: `Bearer ${sandboxEnv.CURSOR_API_KEY}` },
+            },
+          ],
+        },
+        transform: {
+          headers: {
+            Authorization: `Bearer ${env.CURSOR_API_KEY}`,
+          },
+        },
+      },
+    ];
+  },
+});
+```
+
+更新标志防止缓存的安装在运行时自行更新。凭据代理仅限于 Cursor 的初始 API 密钥交换，因此后续请求保留该交换返回的短期 Cursor 访问令牌。
+
+Cursor 支持 AI Gateway。用 AI Gateway 凭据配置 Cursor 的 OpenAI API 密钥，并把 **Override OpenAI Base URL** 设为 `https://ai-gateway.vercel.sh/cursor/v1`。常规 Cursor CLI 仍用 `CURSOR_API_KEY` 向 Cursor 身份验证；该登录与 Cursor 账户中配置的模型提供商和路由是分开的。
+
+### Grok Build ACP
+
+Grok Build 通过 `grok agent stdio` 直接暴露 ACP。它不为其权限行为声明 ACP 会话模式，因此该 profile 省略 `permissionModeMapping`：
+
+```ts
+import { createACP } from '@ai-sdk/harness-acp';
+import { createCredentialRequestTransformation } from '@ai-sdk/harness/utils';
+
+export const grokBuildACPHarness = createACP({
+  harnessId: 'acp-grok-build',
+  // Define the runtime's built-in tool names and input schemas to expose
+  // provider-executed calls as typed HarnessAgent tools.
+  // builtinTools: { ... },
+  source: {
+    type: 'npm-simple',
+    packageName: '@xai-official/grok',
+    packageVersion: '0.2.111',
+  },
+  executable: 'grok',
+  args: ['agent', 'stdio'],
+  modelMapping: {
+    type: 'session-model',
+    path: 'modelId',
+  },
+  credentialEnv: ['XAI_API_KEY'],
+  credentialBrokering: ({ env, sandboxEnv }) => {
+    if (!env.XAI_API_KEY || !sandboxEnv?.XAI_API_KEY) return [];
+    return [
+      createCredentialRequestTransformation({
+        matchUrl: env.GROK_XAI_API_BASE_URL ?? 'https://api.x.ai/v1',
+        matchHeaders: {
+          Authorization: `Bearer ${sandboxEnv.XAI_API_KEY}`,
+        },
+        transformHeaders: {
+          Authorization: `Bearer ${env.XAI_API_KEY}`,
+        },
+      }),
+    ];
+  },
+  instructionMapping: {
+    type: 'filesystem',
+    path: '.grok/AGENTS.md',
+  },
+  providerAuthentication: {
+    gateway: {
+      env: {
+        GROK_CLIENT_NAME: { $source: 'client-app-name' },
+        GROK_CLIENT_VERSION: { $source: 'client-app-version' },
+        XAI_API_KEY: { $source: 'gateway-api-key' },
+        GROK_XAI_API_BASE_URL: {
+          $source: 'gateway-base-url',
+          ensureSuffix: '/v1',
+        },
+        GROK_MODELS_BASE_URL: {
+          $source: 'gateway-base-url',
+          ensureSuffix: '/v1',
+        },
+      },
+    },
+  },
+});
+```
+
+没有网关凭据时，该 profile 使用直接 `XAI_API_KEY` 身份验证。网关环境提供客户端名称与版本归因。Grok Build 在内部处理其内置的安全操作。对于通过 ACP 发送的权限请求，适配器按工具类别应用所配置的 Harness `permissionMode`，并对其余请求显式审批。
+
+## 已知限制
+
+- ACP v1 不暴露模型步骤边界或每步用量。适配器会推断边界并上报未知的每步用量；终止提示词用量提供回合总量。
+- 标准 ACP v1 没有可移植的手动压缩或回合中途转向 API。
+- ACP v1 没有可移植的内置工具过滤 API。你仍可使用 `activeTools` 与 `inactiveTools` 过滤宿主执行的工具，但过滤 ACP 内置工具会抛出错误。
+- 宿主工具目录变更后，需要 ACP 实现刷新其 MCP 工具列表。保留过期工具的实现会显式失败。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)

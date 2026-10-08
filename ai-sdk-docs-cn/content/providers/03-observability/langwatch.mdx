@@ -1,0 +1,205 @@
+---
+title: LangWatch
+description: 使用 LangWatch 追踪、监控、设防并评估你的 AI SDK 应用。
+---
+
+# LangWatch 可观测性
+
+[LangWatch](https://langwatch.ai/)（[GitHub](https://github.com/langwatch/langwatch)）是一个 LLM Ops 平台，用于监控、实验、度量并改进 LLM 流水线，采用 fair-code 分发模式。
+
+## 安装
+
+在 [LangWatch 仪表盘](https://app.langwatch.com/)获取你的 `LANGWATCH_API_KEY`。
+
+<InstallPackages packages="langwatch" />
+
+确保已设置 `LANGWATCH_API_KEY`：
+
+<Tabs items={["环境变量", "客户端参数"]} >
+
+<Tab title="环境变量">
+
+```bash filename=".env"
+LANGWATCH_API_KEY='your_api_key_here'
+```
+
+</Tab>
+
+<Tab title="客户端参数">
+
+```typescript
+import { LangWatch } from 'langwatch';
+
+const langwatch = new LangWatch({
+  apiKey: 'your_api_key_here',
+});
+```
+
+</Tab>
+
+</Tabs>
+
+## 基本概念
+
+- 每条触发你 LLM 流水线（作为一个整体）的消息都会被捕获为一条 [Trace](https://docs.langwatch.ai/concepts#traces)。
+- 一条 [Trace](https://docs.langwatch.ai/concepts#traces) 包含多个 [Span](https://docs.langwatch.ai/concepts#spans)，它们是流水线内部的各个步骤。
+  - 一个 span 可以是一次 LLM 调用、一次 RAG 检索的数据库查询，或一个简单的函数变换。
+  - 不同类型的 [Span](https://docs.langwatch.ai/concepts#spans) 捕获不同的参数。
+  - [Span](https://docs.langwatch.ai/concepts#spans) 可以嵌套，以刻画流水线结构。
+- 具有相同 [`thread_id`](https://docs.langwatch.ai/concepts#threads) 元数据的 [Trace](https://docs.langwatch.ai/concepts#traces) 可以在 LangWatch 仪表盘中归为一组，让单条消息成为一段对话的组成部分。
+  - 同时建议提供 [`user_id`](https://docs.langwatch.ai/concepts#user-id) 元数据，以便追踪用户分析数据。
+
+## 配置
+
+AI SDK 通过 Next.js 的 OpenTelemetry 集成支持追踪。使用 `LangWatchExporter`，你可以把这些追踪数据自动收集到 LangWatch。
+
+首先，安装必要的依赖：
+
+```bash
+npm install @vercel/otel langwatch @opentelemetry/api-logs @opentelemetry/instrumentation @opentelemetry/sdk-logs @ai-sdk/otel
+```
+
+然后，为你的应用设置 OpenTelemetry。根据你是在 Next.js 中使用 AI SDK 还是在 Node.js 中使用，选择下面的其中一个标签页：
+
+<Tabs items={['Next.js', 'Node.js']}>
+<Tab title="Next.js">
+
+如果尚未启用，你需要在 `next.config.js` 文件中启用 `instrumentationHook`：
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    instrumentationHook: true,
+  },
+};
+
+module.exports = nextConfig;
+```
+
+接下来，你需要在项目的**根目录**（如果使用 `src` 文件夹则放在其中）创建一个名为 `instrumentation.ts`（或 `.js`）的文件，并以 `LangWatchExporter` 作为 traceExporter：
+
+```typescript
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { registerOTel } from '@vercel/otel';
+import { LangWatchExporter } from 'langwatch';
+
+registerTelemetry(new LegacyOpenTelemetry());
+
+export function register() {
+  registerOTel({
+    serviceName: 'next-app',
+    traceExporter: new LangWatchExporter(),
+  });
+}
+```
+
+（关于 Next.js OpenTelemetry 配置的更多信息，见[官方指南](https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration)）
+
+最后，在你想追踪的 AI SDK 调用上启用 `telemetry` 追踪：
+
+```typescript
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt:
+    'Explain why a chicken would make a terrible astronaut, be creative and humorous about it.',
+  telemetry: {
+    // optional metadata
+    metadata: {
+      userId: 'myuser-123',
+      threadId: 'mythread-123',
+    },
+  },
+});
+```
+
+</Tab>
+<Tab title="Node.js">
+对于 Node.js，先按官方 OpenTelemetry 指南操作：
+
+- [OpenTelemetry Node.js 入门](https://opentelemetry.io/docs/languages/js/getting-started/nodejs/)
+
+设置好 OpenTelemetry 后，你可以使用 `LangWatchExporter` 把追踪数据自动发送到 LangWatch：
+
+```typescript
+import { LangWatchExporter } from 'langwatch';
+
+const sdk = new NodeSDK({
+  traceExporter: new LangWatchExporter({
+    apiKey: process.env.LANGWATCH_API_KEY,
+  }),
+  // ...
+});
+```
+
+</Tab>
+</Tabs>
+
+完成了！现在你的消息会显示在 LangWatch 上：
+
+![AI SDK](https://mintlify.s3.us-west-1.amazonaws.com/langwatch/images/integration/vercel-ai-sdk.png)
+
+### 示例项目
+
+你可以在[我们的 GitHub](https://github.com/langwatch/langwatch/blob/main/typescript-sdk/example/lib/chat/vercel-ai.tsx) 上找到一个完整示例项目，其中包含更复杂的流水线以及 AI SDK 与 LangWatch 的集成。
+
+### 手动集成
+
+以下文档面向手动集成。如果你没有使用 AI SDK 的 OpenTelemetry 集成，
+可以手动启动一条 trace 来捕获你的消息：
+
+```typescript
+import { LangWatch } from 'langwatch';
+
+const langwatch = new LangWatch();
+
+const trace = langwatch.getTrace({
+  metadata: { threadId: 'mythread-123', userId: 'myuser-123' },
+});
+```
+
+然后，你可以在 trace 内启动一个 LLM span，并传入即将发送给 LLM 的输入。
+
+```typescript
+const span = trace.startLLMSpan({
+  name: 'llm',
+  model: model,
+  input: {
+    type: 'chat_messages',
+    value: messages,
+  },
+});
+```
+
+这会捕获 LLM 输入并记录调用开始的时间。LLM 调用完成后，结束该 span 以记录完成时间戳，并捕获输出与 token 指标（用于成本计算），例如：
+
+```typescript
+span.end({
+  output: {
+    type: 'chat_messages',
+    value: [chatCompletion.choices[0]!.message],
+  },
+  metrics: {
+    promptTokens: chatCompletion.usage?.prompt_tokens,
+    completionTokens: chatCompletion.usage?.completion_tokens,
+  },
+});
+```
+
+## 资源
+
+更多信息与示例，请继续阅读：
+
+- [LangWatch 文档](https://docs.langwatch.ai/)
+- [LangWatch GitHub](https://github.com/langwatch/langwatch)
+
+## 支持
+
+如果你有问题或需要帮助，欢迎加入我们的社区：
+
+- [LangWatch Discord](https://discord.gg/kT4PhDS2gH)
+- [邮件支持](mailto:support@langwatch.ai)

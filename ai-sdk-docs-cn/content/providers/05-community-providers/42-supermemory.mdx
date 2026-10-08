@@ -1,0 +1,138 @@
+---
+title: 'Supermemory'
+description: '了解如何在 Vercel AI SDK 中使用 Supermemory AI SDK 提供商。'
+---
+
+# Supermemory
+
+[Supermemory](https://supermemory.ai) 是一个长期记忆平台，可为你的 AI 应用添加持久的、自我增长的记忆。适用于 AI SDK 的 Supermemory 提供商让你可以构建拥有类人脑记忆能力的 AI 应用：
+
+- **持久记忆**：随每次交互不断增长的长期存储
+- **语义搜索**：使用自然语言查询查找相关记忆
+- **自动记忆管理**：AI 自动保存并检索相关信息
+- **轻松集成**：可简单接入现有 AI SDK 应用
+- **Memory Router**：与语言模型提供商直接集成
+- **提供免费额度**：使用免费 API key 即可上手
+
+在 [Supermemory 文档](https://supermemory.ai/docs/ai-sdk/overview)中了解更多 Supermemory 的能力。
+
+## 安装
+
+Supermemory 提供商通过 `@supermemory/tools` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="@supermemory/tools" />
+
+## 提供商实例
+
+你可以在 [https://console.supermemory.ai](https://console.supermemory.ai) 免费获取 Supermemory API key。
+
+将 Supermemory 集成到你的 AI 应用中有两种方式：
+
+**1. 使用 Supermemory 工具**
+
+在现有 AI SDK 配置中导入并使用 Supermemory 工具：
+
+```typescript
+import { supermemoryTools } from '@supermemory/tools/ai-sdk';
+```
+
+**2. 使用 Memory Router**
+
+使用 Memory Router 与语言模型提供商直接集成：
+
+```typescript
+import { createAnthropic } from '@ai-sdk/anthropic';
+
+const supermemoryRouter = createAnthropic({
+  baseUrl: 'https://api.supermemory.ai/v3/https://api.anthropic.com/v1',
+  apiKey: 'your-provider-api-key',
+  headers: {
+    'x-supermemory-api-key': 'supermemory-api-key',
+    'x-sm-conversation-id': 'conversation-id',
+  },
+});
+```
+
+## 示例
+
+以下是在 AI SDK 中使用 Supermemory 的示例：
+
+### `generateText` 结合工具
+
+```javascript
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { supermemoryTools } from '@supermemory/tools/ai-sdk';
+
+const openai = createOpenAI({
+  apiKey: 'YOUR_OPENAI_KEY',
+});
+
+const { text } = await generateText({
+  model: openai('gpt-5-mini'),
+  prompt: 'Remember that my name is Alice',
+  tools: supermemoryTools('YOUR_SUPERMEMORY_KEY'),
+});
+
+console.log(text);
+```
+
+### `streamText` 结合自动记忆
+
+```javascript
+import { streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { supermemoryTools } from '@supermemory/tools/ai-sdk';
+
+const openai = createOpenAI({
+  apiKey: 'YOUR_OPENAI_KEY',
+});
+
+const result = streamText({
+  model: openai('gpt-5'),
+  prompt: 'What are my dietary preferences?',
+  tools: supermemoryTools('YOUR_SUPERMEMORY_KEY'),
+});
+
+// The AI will automatically call searchMemories tool
+// Example tool call:
+// searchMemories({ informationToGet: "dietary preferences and restrictions" })
+// OR
+// addMemory({ memory: "User is allergic to peanuts" })
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 使用 Memory Router
+
+```javascript
+import { streamText } from 'ai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+
+const supermemoryRouter = createAnthropic({
+  baseUrl: 'https://api.supermemory.ai/v3/https://api.anthropic.com/v1',
+  apiKey: 'your-provider-api-key',
+  headers: {
+    'x-supermemory-api-key': 'supermemory-api-key',
+    'x-sm-conversation-id': 'conversation-id',
+  },
+});
+
+const result = streamText({
+  model: supermemoryRouter('claude-3-sonnet'),
+  messages: [
+    { role: 'user', content: 'Hello! Remember that I love TypeScript.' },
+  ],
+});
+```
+
+有关这些特性与高级配置选项的更多信息，请访问 [Supermemory 文档](https://supermemory.ai/docs/)。
+
+## 更多资源
+
+- [Supermemory 文档](https://supermemory.ai/docs/?ref=ai-sdk)
+- [AI SDK 集成 Cookbook](https://supermemory.ai/docs/cookbook/ai-sdk-integration)
+- [Supermemory 控制台](https://console.supermemory.ai)
+- [Memory Engine 博客文章](https://supermemory.ai/blog/memory-engine/)

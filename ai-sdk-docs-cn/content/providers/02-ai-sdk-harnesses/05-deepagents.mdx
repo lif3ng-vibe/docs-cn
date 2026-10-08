@@ -1,0 +1,175 @@
+---
+title: Deep Agents
+description: 了解如何使用 Deep Agents harness 适配器。
+---
+
+# Deep Agents Harness
+
+Deep Agents harness 适配器将 `HarnessAgent` 连接到 [Deep Agents](https://github.com/langchain-ai/deepagentsjs)——一个基于 LangGraph 的智能体运行时。该适配器在沙箱内运行一个 Node 桥接进程，驱动 `deepagents` 包，并通过沙箱暴露的 WebSocket 将其 `streamEvents` 输出流式传回宿主。
+
+<Note>
+  Harness 包目前处于**实验性**阶段。随着这一早期 API 的进一步打磨，各版本之间可能出现破坏性变更。
+</Note>
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/harness @ai-sdk/harness-deepagents @ai-sdk/sandbox-vercel" />
+
+首次会话启动时，适配器会通过 `pnpm` 在沙箱内自举桥接的 Node 依赖（`deepagents` 包与 LangChain）。
+
+## 导入
+
+```ts
+import { deepAgents, createDeepAgents } from '@ai-sdk/harness-deepagents';
+```
+
+`deepAgents` 等价于使用默认配置的 `createDeepAgents()`。
+
+## 基本用法
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { deepAgents } from '@ai-sdk/harness-deepagents';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+
+const agent = new HarnessAgent({
+  harness: deepAgents,
+  model: 'anthropic/claude-sonnet-4-6',
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+
+let exitCode = 0;
+try {
+  const result = await agent.stream({
+    session,
+    prompt: 'Analyze this codebase and suggest improvements.',
+  });
+
+  for await (const part of result.stream) {
+    if (part.type === 'text-delta') {
+      process.stdout.write(part.text);
+    }
+  }
+} catch (err) {
+  exitCode = 1;
+  console.error(err);
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+  process.exit(exitCode);
+}
+```
+
+要使用该智能体（agent），请确保环境变量中包含用于 Vercel Sandbox 的 `VERCEL_OIDC_TOKEN`，以及[身份验证](#身份验证)一节中列出的模型提供商任一变量。
+
+## 适配器设置
+
+使用 `createDeepAgents()` 配置运行时：
+
+```ts
+const harness = createDeepAgents({ recursionLimit: 100 });
+```
+
+设置项：
+
+- `auth`：身份验证模式（`auto`、`anthropic` 或 `ai-gateway`）或隔离的身份验证环境。
+- `credentialForwarding`：可选的同步或异步回调，在 harness 适配器将每个凭据转发进沙箱进程之前对其进行定制。它会收到本应转发的凭据值（真实凭据或掩码值）以及用于暴露该凭据的环境变量名。该回调只控制转发进沙箱进程的值，不会限制 harness 适配器能在宿主进程中发现、读取或以其他方式访问哪些凭据。
+- `mcpServers`：以服务器名为键的 MCP 服务器定义。
+- `port`：覆盖桥接端口。
+- `recursionLimit`：每回合的最大 LangGraph 超级步数。省略时适用 Deep Agents 默认值。
+- `startupTimeoutMs`：等待桥接启动的最长时间。
+- `reconnect`：已建立的桥接 WebSocket 连接断开后的重连时机。`maxElapsedMs` 控制总重试窗口（包括建立连接与退避延迟），默认为 30 秒。`initialDelayMs` 默认为 50 毫秒，`maxDelayMs` 默认为 2 秒。这些重试采用指数退避，与 `startupTimeoutMs` 相互独立。当沙箱、桥接进程或桥接端点永久不可用时，重试无法恢复。
+- `mintBridgeToken`：同步函数，接收沙箱 id 并返回桥接身份验证令牌。默认情况下，适配器会生成随机的 32 字节令牌。自定义实现必须返回足够保密的令牌。
+
+## 结构化输出
+
+Deep Agents 支持基于 schema 的 [`HarnessAgent` 结构化输出](/docs/ai-sdk-harnesses/harness-agent#生成结构化输出)。适配器应用每回合的 LangChain 工具策略，并将图中校验通过的 `structuredResponse` 作为 JSON 文本返回。
+
+## 身份验证
+
+Deep Agents 始终驱动 Anthropic 客户端。非 Anthropic 模型通过 AI Gateway 的 Anthropic 兼容端点接入，该端点可转换到任意模型（Gemini、OpenAI 等），工具调用也不例外。
+
+`auth` 设置决定如何从宿主环境解析凭据：
+
+- `auto`（默认）：可用时使用 AI Gateway 凭据，否则回退到 Anthropic 凭据。
+- `anthropic`：使用 Anthropic 凭据。
+- `ai-gateway`：使用 AI Gateway 凭据。
+
+当沙箱支持附加式请求变换时，桥接收到的是占位符，适配器会将凭据注入匹配的出站请求。不具备该能力的沙箱仍采用直接凭据转发。
+
+支持的环境变量：
+
+- `AI_GATEWAY_API_KEY`
+- `VERCEL_OIDC_TOKEN`
+- `AI_GATEWAY_BASE_URL`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_AUTH_TOKEN`
+- `ANTHROPIC_BASE_URL`
+
+要运行非 Anthropic 模型，请选择 `ai-gateway`：
+
+```ts
+const harness = createDeepAgents({ auth: 'ai-gateway' });
+const agent = new HarnessAgent({
+  harness,
+  model: 'google/gemini-2.5-flash',
+  sandbox,
+});
+```
+
+传入一个身份验证环境，即可在不读取 `process.env` 的情况下使用以编程方式解析的凭据：
+
+```ts
+const harness = createDeepAgents({
+  auth: { ANTHROPIC_API_KEY: await resolveAnthropicToken() },
+});
+```
+
+所提供的记录会替代宿主环境用于身份验证发现。只有可识别的身份验证变量会被转发。
+
+## 沙箱
+
+Deep Agents 需要至少暴露一个端口的网络沙箱，例如 `@ai-sdk/sandbox-vercel`：
+
+```ts
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+```
+
+## 技能
+
+传入会话的技能会在沙箱中 `$HOME/.agents/skills/` 下物化为原生 Deep Agents 技能文件夹（`<name>/SKILL.md` 及随附文件；位于工作目录之外，因此不会与克隆的代码冲突），并通过 Deep Agents 的 `skills` 选项加载——智能体按需加载它们，技能文件引用也能正确解析。`<workDir>/.agents/skills/` 下已存在的技能（例如克隆仓库中的）同样会被发现。
+
+## 内置工具
+
+适配器通过 `agent.tools` 暴露以下 Deep Agents 内置工具：
+
+- `read`
+- `write`
+- `edit`
+- `bash`
+- `grep`
+- `glob`
+- `ls`
+- `task`
+- `write_todos`
+
+## 已知限制
+
+- **不支持恢复已停止会话的对话**——调用 `session.stop()` 后，Deep Agents 的内存对话状态（LangGraph `MemorySaver`）即消失，只有沙箱工作区通过其快照保留。跨进程交接请使用 `session.detach()`；在保持桥接存活的情况下延续回合请使用 `session.suspendTurn()`。
+- **不支持手动压缩**。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)

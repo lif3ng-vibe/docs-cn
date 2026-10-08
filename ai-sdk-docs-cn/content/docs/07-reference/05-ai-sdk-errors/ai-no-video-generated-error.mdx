@@ -1,0 +1,39 @@
+---
+title: AI_NoVideoGeneratedError
+description: 了解如何修复 AI_NoVideoGeneratedError
+---
+
+# AI_NoVideoGeneratedError
+
+此错误在 AI 提供商未能生成视频时发生。
+可能由以下原因导致：
+
+- 模型未能生成响应。
+- 模型生成了无效的响应。
+
+## 属性
+
+- `message`：错误消息（可选，默认为 `'No video generated.'`）。
+- `responses`：视频模型响应的元数据，包括时间戳、模型和请求头（可选）。
+- `cause`：错误的原因。可用于更细致的错误处理（可选）。
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoVideoGeneratedError` 的实例：
+
+```typescript
+import {
+  experimental_generateVideo as generateVideo,
+  NoVideoGeneratedError,
+} from 'ai';
+
+try {
+  await generateVideo({ model, prompt });
+} catch (error) {
+  if (NoVideoGeneratedError.isInstance(error)) {
+    console.log('NoVideoGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Responses:', error.responses);
+  }
+}
+```

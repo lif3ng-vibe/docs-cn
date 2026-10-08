@@ -1,0 +1,351 @@
+---
+title: 提供商选项
+description: 了解如何使用提供商专属选项来控制推理、缓存及其他高级功能。
+---
+
+# Provider Options
+
+提供商选项（provider options）让你可以传入超出所有提供商共有的[标准设置](/docs/ai-sdk-core/settings)之外的、特定于提供商的配置。它们通过 `generateText` 和 `streamText` 等函数上的 `providerOptions` 属性来设置。
+
+```ts
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Explain quantum entanglement.',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'low',
+    },
+  },
+});
+```
+
+提供商选项以提供商名称（如 `openai`、`anthropic`）作为命名空间，因此你甚至可以在同一次调用中包含多个提供商的选项——只有与当前生效的提供商匹配的选项才会被使用。有关在消息和消息部分（message part）级别应用选项的细节，请参阅[提示词：提供商选项](/docs/foundations/prompts#提供商选项)。
+
+<Note>
+  若要控制推理力度，建议使用顶层的 [`reasoning`
+  参数](/docs/ai-sdk-core/reasoning)而非提供商专属选项。
+  它提供了一个可移植的设置，可在所有支持推理的提供商之间通用。
+  仅在你需要精确 token 预算等特性时，才使用提供商专属选项。
+</Note>
+
+## 常见提供商选项
+
+以下章节介绍最常用的提供商选项，重点关注 OpenAI 和 Anthropic 的推理与输出控制。完整参考请查看各提供商页面：
+
+- [OpenAI 提供商选项](/providers/ai-sdk-providers/openai)
+- [Anthropic 提供商选项](/providers/ai-sdk-providers/anthropic)
+
+---
+
+## OpenAI
+
+### 推理力度
+
+对于推理模型（如 `gpt-6-astra`、`gpt-6-sol`、`gpt-6-luna`），`reasoningEffort` 控制模型在作出响应之前进行的内部推理量。取值越低，速度越快、成本越低；取值越高，回答越详尽。
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'low', // 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+console.log('Text:', result.text);
+console.log('Usage:', result.usage);
+console.log(
+  'Reasoning tokens:',
+  result.finalStep.providerMetadata?.openai?.reasoningTokens,
+);
+```
+
+| 取值        | 行为                          |
+| ----------- | ----------------------------- |
+| `'none'`    | 不进行推理（仅 GPT-5.1 模型）  |
+| `'minimal'` | 极少量的推理                   |
+| `'low'`     | 快速、简洁的推理               |
+| `'medium'`  | 均衡（默认）                   |
+| `'high'`    | 详尽的推理                     |
+| `'xhigh'`   | 支持的模型上的超高推理量        |
+| `'max'`     | 支持的模型上的最大推理量        |
+
+<Note>
+  支持的力度级别因模型而异。对不支持的模型使用某个力度级别会导致报错。
+</Note>
+
+### 推理摘要
+
+使用推理模型时，你可能想看到模型是_如何_得出答案的。`reasoningSummary` 选项可以呈现模型的思考过程。
+
+当 `reasoningEffort` 设置为 `'none'` 以外的值时，OpenAI Responses 提供商默认将 `reasoningSummary` 设为 `'detailed'`。若要省略推理摘要，可将 `reasoningSummary` 设为 `null`。
+
+#### 流式
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me about the Mission burrito debate in San Francisco.',
+  providerOptions: {
+    openai: {
+      reasoningSummary: 'detailed', // 'auto' | 'detailed'
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    console.log(`Reasoning: ${part.textDelta}`);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+#### 非流式
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me about the Mission burrito debate in San Francisco.',
+  providerOptions: {
+    openai: {
+      reasoningSummary: 'auto',
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+
+console.log('Reasoning:', result.finalStep.reasoning);
+```
+
+| 取值         | 行为                |
+| ------------ | ------------------- |
+| `'auto'`     | 推理过程的精简摘要   |
+| `'detailed'` | 完整的推理输出       |
+
+### 文本详略程度
+
+将模型文本回复的长度与详细程度独立于推理进行控制：
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'Write a poem about a boy and his first pet dog.',
+  providerOptions: {
+    openai: {
+      textVerbosity: 'low', // 'low' | 'medium' | 'high'
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+| 取值       | 行为                    |
+| ---------- | ----------------------- |
+| `'low'`    | 简短、极简的回复         |
+| `'medium'` | 均衡的详细程度（默认）    |
+| `'high'`   | 冗长、全面的回复          |
+
+---
+
+## Anthropic
+
+### 思考（扩展推理）
+
+Anthropic 的思考（thinking）功能为 Claude 模型提供了一个专门的"思考"阶段，之后再作出响应。你可以通过提供一个带有 token 预算的 `thinking` 对象来启用它。
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const { text, reasoning, reasoningText } = await generateText({
+  model: anthropic('claude-opus-4-20250514'),
+  prompt: 'How many people will live in the world in 2040?',
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 12000 },
+    } satisfies AnthropicLanguageModelOptions,
+  },
+});
+
+console.log('Reasoning:', reasoningText);
+console.log('Answer:', text);
+```
+
+`budgetTokens` 的值设定了模型可用于内部推理的 token 数量上限。预算越高，推理越深入，但会增加延迟与成本。
+
+<Note>
+  思考功能在 `claude-opus-4-20250514`、`claude-sonnet-4-20250514` 和
+  `claude-sonnet-4-5-20250929` 模型上受支持。
+</Note>
+
+### 力度
+
+`effort` 选项提供了一种更简单的方式来控制推理深度，无需指定 token 预算。它会影响思考、文本回复以及函数调用。
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: anthropic('claude-opus-5-5'),
+  prompt: 'How many people will live in the world in 2040?',
+  providerOptions: {
+    anthropic: {
+      effort: 'low', // 'low' | 'medium' | 'high'
+    } satisfies AnthropicLanguageModelOptions,
+  },
+});
+```
+
+| 取值       | 行为                       |
+| ---------- | -------------------------- |
+| `'low'`    | 推理最少，响应最快          |
+| `'medium'` | 推理均衡                    |
+| `'high'`   | 详尽的推理（默认）           |
+
+### 快速模式
+
+对于 `claude-opus-4-6`，`speed` 选项可将输出 token 速度提升约 2.5 倍：
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: anthropic('claude-opus-4-6'),
+  prompt: 'Write a short poem about the sea.',
+  providerOptions: {
+    anthropic: {
+      speed: 'fast', // 'fast' | 'standard'
+    } satisfies AnthropicLanguageModelOptions,
+  },
+});
+```
+
+---
+
+## 组合选项
+
+你可以在一次调用中组合使用多个提供商选项。例如，在 OpenAI 上同时使用推理力度与推理摘要：
+
+```ts
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'What are the implications of quantum computing for cryptography?',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'high',
+      reasoningSummary: 'detailed',
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+或者在 Anthropic 上以较低的力度级别启用思考功能：
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: anthropic('claude-opus-4-20250514'),
+  prompt: 'Explain the Riemann hypothesis in simple terms.',
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 8000 },
+      effort: 'medium',
+    } satisfies AnthropicLanguageModelOptions,
+  },
+});
+```
+
+## 在 AI Gateway 中使用提供商选项
+
+在使用 [Vercel AI Gateway](/providers/ai-sdk-providers/ai-gateway) 时，提供商选项的用法完全相同。键名使用底层提供商名称（如 `openai`、`anthropic`）——而不是 `gateway`。AI Gateway 会自动将这些选项转发给目标提供商。
+
+```ts
+import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: 'openai/gpt-6-astra', // AI Gateway model string
+  prompt: 'What are the implications of quantum computing for cryptography?',
+  providerOptions: {
+    openai: {
+      reasoningEffort: 'high',
+      reasoningSummary: 'detailed',
+    } satisfies OpenAILanguageModelResponsesOptions,
+  },
+});
+```
+
+你也可以在同一次调用中，将网关专属选项（如路由与回退）与提供商专属选项组合使用：
+
+```ts
+import type { AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import type { GatewayProviderOptions } from '@ai-sdk/gateway';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: 'anthropic/claude-sonnet-4',
+  prompt: 'Explain quantum computing',
+  providerOptions: {
+    // Gateway-specific: control routing
+    gateway: {
+      order: ['vertex', 'anthropic'],
+    } satisfies GatewayProviderOptions,
+    // Provider-specific: enable reasoning
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 12000 },
+    } satisfies AnthropicLanguageModelOptions,
+  },
+});
+```
+
+有关网关路由、回退及其他网关专属选项的更多信息，请参阅 [AI Gateway 提供商文档](/providers/ai-sdk-providers/ai-gateway#提供商选项-1)。
+
+## 类型安全
+
+每个提供商都会为其选项导出一个类型，你可以配合 `satisfies` 使用，从而获得自动补全并在构建时捕获拼写错误：
+
+```ts
+import { type OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import { type AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+```
+
+如需完整可用选项列表，请参阅提供商专属文档：
+
+- [OpenAI 提供商](/providers/ai-sdk-providers/openai)
+- [Anthropic 提供商](/providers/ai-sdk-providers/anthropic)

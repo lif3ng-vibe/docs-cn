@@ -1,0 +1,85 @@
+---
+title: 使用 Streamdown 的 Markdown 聊天机器人
+description: 使用 Streamdown、Next.js 和 AI SDK 渲染流式 Markdown 响应。
+tags: ['next', 'streaming', 'chatbot', 'markdown']
+---
+
+# Markdown Chatbot with Streamdown
+
+[Streamdown](https://streamdown.ai) 会在内容从语言模型流式输出的同时渲染 Markdown。它能处理不完整的 Markdown 语法，并对 [Markdown 块进行记忆化（memoization）](https://streamdown.ai/docs/memoization)，让未变化的块跳过重新渲染。Streamdown 在其默认流式模式下就提供了这一行为。
+
+`/api/chat` 路由可以先从[以聊天提示词流式生成文本](/cookbook/next/stream-text-with-chat-prompt)菜谱开始。然后在客户端使用 Streamdown 渲染文本分片。
+
+## 安装
+
+在 Next.js 应用中安装 Streamdown：
+
+```bash
+npm install streamdown
+```
+
+对于 Tailwind CSS v4，需要将 Streamdown 添加到全局样式表的 sources 中：
+
+```css filename='app/globals.css'
+@import 'tailwindcss';
+@source '../node_modules/streamdown/dist/*.js';
+```
+
+`@source` 路径相对于样式表所在目录。如果你使用 `src/app` 目录或 monorepo，请相应调整。Tailwind CSS v3 的配置请参阅 [Streamdown 安装指南](https://streamdown.ai/docs/getting-started)。
+
+## 客户端
+
+将每个文本分片传给 `Streamdown`。当该分片正在流式输出时设置 `isAnimating`，这样 Streamdown 就能在文本完成前禁用交互控件。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <div>{message.role === 'user' ? 'You' : 'Assistant'}</div>
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? (
+              <Streamdown
+                key={`${message.id}-${index}`}
+                isAnimating={part.state === 'streaming'}
+              >
+                {part.text}
+              </Streamdown>
+            ) : null,
+          )}
+        </div>
+      ))}
+
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          value={input}
+          onChange={event => setInput(event.target.value)}
+          placeholder="Say something..."
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+如需语法高亮、数学公式或 Mermaid 图表，请参阅 [Streamdown 的插件](https://streamdown.ai/docs/plugins)。

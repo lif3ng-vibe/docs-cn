@@ -1,0 +1,227 @@
+---
+title: Get started with Gemini 3
+description: 使用 AI SDK 上手 Gemini 3。
+tags: ['getting-started']
+---
+
+# Get started with Gemini 3
+
+随着 Gemini 3——Google 迄今最智能的模型——的发布，现在是开始构建结合最先进推理与多模态理解的 AI 应用的最佳时机。
+
+[AI SDK](/) 是一个强大的 TypeScript 工具包，可用于结合 Gemini 3 等大语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。
+
+## Gemini 3
+
+Gemini 3 代表了 AI 能力的重大飞跃，它把 Gemini 的所有优势结合在一起，帮助你把任何想法变为现实。它提供：
+
+- 具有前所未有的深度和细腻度的最先进推理
+- 在 Humanity's Last Exam（37.5%）和 GPQA Diamond（91.9%）等复杂基准上达到博士水平的成绩
+- 领先的多模态理解：MMMU-Pro 81%、Video-MMMU 87.6%
+- 一流的 vibe coding 与智能体（agent）能力
+- 出色的长程规划，适用于多步工作流
+
+Gemini 3 Pro 目前以预览版形式提供，在所有基准上都表现出色。
+
+## 使用 AI SDK 上手
+
+AI SDK 是一个 TypeScript 工具包，旨在帮助开发者使用 React、Next.js、Vue、Svelte、Node.js 等构建 AI 应用。把 LLM 集成到应用中很复杂，而且高度依赖于你所使用的具体模型提供商（provider）。
+
+AI SDK 抽象掉了模型提供商之间的差异，省去了构建聊天机器人的样板代码，并让你超越纯文本输出，生成丰富的交互式组件。
+
+AI SDK 的核心是 [AI SDK Core](/docs/ai-sdk-core/overview)，它提供统一的 API 来调用任何 LLM。下面的代码片段就是使用 AI SDK 调用 Gemini 3 所需的全部代码：
+
+```ts
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: google('gemini-3.1-pro-preview'),
+  prompt: 'Explain the concept of the Hilbert space.',
+});
+console.log(text);
+```
+
+### 通过思考模式增强推理
+
+Gemini 3 模型可以通过思考模式（thinking mode）使用增强推理，提升解决复杂问题的能力。你可以使用 `thinkingLevel` 提供商选项控制思考级别：
+
+```ts
+import { google, GoogleLanguageModelOptions } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: google('gemini-3.1-pro-preview'),
+  prompt: 'What is the sum of the first 10 prime numbers?',
+  providerOptions: {
+    google: {
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingLevel: 'low',
+      },
+    } satisfies GoogleLanguageModelOptions,
+  },
+});
+
+console.log(text);
+```
+
+`thinkingLevel` 参数接受不同的值，以控制应用于你提示词（prompt）的推理深度：
+
+- Gemini 3 Pro 支持：`'low'` 和 `'high'`
+- Gemini 3 Flash 支持：`'minimal'`、`'low'`、`'medium'` 和 `'high'`
+
+### 在 AI SDK 中使用工具
+
+Gemini 3 擅长工具调用，为多步工作流提供了更高的可靠性和一致性。以下是在 AI SDK 中使用工具调用的示例：
+
+```ts
+import { z } from 'zod';
+import { generateText, tool, isStepCount } from 'ai';
+import { google } from '@ai-sdk/google';
+
+const result = await generateText({
+  model: google('gemini-3.1-pro-preview'),
+  prompt: 'What is the weather in San Francisco?',
+  tools: {
+    weather: tool({
+      description: 'Get the weather in a location',
+      inputSchema: z.object({
+        location: z.string().describe('The location to get the weather for'),
+      }),
+      execute: async ({ location }) => ({
+        location,
+        temperature: 72 + Math.floor(Math.random() * 21) - 10,
+      }),
+    }),
+  },
+  stopWhen: isStepCount(5), // enables multi-step calling
+});
+
+console.log(result.text);
+
+console.log(result.steps);
+```
+
+### 配合 Gemini 使用 Google 搜索
+
+借助[搜索接地（search grounding）](https://ai.google.dev/gemini-api/docs/google-search)，Gemini 可以使用 Google 搜索获取最新信息。以下是在 AI SDK 中使用 Google 搜索的示例：
+
+```ts
+import { google } from '@ai-sdk/google';
+import { GoogleProviderMetadata } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const { text, sources, providerMetadata } = await generateText({
+  model: google('gemini-3.1-pro-preview'),
+  tools: {
+    google_search: google.tools.googleSearch({}),
+  },
+  prompt:
+    'List the top 5 San Francisco news from the past week.' +
+    'You must include the date of each article.',
+});
+
+// access the grounding metadata. Casting to the provider metadata type
+// is optional but provides autocomplete and type safety.
+const metadata = providerMetadata?.google as GoogleProviderMetadata | undefined;
+const groundingMetadata = metadata?.groundingMetadata;
+const safetyRatings = metadata?.safetyRatings;
+
+console.log({ text, sources, groundingMetadata, safetyRatings });
+```
+
+### 构建交互式界面
+
+AI SDK Core 可以与 [AI SDK UI](/docs/ai-sdk-ui/overview)——AI SDK 的另一个强大组件——搭配使用，简化使用 Next.js、Nuxt、SvelteKit 和 SolidStart 等流行框架构建聊天、补全和助手界面的过程。
+
+AI SDK UI 提供了强大的抽象，简化了在前端管理聊天流和 UI 更新这些复杂任务，让你能更高效地开发动态的 AI 驱动界面。
+
+借助三个主要 Hook——[`useChat`](/docs/reference/ai-sdk-ui/use-chat)、[`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 和 [`useObject`](/docs/reference/ai-sdk-ui/use-object)——你可以把实时聊天能力、文本补全和流式 JSON 引入你的应用。
+
+我们来探索用 [Next.js](https://nextjs.org)、AI SDK 和 Gemini 3 Pro 构建一个聊天机器人（chatbot）：
+
+在新的 Next.js 应用中，先安装 AI SDK 和 Google 提供商：
+
+<Snippet text="pnpm install ai @ai-sdk/google" />
+
+然后，为聊天端点创建一个路由处理器：
+
+```tsx filename="app/api/chat/route.ts"
+import { google } from '@ai-sdk/google';
+import {
+  streamText,
+  UIMessage,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: google('gemini-3.1-pro-preview'),
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+最后，更新根页面（`app/page.tsx`）以使用 `useChat` Hook：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(message => (
+        <div key={message.id} className="whitespace-pre-wrap">
+          {message.role === 'user' ? 'User: ' : 'Gemini: '}
+          {message.parts.map((part, i) => {
+            switch (part.type) {
+              case 'text':
+                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+            }
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="fixed dark:bg-zinc-900 bottom-0 w-full max-w-md p-2 mb-8 border border-zinc-300 dark:border-zinc-800 rounded shadow-xl"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.currentTarget.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+根页面（`app/page.tsx`）上的 useChat Hook 会在用户提交消息时向你的 AI 提供商端点（`app/api/chat/route.ts`）发起请求。随后消息显示在聊天 UI 中。
+
+## 开始使用
+
+准备好深入了吗？以下是上手方式：
+
+1. 阅读 [ai-sdk.dev/docs](/docs) 上的文档，了解 AI SDK 的能力。
+2. 查看 [ai-sdk.dev/examples](/examples) 上的实用示例，看看 SDK 的实际表现。
+3. 通过 [ai-sdk.dev/docs/guides](/cookbook/guides) 上的进阶指南深入探索，主题包括检索增强生成（RAG）等。
+4. 使用 [vercel.com/templates?type=ai](https://vercel.com/templates?type=ai) 上可直接部署的 AI 模板。
+5. 进一步阅读 [Google 提供商](/providers/ai-sdk-providers/google)的相关内容。

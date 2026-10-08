@@ -1,0 +1,104 @@
+---
+title: Helicone
+description: AI SDK 的 Helicone 提供商
+---
+
+# Helicone
+
+[Helicone AI Gateway](https://helicone.ai/) 让你能够访问数百个 AI 模型，并通过其可观测性平台直接集成链路追踪与监控。
+
+- **统一的模型访问**：使用一个 API key 即可访问来自 Anthropic、Google、Meta 等主流提供商的数百个模型。
+- **智能提供商选择**：始终选择最便宜的提供商，并针对提供商的可用性与速率限制启用回退（fallback）。
+- **简化链路追踪**：默认内置 Helicone 可观测性，监控 LLM 性能并调试应用，包括对日志、指标与追踪的 OpenTelemetry 支持。
+- **提升性能与成本效益**：缓存响应以降低成本与延迟。
+- **提示词管理**：直接在 Helicone 中处理提示词版本管理与 playground，无需再依赖工程师进行更改。
+
+更多信息请查看 [Helicone 文档](https://helicone.ai/docs)。
+
+## 安装
+
+Helicone 提供商包含在 `@helicone/ai-sdk-provider` 包中，可通过以下方式安装：
+
+<InstallPackages packages="@helicone/ai-sdk-provider" />
+
+## 快速上手
+
+要开始使用 Helicone，先用 `createHelicone` 函数创建提供商实例，然后即可查询任意你喜欢的模型。
+
+```typescript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await generateText({
+  model: helicone('claude-4.5-haiku'),
+  prompt: 'Write a haiku about artificial intelligence',
+});
+
+console.log(result.text);
+```
+
+你可以在 [Helicone Dashboard](https://us.helicone.ai/settings/api-keys) 获取 Helicone API key。
+
+## 示例
+
+以下是在 AI SDK 中使用 Helicone 的示例。
+
+### `generateText`
+
+```javascript
+import { createHelicone } from '@helicone/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const { text } = await generateText({
+  model: helicone('gemini-2.5-flash-lite'),
+  prompt: 'What is Helicone?',
+});
+
+console.log(text);
+```
+
+### `streamText`
+
+```javascript
+const helicone = createHelicone({
+  apiKey: process.env.HELICONE_API_KEY,
+});
+
+const result = await streamText({
+  model: helicone('deepseek-v3.1-terminus'),
+  prompt: 'Write a short story about a robot learning to paint',
+  maxOutputTokens: 300,
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+
+console.log('\n\nStream completed!');
+```
+
+## 高级特性
+
+Helicone 提供多项高级特性来增强你的 AI 应用：
+
+1. **模型灵活性**：无需更改代码或管理多个 API key，即可在数百个模型之间切换。
+
+2. **成本管理**：通过 Helicone 的 LLM 可观测性仪表盘实时管理每个模型的成本。
+
+3. **可观测性**：通过 Helicone 的 LLM 可观测性仪表盘查看所有请求的全面分析与日志。
+
+4. **提示词管理**：通过 Helicone 仪表盘管理提示词及其版本。
+
+5. **缓存**：缓存响应以降低成本与延迟。
+
+6. **定期更新**：新模型与新功能上线后自动可用。
+
+有关这些特性与高级配置选项的更多信息，请访问 [Helicone 文档](https://docs.helicone.ai)。

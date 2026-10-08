@@ -1,0 +1,138 @@
+---
+title: 并行调用工具
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）并行调用工具。
+tags: ['rsc', 'tool use']
+---
+
+# Call Tools in Parallel
+
+一些语言模型支持并行调用工具。当多个工具彼此独立、可以在同一次生成步骤中并行执行时，这尤其有用。
+
+<Browser>
+  <ChatGeneration
+    history={[
+      { role: 'User', content: '最近怎么样？' },
+      { role: 'Assistant', content: '一切都好，有什么可以帮你？' },
+    ]}
+    inputMessage={{
+      role: 'User',
+      content: '巴黎和纽约的天气怎么样？',
+    }}
+    outputMessage={{
+      role: 'Assistant',
+      content: '纽约当前 24°C，巴黎当前 25°C，两座城市都是晴天。',
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来修改前面的示例，并行地为多个城市调用 `getWeather` 工具。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { Message, continueConversation } from './actions';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [conversation, setConversation] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>('');
+
+  return (
+    <div>
+      <div>
+        {conversation.map((message, index) => (
+          <div key={index}>
+            {message.role}: {message.content}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <input
+          type="text"
+          value={input}
+          onChange={event => {
+            setInput(event.target.value);
+          }}
+        />
+        <button
+          onClick={async () => {
+            const { messages } = await continueConversation([
+              ...conversation,
+              { role: 'user', content: input },
+            ]);
+
+            setConversation(messages);
+          }}
+        >
+          Send Message
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+我们来更新 tools 对象，改用 `getWeather` 函数。
+
+```ts filename='app/actions.ts'
+'use server';
+
+import { generateText } from 'ai';
+import { z } from 'zod';
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+function getWeather({ city, unit }) {
+  // This function would normally make an
+  // API request to get the weather.
+
+  return { value: 25, description: 'Sunny' };
+}
+
+export async function continueConversation(history: Message[]) {
+  'use server';
+
+  const { text, toolResults } = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a friendly weather assistant!',
+    messages: history,
+    tools: {
+      getWeather: {
+        description: 'Get the weather for a location',
+        inputSchema: z.object({
+          city: z.string().describe('The city to get the weather for'),
+          unit: z
+            .enum(['C', 'F'])
+            .describe('The unit to display the temperature in'),
+        }),
+        execute: async ({ city, unit }) => {
+          const weather = getWeather({ city, unit });
+          return `It is currently ${weather.value}°${unit} and ${weather.description} in ${city}!`;
+        },
+      },
+    },
+  });
+
+  return {
+    messages: [
+      ...history,
+      {
+        role: 'assistant' as const,
+        content:
+          text || toolResults.map(toolResult => toolResult.result).join('\n'),
+      },
+    ],
+  };
+}
+```

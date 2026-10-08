@@ -1,0 +1,479 @@
+---
+title: 提供商与模型管理
+description: 了解如何使用多个提供商与模型
+---
+
+# Provider & Model Management
+
+当你使用多个提供商和模型时，通常希望在一个集中的位置管理它们，
+并通过简单的字符串 id 访问模型。
+
+为此，AI SDK 提供了[自定义提供商](/docs/reference/ai-sdk-core/custom-provider)和
+[提供商注册表](/docs/reference/ai-sdk-core/provider-registry)：
+
+- 通过**自定义提供商**，你可以预配置模型设置、提供模型名称别名，
+  并限制可用的模型。
+- **提供商注册表**让你可以混合多个提供商，并通过简单的字符串 id 访问它们。
+
+你可以在应用中组合使用自定义提供商、提供商注册表和[中间件](/docs/ai-sdk-core/middleware)。
+
+## 自定义提供商
+
+你可以使用 `customProvider` 创建[自定义提供商](/docs/reference/ai-sdk-core/custom-provider)。
+
+### 示例：自定义模型设置
+
+你可能想覆盖某个提供商的默认模型设置，或提供带有预配置设置的模型名称别名。
+
+```ts
+import {
+  gateway,
+  customProvider,
+  defaultSettingsMiddleware,
+  wrapLanguageModel,
+} from 'ai';
+
+// custom provider with different provider options:
+export const openai = customProvider({
+  languageModels: {
+    // replacement model with custom provider options:
+    'gpt-6-astra': wrapLanguageModel({
+      model: gateway('openai/gpt-6-astra'),
+      middleware: defaultSettingsMiddleware({
+        settings: {
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'high',
+            },
+          },
+        },
+      }),
+    }),
+    // alias model with custom provider options:
+    'gpt-6-astra-high-reasoning': wrapLanguageModel({
+      model: gateway('openai/gpt-6-astra'),
+      middleware: defaultSettingsMiddleware({
+        settings: {
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'high',
+            },
+          },
+        },
+      }),
+    }),
+  },
+  fallbackProvider: gateway,
+});
+```
+
+### 示例：模型名称别名
+
+你还可以提供模型名称别名，以便将来在一处更新模型版本：
+
+```ts
+import { customProvider, gateway } from 'ai';
+
+// custom provider with alias names:
+export const anthropic = customProvider({
+  languageModels: {
+    opus: gateway('anthropic/claude-opus-5.5'),
+    sonnet: gateway('anthropic/claude-sonnet-5.5'),
+    haiku: gateway('anthropic/claude-haiku-5.5'),
+  },
+  fallbackProvider: gateway,
+});
+```
+
+### 示例：限制可用模型
+
+即使你拥有多个提供商，也可以限制系统中可用的模型。
+
+```ts
+import {
+  customProvider,
+  defaultSettingsMiddleware,
+  wrapLanguageModel,
+  gateway,
+} from 'ai';
+
+export const myProvider = customProvider({
+  languageModels: {
+    'text-medium': gateway('anthropic/claude-sonnet-5.5'),
+    'text-small': gateway('openai/gpt-6-luna'),
+    'reasoning-medium': wrapLanguageModel({
+      model: gateway('openai/gpt-6-astra'),
+      middleware: defaultSettingsMiddleware({
+        settings: {
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'high',
+            },
+          },
+        },
+      }),
+    }),
+    'reasoning-fast': wrapLanguageModel({
+      model: gateway('openai/gpt-6-astra'),
+      middleware: defaultSettingsMiddleware({
+        settings: {
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'low',
+            },
+          },
+        },
+      }),
+    }),
+  },
+  embeddingModels: {
+    embedding: gateway.embeddingModel('openai/text-embedding-3-small'),
+  },
+  // no fallback provider
+});
+```
+
+### 示例：文件与技能接口
+
+你可以将提供商的 `files` 或 `skills` 接口附加到自定义提供商上。这样你就可以通过同一个提供商抽象使用 `uploadFile` 和 `uploadSkill`。
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
+import { customProvider, uploadFile, uploadSkill } from 'ai';
+
+// custom provider with files interface:
+const myOpenAI = customProvider({
+  languageModels: {
+    'gpt-6-luna': openai.responses('gpt-6-luna'),
+  },
+  files: openai.files(),
+});
+
+// custom provider with skills interface:
+const myAnthropic = customProvider({
+  languageModels: {
+    sonnet: anthropic('claude-sonnet-5-5'),
+  },
+  skills: anthropic.skills(),
+});
+
+// usage:
+await uploadFile({
+  api: myOpenAI.files!(),
+  data: fileData,
+  filename: 'image.png',
+});
+await uploadSkill({
+  api: myAnthropic.skills!(),
+  files: skillFiles,
+  displayTitle: 'My Skill',
+});
+```
+
+如果未设置 `files` 或 `skills` 选项但配置了 `fallbackProvider`，自定义提供商将从回退提供商继承这些接口。
+
+## 提供商注册表
+
+你可以使用 `createProviderRegistry` 创建包含多个提供商和模型的[提供商注册表](/docs/reference/ai-sdk-core/provider-registry)。
+
+### 设置
+
+```ts filename={"registry.ts"}
+import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
+import { createProviderRegistry, gateway } from 'ai';
+
+export const registry = createProviderRegistry({
+  // register provider with prefix and default setup using gateway:
+  gateway,
+
+  // register provider with prefix and direct provider import:
+  anthropic,
+  openai,
+});
+```
+
+### 使用自定义分隔符进行设置
+
+默认情况下，注册表使用 `:` 作为提供商与模型 ID 之间的分隔符。你可以自定义该分隔符：
+
+```ts filename={"registry.ts"}
+import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
+import { createProviderRegistry, gateway } from 'ai';
+
+export const customSeparatorRegistry = createProviderRegistry(
+  {
+    gateway,
+    anthropic,
+    openai,
+  },
+  { separator: ' > ' },
+);
+```
+
+### 示例：使用语言模型
+
+你可以使用注册表上的 `languageModel` 方法访问语言模型。
+提供商 id 会成为模型 id 的前缀：`providerId:modelId`。
+
+```ts highlight={"5"}
+import { generateText } from 'ai';
+import { registry } from './registry';
+
+const { text } = await generateText({
+  model: registry.languageModel('openai:gpt-6-astra'), // default separator
+  // or with custom separator:
+  // model: customSeparatorRegistry.languageModel('openai > gpt-6-astra'),
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+### 示例：使用文本嵌入模型
+
+你可以使用注册表上的 `.embeddingModel` 方法访问文本嵌入模型。
+提供商 id 会成为模型 id 的前缀：`providerId:modelId`。
+
+```ts highlight={"5"}
+import { embed } from 'ai';
+import { registry } from './registry';
+
+const { embedding } = await embed({
+  model: registry.embeddingModel('openai:text-embedding-3-small'),
+  value: 'sunny day at the beach',
+});
+```
+
+### 示例：使用图像模型
+
+你可以使用注册表上的 `imageModel` 方法访问图像模型。
+提供商 id 会成为模型 id 的前缀：`providerId:modelId`。
+
+```ts highlight={"5"}
+import { generateImage } from 'ai';
+import { registry } from './registry';
+
+const { image } = await generateImage({
+  model: registry.imageModel('openai:dall-e-3'),
+  prompt: 'A beautiful sunset over a calm ocean',
+});
+```
+
+### 示例：使用视频模型
+
+你可以使用注册表上的 `videoModel` 方法访问视频模型。
+提供商 id 会成为模型 id 的前缀：`providerId:modelId`。
+
+```ts highlight={"8"}
+import { experimental_generateVideo } from 'ai';
+import { fal } from '@ai-sdk/fal';
+import { createProviderRegistry } from 'ai';
+
+const registry = createProviderRegistry({ fal });
+
+const { videos } = await experimental_generateVideo({
+  model: registry.videoModel('fal:luma-dream-machine/ray-2'),
+  prompt: 'A cat walking on a beach at sunset',
+});
+```
+
+### 示例：使用文件接口
+
+你可以通过调用 `registry.files(providerId)` 访问提供商的文件接口。
+当你想先通过注册表中的提供商上传文件、再在模型请求中引用它们时，这会很有用。
+
+```ts highlight={"12,17"}
+import { openai } from '@ai-sdk/openai';
+import {
+  createProviderRegistry,
+  customProvider,
+  generateText,
+  uploadFile,
+} from 'ai';
+
+const registry = createProviderRegistry({
+  openai: customProvider({
+    languageModels: { 'gpt-6-luna': openai.responses('gpt-6-luna') },
+    files: openai.files(),
+  }),
+});
+
+const { providerReference } = await uploadFile({
+  api: registry.files('openai'),
+  data: fileData,
+  filename: 'image.png',
+});
+
+const { text } = await generateText({
+  model: registry.languageModel('openai:gpt-6-luna'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe what you see in this image.' },
+        { type: 'file', mediaType: 'image', data: providerReference },
+      ],
+    },
+  ],
+});
+```
+
+### 示例：使用技能接口
+
+你可以通过调用 `registry.skills(providerId)` 访问提供商的技能接口。
+
+```ts highlight={"7,12"}
+import { anthropic } from '@ai-sdk/anthropic';
+import { createProviderRegistry, customProvider, uploadSkill } from 'ai';
+
+const registry = createProviderRegistry({
+  anthropic: customProvider({
+    languageModels: { sonnet: anthropic('claude-sonnet-5-5') },
+    skills: anthropic.skills(),
+  }),
+});
+
+await uploadSkill({
+  api: registry.skills('anthropic'),
+  files: skillFiles,
+  displayTitle: 'My Skill',
+});
+```
+
+## 组合自定义提供商、提供商注册表与中间件
+
+提供商管理的核心思想是建立一个文件，包含你想使用的所有提供商和模型。
+你可能希望预配置模型设置、提供模型名称别名、限制可用的模型等等。
+
+下面的示例实现了以下概念：
+
+- 以命名空间前缀透传网关（此处为 `gateway > *`）
+- 以命名空间前缀透传完整提供商（此处为 `xai > *`）
+- 使用自定义 api key 和 base URL 配置 OpenAI 兼容提供商（此处为 `custom > *`）
+- 设置模型名称别名（此处为 `anthropic > fast`、`anthropic > writing`、`anthropic > reasoning`）
+- 预配置模型设置（此处为 `anthropic > reasoning`）
+- 校验提供商特有选项（此处为 `AnthropicLanguageModelOptions`）
+- 使用回退提供商（此处为 `anthropic > *`）
+- 将提供商限制为某些模型且不设回退（此处为 `groq > llama-3.1-8b-instant`、`groq > qwen/qwen3.6-27b`）
+- 为提供商注册表定义自定义分隔符（此处为 `>`）
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { xai } from '@ai-sdk/xai';
+import { groq } from '@ai-sdk/groq';
+import {
+  createProviderRegistry,
+  customProvider,
+  defaultSettingsMiddleware,
+  gateway,
+  wrapLanguageModel,
+} from 'ai';
+
+export const registry = createProviderRegistry(
+  {
+    // pass through gateway with a namespace prefix
+    gateway,
+
+    // pass through full providers with namespace prefixes
+    xai,
+
+    // access an OpenAI-compatible provider with custom setup
+    custom: createOpenAICompatible({
+      name: 'provider-name',
+      apiKey: process.env.CUSTOM_API_KEY,
+      baseURL: 'https://api.custom.com/v1',
+    }),
+
+    // setup model name aliases
+    anthropic: customProvider({
+      languageModels: {
+        fast: anthropic('claude-haiku-5-5'),
+
+        // simple model
+        writing: anthropic('claude-sonnet-4-5'),
+
+        // extended reasoning model configuration:
+        reasoning: wrapLanguageModel({
+          model: anthropic('claude-sonnet-4-5'),
+          middleware: defaultSettingsMiddleware({
+            settings: {
+              maxOutputTokens: 100000, // example default setting
+              providerOptions: {
+                anthropic: {
+                  thinking: {
+                    type: 'enabled',
+                    budgetTokens: 32000,
+                  },
+                } satisfies AnthropicLanguageModelOptions,
+              },
+            },
+          }),
+        }),
+      },
+      fallbackProvider: anthropic,
+    }),
+
+    // limit a provider to certain models without a fallback
+    groq: customProvider({
+      languageModels: {
+        'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
+        'qwen/qwen3.6-27b': groq('qwen/qwen3.6-27b'),
+      },
+    }),
+  },
+  { separator: ' > ' },
+);
+
+// usage:
+const model = registry.languageModel('anthropic > reasoning');
+```
+
+## 全局提供商配置
+
+AI SDK 5 包含一个全局提供商功能，让你可以仅使用纯模型 ID 字符串来指定模型：
+
+```ts
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = await streamText({
+  model: __MODEL__, // Uses the global provider (defaults to gateway)
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+默认情况下，全局提供商被设置为 Vercel AI Gateway。
+
+### 自定义全局提供商
+
+你可以设置自己偏好的全局提供商：
+
+```ts filename="setup.ts"
+import { openai } from '@ai-sdk/openai';
+
+// Initialize once during startup:
+globalThis.AI_SDK_DEFAULT_PROVIDER = openai;
+```
+
+```ts filename="app.ts"
+import { streamText } from 'ai';
+
+const result = await streamText({
+  model: 'gpt-6-astra', // Uses OpenAI provider without prefix
+  prompt: 'Invent a new holiday and describe its traditions.',
+});
+```
+
+这简化了提供商的使用，让你无需更改整个代码库中的模型引用即可在不同提供商之间切换。
+
+## 实验性决策模型
+
+自定义提供商接受 `decisionModels` 别名，注册表暴露
+`decisionModel('provider:model')`。这些方法返回供
+`experimental_decide` 使用的模型实例。直接的字符串 ID 默认使用 Gateway，或使用
+显式配置的、带有 `decisionModel` 方法的默认提供商。针对语言模型和图像模型的注册表
+中间件不适用于决策。
+别名、默认提供商配置与能力差异请参阅
+[Decisions](/docs/ai-sdk-core/decisions#模型别名与注册表)。

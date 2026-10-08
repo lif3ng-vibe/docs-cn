@@ -1,0 +1,10 @@
+{
+  "name": "ai-sdk-docs-cn",
+  "version": "0.0.0",
+  "private": true,
+  "description": "简体中文镜像：AI SDK 文档（ai-sdk.dev）的汉化翻译与构建工程（上游 vercel/ai main@5028fa4，Apache-2.0）",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

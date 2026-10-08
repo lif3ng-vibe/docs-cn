@@ -1,0 +1,68 @@
+---
+title: Experimental_StdioMCPTransport
+description: 为模型上下文协议（MCP）客户端创建传输层，通过标准输入输出流与 MCP 服务器通信
+---
+
+# `Experimental_StdioMCPTransport`
+
+为模型上下文协议（MCP）客户端创建传输层（transport），通过标准输入输出流与 MCP 服务器通信。该传输层仅在 Node.js 环境中受支持。
+
+此功能为实验性，未来可能变更或移除。
+
+## 导入
+
+<Snippet
+  text={`import { Experimental_StdioMCPTransport } from "@ai-sdk/mcp/mcp-stdio"`}
+  prompt={false}
+/>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'config',
+      type: 'StdioConfig',
+      description: 'MCP 客户端的配置。',
+      properties: [
+        {
+          type: 'StdioConfig',
+          parameters: [
+            {
+              name: 'command',
+              type: 'string',
+              description: '运行 MCP 服务器的命令。',
+            },
+            {
+              name: 'args',
+              type: 'string[]',
+              isOptional: true,
+              description: '传给 MCP 服务器的参数。',
+            },
+            {
+              name: 'env',
+              type: 'Record<string, string>',
+              isOptional: true,
+              description:
+                '为 MCP 服务器设置的环境变量。',
+            },
+            {
+              name: 'stderr',
+              type: 'IOType | Stream | number',
+              isOptional: true,
+              description: "MCP 服务器 stderr 要写入的流。",
+            },
+            {
+              name: 'cwd',
+              type: 'string',
+              isOptional: true,
+              description: 'MCP 服务器的工作目录。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>

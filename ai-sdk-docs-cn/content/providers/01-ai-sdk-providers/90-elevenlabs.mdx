@@ -1,0 +1,284 @@
+---
+title: ElevenLabs
+description: 了解如何在 AI SDK 中使用 ElevenLabs 提供商。
+---
+
+# ElevenLabs 提供商
+
+[ElevenLabs](https://elevenlabs.io/) 提供商为 ElevenLabs 的语音转写（transcription）与语音生成 API 提供支持。
+
+## 安装
+
+ElevenLabs 提供商可通过 `@ai-sdk/elevenlabs` 模块获取，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/elevenlabs" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/elevenlabs` 导入默认提供商实例 `elevenLabs`：
+
+```ts
+import { elevenLabs } from '@ai-sdk/elevenlabs';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/elevenlabs` 导入 `createElevenLabs` 并使用你的设置创建提供商实例：
+
+```ts
+import { createElevenLabs } from '@ai-sdk/elevenlabs';
+
+const elevenLabs = createElevenLabs({
+  // custom settings, e.g.
+  fetch: customFetch,
+});
+```
+
+你可以使用以下可选设置来自定义 ElevenLabs 提供商实例：
+
+- **apiKey** _string_
+
+  通过 `xi-api-key` 请求头发送的 API 密钥。默认取 `ELEVENLABS_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。默认使用全局 `fetch` 函数。可以用它作为中间件拦截请求，或为测试等场景提供自定义 fetch 实现。
+
+- **webSocket** _WebSocketConstructor_
+
+  用于实时语音转写的自定义 WebSocket 实现。当运行时的原生 WebSocket 构造器无法发送 `xi-api-key` 身份验证请求头时，需要使用支持请求头的实现。
+
+## 语音模型
+
+你可以使用 `.speech()` 工厂方法创建调用 [ElevenLabs 语音 API](https://elevenlabs.io/text-to-speech) 的模型。
+
+第一个参数是模型 id，例如 `eleven_multilingual_v2`。
+
+```ts
+const model = elevenLabs.speech('eleven_multilingual_v2');
+```
+
+`voice` 参数可以设置为 [ElevenLabs 音色库](https://elevenlabs.io/app/voice-library)中的音色 ID。在音色库中选中一个音色并复制其 ID 即可找到音色 ID。
+
+```ts highlight="6"
+import { generateSpeech } from 'ai';
+import { elevenLabs } from '@ai-sdk/elevenlabs';
+
+const result = await generateSpeech({
+  model: elevenLabs.speech('eleven_multilingual_v2'),
+  text: 'Hello, world!',
+  voice: '21m00Tcm4TlvDq8ikWAM', // Rachel voice
+});
+```
+
+还可以通过 `providerOptions` 参数传入更多提供商专属选项：
+
+```ts highlight="7-9"
+import { generateSpeech } from 'ai';
+import {
+  elevenLabs,
+  type ElevenLabsSpeechModelOptions,
+} from '@ai-sdk/elevenlabs';
+
+const result = await generateSpeech({
+  model: elevenLabs.speech('eleven_multilingual_v2'),
+  text: 'Hello, world!',
+  voice: '21m00Tcm4TlvDq8ikWAM',
+  providerOptions: {
+    elevenlabs: {
+      voiceSettings: {
+        stability: 0.5,
+        similarityBoost: 0.75,
+      },
+    } satisfies ElevenLabsSpeechModelOptions,
+  },
+});
+```
+
+- **languageCode** _string or null_  
+  可选。用于为模型强制指定语言的代码（ISO 639-1）。目前仅 Turbo v2.5 和 Flash v2.5 支持语言强制。对其他模型，提供语言代码会导致错误。
+
+- **voiceSettings** _object or null_  
+  可选。覆盖给定音色已存储设置的声音设置。仅对当前请求生效。
+  - **stability** _double or null_  
+    可选。决定声音的稳定性以及每次生成之间的随机性。值越低情感范围越广；值越高声音越单调。
+  - **useSpeakerBoost** _boolean or null_  
+    可选。提升与原始说话人的相似度。会增加计算负载与延迟。
+  - **similarityBoost** _double or null_  
+    可选。控制 AI 与原始声音的贴合程度。
+  - **style** _double or null_  
+    可选。放大原始说话人的风格。设为大于 0 时可能增加延迟。
+
+- **pronunciationDictionaryLocators** _array of objects or null_  
+  可选。按顺序应用于文本的发音词典定位器列表。每个请求最多 3 个定位器。  
+  每个定位器对象：
+  - **pronunciationDictionaryId** _string_（必填）  
+    发音词典的 ID。
+  - **versionId** _string or null_（可选）  
+    词典的版本 ID。未提供时使用最新版本。
+
+- **seed** _integer or null_  
+  可选。指定后系统将尝试进行确定性采样。取值必须在 0 到 4294967295 之间。不保证确定性。
+
+- **previousText** _string or null_  
+  可选。当前请求文本之前的文本。在拼接多段生成内容时可改善连贯性，或影响当前生成的连贯性。
+
+- **nextText** _string or null_  
+  可选。当前请求文本之后的文本。在拼接多段生成内容时可改善连贯性，或影响当前生成的连贯性。
+
+- **previousRequestIds** _array of strings or null_  
+  可选。在此样本之前生成的样本的请求 ID 列表。拆分大任务时可改善连贯性。最多 3 个 ID。同时发送 `previousText` 与 `previousRequestIds` 时，`previousText` 会被忽略。
+
+- **nextRequestIds** _array of strings or null_  
+  可选。在此样本之后生成的样本的请求 ID 列表。重新生成样本时有助于保持连贯性。最多 3 个 ID。同时发送 `nextText` 与 `nextRequestIds` 时，`nextText` 会被忽略。
+
+- **applyTextNormalization** _enum_  
+  可选。控制文本规范化。  
+  允许的值：`'auto'`（默认）、`'on'`、`'off'`。
+  - `'auto'`：由系统决定是否应用规范化（如将数字拼写展开）。
+  - `'on'`：始终应用规范化。
+  - `'off'`：从不应用规范化。  
+    对 `eleven_turbo_v2_5` 和 `eleven_flash_v2_5`，仅企业版（Enterprise）方案可启用。
+
+- **applyLanguageTextNormalization** _boolean_  
+  可选。默认为 `false`。控制语言文本规范化，有助于在部分受支持语言（目前仅日语）中正确发音。可能显著增加延迟。
+
+- **enableLogging** _boolean_  
+  可选。是否为此 API 调用启用请求日志。默认取账号级设置。
+
+### 模型能力
+
+| 模型                     | 说明         |
+| ------------------------ | ------------ |
+| `eleven_v3`              | <Check />    |
+| `eleven_multilingual_v2` | <Check />    |
+| `eleven_flash_v2_5`      | <Check />    |
+| `eleven_flash_v2`        | <Check />    |
+| `eleven_turbo_v2_5`      | <Check />    |
+| `eleven_turbo_v2`        | <Check />    |
+| `eleven_monolingual_v1`  | <Check />    |
+| `eleven_multilingual_v1` | <Check />    |
+
+## 语音转写模型
+
+你可以使用 `.transcription()` 工厂方法创建调用 [ElevenLabs 语音转写 API](https://elevenlabs.io/speech-to-text) 的模型。
+
+第一个参数是模型 id，例如 `scribe_v2`。
+
+```ts
+const model = elevenLabs.transcription('scribe_v2');
+```
+
+还可以通过 `providerOptions` 参数传入更多提供商专属选项。例如，若事先知道输入语言，以 ISO-639-1（如 `en`）格式提供有时可以提升语音转写性能。
+
+```ts highlight="10-14"
+import { transcribe } from 'ai';
+import {
+  elevenLabs,
+  type ElevenLabsTranscriptionModelOptions,
+} from '@ai-sdk/elevenlabs';
+
+const result = await transcribe({
+  model: elevenLabs.transcription('scribe_v2'),
+  audio: new Uint8Array([1, 2, 3, 4]),
+  providerOptions: {
+    elevenlabs: {
+      languageCode: 'en',
+    } satisfies ElevenLabsTranscriptionModelOptions,
+  },
+});
+```
+
+以下提供商选项可用：
+
+- **languageCode** _string_
+
+  与音频文件语言对应的 ISO-639-1 或 ISO-639-3 语言代码。若事先知道，有时可以提升语音转写性能。默认为 `null`，此时自动预测语言。
+
+- **tagAudioEvents** _boolean_
+
+  是否在转写结果中标注音频事件，如（笑声）、（脚步声）等。默认为 `true`。
+
+- **numSpeakers** _integer_
+
+  上传文件中说话人数的最大值。有助于预测谁在何时说话。可预测的最大说话人数为 32。默认为 `null`，此时说话人数设为模型支持的最大值。
+
+- **timestampsGranularity** _enum_
+
+  转写结果中时间戳的粒度。默认为 `'word'`。允许的值：`'none'`、`'word'`、`'character'`。
+
+- **diarize** _boolean_
+
+  是否标注上传文件中当前正在说话的说话人。默认为 `true`。
+
+- **fileFormat** _enum_
+
+  输入音频的格式。默认为 `'other'`。允许的值：`'pcm_s16le_16'`、`'other'`。使用 `'pcm_s16le_16'` 时，输入音频必须是 16kHz 采样率的 16 位 PCM、单声道（mono）且小端字节序。延迟将低于传入编码波形的方式。
+
+### 模型能力
+
+| 模型                     | 语音转写      | 时长      | 分段      | 语言      |
+| ------------------------ | ------------- | --------- | --------- | --------- |
+| `scribe_v1`              | <Check />     | <Check /> | <Check /> | <Check /> |
+| `scribe_v1_experimental` | <Check />     | <Check /> | <Check /> | <Check /> |
+| `scribe_v2`              | <Check />     | <Check /> | <Check /> | <Check /> |
+
+## 流式语音转写模型
+
+<Note type="warning">流式语音转写是一项实验性功能。</Note>
+
+Scribe v2 Realtime 通过 `experimental_streamTranscribe` 支持实时转写。接受 8、16、22.05、24、44.1 或 48 kHz 的原始 PCM 音频，或 8 kHz mu-law 音频。
+
+```ts
+import {
+  createElevenLabs,
+  type ElevenLabsProviderSettings,
+} from '@ai-sdk/elevenlabs';
+import { experimental_streamTranscribe as streamTranscribe } from 'ai';
+import { WebSocket } from 'ws';
+
+const elevenLabs = createElevenLabs({
+  webSocket: WebSocket as unknown as ElevenLabsProviderSettings['webSocket'],
+});
+
+const result = streamTranscribe({
+  model: elevenLabs.transcription('scribe_v2_realtime'),
+  audio,
+  inputAudioFormat: { type: 'audio/pcm', rate: 16000 },
+  providerOptions: {
+    elevenlabs: {
+      languageCode: 'en',
+      streaming: {
+        includeLanguageDetection: true,
+        includeTimestamps: true,
+      },
+    },
+  },
+});
+
+for await (const part of result.fullStream) {
+  if (part.type === 'transcript-partial') {
+    console.log('partial:', part.text);
+  }
+
+  if (part.type === 'transcript-final') {
+    console.log('final:', part.text);
+  }
+}
+```
+
+ElevenLabs 实时端点通过 WebSocket 请求头进行身份验证。在原生 WebSocket 构造器无法发送请求头的运行时中，请使用支持请求头的 WebSocket 实现，如 `ws`。
+
+`streaming` 提供商选项与 ElevenLabs 的实时转写设置对应：`commitStrategy`、`enableLogging`、`filterBackgroundAudio`、`includeLanguageDetection`、`includeTimestamps`、`keyterms`、`minSilenceDurationMs`、`minSpeechDurationMs`、`noVerbatim`、`previousText`、`secondaryLanguages`、`vadSilenceThresholdSecs` 和 `vadThreshold`。
+
+ElevenLabs 在携带时间戳的提交事件中返回检测到的语言。启用 `includeLanguageDetection` 时，提供商会在内部请求该事件，但只有同时启用 `includeTimestamps` 才会返回时间戳分段。`filterBackgroundAudio` 不能与这两个选项中的任何一个组合使用。
+
+有关流式语音转写的更多信息，参见[语音转写](/docs/ai-sdk-core/transcription)。
+
+### 模型能力
+
+| 模型                 | 流式语音转写        | 时间戳              | 语言检测            |
+| -------------------- | ------------------- | ------------------- | ------------------- |
+| `scribe_v2_realtime` | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |

@@ -1,0 +1,124 @@
+---
+title: Mixedbread
+description: 了解如何使用 Mixedbread 提供商。
+---
+
+# Mixedbread 提供商
+
+[patelvivekdev/mixedbread-ai-provider](https://github.com/patelvivekdev/mixedbread-ai-provider) 是一个社区提供商，它使用 [Mixedbread](https://www.mixedbread.ai/) 为 AI SDK 提供嵌入（embedding）支持。
+
+## 安装
+
+Mixedbread 提供商包含在 `mixedbread-ai-provider` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="mixedbread-ai-provider" />
+
+## 提供商实例
+
+你可以从 `mixedbread-ai-provider` 导入默认提供商实例 `mixedbread`：
+
+```ts
+import { mixedbread } from 'mixedbread-ai-provider';
+```
+
+如果需要自定义配置，可以从 `mixedbread-ai-provider` 导入 `createMixedbread`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createMixedbread } from 'mixedbread-ai-provider';
+
+const mixedbread = createMixedbread({
+  // custom settings
+});
+```
+
+你可以使用以下可选设置来自定义 Mixedbread 提供商实例：
+
+- **baseURL** _string_
+
+  Mixedbread API 的基础 URL。默认前缀为 `https://api.mixedbread.com/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。默认取自 `MIXEDBREAD_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。默认使用全局 `fetch` 函数。你可以将它用作中间件来拦截请求，或提供自定义 fetch 实现，例如用于测试。
+
+## 文本嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 [Mixedbread 嵌入 API](https://www.mixedbread.com/api-reference/endpoints/embeddings) 的模型。
+
+```ts
+import { mixedbread } from 'mixedbread-ai-provider';
+
+const embeddingModel = mixedbread.embeddingModel(
+  'mixedbread-ai/mxbai-embed-large-v1',
+);
+```
+
+你可以使用 Mixedbread 嵌入模型配合 `embed` 函数生成嵌入：
+
+```ts
+import { mixedbread } from 'mixedbread-ai-provider';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: mixedbread.embeddingModel('mixedbread-ai/mxbai-embed-large-v1'),
+  value: 'sunny day at the beach',
+});
+```
+
+Mixedbread 嵌入模型支持额外的提供商选项，可通过 `providerOptions.mixedbread` 传入：
+
+```ts
+import { mixedbread } from 'mixedbread-ai-provider';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: mixedbread.embeddingModel('mixedbread-ai/mxbai-embed-large-v1'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    mixedbread: {
+      prompt: 'Generate embeddings for text',
+      normalized: true,
+      dimensions: 512,
+      encodingFormat: 'float16',
+    },
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **prompt** _string_
+
+  可选的提示词（prompt），为模型提供上下文。更多信息请参阅模型文档。长度为 1 到 256 个字符的字符串。
+
+- **normalized** _boolean_
+
+  是否对嵌入进行归一化。
+
+- **dimensions** _number_
+
+  输出向量的期望维度数。默认为模型的最大维度。取值为 1 到模型最大输出维度之间的数字。仅适用于基于 Matryoshka 的模型。
+
+- **encodingFormat** _'float' | 'float16' | 'binary' | 'ubinary' | 'int8' | 'uint8' | 'base64'_
+
+### 模型能力
+
+| 模型                              | 上下文长度 | 维度 | 自定义维度 |
+| --------------------------------- | ---------- | ---- | ---------- |
+| `mxbai-embed-large-v1`            | 512        | 1024 | <Check />  |
+| `mxbai-embed-2d-large-v1`         | 512        | 1024 | <Check />  |
+| `deepset-mxbai-embed-de-large-v1` | 512        | 1024 | <Check />  |
+| `mxbai-embed-xsmall-v1`           | 4096       | 384  | <Cross />  |
+
+<Note>
+  上表列出了常用模型。完整可用模型列表请参阅 [Mixedbread
+  文档](https://www.mixedbread.com/docs/models/embedding)。
+</Note>

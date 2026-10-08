@@ -1,0 +1,125 @@
+---
+title: 流式传输对象
+description: 学习如何使用 AI SDK 与 React 服务器组件（RSC）流式传输对象。
+tags: ['rsc', 'streaming', 'structured data']
+---
+
+# Stream Object
+
+<Note>
+  本示例使用 React 服务器组件（RSC）。如果你想改用客户端渲染和 Hook，请参阅[使用
+  useObject 的"流式生成对象"示例](/examples/next-pages/basics/streaming-object-generation)。
+</Note>
+
+对象生成有时需要较长时间才能完成，尤其是生成较大的 schema 时。在这种情况下，将对象生成过程实时流式传输到客户端会很有用。这样客户端可以在对象生成的同时逐步显示生成的内容，而不必让用户等待全部完成后再显示结果。
+
+<Browser>
+  <ObjectGeneration
+    stream
+    object={{
+      notifications: [
+        {
+          name: 'Jamie Roberts',
+          message: '嘿！复习进展如何？要不要来杯咖啡提提神？',
+          minutesAgo: 15,
+        },
+        {
+          name: 'Prof. Morgan',
+          message: '提醒：你的学期论文明天早上 8 点整截止。请确保符合列出的提交要求。',
+          minutesAgo: 46,
+        },
+        {
+          name: 'Alex Chen',
+          message: '兄弟，急事！能借我明天考试的笔记吗？我的笔记真的被狗吃了！',
+          minutesAgo: 30,
+        },
+      ],
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，点击按钮时会调用 `generate` 函数。该函数会按照 schema 的描述生成一份通知列表。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+import { generate } from './actions';
+import { readStreamableValue } from '@ai-sdk/rsc';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export default function Home() {
+  const [generation, setGeneration] = useState<string>('');
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          const { object } = await generate('Messages during finals week.');
+
+          for await (const partialObject of readStreamableValue(object)) {
+            if (partialObject) {
+              setGeneration(
+                JSON.stringify(partialObject.notifications, null, 2),
+              );
+            }
+          }
+        }}
+      >
+        Ask
+      </button>
+
+      <pre>{generation}</pre>
+    </div>
+  );
+}
+```
+
+## 服务器
+
+接下来我们实现 `generate` 函数。我们将使用 `streamText` 函数配合 `Output.object`，基于前面定义的 schema 流式生成虚构的通知列表。
+
+```typescript filename='app/actions.ts'
+'use server';
+
+import { streamText, Output } from 'ai';
+import { createStreamableValue } from '@ai-sdk/rsc';
+import { z } from 'zod';
+
+export async function generate(input: string) {
+  'use server';
+
+  const stream = createStreamableValue();
+
+  (async () => {
+    const { partialOutputStream } = streamText({
+      model: 'openai/gpt-6-astra',
+      instructions: 'You generate three notifications for a messages app.',
+      prompt: input,
+      output: Output.object({
+        schema: z.object({
+          notifications: z.array(
+            z.object({
+              name: z.string().describe('Name of a fictional person.'),
+              message: z.string().describe('Do not use emojis or links.'),
+              minutesAgo: z.number(),
+            }),
+          ),
+        }),
+      }),
+    });
+
+    for await (const partialObject of partialOutputStream) {
+      stream.update(partialObject);
+    }
+
+    stream.done();
+  })();
+
+  return { object: stream.value };
+}
+```

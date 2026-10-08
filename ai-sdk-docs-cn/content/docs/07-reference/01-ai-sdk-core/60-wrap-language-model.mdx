@@ -1,0 +1,58 @@
+---
+title: wrapLanguageModel
+description: 使用中间件包装语言模型的函数（API 参考）
+---
+
+# `wrapLanguageModel()`
+
+`wrapLanguageModel` 函数提供了一种通过中间件包装语言模型来增强其行为的方式。
+有关中间件的更多信息，请参阅[语言模型中间件](/docs/ai-sdk-core/middleware)。
+
+```ts
+import { wrapLanguageModel, gateway } from 'ai';
+
+const wrappedLanguageModel = wrapLanguageModel({
+  model: gateway('openai/gpt-6-astra'),
+  middleware: yourLanguageModelMiddleware,
+});
+```
+
+## 导入
+
+<Snippet text={`import { wrapLanguageModel } from "ai"`} prompt={false} />
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'LanguageModelV4',
+      description: '要包装的原始 LanguageModelV4 实例。',
+    },
+    {
+      name: 'middleware',
+      type: 'LanguageModelV4Middleware | LanguageModelV4Middleware[]',
+      description:
+        '要应用于语言模型的中间件。提供多个中间件时，第一个中间件会最先转换输入，最后一个中间件会直接包裹在模型周围。',
+    },
+    {
+      name: 'modelId',
+      type: 'string',
+      description:
+        '可选的自定义模型 ID，用于覆盖原始模型的 ID。',
+    },
+    {
+      name: 'providerId',
+      type: 'string',
+      description:
+        '可选的自定义提供商 ID，用于覆盖原始模型的提供商。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个应用了中间件的全新 `LanguageModelV4` 实例。

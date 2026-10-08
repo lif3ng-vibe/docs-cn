@@ -1,0 +1,105 @@
+---
+title: 工具调用缺少结果错误
+description: 如何修复在不带 execute 函数的工具中出现的 "ToolInvocation must have a result" 错误
+---
+
+# Tool Invocation Missing Result Error
+
+## 问题
+
+使用 `generateText()` 或 `streamText()` 时，当调用了不带 `execute` 函数的工具，你可能会遇到 "ToolInvocation must have a result" 错误。
+
+## 原因
+
+当你定义了不带 `execute` 函数的工具，且没有通过其他方式（如 `useChat` 的 `onToolCall` 或 `addToolOutput` 函数）提供结果时，就会出现这个错误。
+
+每次工具被调用后，模型都期望在继续对话之前收到一个结果。没有结果，模型就无法判断工具调用是成功还是失败，对话状态也会变得无效。
+
+## 解决方案
+
+处理工具结果有两种方式：
+
+1. 在服务端执行：使用带 `execute` 函数的工具：
+
+```tsx
+const tools = {
+  weather: tool({
+    description: 'Get the weather in a location',
+    inputSchema: z.object({
+      location: z
+        .string()
+        .describe('The city and state, e.g. "San Francisco, CA"'),
+    }),
+    execute: async ({ location }) => {
+      // Fetch and return weather data
+      return { temperature: 72, conditions: 'sunny', location };
+    },
+  }),
+};
+```
+
+2. 在客户端结合 `useChat` 执行（省略 `execute` 函数），此时必须使用 `addToolOutput` 提供结果：
+
+```tsx
+import { useChat } from '@ai-sdk/react';
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai';
+
+const { messages, sendMessage, addToolOutput } = useChat({
+  // Automatically submit when all tool results are available
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+
+  // Handle tool calls in onToolCall
+  onToolCall: async ({ toolCall }) => {
+    if (toolCall.toolName === 'getLocation') {
+      try {
+        const result = await getLocationData();
+
+        // Important: Don't await addToolOutput inside onToolCall to avoid deadlocks
+        addToolOutput({
+          tool: 'getLocation',
+          toolCallId: toolCall.toolCallId,
+          output: result,
+        });
+      } catch (err) {
+        // Important: Don't await addToolOutput inside onToolCall to avoid deadlocks
+        addToolOutput({
+          tool: 'getLocation',
+          toolCallId: toolCall.toolCallId,
+          state: 'output-error',
+          errorText: 'Failed to get location',
+        });
+      }
+    }
+  },
+});
+```
+
+```tsx
+// For interactive UI elements:
+const { messages, sendMessage, addToolOutput } = useChat({
+  transport: new DefaultChatTransport({ api: '/api/chat' }),
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+});
+
+// Inside your JSX, when rendering tool calls:
+<button
+  onClick={() =>
+    addToolOutput({
+      tool: 'myTool',
+      toolCallId, // must provide tool call ID
+      output: {
+        /* your tool result */
+      },
+    })
+  }
+>
+  Confirm
+</button>;
+```
+
+<Note type="warning">
+  无论是在服务端还是客户端处理工具，每个工具调用都必须有对应的结果，对话才能继续。
+</Note>

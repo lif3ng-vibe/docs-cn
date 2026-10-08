@@ -1,0 +1,209 @@
+---
+title: 停止流
+description: 了解如何使用 AI SDK 取消流
+---
+
+# Stopping Streams
+
+取消正在进行的流往往是需要的。
+例如，当用户发现响应不是自己想要的内容时，可能会希望停止流。
+
+AI SDK 的不同部分以不同的方式支持取消流。
+
+## AI SDK Core
+
+AI SDK 的函数有一个 `abortSignal` 参数，可用于取消流。
+如果你想从服务器侧取消到 LLM API 的流，例如通过转发请求中的 `abortSignal`，就可以使用它。
+
+```tsx highlight="10,11,12-16"
+import { createTextStreamResponse, streamText, toTextStream } from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    prompt,
+    // forward the abort signal:
+    abortSignal: req.signal,
+    onAbort: ({ steps }) => {
+      // Handle cleanup when stream is aborted
+      console.log('Stream aborted after', steps.length, 'steps');
+      // Persist partial results to database
+    },
+  });
+
+  return createTextStreamResponse({
+    stream: toTextStream({ stream: result.stream }),
+  });
+}
+```
+
+## AI SDK UI
+
+各 Hook（如 `useChat` 或 `useCompletion`）提供了可用于取消流的 `stop` 辅助函数。
+这会中止来自客户端的 HTTP 请求。如果还想在服务器上停止模型请求，你的服务器运行时必须将客户端断开连接传播到请求的 `AbortSignal`，并且你的路由必须像上面所示那样将该信号转发给 AI SDK Core 调用。
+
+<Note type="warning">
+  流中止功能与流恢复不兼容。如果你在 `useChat` 中使用
+  `resume: true`，中止功能会破坏恢复机制。请在"中止"和"恢复"功能之间二选一，不要同时使用。
+</Note>
+
+```tsx file="app/page.tsx" highlight="6,11-14"
+'use client';
+
+import { useCompletion } from '@ai-sdk/react';
+
+export default function Chat() {
+  const { input, completion, stop, status, handleSubmit, handleInputChange } =
+    useCompletion();
+
+  return (
+    <div>
+      {(status === 'submitted' || status === 'streaming') && (
+        <button type="button" onClick={() => stop()}>
+          Stop
+        </button>
+      )}
+      {completion}
+      <form onSubmit={handleSubmit}>
+        <input value={input} onChange={handleInputChange} />
+      </form>
+    </div>
+  );
+}
+```
+
+### Vercel
+
+在 Vercel 上，[请求取消](https://vercel.com/docs/functions/functions-api-reference#cancel-requests)仅在 Node.js 运行时中受支持，并且必须为每个需要的函数单独启用。在 `vercel.json` 中为该函数的配置添加 `supportsCancellation`：
+
+```json filename="vercel.json"
+{
+  "functions": {
+    "app/api/chat/route.ts": {
+      "supportsCancellation": true
+    }
+  }
+}
+```
+
+启用取消功能后，调用 `stop()` 会中止客户端请求，Vercel 会中止 `req.signal`，而将 `req.signal` 作为 `abortSignal` 转发即可取消模型请求。
+
+<Note type="warning">
+  如果没有 `supportsCancellation`，`stop()` 仍会停止客户端的流
+  但服务器端的生成可能会继续。
+</Note>
+
+## 处理流中止的清理
+
+当流被中止时，你可能需要执行清理操作，例如持久化部分结果或清理资源。`onAbort` 回调提供了一种在服务器侧处理这些场景的方式。
+
+`onEnd` 在流正常完成时被调用，而 `onAbort` 则专门在流通过 `AbortSignal` 被中止时调用。这一区别让你可以用不同的方式处理正常完成和中止的流。
+
+<Note>
+  对于 UI 消息流（`toUIMessageStreamResponse`），`onEnd` 回调
+  还会接收一个 `isAborted` 参数，指示流是否被中止。这让你可以在单个回调中同时处理完成和中止场景。
+</Note>
+
+```tsx highlight="8-12"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Write a long story...',
+  abortSignal: controller.signal,
+  onAbort: async ({ steps }) => {
+    // Called when stream is aborted - persist partial results
+    await savePartialResults(steps);
+    await logAbortEvent(steps.length);
+  },
+  onEnd: async ({ steps, totalUsage }) => {
+    // Called when stream completes normally
+    await saveFinalResults(steps, totalUsage);
+  },
+});
+```
+
+`onAbort` 回调接收：
+
+- `steps`：在中止发生之前所有已完成步骤的数组
+
+这在以下场景中特别有用：
+
+- 将部分对话历史持久化到数据库
+- 保存部分进度以便稍后继续
+- 清理服务器侧的资源或连接
+- 记录中止事件用于分析
+
+你还可以使用 `abort` 流部分直接在流中处理中止事件：
+
+```tsx highlight="6-9"
+for await (const part of result.stream) {
+  switch (part.type) {
+    case 'text-delta':
+      // Handle text delta content
+      break;
+    case 'abort':
+      // Handle abort event directly in stream
+      console.log('Stream was aborted');
+      break;
+    // ... other cases
+  }
+}
+```
+
+## UI 消息流
+
+在使用 `toUIMessageStream` 时，你需要以稍微不同的方式处理流中止。`onEnd` 回调会接收一个 `isAborted` 参数，并且你应当将 `consumeStream` 传递给 `createUIMessageStreamResponse` 以确保正确处理中止：
+
+```tsx highlight="3,21,24-30,34"
+import { openai } from '@ai-sdk/openai';
+import {
+  consumeStream,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  UIMessage,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+    abortSignal: req.signal,
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      onEnd: async ({ isAborted }) => {
+        if (isAborted) {
+          console.log('Stream was aborted');
+          // Handle abort-specific cleanup
+        } else {
+          console.log('Stream completed normally');
+          // Handle normal completion
+        }
+      },
+    }),
+    consumeSseStream: consumeStream,
+  });
+}
+```
+
+要在 UI 消息流中正确处理中止，`consumeStream` 函数是必需的。它确保即使在流被中止时也能被正确消费，从而防止潜在的内存泄漏或连接挂起。
+
+`onEnd` 回调会区分"消费者取消"与"观测到中止"。当消费者在结果被声明之前取消 UI 消息流时（例如客户端断开连接期间），`isCancelled` 为 `true`，`outcome.status` 保持为 `'unknown'`，`isAborted` 保持为 `false`。当流先观测到 `abort` 部分时，`outcome.status` 为 `'aborted'`，`isAborted` 为 `true`，而 `isCancelled` 不存在。如果同一段清理逻辑在两种情况下都应执行，请同时检查这两个标志。
+
+## AI SDK RSC
+
+<Note type="warning">
+  AI SDK RSC 目前不支持停止流。
+</Note>

@@ -1,0 +1,207 @@
+---
+title: 错误处理
+description: 了解如何在 AI SDK Core 中处理错误
+---
+
+# Error Handling
+
+## 处理常规错误
+
+常规错误会以异常形式抛出，可以通过 `try/catch` 块来处理。
+
+```ts highlight="4,9-11"
+import { generateText } from 'ai';
+__PROVIDER_IMPORT__;
+
+try {
+  const { text } = await generateText({
+    model: __MODEL__,
+    prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  });
+} catch (error) {
+  // handle error
+}
+```
+
+有关可能抛出的各类错误的更多信息，请参阅[错误类型](/docs/reference/ai-sdk-errors)。
+
+## 处理流式错误（简单流）
+
+当不支持 error 块的流中出现错误时，该错误会作为常规错误抛出。
+你可以使用 `try/catch` 块来处理这类错误。
+
+```ts highlight="4,13-15"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+try {
+  const { textStream } = streamText({
+    model: __MODEL__,
+    prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  });
+
+  for await (const textPart of textStream) {
+    process.stdout.write(textPart);
+  }
+} catch (error) {
+  // handle error
+}
+```
+
+## 处理流式错误（支持 `error` 的流式）
+
+`stream` 结果支持错误部件。
+你可以像处理其他部件一样处理这些错误部件。
+此外建议再添加一个 try-catch 块，以处理发生在流式传输之外的错误。
+
+```ts highlight="14-22"
+import { StreamProviderError, streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+try {
+  const { stream } = streamText({
+    model: __MODEL__,
+    prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  });
+
+  for await (const part of stream) {
+    switch (part.type) {
+      // ... handle other part types
+
+      case 'error': {
+        const error = part.error;
+
+        if (StreamProviderError.isInstance(error)) {
+          console.error(error.message, {
+            type: error.type,
+            code: error.code,
+            statusCode: error.statusCode,
+            isRetryable: error.isRetryable,
+          });
+        }
+        break;
+      }
+
+      case 'abort': {
+        // handle stream abort
+        break;
+      }
+
+      case 'tool-error': {
+        const error = part.error;
+        // handle error
+        break;
+      }
+    }
+  }
+} catch (error) {
+  // handle error
+}
+```
+
+## 流式开始后重试提供商错误
+
+`maxRetries` 会重试启动模型调用时发生的失败。若要重试在响应流式开始之后收到的格式良好的提供商错误事件，请设置 `streamRetries`：
+
+```ts highlight="7"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { textStream } = streamText({
+  model: __MODEL__,
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  streamRetries: 2,
+});
+
+for await (const textPart of textStream) {
+  process.stdout.write(textPart);
+}
+```
+
+流式重试仅会基于相同的累积对话与生成上下文重新运行失败的模型步骤。先前已完成的步骤（包括其中的工具调用和工具结果）不会被重放。来自失败尝试的工具输入、工具调用、审批请求、工具回调以及客户端工具执行都会被丢弃。只有在某次尝试成功完成模型调用之后，它们才会被暴露或执行。
+
+格式良好的提供商错误事件会被规范化为 [`StreamProviderError`](/docs/reference/ai-sdk-errors/ai-stream-provider-error) 实例。同一个实例会提供给 `onError`，并且在未请求恢复或重试次数用尽的情况下，也会提供给完整流中的 `error` 部件。在决定是否请求恢复时，请参考其 `isRetryable` 元数据。
+
+重试仍属于同一个逻辑步骤。`onStepStart` 在该步骤中只运行一次。`onLanguageModelCallStart` 会在每次提供商调用尝试时运行，而 `onLanguageModelCallEnd` 只会在达成模型调用完成的尝试上运行。
+
+你也可以在 `onError` 中动态决定。显式设置 `streamRetries` 以启用流恢复；当唯一一次重试只应由回调指示时，可将其设为 `0`：
+
+```ts highlight="7-12"
+const result = streamText({
+  model: __MODEL__,
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  streamRetries: 0,
+  onError: ({ error }) => {
+    if (isTransientProviderError(error)) {
+      return { retry: true };
+    }
+  },
+});
+```
+
+回调指示的恢复在每个逻辑步骤中最多只能重试一次。配置了自动重试后，在自动重试额度耗尽之后，`onError` 还可以请求一次额外的重试。这将一个步骤的恢复调用总次数限制在 `streamRetries + 1` 以内。
+
+省略 `streamRetries` 时，所有流式重试行为都会被禁用，而现有的仅用于日志记录的 `onError` 回调仍能保留增量工具流式。除 `{ retry: true }` 之外的 `onError` 返回值都保持原有行为，不会请求恢复。被恢复的提供商错误事件不会作为最终的 `error` 部件发出。
+
+<Note type="warning">
+  提供商错误发出之前的非工具输出无法撤回。因此，重试的模型步骤可能会向消费端流追加重复或出现分歧的部分文本、推理（reasoning）、文件或来源。在恢复输出开始之前，未完成的文本与推理部件会被结束，这样 UI 消费端就不会让它们停留在流式状态。失败尝试的输出会被排除在恢复后的步骤结果、结构化输出解析、响应消息以及后续模型步骤之外。最终的请求与响应元数据来自恢复后的那次尝试。重试还会增加延迟，并可能产生额外的提供商用量与成本。
+</Note>
+
+<Note type="warning">
+  失败尝试隔离可防止 AI SDK 客户端工具执行，但无法撤销由提供商执行的工具已经完成的工作。在提供商侧工作之后重试步骤，可能会重复该工作或其成本。对于提供商执行的副作用，请使用幂等性控制。
+</Note>
+
+## 处理流中止
+
+当流被中止时（例如通过聊天的停止按钮），你可能需要执行清理操作，比如更新 UI 中存储的消息。请使用 `onAbort` 回调来处理这些情况。
+
+当流通过 `AbortSignal` 被中止时会调用 `onAbort` 回调，而 `onEnd` 不会被调用。这确保你仍能适当地更新 UI 状态。
+
+```ts highlight="6-10"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { textStream } = streamText({
+  model: __MODEL__,
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+  onAbort: ({ steps }) => {
+    // Update stored messages or perform cleanup
+    console.log('Stream aborted after', steps.length, 'steps');
+  },
+  onEnd: ({ steps, totalUsage }) => {
+    // This is called on normal completion
+    console.log('Stream completed normally');
+  },
+});
+
+for await (const textPart of textStream) {
+  process.stdout.write(textPart);
+}
+```
+
+`onAbort` 回调接收：
+
+- `steps`：中止前所有已完成步骤组成的数组
+
+你也可以直接在流中处理中止事件：
+
+```ts highlight="11-14"
+import { streamText } from 'ai';
+__PROVIDER_IMPORT__;
+
+const { stream } = streamText({
+  model: __MODEL__,
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+
+for await (const chunk of stream) {
+  switch (chunk.type) {
+    case 'abort': {
+      // Handle abort directly in stream
+      console.log('Stream was aborted');
+      break;
+    }
+    // ... handle other part types
+  }
+}
+```

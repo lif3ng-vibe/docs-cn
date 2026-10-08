@@ -1,0 +1,254 @@
+---
+title: 本地缓存中间件
+description: 了解如何为本地开发创建缓存中间件。
+tags: ['streaming', 'caching', 'middleware']
+---
+
+# Local Caching Middleware
+
+在开发 AI 应用时，开发过程中常常会反复发起相同的 API 调用，这会导致成本上升和开发周期变慢。缓存中间件允许你把响应存储在本地，并在相同输入出现时复用它们。
+
+这种方式在以下两种场景中特别有用：
+
+1. **迭代 UI/UX**——当你专注于样式和用户体验时，不希望每次代码变更都重新生成 AI 响应。
+2. **开发评测（evals）**——在开发评测时，你需要反复测试相同的提示词（prompt），但并不需要每次都产生新的生成结果。
+
+## 实现
+
+在这个实现中，你会创建一个 JSON 文件来存储响应。当发起请求时，先检查是否已经见过这个完全相同的请求。如果见过，就立即返回缓存的响应（一次性生成结果或分块的 token）。如果没有，则触发生成、保存响应并返回。
+
+<Note>
+  请务必将本地缓存路径加入 `.gitignore`，以免把它提交到仓库。
+</Note>
+
+### 工作原理
+
+对于常规生成，你存储并取回完整响应。而流式实现会在每个 token 到达时捕获它、存储完整序列，并在缓存命中时使用 SDK 的 `simulateReadableStream` 工具，以受控速度（默认每个分块间隔 10 毫秒）重现逐 token 的流式体验。
+
+这种方式让你两全其美：
+
+- 重复查询即时响应
+- 为 UI 开发保留流式行为
+
+中间件会处理所有必要的转换，使缓存的响应与新鲜响应无法区分，包括规范化工具调用和修正时间戳格式。
+
+### 中间件
+
+```ts
+import {
+  type LanguageModelV4Middleware,
+  type LanguageModelV4StreamPart,
+  type LanguageModelV4CallOptions,
+  type LanguageModelV4,
+} from '@ai-sdk/provider';
+import { safeParseJSON } from '@ai-sdk/provider-utils';
+import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
+import { wrapLanguageModel, simulateReadableStream } from 'ai';
+
+const CACHE_FILE = path.join(process.cwd(), '.cache/ai-cache.json');
+
+export const cached = (model: LanguageModelV4) =>
+  wrapLanguageModel({
+    middleware: cacheMiddleware,
+    model,
+  });
+
+const ensureCacheFile = () => {
+  const cacheDir = path.dirname(CACHE_FILE);
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  }
+  if (!fs.existsSync(CACHE_FILE)) {
+    fs.writeFileSync(CACHE_FILE, '{}');
+  }
+};
+
+const getCachedResult = (key: string | object) => {
+  ensureCacheFile();
+  const cacheKey = typeof key === 'object' ? JSON.stringify(key) : key;
+  try {
+    const cacheContent = fs.readFileSync(CACHE_FILE, 'utf-8');
+
+    const parseResult = safeParseJSON({ text: cacheContent });
+    if (!parseResult.success) {
+      console.error('Failed to parse cache:', parseResult.error);
+      return null;
+    }
+    const cache = parseResult.value as Record<string, any>;
+
+    const result = cache[cacheKey];
+
+    return result ?? null;
+  } catch (error) {
+    console.error('Cache error:', error);
+    return null;
+  }
+};
+
+const updateCache = (key: string, value: any) => {
+  ensureCacheFile();
+  try {
+    const parseResult = safeParseJSON({
+      text: fs.readFileSync(CACHE_FILE, 'utf-8'),
+    });
+    const cache = parseResult.success
+      ? (parseResult.value as Record<string, unknown>)
+      : {};
+    const updatedCache = { ...cache, [key]: value };
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(updatedCache, null, 2));
+  } catch (error) {
+    console.error('Failed to update cache:', error);
+  }
+};
+
+const cleanPrompt = (prompt: LanguageModelV4CallOptions['prompt']) => {
+  return prompt.map(m => {
+    if (m.role === 'assistant') {
+      return {
+        ...m,
+        content: m.content.map(part =>
+          part.type === 'tool-call' ? { ...part, toolCallId: 'cached' } : part,
+        ),
+      };
+    }
+    if (m.role === 'tool') {
+      return {
+        ...m,
+        content: m.content.map(tc => ({
+          ...tc,
+          toolCallId: 'cached',
+          result: {},
+        })),
+      };
+    }
+
+    return m;
+  });
+};
+
+export const cacheMiddleware: LanguageModelV4Middleware = {
+  specificationVersion: 'v4',
+  wrapGenerate: async ({ doGenerate, params, model }) => {
+    const cacheKey = JSON.stringify({
+      ...params,
+      prompt: cleanPrompt(params.prompt),
+      _function: 'generate',
+      model: model.modelId,
+    });
+
+    const cached = getCachedResult(cacheKey);
+
+    if (cached && cached !== null) {
+      return {
+        ...cached,
+        response: {
+          ...cached.response,
+          timestamp: cached?.response?.timestamp
+            ? new Date(cached?.response?.timestamp)
+            : undefined,
+        },
+      };
+    }
+
+    const result = await doGenerate();
+
+    updateCache(cacheKey, result);
+
+    return result;
+  },
+
+  wrapStream: async ({ doStream, params, model }) => {
+    const cacheKey = JSON.stringify({
+      ...params,
+      prompt: cleanPrompt(params.prompt),
+      _function: 'stream',
+      model: model.modelId,
+    });
+
+    const cached = getCachedResult(cacheKey);
+
+    if (cached && cached !== null) {
+      const { chunks, ...rest } = cached;
+      const formattedChunks = (chunks as LanguageModelV4StreamPart[]).map(p => {
+        if (p.type === 'response-metadata' && p.timestamp) {
+          return { ...p, timestamp: new Date(p.timestamp) };
+        }
+        return p;
+      });
+
+      return {
+        stream: simulateReadableStream({
+          initialDelayInMs: 0,
+          chunkDelayInMs: 10,
+          chunks: formattedChunks,
+        }),
+        ...rest,
+      };
+    }
+
+    const { stream, ...rest } = await doStream();
+
+    const fullResponse: LanguageModelV4StreamPart[] = [];
+
+    const transformStream = new TransformStream<
+      LanguageModelV4StreamPart,
+      LanguageModelV4StreamPart
+    >({
+      transform(chunk, controller) {
+        fullResponse.push(chunk);
+        controller.enqueue(chunk);
+      },
+
+      flush() {
+        updateCache(cacheKey, { chunks: fullResponse, ...rest });
+      },
+    });
+
+    return {
+      stream: stream.pipeThrough(transformStream),
+      ...rest,
+    };
+  },
+};
+```
+
+## 使用中间件
+
+该中间件可以轻松集成到你现有的 AI SDK 配置中：
+
+```ts highlight="4,8"
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+import 'dotenv/config';
+import { cached } from '../middleware/your-cache-middleware';
+
+async function main() {
+  const result = streamText({
+    model: cached(openai('gpt-4.1')),
+    maxOutputTokens: 512,
+    temperature: 0.3,
+    maxRetries: 5,
+    prompt: 'Invent a new holiday and describe its traditions.',
+  });
+
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
+  }
+
+  console.log();
+  console.log('Token usage:', await result.usage);
+  console.log('Finish reason:', await result.finishReason);
+}
+
+main().catch(console.error);
+```
+
+## 注意事项
+
+使用此缓存中间件时，请记住以下几点：
+
+1. **仅用于开发**——这种方式面向本地开发，而非生产环境。
+2. **缓存失效**——想获得新响应时，你需要清空缓存（删除缓存文件）。
+3. **多步流程**——使用 `stopWhen` 时请注意，缓存发生在单个语言模型响应层面，而不是整个执行流程。这意味着模型的生成会被缓存，但工具调用不会，每次生成时都会执行。

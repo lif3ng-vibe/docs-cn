@@ -1,0 +1,24 @@
+---
+title: AI_NoSpeechGeneratedError
+description: 了解如何修复 AI_NoSpeechGeneratedError
+---
+
+# AI_NoSpeechGeneratedError
+
+此错误在无法从输入生成音频时发生。
+
+## 属性
+
+- `responses`：语音模型响应元数据数组（构造函数中必填）
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_NoSpeechGeneratedError` 的实例：
+
+```typescript
+import { NoSpeechGeneratedError } from 'ai';
+
+if (NoSpeechGeneratedError.isInstance(error)) {
+  // Handle the error
+}
+```

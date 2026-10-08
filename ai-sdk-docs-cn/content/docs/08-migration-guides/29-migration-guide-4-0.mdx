@@ -1,0 +1,1120 @@
+---
+title: 从 AI SDK 3.4 迁移到 4.0
+description: 了解如何将 AI SDK 3.4 升级到 4.0。
+---
+
+# Migrate AI SDK 3.4 to 4.0
+
+<Note>
+  欲了解本次发布的更多信息，请查阅 [AI SDK 4.0 发布博客文章](https://vercel.com/blog/ai-sdk-4-0)。
+</Note>
+
+## 推荐迁移流程
+
+1. 备份你的项目。如果使用版本控制系统，请确保所有历史版本都已提交。
+1. [迁移到 AI SDK 3.4](/docs/migration-guides/migration-guide-3-4)。
+1. 升级到 AI SDK 4.0。
+1. 使用 [codemod](#codemods) 自动迁移代码。
+   > 如果不想使用 codemod，我们建议在升级到 AI SDK 4.0 之前先解决所有弃用警告。
+1. 按照下文的破坏性变更指南操作。
+1. 确认项目运行正常。
+1. 提交你的变更。
+
+## AI SDK 4.0 包版本
+
+你需要在 `package.json` 文件中将以下包更新到相应版本：
+
+- `ai` 包：`4.0.*`
+- `@ai-sdk/provider-utils` 包：`2.0.*`
+- `@ai-sdk/*` 包：`1.0.*`（其他 `@ai-sdk/*` 包）
+
+## Codemods
+
+当某个功能被弃用、移除或发生其他变更时，AI SDK 提供 Codemod 转换来帮助你升级代码库。
+
+Codemod 是在代码库上以编程方式运行的转换。它让你无需逐个文件手动修改，就能轻松应用大量变更。
+
+<Note>
+  Codemod 只是协助升级的工具，可能无法覆盖你需要做出的所有变更，部分改动可能仍需手动完成。
+</Note>
+
+在项目根目录运行以下命令，即可执行 4.0 升级流程提供的所有 codemod：
+
+```sh
+npx @ai-sdk/codemod upgrade
+```
+
+只运行 v4 codemod：
+
+```sh
+npx @ai-sdk/codemod v4
+```
+
+也可以指定 codemod 名称来单独运行某个 codemod：
+
+```sh
+npx @ai-sdk/codemod <codemod-name> <path>
+```
+
+例如，运行某个特定的 v4 codemod：
+
+```sh
+npx @ai-sdk/codemod v4/replace-baseurl src/
+```
+
+另请参阅 [codemod 对照表](#codemod-对照表)。此外，最新的一批 codemod 可以在
+[`@ai-sdk/codemod`](https://github.com/vercel/ai/tree/main/packages/codemod/src/codemods)
+仓库中找到。
+
+## 提供商变更
+
+### 移除 `baseUrl` 选项
+
+所有提供商都移除了 `baseUrl` 选项。请改用 `baseURL` 选项。
+
+```ts filename="AI SDK 3.4"
+const perplexity = createOpenAI({
+  // ...
+  baseUrl: 'https://api.perplexity.ai/',
+});
+```
+
+```ts filename="AI SDK 4.0"
+const perplexity = createOpenAI({
+  // ...
+  baseURL: 'https://api.perplexity.ai/',
+});
+```
+
+### Anthropic 提供商
+
+#### 移除 `Anthropic` 门面
+
+`Anthropic` 门面（facade）已从 Anthropic 提供商中移除。
+请改用 `anthropic` 对象或 `createAnthropic` 函数。
+
+```ts filename="AI SDK 3.4"
+const anthropic = new Anthropic({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const anthropic = createAnthropic({
+  // ...
+});
+```
+
+#### 移除 `topK` 设置
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+Anthropic 提供商移除了模型特定的 `topK` 设置。
+你可以改用标准的 `topK` 设置。
+
+```ts filename="AI SDK 3.4"
+const result = await generateText({
+  model: anthropic('claude-3-5-sonnet-latest', {
+    topK: 0.5,
+  }),
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = await generateText({
+  model: anthropic('claude-3-5-sonnet-latest'),
+  topK: 0.5,
+});
+```
+
+### Google Generative AI 提供商
+
+#### 移除 `Google` 门面
+
+`Google` 门面已从 Google Generative AI 提供商中移除。
+请改用 `google` 对象或 `createGoogleGenerativeAI` 函数。
+
+```ts filename="AI SDK 3.4"
+const google = new Google({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const google = createGoogleGenerativeAI({
+  // ...
+});
+```
+
+#### 移除 `topK` 设置
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+Google Generative AI 提供商移除了模型特定的 `topK` 设置。
+你可以改用标准的 `topK` 设置。
+
+```ts filename="AI SDK 3.4"
+const result = await generateText({
+  model: google('gemini-1.5-flash', {
+    topK: 0.5,
+  }),
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = await generateText({
+  model: google('gemini-1.5-flash'),
+  topK: 0.5,
+});
+```
+
+### Google Vertex 提供商
+
+#### 移除 `topK` 设置
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+Google Vertex 提供商移除了模型特定的 `topK` 设置。
+你可以改用标准的 `topK` 设置。
+
+```ts filename="AI SDK 3.4"
+const result = await generateText({
+  model: vertex('gemini-1.5-flash', {
+    topK: 0.5,
+  }),
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = await generateText({
+  model: vertex('gemini-1.5-flash'),
+  topK: 0.5,
+});
+```
+
+### Mistral 提供商
+
+#### 移除 `Mistral` 门面
+
+`Mistral` 门面已从 Mistral 提供商中移除。
+请改用 `mistral` 对象或 `createMistral` 函数。
+
+```ts filename="AI SDK 3.4"
+const mistral = new Mistral({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const mistral = createMistral({
+  // ...
+});
+```
+
+### OpenAI 提供商
+
+#### 移除 `OpenAI` 门面
+
+`OpenAI` 门面已从 OpenAI 提供商中移除。
+请改用 `openai` 对象或 `createOpenAI` 函数。
+
+```ts filename="AI SDK 3.4"
+const openai = new OpenAI({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const openai = createOpenAI({
+  // ...
+});
+```
+
+### LangChain 适配器
+
+#### 移除 `toAIStream`
+
+LangChain 适配器移除了 `toAIStream` 函数。
+请改用 `toDataStream` 函数。
+
+```ts filename="AI SDK 3.4"
+LangChainAdapter.toAIStream(stream);
+```
+
+```ts filename="AI SDK 4.0"
+LangChainAdapter.toDataStream(stream);
+```
+
+## AI SDK Core 变更
+
+### `streamText` 立即返回
+
+`streamText` 函数现在立即返回，不再返回 Promise。
+无需再 await `streamText` 的结果。
+
+```ts filename="AI SDK 3.4"
+const result = await streamText({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamText({
+  // ...
+});
+```
+
+### `streamObject` 立即返回
+
+`streamObject` 函数现在立即返回，不再返回 Promise。
+无需再 await `streamObject` 的结果。
+
+```ts filename="AI SDK 3.4"
+const result = await streamObject({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamObject({
+  // ...
+});
+```
+
+### 移除 roundtrips
+
+`generateText` 和 `streamText` 函数移除了 `maxToolRoundtrips` 和 `maxAutomaticRoundtrips` 选项（往返调用）。
+请改用 `maxSteps` 选项。
+
+`GenerateTextResult` 类型移除了 `roundtrips` 属性。
+请改用 `steps` 属性。
+
+```ts filename="AI SDK 3.4"
+const { text, roundtrips } = await generateText({
+  maxToolRoundtrips: 1, // or maxAutomaticRoundtrips
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { text, steps } = await generateText({
+  maxSteps: 2,
+  // ...
+});
+```
+
+### 移除 `nanoid` 导出
+
+`nanoid` 导出已被移除。请改用 [`generateId`](/docs/reference/ai-sdk-core/generate-id)。
+
+```ts filename="AI SDK 3.4"
+import { nanoid } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { generateId } from 'ai';
+```
+
+### 生成的 ID 默认长度增大
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+[`generateId`](/docs/reference/ai-sdk-core/generate-id) 函数现在生成 16 字符的 ID。之前的默认值是 7 个字符。
+
+如果你限制了 ID 的长度，可能因此需要更新数据库 schema。
+
+```ts filename="AI SDK 4.0"
+import { generateId } from 'ai';
+
+const id = generateId(); // now 16 characters
+```
+
+### 移除 `ExperimentalMessage` 类型
+
+以下类型已被移除：
+
+- `ExperimentalMessage`（改用 `ModelMessage`）
+- `ExperimentalUserMessage`（改用 `CoreUserMessage`）
+- `ExperimentalAssistantMessage`（改用 `CoreAssistantMessage`）
+- `ExperimentalToolMessage`（改用 `CoreToolMessage`）
+
+```ts filename="AI SDK 3.4"
+import {
+  ExperimentalMessage,
+  ExperimentalUserMessage,
+  ExperimentalAssistantMessage,
+  ExperimentalToolMessage,
+} from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import {
+  ModelMessage,
+  CoreUserMessage,
+  CoreAssistantMessage,
+  CoreToolMessage,
+} from 'ai';
+```
+
+### 移除 `ExperimentalTool` 类型
+
+`ExperimentalTool` 类型已被移除。请改用 `CoreTool` 类型。
+
+```ts filename="AI SDK 3.4"
+import { ExperimentalTool } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { CoreTool } from 'ai';
+```
+
+### 移除实验性 AI 函数导出
+
+以下导出已被移除：
+
+- `experimental_generateText`（改用 `generateText`）
+- `experimental_streamText`（改用 `streamText`）
+- `experimental_generateObject`（改用 `generateObject`）
+- `experimental_streamObject`（改用 `streamObject`）
+
+```ts filename="AI SDK 3.4"
+import {
+  experimental_generateText,
+  experimental_streamText,
+  experimental_generateObject,
+  experimental_streamObject,
+} from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { generateText, streamText, generateObject, streamObject } from 'ai';
+```
+
+### 从 `streamText` 移除 AI 流相关方法
+
+`streamText` 结果移除了以下方法：
+
+- `toAIStream`
+- `pipeAIStreamToResponse`
+- `toAIStreamResponse`
+
+请改用 `toDataStream`、`pipeDataStreamToResponse` 和 `toDataStreamResponse` 函数。
+
+```ts filename="AI SDK 3.4"
+const result = await streamText({
+  // ...
+});
+
+result.toAIStream();
+result.pipeAIStreamToResponse(response);
+result.toAIStreamResponse();
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamText({
+  // ...
+});
+
+result.toDataStream();
+result.pipeDataStreamToResponse(response);
+result.toDataStreamResponse();
+```
+
+### `formatStreamPart` 更名为 `formatDataStreamPart`
+
+`formatStreamPart` 函数已更名为 `formatDataStreamPart`。
+
+```ts filename="AI SDK 3.4"
+formatStreamPart('text', 'Hello, world!');
+```
+
+```ts filename="AI SDK 4.0"
+formatDataStreamPart('text', 'Hello, world!');
+```
+
+### `parseStreamPart` 更名为 `parseDataStreamPart`
+
+`parseStreamPart` 函数已更名为 `parseDataStreamPart`。
+
+```ts filename="AI SDK 3.4"
+const part = parseStreamPart(line);
+```
+
+```ts filename="AI SDK 4.0"
+const part = parseDataStreamPart(line);
+```
+
+### `TokenUsage`、`CompletionTokenUsage` 与 `EmbeddingTokenUsage` 类型更名
+
+`TokenUsage`、`CompletionTokenUsage` 和 `EmbeddingTokenUsage` 类型已更名：前两者改为 `LanguageModelUsage`，最后一个改为 `EmbeddingModelUsage`。
+
+```ts filename="AI SDK 3.4"
+import { TokenUsage, CompletionTokenUsage, EmbeddingTokenUsage } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { LanguageModelUsage, EmbeddingModelUsage } from 'ai';
+```
+
+### 移除已弃用的遥测数据
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+以下遥测数据取值已被移除：
+
+- `ai.finishReason`（移至 `ai.response.finishReason`）
+- `ai.result.object`（移至 `ai.response.object`）
+- `ai.result.text`（移至 `ai.response.text`）
+- `ai.result.toolCalls`（移至 `ai.response.toolCalls`）
+- `ai.stream.msToFirstChunk`（移至 `ai.response.msToFirstChunk`）
+
+此变更会影响可观测性提供商，以及你用于处理遥测数据的任何脚本或自动化流程。
+
+### 提供商注册表
+
+#### 移除 experimental_Provider、experimental_ProviderRegistry 和 experimental_ModelRegistry
+
+`experimental_Provider` 接口、`experimental_ProviderRegistry` 接口和 `experimental_ModelRegistry` 接口已被移除。
+请改用 `Provider` 接口。
+
+```ts filename="AI SDK 3.4"
+import { experimental_Provider, experimental_ProviderRegistry } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { Provider } from 'ai';
+```
+
+<Note>
+  模型注册表（model registry）已不再可用。请改为[注册提供商](/docs/reference/ai-sdk-core/provider-registry#设置)。
+</Note>
+
+#### 移除 `experimental_createModelRegistry` 函数
+
+`experimental_createModelRegistry` 函数已被移除。
+请改用 `experimental_createProviderRegistry` 函数。
+
+```ts filename="AI SDK 3.4"
+import { experimental_createModelRegistry } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { experimental_createProviderRegistry } from 'ai';
+```
+
+<Note>
+  模型注册表（model registry）已不再可用。请改为[注册提供商](/docs/reference/ai-sdk-core/provider-registry#设置)。
+</Note>
+
+### 从结果中移除 `rawResponse`
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`generateText`、`streamText`、`generateObject` 和 `streamObject` 的结果移除了 `rawResponse` 属性。
+你可以改用 `response` 属性。
+
+```ts filename="AI SDK 3.4"
+const { text, rawResponse } = await generateText({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { text, response } = await generateText({
+  // ...
+});
+```
+
+### 从 `pipeDataStreamToResponse` 和 `toDataStreamResponse` 移除 `init` 选项
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`pipeDataStreamToResponse` 和 `toDataStreamResponse` 函数移除了 `init` 选项。
+你可以把 `init` 中的值直接设置到 `options` 对象里。
+
+```ts filename="AI SDK 3.4"
+const result = await streamText({
+  // ...
+});
+
+result.pipeDataStreamToResponse(response, {
+  init: {
+    headers: {
+      'X-Custom-Header': 'value',
+    },
+  },
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamText({
+  // ...
+});
+
+result.pipeDataStreamToResponse(response, {
+  headers: {
+    'X-Custom-Header': 'value',
+  },
+  // ...
+});
+```
+
+### 从 `generateText` 和 `streamText` 移除 `responseMessages`
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`generateText` 和 `streamText` 的结果移除了 `responseMessages` 属性，
+`onFinish` 回调也包括在内。
+请改用 `response.messages` 属性。
+
+```ts filename="AI SDK 3.4"
+const { text, responseMessages } = await generateText({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { text, response } = await generateText({
+  // ...
+});
+
+const responseMessages = response.messages;
+```
+
+### 移除 `experimental_continuationSteps` 选项
+
+`generateText` 函数移除了 `experimental_continuationSteps` 选项。
+请改用 `experimental_continueSteps` 选项。
+
+```ts filename="AI SDK 3.4"
+const result = await generateText({
+  experimental_continuationSteps: true,
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const result = await generateText({
+  experimental_continueSteps: true,
+  // ...
+});
+```
+
+### 移除 `LanguageModelResponseMetadataWithHeaders` 类型
+
+`LanguageModelResponseMetadataWithHeaders` 类型已被移除。
+请改用 `LanguageModelResponseMetadata` 类型。
+
+```ts filename="AI SDK 3.4"
+import { LanguageModelResponseMetadataWithHeaders } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { LanguageModelResponseMetadata } from 'ai';
+```
+
+#### `streamText` 的 warnings 结果改为 Promise
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`StreamTextResult` 类型的 `warnings` 属性现在是一个 Promise。
+
+```ts filename="AI SDK 3.4"
+const result = await streamText({
+  // ...
+});
+
+const warnings = result.warnings;
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamText({
+  // ...
+});
+
+const warnings = await result.warnings;
+```
+
+#### `streamObject` 的 warnings 结果改为 Promise
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`StreamObjectResult` 类型的 `warnings` 属性现在是一个 Promise。
+
+```ts filename="AI SDK 3.4"
+const result = await streamObject({
+  // ...
+});
+
+const warnings = result.warnings;
+```
+
+```ts filename="AI SDK 4.0"
+const result = streamObject({
+  // ...
+});
+
+const warnings = await result.warnings;
+```
+
+#### `simulateReadableStream` 的 `values` 更名为 `chunks`
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`ai/test` 中 `simulateReadableStream` 函数的 `values` 选项已更名为 `chunks`。
+
+```ts filename="AI SDK 3.4"
+import { simulateReadableStream } from 'ai/test';
+
+const stream = simulateReadableStream({
+  values: [1, 2, 3],
+  chunkDelayInMs: 100,
+});
+```
+
+```ts filename="AI SDK 4.0"
+import { simulateReadableStream } from 'ai/test';
+
+const stream = simulateReadableStream({
+  chunks: [1, 2, 3],
+  chunkDelayInMs: 100,
+});
+```
+
+## AI SDK RSC 变更
+
+<Note type="warning">
+  本节的变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+### 移除 `render` 函数
+
+AI SDK RSC 3.0 的 `render` 函数已被移除。
+请改用 `streamUI` 函数，或[切换到 AI SDK UI](/docs/ai-sdk-rsc/migrating-to-ui)。
+
+```ts filename="AI SDK 3.0"
+import { render } from '@ai-sdk/rsc';
+```
+
+```ts filename="AI SDK 4.0"
+import { streamUI } from '@ai-sdk/rsc';
+```
+
+## AI SDK UI 变更
+
+### 移除 Svelte、Vue 和 SolidJS 导出
+
+<Note type="warning">
+  此 codemod 只处理 `.ts` 和 `.tsx` 文件。如果你的代码位于其他后缀的文件中，请手动检查并更新你的代码。
+</Note>
+
+`ai` 包不再导出 Svelte、Vue 和 SolidJS 的 UI 集成。
+你需要直接安装 `@ai-sdk/svelte`、`@ai-sdk/vue` 和 `@ai-sdk/solid` 包。
+
+```ts filename="AI SDK 3.4"
+import { useChat } from 'ai/svelte';
+```
+
+```ts filename="AI SDK 4.0"
+import { useChat } from '@ai-sdk/svelte';
+```
+
+### 移除 `experimental_StreamData`
+
+`experimental_StreamData` 导出已被移除。
+请改用 `StreamData` 导出。
+
+```ts filename="AI SDK 3.4"
+import { experimental_StreamData } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { StreamData } from 'ai';
+```
+
+### `useChat` Hook
+
+<Note type="warning">
+  本节的变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+#### 移除 `streamMode` 设置
+
+`useChat` Hook 移除了 `streamMode` 选项。
+请改用 `streamProtocol` 参数。
+
+```ts filename="AI SDK 3.4"
+const { messages } = useChat({
+  streamMode: 'text',
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { messages } = useChat({
+  streamProtocol: 'text',
+  // ...
+});
+```
+
+#### 用 `maxSteps` 取代 roundtrip 设置
+
+`useChat` Hook 移除了以下选项：
+
+- `experimental_maxAutomaticRoundtrips`
+- `maxAutomaticRoundtrips`
+- `maxToolRoundtrips`
+
+请改用 [`maxSteps`](/docs/ai-sdk-core/tools-and-tool-calling#多步调用使用-stopwhen) 选项。
+`maxSteps` 的值等于 roundtrip 数 + 1。
+
+```ts filename="AI SDK 3.4"
+const { messages } = useChat({
+  experimental_maxAutomaticRoundtrips: 2,
+  // or maxAutomaticRoundtrips
+  // or maxToolRoundtrips
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { messages } = useChat({
+  maxSteps: 3, // 2 roundtrips + 1
+  // ...
+});
+```
+
+#### 移除 `options` 设置
+
+`useChat` Hook 移除了 `options` 参数。
+请改用 `headers` 和 `body` 参数。
+
+```ts filename="AI SDK 3.4"
+const { messages } = useChat({
+  options: {
+    headers: {
+      'X-Custom-Header': 'value',
+    },
+  },
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { messages } = useChat({
+  headers: {
+    'X-Custom-Header': 'value',
+  },
+  // ...
+});
+```
+
+#### 移除 `experimental_addToolResult` 方法
+
+`useChat` Hook 移除了 `experimental_addToolResult` 方法。
+请改用 `addToolResult` 方法。
+
+```ts filename="AI SDK 3.4"
+const { messages, experimental_addToolResult } = useChat({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { messages, addToolResult } = useChat({
+  // ...
+});
+```
+
+#### `keepLastMessageOnError` 默认值改为 true 并弃用该选项
+
+`keepLastMessageOnError` 选项的默认值改为 `true`。
+该选项将在下一个主版本中移除。
+
+```ts filename="AI SDK 3.4"
+const { messages } = useChat({
+  keepLastMessageOnError: true,
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { messages } = useChat({
+  // ...
+});
+```
+
+### `useCompletion` Hook
+
+<Note type="warning">
+  本节的变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+#### 移除 `streamMode` 设置
+
+`useCompletion` Hook 移除了 `streamMode` 选项。
+请改用 `streamProtocol` 参数。
+
+```ts filename="AI SDK 3.4"
+const { text } = useCompletion({
+  streamMode: 'text',
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { text } = useCompletion({
+  streamProtocol: 'text',
+  // ...
+});
+```
+
+### `useAssistant` Hook
+
+#### 移除 `experimental_useAssistant` 导出
+
+`useAssistant` Hook 移除了 `experimental_useAssistant` 导出。
+请直接使用 `useAssistant` Hook。
+
+```ts filename="AI SDK 3.4"
+import { experimental_useAssistant } from '@ai-sdk/react';
+```
+
+```ts filename="AI SDK 4.0"
+import { useAssistant } from '@ai-sdk/react';
+```
+
+#### 从 `AssistantResponse` 移除 `threadId` 和 `messageId`
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+传给 `AssistantResponse` 回调的参数移除了 `threadId` 和 `messageId` 属性。传给 `AssistantResponse` 的初始响应选项仍需要这两个 ID。
+请改用外层作用域中的 `threadId` 和 `messageId` 变量。
+
+```ts filename="AI SDK 3.4"
+return AssistantResponse(
+  { threadId: myThreadId, messageId: myMessageId },
+  async ({ forwardStream, sendDataMessage, threadId, messageId }) => {
+    // use threadId and messageId here
+  },
+);
+```
+
+```ts filename="AI SDK 4.0"
+return AssistantResponse(
+  { threadId: myThreadId, messageId: myMessageId },
+  async ({ forwardStream, sendDataMessage }) => {
+    // use myThreadId and myMessageId here
+  },
+);
+```
+
+#### 移除 `experimental_AssistantResponse` 导出
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`experimental_AssistantResponse` 导出已被移除。
+请直接使用 `AssistantResponse` 函数。
+
+```ts filename="AI SDK 3.4"
+import { experimental_AssistantResponse } from 'ai';
+```
+
+```ts filename="AI SDK 4.0"
+import { AssistantResponse } from 'ai';
+```
+
+### `experimental_useObject` Hook
+
+<Note type="warning">
+  本节的变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+`experimental_useObject` Hook 移除了 `setInput` 辅助函数。
+请改用 `submit` 辅助函数。
+
+```ts filename="AI SDK 3.4"
+const { object, setInput } = useObject({
+  // ...
+});
+```
+
+```ts filename="AI SDK 4.0"
+const { object, submit } = useObject({
+  // ...
+});
+```
+
+## AI SDK 错误
+
+### 移除 `isXXXError` 静态方法
+
+AI SDK 错误移除了 `isXXXError` 静态方法。
+请改用相应错误类的 `isInstance` 方法。
+
+```ts filename="AI SDK 3.4"
+import { APICallError } from 'ai';
+
+APICallError.isAPICallError(error);
+```
+
+```ts filename="AI SDK 4.0"
+import { APICallError } from 'ai';
+
+APICallError.isInstance(error);
+```
+
+### 移除 `toJSON` 方法
+
+<Note type="warning">
+  此变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+AI SDK 错误移除了 `toJSON` 方法。
+
+## AI SDK 2.x 旧版变更
+
+<Note type="warning">
+  本节的变更没有可用的 codemod。请手动检查并更新你的代码。
+</Note>
+
+### 移除 2.x 旧版提供商
+
+AI SDK 2.x 的旧版提供商已被移除。请改用新的 [AI SDK 提供商架构](/docs/foundations/providers-and-models)。
+
+#### 移除 2.x 旧版函数与工具调用
+
+`useChat` 和 `Message` 移除了旧版的 `function_call` 和 `tools` 选项。
+`Message` 类型移除了 `name` 属性。
+请改用 [AI SDK Core 工具调用](/docs/ai-sdk-core/tools-and-tool-calling)。
+
+### 移除 2.x 提示词辅助函数
+
+在 AI SDK 提供商架构下，用于构造消息提示词的辅助函数已不再需要，因此被移除。
+
+### 移除 2.x 的 `AIStream`
+
+`AIStream` 函数及相关导出已被移除。
+请改用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 函数及其 `toDataStream()` 方法。
+
+### 移除 2.x 的 `StreamingTextResponse`
+
+`StreamingTextResponse` 函数已被移除。
+请改用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 函数及其 `toDataStreamResponse()` 方法。
+
+### 移除 2.x 的 `streamToResponse`
+
+`streamToResponse` 函数已被移除。
+请改用 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 函数及其 `pipeDataStreamToResponse()` 方法。
+
+### 移除 2.x 的 RSC `Tokens` 流式传输
+
+2.x 的旧版 `Tokens` RSC 流式传输已被移除。
+`Tokens` 实现于 AI SDK RSC 之前，已不再需要。
+
+## Codemod 对照表
+
+下表列出了 AI SDK 4.0 升级过程中各 codemod 的可用情况。注意 codemod `upgrade` 命令会替你运行全部 codemod。
+这份列表用于展示哪些迁移具备一定程度的自动化。
+如果你想只运行其中一部分 codemod，也可以借它查找 codemod 名称。更多信息参见 [Codemods](#codemods) 一节。
+
+| 变更                                                                                                | Codemod                                               |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **提供商变更**                                                                                       |                                                       |
+| 移除 baseUrl 选项                                                                                    | `v4/replace-baseurl`                                  |
+| **Anthropic 提供商**                                                                                 |                                                       |
+| 移除 Anthropic 门面                                                                                  | `v4/remove-anthropic-facade`                          |
+| 移除 topK 设置                                                                                       | _N/A_                                                 |
+| **Google Generative AI 提供商**                                                                      |                                                       |
+| 移除 Google 门面                                                                                     | `v4/remove-google-facade`                             |
+| 移除 topK 设置                                                                                       | _N/A_                                                 |
+| **Google Vertex 提供商**                                                                             |                                                       |
+| 移除 topK 设置                                                                                       | _N/A_                                                 |
+| **Mistral 提供商**                                                                                   |                                                       |
+| 移除 Mistral 门面                                                                                    | `v4/remove-mistral-facade`                            |
+| **OpenAI 提供商**                                                                                    |                                                       |
+| 移除 OpenAI 门面                                                                                     | `v4/remove-openai-facade`                             |
+| **LangChain 适配器**                                                                                 |                                                       |
+| 移除 toAIStream                                                                                      | `v4/replace-langchain-toaistream`                     |
+| **AI SDK Core 变更**                                                                                 |                                                       |
+| streamText 立即返回                                                                                  | `v4/remove-await-streamtext`                          |
+| streamObject 立即返回                                                                                | `v4/remove-await-streamobject`                        |
+| 移除 roundtrips                                                                                      | `v4/replace-roundtrips-with-maxsteps`                 |
+| 移除 nanoid 导出                                                                                     | `v4/replace-nanoid`                                   |
+| 生成的 ID 默认长度增大                                                                               | _N/A_                                                 |
+| 移除 ExperimentalMessage 类型                                                                        | `v4/remove-experimental-message-types`                |
+| 移除 ExperimentalTool 类型                                                                           | `v4/remove-experimental-tool`                         |
+| 移除实验性 AI 函数导出                                                                               | `v4/remove-experimental-ai-fn-exports`                |
+| 从 streamText 移除 AI 流相关方法                                                                     | `v4/remove-ai-stream-methods-from-stream-text-result` |
+| `formatStreamPart` 更名为 `formatDataStreamPart`                                                     | `v4/rename-format-stream-part`                        |
+| `parseStreamPart` 更名为 `parseDataStreamPart`                                                       | `v4/rename-parse-stream-part`                         |
+| `TokenUsage`、`CompletionTokenUsage` 和 `EmbeddingTokenUsage` 类型更名                               | `v4/replace-token-usage-types`                        |
+| 移除已弃用的遥测数据                                                                                 | _N/A_                                                 |
+| **提供商注册表**                                                                                     |                                                       |
+| &rarr; 移除 experimental_Provider、experimental_ProviderRegistry 和 experimental_ModelRegistry       | `v4/remove-deprecated-provider-registry-exports`      |
+| &rarr; 移除 experimental_createModelRegistry 函数                                                    | _N/A_                                                 |
+| 从结果中移除 rawResponse                                                                             | _N/A_                                                 |
+| 从 pipeDataStreamToResponse 和 toDataStreamResponse 移除 init 选项                                   | _N/A_                                                 |
+| 从 generateText 和 streamText 移除 responseMessages                                                  | _N/A_                                                 |
+| 移除 experimental_continuationSteps 选项                                                             | `v4/replace-continuation-steps`                       |
+| 移除 LanguageModelResponseMetadataWithHeaders 类型                                                   | `v4/remove-metadata-with-headers`                     |
+| streamText 的 warnings 结果改为 Promise                                                              | _N/A_                                                 |
+| streamObject 的 warnings 结果改为 Promise                                                            | _N/A_                                                 |
+| `simulateReadableStream` 的 `values` 更名为 `chunks`                                                 | _N/A_                                                 |
+| **AI SDK RSC 变更**                                                                                  |                                                       |
+| 移除 render 函数                                                                                     | _N/A_                                                 |
+| **AI SDK UI 变更**                                                                                   |                                                       |
+| 移除 Svelte、Vue 和 SolidJS 导出                                                                     | `v4/rewrite-framework-imports`                        |
+| 移除 experimental_StreamData                                                                         | `v4/remove-experimental-streamdata`                   |
+| **useChat Hook**                                                                                     |                                                       |
+| 移除 streamMode 设置                                                                                 | _N/A_                                                 |
+| 用 maxSteps 取代 roundtrip 设置                                                                      | `v4/replace-roundtrips-with-maxsteps`                 |
+| 移除 options 设置                                                                                    | _N/A_                                                 |
+| 移除 experimental_addToolResult 方法                                                                 | _N/A_                                                 |
+| keepLastMessageOnError 默认值改为 true 并弃用该选项                                                  | _N/A_                                                 |
+| **useCompletion Hook**                                                                               |                                                       |
+| 移除 streamMode 设置                                                                                 | _N/A_                                                 |
+| **useAssistant Hook**                                                                                |                                                       |
+| 移除 experimental_useAssistant 导出                                                                  | `v4/remove-experimental-useassistant`                 |
+| 从 AssistantResponse 移除 threadId 和 messageId                                                      | _N/A_                                                 |
+| 移除 experimental_AssistantResponse 导出                                                             | _N/A_                                                 |
+| **experimental_useObject Hook**                                                                      |                                                       |
+| 移除 setInput 辅助函数                                                                               | _N/A_                                                 |
+| **AI SDK 错误**                                                                                      |                                                       |
+| 移除 isXXXError 静态方法                                                                             | `v4/remove-isxxxerror`                                |
+| 移除 toJSON 方法                                                                                     | _N/A_                                                 |
+| **AI SDK 2.x 旧版变更**                                                                              |                                                       |
+| 移除 2.x 旧版提供商                                                                                  | _N/A_                                                 |
+| 移除 2.x 旧版函数与工具调用                                                                          | _N/A_                                                 |
+| 移除 2.x 提示词辅助函数                                                                              | _N/A_                                                 |
+| 移除 2.x AIStream                                                                                    | _N/A_                                                 |
+| 移除 2.x StreamingTextResponse                                                                       | _N/A_                                                 |
+| 移除 2.x streamToResponse                                                                            | _N/A_                                                 |
+| 移除 2.x RSC Tokens 流式传输                                                                         | _N/A_                                                 |

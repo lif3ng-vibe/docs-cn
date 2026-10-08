@@ -1,0 +1,25 @@
+---
+title: AI_MessageConversionError
+description: 了解如何修复 AI_MessageConversionError
+---
+
+# AI_MessageConversionError
+
+当消息转换失败时会引发此错误。
+
+## 属性
+
+- `originalMessage`：转换失败的原始消息
+- `message`：错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_MessageConversionError` 的实例：
+
+```typescript
+import { MessageConversionError } from 'ai';
+
+if (MessageConversionError.isInstance(error)) {
+  // Handle the error
+}
+```

@@ -1,0 +1,85 @@
+---
+title: 概览
+description: 了解什么是 AI SDK harness，以及它们如何融入 AI SDK。
+---
+
+# AI SDK Harnesses
+
+AI SDK 的 harness 抽象让你可以通过单一的 AI SDK 接口运行成熟的智能体 harness。harness 是一个完整的智能体运行时，例如 Claude Code、Codex 或 Pi。它拥有的能力远不止一次模型调用：工作区访问、内置编码工具、原生会话状态、压缩（compaction）、权限流程以及特定于运行时的配置。Harness 适配器可以在沙箱中运行该运行时，但不同适配器的执行环境各不相同；使用前请查阅适配器的运行时位置与安全指引。
+
+AI SDK 的 harness 抽象与提供商/模型抽象是相互独立的。提供商向 `generateText`、`streamText` 等 AI SDK Core 函数暴露模型；harness 则向 `HarnessAgent` 暴露智能体运行时。
+
+使用 harness 并不意味着放弃自定义能力。`HarnessAgent` 允许你提供自己的指令、技能、AI SDK 工具、权限设置、沙箱设置 Hook 以及适配器专属配置，同时保留让每个 harness 强大的运行时行为。
+
+两种抽象是解耦的，但在可能之处使用兼容的原语。Harness 输出会被投射到 AI SDK 的流与响应类型中，因此消费 AI SDK 模型流的界面同样可以消费 harness 流。例如，你可以把 `HarnessAgent` 流传给 `toUIMessageStream`，再用 `useChat` 渲染。该 API 的设计让 AI SDK 用户感到熟悉，但 harness 运行时的概念与较低层的语言模型不同。配置在合适之处遵循 AI SDK 模式，在 harness 运行时行为不同的地方则有所分化。
+
+<Note>
+  Harness 相关包目前处于**实验性**阶段。在这一早期 API 进一步完善之前，各版本之间可能出现破坏性变更。
+</Note>
+
+## 何时使用 Harness
+
+当你希望由现成的智能体运行时来驱动任务时，请使用 harness：
+
+- 可以检查和修改沙箱化工作区的编码智能体。
+- 拥有自己内置工具与权限模型的智能体运行时。
+- 由运行时掌管对话历史的多轮会话。
+- 应保留 harness 原生行为、而不是用工具循环重新实现的工作流。
+
+当你想直接控制模型调用、工具循环、模型设置、结构化输出或自定义智能体架构时，请使用提供商和模型。
+
+## 核心概念
+
+Harness 由四个主要部分组成：
+
+- `HarnessAgent`：你在应用代码中使用的 AI SDK 智能体实现。
+- Harness 适配器：连接到某个运行时的包，例如 `@ai-sdk/harness-claude-code`。
+- 沙箱提供商：harness 运行所在的隔离文件系统与进程环境。
+- 会话：一次 harness 运行的活跃对话与工作区状态。
+
+## 兼容的流
+
+`HarnessAgent.generate()` 返回 AI SDK 的 `GenerateTextResult`。
+`HarnessAgent.stream()` 返回 AI SDK 的 `StreamTextResult`。
+
+这意味着你可以使用熟悉的字段：
+
+- `result.text`
+- `result.stream`
+- `result.steps`
+- `result.usage`
+- `result.responseMessages`
+
+Harness 特有的事件会被转换为兼容的流式部分。文本、推理、工具调用、工具结果、用量和完成原因在可能之处使用相同的 AI SDK 形态。没有一等 AI SDK 部分的事件（例如工作区文件变更和压缩）会以动态的提供商执行工具部分形式呈现。
+
+## 会话很重要
+
+与语言模型调用不同，harness 会话拥有状态。会话承载 harness 运行时、沙箱、工作目录、原生对话历史以及待处理的审批。
+
+在运行回合之前先创建会话：
+
+```ts
+const session = await agent.createSession();
+
+try {
+  const result = await agent.generate({
+    session,
+    prompt: 'Inspect the repository and summarize the test setup.',
+  });
+
+  console.log(result.text);
+} finally {
+  await session.destroy();
+}
+```
+
+对于服务器路由，请使用稳定的 `sessionId`，并持久化 `session.detach()` 或 `session.stop()` 返回的恢复状态。
+
+## 下一步
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)：主 API。
+- [Skills](/docs/ai-sdk-harnesses/skills)：可复用的指令包。
+- [Harness adapters](/docs/ai-sdk-harnesses/harness-adapters)：已实现的运行时。
+- [Workflow utilities](/docs/ai-sdk-harnesses/workflow-utilities)：持久的长时间运行回合。
+- [UI](/docs/ai-sdk-harnesses/ui)：`useChat` 路由。
+- [Terminal UI](/docs/ai-sdk-harnesses/terminal-ui)：`@ai-sdk/tui`。

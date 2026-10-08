@@ -1,0 +1,118 @@
+---
+title: 生成对象
+description: 了解如何使用 AI SDK 和 Next.js 生成对象
+tags: ['next', 'structured data']
+---
+
+# Generate Object
+
+你可以将 `generateText` 与 `Output` 配合使用来生成结构化数据，例如 JSON。通过提供一个描述目标对象结构的 schema，SDK 会校验生成的输出，确保其符合指定的结构。
+
+`Output.object` 函数要求你使用 [zod](https://zod.dev) 提供 schema，zod 是一个用于定义 JavaScript 对象 schema 的库。
+
+<Browser>
+  <ObjectGeneration
+    object={{
+      notifications: [
+        {
+          name: 'Jamie Roberts',
+          message: "Hey! How's the study grind going? Need a coffee boost?",
+          minutesAgo: 15,
+        },
+        {
+          name: 'Prof. Morgan',
+          message:
+            'Reminder: Your term paper is due promptly at 8 AM tomorrow. Please ensure it meets the submission guidelines outlined.',
+          minutesAgo: 46,
+        },
+        {
+          name: 'Alex Chen',
+          message:
+            "Dude, urgent! Borrow your notes for tomorrow's exam? I swear mine got eaten by my dog!",
+          minutesAgo: 30,
+        },
+      ],
+    }}
+  />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，点击按钮时向 `/api/completion` 端点发送 POST 请求。该端点会根据输入的提示词返回生成的对象，我们再将其展示出来。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useState } from 'react';
+
+export default function Page() {
+  const [generation, setGeneration] = useState();
+  const [isLoading, setIsLoading] = useState(false);
+
+  return (
+    <div>
+      <div
+        onClick={async () => {
+          setIsLoading(true);
+
+          await fetch('/api/completion', {
+            method: 'POST',
+            body: JSON.stringify({
+              prompt: 'Messages during finals week.',
+            }),
+          }).then(response => {
+            response.json().then(json => {
+              setGeneration(json.notifications);
+              setIsLoading(false);
+            });
+          });
+        }}
+      >
+        Generate
+      </div>
+
+      {isLoading ? (
+        'Loading...'
+      ) : (
+        <pre>{JSON.stringify(generation, null, 2)}</pre>
+      )}
+    </div>
+  );
+}
+```
+
+## 服务器
+
+我们来为 `/api/completion` 创建一个 Route Handler，根据输入的提示词生成对象。该路由会调用 `ai` 模块中的 `generateText` 函数并配合 `Output.object`，根据输入的提示词生成对象并返回。
+
+```typescript filename='app/api/completion/route.ts'
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { prompt }: { prompt: string } = await req.json();
+
+  const result = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You generate three notifications for a messages app.',
+    prompt,
+    output: Output.object({
+      schema: z.object({
+        notifications: z.array(
+          z.object({
+            name: z.string().describe('Name of a fictional person.'),
+            message: z.string().describe('Do not use emojis or links.'),
+            minutesAgo: z.number(),
+          }),
+        ),
+      }),
+    }),
+  });
+
+  return Response.json(result.output);
+}
+```
+
+---
+
+<GithubLink link="https://github.com/vercel/ai/blob/main/examples/next-openai-pages/pages/basics/generate-object/index.tsx" />

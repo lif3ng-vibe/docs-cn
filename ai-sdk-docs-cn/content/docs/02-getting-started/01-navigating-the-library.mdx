@@ -1,0 +1,79 @@
+---
+title: 浏览本函数库
+description: 了解如何在 AI SDK 中导航。
+---
+
+# Navigating the Library
+
+AI SDK 是用于构建 AI 应用的强大工具集。本页将帮助你根据需求选择合适的工具。
+
+我们先快速概览一下 AI SDK，它由三部分组成：
+
+- **[AI SDK Core](/docs/ai-sdk-core/overview)**：一套统一的、与提供商无关的 API，用于与大语言模型（LLM）一起生成文本、结构化对象和工具调用。
+- **[AI SDK UI](/docs/ai-sdk-ui/overview)**：一组与框架无关的 Hook，用于构建聊天和生成式用户界面。
+- [AI SDK RSC](/docs/ai-sdk-rsc/overview)：使用 React 服务器组件（RSC）流式传输生成式用户界面。目前处于实验性阶段，我们推荐使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。
+
+## 为你的环境选择合适的工具
+
+在决定使用 AI SDK 的哪一部分时，首先应考虑你所处的环境和现有技术栈。SDK 的不同组件针对特定的框架和环境进行了定制。
+
+| 函数库 | 用途 | 环境兼容性 |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [AI SDK Core](/docs/ai-sdk-core/overview) | 通过统一 API 调用任何 LLM（例如 [generateText](/docs/reference/ai-sdk-core/generate-text) 和 [streamText](/docs/reference/ai-sdk-core/stream-text)） | 任何 JS 环境（例如 Node.js、Deno、浏览器） |
+| [AI SDK UI](/docs/ai-sdk-ui/overview) | 构建流式聊天和生成式 UI（例如 [useChat](/docs/reference/ai-sdk-ui/use-chat)） | React 与 Next.js、Vue 与 Nuxt、Svelte 与 SvelteKit |
+| [AI SDK RSC](/docs/ai-sdk-rsc/overview) | 从服务器到客户端流式传输生成式 UI（例如 [streamUI](/docs/reference/ai-sdk-rsc/stream-ui)）。目前处于实验性阶段，我们推荐使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。 | 任何支持 React 服务器组件的框架（例如 Next.js） |
+
+## 环境兼容性
+
+这些工具的设计目标是彼此无缝协作，你很可能会将它们结合使用。让我们看看如何根据应用环境、现有技术栈和需求来决定使用哪些函数库。
+
+下表列出了 AI SDK 基于环境的兼容性：
+
+| 环境 | [AI SDK Core](/docs/ai-sdk-core/overview) | [AI SDK UI](/docs/ai-sdk-ui/overview) | [AI SDK RSC](/docs/ai-sdk-rsc/overview) |
+| --------------------- | ----------------------------------------- | ------------------------------------- | --------------------------------------- |
+| 无 / Node.js / Deno | <Check /> | <Cross /> | <Cross /> |
+| Vue / Nuxt | <Check /> | <Check /> | <Cross /> |
+| Svelte / SvelteKit | <Check /> | <Check /> | <Cross /> |
+| Next.js Pages 路由 | <Check /> | <Check /> | <Cross /> |
+| Next.js App 路由 | <Check /> | <Check /> | <Check /> |
+
+## 何时使用 AI SDK UI
+
+AI SDK UI 提供了一组与框架无关的 Hook，用于快速构建**可用于生产环境的 AI 原生应用**。它提供：
+
+- 对流式聊天和客户端生成式 UI 的完整支持
+- 用于处理常见 AI 交互模式的实用工具（即聊天、补全、助手）
+- 经过生产环境验证的可靠性与性能
+- 跨主流框架的兼容性
+
+## AI SDK UI 框架兼容性
+
+AI SDK UI 支持以下框架：[React](https://react.dev/)、[Svelte](https://svelte.dev/) 和 [Vue.js](https://vuejs.org/)。以下是这些框架所支持功能的对比：
+
+| 功能 | React | Svelte | Vue.js |
+| ---------------------------------------------------------- | --------- | --------- | --------- |
+| [useChat](/docs/reference/ai-sdk-ui/use-chat) | <Check /> | <Check /> | <Check /> |
+| [useChat](/docs/reference/ai-sdk-ui/use-chat) 工具调用 | <Check /> | <Check /> | <Cross /> |
+| [useCompletion](/docs/reference/ai-sdk-ui/use-completion) | <Check /> | <Check /> | <Check /> |
+| [useObject](/docs/reference/ai-sdk-ui/use-object) | <Check /> | <Cross /> | <Cross /> |
+| [MCP Apps](/docs/ai-sdk-core/mcp-apps) | <Check /> | <Cross /> | <Cross /> |
+
+<Note>
+  欢迎为非 React 框架[贡献代码](https://github.com/vercel/ai/blob/main/CONTRIBUTING.md)以实现缺失的功能。
+</Note>
+
+## 何时使用 AI SDK RSC
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们推荐在生产环境中使用 [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+[React 服务器组件](https://nextjs.org/docs/app/building-your-application/rendering/server-components)（RSC）为构建 React 应用提供了一种新方法，它允许组件在服务器上渲染、直接获取数据并将结果流式传输到客户端，从而减小打包体积并提升性能。它们还引入了一种新方式，可以从应用中的任何位置调用服务器端函数，称为 [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)。
+
+AI SDK RSC 提供了许多实用工具，允许你将值和 UI 直接从服务器流式传输到客户端。然而，**了解当前的局限性非常重要**：
+
+- **取消操作**：目前无法使用 Server Actions 中止流。这将在 React 和 Next.js 的未来版本中得到改进。
+- **数据传输量增加**：使用 [`createStreamableUI`](/docs/reference/ai-sdk-rsc/create-streamable-ui) 可能导致二次方数据传输（与生成文本的长度成二次方关系）。你可以改用 [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value) 来避免此问题，并在客户端渲染组件。
+- **流式传输期间的重挂载问题**：使用 `createStreamableUI` 时，组件会在 `.done()` 时重新挂载，导致[闪烁](https://github.com/vercel/ai/issues/2232)。
+
+鉴于这些局限性，**我们推荐在生产应用中使用 [AI SDK UI](/docs/ai-sdk-ui/overview)**。

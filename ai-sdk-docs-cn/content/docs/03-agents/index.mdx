@@ -1,0 +1,72 @@
+---
+title: 智能体
+description: 使用 AI SDK 构建智能体（agent）的概览。
+---
+
+# Agents
+
+以下章节介绍如何使用 AI SDK 构建智能体（agent）——即让大语言模型（LLM）在循环中使用工具来完成任务的系统。
+
+<IndexCards
+  cards={[
+    {
+      title: '概览',
+      description:
+        '了解什么是智能体、如何管理状态，以及为什么要使用 ToolLoopAgent。',
+      href: '/docs/agents/overview',
+    },
+    {
+      title: '构建智能体',
+      description:
+        '使用工具、运行时上下文和循环控制创建 ToolLoopAgent 实例。',
+      href: '/docs/agents/building-agents',
+    },
+    {
+      title: '工作流模式',
+      description:
+        '使用核心函数为复杂工作流构建结构化模式。',
+      href: '/docs/agents/workflows',
+    },
+    {
+      title: '循环控制',
+      description: '通过 stopWhen 和 prepareStep 实现高级执行控制。',
+      href: '/docs/agents/loop-control',
+    },
+    {
+      title: '配置调用选项',
+      description:
+        '传入类型安全的运行时输入，动态配置智能体行为。',
+      href: '/docs/agents/configuring-call-options',
+    },
+    {
+      title: '工具审批',
+      description:
+        '在敏感工具调用执行前进行审查、批准或拒绝。',
+      href: '/docs/agents/tool-approvals',
+    },
+    {
+      title: '基于策略的工具审批',
+      description:
+        '使用 @ai-sdk/policy-opa 和 Open Policy Agent 以代码形式编写工具授权规则。',
+      href: '/docs/agents/policy-tool-approvals',
+    },
+    {
+      title: '子智能体',
+      description:
+        '将上下文繁重的任务委派给专门的子智能体，同时保持主智能体专注。',
+      href: '/docs/agents/subagents',
+    },
+    {
+      title: 'WorkflowAgent',
+      description:
+        '使用 Workflow SDK 的 @ai-sdk/workflow 构建持久化、可恢复的智能体。',
+      href: '/docs/agents/workflow-agent',
+    },
+    {
+      title: '终端 UI',
+      description:
+        '在交互式终端界面中运行 ToolLoopAgent 实例。',
+      href: '/docs/agents/terminal-ui',
+    },
+  ]}
+/>

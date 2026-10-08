@@ -1,0 +1,230 @@
+---
+title: Get started with Claude 4
+description: 使用 AI SDK 上手 Claude 4。
+tags: ['getting-started']
+---
+
+# Get started with Claude 4
+
+随着 Claude 4 的发布，现在是开始构建 AI 应用的最佳时机，尤其是那些需要复杂推理能力和高级智能的应用。
+
+[AI SDK](/) 是一个强大的 TypeScript 工具包，可用于结合 Claude 4 等大语言模型（LLM）以及 React、Next.js、Vue、Svelte、Node.js 等流行框架构建 AI 应用。
+
+## Claude 4
+
+Claude 4 是 Anthropic 迄今最先进的模型家族，在推理、指令遵循、编程和知识任务上都表现出卓越的能力。Claude 4 提供两个变体——Sonnet 和 Opus——以增强的可靠性和控制力带来最先进的性能。Claude 4 在 Claude 3.7 引入的扩展思考能力之上更进一步，通过细致的逐步推理实现更复杂的问题求解。
+
+Claude 4 擅长复杂推理、代码生成与分析、精细的内容创作以及智能体（agent）能力，非常适合驱动复杂的 AI 工作流、面向客户的智能体，以及需要细腻理解与回应的应用。Claude Opus 4 是一个出色的编程模型，在 SWE-bench（72.5%）和 Terminal-bench（43.2%）上领先，并且能在需要专注投入和数千步骤的长时间任务上保持性能。Claude Sonnet 4 相比 Sonnet 3.7 有显著提升，编程能力尤为突出（SWE-bench 72.7%），同时兼顾性能与效率。
+
+### Claude 4 模型的提示词工程
+
+Claude 4 模型对清晰、明确的指令响应良好。以下最佳实践有助于获得最优表现：
+
+1. **给出明确的指令**：清楚说明你想让模型做什么，包括响应的具体步骤或格式。
+2. **提供上下文和动机**：解释为什么要执行某个任务，帮助模型更好地理解底层目标。
+3. **避免负面示例**：提供示例时，只演示你希望看到的行为，而不是你想避免的行为。
+
+## 使用 AI SDK 上手
+
+AI SDK 是一个 TypeScript 工具包，旨在帮助开发者使用 React、Next.js、Vue、Svelte、Node.js 等构建 AI 应用。把 LLM 集成到应用中很复杂，而且高度依赖于你所使用的具体模型提供商（provider）。
+
+AI SDK 抽象掉了模型提供商之间的差异，省去了构建聊天机器人的样板代码，并让你超越纯文本输出，生成丰富的交互式组件。
+
+AI SDK 的核心是 [AI SDK Core](/docs/ai-sdk-core/overview)，它提供统一的 API 来调用任何 LLM。下面的代码片段就是使用 AI SDK 调用 Claude 4 Sonnet 所需的全部代码：
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const { text, reasoningText, reasoning } = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  prompt: 'How will quantum computing impact cryptography by 2050?',
+});
+console.log(text);
+```
+
+### 推理能力
+
+Claude 4 增强了 Claude 3.7 Sonnet 首次引入的扩展思考（extended thinking）能力——通过细致的逐步推理解决复杂问题。此外，Opus 4 和 Sonnet 4 现在都可以在扩展思考过程中使用工具，让 Claude 能在推理与工具使用之间交替，从而改进响应。你可以使用 `thinking` 提供商选项启用扩展思考，并以 token 为单位指定思考预算。对于交错思考（interleaved thinking，Claude 可以在工具调用之间思考），你需要通过 `anthropic-beta` 请求头启用一项 beta 功能：
+
+```ts
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
+
+const { text, reasoningText, reasoning } = await generateText({
+  model: anthropic('claude-sonnet-4-20250514'),
+  prompt: 'How will quantum computing impact cryptography by 2050?',
+  providerOptions: {
+    anthropic: {
+      thinking: { type: 'enabled', budgetTokens: 15000 },
+    } satisfies AnthropicLanguageModelOptions,
+  },
+  headers: {
+    'anthropic-beta': 'interleaved-thinking-2025-05-14',
+  },
+});
+
+console.log(text); // text response
+console.log(reasoningText); // reasoning text
+console.log(reasoning); // reasoning details including redacted reasoning
+```
+
+### 构建交互式界面
+
+AI SDK Core 可以与 [AI SDK UI](/docs/ai-sdk-ui/overview)——AI SDK 的另一个强大组件——搭配使用，简化使用 Next.js、Nuxt、SvelteKit 和 SolidStart 等流行框架构建聊天、补全和助手界面的过程。
+
+AI SDK UI 提供了强大的抽象，简化了在前端管理聊天流和 UI 更新这些复杂任务，让你能更高效地开发动态的 AI 驱动界面。
+
+借助三个主要 Hook——[`useChat`](/docs/reference/ai-sdk-ui/use-chat)、[`useCompletion`](/docs/reference/ai-sdk-ui/use-completion) 和 [`useObject`](/docs/reference/ai-sdk-ui/use-object)——你可以把实时聊天能力、文本补全和流式 JSON 引入你的应用。
+
+我们来探索用 [Next.js](https://nextjs.org)、AI SDK 和 Claude Sonnet 4 构建一个聊天机器人（chatbot）：
+
+在新的 Next.js 应用中，先安装 AI SDK 和 Anthropic 提供商：
+
+<Snippet text="pnpm install ai @ai-sdk/anthropic" />
+
+然后，为聊天端点创建一个路由处理器：
+
+```tsx filename="app/api/chat/route.ts"
+import { anthropic, AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
+import {
+  streamText,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: anthropic('claude-sonnet-4-20250514'),
+    messages: await convertToModelMessages(messages),
+    headers: {
+      'anthropic-beta': 'interleaved-thinking-2025-05-14',
+    },
+    providerOptions: {
+      anthropic: {
+        thinking: { type: 'enabled', budgetTokens: 15000 },
+      } satisfies AnthropicLanguageModelOptions,
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      sendReasoning: true,
+    }),
+  });
+}
+```
+
+<Note>
+  你可以在 `toUIMessageStream` 辅助函数中使用 `sendReasoning: true` 把模型的推理 token 转发给客户端。
+</Note>
+
+最后，更新根页面（`app/page.tsx`）以使用 `useChat` Hook：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Page() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input });
+      setInput('');
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+        {messages.map(message => (
+          <div
+            key={message.id}
+            className={`p-3 rounded-lg ${
+              message.role === 'user' ? 'bg-blue-50 ml-auto' : 'bg-gray-50'
+            }`}
+          >
+            <p className="font-semibold">
+              {message.role === 'user' ? 'You' : 'Claude 4'}
+            </p>
+            {message.parts.map((part, index) => {
+              if (part.type === 'text') {
+                return (
+                  <div key={index} className="mt-1">
+                    {part.text}
+                  </div>
+                );
+              }
+              if (part.type === 'reasoning') {
+                return (
+                  <pre
+                    key={index}
+                    className="bg-gray-100 p-2 rounded mt-2 text-xs overflow-x-auto"
+                  >
+                    <details>
+                      <summary className="cursor-pointer">
+                        View reasoning
+                      </summary>
+                      {part.text}
+                    </details>
+                  </pre>
+                );
+              }
+            })}
+          </div>
+        ))}
+      </div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          name="prompt"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Ask Claude 4 something..."
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}
+```
+
+<Note>
+  你可以通过消息 `parts` 中的 `reasoning` 部分访问模型的推理 token。推理文本位于 reasoning 部分的 `text` 属性中。
+</Note>
+
+根页面（`app/page.tsx`）上的 useChat Hook 会在用户提交消息时向你的 LLM 提供商端点（`app/api/chat/route.ts`）发起请求。随后消息显示在聊天 UI 中。
+
+### Claude 4 模型变体
+
+Claude 4 提供两个变体，各自针对不同用例做了优化：
+
+- **Claude Sonnet 4**：性能均衡，适合大多数企业应用，相比 Sonnet 3.7 有显著提升。
+- **Claude Opus 4**：Anthropic 最强大的模型，也是目前最好的编程模型。擅长在需要专注投入和数千步骤的长时间任务上保持性能，能够连续工作数小时。
+
+## 开始使用
+
+准备好深入了吗？以下是上手方式：
+
+1. 阅读 [ai-sdk.dev/docs](/docs) 上的文档，了解 AI SDK 的能力。
+2. 查看 [ai-sdk.dev/examples](/examples) 上的实用示例，看看 SDK 的实际表现。
+3. 通过 [ai-sdk.dev/docs/guides](/cookbook/guides) 上的进阶指南深入探索，主题包括检索增强生成（RAG）等。
+4. 使用 [vercel.com/templates?type=ai](https://vercel.com/templates?type=ai) 上可直接部署的 AI 模板。

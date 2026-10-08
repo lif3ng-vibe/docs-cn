@@ -1,0 +1,146 @@
+---
+title: generateVideo
+description: 工作流中持久化视频生成的 API 参考。
+---
+
+# `generateVideo()`
+
+在工作流中以持久化方式生成视频。该辅助函数会使用 Workflow webhook URL 启动一个异步视频生成任务，挂起工作流直到提供商发送终结通知，然后通过一次状态请求获取已完成的结果。
+
+与 `ai` 包中的 [`experimental_generateVideo`](/docs/reference/ai-sdk-core/generate-video) 不同，该辅助函数不会下载由提供商托管的视频。URL 结果保持为 URL，你的工作流可以自行决定在另一步骤中持久化、复制或处理它们，而无需让视频字节跨越工作流步骤边界进行序列化。
+
+```ts
+import { experimental_generateVideo as generateVideo } from '@ai-sdk/workflow/video';
+
+export async function videoWorkflow(prompt: string) {
+  'use workflow';
+
+  // The workflow suspends while the video renders, consuming no compute.
+  const result = await generateVideo({
+    model: 'klingai/kling-v3.0-t2v',
+    prompt,
+  });
+
+  return result.videos;
+}
+```
+
+所选模型必须支持异步启动与状态查询操作以及提供商 webhook。该辅助函数必须在 Workflow SDK 工作流中调用。
+
+## 导入
+
+<Snippet
+  text={`import { experimental_generateVideo as generateVideo } from "@ai-sdk/workflow/video"`}
+  prompt={false}
+/>
+
+## 参数
+
+该辅助函数接受与 `ai` 中 `experimental_startVideo` 相同的参数，但不含 `webhookUrl` 与 `abortSignal`。webhook URL 由它创建并管理。
+
+<PropertiesTable
+  content={[
+    {
+      name: 'model',
+      type: 'VideoModel',
+      isRequired: true,
+      description:
+        '要使用的异步视频模型。可以是与 Vercel AI Gateway 兼容的字符串，或可序列化的提供商模型。',
+    },
+    {
+      name: 'prompt',
+      type: 'string | GenerateVideoPrompt',
+      isRequired: true,
+      description: '用于生成视频的提示词（prompt）或图像提示词。',
+    },
+    {
+      name: 'n',
+      type: 'number',
+      isOptional: true,
+      description: '要生成的视频数量。默认值：1。',
+    },
+    {
+      name: 'aspectRatio',
+      type: '`${number}:${number}` | "adaptive"',
+      isOptional: true,
+      description: '生成视频的宽高比。',
+    },
+    {
+      name: 'resolution',
+      type: '`${number}x${number}`',
+      isOptional: true,
+      description: '生成视频的分辨率。',
+    },
+    {
+      name: 'duration',
+      type: 'number',
+      isOptional: true,
+      description: '每个生成视频的时长（秒）。',
+    },
+    {
+      name: 'maxVideosPerCall',
+      type: 'number',
+      isOptional: true,
+      description: '单次调用可启动的最大视频数量。',
+    },
+    {
+      name: 'fps',
+      type: 'number',
+      isOptional: true,
+      description: '生成视频的每秒帧数。',
+    },
+    {
+      name: 'seed',
+      type: 'number',
+      isOptional: true,
+      description: '在受支持时用于确定性生成的随机种子。',
+    },
+    {
+      name: 'frameImages',
+      type: 'Array<{ image: DataContent; frameType: VideoModelV4FrameType }>',
+      isOptional: true,
+      description: '带角色标记的首帧与尾帧图像。',
+    },
+    {
+      name: 'inputReferences',
+      type: 'Array<DataContent | { data: DataContent; mediaType?: string }>',
+      isOptional: true,
+      description: '用于生成的参考图像或视频。',
+    },
+    {
+      name: 'generateAudio',
+      type: 'boolean',
+      isOptional: true,
+      description: '是否随视频一起生成音频。',
+    },
+    {
+      name: 'providerOptions',
+      type: 'ProviderOptions',
+      isOptional: true,
+      description: '额外的提供商特定选项。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string>',
+      isOptional: true,
+      description: '启动与状态请求的附加 HTTP 请求头。',
+    },
+    {
+      name: 'maxRetries',
+      type: 'number',
+      isOptional: true,
+      description:
+        '每个启动与状态请求的 AI SDK 最大重试次数。默认值：2。',
+    },
+  ]}
+/>
+
+## 返回值
+
+返回来自提供商的已完成状态结果。`videos` 包含按 `type` 区分的原始提供商视频数据：
+
+- `url`：提供商托管的 URL 与媒体类型
+- `base64`：Base64 编码的视频数据与媒体类型
+- `binary`：一个 `Uint8Array` 与媒体类型
+
+托管 URL 可能会过期。如需保留某个视频，请在单独的工作流步骤中处理它。

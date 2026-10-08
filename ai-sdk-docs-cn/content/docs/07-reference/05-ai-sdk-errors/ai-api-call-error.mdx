@@ -1,0 +1,33 @@
+---
+title: AI_APICallError
+description: 了解如何解决 AI_APICallError
+---
+
+# AI_APICallError
+
+此错误在 API 调用失败时发生。
+
+## 属性
+
+- `url`：失败的 API 请求的 URL
+- `requestBodyValues`：发送到 API 的请求体值
+- `statusCode`：API 返回的 HTTP 状态码（可选）
+- `responseHeaders`：API 返回的响应头（可选）
+- `responseBody`：API 返回的响应体（可选）
+- `isRetryable`：根据状态码判断该请求是否可重试
+- `data`：与该错误关联的其他数据（可选）
+- `cause`：导致 API 调用失败的底层错误（可选）
+
+当此错误在 AI SDK UI 的聊天传输层或补全请求中创建时，`requestBodyValues` 为 `undefined`，因此提示词与消息不会被复制到面向客户端的错误对象中。
+
+## 排查此错误
+
+可以使用以下方式检查错误是否为 `AI_APICallError` 的实例：
+
+```typescript
+import { APICallError } from 'ai';
+
+if (APICallError.isInstance(error)) {
+  // Handle the error
+}
+```

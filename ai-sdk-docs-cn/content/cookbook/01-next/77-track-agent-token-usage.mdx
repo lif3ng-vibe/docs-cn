@@ -1,0 +1,334 @@
+---
+title: Track Agent Token Usage
+description: 了解如何使用 ToolLoopAgent 跟踪活跃的上下文窗口。
+tags: ['next']
+---
+
+# Track Agent Token Usage
+
+<Note>
+  有关构建智能体的更多信息，请参阅 [ToolLoopAgent
+  文档](/docs/reference/ai-sdk-core/tool-loop-agent)。
+</Note>
+
+在智能体应用中跟踪 token 消耗有助于你监控成本并实现上下文管理策略。
+本菜谱展示如何跨步骤跟踪用量，并使其在智能体的整个生命周期中可用。
+
+## 从一个基础智能体开始
+
+首先，搭建一个带有工具的基础 `ToolLoopAgent`。使用 `InferAgentUIMessage` 定义一个 `AgentUIMessage` 类型，以便在前端获得类型安全的消息，包括带类型的工具调用与工具结果。
+
+```typescript filename='ai/agent.ts'
+import { type InferAgentUIMessage, ToolLoopAgent, tool } from 'ai';
+import { z } from 'zod';
+
+export const agent = new ToolLoopAgent({
+  model: 'anthropic/claude-haiku-5.5',
+  tools: {
+    greet: tool({
+      description: 'Greets a person by their name.',
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }) => `Greeted ${name}`,
+    }),
+  },
+});
+
+export type AgentUIMessage = InferAgentUIMessage<typeof agent>;
+```
+
+创建一个以流式方式返回智能体响应的 Route Handler。使用 `AgentUIMessage` 为来自客户端的消息标注类型。
+
+```tsx filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+} from 'ai';
+import { type AgentUIMessage, agent } from '@/ai/agent';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: AgentUIMessage[] } = await req.json();
+
+  const result = await agent.stream({
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+再创建一个使用 `useChat` 的基础聊天界面。将 `AgentUIMessage` 作为泛型传入，即可获得类型安全的消息访问，包括带类型的工具调用与工具结果。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { type AgentUIMessage } from '@/ai/agent';
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat<AgentUIMessage>();
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          <strong>{m.role}:</strong>
+          {m.parts.map(
+            (p, i) => p.type === 'text' && <span key={i}>{p.text}</span>,
+          )}
+        </div>
+      ))}
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input value={input} onChange={e => setInput(e.target.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+## 通过消息元数据访问步骤间的用量
+
+要跟踪 token 用量，可以使用 `messageMetadata` 回调将其附加到每条消息上。首先，定义一个元数据类型，并将其作为第二个泛型传给 `InferAgentUIMessage`。
+
+```typescript filename='ai/agent.ts' highlight="2-3,20-21"
+import {
+  type InferAgentUIMessage,
+  type LanguageModelUsage,
+  ToolLoopAgent,
+  tool,
+} from 'ai';
+import { z } from 'zod';
+
+export const agent = new ToolLoopAgent({
+  model: 'anthropic/claude-haiku-5.5',
+  tools: {
+    greet: tool({
+      description: 'Greets a person by their name.',
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }) => `Greeted ${name}`,
+    }),
+  },
+});
+
+type AgentMetadata = { usage: LanguageModelUsage };
+export type AgentUIMessage = InferAgentUIMessage<typeof agent, AgentMetadata>;
+```
+
+现在，在 Route Handler 中添加 `messageMetadata` 回调。将 `AgentUIMessage` 作为消息泛型传给 `toUIMessageStream`，为该回调标注类型。当一个步骤结束时，`finish-step` 部件会包含用量数据，你可以将其纳入消息元数据中。
+
+```tsx filename='app/api/chat/route.ts' highlight="16-25"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+  type ToolSet,
+} from 'ai';
+import { type AgentUIMessage, agent } from '@/ai/agent';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: AgentUIMessage[] } = await req.json();
+
+  const result = await agent.stream({
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream<ToolSet, AgentUIMessage>({
+      stream: result.stream,
+      messageMetadata: ({ part }) => {
+        if (part.type === 'finish-step') {
+          return { usage: part.usage };
+        }
+      },
+    }),
+  });
+}
+```
+
+现在你可以在客户端访问这些元数据了。`AgentUIMessage` 类型已经包含了元数据的形状，让你能以类型安全的方式访问 `m.metadata.usage`。
+
+```typescript filename='app/page.tsx' highlight="17-19"
+'use client';
+
+import { type AgentUIMessage } from '@/ai/agent';
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat<AgentUIMessage>();
+
+  return (
+    <div>
+      {messages.map((m) => (
+        <div key={m.id}>
+          <strong>{m.role}:</strong>
+          {m.parts.map((p, i) => p.type === 'text' && <span key={i}>{p.text}</span>)}
+          {m.metadata?.usage && (
+            <div>Input tokens: {m.metadata.usage.inputTokens}</div>
+          )}
+        </div>
+      ))}
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        sendMessage({ text: input });
+        setInput('');
+      }}>
+        <input value={input} onChange={(e) => setInput(e.target.value)} />
+      </form>
+    </div>
+  );
+}
+```
+
+## 通过 Call Options 将用量传回智能体
+
+现在用量数据已经显示在 UI 中了。但如果你想基于这些数据采取行动呢？例如，你可能想在接近 token 上限时实现上下文压缩（context compaction）。
+
+要操作消息或应用上下文管理策略，你可以使用 `prepareStep` 回调。但 `prepareStep` 只能访问当前运行中的步骤。在新请求的第一个步骤时，`steps` 是空的，让你无法得知对话在此前的请求中已经累积了多少 token。
+
+为了解决这个问题，可以把之前消息中的用量传回给智能体。使用 `callOptionsSchema` 定义数据形状，并使用 `prepareCall` 使其可在 `context` 上被访问，这样 `prepareStep` 就能读取到它。
+
+```typescript filename='ai/agent.ts' highlight="11-13,21-26"
+import {
+  type InferAgentUIMessage,
+  type LanguageModelUsage,
+  ToolLoopAgent,
+  tool,
+} from 'ai';
+import { z } from 'zod';
+
+export const agent = new ToolLoopAgent({
+  model: 'anthropic/claude-haiku-5.5',
+  callOptionsSchema: z.object({
+    lastInputTokens: z.number(),
+  }),
+  tools: {
+    greet: tool({
+      description: 'Greets a person by their name.',
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }) => `Greeted ${name}`,
+    }),
+  },
+  prepareCall: ({ options, ...settings }) => {
+    return {
+      ...settings,
+      context: { lastInputTokens: options.lastInputTokens },
+    };
+  },
+});
+
+type AgentMetadata = { usage: LanguageModelUsage };
+export type AgentUIMessage = InferAgentUIMessage<typeof agent, AgentMetadata>;
+```
+
+从先前的消息中提取上一次的输入 token 数，并将其传给智能体。
+
+```tsx filename='app/api/chat/route.ts' highlight="12-14,18-20"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+  type ToolSet,
+} from 'ai';
+import { type AgentUIMessage, agent } from '@/ai/agent';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: AgentUIMessage[] } = await req.json();
+
+  const lastInputTokens =
+    messages.filter(m => m.role === 'assistant').at(-1)?.metadata?.usage
+      ?.inputTokens ?? 0;
+
+  const result = await agent.stream({
+    messages: await convertToModelMessages(messages),
+    options: {
+      lastInputTokens,
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream<ToolSet, AgentUIMessage>({
+      stream: result.stream,
+      messageMetadata: ({ part }) => {
+        if (part.type === 'finish-step') {
+          return { usage: part.usage };
+        }
+      },
+    }),
+  });
+}
+```
+
+## 在 prepareStep 和工具中访问用量
+
+有了 `context` 上的用量数据，你就可以在 `prepareStep` 中访问它来做出上下文管理决策，或者将其传给你的工具。
+
+```typescript filename='ai/agent.ts' highlight="9-11,31-40"
+import {
+  type InferAgentUIMessage,
+  type LanguageModelUsage,
+  ToolLoopAgent,
+  tool,
+} from 'ai';
+import { z } from 'zod';
+
+type TContext = {
+  lastInputTokens: number;
+};
+
+export const agent = new ToolLoopAgent({
+  model: 'anthropic/claude-haiku-5.5',
+  callOptionsSchema: z.object({
+    lastInputTokens: z.number(),
+  }),
+  tools: {
+    greet: tool({
+      description: 'Greets a person by their name.',
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }) => `Greeted ${name}`,
+    }),
+  },
+  prepareCall: ({ options, ...settings }) => {
+    return {
+      ...settings,
+      context: { lastInputTokens: options.lastInputTokens },
+    };
+  },
+  prepareStep: ({ steps, context }) => {
+    const lastStep = steps.at(-1);
+    const lastStepUsage =
+      lastStep?.usage?.inputTokens ??
+      (context as TContext)?.lastInputTokens ??
+      0;
+    console.log('Last step input tokens:', lastStepUsage);
+    // You can use this to implement context compaction strategies
+    return {
+      context: {
+        ...context,
+        lastStepUsage,
+      },
+    };
+  },
+});
+
+type AgentMetadata = { usage: LanguageModelUsage };
+export type AgentUIMessage = InferAgentUIMessage<typeof agent, AgentMetadata>;
+```
+
+`prepareStep` 回调会在每个步骤之前运行，让你可以访问：
+
+- `steps`：此前所有的步骤及其用量数据
+- `context`：由 `prepareCall` 设置的上下文（来自上一个请求的用量）
+
+这让你能够跟踪整个对话生命周期中的 token 消耗，并在接近 token 上限时实现上下文压缩等策略。

@@ -1,0 +1,67 @@
+---
+title: Azure AI
+description: 了解如何在 AI SDK 中使用 @quail-ai/azure-ai-provider。
+---
+
+# AI SDK 的 Azure 自定义提供商
+
+**[Quail-AI/azure-ai-provider](https://github.com/QuailAI/azure-ai-provider)** 提供与 Azure 托管语言模型的非官方集成，使用 Azure 原生 API 而非标准 OpenAI API 格式。
+
+## 语言模型
+
+该提供商可用于 Azure AI Foundry 中任何兼容 Azure-Rest AI-inference API 的模型。
+
+### 已测试的模型
+
+- DeepSeek-R1
+- Llama 3.3-70B Instruct
+- Cohere-command-r-08-2024
+
+## 安装
+
+### 安装步骤
+
+通过 npm 安装该提供商：
+
+```bash
+npm i @quail-ai/azure-ai-provider
+```
+
+## 提供商实例
+
+创建一个 Azure AI 资源，并配置你的 endpoint URL 与 API key。将以下内容添加到 `.env` 文件：
+
+```bash
+AZURE_API_ENDPOINT=https://<your-resource>.services.ai.azure.com/models
+AZURE_API_KEY=<your-api-key>
+```
+
+从包中导入 `createAzure` 来创建提供商实例：
+
+```ts
+import { createAzure } from '@quail-ai/azure-ai-provider';
+
+const azure = createAzure({
+  endpoint: process.env.AZURE_API_ENDPOINT,
+  apiKey: process.env.AZURE_API_KEY,
+});
+```
+
+## 基本用法
+
+使用 Azure 自定义提供商生成文本：
+
+```ts
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: azure('your-deployment-name'),
+  prompt: 'Write a story about a robot.',
+});
+```
+
+## 状态
+
+> ✅ 对话补全：流式与非流式响应均可正常工作\
+> ⚠️ 工具调用：功能高度依赖于所选模型\
+> ⚠️ 嵌入（embedding）：已有实现但未经测试

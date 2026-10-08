@@ -1,0 +1,44 @@
+---
+title: Harness 适配器
+description: 了解可用的 AI SDK harness 适配器。
+---
+
+# Harness Adapters
+
+Harness 适配器将 `HarnessAgent` 连接到特定的智能体运行时。它们相当于 harness 版的 AI SDK 模型提供商：每个适配器包装一个运行时，并将其会话、流事件、工具、用量、生命周期状态和配置归一化为 harness 契约。
+
+## AI SDK Harness 适配器
+
+AI SDK 包含以下 harness 适配器：
+
+- [Claude Code](/providers/ai-sdk-harnesses/claude-code)（`@ai-sdk/harness-claude-code`）
+- [Cline](/providers/ai-sdk-harnesses/cline)（`@ai-sdk/harness-cline`）
+- [Codex](/providers/ai-sdk-harnesses/codex)（`@ai-sdk/harness-codex`）
+- [Cursor](/providers/ai-sdk-harnesses/cursor)（`@ai-sdk/harness-cursor`）
+- [Deep Agents](/providers/ai-sdk-harnesses/deepagents)（`@ai-sdk/harness-deepagents`）
+- [fx](/providers/ai-sdk-harnesses/fx)（`@ai-sdk/harness-fx`）
+- [GitHub Copilot](/providers/ai-sdk-harnesses/github-copilot)（`@ai-sdk/harness-github-copilot`）
+- [Grok Build](/providers/ai-sdk-harnesses/grok-build)（`@ai-sdk/harness-grok-build`）
+- [OpenCode](/providers/ai-sdk-harnesses/opencode)（`@ai-sdk/harness-opencode`）
+- [Pi](/providers/ai-sdk-harnesses/pi)（`@ai-sdk/harness-pi`）
+
+### 即将推出
+
+- Amp（`@ai-sdk/harness-amp`）
+- Goose（`@ai-sdk/harness-goose`）
+- Mastra（`@ai-sdk/harness-mastra`）
+
+## 适配器能力
+
+| 适配器                                                       | 运行时位置   | 自定义工具  | 自定义技能  | 结构化输出  | 内置工具审批 | 内置工具过滤                 | 历史访问       |
+| ------------------------------------------------------------ | ------------ | ----------- | ----------- | ----------- | ------------ | ---------------------------- | -------------- |
+| [Claude Code](/providers/ai-sdk-harnesses/claude-code)       | 沙箱桥接     | <Check />   | <Check />   | <Check />   | <Check />    | <Check />                    | <Cross />      |
+| [Cline](/providers/ai-sdk-harnesses/cline)                   | 宿主进程     | <Check />   | <Check />   | <Check />   | <Check />    | <Check />                    | <Cross />      |
+| [Codex](/providers/ai-sdk-harnesses/codex)                   | 沙箱桥接     | <Check />   | <Check />   | <Check />   | <Cross />    | <Cross />                    | <Cross />      |
+| [Cursor](/providers/ai-sdk-harnesses/cursor)                 | 经 ACP 的沙箱 | <Check />  | <Check />   | <Cross />   | <Cross />    | <Cross />                    | <Cross />      |
+| [Deep Agents](/providers/ai-sdk-harnesses/deepagents)        | 沙箱桥接     | <Check />   | <Check />   | <Check />   | <Check />    | <Check /> 通过自动拒绝        | <Cross />      |
+| [fx](/providers/ai-sdk-harnesses/fx)                         | 经 ACP 的沙箱 | <Check />  | <Check />   | <Cross />   | <Check />    | <Cross />                    | <Cross />      |
+| [GitHub Copilot](/providers/ai-sdk-harnesses/github-copilot) | 经 ACP 的沙箱 | <Check />  | <Check />   | <Cross />   | <Cross />    | <Cross />                    | <Cross />      |
+| [Grok Build](/providers/ai-sdk-harnesses/grok-build)         | 经 ACP 的沙箱 | <Check />  | <Check />   | <Check />   | <Cross />    | <Cross />                    | <Cross />      |
+| [OpenCode](/providers/ai-sdk-harnesses/opencode)             | 沙箱桥接     | <Check />   | <Check />   | <Check />   | <Check />    | <Check /> 通过自动拒绝        | <Cross />      |
+| [Pi](/providers/ai-sdk-harnesses/pi)                         | 宿主进程     | <Check />   | <Check />   | <Cross />   | <Check />    | <Check />                    | <Cross />      |

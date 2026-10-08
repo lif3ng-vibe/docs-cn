@@ -1,0 +1,78 @@
+---
+title: 生成文本
+description: 学习如何使用 AI SDK 和 Next.js 生成文本。
+tags: ['next']
+---
+
+# Generate Text
+
+有时你可能需要基于提示词（prompt）生成文本。例如，你可能想针对一个问题生成回答，或总结一段文本。`generateText` 函数可用于基于输入提示词生成文本。
+
+<Browser>
+  <TextGeneration />
+</Browser>
+
+## 客户端
+
+我们来创建一个简单的 React 组件，当按钮被点击时，它会向 `/api/completion` 端点发起 POST 请求。该端点将基于输入提示词生成文本。
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+
+export default function Page() {
+  const [generation, setGeneration] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          setIsLoading(true);
+
+          await fetch('/api/completion', {
+            method: 'POST',
+            body: JSON.stringify({
+              prompt: 'Why is the sky blue?',
+            }),
+          }).then(response => {
+            response.json().then(json => {
+              setGeneration(json.text);
+              setIsLoading(false);
+            });
+          });
+        }}
+      >
+        Generate
+      </button>
+
+      {isLoading ? 'Loading...' : generation}
+    </div>
+  );
+}
+```
+
+## 服务器
+
+我们来为 `/api/completion` 创建一个 Route Handler，它会基于输入提示词生成文本。该路由将调用 `ai` 模块中的 `generateText` 函数，基于输入提示词生成文本并返回。
+
+```typescript filename='app/api/completion/route.ts'
+import { generateText } from 'ai';
+
+export async function POST(req: Request) {
+  const { prompt }: { prompt: string } = await req.json();
+
+  const { text } = await generateText({
+    model: 'openai/gpt-6-astra',
+    instructions: 'You are a helpful assistant.',
+    prompt,
+  });
+
+  return Response.json({ text });
+}
+```
+
+---
+
+<GithubLink link="https://github.com/vercel/ai/blob/main/examples/next-openai-pages/pages/basics/generate-text/index.tsx" />

@@ -1,0 +1,107 @@
+---
+title: NVIDIA NIM
+description: 在 AI SDK 中使用 NVIDIA NIM 的 OpenAI 兼容 API。
+---
+
+# NVIDIA NIM 提供商
+
+[NVIDIA NIM](https://www.nvidia.com/en-us/ai/) 提供用于部署基础模型的优化推理（inference）微服务。它提供一个 OpenAI 兼容 API，可配合 AI SDK 使用。
+
+## 设置
+
+NVIDIA NIM 提供商（provider）与 OpenAI API 兼容，因此通过 `@ai-sdk/openai-compatible` 模块提供。
+安装方式如下：
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+## 提供商实例
+
+要使用 NVIDIA NIM，可以用 `@ai-sdk/openai-compatible` 中的 `createOpenAICompatible` 函数创建一个自定义提供商实例：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const nim = createOpenAICompatible({
+  name: 'nim',
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+  headers: {
+    Authorization: `Bearer ${process.env.NIM_API_KEY}`,
+  },
+});
+```
+
+<Note>
+  在 [NVIDIA Build](https://build.nvidia.com/explore/discover) 注册即可获得 API key 和免费额度。新用户会收到 1,000 个推理（inference）积分作为起步额度。
+</Note>
+
+## 语言模型
+
+你可以使用提供商实例与 NIM 模型交互。例如，使用 [DeepSeek-R1](https://build.nvidia.com/deepseek-ai/deepseek-r1)——一个强大的开源语言模型：
+
+```ts
+const model = nim.chatModel('deepseek-ai/deepseek-r1');
+```
+
+### 示例 - 生成文本
+
+你可以使用 NIM 语言模型，通过 `generateText` 函数生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const nim = createOpenAICompatible({
+  name: 'nim',
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+  headers: {
+    Authorization: `Bearer ${process.env.NIM_API_KEY}`,
+  },
+});
+
+const { text, usage, finishReason } = await generateText({
+  model: nim.chatModel('deepseek-ai/deepseek-r1'),
+  prompt: 'Tell me the history of the San Francisco Mission-style burrito.',
+});
+
+console.log(text);
+console.log('Token usage:', usage);
+console.log('Finish reason:', finishReason);
+```
+
+### 示例 - 流式生成文本
+
+NIM 语言模型也可以通过 `streamText` 函数以流式（streaming）方式生成文本：
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { streamText } from 'ai';
+
+const nim = createOpenAICompatible({
+  name: 'nim',
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+  headers: {
+    Authorization: `Bearer ${process.env.NIM_API_KEY}`,
+  },
+});
+
+const result = streamText({
+  model: nim.chatModel('deepseek-ai/deepseek-r1'),
+  prompt: 'Tell me the history of the Northern White Rhino.',
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+
+console.log();
+console.log('Token usage:', await result.usage);
+console.log('Finish reason:', await result.finishReason);
+```
+
+NIM 语言模型还支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 生成结构化数据。
+
+<Note>
+  各模型对工具调用和结构化输出的支持程度不同。例如，
+  [`meta/llama-3.3-70b-instruct`](https://build.nvidia.com/meta/llama-3_3-70b-instruct)
+  模型支持结构化输出能力。具体支持的功能请查阅各模型在 NVIDIA Build 上的文档。
+</Note>

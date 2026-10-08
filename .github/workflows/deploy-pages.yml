@@ -76,6 +76,20 @@ jobs:
           rm -f export.zip
           node scripts/prefix-dist.mjs
 
+      # ai-sdk 是 pnpm monorepo（geistdocs/fumadocs + Next.js 16 静态导出）。
+      # 无需 sed：basePath 写死在其 next.config.ts 与 geistdocs config，内链/
+      # canonical/sitemap 构建期自动带 /docs-cn/ai-sdk 前缀（已本地验证产物）；
+      # 搜索是构建期静态索引，无需服务端。产物 out/ 在 apps/docs/ 根层，
+      # postprocess 脚本负责折叠 root-param 目录与板块根跳转桩。
+      - name: Build ai-sdk-docs-cn
+        working-directory: ai-sdk-docs-cn
+        env:
+          NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: https://lif3ng-vibe.github.io/docs-cn/ai-sdk
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm --filter ai-sdk-docs build
+
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
         env:
@@ -239,6 +253,7 @@ jobs:
           mv agent-skills-docs-cn/dist _site/agent-skills
           mv tester-army-e2e-docs-cn/dist-deploy _site/tester-army-e2e
           mv claude-mem-docs-cn/dist _site/claude-mem
+          mv ai-sdk-docs-cn/apps/docs/out _site/ai-sdk
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

@@ -1,0 +1,228 @@
+---
+title: Hugging Face
+description: 了解如何使用 Hugging Face 提供商。
+---
+
+# Hugging Face 提供商
+
+[Hugging Face](https://huggingface.co/) 提供商通过 [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/index) 提供对数千个语言模型的访问，包括来自 Meta、DeepSeek、Qwen 等厂商的模型。
+
+API 密钥可从 [Hugging Face Settings](https://huggingface.co/settings/tokens) 获取。
+
+## 安装
+
+Hugging Face 提供商包含在 `@ai-sdk/huggingface` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/huggingface" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/huggingface` 导入默认提供商实例 `huggingFace`：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+```
+
+如需自定义配置，可以导入 `createHuggingFace`，并使用你的设置创建提供商实例：
+
+```ts
+import { createHuggingFace } from '@ai-sdk/huggingface';
+
+const huggingFace = createHuggingFace({
+  apiKey: process.env.HUGGINGFACE_API_KEY ?? '',
+});
+```
+
+你可以使用以下可选设置来定制 Hugging Face 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://router.huggingface.co/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认值为
+  `HUGGINGFACE_API_KEY` 环境变量。你可以从
+  [Hugging Face Settings](https://huggingface.co/settings/tokens) 获取 API 密钥。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## 语言模型
+
+你可以使用提供商实例创建语言模型：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: huggingFace('deepseek-ai/DeepSeek-V3-0324'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+你也可以使用 `.responses()` 或 `.languageModel()` 工厂方法：
+
+```ts
+const model = huggingFace.responses('deepseek-ai/DeepSeek-V3-0324');
+// or
+const model = huggingFace.languageModel('moonshotai/Kimi-K2-Instruct');
+```
+
+Hugging Face 语言模型可以用于 `streamText` 函数
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+你可以在 [Hugging Face Inference Models](https://huggingface.co/inference/models) 页面上探索最新和热门模型及其能力、上下文大小、吞吐量与定价。
+
+### 提供商选项
+
+Hugging Face 语言模型支持提供商特有的选项，可以通过 `providerOptions.huggingface` 传入：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: huggingFace('deepseek-ai/DeepSeek-R1'),
+  prompt: 'Explain the theory of relativity.',
+  providerOptions: {
+    huggingface: {
+      reasoningEffort: 'high',
+      instructions: 'Respond in a clear and educational manner.',
+    },
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **metadata** _Record&lt;string, string&gt;_
+
+  随请求一起发送的额外元数据。
+
+- **instructions** _string_
+
+  给模型的指令。可用于提供额外的上下文或引导。
+
+- **strictJsonSchema** _boolean_
+
+  是否对结构化输出使用严格的 JSON schema 校验。默认值为 `false`。
+
+- **reasoningEffort** _string_
+
+  控制推理模型（如 DeepSeek-R1）的推理力度。取值越高，推理越深入。
+
+### 推理输出
+
+对于 `deepseek-ai/DeepSeek-R1` 等推理模型，你可以控制推理力度，并在响应中访问模型的推理过程：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: huggingFace('deepseek-ai/DeepSeek-R1'),
+  prompt: 'How many r letters are in the word strawberry?',
+  providerOptions: {
+    huggingface: {
+      reasoningEffort: 'high',
+    },
+  },
+});
+
+for await (const part of result.stream) {
+  if (part.type === 'reasoning') {
+    console.log(`Reasoning: ${part.textDelta}`);
+  } else if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  }
+}
+```
+
+对于使用 `generateText` 的非流式调用，推理内容可在响应的 `reasoning` 字段中获取：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: huggingFace('deepseek-ai/DeepSeek-R1'),
+  prompt: 'What is 25 * 37?',
+  providerOptions: {
+    huggingface: {
+      reasoningEffort: 'medium',
+    },
+  },
+});
+
+console.log('Reasoning:', result.reasoning);
+console.log('Answer:', result.text);
+```
+
+### 图像输入
+
+对于 `Qwen/Qwen2.5-VL-7B-Instruct` 等具备视觉能力的模型，你可以在消息内容中传入图像：
+
+```ts
+import { huggingFace } from '@ai-sdk/huggingface';
+import { generateText } from 'ai';
+import { readFileSync } from 'fs';
+
+const result = await generateText({
+  model: huggingFace('Qwen/Qwen2.5-VL-7B-Instruct'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe this image in detail.' },
+        {
+          type: 'file',
+          mediaType: 'image',
+          data: readFileSync('./image.png'),
+        },
+      ],
+    },
+  ],
+});
+```
+
+你也可以传入图像 URL：
+
+```ts
+{
+  type: 'file',
+  mediaType: 'image',
+  data: 'https://example.com/image.png',
+}
+```
+
+## 模型能力
+
+| 模型                                            | 图像输入    | 对象生成          | 工具使用   | 工具流式       |
+| ----------------------------------------------- | ----------- | ----------------- | ---------- | -------------- |
+| `meta-llama/Llama-3.1-8B-Instruct`              | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `meta-llama/Llama-3.1-70B-Instruct`             | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `meta-llama/Llama-3.3-70B-Instruct`             | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `meta-llama/Llama-4-Maverick-17B-128E-Instruct` | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `deepseek-ai/DeepSeek-V3.1`                     | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `deepseek-ai/DeepSeek-V3-0324`                  | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `deepseek-ai/DeepSeek-R1`                       | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `deepseek-ai/DeepSeek-R1-Distill-Llama-70B`     | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `Qwen/Qwen3-32B`                                | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `Qwen/Qwen3-Coder-480B-A35B-Instruct`           | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `Qwen/Qwen2.5-VL-7B-Instruct`                   | <Check />   | <Check />         | <Check />  | <Check />      |
+| `google/gemma-3-27b-it`                         | <Cross />   | <Check />         | <Check />  | <Check />      |
+| `moonshotai/Kimi-K2-Instruct`                   | <Cross />   | <Check />         | <Check />  | <Check />      |
+
+<Note>
+  上表列出的是热门模型。你可以在
+  [Hugging Face Inference Models](https://huggingface.co/inference/models)
+  页面上探索所有可用模型。模型能力取决于你所使用的具体模型。请在 Hugging Face Hub 上查阅模型文档，了解每个模型功能的详细信息。
+</Note>

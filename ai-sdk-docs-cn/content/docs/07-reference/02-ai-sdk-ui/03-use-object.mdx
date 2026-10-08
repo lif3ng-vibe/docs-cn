@@ -1,0 +1,196 @@
+---
+title: useObject
+description: useObject Hook 的 API 参考。
+---
+
+# `useObject()`
+
+<Note>
+  `useObject` 可用于 React、Svelte、Vue 以及 SolidJS 社区集成。Angular 提供等价的
+  `StructuredObject` 服务。
+</Note>
+
+让你能够消费表示 JSON 对象的文本流，并根据 schema 将其解析为完整对象。
+你可以在后端将它与 [`streamText`](/docs/reference/ai-sdk-core/stream-text) 和 [`Output.object()`](/docs/reference/ai-sdk-core/output#output-object) 结合使用。
+
+```tsx
+'use client';
+
+import { useObject } from '@ai-sdk/react';
+
+export default function Page() {
+  const { object, submit } = useObject({
+    api: '/api/use-object',
+    schema: z.object({ content: z.string() }),
+  });
+
+  return (
+    <div>
+      <button onClick={() => submit('example input')}>Generate</button>
+      {object?.content && <p>{object.content}</p>}
+    </div>
+  );
+}
+```
+
+## 导入
+
+<Tabs items={['React', 'Svelte', 'Vue']}>
+  <Tab>
+    <Snippet
+      text="import { useObject } from '@ai-sdk/react'"
+      dark
+      prompt={false}
+    />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="import { StructuredObject } from '@ai-sdk/svelte'"
+      dark
+      prompt={false}
+    />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="import { useObject } from '@ai-sdk/vue'"
+      dark
+      prompt={false}
+    />
+  </Tab>
+</Tabs>
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'api',
+      type: 'string',
+      description:
+        '为生成对象而调用的 API 端点。它应以分块文本的形式流式传输与 schema 匹配的 JSON。可以是相对路径（以 `/` 开头）或绝对 URL。',
+    },
+    {
+      name: 'schema',
+      type: 'Zod Schema | JSON Schema',
+      description:
+        '定义完整对象结构的 schema。你可以传入 Zod schema 或 JSON schema（使用 `jsonSchema` 函数）。',
+    },
+    {
+      name: 'id?',
+      type: 'string',
+      description:
+        '唯一标识符。如果未提供，将随机生成一个。提供后，具有相同 `id` 的 `useObject` Hook 将在组件间共享状态。',
+    },
+    {
+      name: 'initialValue',
+      type: 'DeepPartial<RESULT> | undefined',
+      isOptional: true,
+      description: '初始对象的值。可选。',
+    },
+    {
+      name: 'fetch',
+      type: 'FetchFunction',
+      isOptional: true,
+      description:
+        '用于 API 调用的自定义 fetch 函数。默认为全局 fetch 函数。可选。',
+    },
+    {
+      name: 'headers',
+      type: 'Record<string, string> | Headers',
+      isOptional: true,
+      description:
+        '传递给 API 端点的请求头对象。可选。',
+    },
+    {
+      name: 'credentials',
+      type: 'RequestCredentials',
+      isOptional: true,
+      description:
+        'fetch 请求所使用的凭据模式。可选值为："omit"、"same-origin"、"include"。可选。',
+    },
+    {
+      name: 'onError',
+      type: '(error: Error) => void',
+      isOptional: true,
+      description:
+        '遇到错误时调用的回调函数。可选。',
+    },
+    {
+      name: 'onFinish',
+      type: '(result: OnFinishResult) => void',
+      isOptional: true,
+      description: '在流式响应结束时调用。',
+      properties: [
+        {
+          type: 'OnFinishResult',
+          parameters: [
+            {
+              name: 'object',
+              type: 'T | undefined',
+              description:
+                '生成的对象（按 schema 标注类型）。如果最终对象与 schema 不匹配，可以为 undefined。',
+            },
+            {
+              name: 'error',
+              type: 'Error | undefined',
+              description:
+                '可选的错误对象。例如，当最终对象与 schema 不匹配时为 TypeValidationError。',
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
+
+### 返回值
+
+<PropertiesTable
+  content={[
+    {
+      name: 'submit',
+      type: '(input: INPUT) => void',
+      description: '以所提供的输入作为 JSON body 调用 API。',
+    },
+    {
+      name: 'object',
+      type: 'DeepPartial<RESULT> | undefined',
+      description:
+        '所生成对象的当前值。会随着 API 流式传输 JSON 分块而更新。',
+    },
+    {
+      name: 'error',
+      type: 'Error | undefined',
+      description: 'API 调用失败时的错误对象。',
+    },
+    {
+      name: 'isLoading',
+      type: 'boolean',
+      description:
+        '布尔标志，指示当前是否有请求正在进行。',
+    },
+    {
+      name: 'stop',
+      type: '() => void',
+      description: '中止当前 API 请求的函数。',
+    },
+    {
+      name: 'clear',
+      type: '() => void',
+      description: '清空对象状态的函数。',
+    },
+  ]}
+/>
+
+## 示例
+
+<ExampleLinks
+  examples={[
+    {
+      title: '使用 useObject 进行流式对象生成',
+      link: '/examples/next-pages/basics/streaming-object-generation',
+    },
+  ]}
+/>

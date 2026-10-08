@@ -1,0 +1,144 @@
+---
+title: Hume
+description: 了解如何在 AI SDK 中使用 Hume 提供商。
+---
+
+# Hume 提供商
+
+[Hume](https://hume.ai/) 提供商为 Hume 文本转语音（TTS）API 提供支持。
+
+## 安装
+
+Hume 提供商包含在 `@ai-sdk/hume` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/hume" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/hume` 导入默认提供商实例 `hume`：
+
+```ts
+import { hume } from '@ai-sdk/hume';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/hume` 导入 `createHume`，并使用你的设置创建提供商实例：
+
+```ts
+import { createHume } from '@ai-sdk/hume';
+
+const hume = createHume({
+  // custom settings, e.g.
+  fetch: customFetch,
+});
+```
+
+你可以使用以下可选设置来定制 Hume 提供商实例：
+
+- **apiKey** _string_
+
+  通过 `X-Hume-Api-Key` 请求头发送的 API 密钥。
+  默认值为 `HUME_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作中间件来拦截请求，
+  或在测试等场景下提供自定义 fetch 实现。
+
+## 语音模型
+
+你可以使用 `.speech()` 工厂方法创建调用 [Hume 语音 API](https://dev.hume.ai/docs/text-to-speech-tts/overview) 的模型。
+
+```ts
+const model = hume.speech();
+```
+
+你可以传入标准的语音生成选项，例如 `voice`、`speed`、`instructions` 和 `outputFormat`：
+
+```ts
+import { generateSpeech } from 'ai';
+import { hume } from '@ai-sdk/hume';
+
+const result = await generateSpeech({
+  model: hume.speech(),
+  text: 'Hello, world!',
+  voice: 'd8ab67c6-953d-4bd8-9370-8fa53a0f1453',
+  speed: 1.0,
+  instructions: 'Speak in a friendly, conversational tone.',
+  outputFormat: 'mp3',
+});
+```
+
+### 支持的参数
+
+- **text** _string_（必填）
+
+  要转换为语音的文本。
+
+- **voice** _string_
+
+  用于生成音频的声音 ID。
+  默认值为 `'d8ab67c6-953d-4bd8-9370-8fa53a0f1453'`。
+
+- **speed** _number_
+
+  语速倍率。
+
+- **instructions** _string_
+
+  关于文本应如何朗读的描述或指令。
+
+- **outputFormat** _string_
+
+  要生成的音频格式。支持的取值：`'mp3'`、`'pcm'`、`'wav'`。
+  默认值为 `'mp3'`。
+
+<Note>
+  Hume 语音模型不支持 `language` 参数，该参数会被忽略并伴随一条警告。
+</Note>
+
+### 提供商选项
+
+你可以通过 `providerOptions` 参数传入更多提供商特有的选项：
+
+```ts
+import { generateSpeech } from 'ai';
+import { hume } from '@ai-sdk/hume';
+import { type HumeSpeechModelOptions } from '@ai-sdk/hume';
+
+const result = await generateSpeech({
+  model: hume.speech(),
+  text: 'Hello, world!',
+  providerOptions: {
+    hume: {
+      context: {
+        generationId: 'previous-generation-id',
+      },
+    } satisfies HumeSpeechModelOptions,
+  },
+});
+```
+
+可用的提供商选项如下：
+
+- **context** _object_
+
+  语音合成请求的上下文。可以是以下两种形式之一：
+  - `{ generationId: string }` - 用作上下文的先前语音合成结果的 ID。
+  - `{ utterances: Utterance[] }` - 用作上下文的话语（utterance）对象数组，每个话语对象包含：
+    - `text` _string_（必填）- 文本内容。
+    - `description` _string_ - 关于文本应如何朗读的指令。
+    - `speed` _number_ - 语速倍率。
+    - `trailingSilence` _number_ - 在该话语之后追加的静音时长（秒）。
+    - `voice` _object_ - 声音配置，形式为 `{ id: string, provider?: 'HUME_AI' | 'CUSTOM_VOICE' }` 或 `{ name: string, provider?: 'HUME_AI' | 'CUSTOM_VOICE' }`。
+
+### 模型能力
+
+| 模型      | Instructions | Speed     | Output Formats |
+| --------- | ------------ | --------- | -------------- |
+| `default` | <Check />    | <Check /> | mp3, pcm, wav  |

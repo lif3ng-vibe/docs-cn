@@ -1,0 +1,201 @@
+---
+title: createUIMessageStream
+description: createUIMessageStream 的 API 参考。
+---
+
+# `createUIMessageStream`
+
+`createUIMessageStream` 函数用于创建一个面向 UI 消息的可读流（readable stream），支持消息合并、错误处理和结束回调等高级特性。
+
+## 导入
+
+<Snippet text={`import { createUIMessageStream } from "ai"`} prompt={false} />
+
+## 示例
+
+```tsx
+const existingMessages: UIMessage[] = [
+  /* ... */
+];
+
+const stream = createUIMessageStream({
+  async execute({ writer }) {
+    // The outer stream owns the assistant message lifecycle.
+    writer.write({ type: 'start' });
+
+    // Start a text message
+    // Note: The id must be consistent across text-start, text-delta, and text-end steps
+    // This allows the system to correctly identify they belong to the same text block
+    writer.write({
+      type: 'text-start',
+      id: 'example-text',
+    });
+
+    // Write a message chunk
+    writer.write({
+      type: 'text-delta',
+      id: 'example-text',
+      delta: 'Hello',
+    });
+
+    // End the text message
+    writer.write({
+      type: 'text-end',
+      id: 'example-text',
+    });
+
+    // Merge another stream from streamText
+    const result = streamText({
+      model: __MODEL__,
+      prompt: 'Write a haiku about AI',
+    });
+
+    writer.merge(
+      toUIMessageStream({
+        stream: result.stream,
+        sendStart: false,
+        onEnd: ({ outcome }) => {
+          // The composer decides that the model stream outcome is also the
+          // aggregate stream outcome.
+          writer.setOutcome(outcome);
+        },
+      }),
+    );
+  },
+  onError: error =>
+    `Custom error: ${error instanceof Error ? error.message : String(error)}`,
+  originalMessages: existingMessages,
+  onEnd: ({ messages, isContinuation, outcome, responseMessage }) => {
+    console.log('Stream ended with messages:', messages);
+    console.log('Stream outcome:', outcome.status);
+  },
+});
+```
+
+`setOutcome` 用于记录组合器（composer）的策略，既不写入分块（chunk）也不关闭流。通过 `setOutcome` 声明的第一个结果（outcome）会被保留，但致命的执行、合并、错误处理或下游处理失败会使最终 `onEnd` 的结果变为 `failed`。单独的 `error` 分块本身不会改变结果。合并多个子流时，应聚合它们的结果并只调用一次 `setOutcome`。
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'execute',
+      type: '(options: { writer: UIMessageStreamWriterWithOutcome }) => Promise<void> | void',
+      description:
+        '接收一个 writer 实例的函数，可用它向流中写入 UI 消息分块。',
+      properties: [
+        {
+          type: 'UIMessageStreamWriterWithOutcome',
+          parameters: [
+            {
+              name: 'write',
+              type: '(part: UIMessageChunk) => void',
+              description: '向流中写入一个 UI 消息分块。',
+            },
+            {
+              name: 'merge',
+              type: '(stream: ReadableStream<UIMessageChunk>) => void',
+              description:
+                '将另一个 UI 消息流的内容合并到此流中。',
+            },
+            {
+              name: 'setOutcome',
+              type: '(outcome: UIMessageStreamOutcome) => void',
+              description:
+                "声明组合流的操作级结果（outcome）。通过此方法声明的第一个结果会被保留，而致命的执行、合并、错误处理或下游处理失败会覆盖已声明的结果。支持的状态为 'completed'、'failed'、'aborted' 和 'unknown'。声明结果不会写入分块，也不会关闭流。",
+            },
+            {
+              name: 'onError',
+              type: '(error: unknown) => string',
+              description:
+                '流写入器用于处理合并流中错误的错误处理器。',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onError',
+      type: '(error: unknown) => string',
+      description:
+        '一个处理错误并返回错误消息字符串的函数。默认返回 `"An error occurred."`，这样服务端的错误细节就不会发送给客户端。',
+    },
+    {
+      name: 'originalMessages',
+      type: 'UIMessage[] | undefined',
+      description:
+        '原始消息。如果提供此参数，则假定处于持久化模式，并会为响应消息分配一个消息 ID。',
+    },
+    {
+      name: 'onEnd',
+      type: '(options: { messages: UIMessage[]; isContinuation: boolean; isAborted: boolean; isCancelled?: true; outcome: UIMessageStreamOutcome; responseMessage: UIMessage; finishReason?: FinishReason }) => PromiseLike<void> | void',
+      description: '流结束时调用的回调函数。',
+      properties: [
+        {
+          type: 'EndOptions',
+          parameters: [
+            {
+              name: 'messages',
+              type: 'UIMessage[]',
+              description: '更新后的 UI 消息列表。',
+            },
+            {
+              name: 'isContinuation',
+              type: 'boolean',
+              description:
+                '指示响应消息是最后一条原始消息的延续，还是创建了一条新消息。',
+            },
+            {
+              name: 'isAborted',
+              type: 'boolean',
+              description: '指示流是否被中止。',
+            },
+            {
+              name: 'isCancelled',
+              type: 'true | undefined',
+              description:
+                '当消费方在声明结果之前取消了流（例如客户端断开连接）时存在且为 true。',
+            },
+            {
+              name: 'outcome',
+              type: "UIMessageStreamOutcome = { status: 'completed' } | { status: 'failed'; error?: unknown } | { status: 'aborted' } | { status: 'unknown' }",
+              description:
+                "流的操作级结果。它反映流所有者的声明，除非发生致命的流处理失败；它与模型结束原因和单独的 error 分块相互独立。当消费方在声明结果之前取消时保持为 'unknown'；可通过检查 isCancelled 将这种情况与没有声明结果的正常关闭区分开。",
+            },
+            {
+              name: 'responseMessage',
+              type: 'UIMessage',
+              description:
+                '作为响应发送给客户端的消息（如果原始消息被扩展，则指扩展后的该消息）。',
+            },
+            {
+              name: 'finishReason',
+              type: 'FinishReason | undefined',
+              description:
+                "生成结束的原因。取值之一：'stop'、'length'、'content-filter'、'tool-calls'、'error' 或 'other'。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'onFinish',
+      type: '(options: { messages: UIMessage[]; isContinuation: boolean; isAborted: boolean; isCancelled?: true; outcome: UIMessageStreamOutcome; responseMessage: UIMessage; finishReason?: FinishReason }) => PromiseLike<void> | void',
+      description: '`onEnd` 的已弃用别名。',
+    },
+    {
+      name: 'generateId',
+      type: 'IdGenerator | undefined',
+      description:
+        '为消息生成唯一 ID 的函数。未提供时使用默认的 ID 生成器。',
+    },
+  ]}
+/>
+
+### 返回值
+
+`ReadableStream<UIMessageChunk>`
+
+一个发出 UI 消息分块的可读流。该流会自动处理错误传播、多个流的合并，以及所有操作完成后的妥善清理。

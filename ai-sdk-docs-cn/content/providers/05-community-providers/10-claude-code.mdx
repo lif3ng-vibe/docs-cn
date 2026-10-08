@@ -1,0 +1,134 @@
+---
+title: Claude Code
+description: 了解如何通过 Claude Agent SDK 使用 Claude Code 提供商访问 Claude 模型。
+---
+
+# Claude Code 提供商
+
+社区提供商 [ai-sdk-provider-claude-code](https://github.com/ben-vargas/ai-sdk-provider-claude-code) 允许你通过官方 [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) 访问 Claude 模型。对于希望直接使用已有的 Claude Pro/Max 订阅、而无需管理 API key 的开发者来说尤为实用。
+
+## 版本兼容性
+
+| 提供商版本 | AI SDK 版本 | NPM 标签    | 状态   |
+| ---------- | ----------- | ----------- | ------ |
+| 3.x        | v6          | `latest`    | 稳定   |
+| 2.x        | v5          | `ai-sdk-v5` | 维护中 |
+| 0.x        | v4          | `ai-sdk-v4` | 已过时 |
+
+```bash
+# AI SDK v6 (default)
+npm install ai-sdk-provider-claude-code ai
+
+# AI SDK v5
+npm install ai-sdk-provider-claude-code@ai-sdk-v5 ai@^5.0.0
+
+# AI SDK v4
+npm install ai-sdk-provider-claude-code@ai-sdk-v4 ai@^4.0.0
+```
+
+## 安装
+
+<InstallPackages packages="ai-sdk-provider-claude-code" />
+
+## 提供商实例
+
+你可以从 `ai-sdk-provider-claude-code` 导入默认提供商实例 `claudeCode`：
+
+```ts
+import { claudeCode } from 'ai-sdk-provider-claude-code';
+```
+
+如果需要自定义配置，可以导入 `createClaudeCode` 并按你的设置创建提供商实例：
+
+```ts
+import { createClaudeCode } from 'ai-sdk-provider-claude-code';
+
+const claudeCode = createClaudeCode({
+  allowedTools: ['Read', 'Write', 'Edit'],
+  disallowedTools: ['Bash'],
+  mcpServers: {
+    'my-server': {
+      command: 'node',
+      args: ['server.js'],
+    },
+  },
+  permissionMode: 'default',
+});
+```
+
+你可以使用以下可选设置来自定义提供商实例：
+
+- **allowedTools** _string[]_ - 允许使用的工具列表。指定后仅这些工具可用。
+- **disallowedTools** _string[]_ - 禁止使用的工具列表（例如 `['Bash(rm:*)']`）。
+- **mcpServers** _Record&lt;string, McpServerConfig&gt;_ - MCP 服务器配置。
+- **permissionMode** _'default' | 'acceptEdits' | 'bypassPermissions' | 'plan'_ - 工具权限处理方式。
+- **maxTurns** _number_ - 最大对话轮数。
+- **cwd** _string_ - CLI 操作的工作目录。
+- **verbose** _boolean_ - 启用调试日志。
+
+## 语言模型
+
+你可以使用提供商实例创建通过 Claude Agent SDK 调用 Claude 的模型：
+
+```ts
+const model = claudeCode('sonnet');
+```
+
+支持的模型快捷方式：
+
+- **opus**：Claude Opus（能力最强）
+- **sonnet**：Claude Sonnet（均衡）
+- **haiku**：Claude Haiku（速度最快）
+
+你也可以直接使用完整的模型标识符：
+
+```ts
+const model = claudeCode('claude-opus-4-5');
+const model = claudeCode('claude-sonnet-4-5-20250514');
+```
+
+### 示例
+
+```ts
+import { claudeCode } from 'ai-sdk-provider-claude-code';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: claudeCode('sonnet'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+### 模型能力
+
+| 模型     | 图像输入   | 对象生成   | 工具使用   | 工具流式传输 |
+| -------- | ---------- | ---------- | ---------- | ------------ |
+| `opus`   | <Check />  | <Check />  | <Cross />  | <Cross />    |
+| `sonnet` | <Check />  | <Check />  | <Cross />  | <Cross />    |
+| `haiku`  | <Check />  | <Check />  | <Cross />  | <Cross />    |
+
+<Note>
+  工具使用与工具流式传输显示 ❌，因为该提供商不支持 AI SDK
+  自定义工具（即传给 `generateText`/`streamText` 的 Zod schema）。
+  它使用的是 Claude 内置工具（Bash、Edit、Read、Write 等）以及可自主执行的
+  MCP 服务器。对象生成使用原生结构化输出，可保证符合 schema。
+  图像输入仅支持流式模式与 base64/data URL 格式。
+</Note>
+
+## 身份验证
+
+该提供商通过 Claude Code CLI 使用你已有的 Claude Pro 或 Max 订阅：
+
+```bash
+claude login
+```
+
+该命令会打开浏览器窗口进行身份验证。完成验证后，提供商将自动使用你的订阅。
+
+## 环境要求
+
+- Node.js 22 或更高版本
+- 已安装 Claude Code CLI（`npm install -g @anthropic-ai/claude-code`）
+- Claude Pro 或 Max 订阅
+
+更多细节请参阅[提供商文档](https://github.com/ben-vargas/ai-sdk-provider-claude-code)。

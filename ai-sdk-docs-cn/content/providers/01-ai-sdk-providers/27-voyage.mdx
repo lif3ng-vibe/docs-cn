@@ -1,0 +1,218 @@
+---
+title: Voyage AI
+description: 了解如何在 AI SDK 中使用 Voyage AI 提供商进行嵌入和重排序。
+---
+
+# Voyage AI 提供商
+
+[Voyage AI](https://www.voyageai.com/) 提供商为 Voyage AI API 提供嵌入和重排序模型支持。
+
+## 安装
+
+Voyage AI 提供商包含在 `@ai-sdk/voyage` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/voyage" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/voyage` 导入默认提供商实例 `voyage`：
+
+```ts
+import { voyage } from '@ai-sdk/voyage';
+```
+
+如果需要自定义配置，可以从 `@ai-sdk/voyage` 导入 `createVoyage`，
+并使用你的设置创建提供商实例：
+
+```ts
+import { createVoyage } from '@ai-sdk/voyage';
+
+const voyage = createVoyage({
+  // custom settings
+});
+```
+
+你可以使用以下可选设置来定制 Voyage AI 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://api.voyageai.com/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。
+  默认取 `VOYAGE_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作拦截请求的中间件，
+  或在测试等场景下提供自定义 fetch 实现。
+
+## 嵌入模型
+
+你可以使用 `.embedding()` 工厂方法创建调用
+[Voyage AI 嵌入 API](https://docs.voyageai.com/reference/embeddings-api)的模型。
+
+```ts
+const model = voyage.embedding('voyage-4');
+```
+
+你可以使用 `embed` 函数配合 Voyage AI 嵌入模型来生成嵌入（embedding）：
+
+```ts
+import { voyage } from '@ai-sdk/voyage';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: voyage.embedding('voyage-4'),
+  value: 'sunny day at the beach',
+});
+```
+
+Voyage AI 嵌入模型支持额外的提供商选项，可通过 `providerOptions.voyage` 传入：
+
+```ts
+import { voyage, type VoyageEmbeddingModelOptions } from '@ai-sdk/voyage';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: voyage.embedding('voyage-4-large'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    voyage: {
+      inputType: 'document',
+      outputDimension: 512,
+    } satisfies VoyageEmbeddingModelOptions,
+  },
+});
+```
+
+以下是可用的提供商选项：
+
+- **inputType** _'query' | 'document' | null_
+
+  指定传给模型的输入类型。默认为 `null`。
+  - `null`：嵌入模型直接将输入转换为数值向量。
+  - `'query'`：用于在向量数据库中检索相关文档的搜索查询的嵌入。
+  - `'document'`：用于存储在向量数据库中以支持搜索场景的文档嵌入。
+
+- **truncation** _boolean_
+
+  是否截断输入文本以适配模型的上下文长度。默认为 `true`。
+
+- **outputDimension** _number_
+
+  输出嵌入的维度数。
+  由支持灵活维度的模型提供（例如 `voyage-4-large`、`voyage-4`、`voyage-4-lite`、`voyage-4-nano`、`voyage-code-3.5`、`voyage-code-3`、`voyage-3-large`、`voyage-3.5`、`voyage-3.5-lite`）。
+  支持的取值：256、512、1024、2048。
+
+- **outputDtype** _'float' | 'int8' | 'uint8' | 'binary' | 'ubinary'_
+
+  输出嵌入的数据类型。默认为 `'float'`。
+  - `'float'`：32 位浮点数。
+  - `'int8'`、`'uint8'`：8 位整数类型。
+  - `'binary'`、`'ubinary'`：位打包量化的单比特嵌入值。
+
+### 模型能力
+
+| 模型                    | 默认维度           | 上下文长度     |
+| ----------------------- | ------------------ | -------------- |
+| `voyage-4-large`        | 1024               | 32,000         |
+| `voyage-4`              | 1024               | 32,000         |
+| `voyage-4-lite`         | 1024               | 32,000         |
+| `voyage-4-nano`         | 1024               | 32,000         |
+| `voyage-code-3.5`       | 1024               | 32,000         |
+| `voyage-code-3`         | 1024               | 32,000         |
+| `voyage-3-large`        | 1024               | 32,000         |
+| `voyage-3.5`            | 1024               | 32,000         |
+| `voyage-3.5-lite`       | 1024               | 32,000         |
+| `voyage-3`              | 1024               | 32,000         |
+| `voyage-3-lite`         | 512                | 32,000         |
+| `voyage-finance-2`      | 1024               | 32,000         |
+| `voyage-multilingual-2` | 1024               | 32,000         |
+| `voyage-law-2`          | 1024               | 16,000         |
+| `voyage-code-2`         | 1536               | 16,000         |
+
+<Note>
+  上表仅列出热门模型。完整的可用模型列表请参见 [Voyage AI
+  文档](https://docs.voyageai.com/docs/embeddings)。如有需要，你也可以将
+  任何可用的提供商模型 ID 以字符串形式传入。
+</Note>
+
+## 重排序模型
+
+你可以使用 `.reranking()` 工厂方法创建调用
+[Voyage AI 重排序 API](https://docs.voyageai.com/reference/rerank-api)的模型。
+
+```ts
+const model = voyage.reranking('rerank-2.5');
+```
+
+你可以使用 `rerank` 函数配合 Voyage AI 重排序模型对文档进行重排序：
+
+```ts
+import { voyage } from '@ai-sdk/voyage';
+import { rerank } from 'ai';
+
+const documents = [
+  'sunny day at the beach',
+  'rainy afternoon in the city',
+  'snowy night in the mountains',
+];
+
+const { ranking } = await rerank({
+  model: voyage.reranking('rerank-2.5'),
+  documents,
+  query: 'talk about rain',
+  topN: 2,
+});
+
+console.log(ranking);
+```
+
+Voyage AI 重排序模型支持额外的提供商选项，可通过 `providerOptions.voyage` 传入：
+
+```ts
+import { voyage, type VoyageRerankingModelOptions } from '@ai-sdk/voyage';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: voyage.reranking('rerank-2.5'),
+  documents: ['sunny day at the beach', 'rainy afternoon in the city'],
+  query: 'talk about rain',
+  providerOptions: {
+    voyage: {
+      returnDocuments: true,
+      truncation: true,
+    } satisfies VoyageRerankingModelOptions,
+  },
+});
+```
+
+以下是可用的提供商选项：
+
+- **returnDocuments** _boolean_
+
+  是否在响应中返回文档。默认为 `false`。
+
+- **truncation** _boolean_
+
+  是否截断输入文本以适配模型的上下文长度。默认为 `true`。
+
+### 模型能力
+
+| 模型              | 上下文长度     |
+| ----------------- | -------------- |
+| `rerank-2.5`      | 32,000         |
+| `rerank-2.5-lite` | 32,000         |
+| `rerank-2`        | 16,000         |
+| `rerank-2-lite`   | 8,000          |
+| `rerank-1`        | 8,000          |
+| `rerank-lite-1`   | 4,000          |

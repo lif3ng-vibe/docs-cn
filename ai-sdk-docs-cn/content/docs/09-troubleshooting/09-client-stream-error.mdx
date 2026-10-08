@@ -1,0 +1,25 @@
+---
+title: Server Action 普通对象错误
+description: 排查在 Server Actions 中使用 AI SDK Core 函数时出现的错误。
+---
+
+# "Only plain objects can be passed from client components" Server Action 错误
+
+## 问题
+
+我在 Server Actions 中使用 [`streamText`](/docs/reference/ai-sdk-core/stream-text)，遇到了 `"only plain objects and a few built ins can be passed from client components"` 错误。
+
+## 背景
+
+当你试图从 Server Action 返回一个不可序列化的对象给客户端组件时，就会出现此错误。streamText 函数返回的对象很可能包含方法或复杂结构，无法直接序列化并传递给客户端。
+
+## 解决方案
+
+要修复此问题，你需要确保从 Server Action 只返回可序列化的数据。修改方法如下：
+
+1. 不要返回 streamText 的整个结果对象，而是只提取必要的可序列化数据。
+2. 使用 [`createStreamableValue`](/docs/reference/ai-sdk-rsc/create-streamable-value) 函数创建一个可流式传输的值，以便安全地传递给客户端。
+
+下面的示例演示了如何实现此解决方案：[流式文本生成](/examples/next-app/basics/streaming-text-generation)。
+
+这种方式确保只有可序列化的数据（文本）被传递给客户端，从而避免 "only plain objects" 错误。

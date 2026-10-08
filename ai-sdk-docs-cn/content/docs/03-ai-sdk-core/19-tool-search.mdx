@@ -1,0 +1,91 @@
+---
+title: 工具搜索
+description: 让模型按需发现工具，支持直接调用或保留缓存的代码模式。
+---
+
+# Tool Search
+
+`toolSearch()` 让模型找到所需的工具，而无需把每个工具的定义都加载进初始上下文。用 `deferLoading: true` 注册工具；搜索会匹配工具的名称与描述，并在**下一个模型步骤**把它们变为可用。
+
+配合 `generateText`、`streamText`、`ToolLoopAgent` 或 `@ai-sdk/workflow` 的 `WorkflowAgent` 使用。由模型提供搜索查询；该工厂函数还接受一个应用自定义的 `search` 回调和一个 `maxResults` 上限（可选）。`WorkflowAgent` 支持直接工具调用；其他 API 也支持保留缓存的代码模式。
+
+## 直接工具调用
+
+模型最初只会看到 `search`。搜索之后，匹配的工具定义会被加入提供商的工具列表，随后模型直接调用这些工具。这会改变工具定义，并可能使已缓存的提示词前缀失效。
+
+```ts
+import { generateText, isStepCount, tool, toolSearch } from 'ai';
+import { z } from 'zod/v4';
+
+const weather = tool({
+  deferLoading: true,
+  description: 'Get the weather forecast for a city.',
+  inputSchema: z.object({ city: z.string() }),
+  execute: async ({ city }) => ({ city, forecast: 'Rain tomorrow.' }),
+});
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: { search: toolSearch(), weather },
+  stopWhen: isStepCount(5),
+  prompt: 'Will it rain in Bangalore tomorrow?',
+});
+```
+
+## 代码模式
+
+在[代码模式](/docs/ai-sdk-core/code-mode)下，模型通过生成的代码搜索并调用工具。设置 `toolDiscovery: 'conversation'`，即可在用户消息中宣告已发现的定义，同时保持提供商可见的 code 工具不变。**这会在工具被发现时保留工具定义缓存**。能否实际复用提示词缓存取决于提供商。
+
+使用上文定义的 `weather` 工具：
+
+```ts
+import { experimental_codeModeTool as codeModeTool } from '@ai-sdk/code-mode';
+
+const result = await generateText({
+  model: __MODEL__,
+  tools: {
+    code: codeModeTool({ toolDiscovery: 'conversation' }),
+    search: toolSearch(),
+    weather,
+  },
+  experimental_toolCallers: {
+    search: ['code'],
+    weather: ['code'],
+  },
+  stopWhen: isStepCount(5),
+  prompt: 'Will it rain in Bangalore tomorrow?',
+});
+```
+
+模型首先运行 `tools.search({ query: 'weather forecast' })`。在下一步中，它会收到更新后的能力目录，并可以调用 `tools.weather({ city: 'Bangalore' })`。
+
+在两种模式下，搜索默认最多加载 5 个匹配项，遵循 `activeTools` 与调用方路由，并让已发现的工具在本次生成的其余部分保持可用。MCP 客户端工具同样适用：给 `client.tools()` 返回的工具加上 `deferLoading: true` 即可。
+
+设置 `maxResults` 可更改每次搜索加载的匹配工具数量：
+
+```ts
+const search = toolSearch({ maxResults: 10 });
+```
+
+`maxResults` 必须是正的安全整数。更大的上限可以在一次搜索中加载更多相关工具，但也会向模型上下文添加更多工具定义。它不会改变关键字匹配或排序。
+
+## 自定义搜索
+
+当应用需要不同的匹配或排序逻辑时，可以提供 `search` 回调。它会接收查询以及所有符合条件的延迟加载工具的名称和已解析描述，并返回排序后的名称。回调可以是同步或异步的。
+
+```ts
+const search = toolSearch({
+  search: ({ query, tools }) => {
+    // Discover related Gmail actions together, in the application's preferred order.
+    const preferred = /\bgmail\b/i.test(query)
+      ? ['gmail_list_messages', 'gmail_get_message']
+      : [];
+    return preferred.filter(name => tools.some(tool => tool.name === name));
+  },
+});
+```
+
+SDK 会过滤掉未知名称与重复项，然后保留前 `maxResults` 个有效结果（默认为 5 个）。被 `activeTools` 或调用方路由排除的工具仍然不可用。
+发现机制依然在下一个模型步骤生效。不提供回调时，搜索保持默认的关键字匹配与排序。
+
+输入、输出与匹配规则的详细信息，请参阅 [`toolSearch()` 参考](/docs/reference/ai-sdk-core/tool-search)。

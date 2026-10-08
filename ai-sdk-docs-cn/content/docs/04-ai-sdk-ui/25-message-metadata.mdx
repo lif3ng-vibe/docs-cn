@@ -1,0 +1,160 @@
+---
+title: 消息元数据
+description: 了解如何在 AI SDK UI 中为消息附加和使用元数据
+---
+
+# Message Metadata
+
+消息元数据让你能在消息级别为消息附加自定义信息。这对于跟踪时间戳、模型信息、token 用量、用户上下文以及其他消息级数据非常有用。
+
+## 概述
+
+消息元数据与[数据部分](/docs/ai-sdk-ui/streaming-data)的不同之处在于，它附加在消息级别上，而不是作为消息内容的一部分。数据部分适合构成消息内容的动态内容，而元数据则非常适合描述消息本身的信息。
+
+## 快速上手
+
+下面是一个使用消息元数据来跟踪时间戳和模型信息的简单示例：
+
+### 定义元数据类型
+
+首先，为了类型安全，请定义你的元数据类型：
+
+```tsx filename="app/types.ts"
+import { UIMessage } from 'ai';
+import { z } from 'zod';
+
+// Define your metadata schema
+export const messageMetadataSchema = z.object({
+  createdAt: z.number().optional(),
+  model: z.string().optional(),
+  totalTokens: z.number().optional(),
+});
+
+export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
+
+// Create a typed UIMessage
+export type MyUIMessage = UIMessage<MessageMetadata>;
+```
+
+### 从服务器发送元数据
+
+使用 `toUIMessageStream` 中的 `messageMetadata` 回调，在不同的流式传输阶段发送元数据：
+
+```ts filename="app/api/chat/route.ts" highlight="21-29,31-37"
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+import type { MyUIMessage } from '@/types';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: MyUIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: __MODEL__,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages, // pass this in for type-safe return objects
+      messageMetadata: ({ part }) => {
+        // Send metadata when streaming starts
+        if (part.type === 'start') {
+          return {
+            createdAt: Date.now(),
+            model: 'your-model-id',
+          };
+        }
+
+        // Send additional metadata when streaming completes
+        if (part.type === 'finish') {
+          return {
+            totalTokens: part.totalUsage.totalTokens,
+          };
+        }
+      },
+    }),
+  });
+}
+```
+
+<Note>
+  要在 `messageMetadata` 中启用类型安全的元数据返回对象，请传入
+  类型化为你的 UIMessage 类型的 `originalMessages` 参数。
+</Note>
+
+### 在客户端访问元数据
+
+通过 `message.metadata` 属性访问元数据：
+
+```tsx filename="app/page.tsx" highlight="8,20-23,33-36"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import type { MyUIMessage } from '@/types';
+
+export default function Chat() {
+  const { messages } = useChat<MyUIMessage>({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <div>
+            {message.role === 'user' ? 'User: ' : 'AI: '}
+            {message.metadata?.createdAt && (
+              <span className="text-sm text-gray-500">
+                {new Date(message.metadata.createdAt).toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+
+          {/* Render message content */}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? <div key={index}>{part.text}</div> : null,
+          )}
+
+          {/* Display additional metadata */}
+          {message.metadata?.totalTokens && (
+            <div className="text-xs text-gray-400">
+              {message.metadata.totalTokens} tokens
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+<Note>
+  对于在生成过程中会发生变化的任意数据流式传输，请考虑改用
+  [数据部分](/docs/ai-sdk-ui/streaming-data)。
+</Note>
+
+## 常见使用场景
+
+消息元数据非常适合：
+
+- **时间戳**：消息何时创建或完成
+- **模型信息**：使用了哪个 AI 模型
+- **token 用量**：跟踪成本与用量限制
+- **用户上下文**：用户 ID、会话信息
+- **性能指标**：生成时间、首 token 时间
+- **质量指标**：完成原因、置信度分数
+
+## 另请参阅
+
+- [聊天机器人指南](/docs/ai-sdk-ui/chatbot#消息元数据)——构建聊天机器人场景下的消息元数据
+- [流式传输数据](/docs/ai-sdk-ui/streaming-data#消息元数据与数据部分)——与数据部分的对比
+- [UIMessage 参考](/docs/reference/ai-sdk-core/ui-message)——完整的 UIMessage 类型参考

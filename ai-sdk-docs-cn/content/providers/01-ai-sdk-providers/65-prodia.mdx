@@ -1,0 +1,183 @@
+---
+title: Prodia
+description: 了解如何在 AI SDK 中使用 Prodia 的模型。
+---
+
+# Prodia 提供商
+
+[Prodia](https://prodia.com/) 是一个面向生成式 AI 的快速推理平台，基于 FLUX 和 Stable Diffusion 模型提供高速图像生成。
+
+## 安装
+
+Prodia 提供商包含在 `@ai-sdk/prodia` 模块中，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/prodia" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/prodia` 导入默认提供商实例 `prodia`：
+
+```ts
+import { prodia } from '@ai-sdk/prodia';
+```
+
+如果需要自定义配置，可以导入 `createProdia` 并使用你的设置创建提供商实例：
+
+```ts
+import { createProdia } from '@ai-sdk/prodia';
+
+const prodia = createProdia({
+  apiKey: 'your-api-key', // optional, defaults to PRODIA_TOKEN environment variable
+  baseURL: 'custom-url', // optional
+  headers: {
+    /* custom headers */
+  }, // optional
+});
+```
+
+你可以使用以下可选设置来定制 Prodia 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀。
+  默认前缀为 `https://inference.prodia.com/v2`。
+
+- **apiKey** _string_
+
+  以 Bearer token 形式通过 `Authorization` 请求头发送的 API 密钥。
+  默认取 `PRODIA_TOKEN` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  你可以将其用作拦截请求的中间件，
+  或在测试等场景下提供自定义 fetch 实现。
+
+## 图像模型
+
+你可以使用 `.image()` 工厂方法创建 Prodia 图像模型。
+有关使用 AI SDK 进行图像生成的更多信息，请参见 [generateImage()](/docs/reference/ai-sdk-core/generate-image)。
+
+### 基本用法
+
+```ts
+import { writeFileSync } from 'node:fs';
+import { prodia } from '@ai-sdk/prodia';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: prodia.image('inference.flux-fast.schnell.txt2img.v2'),
+  prompt: 'A cat wearing an intricate robe',
+});
+
+const filename = `image-${Date.now()}.png`;
+writeFileSync(filename, image.uint8Array);
+console.log(`Image saved to ${filename}`);
+```
+
+### 模型能力
+
+Prodia 为多种图像生成模型提供快速推理。以下是受支持的模型类型：
+
+| 模型                                     | 描述                              |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `inference.flux-fast.schnell.txt2img.v2` | 用于文生图的快速 FLUX Schnell 模型 |
+| `inference.flux.schnell.txt2img.v2`      | 用于文生图的 FLUX Schnell 模型      |
+
+<Note>
+  Prodia 还支持其他模型 ID。完整的可用
+  模型列表请查看 [Prodia
+  文档](https://docs.prodia.com/)。
+</Note>
+
+### 图像尺寸
+
+你可以使用 `size` 参数以 `WIDTHxHEIGHT` 格式指定图像尺寸：
+
+```ts
+import { prodia } from '@ai-sdk/prodia';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: prodia.image('inference.flux-fast.schnell.txt2img.v2'),
+  prompt: 'A serene mountain landscape at sunset',
+  size: '1024x768',
+});
+```
+
+### 提供商选项
+
+Prodia 图像模型通过 `providerOptions.prodia` 对象支持额外的选项：
+
+```ts
+import { prodia, type ProdiaImageModelOptions } from '@ai-sdk/prodia';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: prodia.image('inference.flux-fast.schnell.txt2img.v2'),
+  prompt: 'A cat wearing an intricate robe',
+  providerOptions: {
+    prodia: {
+      width: 1024,
+      height: 768,
+      steps: 4,
+      stylePreset: 'cinematic',
+    } satisfies ProdiaImageModelOptions,
+  },
+});
+```
+
+受支持的提供商选项如下：
+
+- **width** _number_ - 输出宽度（像素，256–1920）。设置后会覆盖从 `size` 推导出的宽度。
+- **height** _number_ - 输出高度（像素，256–1920）。设置后会覆盖从 `size` 推导出的高度。
+- **steps** _number_ - 计算迭代次数（1–4）。步数越多通常生成质量越高。
+- **stylePreset** _string_ - 为输出图像应用视觉主题。受支持的预设：`3d-model`、`analog-film`、`anime`、`cinematic`、`comic-book`、`digital-art`、`enhance`、`fantasy-art`、`isometric`、`line-art`、`low-poly`、`neon-punk`、`origami`、`photographic`、`pixel-art`、`texture`、`craft-clay`。
+- **loras** _string[]_ - 使用最多 3 个 LoRA 模型增强输出。
+- **progressive** _boolean_ - 使用 JPEG 输出时，返回渐进式 JPEG。
+
+### 随机种子（seed）
+
+你可以使用 `seed` 参数获得可复现的结果：
+
+```ts
+import { prodia } from '@ai-sdk/prodia';
+import { generateImage } from 'ai';
+
+const { image } = await generateImage({
+  model: prodia.image('inference.flux-fast.schnell.txt2img.v2'),
+  prompt: 'A serene mountain landscape at sunset',
+  seed: 12345,
+});
+```
+
+### 提供商元数据
+
+`generateImage` 的响应在 `providerMetadata.prodia.images[]` 中包含提供商特定的元数据。每个图像对象可能包含以下属性：
+
+- **jobId** _string_ - 生成任务的唯一标识符。
+- **seed** _number_ - 生成所用的随机种子。可用于复现结果。
+- **elapsed** _number_ - 生成耗时（秒）。
+- **iterationsPerSecond** _number_ - 处理速度指标。
+- **createdAt** _string_ - 任务创建时间戳。
+- **updatedAt** _string_ - 任务最后更新时间戳。
+
+```ts
+import { prodia } from '@ai-sdk/prodia';
+import { generateImage } from 'ai';
+
+const { image, providerMetadata } = await generateImage({
+  model: prodia.image('inference.flux-fast.schnell.txt2img.v2'),
+  prompt: 'A serene mountain landscape at sunset',
+});
+
+// Access provider metadata
+const metadata = providerMetadata?.prodia?.images?.[0];
+console.log('Job ID:', metadata?.jobId);
+console.log('Seed:', metadata?.seed);
+console.log('Elapsed:', metadata?.elapsed);
+```

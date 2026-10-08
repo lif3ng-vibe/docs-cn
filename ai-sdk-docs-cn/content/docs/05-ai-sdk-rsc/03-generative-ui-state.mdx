@@ -1,0 +1,275 @@
+---
+title: 管理生成式 UI 状态
+description: AI 状态与 UI 状态概述
+---
+
+# Managing Generative UI State
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用 [AI SDK
+  UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI 的指导，请参阅[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+状态是任何应用的重要组成部分。状态在 AI 应用中尤为重要，因为每次请求都会把状态传给大语言模型（LLM），以确保模型拥有生成高质量输出所需的上下文。传统聊天机器人基于文本，其结构与任何聊天应用类似。
+
+例如，在聊天机器人中，状态是一个 `messages` 数组，其中每条 `message` 包含：
+
+- `id`：唯一标识符
+- `role`：消息发送者（user/assistant/system/tool）
+- `content`：消息内容
+
+这类状态无需任何修改即可在 UI 中渲染并发送给模型。
+
+有了生成式 UI，模型可以返回 React 组件，而不是纯文本消息。客户端可以毫无问题地渲染该组件，但这种状态无法回传给模型，因为 React 组件不可序列化。那么，该怎么办呢？
+
+**解决方案是将状态一分为二：其中 AI 状态（AI State）作为 UI 状态（UI State）的代理**。
+
+理解这个概念的一种方式是乐高类比。想象一个由 10,000 块积木组成的乐高模型，拼好后因为易碎而难以搬运。把模型拆散后就可以轻松搬运，然后按照说明书手册中的步骤重新拼装。这样一来，说明书手册就是实体结构的代理。类似地，AI 状态为你的 UI 提供了一种可序列化（JSON）的表示，可以在与模型之间来回传递。
+
+## 什么是 AI 状态与 UI 状态？
+
+RSC API 简化了 AI 状态与 UI 状态的管理，提供了一种可靠的方式，让两者在你的数据库、服务器与客户端之间保持同步。
+
+### AI 状态
+
+AI 状态指应用程序以可序列化格式表示的状态，它将在服务器端使用，并可与语言模型共享。
+
+对于聊天应用，AI 状态就是用户与助手之间的对话历史（消息）。模型生成的组件会以 JSON 格式表示为工具（tool）及其必要的 props。AI 状态还可用于存储其他值和元信息，例如每条消息的 `createdAt` 和每个对话的 `chatId`。LLM 会读取这段历史，以生成下一条消息。这一状态是当前应用状态的事实来源（source of truth）。
+
+<Note>
+  **注意**：AI 状态可以从服务器和客户端两侧访问/修改。
+</Note>
+
+### UI 状态
+
+UI 状态指应用程序在客户端渲染的状态。它是完全位于客户端的状态（类似 `useState`），可以存储从 JavaScript 值到 React 元素的任何内容。UI 状态是客户端实际渲染的 UI 元素列表。
+
+<Note>**注意**：UI 状态只能在客户端访问。</Note>
+
+## 使用 AI / UI 状态
+
+### 创建 AI 上下文
+
+AI SDK RSC 通过提供多个 Hook 来简化应用中 AI 状态与 UI 状态的管理。这些 Hook 底层由 [React 上下文](https://react.dev/reference/react/hooks#context-hooks)驱动。
+
+值得注意的是，这意味着你不必在每次请求时显式地将消息历史传递给服务器。你还可以在 context provider 的任意子组件中访问和更新应用状态。当你开始构建[多步生成式界面](/docs/ai-sdk-rsc/multistep-interfaces)时，这一点尤其有用。
+
+要在应用中使用 `@ai-sdk/rsc` 管理 AI 状态与 UI 状态，可以用 [`createAI`](/docs/reference/ai-sdk-rsc/create-ai) 创建一个 React 上下文：
+
+```tsx filename='app/actions.tsx'
+// Define the AI state and UI state types
+export type ServerMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+export type ClientMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  display: ReactNode;
+};
+
+export const sendMessage = async (input: string): Promise<ClientMessage> => {
+  "use server"
+  ...
+}
+```
+
+```tsx filename='app/ai.ts'
+import { createAI } from '@ai-sdk/rsc';
+import { ClientMessage, ServerMessage, sendMessage } from './actions';
+
+export type AIState = ServerMessage[];
+export type UIState = ClientMessage[];
+
+// Create the AI provider with the initial states and allowed actions
+export const AI = createAI<AIState, UIState>({
+  initialAIState: [],
+  initialUIState: [],
+  actions: {
+    sendMessage,
+  },
+});
+```
+
+<Note>你必须将 Server Action 传入 `actions` 对象。</Note>
+
+在这个例子中，你分别定义了 AI 状态与 UI 状态的类型。
+
+接下来，用新创建的上下文包裹你的应用。这样，你就可以在整个应用中读取和设置 AI 状态与 UI 状态。
+
+```tsx filename='app/layout.tsx'
+import { type ReactNode } from 'react';
+import { AI } from './ai';
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <AI>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </AI>
+  );
+}
+```
+
+## 在客户端读取 UI 状态
+
+可以使用 RSC API 提供的 [`useUIState`](/docs/reference/ai-sdk-rsc/use-ui-state) Hook 在客户端组件中访问 UI 状态。该 Hook 返回当前 UI 状态以及一个更新 UI 状态的函数，用法类似 React 的 `useState`。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useUIState } from '@ai-sdk/rsc';
+
+export default function Page() {
+  const [messages, setMessages] = useUIState();
+
+  return (
+    <ul>
+      {messages.map(message => (
+        <li key={message.id}>{message.display}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 在客户端读取 AI 状态
+
+可以使用 RSC API 提供的 [`useAIState`](/docs/reference/ai-sdk-rsc/use-ai-state) Hook 在客户端组件中访问 AI 状态。该 Hook 返回当前的 AI 状态。
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useAIState } from '@ai-sdk/rsc';
+
+export default function Page() {
+  const [messages, setMessages] = useAIState();
+
+  return (
+    <ul>
+      {messages.map(message => (
+        <li key={message.id}>{message.content}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 在服务器读取 AI 状态
+
+在提供给 `createAI` 上下文的任意 Server Action 中，可以使用 [`getAIState`](/docs/reference/ai-sdk-rsc/get-ai-state) 函数访问 AI 状态。它以只读值的形式返回当前 AI 状态：
+
+```tsx filename='app/actions.ts'
+import { getAIState } from '@ai-sdk/rsc';
+
+export async function sendMessage(message: string) {
+  'use server';
+
+  const history = getAIState();
+
+  const response = await generateText({
+    model: __MODEL__,
+    messages: [...history, { role: 'user', content: message }],
+  });
+
+  return response;
+}
+```
+
+<Note>
+  请记住，只有在传入 `createAI` 上下文 `actions` 键中的 action 内，才能访问状态。
+</Note>
+
+## 在服务器更新 AI 状态
+
+也可以在 Server Action 中使用 [`getMutableAIState`](/docs/reference/ai-sdk-rsc/get-mutable-ai-state) 函数更新 AI 状态。该函数与 `getAIState` 类似，但它返回的状态带有读取和更新的方法：
+
+```tsx filename='app/actions.ts'
+import { getMutableAIState } from '@ai-sdk/rsc';
+
+export async function sendMessage(message: string) {
+  'use server';
+
+  const history = getMutableAIState();
+
+  // Update the AI state with the new user message.
+  history.update([...history.get(), { role: 'user', content: message }]);
+
+  const response = await generateText({
+    model: __MODEL__,
+    messages: history.get(),
+  });
+
+  // Update the AI state again with the response from the model.
+  history.done([...history.get(), { role: 'assistant', content: response }]);
+
+  return response;
+}
+```
+
+<Note>
+  请务必使用 `.update()` 和 `.done()` 将新响应写入 AI 状态，以保持对话历史同步。
+</Note>
+
+## 从客户端调用 Server Actions
+
+要从客户端调用 `sendMessage` action，可以使用 [`useActions`](/docs/reference/ai-sdk-rsc/use-actions) Hook。该 Hook 返回提供给 `createAI` 的所有可用 action：
+
+```tsx filename='app/page.tsx'
+'use client';
+
+import { useActions, useUIState } from '@ai-sdk/rsc';
+import { AI } from './ai';
+
+export default function Page() {
+  const { sendMessage } = useActions<typeof AI>();
+  const [messages, setMessages] = useUIState();
+
+  const handleSubmit = async event => {
+    event.preventDefault();
+
+    setMessages(currentMessages => [
+      ...currentMessages,
+      {
+        id: Date.now().toString(),
+        role: 'user',
+        display: event.target.message.value,
+      },
+    ]);
+
+    const response = await sendMessage(event.target.message.value);
+
+    setMessages(currentMessages => [...currentMessages, response]);
+  };
+
+  return (
+    <>
+      <ul>
+        {messages.map(message => (
+          <li key={message.id}>{message.display}</li>
+        ))}
+      </ul>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="message" />
+        <button type="submit">Send</button>
+      </form>
+    </>
+  );
+}
+```
+
+当用户提交消息时，会以消息内容调用 `sendMessage` action。随后该 action 的响应会被加入 UI 状态，从而更新显示的消息。
+
+<Note>
+  重要！调用 Server Action 之后别忘了更新 UI 状态，否则流式返回的组件将不会显示在 UI 中。
+</Note>
+
+了解更多，请查看这个使用 `@ai-sdk/rsc` 管理 AI 状态与 UI 状态的[示例](/examples/next-app/state-management/ai-ui-states)。
+
+---
+
+接下来，你将学习如何使用 `@ai-sdk/rsc` 保存和恢复状态。

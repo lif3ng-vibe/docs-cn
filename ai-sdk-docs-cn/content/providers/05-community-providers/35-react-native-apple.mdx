@@ -1,0 +1,244 @@
+---
+title: React Native Apple
+description: 了解如何使用 Apple 提供商进行端侧 AI。
+---
+
+# React Native Apple 提供商
+
+[@react-native-ai/apple](https://github.com/callstackincubator/ai/tree/main/packages/apple-llm) 是一个社区提供商，它将 Apple 的端侧 AI 能力带到 React Native 与 Expo 应用中。它让你可以完全在设备上运行 AI SDK，利用 iOS 26+ 提供的 Apple Intelligence 基础模型，通过 Apple 的原生 AI 框架提供文本生成、嵌入（embedding）、语音转写（transcription）与语音合成。
+
+## 安装
+
+Apple 提供商包含在 `@react-native-ai/apple` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="@react-native-ai/apple" />
+
+### 前置条件
+
+使用 Apple 提供商之前，你需要：
+
+- **React Native 或 Expo 应用**：该提供商仅适用于 React Native 与 Expo 应用。配置说明请参阅 [Expo 快速上手指南](/docs/getting-started/expo)
+- **iOS 26+**：Apple Intelligence 基础模型与核心功能所需
+
+### 提供商实例
+
+你可以从 `@react-native-ai/apple` 导入默认提供商实例 `apple`：
+
+```ts
+import { apple } from '@react-native-ai/apple';
+```
+
+### 可用性检查
+
+在使用 Apple AI 功能之前，你可以检查它们在当前设备上是否可用：
+
+```ts
+if (!apple.isAvailable()) {
+  // Handle fallback logic for unsupported devices
+}
+```
+
+## 语言模型
+
+Apple 通过 Apple Foundation Models 提供端侧语言模型，适用于 iOS 26+ 且已启用 Apple Intelligence 的设备。
+
+### 文本生成
+
+使用 Apple 的端侧语言模型生成文本：
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: apple(),
+  prompt: 'Explain quantum computing in simple terms',
+});
+```
+
+### 流式文本生成
+
+用于实时文本生成：
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: apple(),
+  prompt: 'Write a short story about space exploration',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 结构化输出生成
+
+使用 Zod schema 生成结构化数据：
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: apple(),
+  output: Output.object({
+    schema: z.object({
+      recipe: z.string(),
+      ingredients: z.array(z.string()),
+      cookingTime: z.string(),
+    }),
+  }),
+  prompt: 'Create a recipe for chocolate chip cookies',
+});
+```
+
+### 模型配置
+
+配置生成参数：
+
+```ts
+const { text } = await generateText({
+  model: apple(),
+  prompt: 'Generate creative content',
+  temperature: 0.8, // Controls randomness (0-1)
+  maxTokens: 150, // Maximum tokens to generate
+  topP: 0.9, // Nucleus sampling threshold
+  topK: 40, // Top-K sampling parameter
+});
+```
+
+### 工具调用
+
+Apple 提供商支持工具调用，但工具由 Apple Intelligence 而非 AI SDK 执行。工具必须先通过 `createAppleProvider` 向提供商预注册，然后才能在生成调用中使用。
+
+```ts
+import { createAppleProvider } from '@react-native-ai/apple';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const getWeather = tool({
+  description: 'Get current weather information',
+  inputSchema: z.object({
+    city: z.string().describe('The city name'),
+  }),
+  execute: async ({ city }) => {
+    return `Weather in ${city}: Sunny, 25°C`;
+  },
+});
+
+// Create a provider with all available tools
+const apple = createAppleProvider({
+  availableTools: {
+    getWeather,
+  },
+});
+
+// Use the provider with selected tools
+const result = await generateText({
+  model: apple(),
+  prompt: 'What is the weather like in San Francisco?',
+  tools: { getWeather },
+});
+```
+
+<Note>
+  由于工具由 Apple Intelligence 而非 AI SDK 执行，因此不支持 `stopWhen`、
+  `onStepStart`、`onStepEnd` 等多步功能。
+</Note>
+
+## 文本嵌入
+
+Apple 使用 `NLContextualEmbedding` 提供多语言文本嵌入，适用于 iOS 17+。
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: apple.embeddingModel(),
+  value: 'Hello world',
+});
+```
+
+## 音频转写
+
+Apple 使用 `SpeechAnalyzer` 与 `SpeechTranscriber` 提供语音转文字功能，适用于 iOS 26+。
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { transcribe } from 'ai';
+
+const response = await transcribe({
+  model: apple.transcriptionModel(),
+  audio: audioBuffer,
+});
+
+console.log(response.text);
+```
+
+## 语音合成
+
+Apple 使用 `AVSpeechSynthesizer` 提供文字转语音功能，适用于 iOS 13+，iOS 17+ 上具备增强特性。
+
+### 基本语音生成
+
+将文本转换为语音：
+
+```ts
+import { apple } from '@react-native-ai/apple';
+import { generateSpeech } from 'ai';
+
+const response = await generateSpeech({
+  model: apple.speechModel(),
+  text: 'Hello from Apple on-device speech!',
+  language: 'en-US',
+});
+```
+
+### 声音选择
+
+你可以通过将声音标识符传给 `voice` 选项，来配置语音合成所用的声音。
+
+```ts
+const response = await generateSpeech({
+  model: apple.speechModel(),
+  text: 'Custom voice example',
+  voice: 'com.apple.ttsbundle.Samantha-compact',
+});
+```
+
+要查看可用声音，可以使用 `getVoices` 方法：
+
+```ts
+import { AppleSpeech } from '@react-native-ai/apple';
+
+const voices = await AppleSpeech.getVoices();
+console.log(voices);
+```
+
+## 平台要求
+
+不同的 Apple AI 功能对 iOS 版本有不同要求：
+
+| 功能     | 最低 iOS 版本 | 附加要求                          |
+| -------- | ------------- | --------------------------------- |
+| 文本生成 | iOS 26+       | 已启用 Apple Intelligence 的设备  |
+| 文本嵌入 | iOS 17+       | -                                 |
+| 音频转写 | iOS 26+       | 已下载语言资源                    |
+| 语音合成 | iOS 13+       | Personal Voice 需 iOS 17+         |
+
+<Note>
+  Apple Intelligence 功能目前仅在部分设备上可用。请查阅 Apple
+  文档了解最新的设备兼容性信息。
+</Note>
+
+## 更多资源
+
+- [React Native Apple 提供商 GitHub 仓库](https://github.com/callstackincubator/ai/tree/main/packages/apple-llm)
+- [React Native AI 文档](https://www.react-native-ai.dev/)
+- [Apple Intelligence](https://www.apple.com/apple-intelligence/)
+- [Apple Foundation Models](https://developer.apple.com/documentation/foundationmodels)

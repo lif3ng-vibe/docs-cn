@@ -1,0 +1,56 @@
+---
+title: 技能（Skills）
+description: 在 AI SDK harness 中使用技能。
+---
+
+# Harness 技能
+
+[技能（Skills）](https://agentskills.io/) 是可复用的指令包，适用于项目约定、工作流指引、领域专用流程，或任何需要被底层 harness 运行时发现的其他指令。你可以为 `HarnessAgent` 配置技能，也可以在已完成的轮次之间替换它们。
+
+## 定义技能
+
+通过 `skills` 设置项将技能传递给 `HarnessAgent`：
+
+```ts
+const agent = new HarnessAgent({
+  harness: claudeCode,
+  skills: [
+    {
+      name: 'careful-refactors',
+      description: 'Make small, low-risk code changes.',
+      content:
+        'Prefer minimal diffs. Preserve public APIs. Before editing, read references/checklist.md and follow it.',
+      files: [
+        {
+          path: 'references/checklist.md',
+          content:
+            '# Refactor checklist\n\n- Identify the smallest useful change.\n- Preserve public APIs.\n- Run the narrowest relevant test.',
+        },
+      ],
+    },
+  ],
+});
+```
+
+每个技能包含：
+
+- `name`：技能的稳定标识符。
+- `description`：面向模型的简短摘要。
+- `content`：完整的指令内容。
+- `files`：随技能一起打包的额外文本文件（可选）。
+
+附加文件使用相对于技能的 POSIX 路径，例如 `reference.md`、`references/codes.md` 或 `templates/config.json`。当需要智能体（agent）读取这些文件时，请在 `content` 中引用相应路径。
+
+## 何时使用技能
+
+技能适用于需要按需获取的可复用指令，而不是像常规 `instructions` 那样始终加载到智能体的上下文中。
+
+广泛的行为设定与当前会话中的优先事项，请使用 `instructions`。
+
+可以使用 `callOptionsSchema` 与 `prepareCall` 在已完成的轮次之间更改技能。详情参见[在轮次之间更改设置](/docs/ai-sdk-harnesses/harness-agent#在回合之间更改设置)。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)

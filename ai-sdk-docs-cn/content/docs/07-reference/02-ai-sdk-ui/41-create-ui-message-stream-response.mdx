@@ -1,0 +1,132 @@
+---
+title: createUIMessageStreamResponse
+description: createUIMessageStreamResponse 的 API 参考。
+---
+
+# `createUIMessageStreamResponse`
+
+`createUIMessageStreamResponse` 函数会创建一个向客户端流式传输 UI 消息的 Response 对象。
+
+## 导入
+
+<Snippet
+  text={`import { createUIMessageStreamResponse } from "ai"`}
+  prompt={false}
+/>
+
+## 示例
+
+```tsx
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai';
+__PROVIDER_IMPORT__;
+
+const response = createUIMessageStreamResponse({
+  status: 200,
+  statusText: 'OK',
+  headers: {
+    'Custom-Header': 'value',
+  },
+  stream: createUIMessageStream({
+    execute({ writer }) {
+      // The outer stream owns the assistant message lifecycle.
+      writer.write({ type: 'start' });
+
+      // Write custom data (type must be 'data-<name>')
+      writer.write({
+        type: 'data-message',
+        data: { content: 'Hello' },
+      });
+
+      // Write text content using start/delta/end pattern
+      writer.write({
+        type: 'text-start',
+        id: 'greeting-text',
+      });
+      writer.write({
+        type: 'text-delta',
+        id: 'greeting-text',
+        delta: 'Hello, world!',
+      });
+      writer.write({
+        type: 'text-end',
+        id: 'greeting-text',
+      });
+
+      // Write source information (flat properties, not nested)
+      writer.write({
+        type: 'source-url',
+        sourceId: 'source-1',
+        url: 'https://example.com',
+        title: 'Example Source',
+      });
+
+      // Merge with LLM stream
+      const result = streamText({
+        model: __MODEL__,
+        prompt: 'Say hello',
+      });
+
+      writer.merge(
+        toUIMessageStream({ stream: result.stream, sendStart: false }),
+      );
+    },
+  }),
+});
+```
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'stream',
+      type: 'ReadableStream<UIMessageChunk>',
+      description: '要发送到客户端的 UI 消息流。',
+    },
+    {
+      name: 'status',
+      type: 'number',
+      isOptional: true,
+      description: '响应的状态码。默认为 200。',
+    },
+    {
+      name: 'statusText',
+      type: 'string',
+      isOptional: true,
+      description: '响应的状态文本。',
+    },
+    {
+      name: 'headers',
+      type: 'Headers | Record<string, string>',
+      isOptional: true,
+      description: '响应的附加请求头。',
+    },
+    {
+      name: 'keepAliveMs',
+      type: 'number',
+      isOptional: true,
+      description:
+        '发送 SSE keep-alive 注释的间隔（毫秒）。设置后，会立即发送一条起始注释，并在流空闲达到配置的间隔后继续发送后续注释。',
+    },
+    {
+      name: 'consumeSseStream',
+      type: '(options: { stream: ReadableStream<string> }) => PromiseLike<void> | void',
+      isOptional: true,
+      description:
+        '用于消费 Server-Sent Events 流的可选回调。',
+    },
+  ]}
+/>
+
+### 返回值
+
+`Response`
+
+一个 Response 对象，以指定的状态、请求头和内容流式传输 UI 消息块。

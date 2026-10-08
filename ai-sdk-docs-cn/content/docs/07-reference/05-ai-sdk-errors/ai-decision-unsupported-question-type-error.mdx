@@ -1,0 +1,28 @@
+---
+title: AI_DecisionUnsupportedQuestionTypeError
+description: 识别决策模型不支持的问题类型。
+---
+
+# AI_DecisionUnsupportedQuestionTypeError
+
+此实验性（experimental）错误用于标识类型不被决策模型支持的问题。它以 `Experimental_DecisionUnsupportedQuestionTypeError` 的名称从 `ai` 与 `@ai-sdk/provider` 导出。
+
+## 属性
+
+- `questionId`：不被支持的问题的 ID。
+- `questionType`：所请求的问题类型。
+- `provider`：决策模型的提供商。
+- `modelId`：决策模型 ID。
+- `message`：对不被支持的问题与模型的描述。提供商可以提供自定义消息。
+
+## 排查此错误
+
+使用基于标记的 `isInstance` 检查，它可跨包副本工作：
+
+```typescript
+import { Experimental_DecisionUnsupportedQuestionTypeError as DecisionUnsupportedQuestionTypeError } from 'ai';
+
+if (DecisionUnsupportedQuestionTypeError.isInstance(error)) {
+  console.log(error.questionId, error.questionType, error.modelId);
+}
+```

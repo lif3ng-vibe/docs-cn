@@ -1,0 +1,72 @@
+---
+title: LanguageModelV4Middleware
+description: 用于增强语言模型行为的中间件（API 参考）
+---
+
+# `LanguageModelV4Middleware`
+
+<Note type="warning">
+  语言模型中间件是一项实验性功能。
+</Note>
+
+语言模型中间件提供了一种通过拦截和修改对语言模型的调用来增强语言模型行为的方式。它可以以与具体语言模型无关的方式添加防护栏（guardrails）、RAG、缓存和日志记录等特性。
+
+更多信息请参阅 [语言模型中间件](/docs/ai-sdk-core/middleware)。
+
+## 导入
+
+<Snippet
+  text={`import { LanguageModelV4Middleware } from "ai"`}
+  prompt={false}
+/>
+
+## API 签名
+
+<PropertiesTable
+  content={[
+    {
+      name: 'specificationVersion',
+      type: "'v4'",
+      description: '中间件的规范版本。必须为 "v4"。',
+    },
+    {
+      name: 'transformParams',
+      type: '({ type: "generate" | "stream", params: LanguageModelV4CallOptions, model: LanguageModelV4 }) => PromiseLike<LanguageModelV4CallOptions>',
+      isOptional: true,
+      description:
+        '在参数传递给语言模型之前对其进行转换。',
+    },
+    {
+      name: 'wrapGenerate',
+      type: '({ doGenerate: () => PromiseLike<LanguageModelV4GenerateResult>, doStream: () => PromiseLike<LanguageModelV4StreamResult>, params: LanguageModelV4CallOptions, model: LanguageModelV4 }) => PromiseLike<LanguageModelV4GenerateResult>',
+      isOptional: true,
+      description:
+        '包装语言模型的生成（generate）操作。接收 doGenerate 和 doStream 两个函数。',
+    },
+    {
+      name: 'wrapStream',
+      type: '({ doGenerate: () => PromiseLike<LanguageModelV4GenerateResult>, doStream: () => PromiseLike<LanguageModelV4StreamResult>, params: LanguageModelV4CallOptions, model: LanguageModelV4 }) => PromiseLike<LanguageModelV4StreamResult>',
+      isOptional: true,
+      description:
+        '包装语言模型的流式（stream）操作。接收 doGenerate 和 doStream 两个函数。',
+    },
+    {
+      name: 'overrideProvider',
+      type: '(options: { model: LanguageModelV4 }) => string',
+      isOptional: true,
+      description: '覆盖模型的提供商 ID。',
+    },
+    {
+      name: 'overrideModelId',
+      type: '(options: { model: LanguageModelV4 }) => string',
+      isOptional: true,
+      description: '覆盖模型的模型 ID。',
+    },
+    {
+      name: 'overrideSupportedUrls',
+      type: '(options: { model: LanguageModelV4 }) => PromiseLike<Record<string, RegExp[]>> | Record<string, RegExp[]>',
+      isOptional: true,
+      description: '覆盖模型支持的 URL。',
+    },
+  ]}
+/>

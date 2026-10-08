@@ -1,0 +1,118 @@
+---
+title: Qwen
+description: 了解如何使用 Qwen 提供商。
+---
+
+# Qwen 提供商
+
+<Note type="warning">
+  该社区提供商尚未兼容 AI SDK 5。请等待提供商更新，或考虑使用[兼容 AI SDK 5 的
+  提供商](/providers/ai-sdk-providers)。
+</Note>
+
+[younis-ahmed/qwen-ai-provider](https://github.com/younis-ahmed/qwen-ai-provider) 是一个社区提供商，它使用 [Qwen](https://www.alibabacloud.com/en/solutions/generative-ai/qwen) 为 AI SDK 提供语言模型支持。
+
+## 安装
+
+Qwen 提供商包含在 `qwen-ai-provider` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="qwen-ai-provider" />
+
+## 提供商实例
+
+你可以从 `qwen-ai-provider` 导入默认提供商实例 `qwen`：
+
+```ts
+import { qwen } from 'qwen-ai-provider';
+```
+
+如果需要自定义配置，可以从 `qwen-ai-provider` 导入 `createQwen`，并用你的设置创建一个提供商实例：
+
+```ts
+import { createQwen } from 'qwen-ai-provider';
+
+const qwen = createQwen({
+  // optional settings, e.g.
+  // baseURL: 'https://qwen/api/v1',
+});
+```
+
+你可以使用以下可选设置来自定义 Qwen 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀，例如使用代理服务器。
+  默认前缀为 `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。
+  默认取自 `DASHSCOPE_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将它用作中间件来拦截请求，
+  或提供自定义 fetch 实现，例如用于测试。
+
+## 语言模型
+
+你可以使用提供商实例创建调用 [Qwen 聊天 API](https://www.alibabacloud.com/help/en/model-studio/developer-reference/use-qwen-by-calling-api) 的模型。
+第一个参数是模型 id，例如 `qwen-plus`。
+部分 Qwen 聊天模型支持工具调用。
+
+```ts
+const model = qwen('qwen-plus');
+```
+
+### 示例
+
+你可以使用 Qwen 语言模型配合 `generateText` 函数生成文本：
+
+```ts
+import { qwen } from 'qwen-ai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: qwen('qwen-plus'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+Qwen 语言模型也可以用于 `streamText` 函数，并支持通过 [`Output`](/docs/reference/ai-sdk-core/output) 生成结构化数据
+（参见 [AI SDK Core](/docs/ai-sdk-core)）。
+
+### 模型能力
+
+| 模型                      | 图像输入  | 对象生成  | 工具使用   | 工具流式   |
+| ------------------------- | --------- | --------- | ---------- | ---------- |
+| `qwen-vl-max`             | <Check /> | <Check /> | <Check />  | <Check />  |
+| `qwen-plus-latest`        | <Cross /> | <Check /> | <Check />  | <Check />  |
+| `qwen-max`                | <Cross /> | <Check /> | <Check />  | <Check />  |
+| `qwen2.5-72b-instruct`    | <Cross /> | <Check /> | <Check />  | <Check />  |
+| `qwen2.5-14b-instruct-1m` | <Cross /> | <Check /> | <Check />  | <Check />  |
+| `qwen2.5-vl-72b-instruct` | <Check /> | <Check /> | <Check />  | <Check />  |
+
+<Note>
+  上表列出了常用模型。完整可用模型列表请参阅 [Qwen
+  文档](https://www.alibabacloud.com/help/en/model-studio/getting-started/models)。如有需要，你也可以将任何可用的提供商模型 ID 作为字符串传入。
+</Note>
+
+## 嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 [Qwen 嵌入 API](https://www.alibabacloud.com/help/en/model-studio/getting-started/models#cff6607866tsg) 的模型。
+
+```ts
+const model = qwen.embeddingModel('text-embedding-v3');
+```
+
+### 模型能力
+
+| 模型                | 默认维度 | 最大行数 | 每行最大 token 数 |
+| ------------------- | -------- | -------- | ----------------- |
+| `text-embedding-v3` | 1024     | 6        | 8,192             |

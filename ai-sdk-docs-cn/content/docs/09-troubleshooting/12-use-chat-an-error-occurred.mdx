@@ -1,0 +1,64 @@
+---
+title: useChat 出现 "An error occurred" 错误
+description: 排查 useChat 中 "An error occurred" 错误相关的问题。
+---
+
+# `useChat` "An error occurred"
+
+## 问题
+
+我在使用 [`useChat`](/docs/reference/ai-sdk-ui/use-chat)，遇到了 "An error occurred" 错误。
+
+## 背景
+
+出于安全原因（默认安全，secure-by-default），使用 `toUIMessageStream` 时，来自 `streamText` 的错误信息默认会被遮蔽。
+这可以防止敏感信息泄露给客户端。
+
+## 解决方案
+
+要将错误详情转发给客户端或记录错误，请在调用 `toUIMessageStream` 时使用 `onError` 函数。
+
+```tsx
+export function errorHandler(error: unknown) {
+  if (error == null) {
+    return 'unknown error';
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return JSON.stringify(error);
+}
+```
+
+```tsx
+const result = streamText({
+  // ...
+});
+
+return createUIMessageStreamResponse({
+  stream: toUIMessageStream({
+    stream: result.stream,
+    onError: errorHandler,
+  }),
+});
+```
+
+如果你使用的是 `createUIMessageStream`，可以将 `onError` 函数传给它：
+
+```tsx
+const response = createUIMessageStreamResponse({
+  stream: createUIMessageStream({
+    // ...
+    async execute({ writer }) {
+      // ...
+    },
+    onError: errorHandler,
+  }),
+});
+```

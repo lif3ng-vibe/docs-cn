@@ -1,0 +1,61 @@
+---
+title: 从 AI SDK 3.2 迁移到 3.3
+description: 了解如何将 AI SDK 3.2 升级到 3.3。
+---
+
+# Migrate AI SDK 3.2 to 3.3
+
+<Note>
+  欲了解本次发布的更多信息，请查阅 [AI SDK 3.3 发布博客文章](https://vercel.com/blog/vercel-ai-sdk-3-3)。
+</Note>
+
+此版本没有破坏性变更。
+
+以下变更日志涵盖了 3.2.x 系列的全部变更，为 AI SDK 及其相关库带来了重大改进和新功能：
+
+## 新功能
+
+### OpenTelemetry 支持
+
+- 为所有 [AI SDK Core 函数](/docs/ai-sdk-core/overview#ai-sdk-core-函数)添加了实验性的 [OpenTelemetry 支持](/docs/ai-sdk-core/telemetry)，提供更好的可观测性与追踪能力。
+
+### AI SDK UI 改进
+
+- 引入了实验性的 **`useObject`** Hook（面向 React），可与后端的 **`streamObject`** 配合使用，实现结构化数据的无缝流式传输。
+- 增强了 **`useChat`**，实验性支持附件与流式工具调用，提供更丰富的聊天功能。
+- 修复了 **`useChat`** 以防止空提交，通过确保只处理有效输入来提升用户交互质量。
+- 修复了 **`useChat`** 的 **`reload`** 函数，现在能正确发送 data、body 和 headers。
+- 为 **`useAssistant`** 实现了 **`setThreadId`** 辅助函数，简化线程管理。
+- 为 **`useChat`** 和 **`useCompletion`** 补充了数据流协议文档，开发者可以将这些函数与任何后端搭配使用。数据流协议也让自定义前端能够配合 **`streamText`** 使用。
+- 添加了对自定义 fetch 函数和请求体定制的支持，对 API 交互提供更细的控制。
+- 为 **`useChat`** Hook 添加了 **`onFinish`**，可用于获取 token 用量和完成原因。
+
+### Core 增强
+
+- 实现了发送自定义请求头的支持，可发起更贴合需求的 API 请求。
+- 在现有 Zod 支持之外添加了原生 JSON schema 支持，为 schema 与数据校验提供更多选择。
+- 为 **`embed`** 和 **`embedMany`** 函数引入用量信息，便于洞察 token 用量。
+- 添加了对 **`stopSequences`** 和 **`topK`** 等更多设置项的支持，可对文本生成进行更精细的控制。
+- 提供了 **`generateText`** 所有步骤的信息访问，可获取中间的工具调用与结果。
+
+### 新提供商
+
+- [AWS Bedrock 提供商](/providers/ai-sdk-providers/amazon-bedrock)。
+
+### 提供商改进
+
+- 增强了 Anthropic、Google、Azure 和 OpenAI 等现有提供商，包含多项改进和错误修复。
+- 升级了 LangChain 适配器，支持 StreamEvent v2，并引入 **`toDataStreamResponse`** 函数，可将 LangChain 输出流转换为数据流响应。
+- 为 OpenAI 提供商添加了旧版函数调用支持。
+- 更新了 Mistral AI 提供商，修复并改进了工具调用支持。
+
+### UI 框架支持扩展
+
+- SolidJS：更新 **`useChat`** 和 **`useCompletion`**，与 React 实现达到功能对等。
+- Vue.js：引入 **`useAssistant`** Hook。
+- Vue.js / Nuxt：[更新了示例](https://github.com/vercel/ai/tree/main/examples/nuxt-openai)，展示最新功能与最佳实践。
+- Svelte：为 **`useChat`** 添加工具调用支持。
+
+## 修复与改进
+
+- 解决了 SDK 各组件中的多种问题，包括竞态条件、错误处理和状态管理。

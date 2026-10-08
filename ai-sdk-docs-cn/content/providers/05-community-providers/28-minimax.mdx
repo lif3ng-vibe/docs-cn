@@ -1,0 +1,132 @@
+---
+title: MiniMax
+description: 了解如何在 AI SDK 中使用 MiniMax 提供商。
+---
+
+# MiniMax 提供商
+
+[vercel-minimax-ai-provider](https://github.com/MiniMax-AI/vercel-minimax-ai-provider) 是一个社区提供商，提供对来自 [MiniMax](https://www.minimax.io/) 的最新 [MiniMax-M2 模型](https://platform.minimax.io/docs/guides/text-generation)的访问。
+
+API key 可从 [MiniMax Platform](https://platform.minimax.io/user-center/basic-information/interface-key) 获取。
+
+## 安装
+
+MiniMax 提供商通过 `vercel-minimax-ai-provider` 模块提供，可通过以下方式安装：
+
+<InstallPackages packages="vercel-minimax-ai-provider" />
+
+## 提供商实例
+
+MiniMax 提供商支持两种 API 兼容模式：
+
+### Anthropic 兼容 API（默认）
+
+你可以从 `vercel-minimax-ai-provider` 导入默认的提供商实例 `minimax`：
+
+```ts
+import { minimax } from 'vercel-minimax-ai-provider';
+```
+
+或者显式使用 Anthropic 兼容实例：
+
+```ts
+import { minimaxAnthropic } from 'vercel-minimax-ai-provider';
+```
+
+或者 OpenAI 兼容 API 格式：
+
+```ts
+import { minimaxOpenAI } from 'vercel-minimax-ai-provider';
+```
+
+## 自定义配置
+
+如需自定义配置，可以使用 `createMinimax`（Anthropic 兼容）或 `createMinimaxOpenAI`（OpenAI 兼容）函数：
+
+### Anthropic 兼容配置（默认）
+
+```ts
+import { createMinimax } from 'vercel-minimax-ai-provider';
+
+const minimax = createMinimax({
+  apiKey: process.env.MINIMAX_API_KEY,
+});
+```
+
+### 配置选项
+
+你可以使用以下可选设置来自定义 MiniMax 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀。
+  - Anthropic 兼容默认值：`https://api.minimax.io/anthropic/v1`
+  - OpenAI 兼容默认值：`https://api.minimax.io/v1`
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。默认取
+  `MINIMAX_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+
+## API 兼容性
+
+MiniMax 提供两种 API 格式，两者都包含在本包中。
+
+主要区别在于 API 请求/响应格式：
+
+- **Anthropic 格式**（默认）：使用 Anthropic Messages API 格式，带 `anthropic-version` 请求头
+- **OpenAI 格式**：使用标准 OpenAI 聊天补全格式
+
+两种格式访问的 MiniMax 模型相同，能力也相同。
+
+## 模型能力
+
+| 模型                | 文本生成        | 对象生成          | 图像输入    | 工具使用   | 工具流式       |
+| ------------------- | --------------- | ----------------- | ----------- | ---------- | -------------- |
+| `MiniMax-M2`        | <Check />       | <Check />         | <Cross />   | <Check />  | <Check />      |
+| `MiniMax-M2-Stable` | <Check />       | <Check />         | <Cross />   | <Check />  | <Check />      |
+
+<Note>
+  可用模型及其能力的完整列表请查看 [MiniMax
+  文档](https://platform.minimax.io/docs/api-reference/text-intro)。为保持向前兼容，该提供商接受任意字符串形式的模型 ID。
+</Note>
+
+## 用法示例
+
+### 基本文本生成
+
+```ts
+import { minimax } from 'vercel-minimax-ai-provider';
+import { generateText } from 'ai';
+
+const result = await generateText({
+  model: minimax('MiniMax-M2'),
+  prompt: 'Explain quantum computing in simple terms.',
+});
+
+console.log(result.text);
+```
+
+### 流式
+
+```ts
+import { minimax } from 'vercel-minimax-ai-provider';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: minimax('MiniMax-M2'),
+  prompt: 'Write a short story about a robot learning to paint.',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```

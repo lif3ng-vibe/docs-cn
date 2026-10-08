@@ -1,0 +1,282 @@
+---
+title: 多步界面
+description: 使用 AI SDK RSC 构建多步界面的概述
+---
+
+# 设计多步界面
+
+<Note type="warning">
+  AI SDK RSC 目前处于实验性阶段。我们建议在生产环境中使用
+  [AI SDK UI](/docs/ai-sdk-ui/overview)。有关从 RSC 迁移到 UI
+  的指导，请参阅我们的[迁移指南](/docs/ai-sdk-rsc/migrating-to-ui)。
+</Note>
+
+多步界面（multistep interfaces）是指需要执行多个独立步骤才能完成特定任务的用户界面。
+
+例如，如果你想构建一个能够预订航班的生成式 UI 聊天机器人，它可能包含三个步骤：
+
+- 搜索所有航班
+- 选择航班
+- 查询可用性
+
+要构建这类应用，你将利用两个概念：**工具组合**（tool composition）和**应用上下文**（application context）。
+
+**工具组合**是指将多个[工具](/docs/ai-sdk-core/tools-and-tool-calling)组合起来创建新工具的过程。这是一个强大的概念，能让你把复杂任务拆分为更小、更易管理的步骤。在上面的示例中，_"搜索所有航班"_、_"选择航班"_和_"查询可用性"_共同构成了一个完整的_"预订航班"_工具。
+
+**应用上下文**是指应用在任意时刻的状态，包括用户的输入、语言模型的输出以及其他相关信息。在上面的示例中，_"选择航班"_中选定的航班会被用作完成_"查询可用性"_任务所需的上下文。
+
+## 概述
+
+要使用 `@ai-sdk/rsc` 构建多步界面，你需要准备以下几项：
+
+- 一个调用 `streamUI` 函数并返回其结果的 Server Action
+- 工具（完成整体任务所需的子任务）
+- 调用工具时应渲染的 React 组件
+- 一个用于渲染聊天机器人的页面
+
+你将遵循的大致流程是：
+
+- 用户发送消息（通过 `useActions` 调用你的 Server Action，并将消息作为输入传入）
+- 消息被追加到 AI 状态中，然后与若干工具一起传递给模型
+- 模型可以决定调用某个工具，这将渲染 `<SomeTool />` 组件
+- 在该组件内，你可以使用 `useActions` 通过 Server Action 调用模型，并使用 `useUIState` 将模型的响应（`<SomeOtherTool />`）追加到 UI 状态，从而添加交互性
+- 依此类推……
+
+## 实现
+
+逐轮（turn-by-turn）实现是多步界面最简单的形式。在这种实现中，用户和模型在对话中轮流进行：对于每条用户输入，模型都会生成一个响应，对话以这种逐轮的方式持续进行。
+
+在下面的示例中，你定义了两个工具（`searchFlights` 和 `lookupFlight`），模型可以用它们来搜索航班以及查询特定航班的详情。
+
+```tsx filename="app/actions.tsx"
+import { streamUI } from '@ai-sdk/rsc';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const searchFlights = async (
+  source: string,
+  destination: string,
+  date: string,
+) => {
+  return [
+    {
+      id: '1',
+      flightNumber: 'AA123',
+    },
+    {
+      id: '2',
+      flightNumber: 'AA456',
+    },
+  ];
+};
+
+const lookupFlight = async (flightNumber: string) => {
+  return {
+    flightNumber: flightNumber,
+    departureTime: '10:00 AM',
+    arrivalTime: '12:00 PM',
+  };
+};
+
+export async function submitUserMessage(input: string) {
+  'use server';
+
+  const ui = await streamUI({
+    model: openai('gpt-6-astra'),
+    instructions: 'you are a flight booking assistant',
+    prompt: input,
+    text: async ({ content }) => <div>{content}</div>,
+    tools: {
+      searchFlights: {
+        description: 'search for flights',
+        inputSchema: z.object({
+          source: z.string().describe('The origin of the flight'),
+          destination: z.string().describe('The destination of the flight'),
+          date: z.string().describe('The date of the flight'),
+        }),
+        generate: async function* ({ source, destination, date }) {
+          yield `Searching for flights from ${source} to ${destination} on ${date}...`;
+          const results = await searchFlights(source, destination, date);
+
+          return (
+            <div>
+              {results.map(result => (
+                <div key={result.id}>
+                  <div>{result.flightNumber}</div>
+                </div>
+              ))}
+            </div>
+          );
+        },
+      },
+      lookupFlight: {
+        description: 'lookup details for a flight',
+        inputSchema: z.object({
+          flightNumber: z.string().describe('The flight number'),
+        }),
+        generate: async function* ({ flightNumber }) {
+          yield `Looking up details for flight ${flightNumber}...`;
+          const details = await lookupFlight(flightNumber);
+
+          return (
+            <div>
+              <div>Flight Number: {details.flightNumber}</div>
+              <div>Departure Time: {details.departureTime}</div>
+              <div>Arrival Time: {details.arrivalTime}</div>
+            </div>
+          );
+        },
+      },
+    },
+  });
+
+  return ui.value;
+}
+```
+
+接下来，创建一个用于保存 UI 状态和 AI 状态的 AI 上下文。
+
+```ts filename='app/ai.ts'
+import { createAI } from '@ai-sdk/rsc';
+import { submitUserMessage } from './actions';
+
+export const AI = createAI<any[], React.ReactNode[]>({
+  initialUIState: [],
+  initialAIState: [],
+  actions: {
+    submitUserMessage,
+  },
+});
+```
+
+接下来，用你新创建的上下文包裹你的应用。
+
+```tsx filename='app/layout.tsx'
+import { type ReactNode } from 'react';
+import { AI } from './ai';
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <AI>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </AI>
+  );
+}
+```
+
+要调用你的 Server Action，请将根页面更新为以下内容：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useState } from 'react';
+import { AI } from './ai';
+import { useActions, useUIState } from '@ai-sdk/rsc';
+
+export default function Page() {
+  const [input, setInput] = useState<string>('');
+  const [conversation, setConversation] = useUIState<typeof AI>();
+  const { submitUserMessage } = useActions();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setInput('');
+    setConversation(currentConversation => [
+      ...currentConversation,
+      <div>{input}</div>,
+    ]);
+    const message = await submitUserMessage(input);
+    setConversation(currentConversation => [...currentConversation, message]);
+  };
+
+  return (
+    <div>
+      <div>
+        {conversation.map((message, i) => (
+          <div key={i}>{message}</div>
+        ))}
+      </div>
+      <div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+          />
+          <button>Send Message</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+```
+
+该页面使用 `useUIState` Hook 获取当前 UI 状态，然后将其映射并渲染到 UI 中。为了访问 Server Action，你使用 `useActions` Hook，它会返回在你的 `actions.tsx` 文件中传递给 `createAI` 函数 `actions` 键的所有 action。最后，你像调用其他 TypeScript 函数一样调用 `submitUserMessage` 函数。该函数返回一个 React 组件（`message`），随后通过 `setConversation` 更新 UI 状态，将其渲染到 UI 中。
+
+在这个示例中，要调用下一个工具，用户必须以纯文本回复。**由于你流式传输的是 React 组件，因此可以添加一个按钮来触发对话的下一步**。
+
+要添加用户交互，你需要将该组件转换为客户端组件，并使用 `useActions` Hook 来触发对话的下一步。
+
+```tsx filename="components/flights.tsx"
+'use client';
+
+import { useActions, useUIState } from '@ai-sdk/rsc';
+import { ReactNode } from 'react';
+
+interface FlightsProps {
+  flights: { id: string; flightNumber: string }[];
+}
+
+export const Flights = ({ flights }: FlightsProps) => {
+  const { submitUserMessage } = useActions();
+  const [_, setMessages] = useUIState();
+
+  return (
+    <div>
+      {flights.map(result => (
+        <div key={result.id}>
+          <div
+            onClick={async () => {
+              const display = await submitUserMessage(
+                `lookupFlight ${result.flightNumber}`,
+              );
+
+              setMessages((messages: ReactNode[]) => [...messages, display]);
+            }}
+          >
+            {result.flightNumber}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+```
+
+现在，更新你的 `searchFlights` 工具以渲染新的 `<Flights />` 组件。
+
+```tsx filename="actions.tsx"
+...
+searchFlights: {
+  description: 'search for flights',
+  inputSchema: z.object({
+    source: z.string().describe('The origin of the flight'),
+    destination: z.string().describe('The destination of the flight'),
+    date: z.string().describe('The date of the flight'),
+  }),
+  generate: async function* ({ source, destination, date }) {
+    yield `Searching for flights from ${source} to ${destination} on ${date}...`;
+    const results = await searchFlights(source, destination, date);
+    return (<Flights flights={results} />);
+  },
+}
+...
+```
+
+在上面的示例中，`Flights` 组件用于显示搜索结果。当用户点击某个航班号时，会以该航班号为参数调用 `lookupFlight` 工具，随后调用 `submitUserMessage` action 来触发对话的下一步。
+
+想了解在 Next.js App Router 中进行工具调用的更多信息，请查看[这里的示例](/examples/next-app/tools)。

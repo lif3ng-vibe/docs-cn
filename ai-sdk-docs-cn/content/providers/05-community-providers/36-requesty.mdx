@@ -1,0 +1,263 @@
+---
+title: Requesty
+description: 适用于 AI SDK 的 Requesty 提供商
+---
+
+# Requesty
+
+[Requesty](https://requesty.ai/) 是一个统一的 LLM 网关，提供对来自 OpenAI、Anthropic、Google、Mistral、AWS 等领先提供商的 300 多个大语言模型的访问。适用于 AI SDK 的 Requesty 提供商可以与所有这些模型无缝集成，同时具备企业级优势：
+
+- **通用模型访问**：一个 API key 即可使用来自多个提供商的 300+ 个模型
+- **99.99% 可用性 SLA**：企业级基础设施，配备智能故障转移与负载均衡
+- **成本优化**：按量付费，通过智能路由与提示词缓存（prompt caching）最高可降低 80% 成本
+- **高级安全**：提示词注入检测、端到端加密与 GDPR 合规
+- **实时可观测性**：内置监控、追踪与分析
+- **智能路由**：自动故障转移与基于性能的路由
+- **推理支持**：高级推理能力，推理力度可配置
+
+在 [Requesty 文档](https://docs.requesty.ai)中了解更多 Requesty 的能力。
+
+## 安装
+
+Requesty 提供商包含在 `@requesty/ai-sdk` 模块中，你可以通过以下方式安装：
+
+<InstallPackages packages="@requesty/ai-sdk" />
+
+## API Key 配置
+
+出于安全考虑，你应将 API key 设置为名为 `REQUESTY_API_KEY`（名称必须完全一致）的环境变量：
+
+```bash
+# Linux/Mac
+export REQUESTY_API_KEY=your_api_key_here
+
+# Windows Command Prompt
+set REQUESTY_API_KEY=your_api_key_here
+
+# Windows PowerShell
+$env:REQUESTY_API_KEY="your_api_key_here"
+```
+
+你可以在 [Requesty 控制台](https://app.requesty.ai/api-keys)获取你的 Requesty API key。
+
+## 提供商实例
+
+你可以从 `@requesty/ai-sdk` 导入默认提供商实例 `requesty`：
+
+```typescript
+import { requesty } from '@requesty/ai-sdk';
+```
+
+也可以使用 `createRequesty` 创建自定义提供商实例：
+
+```typescript
+import { createRequesty } from '@requesty/ai-sdk';
+
+const customRequesty = createRequesty({
+  apiKey: 'YOUR_REQUESTY_API_KEY',
+});
+```
+
+## 语言模型
+
+Requesty 通过简洁统一的接口同时支持聊天模型与补全模型：
+
+```typescript
+// Using the default provider instance
+const model = requesty('openai/gpt-4o');
+
+// Using a custom provider instance
+const customModel = customRequesty('anthropic/claude-3.5-sonnet');
+```
+
+完整可用模型列表请参阅 [Requesty 模型文档](https://requesty.ai/models)。
+
+## 示例
+
+以下是在 AI SDK 中使用 Requesty 的示例：
+
+### `generateText`
+
+```javascript
+import { requesty } from '@requesty/ai-sdk';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: requesty('openai/gpt-4o'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+
+console.log(text);
+```
+
+### `streamText`
+
+```javascript
+import { requesty } from '@requesty/ai-sdk';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: requesty('anthropic/claude-3.5-sonnet'),
+  prompt: 'Write a short story about AI.',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+### 结构化输出
+
+```javascript
+import { requesty } from '@requesty/ai-sdk';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: requesty('openai/gpt-4o'),
+  output: Output.object({
+    schema: z.object({
+      recipe: z.object({
+        name: z.string(),
+        ingredients: z.array(z.string()),
+        steps: z.array(z.string()),
+      }),
+    }),
+  }),
+  prompt: 'Generate a recipe for chocolate chip cookies.',
+});
+
+console.log(output.recipe);
+```
+
+## 高级功能
+
+### 推理支持
+
+针对支持的模型，Requesty 提供高级推理能力，推理力度可配置：
+
+```javascript
+import { createRequesty } from '@requesty/ai-sdk';
+import { generateText } from 'ai';
+
+const requesty = createRequesty({ apiKey: process.env.REQUESTY_API_KEY });
+
+// Using reasoning effort
+const { text, reasoning } = await generateText({
+  model: requesty('openai/o3-mini', {
+    reasoningEffort: 'medium',
+  }),
+  prompt: 'Solve this complex problem step by step...',
+});
+
+console.log('Response:', text);
+console.log('Reasoning:', reasoning);
+```
+
+#### 推理力度取值
+
+- `'low'` - 最小推理力度
+- `'medium'` - 中等推理力度
+- `'high'` - 高推理力度
+- `'max'` - 最大推理力度（Requesty 专属）
+- 预算字符串（如 `"10000"`）- 指定推理的 token 预算
+
+#### 支持推理的模型
+
+- **OpenAI**：`openai/o3-mini`、`openai/o3`
+- **Anthropic**：`anthropic/claude-sonnet-4-0` 及其他 Claude 推理模型
+- **Deepseek**：所有 Deepseek 推理模型（自动推理）
+
+### 自定义配置
+
+使用自定义设置配置 Requesty：
+
+```javascript
+import { createRequesty } from '@requesty/ai-sdk';
+
+const requesty = createRequesty({
+  apiKey: process.env.REQUESTY_API_KEY,
+  baseURL: 'https://router.requesty.ai/v1',
+  headers: {
+    'Custom-Header': 'custom-value',
+  },
+  extraBody: {
+    custom_field: 'value',
+  },
+});
+```
+
+### 传递额外请求体参数
+
+有三种方式向 Requesty 传递额外请求体参数：
+
+#### 1. 通过提供商选项
+
+```javascript
+await streamText({
+  model: requesty('anthropic/claude-3.5-sonnet'),
+  messages: [{ role: 'user', content: 'Hello' }],
+  providerOptions: {
+    requesty: {
+      custom_field: 'value',
+      reasoning_effort: 'high',
+    },
+  },
+});
+```
+
+#### 2. 通过模型设置
+
+```javascript
+const model = requesty('anthropic/claude-3.5-sonnet', {
+  extraBody: {
+    custom_field: 'value',
+  },
+});
+```
+
+#### 3. 通过提供商工厂
+
+```javascript
+const requesty = createRequesty({
+  apiKey: process.env.REQUESTY_API_KEY,
+  extraBody: {
+    custom_field: 'value',
+  },
+});
+```
+
+## 企业级功能
+
+Requesty 提供多项企业级功能：
+
+1. **99.99% 可用性 SLA**：先进的路由与故障转移机制，在其他服务失效时仍保持你的 AI 应用在线。
+
+2. **智能负载均衡**：基于实时性能的路由会自动选择表现最佳的提供商。
+
+3. **成本优化**：智能路由可在保持响应质量的同时，最高降低 40% 的 API 成本。
+
+4. **高级安全**：内置提示词注入检测、端到端加密与 GDPR 合规。
+
+5. **实时可观测性**：对所有请求提供全面的监控、追踪与分析。
+
+6. **地域限制**：通过可配置的地域控制满足地区法规要求。
+
+7. **模型访问控制**：对可访问的模型与提供商进行细粒度控制。
+
+## 核心优势
+
+- **零停机**：自动故障转移，切换时间 \<50ms
+- **多提供商冗余**：在健康的提供商之间无缝切换
+- **智能排队**：带指数退避的重试逻辑
+- **对开发者友好**：统一 API，配置简单直接
+- **灵活性**：无需更改代码即可切换模型与提供商
+- **企业支持**：面向大流量用户提供自定义 SLA
+
+## 更多资源
+
+- [Requesty 提供商仓库](https://github.com/requestyai/ai-sdk-requesty)
+- [Requesty 文档](https://docs.requesty.ai/)
+- [Requesty 控制台](https://app.requesty.ai/analytics)
+- [Requesty Discord 社区](https://discord.com/invite/Td3rwAHgt4)
+- [Requesty 状态页](https://status.requesty.ai)

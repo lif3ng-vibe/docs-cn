@@ -1,0 +1,412 @@
+---
+title: 网络搜索智能体
+description: 了解如何结合 AI SDK 与 Node 构建可访问网络的智能体
+tags: ['node', 'tool use', 'agent', 'web']
+---
+
+# Web Search Agent
+
+使用 AI SDK 构建网络搜索智能体（agent）有两种方式：
+
+1. 使用具备原生网络搜索能力的模型
+2. 使用工具访问网络并返回搜索结果
+
+提供商原生搜索运行在提供商的基础设施上，并在生成响应的同时返回来源。可用的搜索控制项和定价因提供商而异；搜索可能产生额外的工具费用。
+
+而通过使用工具，你可以获得更高的灵活性，并对搜索查询拥有更大的控制权。它允许你自定义搜索策略、指定搜索参数，并且可以与任何支持工具调用的 LLM 搭配使用。这种方式会为所使用的搜索 API 产生额外费用，但让你完全掌控搜索体验。
+
+## 使用原生网络搜索
+
+有多个模型提供原生网络搜索能力（Perplexity、OpenAI、Gemini）。下面我们看看如何跨提供商构建网络搜索智能体。
+
+### OpenAI Responses API
+
+OpenAI 的 Responses API 内置了一个网络搜索工具，可用于搜索网络并返回搜索结果。该工具名为 `web_search`，通过 `openai` 提供商访问。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+
+const { text, sources } = await generateText({
+  model: 'openai/gpt-6-luna',
+  prompt: 'What happened in San Francisco last week?',
+  tools: {
+    web_search: openai.tools.webSearch({}),
+  },
+});
+
+console.log(text);
+console.log(sources);
+```
+
+你也可以使用 `ToolLoopAgent` 来构建基于 OpenAI 的网络搜索智能体。下面的示例展示了如何从工具调用中提取查询与来源：
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { ToolLoopAgent } from 'ai';
+
+const agent = new ToolLoopAgent({
+  model: 'openai/gpt-6-luna',
+  tools: {
+    web_search: openai.tools.webSearch({
+      searchContextSize: 'low',
+    }),
+  },
+});
+
+const { text, sources, toolResults } = await agent.generate({
+  prompt: 'What happened in San Francisco last week?',
+});
+
+// Access sources directly
+console.log('Sources:', sources);
+
+// Or extract query and sources from tool results
+for (const toolResult of toolResults) {
+  if (toolResult.toolName === 'web_search') {
+    const { action, sources } = toolResult.output;
+    console.log('Search query:', action.query);
+    console.log('Sources:', sources);
+  }
+}
+```
+
+### Perplexity
+
+Perplexity 的 Agent API 提供了一些预设（preset），将模型与网络搜索等原生工具组合在一起。`fast` 预设可以搜索网络，并通过 `sources` 属性返回引用。
+
+安装 `@ai-sdk/perplexity` 并在你的环境中设置 `PERPLEXITY_API_KEY`，即可直接使用该提供商：
+
+<InstallPackages packages="@ai-sdk/perplexity" />
+
+```ts
+import { perplexity } from '@ai-sdk/perplexity';
+import { generateText } from 'ai';
+
+const { text, sources } = await generateText({
+  model: perplexity('fast'),
+  prompt: 'What are the latest developments in quantum computing?',
+});
+
+console.log(text);
+console.log(sources);
+```
+
+原生工具、搜索过滤器和 Agent API 选项详见 [Perplexity 提供商文档](/providers/ai-sdk-providers/perplexity#agent-工具)。
+
+### Gemini
+
+对于受支持的 Gemini 模型，你可以启用搜索接地（search grounding），让模型通过 Google 搜索访问最新信息。
+
+```ts
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
+
+const { text, sources, providerMetadata } = await generateText({
+  model: 'google/gemini-3.8-flash',
+  tools: {
+    google_search: google.tools.googleSearch({}),
+  },
+  prompt:
+    'List the top 5 San Francisco news from the past week.' +
+    'You must include the date of each article.',
+});
+
+console.log(text);
+console.log(sources);
+
+// access the grounding metadata.
+const metadata = providerMetadata?.google;
+const groundingMetadata = metadata?.groundingMetadata;
+const safetyRatings = metadata?.safetyRatings;
+```
+
+## 使用工具
+
+使用工具进行网络搜索时，你有两个选择：使用与 AI SDK 直接集成的现成工具，或构建符合自身需求的自定义工具。
+
+与搜索能力内置于模型之中的原生网络搜索示例不同，使用网络搜索工具需要多个步骤。语言模型会进行两次生成——第一次调用相应的网络搜索工具（从上下文中提取搜索查询），第二次处理结果并生成响应。当你将 `stopWhen: isStepCount(n)` 设置为大于 1 的值时，这个多步过程会被自动处理。
+
+<Note>
+  通过使用 `stopWhen`，你可以自动将工具结果连同原始问题一起发回给语言模型，使模型能够基于搜索结果，以与用户查询相关的信息作出回应。
+  这带来了流畅的体验：智能体可以搜索网络，并将搜索所得融入其响应之中。
+</Note>
+
+### 使用现成工具
+
+如果你希望直接使用现成的网络搜索工具而不必从零构建，有几个可直接与 AI SDK 集成的选择。
+
+#### Exa
+
+<Note>
+  从 [Exa Dashboard](https://dashboard.exa.ai/api-keys) 获取你的 API key。
+</Note>
+
+首先，安装 Exa 的 `webSearch` 工具：
+
+```bash
+pnpm install @exalabs/ai-sdk
+```
+
+然后，你可以导入它并传入 `generateText`、`streamText` 或你的智能体：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { webSearch } from '@exalabs/ai-sdk';
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt: 'Tell me the latest developments in AI',
+  tools: {
+    webSearch: webSearch(),
+  },
+  stopWhen: isStepCount(3),
+});
+
+console.log(text);
+```
+
+更多配置选项与自定义方式，请参阅 [Exa AI SDK 文档](https://docs.exa.ai/reference/vercel)。
+
+#### Parallel Web
+
+<Note>从 [Parallel Platform](https://parallel.ai) 获取你的 API key。</Note>
+
+首先，安装 Parallel Web 的 AI SDK 工具：
+
+```bash
+pnpm install @parallel-web/ai-sdk-tools
+```
+
+然后，你可以导入这些工具并传入 `generateText`、`streamText` 或你的智能体。Parallel Web 提供两个工具：用于网络搜索的 `searchTool` 和用于提取网页内容的 `extractTool`：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { searchTool, extractTool } from '@parallel-web/ai-sdk-tools';
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt: 'When was Vercel Ship AI?',
+  tools: {
+    webSearch: searchTool,
+    webExtract: extractTool,
+  },
+  stopWhen: isStepCount(3),
+});
+
+console.log(text);
+```
+
+#### Perplexity Search
+
+<Note>
+  从 [Perplexity API Keys 页面](https://www.perplexity.ai/account/api/keys) 获取你的 API key。
+</Note>
+
+首先，安装 Perplexity Search 工具：
+
+```bash
+pnpm install @perplexity-ai/ai-sdk
+```
+
+然后，你可以导入它并传入 `generateText`、`streamText` 或你的智能体。Perplexity Search 提供实时网络搜索，并带有高级过滤选项，包括域名、语言、日期范围和时效性过滤：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { perplexitySearch } from '@perplexity-ai/ai-sdk';
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt:
+    'What are the latest AI developments? Use search to find current information.',
+  tools: {
+    search: perplexitySearch(),
+  },
+  stopWhen: isStepCount(3),
+});
+
+console.log(text);
+```
+
+更多配置选项与自定义方式，请参阅 [Perplexity Search API 文档](https://docs.perplexity.ai/guides/search-quickstart)。
+
+#### Tavily
+
+<Note>
+  从 [Tavily Dashboard](https://app.tavily.com) 获取你的 API key。
+</Note>
+
+首先，安装 `tavilySearch` 工具：
+
+```bash
+pnpm install @tavily/ai-sdk
+```
+
+然后，你可以导入它并传入 `generateText`、`streamText` 或你的智能体：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { tavilySearch, tavilyExtract } from '@tavily/ai-sdk';
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt: 'When was the latest update to the AI SDK?',
+  tools: {
+    webSearch: tavilySearch(),
+    webExtract: tavilyExtract(),
+  },
+  stopWhen: isStepCount(3),
+});
+
+console.log(text);
+```
+
+若需对智能体的网页访问功能做更多自定义，请访问 [Tavily AI SDK 文档](https://docs.tavily.com/documentation/integrations/vercel)。
+
+#### You.com
+
+<Note>
+  从 [You.com API Keys 页面](https://you.com/platform/api-keys) 获取你的 API key。
+</Note>
+
+首先，安装 You.com 的 AI SDK 插件：
+
+```bash
+pnpm install @youdotcom-oss/ai-sdk-plugin
+```
+
+然后，你可以导入这些工具并传入 `generateText`、`streamText` 或你的智能体。You.com 提供三个工具：`youSearch` 用于带高级过滤的实时网络搜索，`youResearch` 用于带引用来源、力度可调（从轻量到详尽）的深度研究，`youContents` 用于以 markdown 或 HTML 提取网页内容：
+
+```ts
+import { generateText, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import {
+  youSearch,
+  youResearch,
+  youContents,
+} from '@youdotcom-oss/ai-sdk-plugin';
+
+const { text } = await generateText({
+  model: __MODEL__,
+  prompt: 'Research the latest developments in quantum computing',
+  tools: {
+    search: youSearch(),
+    research: youResearch(),
+    extract: youContents(),
+  },
+  stopWhen: isStepCount(5),
+});
+
+console.log(text);
+```
+
+更多配置选项与自定义方式，请参阅 [You.com AI SDK Plugin 文档](https://github.com/youdotcom-oss/dx-toolkit/tree/main/packages/ai-sdk-plugin#readme)。
+
+### 构建并使用自定义工具
+
+若想对网络搜索功能拥有更多控制，可以使用网页抓取与爬取 API 构建自定义工具。这种方式允许你自定义搜索参数、处理特定数据格式，并接入专门的搜索服务。
+
+#### Exa
+
+下面看看如何使用 Exa 实现一个搜索工具：
+
+```bash
+pnpm install exa-js
+```
+
+```ts
+import { generateText, tool, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+import Exa from 'exa-js';
+
+export const exa = new Exa(process.env.EXA_API_KEY);
+
+export const webSearch = tool({
+  description: 'Search the web for up-to-date information',
+  inputSchema: z.object({
+    query: z.string().min(1).max(100).describe('The search query'),
+  }),
+  execute: async ({ query }) => {
+    const { results } = await exa.searchAndContents(query, {
+      livecrawl: 'always',
+      numResults: 3,
+    });
+    return results.map(result => ({
+      title: result.title,
+      url: result.url,
+      content: result.text.slice(0, 1000), // take just the first 1000 characters
+      publishedDate: result.publishedDate,
+    }));
+  },
+});
+
+const { text } = await generateText({
+  model: __MODEL__, // can be any model that supports tools
+  prompt: 'What happened in San Francisco last week?',
+  tools: {
+    webSearch,
+  },
+  stopWhen: isStepCount(5),
+});
+```
+
+#### Firecrawl
+
+[Firecrawl](https://firecrawl.dev) 提供用于网页抓取与爬取的 API。下面看看如何使用 Firecrawl 构建自定义抓取工具：
+
+```bash
+pnpm install @mendable/firecrawl-js
+```
+
+```ts
+import { generateText, tool, isStepCount } from 'ai';
+__PROVIDER_IMPORT__;
+import { z } from 'zod';
+import FirecrawlApp from '@mendable/firecrawl-js';
+import 'dotenv/config';
+
+const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
+
+export const webSearch = tool({
+  description: 'Search the web for up-to-date information',
+  inputSchema: z.object({
+    urlToCrawl: z
+      .string()
+      .url()
+      .min(1)
+      .max(100)
+      .describe('The URL to crawl (including http:// or https://)'),
+  }),
+  execute: async ({ urlToCrawl }) => {
+    const crawlResponse = await app.crawlUrl(urlToCrawl, {
+      limit: 1,
+      scrapeOptions: {
+        formats: ['markdown', 'html'],
+      },
+    });
+    if (!crawlResponse.success) {
+      throw new Error(`Failed to crawl: ${crawlResponse.error}`);
+    }
+    return crawlResponse.data;
+  },
+});
+
+const main = async () => {
+  const { text } = await generateText({
+    model: __MODEL__, // can be any model that supports tools
+    prompt: 'Get the latest blog post from vercel.com/blog',
+    tools: {
+      webSearch,
+    },
+    stopWhen: isStepCount(5),
+  });
+  console.log(text);
+};
+
+main();
+```

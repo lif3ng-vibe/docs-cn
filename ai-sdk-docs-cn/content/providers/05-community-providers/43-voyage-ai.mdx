@@ -1,0 +1,296 @@
+---
+title: Voyage AI
+description: 了解如何使用 Voyage AI 提供商。
+---
+
+# Voyage AI 提供商
+
+[patelvivekdev/voyage-ai-provider](https://github.com/patelvivekdev/voyageai-ai-provider) 是一个社区提供商，它使用 [Voyage AI](https://www.voyageai.com) 为 AI SDK 提供嵌入（embedding）支持。
+
+## 安装
+
+Voyage 提供商通过 `voyage-ai-provider` 模块提供。可通过以下方式安装：
+
+<InstallPackages packages="voyage-ai-provider" />
+
+## 提供商实例
+
+你可以从 `voyage-ai-provider` 导入默认提供商实例 `voyage`：
+
+```ts
+import { voyage } from 'voyage-ai-provider';
+```
+
+如果需要自定义配置，可以从 `voyage-ai-provider` 导入 `createVoyage`，并用你的设置创建提供商实例：
+
+```ts
+import { createVoyage } from 'voyage-ai-provider';
+
+const voyage = createVoyage({
+  // custom settings
+});
+```
+
+你可以使用以下可选设置来自定义 Voyage 提供商实例：
+
+- **baseURL** _string_
+
+  Voyage API 的基础 URL。
+  默认前缀为 `https://api.voyageai.com/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API key。
+  默认取自 `VOYAGE_API_KEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _(input: RequestInfo, init?: RequestInit) => Promise&lt;Response&gt;_
+
+  自定义 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) 实现。
+  默认使用全局 `fetch` 函数。
+  你可以将其用作拦截请求的中间件，
+  或为测试等场景提供自定义 fetch 实现。
+
+## 文本嵌入模型
+
+你可以使用 `.embeddingModel()` 工厂方法创建调用 [Voyage 嵌入 API](https://docs.voyageai.com/reference/embeddings-api) 的模型。
+
+```ts
+import { voyage } from 'voyage-ai-provider';
+
+const embeddingModel = voyage.embeddingModel('voyage-3.5-lite');
+```
+
+你可以使用 Voyage 嵌入模型，通过 `embed` 或 `embedMany` 函数生成嵌入：
+
+```ts
+import { voyage } from 'voyage-ai-provider';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: voyage.embeddingModel('voyage-3.5-lite'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    voyage: {
+      inputType: 'document',
+    },
+  },
+});
+```
+
+Voyage 嵌入模型支持额外的提供商选项，可通过 `providerOptions.voyage` 传入：
+
+```ts
+import { voyage } from 'voyage-ai-provider';
+import { embed } from 'ai';
+
+const { embedding } = await embed({
+  model: voyage.embeddingModel('voyage-3.5-lite'),
+  value: 'sunny day at the beach',
+  providerOptions: {
+    voyage: {
+      inputType: 'query',
+      outputDimension: 512,
+    },
+  },
+});
+```
+
+以下[提供商选项](https://docs.voyageai.com/reference/embeddings-api)可用：
+
+- **inputType** _'query' | 'document' | 'null'_
+
+  指定传给模型的输入类型。默认为 `'null'`。
+  - `'null'`：当 `inputType` 为 `'null'` 时，嵌入模型会将输入直接转换为数值向量。
+
+  对于检索/搜索场景，建议使用 `'query'` 或 `'document'`。
+  - `'query'`：输入是搜索查询，例如 “Represent the query for retrieving supporting documents: ...”。
+  - `'document'`：输入是要存入向量数据库的文档，例如 “Represent the document for retrieval: ...”。
+
+- **outputDimension** _number_
+
+  输出嵌入的维度数量。默认为 `'null'`。
+  - 例如，`voyage-code-3` 与 `voyage-3-large` 支持：2048、1024（默认）、512 和 256。
+  - 支持的取值请参阅[模型文档](https://docs.voyageai.com/docs/embeddings)。
+
+- **outputDtype** _'float' | 'int8' | 'uint8' | 'binary' | 'ubinary'_
+
+  输出嵌入的数据类型。默认为 `'float'`。
+  - `'float'`：32 位浮点数（所有模型均支持）。
+  - `'int8'`、`'uint8'`：8 位整数类型（由 `voyage-3-large`、`voyage-3.5`、`voyage-3.5-lite` 与 `voyage-code-3` 支持）。
+  - `'binary'`、`'ubinary'`：按位打包的量化单比特嵌入值（由 `voyage-3-large`、`voyage-3.5`、`voyage-3.5-lite` 与 `voyage-code-3` 支持）。返回列表的长度为 `outputDimension` 的 1/8。`'binary'` 使用偏移二进制（offset binary）编码。
+
+  更多细节请参阅 [FAQ：输出数据类型](https://docs.voyageai.com/docs/faq#what-is-quantization-and-output-data-types)。
+
+- **truncation** _boolean_
+
+  是否截断输入文本以适配模型的上下文长度。未指定时默认为 true。
+
+更多模型请访问 [Voyage Library](https://docs.voyageai.com/docs/embeddings) 主页。
+
+### 模型能力
+
+| 模型                    | 默认维度                       | 上下文长度     |
+| ----------------------- | ------------------------------ | -------------- |
+| `voyage-3.5`            | 1024 (default), 256, 512, 2048 | 32,000         |
+| `voyage-3.5-lite`       | 1024 (default), 256, 512, 2048 | 32,000         |
+| `voyage-3-large`        | 1024 (default), 256, 512, 2048 | 32,000         |
+| `voyage-3`              | 1024                           | 32,000         |
+| `voyage-code-3`         | 1024 (default), 256, 512, 2048 | 32,000         |
+| `voyage-3-lite`         | 512                            | 32,000         |
+| `voyage-finance-2`      | 1024                           | 32,000         |
+| `voyage-multilingual-2` | 1024                           | 32,000         |
+| `voyage-law-2`          | 1024                           | 32,000         |
+| `voyage-code-2`         | 1024                           | 16,000         |
+
+<Note>
+  上表列出的是热门模型。可用模型的完整列表请参阅 [Voyage
+  文档](https://docs.voyageai.com/docs/embeddings)。
+</Note>
+
+## 图像嵌入
+
+### 示例 1：将图像嵌入为单个嵌入向量
+
+```ts
+import { voyage, ImageEmbeddingInput } from 'voyage-ai-provider';
+import { embedMany } from 'ai';
+
+const imageModel = voyage.imageEmbeddingModel('voyage-multimodal-3');
+
+const { embeddings } = await embedMany<ImageEmbeddingInput>({
+  model: imageModel,
+  values: [
+    {
+      image:
+        'https://raw.githubusercontent.com/voyage-ai/voyage-multimodal-3/refs/heads/main/images/banana_200_x_200.jpg',
+    },
+    {
+      image: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...',
+    },
+  ],
+  // or you can pass the array of images url and base64 string directly
+  // values: [
+  //   'https://raw.githubusercontent.com/voyage-ai/voyage-multimodal-3/refs/heads/main/images/banana_200_x_200.jpg',
+  //   'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...',
+  // ],
+});
+```
+
+### 示例 2：将多张图像嵌入为单个嵌入向量
+
+```ts
+import { voyage, ImageEmbeddingInput } from 'voyage-ai-provider';
+import { embedMany } from 'ai';
+
+const imageModel = voyage.imageEmbeddingModel('voyage-multimodal-3');
+
+const { embeddings } = await embedMany<ImageEmbeddingInput>({
+  model: imageModel,
+  values: [
+    {
+      image: [
+        'https://raw.githubusercontent.com/voyage-ai/voyage-multimodal-3/refs/heads/main/images/banana_200_x_200.jpg',
+        'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...',
+      ],
+    },
+  ],
+});
+```
+
+<Note>
+  如果遇到图像 URL 未找到的错误，请将图像转换为 base64，并在 image
+  数组中传入 base64 数据 URL。该值应为 data URL 格式
+  `data:[mediatype];base64,<data>` 的 Base64 编码图像。支持的媒体类型：`image/png`、
+  `image/jpeg`、`image/webp` 与 `image/gif`。
+</Note>
+
+## 多模态嵌入
+
+### 示例 1：将多条文本与多张图像嵌入为单个嵌入向量
+
+```ts
+import { voyage, MultimodalEmbeddingInput } from 'voyage-ai-provider';
+import { embedMany } from 'ai';
+
+const multimodalModel = voyage.multimodalEmbeddingModel('voyage-multimodal-3');
+
+const { embeddings } = await embedMany<MultimodalEmbeddingInput>({
+  model: multimodalModel,
+  values: [
+    {
+      text: ['Hello, world!', 'This is a banana'],
+      image: [
+        'https://raw.githubusercontent.com/voyage-ai/voyage-multimodal-3/refs/heads/main/images/banana_200_x_200.jpg',
+      ],
+    },
+    {
+      text: ['Hello, coders!', 'This is a coding test'],
+      image: ['data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...'],
+    },
+  ],
+});
+```
+
+`values` 列表需满足以下约束：
+
+- 列表中的值不能超过 1,000 个。
+- 每张图像不能超过 1,600 万像素，且大小不能超过 20 MB。
+- 图像每 560 像素计为 1 个 token，列表中每个输入不得超过 32,000 个 token，且所有输入的 token 总数不得超过 320,000。
+
+Voyage 多模态嵌入模型支持额外的提供商选项，可通过 `providerOptions.voyage` 传入：
+
+```ts
+import { voyage, MultimodalEmbeddingInput } from 'voyage-ai-provider';
+import { embedMany } from 'ai';
+
+const multimodalModel = voyage.multimodalEmbeddingModel('voyage-multimodal-3');
+
+const { embeddings } = await embedMany<MultimodalEmbeddingInput>({
+  model: multimodalModel,
+  values: [
+    {
+      text: ['Hello, world!'],
+      image: ['data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...'],
+    },
+  ],
+  providerOptions: {
+    voyage: {
+      inputType: 'query',
+      outputEncoding: 'base64',
+      truncation: true,
+    },
+  },
+});
+```
+
+以下提供商选项可用：
+
+- **inputType** _'query' | 'document'_
+
+  指定传给模型的输入类型。默认为 `'query'`。
+
+  当 `inputType` 指定为 `'query'` 或 `'document'` 时，Voyage 会在向量化之前自动为输入添加一段前缀提示词（prompt），从而生成面向检索/搜索任务优化的向量：
+  - `'query'`：添加前缀 “Represent the query for retrieving supporting documents: ”
+  - `'document'`：添加前缀 “Represent the document for retrieval: ”
+
+- **outputEncoding** _'base64'_
+
+  输出嵌入的数据编码。默认为 `null`（32 位浮点数列表）。
+  - 若为 `null`，嵌入以浮点数列表（float32）形式返回。
+  - 若为 `'base64'`，嵌入以 Base64 编码的单精度浮点数 NumPy 数组形式返回。
+
+  更多细节请参阅 [FAQ：输出数据类型](https://docs.voyageai.com/docs/faq#what-is-quantization-and-output-data-types)。
+
+- **truncation** _boolean_
+
+  是否截断输入以适配模型的上下文长度。未指定时默认为 `true`。
+
+### 模型能力
+
+| 模型                  | 上下文长度（token）     | 嵌入维度            |
+| --------------------- | ----------------------- | ------------------- |
+| `voyage-multimodal-3` | 32,000                  | 1024                |

@@ -1,0 +1,26 @@
+---
+title: AI_InvalidDataContentError
+description: 如何解决 AI_InvalidDataContentError
+---
+
+# AI_InvalidDataContentError
+
+此错误在多模态消息部分中提供的数据内容无效时发生。参见[多模态消息的提示词示例](/docs/foundations/prompts#消息提示词)。
+
+## 属性
+
+- `content`：无效的内容值
+- `cause`：导致此错误的底层错误（可选）
+- `message`：描述期望与实际接收内容类型的错误消息（可选，自动生成）
+
+## 排查此错误
+
+可以使用以下方式检查错误是否为 `AI_InvalidDataContentError` 的实例：
+
+```typescript
+import { InvalidDataContentError } from 'ai';
+
+if (InvalidDataContentError.isInstance(error)) {
+  // Handle the error
+}
+```

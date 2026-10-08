@@ -1,0 +1,366 @@
+---
+title: Multi-Modal Agent
+description: 了解如何使用 AI SDK 构建能够处理图像和 PDF 的多模态智能体（agent）。
+tags: ['multi-modal', 'agent', 'images', 'pdf', 'vision', 'next']
+---
+
+# Multi-Modal Agent
+
+在本指南中，你将构建一个能够理解图像和 PDF 的多模态智能体（agent）。
+
+多模态（multi-modal）指的是智能体以多种格式理解并生成响应的能力。本指南将聚焦图像和 PDF——现代语言模型可以原生处理的两种常见文档类型。
+
+<Note>
+  有关提供商（provider）及其多模态能力的完整列表，请访问[提供商文档](/providers/ai-sdk-providers)。
+</Note>
+
+我们将使用 OpenAI 的 GPT-6 Astra 构建这个智能体，但同样的代码也可以与其他提供商无缝协作——只需修改一行代码即可在它们之间切换。
+
+## 前置条件
+
+跟随本快速上手，你需要：
+
+- 本地开发机器上安装 Node.js 22+ 和 pnpm。
+- 一个 Vercel AI Gateway API 密钥。
+
+如果你还没有获取 Vercel AI Gateway API 密钥，可以在 Vercel 网站上[注册](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai&title=Go+to+AI+Gateway)获取。
+
+## 创建你的应用
+
+先创建一个新的 Next.js 应用。该命令会创建一个名为 `multi-modal-agent` 的新目录，并在其中搭建一个基础的 Next.js 应用。
+
+<div className="mb-4">
+  <Note>
+    提示使用 App Router 时请务必选择 yes。如果你要找的是 Next.js Pages Router 快速上手指南，可以在[这里](/docs/getting-started/nextjs-pages-router)找到。
+  </Note>
+</div>
+
+<Snippet text="pnpm create next-app@latest multi-modal-agent" />
+
+进入新创建的目录：
+
+<Snippet text="cd multi-modal-agent" />
+
+### 安装依赖
+
+安装 `ai` 和 `@ai-sdk/react`，它们分别是 AI SDK 包和 AI SDK 的 React 包。
+
+<Note>
+  AI SDK 的设计目标是提供与任何大语言模型交互的统一接口。这意味着你只需一行代码即可更换模型和提供商！在[提供商](/providers)部分了解更多关于[可用提供商](/providers)和[构建自定义提供商](/providers/community-providers/custom-providers)的信息。
+</Note>
+<InstallPackages packages="ai @ai-sdk/react" />
+
+### 配置你的 Vercel AI Gateway API 密钥
+
+在项目根目录创建 `.env.local` 文件并添加你的 Vercel AI Gateway API 密钥。该密钥用于向 Vercel AI Gateway 验证你的应用。
+
+<Snippet text="touch .env.local" />
+
+编辑 `.env.local` 文件：
+
+```env filename=".env.local"
+AI_GATEWAY_API_KEY=your_api_key_here
+```
+
+将 `your_api_key_here` 替换为你实际的 Vercel AI Gateway API 密钥。
+
+<Note className="mb-4">
+  AI SDK 的 Vercel AI Gateway Provider 是默认的全局提供商（provider），因此你可以在模型配置中用简单的字符串访问模型。如果你更希望直接使用 OpenAI 等特定提供商，请参阅[提供商管理](/docs/ai-sdk-core/provider-management)文档。
+</Note>
+
+## 实现计划
+
+要构建一个多模态智能体，你需要：
+
+- 创建一个 Route Handler 来处理传入的聊天消息并生成响应。
+- 连接 UI 以显示聊天消息、提供用户输入，并处理新消息的提交。
+- 添加上传图像和 PDF 并将它们附加到聊天消息的能力。
+
+## 创建 Route Handler
+
+创建路由处理器 `app/api/chat/route.ts` 并添加以下代码：
+
+```tsx filename="app/api/chat/route.ts"
+import {
+  streamText,
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  toUIMessageStream,
+  type UIMessage,
+} from 'ai';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: 'openai/gpt-6-astra',
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+}
+```
+
+来看看这段代码中发生了什么：
+
+1. 定义一个异步的 `POST` 请求处理器，并从请求体中提取 `messages`。`messages` 变量包含你与智能体之间的对话历史，为智能体提供进行下一次生成所需的上下文。
+2. 使用 `convertToModelMessages` 将 UI 消息转换为模型消息，它把面向 UI 的消息格式转换为语言模型期望的格式。
+3. 调用从 `ai` 包导入的 [`streamText`](/docs/reference/ai-sdk-core/stream-text)。该函数接受一个配置对象，其中包含 `model` 提供商和 `messages`（在第 2 步中转换）。你可以传入额外的[设置](/docs/ai-sdk-core/settings)来进一步定制模型的行为。
+4. `streamText` 函数返回一个 [`StreamTextResult`](/docs/reference/ai-sdk-core/stream-text#result-object)。把它的 `stream` 传给 `toUIMessageStream`，再用 `createUIMessageStreamResponse` 返回，即可创建一个流式响应对象。
+5. 最后，把结果返回给客户端以流式传输响应。
+
+这个 Route Handler 在 `/api/chat` 创建了一个 POST 请求端点。
+
+## 连接 UI
+
+现在你有了一个可以查询大语言模型（LLM）的 Route Handler，接下来搭建前端。[ AI SDK UI ](/docs/ai-sdk-ui) 把聊天接口的复杂性抽象进一个 Hook——[`useChat`](/docs/reference/ai-sdk-ui/use-chat)。
+
+用以下代码更新你的根页面（`app/page.tsx`），以显示聊天消息列表并提供用户消息输入：
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(m => (
+        <div key={m.id} className="whitespace-pre-wrap">
+          {m.role === 'user' ? 'User: ' : 'AI: '}
+          {m.parts.map((part, index) => {
+            if (part.type === 'text') {
+              return <span key={`${m.id}-text-${index}`}>{part.text}</span>;
+            }
+            return null;
+          })}
+        </div>
+      ))}
+
+      <form
+        onSubmit={async event => {
+          event.preventDefault();
+          sendMessage({
+            role: 'user',
+            parts: [{ type: 'text', text: input }],
+          });
+          setInput('');
+        }}
+        className="fixed bottom-0 w-full max-w-md mb-8 border border-gray-300 rounded shadow-xl"
+      >
+        <input
+          className="w-full p-2"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.target.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+<Note>
+  确保在文件顶部添加 `"use client"` 指令。这让你可以通过 JavaScript 添加交互性。
+</Note>
+
+该页面使用了 `useChat` Hook，并配置 `DefaultChatTransport` 来指定 API 端点。`useChat` Hook 提供了多个实用函数和状态变量：
+
+- `messages` - 当前的聊天消息（由带有 `id`、`role` 和 `parts` 属性的对象组成的数组）。
+- `sendMessage` - 向 AI 发送新消息的函数。
+- 每条消息包含一个 `parts` 数组，可以包括文本、图像、PDF 和其他内容类型。
+- 文件在发送前会转换为 data URL，以保持跨环境的兼容性。
+
+## 添加文件上传
+
+为了让你的智能体具备多模态能力，我们来添加向模型上传和发送图像与 PDF 的功能。在 v5 中，文件作为消息 `parts` 数组的一部分发送。文件在发送到服务器之前会使用 FileReader API 转换为 data URL。
+
+用以下代码更新你的根页面（`app/page.tsx`）：
+
+```tsx filename="app/page.tsx" highlight="4-5,10-12,15-39,46-81,87-97"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useRef, useState } from 'react';
+import Image from 'next/image';
+
+async function convertFilesToDataURLs(files: FileList) {
+  return Promise.all(
+    Array.from(files).map(
+      file =>
+        new Promise<{
+          type: 'file';
+          mediaType: string;
+          url: string;
+        }>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            resolve({
+              type: 'file',
+              mediaType: file.type,
+              url: reader.result as string,
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        }),
+    ),
+  );
+}
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+  });
+
+  return (
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map(m => (
+        <div key={m.id} className="whitespace-pre-wrap">
+          {m.role === 'user' ? 'User: ' : 'AI: '}
+          {m.parts.map((part, index) => {
+            if (part.type === 'text') {
+              return <span key={`${m.id}-text-${index}`}>{part.text}</span>;
+            }
+            if (part.type === 'file' && part.mediaType?.startsWith('image/')) {
+              return (
+                <Image
+                  key={`${m.id}-image-${index}`}
+                  src={part.url}
+                  width={500}
+                  height={500}
+                  alt={`attachment-${index}`}
+                />
+              );
+            }
+            if (part.type === 'file' && part.mediaType === 'application/pdf') {
+              return (
+                <iframe
+                  key={`${m.id}-pdf-${index}`}
+                  src={part.url}
+                  width={500}
+                  height={600}
+                  title={`pdf-${index}`}
+                />
+              );
+            }
+            return null;
+          })}
+        </div>
+      ))}
+
+      <form
+        className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl space-y-2"
+        onSubmit={async event => {
+          event.preventDefault();
+
+          const fileParts =
+            files && files.length > 0
+              ? await convertFilesToDataURLs(files)
+              : [];
+
+          sendMessage({
+            role: 'user',
+            parts: [{ type: 'text', text: input }, ...fileParts],
+          });
+
+          setInput('');
+          setFiles(undefined);
+
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }}
+      >
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          className=""
+          onChange={event => {
+            if (event.target.files) {
+              setFiles(event.target.files);
+            }
+          }}
+          multiple
+          ref={fileInputRef}
+        />
+        <input
+          className="w-full p-2"
+          value={input}
+          placeholder="Say something..."
+          onChange={e => setInput(e.target.value)}
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+在这段代码中，你：
+
+1. 添加了一个辅助函数 `convertFilesToDataURLs`，用于把上传的文件转换为 data URL。
+1. 创建了保存输入文本、文件的状态，以及指向文件输入框的 ref。
+1. 配置 `useChat` 并通过 `DefaultChatTransport` 指定 API 端点。
+1. 使用 `parts` 数组结构显示消息，恰当地渲染文本、图像和 PDF。
+1. 更新 `onSubmit` 函数，使用 `sendMessage` 发送消息，同时包含文本和文件部分。
+1. 在表单中添加了文件输入框，包括一个 `onChange` 处理器来处理文件状态的更新。
+
+## 运行你的应用
+
+至此，多模态智能体所需的一切都已构建完成！使用以下命令启动应用：
+
+<Snippet text="pnpm run dev" />
+
+打开浏览器并访问 http://localhost:3000。你会看到一个输入框和一个上传文件的按钮。
+
+试着上传一张图像或 PDF 并就此向模型提问。看看模型的响应流式传回给你！
+
+## 使用其他提供商
+
+借助 AI SDK 统一的提供商接口，你可以轻松切换到其他支持多模态能力的提供商：
+
+```tsx filename="app/api/chat/route.ts"
+// Using Anthropic
+const result = streamText({
+  model: 'anthropic/claude-sonnet-5.5',
+  messages: await convertToModelMessages(messages),
+});
+
+// Using Google
+const result = streamText({
+  model: 'google/gemini-3.8-flash',
+  messages: await convertToModelMessages(messages),
+});
+```
+
+安装提供商包（`@ai-sdk/anthropic` 或 `@ai-sdk/google`）并更新 `.env.local` 中的 API 密钥。其余代码保持不变。
+
+<Note>
+  不同提供商的文件大小限制和性能特征可能各不相同。具体细节请查阅[提供商文档](/providers/ai-sdk-providers)。
+</Note>
+
+## 下一步
+
+你已经使用 AI SDK 构建了一个多模态 AI 智能体！继续探索[工具调用](/docs/ai-sdk-core/tools-and-tool-calling)，进一步实验和扩展本应用的功能。

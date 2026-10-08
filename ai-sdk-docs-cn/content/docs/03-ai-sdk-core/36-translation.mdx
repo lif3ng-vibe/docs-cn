@@ -1,0 +1,178 @@
+---
+title: 翻译
+description: 了解如何使用 AI SDK 进行语音翻译。
+---
+
+# Translation
+
+<Note type="warning">语音翻译是一项实验性（experimental）功能。</Note>
+
+AI SDK 提供了 [`experimental_streamTranslate`](/docs/reference/ai-sdk-core/stream-translate) 函数，用于将实时语音翻译成另一种语言。翻译是一种仅支持流式的模态：模型将实时源音频翻译为目标语言的音频和文本。
+
+`experimental_streamTranslate` 构建在语音翻译模型规范（`Experimental_SpeechTranslationModelV4`）之上。
+
+<Note>
+  语音翻译模型规范的提供商实现单独发布。传入任何实现了 `Experimental_SpeechTranslationModelV4` 的模型实例即可——可用的翻译模型请参阅你所用提供商的文档。
+</Note>
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import { experimental_streamTranslate as streamTranslate } from 'ai';
+
+const result = streamTranslate({
+  model: openai.translation('gpt-realtime-translate'),
+  audio: audioStream, // ReadableStream<Uint8Array | string>
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  targetLanguage: 'es',
+});
+
+for await (const part of result.fullStream) {
+  if (part.type === 'output-text-delta') {
+    process.stdout.write(part.delta);
+  }
+
+  if (part.type === 'audio') {
+    // translated audio chunk (Uint8Array or base64 string)
+  }
+
+  if (part.type === 'source-transcript-final') {
+    console.log('source:', part.text);
+  }
+}
+
+console.log(await result.translationText);
+```
+
+`audio` 流必须包含原始音频数据块。`Uint8Array` 数据块是原始字节；`string` 数据块是 base64 编码的原始字节。请始终设置 `inputAudioFormat`，使其与你发送的数据块相匹配。
+
+`targetLanguage`（以及可选的 `sourceLanguage`）是 BCP-47 风格的语言标签（例如 `en`、`es`、`fr-CA`）。支持的取值由提供商决定，并由提供商进行校验。
+
+当未提供 `sourceLanguage` 时，提供商会自动检测源语言。
+
+`fullStream` 是一个单消费者（single-consumer）的实时流，只能访问一次。当你既需要流式部分又需要最终结果时，请先访问 `fullStream`，并在消费它的同时或之后等待结果 promise。如果先访问结果 promise，流会在内部被消费，`fullStream` 将不再可用。这样可以避免为实时音频保留无上限的重放缓冲区。
+
+访问最终翻译元数据：
+
+```ts
+const sourceText = await result.sourceText; // final source-language transcript
+const translationText = await result.translationText; // final translated text
+const durationInSeconds = await result.durationInSeconds; // duration of the source audio in seconds, if available
+const usage = await result.usage; // audio/text token usage, if reported
+```
+
+当至少发出了一个 `audio` 部分，或最终输出文本非空时，翻译流即被视为成功。对于仅产生音频输出的提供商，`translationText` 可能会解析为空字符串。
+
+## 流式部分
+
+`fullStream` 会产出以下部分类型：
+
+- `audio`：目标语言的已翻译音频数据块。
+- `output-text-delta`：只增不改的已翻译文本增量。
+- `output-text-final`：某个提供商定义的分段或话语的最终翻译文本。
+- `source-transcript-delta`：只增不改的源转写增量。
+- `source-transcript-partial`：非最终的源转写文本，可能会被后续部分修订。
+- `source-transcript-final`：某个提供商定义的分段或话语的最终源转写文本。
+- `raw`：启用 `includeRawChunks` 时的原始提供商数据块。
+- `error`：流式错误。
+
+输出文本是只增不改的：提供商流式发出 `output-text-delta` 部分，并按话语用 `output-text-final` 收尾。目前的设计中没有针对输出文本的部分/修订类型。
+
+## 设置
+
+### 输出音频格式
+
+使用 `outputAudioFormat` 为翻译后的音频数据块请求特定的音频格式。未设置时，将使用提供商的默认输出格式。
+
+```ts highlight="8"
+import { openai } from '@ai-sdk/openai';
+import { experimental_streamTranslate as streamTranslate } from 'ai';
+
+const result = streamTranslate({
+  model: openai.translation('gpt-realtime-translate'),
+  audio: audioStream,
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  outputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  targetLanguage: 'es',
+});
+```
+
+### 提供商特定设置
+
+翻译模型通常具有提供商或模型特定的设置，你可以通过 `providerOptions` 参数来设置它们。
+
+```ts highlight="9-13"
+import { openai } from '@ai-sdk/openai';
+import { experimental_streamTranslate as streamTranslate } from 'ai';
+
+const result = streamTranslate({
+  model: openai.translation('gpt-realtime-translate'),
+  audio: audioStream,
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  targetLanguage: 'es',
+  providerOptions: {
+    openai: {
+      // provider-specific options
+    },
+  },
+});
+```
+
+### 中止信号
+
+传入 `abortSignal` 以取消翻译：
+
+```ts highlight="9"
+import { openai } from '@ai-sdk/openai';
+import { experimental_streamTranslate as streamTranslate } from 'ai';
+
+const result = streamTranslate({
+  model: openai.translation('gpt-realtime-translate'),
+  audio: audioStream,
+  inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+  targetLanguage: 'es',
+  abortSignal: AbortSignal.timeout(60_000), // abort after 1 minute
+});
+```
+
+### 错误处理
+
+当 `experimental_streamTranslate` 无法产生翻译时——未发出任何 `audio` 部分且最终输出文本为空，或流在没有 finish 事件的情况下结束——它会抛出 [`AI_NoTranslationGeneratedError`](/docs/reference/ai-sdk-errors/ai-no-translation-generated-error) 错误。
+
+该错误会保留以下信息，帮助你记录问题：
+
+- `response`：关于语音翻译模型响应的元数据，包括时间戳、模型和请求头。
+- `cause`：错误的原因。你可以用它进行更细致的错误处理。
+
+```ts
+import { openai } from '@ai-sdk/openai';
+import {
+  experimental_streamTranslate as streamTranslate,
+  NoTranslationGeneratedError,
+} from 'ai';
+
+try {
+  const result = streamTranslate({
+    model: openai.translation('gpt-realtime-translate'),
+    audio: audioStream,
+    inputAudioFormat: { type: 'audio/pcm', rate: 24000 },
+    targetLanguage: 'es',
+  });
+
+  console.log(await result.translationText);
+} catch (error) {
+  if (NoTranslationGeneratedError.isInstance(error)) {
+    console.log('NoTranslationGeneratedError');
+    console.log('Cause:', error.cause);
+    console.log('Response:', error.response);
+  }
+}
+```
+
+## 翻译模型
+
+| 提供商 | 模型 |
+| --- | --- |
+| [OpenAI](/providers/ai-sdk-providers/openai#翻译模型) | `gpt-realtime-translate` |
+| [Google](/providers/ai-sdk-providers/google#翻译模型) | `gemini-3.5-live-translate-preview` |
+
+以上仅是 AI SDK 各提供商所支持的翻译模型中的一小部分。更多信息请参阅相应提供商的文档。

@@ -1,0 +1,188 @@
+---
+title: OpenCode
+description: 了解如何使用 OpenCode harness 适配器。
+---
+
+# OpenCode Harness
+
+OpenCode harness 适配器通过 `@opencode-ai/sdk` 将 `HarnessAgent` 连接到 OpenCode。该适配器在沙箱内运行一个桥接进程，在该沙箱中启动 OpenCode 服务器，并通过沙箱暴露的 WebSocket 将 OpenCode 会话事件流式传回宿主。
+
+<Note>
+  Harness 包目前处于**实验性**阶段。随着这一早期 API 的进一步打磨，各版本之间可能出现破坏性变更。
+</Note>
+
+## 安装
+
+<InstallPackages packages="@ai-sdk/harness @ai-sdk/harness-opencode @ai-sdk/sandbox-vercel" />
+
+首次会话启动时，适配器会在沙箱内自举 OpenCode 桥接依赖。桥接包依赖 `@opencode-ai/sdk` 与 `opencode-ai`。
+
+## 导入
+
+```ts
+import { openCode, createOpenCode } from '@ai-sdk/harness-opencode';
+```
+
+`openCode` 等价于使用默认配置的 `createOpenCode()`。
+
+## 基本用法
+
+```ts
+import { HarnessAgent } from '@ai-sdk/harness/agent';
+import { openCode } from '@ai-sdk/harness-opencode';
+import { createVercelNetworkSandboxSession } from '@ai-sdk/sandbox-vercel';
+
+const agent = new HarnessAgent({
+  harness: openCode,
+  model: 'anthropic/claude-sonnet-4-6',
+});
+
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+const session = await agent.createSession({ sandboxSession });
+
+let exitCode = 0;
+try {
+  const result = await agent.stream({
+    session,
+    prompt: 'Check the test failures and fix the production code.',
+  });
+
+  for await (const part of result.stream) {
+    if (part.type === 'text-delta') {
+      process.stdout.write(part.text);
+    }
+  }
+} catch (err) {
+  exitCode = 1;
+  console.error(err);
+} finally {
+  await session.destroy();
+  await sandboxSession.destroy();
+  process.exit(exitCode);
+}
+```
+
+要使用该智能体（agent），请确保环境变量中包含用于 Vercel Sandbox 的 `VERCEL_OIDC_TOKEN`，以及[身份验证](#身份验证)一节中列出的任一 OpenCode 变量。
+
+## 适配器设置
+
+使用 `createOpenCode()` 配置运行时：
+
+```ts
+const harness = createOpenCode({
+  reasoningVariant: 'high',
+  openCodeConfig: {
+    agent: {
+      general: {
+        model: 'openai/gpt-5.4-mini',
+      },
+    },
+  },
+});
+```
+
+设置项：
+
+- `auth`：身份验证模式（`auto`、`anthropic`、`openai` 或 `ai-gateway`）或隔离的身份验证环境。
+- `credentialForwarding`：可选的同步或异步回调，在 harness 适配器将每个凭据转发进沙箱进程之前对其进行定制。它会收到本应转发的凭据值（真实凭据或掩码值）以及用于暴露该凭据的环境变量名。该回调只控制转发进沙箱进程的值，不会限制 harness 适配器能在宿主进程中发现、读取或以其他方式访问哪些凭据。
+- `mcpServers`：以服务器名为键的 MCP 服务器定义。
+- `openCodeConfig`：额外的原生 OpenCode 配置。适配器托管的设置优先。智能体本地的 `permission` 与已弃用的 `tools` 设置会被忽略，因此它们无法绕过 harness 权限或内置工具过滤。
+- `provider`：当 `HarnessAgent` 上的 `model` 未带前缀时使用的提供商 id。
+- `reasoningVariant`：受支持模型的 OpenCode 推理/思考变体，例如 `low`、`medium` 或 `high`。
+- `port`：覆盖桥接端口。
+- `startupTimeoutMs`：等待桥接启动的最长时间。
+- `reconnect`：已建立的桥接 WebSocket 连接断开后的重连时机。`maxElapsedMs` 控制总重试窗口（包括建立连接与退避延迟），默认为 30 秒。`initialDelayMs` 默认为 50 毫秒，`maxDelayMs` 默认为 2 秒。这些重试采用指数退避，与 `startupTimeoutMs` 相互独立。当沙箱、桥接进程或桥接端点永久不可用时，重试无法恢复。
+- `mintBridgeToken`：同步函数，接收沙箱 id 并返回桥接身份验证令牌。默认情况下，适配器会生成随机的 32 字节令牌。自定义实现必须返回足够保密的令牌。
+
+## 结构化输出
+
+OpenCode 支持基于 schema 的 [`HarnessAgent` 结构化输出](/docs/ai-sdk-harnesses/harness-agent#生成结构化输出)。适配器使用 OpenCode 的 `json_schema` 提示词格式，并将校验通过的 `structured` 结果作为 JSON 文本返回。
+
+## 身份验证
+
+`auth` 设置决定如何从宿主环境解析凭据：
+
+- `auto`（默认）：可用时使用 AI Gateway 凭据，否则使用所选模型提供商的凭据。
+- `anthropic`：使用 Anthropic 凭据。
+- `openai`：使用 OpenAI 凭据。
+- `ai-gateway`：使用 AI Gateway 凭据。
+
+当沙箱支持附加式请求变换时，桥接收到的是占位符，适配器会将凭据注入匹配的出站请求。不具备该能力的沙箱仍采用直接凭据转发。
+
+支持的环境变量：
+
+- `AI_GATEWAY_API_KEY`
+- `AI_GATEWAY_BASE_URL`
+- `VERCEL_OIDC_TOKEN`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_AUTH_TOKEN`
+- `ANTHROPIC_BASE_URL`
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL`
+- `OPENAI_ORGANIZATION`
+- `OPENAI_PROJECT`
+
+如果未设置任何适用的凭据环境变量，除非选择了 AI Gateway 身份验证，否则适配器会尝试从宿主系统解析原生订阅。
+
+在不希望自动检测时，可选择特定的身份验证模式：
+
+```ts
+const anthropicHarness = createOpenCode({ auth: 'anthropic' });
+const openAIHarness = createOpenCode({ auth: 'openai' });
+const gatewayHarness = createOpenCode({ auth: 'ai-gateway' });
+```
+
+传入一个身份验证环境，即可在不读取 `process.env` 的情况下使用以编程方式解析的凭据：
+
+```ts
+const harness = createOpenCode({
+  auth: { OPENAI_API_KEY: await resolveOpenAIToken() },
+  provider: 'openai',
+});
+```
+
+所提供的记录会替代宿主环境用于身份验证发现。只有可识别的身份验证变量会被转发。
+
+对于 OpenAI 兼容端点，请选择 `openai` 并设置 `OPENAI_BASE_URL`。
+
+## 沙箱
+
+OpenCode 需要至少暴露一个端口的网络沙箱，例如 `@ai-sdk/sandbox-vercel`：
+
+```ts
+const sandboxSession = await createVercelNetworkSandboxSession({
+  runtime: 'node24',
+  ports: [4000],
+  template: await agent.getSandboxTemplate(),
+});
+```
+
+## 内置工具
+
+适配器通过 `agent.tools` 暴露以下常用的 OpenCode 内置工具：
+
+- `read`
+- `write`
+- `edit`
+- `bash`
+- `glob`
+- `grep`
+- `ls`
+- `webfetch`
+- `skill`
+- `todowrite`
+- `agent`
+
+不符合常见工具形态的其他 OpenCode 内置工具也可能出现在 `agent.tools` 中。
+
+当 `permissionMode` 为 `allow-reads` 或 `allow-edits` 时，OpenCode 支持内置工具审批请求。宿主执行的 AI SDK 工具审批同样有效。
+
+## 相关内容
+
+- [HarnessAgent](/docs/ai-sdk-harnesses/harness-agent)
+- [Harness 工具](/docs/ai-sdk-harnesses/tools)
+- [Harness 适配器](/docs/ai-sdk-harnesses/harness-adapters)

@@ -1,0 +1,155 @@
+---
+title: Braintrust
+description: 使用 Braintrust 监控并追踪 LLM 应用
+---
+
+# Braintrust 可观测性
+
+Braintrust 是一个用于构建 AI 应用的端到端平台。在使用 AI SDK 构建时，你可以集成 Braintrust 来[记录](https://www.braintrust.dev/docs/guides/logging)（log）、监控真实场景中的交互，并对其采取行动。
+
+## 安装
+
+Braintrust 原生支持 OpenTelemetry，无论通过 Next.js 还是 Node.js，都能与 AI SDK 开箱即用。
+
+### Next.js
+
+如果你使用 Next.js，可以将 Braintrust 导出器与 `@vercel/otel` 搭配使用：
+
+```typescript filename="instrumentation"
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { registerOTel } from '@vercel/otel';
+import { BraintrustExporter } from 'braintrust';
+
+registerTelemetry(new LegacyOpenTelemetry());
+
+export function register() {
+  registerOTel({
+    serviceName: 'my-braintrust-app',
+    traceExporter: new BraintrustExporter({
+      parent: 'project_name:your-project-name',
+      filterAISpans: true, // Only send AI-related spans
+    }),
+  });
+}
+```
+
+被追踪的 LLM 调用会出现在 `parent` 字段所提供的 Braintrust 项目或实验（experiment）之下。
+
+集成注册完成后，遥测（telemetry）数据会被自动捕获。你可以通过 `context` 选项传入额外的元数据：
+
+```typescript
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-luna'),
+  prompt: 'What is 2 + 2?',
+  context: {
+    query: 'weather',
+    location: 'San Francisco',
+  },
+});
+```
+
+<Note>
+该集成支持 `streamText` 等流式函数。每次流式调用都会在 Braintrust 中生成 `ai.streamText` span。
+
+```typescript
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
+
+  const result = await streamText({
+    model: openai('gpt-6-luna'),
+    prompt,
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+</Note>
+
+### Node.js
+
+如果你在 Node.js 中不使用框架，则必须直接配置 `NodeSDK`。在这种情况下，使用 `BraintrustSpanProcessor` 会更直接。
+
+首先，安装必要的依赖：
+
+```bash
+npm install ai @ai-sdk/openai @ai-sdk/otel braintrust @opentelemetry/sdk-node @opentelemetry/sdk-trace-base zod
+```
+
+然后，设置 OpenTelemetry SDK：
+
+```typescript
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { registerTelemetry, generateText, tool, isStepCount } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+import { BraintrustSpanProcessor } from 'braintrust';
+
+const sdk = new NodeSDK({
+  spanProcessors: [
+    new BraintrustSpanProcessor({
+      parent: 'project_name:your-project-name',
+      filterAISpans: true,
+    }),
+  ],
+});
+
+sdk.start();
+registerTelemetry(new LegacyOpenTelemetry());
+
+async function main() {
+  const result = await generateText({
+    model: openai('gpt-6-luna'),
+    messages: [
+      {
+        role: 'user',
+        content: 'What are my orders and where are they? My user ID is 123',
+      },
+    ],
+    tools: {
+      listOrders: tool({
+        description: 'list all orders',
+        inputSchema: z.object({ userId: z.string() }),
+        execute: async ({ userId }) =>
+          `User ${userId} has the following orders: 1`,
+      }),
+      viewTrackingInformation: tool({
+        description: 'view tracking information for a specific order',
+        inputSchema: z.object({ orderId: z.string() }),
+        execute: async ({ orderId }) =>
+          `Here is the tracking information for ${orderId}`,
+      }),
+    },
+    context: {
+      something: 'custom',
+      someOtherThing: 'other-value',
+    },
+    telemetry: {
+      functionId: 'my-awesome-function',
+    },
+    stopWhen: isStepCount(10),
+  });
+
+  await sdk.shutdown();
+}
+
+main().catch(console.error);
+```
+
+## 资源
+
+要看分步示例，请查看 Braintrust 的 [cookbook](https://www.braintrust.dev/docs/cookbook/recipes/OTEL-logging)。
+
+在 Braintrust 中记录你的应用之后，还可以探索其他工作流，例如：
+
+- 向你的库中添加[工具](https://www.braintrust.dev/docs/guides/functions/tools)，并在[实验](https://www.braintrust.dev/docs/guides/evals)与[演练场](https://www.braintrust.dev/docs/guides/playground)中使用它们
+- 创建[自定义评分器](https://www.braintrust.dev/docs/guides/functions/scorers)来评估 LLM 调用的质量
+- 将你的日志添加到[数据集](https://www.braintrust.dev/docs/guides/datasets)，并运行评估来比较不同模型与提示词

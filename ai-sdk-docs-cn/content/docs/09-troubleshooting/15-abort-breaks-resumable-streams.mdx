@@ -1,0 +1,69 @@
+---
+title: 中止与可恢复流
+description: 排查可恢复流的中止与停止行为
+---
+
+# Abort and resumable streams
+
+## 问题
+
+使用 `useChat` 并设置 `resume: true` 进行流恢复时，客户端侧的中止会被视为断开连接。关闭标签页、刷新页面、跳转离开或调用 `stop()` 都会关闭当前的 HTTP 连接，但不应该取消底层正在进行的生成。
+
+如果你的应用将请求的中止信号传递给了模型调用，断开连接可能会取消流恢复所期望继续运行的工作。如果你的停止按钮只调用 `stop()`，服务器端的生成可能会继续进行，客户端也可能重新连接到同一个活跃流。
+
+```tsx
+const { messages, stop } = useChat({
+  id: chatId,
+  resume: true, // Stream resumption enabled
+});
+
+// stop() only aborts the current client request.
+// It is not a server-side cancellation request.
+```
+
+## 背景
+
+流恢复允许客户端在原始连接关闭后重新连接到活跃流。为此，服务器需要让流生产者持续运行，即使当前没有客户端连接。
+
+这意味着路由清理、页面卸载和网络断开都应当被视为可恢复的断开连接。而用户显式取消则需要一个单独的服务器端信号，用于取消活跃的生产者并清除存储的活跃流引用。
+
+## 解决方案
+
+使用 `resume: true` 在断开后重新连接，并为用户显式取消添加一个专用的停止端点。
+
+停止端点应当：
+
+1. 加载对话并读取其活跃流 ID
+2. 如果客户端发送了最新的部分助手消息，则将其持久化
+3. 取消正在产生流的工作
+4. 仅当活跃流引用仍指向同一个流时才将其清除
+
+在客户端，先调用你的停止端点，再停止本地对话流：
+
+```tsx
+const chat = useChat({
+  id: chatId,
+  resume: true,
+});
+
+async function stopStream() {
+  await fetch(`/api/chat/${chatId}/stop`, { method: 'POST' });
+  chat.stop();
+}
+```
+
+将页面跳转与停止行为区分开。不要在路由清理代码、页面卸载处理器或组件卸载清理中调用停止端点。这些事件属于断开连接，应当保持可恢复。
+
+如果你不需要流恢复，只想要客户端侧的取消，可以禁用 `resume` 并直接使用 `stop()`：
+
+```tsx
+const { messages, sendMessage, stop } = useChat({
+  id: chatId,
+  resume: false, // Disable stream resumption (default behavior)
+});
+```
+
+## 相关内容
+
+- [聊天机器人恢复流](/docs/ai-sdk-ui/chatbot-resume-streams)
+- [停止流](/docs/advanced/stopping-streams)

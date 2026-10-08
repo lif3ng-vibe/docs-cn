@@ -1,0 +1,27 @@
+---
+title: AI_InvalidToolInputError
+description: 了解如何修复 AI_InvalidToolInputError
+---
+
+# AI_InvalidToolInputError
+
+当提供了无效的工具输入时会引发此错误。
+
+## 属性
+
+- `toolName`：输入无效的工具名称
+- `toolInput`：无效的工具输入
+- `message`：错误消息
+- `cause`：错误原因
+
+## 排查此错误
+
+你可以使用以下方式检查错误是否为 `AI_InvalidToolInputError` 的实例：
+
+```typescript
+import { InvalidToolInputError } from 'ai';
+
+if (InvalidToolInputError.isInstance(error)) {
+  // Handle the error
+}
+```

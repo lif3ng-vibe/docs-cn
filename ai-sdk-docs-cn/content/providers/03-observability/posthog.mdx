@@ -1,0 +1,170 @@
+---
+title: PostHog
+description: 使用 PostHog 监控并分析 LLM 用量
+---
+
+# PostHog LLM Analytics
+
+[PostHog](https://posthog.com/) 是一个开源的产品分析平台。借助 PostHog LLM Analytics 集成，你可以把 LLM 用量与产品分析放在一起追踪，理解 AI 功能如何影响用户行为。PostHog 提供：
+
+- [LLM 分析](https://posthog.com/docs/llm-analytics/start-here)——按模型与用户统计的成本、延迟与 token 用量
+- [产品分析](https://posthog.com/docs/product-analytics)——把 AI 用量与用户行为及业务指标关联起来
+- [实验](https://posthog.com/docs/experiments)——对提示词（prompt）、模型与 AI 功能进行 A/B 测试
+
+## 安装
+
+PostHog 通过 [OpenTelemetry](https://opentelemetry.io/docs/) 支持 [AI SDK 遥测数据](/docs/ai-sdk-core/telemetry)。`@posthog/ai` 包中的 `PostHogTraceExporter` 会把 `gen_ai.*` span 发送到 PostHog 的 OTLP 摄取端点，并在那里被自动转换为 `$ai_generation` 事件。
+
+<Tabs items={["Next.js", "Node.js"]}>
+<Tab>
+
+Next.js 通过 [instrumentation hook](https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry) 内置支持 OpenTelemetry 埋点。
+
+**第 1 步。** 安装依赖
+
+```bash
+npm install @posthog/ai @opentelemetry/sdk-node @opentelemetry/resources @ai-sdk/otel
+```
+
+**第 2 步。** 在项目根目录创建 `instrumentation.ts` 文件，并在你的 OTel 配置旁注册 AI SDK 遥测集成：
+
+```ts filename="instrumentation.ts"
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { PostHogTraceExporter } from '@posthog/ai/otel';
+
+registerTelemetry(new LegacyOpenTelemetry());
+
+export function register() {
+  const sdk = new NodeSDK({
+    resource: resourceFromAttributes({
+      'service.name': 'my-nextjs-app',
+    }),
+    traceExporter: new PostHogTraceExporter({
+      apiKey: process.env.POSTHOG_API_KEY!,
+      host: 'https://us.i.posthog.com', // use https://eu.i.posthog.com for EU
+    }),
+  });
+  sdk.start();
+}
+```
+
+**第 3 步。** 在 Route Handler 或 Server Action 中使用启用了遥测的 AI SDK
+
+```ts highlight="6-11"
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me a fun fact about hedgehogs.',
+  telemetry: {
+    functionId: 'my-ai-function',
+    metadata: {
+      posthog_distinct_id: 'user_123', // optional: links events to a PostHog user
+    },
+  },
+});
+```
+
+</Tab>
+<Tab>
+
+**第 1 步。** 安装依赖
+
+```bash
+npm install @posthog/ai @opentelemetry/sdk-node @opentelemetry/resources @ai-sdk/otel
+```
+
+**第 2 步。** 使用 PostHog 的 trace 导出器初始化 OpenTelemetry SDK
+
+```ts filename="tracing.ts"
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { PostHogTraceExporter } from '@posthog/ai/otel';
+import { registerTelemetry } from 'ai';
+import { LegacyOpenTelemetry } from '@ai-sdk/otel';
+
+const sdk = new NodeSDK({
+  resource: resourceFromAttributes({
+    'service.name': 'my-ai-app',
+  }),
+  traceExporter: new PostHogTraceExporter({
+    apiKey: '<your-posthog-project-api-key>',
+    host: 'https://us.i.posthog.com', // use https://eu.i.posthog.com for EU
+  }),
+});
+sdk.start();
+registerTelemetry(new LegacyOpenTelemetry());
+```
+
+**第 3 步。** 使用 AI SDK。集成注册后，遥测数据会被自动捕获：
+
+```ts highlight="6-12"
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Tell me a fun fact about hedgehogs.',
+  telemetry: {
+    functionId: 'my-ai-function',
+    metadata: {
+      posthog_distinct_id: 'user_123', // optional: links events to a PostHog user
+    },
+  },
+});
+
+console.log(result.text);
+
+await sdk.shutdown();
+```
+
+</Tab>
+</Tabs>
+
+<Note>
+  该集成支持 `streamText` 等流式函数。每次流式
+  调用都会生成 `ai.streamText` span，并被 PostHog 捕获。
+</Note>
+
+## 配置
+
+### 将事件关联到 PostHog 用户
+
+在 `metadata` 字段中传入 `posthog_distinct_id`，即可把 LLM 事件与 PostHog 中的特定用户关联起来。如果省略，事件将以匿名方式捕获。
+
+```ts highlight="6"
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a short story about a cat.',
+  telemetry: {
+    metadata: {
+      posthog_distinct_id: 'user_123',
+    },
+  },
+});
+```
+
+### 隐私控制
+
+把 `recordInputs` 和 `recordOutputs` 设为 `false`，即可关闭输入与输出的记录：
+
+```ts highlight="5-6"
+const result = await generateText({
+  model: openai('gpt-6-astra'),
+  prompt: 'Write a short story about a cat.',
+  telemetry: {
+    recordInputs: false,
+    recordOutputs: false,
+  },
+});
+```
+
+## 资源
+
+- [PostHog LLM analytics 文档](https://posthog.com/docs/llm-analytics/start-here)
+- [PostHog AI SDK 包](https://www.npmjs.com/package/@posthog/ai)
+- [PostHog](https://posthog.com/)

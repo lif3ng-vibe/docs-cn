@@ -1,0 +1,116 @@
+---
+title: streamText 多步 Cookbook
+description: 了解如何创建多个具有不同设置的 streamText 步骤
+tags: ['next', 'streaming']
+---
+
+# streamText 多步智能体
+
+你可能希望在流中划分不同的步骤，让每个步骤拥有不同的设置，例如不同的模型、工具或系统提示词。
+
+在合并进 `UIMessageStream` 时使用 `createUIMessageStream` 以及 `sendFinish` / `sendStart` 选项，你就可以控制 finish 和 start 事件何时发送到客户端，从而在单条助手 UI 消息中实现多个不同的步骤。
+
+## 服务器
+
+```typescript filename='app/api/chat/route.ts'
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  tool,
+} from 'ai';
+import { z } from 'zod';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      const modelMessages = await convertToModelMessages(messages);
+
+      // step 1 example: forced tool call
+      const result1 = streamText({
+        model: 'openai/gpt-6-luna',
+        instructions: 'Extract the user goal from the conversation.',
+        messages: modelMessages,
+        toolChoice: 'required', // force the model to call a tool
+        tools: {
+          extractGoal: tool({
+            inputSchema: z.object({ goal: z.string() }),
+            execute: async ({ goal }) => goal, // no-op extract tool
+          }),
+        },
+      });
+
+      // forward the initial result to the client without the finish event:
+      writer.merge(
+        toUIMessageStream({ stream: result1.stream, sendFinish: false }),
+      );
+
+      // note: you can use any programming construct here, e.g. if-else, loops, etc.
+      // workflow programming is normal programming with this approach.
+
+      // example: continue stream with forced tool call from previous step
+      const result2 = streamText({
+        // different system prompt, different model, no tools:
+        model: 'openai/gpt-6-astra',
+        instructions:
+          'You are a helpful assistant with a different system prompt. Repeat the extract user goal in your answer.',
+        // continue the workflow stream with the messages from the previous step:
+        messages: [...modelMessages, ...(await result1.response).messages],
+      });
+
+      // forward the 2nd result to the client (incl. the finish event):
+      writer.merge(
+        toUIMessageStream({ stream: result2.stream, sendStart: false }),
+      );
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
+}
+```
+
+## 客户端
+
+```tsx filename="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage } = useChat();
+
+  return (
+    <div>
+      {messages?.map(message => (
+        <div key={message.id}>
+          <strong>{`${message.role}: `}</strong>
+          {message.parts.map((part, index) => {
+            switch (part.type) {
+              case 'text':
+                return <span key={index}>{part.text}</span>;
+              case 'tool-extractGoal': {
+                return <pre key={index}>{JSON.stringify(part, null, 2)}</pre>;
+              }
+            }
+          })}
+        </div>
+      ))}
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input value={input} onChange={e => setInput(e.currentTarget.value)} />
+      </form>
+    </div>
+  );
+}
+```

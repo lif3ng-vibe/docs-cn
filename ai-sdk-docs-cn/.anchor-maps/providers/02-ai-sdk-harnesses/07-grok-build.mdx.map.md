@@ -1,0 +1,10 @@
+Setup | 安装 | 安装
+Import | 导入 | 导入
+Basic Usage | 基本用法 | 基本用法
+Adapter Settings | 适配器设置 | 适配器设置
+Structured Output | 结构化输出 | 结构化输出
+Authentication | 身份验证 | 身份验证
+Sandbox | 沙箱 | 沙箱
+Built-in Tools | 内置工具 | 内置工具
+Known Limitations | 已知限制 | 已知限制
+Related | 相关内容 | 相关内容

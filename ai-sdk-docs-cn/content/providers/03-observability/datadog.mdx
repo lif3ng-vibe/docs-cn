@@ -1,0 +1,219 @@
+---
+title: Datadog Agent Observability
+description: 使用 Datadog Agent Observability 追踪并监控 AI SDK 应用
+---
+
+# Datadog Agent Observability
+
+[Datadog Agent Observability](https://docs.datadoghq.com/llm_observability/) 帮助 AI 工程师、数据科学家与应用开发者快速开发、评估并监控智能体（agent）应用。借助结构化实验、跨 AI 智能体的端到端追踪以及评估，你可以放心地改进输出质量、性能、成本与整体风险。
+
+Datadog Agent Observability 完整支持：
+
+- 成本追踪
+- 提示词（prompt）追踪与管理
+- 在线与离线评估
+- 实验
+
+## 安装
+
+### 1. 账户设置与 API key
+
+如果还没有 Datadog 账户，请[创建 Datadog 账户](https://www.datadoghq.com/)，并[开通一个 API key](https://docs.datadoghq.com/account_management/api-app-keys/#api-keys)。
+
+### 2. 选择发送追踪数据的方式
+
+- [使用 OpenTelemetry](#opentelemetry)，通过 OTLP 导出器把 AI SDK 的 GenAI span 发送到 Datadog。
+- [使用 `dd-trace`](#datadog-agent-observability-sdk-dd-trace)（Datadog Agent Observability SDK）直接发送到 Datadog Agent Observability。
+
+除上述安装步骤外，使用 `ai` SDK 无需任何改动。
+
+### OpenTelemetry
+
+Datadog 接受遵循 [OpenTelemetry GenAI 语义约定](https://docs.datadoghq.com/llm_observability/instrument/otel_instrumentation/)的 span。请使用来自 `@ai-sdk/otel` 的 AI SDK `OpenTelemetry` 集成。
+
+<Tabs items={["Next.js", "Node.js"]}>
+
+<Tab>
+
+安装 OpenTelemetry 相关包：
+
+```bash
+npm install @ai-sdk/otel @opentelemetry/api @vercel/otel
+```
+
+在 AI SDK OpenTelemetry 集成之前注册 OpenTelemetry provider：
+
+```ts filename="instrumentation.ts"
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { registerTelemetry } from 'ai';
+import { OTLPHttpProtoTraceExporter, registerOTel } from '@vercel/otel';
+
+export function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const ddSite = process.env.DD_SITE || 'datadoghq.com';
+
+    registerOTel({
+      serviceName: 'my-ai-app',
+      traceExporter: new OTLPHttpProtoTraceExporter({
+        url: `https://otlp.${ddSite}/v1/traces`,
+        headers: {
+          'dd-api-key': process.env.DD_API_KEY!,
+          'dd-otlp-source': 'llmobs',
+        },
+      }),
+    });
+
+    registerTelemetry(new OpenTelemetry());
+  }
+}
+```
+
+</Tab>
+
+<Tab>
+
+安装 OpenTelemetry SDK 与 HTTP/protobuf 导出器：
+
+```bash
+npm install @ai-sdk/otel @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-proto
+```
+
+创建一个埋点模块，在注册 AI SDK 集成之前启动 Node.js 的 OpenTelemetry SDK：
+
+```js filename="instrumentation.mjs"
+import { OpenTelemetry } from '@ai-sdk/otel';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { registerTelemetry } from 'ai';
+
+const ddSite = process.env.DD_SITE || 'datadoghq.com';
+
+export const sdk = new NodeSDK({
+  serviceName: 'my-ai-app',
+  traceExporter: new OTLPTraceExporter({
+    url: `https://otlp.${ddSite}/v1/traces`,
+    headers: {
+      'dd-api-key': process.env.DD_API_KEY,
+      'dd-otlp-source': 'llmobs',
+    },
+  }),
+});
+
+sdk.start();
+registerTelemetry(new OpenTelemetry());
+```
+
+在 shell 环境中设置 `DD_API_KEY` 与 `DD_SITE`，然后在应用启动之前加载该埋点模块：
+
+```bash
+node --import ./instrumentation.mjs your-app.mjs
+```
+
+对于脚本，可以从埋点模块导入 `sdk`，并在所有 AI SDK 调用与流结束后调用 `await sdk.shutdown()`。参见 [OpenTelemetry NodeSDK 参考](https://open-telemetry.github.io/opentelemetry-js/classes/_opentelemetry_sdk-node.NodeSDK.html)。
+
+</Tab>
+
+</Tabs>
+
+将 `DD_SITE` 设置为你的 Datadog 账户所配置的数据中心。
+
+`serviceName` 在 OpenTelemetry 中标识应用。Datadog 使用根 span 的服务在 Agent Observability 中设置 `ml_app` 值。
+
+### Datadog Agent Observability SDK（`dd-trace`）
+
+<Note>
+  该 tracer 不支持 Edge 运行时路由；发起 AI SDK 调用的路由请使用 Node.js 运行时。
+</Note>
+
+```bash
+npm install dd-trace
+```
+
+<Tabs items={["Next.js", "Node.js"]}>
+
+<Tab>
+
+将 `dd-trace` 与 `ai` 加入 `next.config.ts` 的 `serverExternalPackages`，以便它们能被正确地自动埋点。
+
+```ts filename="next.config.ts"
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  serverExternalPackages: ['dd-trace', 'ai'],
+};
+
+export default nextConfig;
+```
+
+在 Next.js 进程启动之前设置这些变量：
+
+```bash
+DD_LLMOBS_ENABLED=1
+DD_LLMOBS_ML_APP=my-ai-app
+DD_SITE=<YOUR_DATADOG_SITE>
+DD_API_KEY=<YOUR_DATADOG_API_KEY>
+```
+
+在应用的 `app` 或 `pages` 目录旁创建 `instrumentation.ts`：
+
+```ts filename="instrumentation.ts"
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const initializeImportName = 'dd-trace/initialize.mjs';
+    await import(initializeImportName as string);
+  }
+}
+```
+
+如果你的环境可以设置 `NODE_OPTIONS`，建议改用它来代替 `instrumentation.ts` 方案：
+
+```bash
+NODE_OPTIONS="--import dd-trace/initialize.mjs"
+```
+
+在启动 Next.js 进程之前，在同一个环境中设置该选项及其他 Datadog 变量。这会让 `dd-trace` 尽早加载，从而对服务端调用进行埋点。
+
+</Tab>
+
+<Tab>
+
+在启动 Node.js 进程之前，在 shell 中设置这些变量：
+
+```bash
+export DD_LLMOBS_ENABLED=1
+export DD_LLMOBS_AGENTLESS_ENABLED=true
+export DD_LLMOBS_ML_APP=my-ai-app
+export DD_SITE='<YOUR_DATADOG_SITE>'
+export DD_API_KEY='<YOUR_DATADOG_API_KEY>'
+```
+
+`DD_LLMOBS_AGENTLESS_ENABLED` 会在没有 Datadog Agent 的情况下把追踪数据直接发送到 Datadog。这遵循 Datadog 的 [AI SDK 集成设置](https://docs.datadoghq.com/integrations/vercel-ai-sdk/)。
+
+在应用导入 AI SDK 之前加载 `dd-trace`：
+
+```bash
+node --import dd-trace/initialize.mjs app.mjs
+```
+
+参见 [Datadog Node.js 快速上手](https://docs.datadoghq.com/llm_observability/quickstart/?tab=nodejs)。
+
+</Tab>
+
+</Tabs>
+
+## 故障排查
+
+看不到追踪数据？尝试以下选项来帮助调试：
+
+- 如果使用 `dd-trace`，可开启调试日志（`DD_TRACE_DEBUG=true`）以查看详细的 tracer 执行日志
+- 再次确认你的 API key 与 Datadog site 设置正确
+- 确保在初始化 Datadog Agent Observability 或 OpenTelemetry SDK 之前，所有环境变量都已设置
+
+如需更多帮助，可以提交 [GitHub issue](https://github.com/DataDog/dd-trace-js/issues) 或[支持工单](https://www.datadoghq.com/support/)。
+
+## 资源
+
+- [Datadog Agent Observability Next.js 埋点指南](https://docs.datadoghq.com/llm_observability/guide/nextjs_guide/?tab=nodeoptions)
+- [Datadog Agent Observability `dd-trace` 自动埋点的 AI SDK 支持](https://docs.datadoghq.com/llm_observability/instrument/auto_instrumentation?tab=nodejs#vercel-ai-sdk)
+- [Datadog Agent Observability OpenTelemetry 指南](https://docs.datadoghq.com/llm_observability/instrument/otel_instrumentation/?tab=python)
+- [Datadog Agent Observability Node.js SDK 参考](https://docs.datadoghq.com/llm_observability/instrument/sdk?tab=nodejs)

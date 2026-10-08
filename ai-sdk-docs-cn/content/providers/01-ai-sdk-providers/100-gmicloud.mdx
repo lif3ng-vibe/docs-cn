@@ -1,0 +1,70 @@
+---
+title: GMI Cloud
+description: 了解如何在 AI SDK 中使用 GMI Cloud 的模型。
+---
+
+# GMI Cloud 提供商
+
+[GMI Cloud](https://www.gmicloud.ai) 提供商通过 GMI Cloud 的 GPU 推理平台，经由 OpenAI 兼容 API 提供对开放权重语言模型的访问。
+
+API 密钥可从 [GMI Cloud 控制台](https://console.gmicloud.ai)获取。
+
+## 安装
+
+GMI Cloud 提供商可通过 `@ai-sdk/gmicloud` 模块获取，可以通过以下方式安装：
+
+<InstallPackages packages="@ai-sdk/gmicloud" />
+
+## 提供商实例
+
+你可以从 `@ai-sdk/gmicloud` 导入默认提供商实例 `gmicloud`：
+
+```ts
+import { gmicloud } from '@ai-sdk/gmicloud';
+```
+
+如需自定义配置，可以导入 `createGmicloud`，并用你的设置创建提供商实例：
+
+```ts
+import { createGmicloud } from '@ai-sdk/gmicloud';
+
+const gmicloud = createGmicloud({
+  apiKey: process.env.GMI_CLOUD_APIKEY ?? '',
+});
+```
+
+你可以使用以下可选设置来自定义 GMI Cloud 提供商实例：
+
+- **baseURL** _string_
+
+  为 API 调用使用不同的 URL 前缀。默认前缀为 `https://api.gmi-serving.com/v1`。
+
+- **apiKey** _string_
+
+  通过 `Authorization` 请求头发送的 API 密钥。默认取 `GMI_CLOUD_APIKEY` 环境变量。
+
+- **headers** _Record&lt;string,string&gt;_
+
+  请求中包含的自定义请求头。
+
+- **fetch** _FetchFunction_
+
+  自定义 fetch 实现。
+
+## 语言模型
+
+```ts
+import { gmicloud } from '@ai-sdk/gmicloud';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: gmicloud('deepseek-ai/DeepSeek-V4-Flash-0731'),
+  prompt: 'What is the capital of France?',
+});
+```
+
+GMI Cloud 提供的开放权重模型目录持续更新，因此模型 ID 的类型为 `string`。不支持嵌入和图像模型。
+
+## 错误诊断
+
+GMI Cloud 的边缘层在拒绝请求时会在 `error.message` 中报告一条通用信息，并把后端引擎的诊断信息嵌套在 `error.details` 中。该提供商会解包嵌套的诊断信息，因此 `AI_APICallError.message` 会携带引擎的具体原因（例如 `The request is invalid: Invalid max_tokens value, the valid range of max_tokens is [1, 393216].`），而不是 `Backend request failed with status 400`。

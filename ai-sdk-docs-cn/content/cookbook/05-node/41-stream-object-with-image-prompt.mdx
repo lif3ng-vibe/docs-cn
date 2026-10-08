@@ -1,0 +1,114 @@
+---
+title: 使用图像提示词流式输出结构化对象
+description: 了解如何结合 AI SDK 与 Node，使用图像提示词流式输出结构化数据
+tags: ['node', 'streaming', 'structured data', 'multimodal']
+---
+
+# Stream Object with Image Prompt
+
+某些支持视觉能力的语言模型可以接受图像作为提示词（prompt）的一部分。以下是在输入中包含图像时可使用的几种不同[格式](/docs/reference/ai-sdk-core/generate-text#content-image)。
+
+## URL
+
+```ts file='index.ts'
+import { streamText, Output } from 'ai';
+import dotenv from 'dotenv';
+import { z } from 'zod';
+
+dotenv.config();
+
+async function main() {
+  const { partialOutputStream } = streamText({
+    model: 'openai/gpt-4.1',
+    maxOutputTokens: 512,
+    output: Output.object({
+      schema: z.object({
+        stamps: z.array(
+          z.object({
+            country: z.string(),
+            date: z.string(),
+          }),
+        ),
+      }),
+    }),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'list all the stamps in these passport pages?',
+          },
+          {
+            type: 'file',
+            mediaType: 'image/jpeg',
+            data: new URL(
+              'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/WW2_Spanish_official_passport.jpg/1498px-WW2_Spanish_official_passport.jpg',
+            ),
+          },
+        ],
+      },
+    ],
+  });
+
+  for await (const partialObject of partialOutputStream) {
+    console.clear();
+    console.log(partialObject);
+  }
+}
+
+main();
+```
+
+## 文件缓冲区
+
+```ts file='index.ts'
+import { streamText, Output } from 'ai';
+import dotenv from 'dotenv';
+import { z } from 'zod';
+import fs from 'fs';
+
+dotenv.config();
+
+async function main() {
+  const { partialOutputStream } = streamText({
+    model: 'openai/gpt-4.1',
+    maxOutputTokens: 512,
+    output: Output.object({
+      schema: z.object({
+        stamps: z.array(
+          z.object({
+            country: z.string(),
+            date: z.string(),
+          }),
+        ),
+      }),
+    }),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'list all the stamps in these passport pages?',
+          },
+          {
+            type: 'file',
+            mediaType: 'image/png',
+            data: fs.readFileSync('./data/passport.png', {
+              encoding: 'base64',
+            }),
+          },
+        ],
+      },
+    ],
+  });
+
+  for await (const partialObject of partialOutputStream) {
+    console.clear();
+    console.log(partialObject);
+  }
+}
+
+main();
+```

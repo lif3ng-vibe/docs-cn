@@ -1,0 +1,88 @@
+---
+title: QVAC
+description: 了解如何使用 QVAC 提供商。
+---
+
+# QVAC 提供商
+
+[QVAC](https://qvac.tether.io) 是一个开源、跨平台的运行时，面向本地优先、点对点的 AI——大语言模型（LLM）、嵌入（embedding）、语音转写（transcription）、翻译、语音和图像生成，全部在用户自己的硬件上运行。
+
+[`@qvac/ai-sdk-provider`](https://www.npmjs.com/package/@qvac/ai-sdk-provider) 是 [`@ai-sdk/openai-compatible`](https://www.npmjs.com/package/@ai-sdk/openai-compatible) 的品牌化封装，它指向本地以 `qvac serve openai` 启动的 HTTP 服务器，并重新导出 QVAC 带类型的模型元数据。
+
+<Note>
+  该提供商连接的是本地 OpenAI 兼容服务器。使用前请先安装
+  [`@qvac/cli`](https://www.npmjs.com/package/@qvac/cli)，并用 `qvac
+  serve openai` 启动服务。
+</Note>
+
+## 设置
+
+QVAC 提供商包含在 `@qvac/ai-sdk-provider` 模块中。安装方式如下：
+
+<Tabs items={['pnpm', 'npm', 'yarn', 'bun']}>
+  <Tab>
+    <Snippet
+      text="pnpm add @qvac/ai-sdk-provider ai @ai-sdk/openai-compatible"
+      dark
+    />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="npm install @qvac/ai-sdk-provider ai @ai-sdk/openai-compatible"
+      dark
+    />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="yarn add @qvac/ai-sdk-provider ai @ai-sdk/openai-compatible"
+      dark
+    />
+  </Tab>
+  <Tab>
+    <Snippet
+      text="bun add @qvac/ai-sdk-provider ai @ai-sdk/openai-compatible"
+      dark
+    />
+  </Tab>
+</Tabs>
+
+`ai` 和 `@ai-sdk/openai-compatible` 是对等依赖（peer dependencies）——需要一并安装。
+
+## 提供商实例
+
+从 `@qvac/ai-sdk-provider` 导入 `createQvac`，并创建一个指向正在运行的 `qvac serve openai` 的提供商实例：
+
+```ts
+import { createQvac } from '@qvac/ai-sdk-provider';
+
+const qvac = createQvac({
+  baseURL: 'http://127.0.0.1:11434/v1', // match your `qvac serve` port
+  apiKey: 'qvac', // anything non-empty; serve does not validate
+});
+```
+
+## 语言模型
+
+向提供商实例传入一个 `qvac serve` 别名即可创建模型：
+
+```ts
+import { createQvac } from '@qvac/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const qvac = createQvac({
+  baseURL: 'http://127.0.0.1:11434/v1',
+  apiKey: 'qvac',
+});
+
+const { text } = await generateText({
+  model: qvac('qwen3.5-0.8b'),
+  prompt: 'Write a haiku about local-first AI.',
+});
+
+console.log(text);
+```
+
+## 更多资源
+
+- [QVAC](https://qvac.tether.io)
+- [npm 包](https://www.npmjs.com/package/@qvac/ai-sdk-provider)

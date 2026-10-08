@@ -1,0 +1,99 @@
+---
+title: toolSearch
+description: 搜索延迟加载的工具并按需加载其定义，用于直接调用或 code mode。
+---
+
+# `toolSearch()`
+
+创建一个工具，用于搜索当前生成过程中的延迟加载工具（deferred tools），默认使用关键词匹配，也可使用自定义搜索回调。可与 `generateText`、`streamText`、`ToolLoopAgent` 或 `@ai-sdk/workflow` 中的 `WorkflowAgent` 搭配使用。
+`WorkflowAgent` 支持直接工具调用。其他 API 也支持通过 `toolDiscovery: 'conversation'` 配置的 code mode。
+
+```ts
+import { toolSearch } from 'ai';
+
+const search = toolSearch();
+```
+
+直接调用与 code mode 的示例（包括 code mode 如何保留工具定义缓存）请参阅[工具搜索指南](/docs/ai-sdk-core/tool-search)。
+
+## 选项
+
+可传入一个可选的配置对象来控制结果上限：
+
+```ts
+const search = toolSearch({ maxResults: 10 });
+```
+
+`maxResults` 是每次搜索返回并发现的最大匹配工具数量。默认值为 `5`，必须为正的安全整数。创建搜索工具时，无效值会抛出 `InvalidArgumentError`。面向模型的描述会反映所配置的上限。
+
+该上限同时适用于默认关键词搜索和自定义搜索回调，且不会改变它们的匹配或排序方式。已发现的工具会在多次搜索间累积，因此这并不是对一次生成期间加载工具总数的限制。
+
+传入 `search` 回调可以基于应用自身的搜索逻辑来筛选和排序工具。回调可以同步或异步返回：
+
+```ts
+const search = toolSearch({
+  search: ({ query, tools }) => {
+    const preferred = /\bgmail\b/i.test(query)
+      ? ['gmail_list_messages', 'gmail_get_message']
+      : [];
+    return preferred.filter(name => tools.some(tool => tool.name === name));
+  },
+});
+```
+
+回调的签名如下：
+
+```ts
+search?: (options: {
+  query: string;
+  tools: Array<{ name: string; description?: string }>;
+}) => string[] | PromiseLike<string[]>;
+```
+
+`tools` 包含所有符合条件的延迟加载工具（在关键词匹配或排序之前）。资格判定遵循 `activeTools` 与调用方路由。描述会使用当前的工具上下文与沙箱解析；schema 不包含在内。
+
+按排序后的顺序返回工具名称。SDK 会忽略未知或不合格的名称，在保持顺序的情况下去重，并保留前 `maxResults` 个有效名称（默认 5 个）。返回的描述来自 SDK 的候选目录。返回空数组则不会发现任何工具。回调错误遵循正常的工具执行错误处理；
+SDK 不会回退到关键词搜索。
+
+不传回调时，`toolSearch()` 使用下文描述的默认关键词搜索。
+
+## 模型输入
+
+模型向搜索工具提供以下输入：
+
+```json
+{ "query": "weather forecast" }
+```
+
+`query` 是必填的非空字符串。默认情况下，搜索在本地进行且不区分大小写，匹配工具名称和描述中的词。驼峰式命名的名称会被拆分为单词。名称匹配的排名高于描述匹配；得分相同时保持注册顺序。函数描述会使用当前的工具上下文与沙箱解析。默认搜索不使用嵌入（embedding）服务，也不会发起额外的模型调用。自定义回调则可以两者都用。
+
+## 输出
+
+```ts
+{
+  tools: [
+    { name: 'getForecast', description: 'Get the weather forecast for a city.' },
+  ],
+}
+```
+
+结果最多包含 `maxResults` 个匹配工具（默认 5 个），附带名称和可选描述。结果不包含 schema。无匹配时返回
+`{ tools: [] }`。
+每个返回的匹配都会进入发现队列。新发现的工具只能在其定义被提供之后的下一个模型步骤中调用。与搜索同属一个响应的并行调用无法使用新发现的工具。对于 code mode，请结束当前执行并等待能力更新。
+
+## 发现生命周期
+
+在下一个模型步骤之前，SDK 会通过各工具配置的调用方式使已发现的工具可用：
+
+- **直接调用**：提供商收到更新后的工具定义。
+- **Code mode**：SDK 会追加一条包含更新后能力目录的用户消息。对提供商可见的 code mode
+  定义保持不变。已有的目录会保留在对话中；最新的目录描述当前完整可用的工具集合。
+
+实际的提示词缓存复用取决于提供商。code mode 搜索仍需要
+`toolDiscovery: 'conversation'`；不支持描述发现与提供商调用方式。
+
+在生成的剩余过程中，已发现的工具保持加载状态（受
+`activeTools` 约束）。搜索无法发现被 `activeTools` 排除的工具。发现
+状态在多次生成调用之间相互隔离，包括复用同一 agent 或工具实例的调用。
+
+在 `generateText` 和 `streamText` 中设置多步 `stopWhen` 条件，让模型能够先搜索、再使用发现的工具并给出回答。

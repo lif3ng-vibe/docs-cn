@@ -1,0 +1,69 @@
+---
+title: AI_UIMessageStreamError
+description: 了解如何修复 AI_UIMessageStreamError
+---
+
+# AI_UIMessageStreamError
+
+当 UI 消息流（UI message stream）报告错误，或包含无效、乱序的分块（chunk）时，会发生此错误。
+
+常见原因：
+
+- 在补全数据流中收到 `error` 分块
+- 在没有前置 `text-start` 分块的情况下收到 `text-delta` 分块
+- 在没有前置 `text-start` 分块的情况下收到 `text-end` 分块
+- 在没有前置 `reasoning-start` 分块的情况下收到 `reasoning-delta` 分块
+- 在没有前置 `reasoning-start` 分块的情况下收到 `reasoning-end` 分块
+- 在没有前置 `tool-input-start` 分块的情况下收到 `tool-input-delta` 分块
+- 尝试访问一个不存在的工具调用
+
+当上游请求**在任何 token 被流式输出之前**就失败，而自定义传输层（transport）又试图在缺少正确 start 分块的情况下向 UI 流写入内联错误消息时，此错误经常出现。
+
+## 属性
+
+- `chunkType`：导致错误的分块类型（例如 `text-delta`、`reasoning-end`、`tool-input-delta`）
+- `chunkId`：与出错分块关联的 ID（part ID 或 toolCallId）。
+  对于本身没有 ID 的分块（例如补全中的 `error` 分块），该值为空字符串。
+- `message`：包含出错详情的错误消息
+
+## 排查此错误
+
+你可以使用以下方式检查某个错误是否为 `AI_UIMessageStreamError` 的实例：
+
+```typescript
+import { UIMessageStreamError } from 'ai';
+
+if (UIMessageStreamError.isInstance(error)) {
+  console.log('Chunk type:', error.chunkType);
+  console.log('Chunk ID:', error.chunkId);
+  // Handle the error
+}
+```
+
+## 常见解决方案
+
+1. **确保分块顺序正确**：对于同一个 ID，始终先发送 `*-start` 分块，再发送任何 `*-delta` 或 `*-end` 分块：
+
+   ```typescript
+   // Correct order
+   writer.write({ type: 'text-start', id: 'my-text' });
+   writer.write({ type: 'text-delta', id: 'my-text', delta: 'Hello' });
+   writer.write({ type: 'text-end', id: 'my-text' });
+   ```
+
+2. **核对 ID 一致**：确保 `*-delta` 与 `*-end` 分块中使用的 `id` 与对应 `*-start` 分块中使用的 `id` 一致。
+
+3. **正确处理错误路径**：在自定义传输层中写入错误消息时，确保发出完整的 start/delta/end 序列：
+
+   ```typescript
+   // When handling errors in custom transports
+   writer.write({ type: 'text-start', id: errorId });
+   writer.write({
+     type: 'text-delta',
+     id: errorId,
+     delta: 'Request failed...',
+   });
+   writer.write({ type: 'text-end', id: errorId });
+   ```
+
+4. **检查流的生成逻辑**：审查你的流式实现，确保分块按正确顺序发送，尤其是在存在并发操作或合并流的情况下。

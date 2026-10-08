@@ -1,0 +1,57 @@
+---
+title: readUIMessageStream
+description: readUIMessageStream 的 API 参考。
+---
+
+# readUIMessageStream
+
+将 `UIMessageChunk` 流转换为 `UIMessage` 的 `AsyncIterableStream`。
+
+UI 消息流在聊天场景之外也很有用，例如终端 UI、客户端上的自定义流消费，或 RSC（React 服务器组件）。
+
+## 导入
+
+```tsx
+import { readUIMessageStream } from 'ai';
+```
+
+## API 签名
+
+### 参数
+
+<PropertiesTable
+  content={[
+    {
+      name: 'message',
+      type: 'UIMessage',
+      isOptional: true,
+      description:
+        '在恢复对话时用作起点的最后一条助手消息。否则为 undefined。',
+    },
+    {
+      name: 'stream',
+      type: 'ReadableStream<UIMessageChunk>',
+      description: '要读取的 UIMessageChunk 对象流。',
+    },
+    {
+      name: 'onError',
+      type: '(error: unknown) => void',
+      isOptional: true,
+      description:
+        '在流处理过程中发生错误时调用的函数。',
+    },
+    {
+      name: 'terminateOnError',
+      type: 'boolean',
+      isOptional: true,
+      description:
+        '发生错误时是否终止流。默认为 false。',
+    },
+  ]}
+/>
+
+### 返回值
+
+一个由 `UIMessage` 组成的 `AsyncIterableStream`。每个流片段代表同一条消息在补全过程中的不同状态。
+
+完整的示例与用例，请参阅[读取 UI 消息流](/docs/ai-sdk-ui/reading-ui-message-streams)。

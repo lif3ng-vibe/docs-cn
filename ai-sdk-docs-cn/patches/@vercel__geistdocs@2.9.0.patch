@@ -1,0 +1,29 @@
+diff --git a/dist/internal/chat/message-actions.js b/dist/internal/chat/message-actions.js
+index 0abb5934d9b3e35f810d1a4e8745b10215574643..f1364dcbaf6df3e443e2dbbecdb989b82d4f1ce4 100644
+--- a/dist/internal/chat/message-actions.js
++++ b/dist/internal/chat/message-actions.js
+@@ -9,7 +9,8 @@ import { Tooltip } from "#geistdocs-ui/components/tooltip";
+ import { cn } from "#geistdocs-ui/utils";
+ import { getPublicPath } from "../../config";
+ import { useGeistdocsConfig } from "../config-context";
+-import { sendChatMessageFeedback } from "../feedback-action";
++// 静态导出镜像补丁：同 feedback-action，桩掉 Server Action 引用。
++const sendChatMessageFeedback = async () => ({ success: false });
+ import { isActiveAssistantMessage } from "./activity";
+ import { buildChatMessageFeedback, readMessageFeedbackVote, withMessageFeedbackVote, } from "./message-feedback";
+ import { getMessageMarkdown } from "./message-text";
+diff --git a/dist/internal/page-actions-client.js b/dist/internal/page-actions-client.js
+index 5d8c21582b183f6be498df1205cd1d247b44eed6..768ed312ae18051485480a6f150e73b1a358e45a 100644
+--- a/dist/internal/page-actions-client.js
++++ b/dist/internal/page-actions-client.js
+@@ -9,7 +9,9 @@ import { Button } from "#geistdocs-ui/components/button";
+ import { Textarea } from "#geistdocs-ui/components/textarea";
+ import { cn } from "#geistdocs-ui/utils";
+ import { useGeistdocsChatContext } from "./chat/context";
+-import { sendFeedback } from "./feedback-action";
++// 静态导出镜像补丁：feedback 的 Server Action 与 output:export 不兼容，
++// 反馈功能已通过 config.feedback.enabled=false 关闭，此处直接桩掉。
++const sendFeedback = async () => ({ success: false });
+ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, } from "./ui/dropdown-menu";
+ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+ import { useIsMobile } from "./use-mobile";

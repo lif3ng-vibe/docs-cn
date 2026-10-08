@@ -1,0 +1,7 @@
+experimental_getRealtimeToolDefinitions | experimental_getRealtimeToolDefinitions | experimental_getrealtimetooldefinitions
+`experimental_getRealtimeToolDefinitions()` | `experimental_getRealtimeToolDefinitions()` | experimental_getrealtimetooldefinitions
+Import | 导入 | 导入
+API Signature | API 签名 | api-签名
+Parameters | 参数 | 参数
+Returns | 返回值 | 返回值
+Notes | 说明 | 说明

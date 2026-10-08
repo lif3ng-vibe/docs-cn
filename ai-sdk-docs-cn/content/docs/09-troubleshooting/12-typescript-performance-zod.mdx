@@ -1,0 +1,46 @@
+---
+title: Zod 与 AI SDK 5 的 TypeScript 性能问题
+description: 排查 Zod 搭配 AI SDK 5 使用时 TypeScript 服务器崩溃与性能缓慢的问题
+---
+
+# TypeScript performance issues with Zod and AI SDK 5
+
+## 问题
+
+将 AI SDK 5 与 Zod 一起使用时，你可能会遇到：
+
+- TypeScript 服务器崩溃或挂起
+- 导入了 AI SDK 函数的文件类型检查极其缓慢
+- 类似 "Type instantiation is excessively deep and possibly infinite" 的错误信息
+- 编写 AI SDK 代码时 IDE 失去响应
+
+## 背景
+
+AI SDK 5 对 Zod 版本有特定的兼容性要求。当使用标准导入路径（`import { z } from 'zod'`）导入 Zod 时，TypeScript 的类型推断可能变得过于复杂，从而导致性能下降或崩溃。
+
+## 解决方案
+
+### 将 Zod 升级到 4.1.8 或更高版本
+
+主要解决方案是升级到 Zod 4.1.8 或更高版本，其中包含针对此模块解析问题的修复：
+
+```bash
+pnpm add zod@^4.1.8
+```
+
+此版本解决了底层问题：不同的模块解析设置导致 TypeScript 重复加载同一份 Zod 声明，进而引发开销巨大的结构化比较。
+
+### 替代方案：更新 TypeScript 配置
+
+如果无法升级 Zod，可以更新你的 `tsconfig.json`，使用 `moduleResolution: "nodenext"`：
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "nodenext"
+    // ... other options
+  }
+}
+```
+
+这可以解决 TypeScript 性能问题，同时让你继续使用标准的 Zod 导入。

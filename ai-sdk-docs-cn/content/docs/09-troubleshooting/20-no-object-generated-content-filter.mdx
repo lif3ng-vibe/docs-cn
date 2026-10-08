@@ -1,0 +1,76 @@
+---
+title: 使用 OpenAI 时对象生成失败
+description: 排查使用 OpenAI 结构化输出时因 Zod schema 类型不兼容导致的 NoObjectGeneratedError（finish reason 为 content-filter）
+---
+
+# Object generation failed with OpenAI
+
+## 问题
+
+使用 OpenAI 进行结构化输出生成时，你可能会遇到 finish reason 为 `content-filter` 的 `NoObjectGeneratedError`。当你的 Zod schema 包含 OpenAI 结构化输出功能无法处理的类型时，就会出现此错误。
+
+```typescript
+// Problematic code - incompatible schema types
+import { generateText, Output } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: openai('gpt-4o-2024-08-06'),
+  output: Output.object({
+    schema: z.object({
+      name: z.string().nullish(), // ❌ .nullish() is not supported
+      email: z.string().optional(), // ❌ .optional() is not supported
+      age: z.number().nullable(), // ✅ .nullable() is supported
+    }),
+  }),
+  prompt: 'Generate a user profile',
+});
+
+// Error: NoObjectGeneratedError: No object generated.
+// Finish reason: content-filter
+```
+
+## 背景
+
+OpenAI 的结构化输出生成底层使用 JSON Schema，对 schema 兼容性有特定要求。Zod 的 `.nullish()` 和 `.optional()` 方法生成的 JSON Schema 模式与 OpenAI 的实现不兼容，导致模型拒绝该 schema 并返回 content-filter 的 finish reason。
+
+## 解决方案
+
+在对 OpenAI 模型使用结构化输出生成时，把 Zod schema 中的 `.nullish()` 和 `.optional()` 替换为 `.nullable()`。
+
+```typescript
+import { generateText, Output } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+
+// Correct approach - use .nullable()
+const result = await generateText({
+  model: openai('gpt-4o-2024-08-06'),
+  output: Output.object({
+    schema: z.object({
+      name: z.string().nullable(), // ✅ Use .nullable() instead of .nullish()
+      email: z.string().nullable(), // ✅ Use .nullable() instead of .optional()
+      age: z.number().nullable(),
+    }),
+  }),
+  prompt: 'Generate a user profile',
+});
+
+console.log(result.output);
+// { name: "John Doe", email: "john@example.com", age: 30 }
+// or { name: null, email: null, age: 25 }
+```
+
+### Schema 类型对比
+
+| Zod 类型      | 是否兼容 | JSON Schema 行为                                  |
+| ------------- | ---------- | ------------------------------------------------------ |
+| `.nullable()` | ✅ 是     | 允许 `null` 或指定类型                    |
+| `.optional()` | ❌ 否      | 字段可被省略（不支持）                   |
+| `.nullish()`  | ❌ 否      | 允许 `null`、`undefined` 或省略（不支持） |
+
+## 相关信息
+
+- 关于结构化输出生成的更多细节，请参阅[生成结构化数据](/docs/ai-sdk-core/generating-structured-data)
+- 关于 OpenAI 特有的结构化输出配置，请参阅 [OpenAI 提供商——结构化输出](/providers/ai-sdk-providers/openai#结构化输出)

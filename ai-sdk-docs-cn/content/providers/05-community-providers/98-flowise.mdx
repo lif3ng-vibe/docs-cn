@@ -1,0 +1,87 @@
+---
+title: Flowise
+description: 了解如何使用 AI SDK 的 Flowise 提供商。
+---
+
+# Flowise 提供商
+
+**[Flowise 提供商](https://github.com/ahmedrowaihi/flowise-ai-sdk-provider)** 让你可以借助 AI SDK 轻松地将 [Flowise](https://flowiseai.com/) 聊天流集成到你的应用中。
+
+## 设置
+
+Flowise 提供商包含在 `@ahmedrowaihi/flowise-vercel-ai-sdk-provider` 模块中。安装方式如下：
+
+<InstallPackages packages="@ahmedrowaihi/flowise-vercel-ai-sdk-provider" />
+
+## 提供商实例
+
+你可以从 `@ahmedrowaihi/flowise-vercel-ai-sdk-provider` 导入提供商工厂：
+
+```ts
+import { createFlowiseProvider } from '@ahmedrowaihi/flowise-vercel-ai-sdk-provider';
+```
+
+## 快速上手
+
+### 使用可复用的提供商
+
+创建一个名为 `.env.local` 的文件，并加入你的 Flowise 配置：
+
+```text
+FLOWISE_BASE_URL=https://your-flowise-instance.com
+FLOWISE_API_KEY=your_api_key_optional
+```
+
+```ts
+import { createFlowiseProvider } from '@ahmedrowaihi/flowise-vercel-ai-sdk-provider';
+import { generateText } from 'ai';
+
+const flowise = createFlowiseProvider({
+  baseUrl: process.env.FLOWISE_BASE_URL!,
+  apiKey: process.env.FLOWISE_API_KEY,
+});
+
+const { text } = await generateText({
+  model: flowise('your-chatflow-id'),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+### 使用一次性模型
+
+```ts
+import { createFlowiseModel } from '@ahmedrowaihi/flowise-vercel-ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: createFlowiseModel({
+    baseUrl: process.env.FLOWISE_BASE_URL!,
+    apiKey: process.env.FLOWISE_API_KEY,
+    chatflowId: 'your-chatflow-id',
+  }),
+  prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+});
+```
+
+### 流式示例
+
+```ts
+import { streamText } from 'ai';
+import { createFlowiseProvider } from '@ahmedrowaihi/flowise-vercel-ai-sdk-provider';
+
+const flowise = createFlowiseProvider({
+  baseUrl: process.env.FLOWISE_BASE_URL!,
+  apiKey: process.env.FLOWISE_API_KEY,
+});
+
+const result = streamText({
+  model: flowise('your-chatflow-id'),
+  prompt: 'Write a story about a robot learning to cook.',
+});
+
+return result.toDataStreamResponse();
+```
+
+## 更多信息
+
+更多信息与高级用法请参阅 [Flowise 提供商文档](https://github.com/ahmedrowaihi/flowise-ai-sdk-provider#readme)。

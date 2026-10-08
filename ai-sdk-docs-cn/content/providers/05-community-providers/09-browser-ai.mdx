@@ -1,0 +1,132 @@
+---
+title: Browser AI
+description: 了解如何在 AI SDK 中使用浏览器 AI 模型提供商。
+---
+
+# Browser AI 模型提供商
+
+[jakobhoeg/browser-ai](https://github.com/jakobhoeg/browser-ai) 是一个社区提供商，作为 AI SDK 在浏览器内运行客户端 AI 模型的基础提供商。
+它目前通过 JavaScript [Prompt API](https://github.com/webmachinelearning/prompt-api) 为 Chrome 与 Edge 的原生浏览器 AI 模型提供模型提供商，同时也为 [🤗 Transformers.js](https://github.com/huggingface/transformers.js) 和 [WebLLM](https://github.com/mlc-ai/web-llm) 这两类浏览器内开源模型提供模型提供商。
+
+### 安装
+
+`@browser-ai/core`（前身为 `@built-in-ai`）包是面向 Chrome 与 Edge 浏览器内置 AI 模型的 AI SDK 提供商。可通过以下方式安装：
+
+<InstallPackages packages="@browser-ai/core" />
+
+`@browser-ai/web-llm` 包是基于 WebLLM 推理引擎、面向热门开源模型的 AI SDK 提供商。可通过以下方式安装：
+
+<InstallPackages packages="@browser-ai/web-llm" />
+
+`@browser-ai/transformers-js` 包是基于 Transformers.js、面向热门开源模型的 AI SDK 提供商。可通过以下方式安装：
+
+<InstallPackages packages="@browser-ai/transformers-js" />
+
+## 提供商实例
+
+### `@browser-ai/core`
+
+你可以从 `@browser-ai/core` 导入默认提供商实例 `browserAI`：
+
+```ts
+import { browserAI } from '@browser-ai/core';
+
+const model = browserAI();
+```
+
+你可以使用以下可选设置来自定义模型：
+
+- **temperature** _number_
+
+  控制模型响应的随机性。对大多数模型而言，`0` 表示结果几乎确定，值越高随机性越大。
+
+- **topK** _number_
+
+  通过限制下一个 token 的选择范围，控制生成文本的多样性与连贯性。
+
+### `@browser-ai/web-llm`
+
+你可以从 `@browser-ai/web-llm` 导入默认提供商实例 `webLLM`：
+
+```ts
+import { webLLM } from '@browser-ai/web-llm';
+
+const model = webLLM();
+```
+
+### `@browser-ai/transformers-js`
+
+你可以从 `@browser-ai/transformers-js` 导入默认提供商实例 `transformersJS`：
+
+```ts
+import { transformersJS } from '@browser-ai/transformers-js';
+
+const model = transformersJS();
+```
+
+## 语言模型
+
+### `@browser-ai/core`
+
+由于模型编排由浏览器本身处理，该提供商在所有支持 Prompt API 的浏览器中均可直接使用。
+例如，客户端使用 Edge 时会调用 [Phi4-mini](https://learn.microsoft.com/en-us/microsoft-edge/web-platform/prompt-api#the-phi-4-mini-model)，使用 Chrome 时则会调用 [Gemini Nano](https://developer.chrome.com/docs/ai/prompt-api#model_download)。
+
+### `@browser-ai/web-llm`
+
+该提供商支持大量热门开源模型，如 Llama3 和 Qwen3。完整列表请参阅官方 [WebLLM 文档](https://github.com/mlc-ai/web-llm)
+
+### `@browser-ai/transformers-js`
+
+该提供商可借助 Transformers.js 库使用 Huggingface 上的大量热门开源模型。
+
+### 使用示例
+
+#### `@browser-ai/core`
+
+```ts
+import { streamText } from 'ai';
+import { browserAI } from '@browser-ai/core';
+
+const result = streamText({
+  model: browserAI(), // will default to the specific browser model
+  prompt: 'Hello, how are you',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+#### `@browser-ai/web-llm`
+
+```ts
+import { streamText } from 'ai';
+import { webLLM } from '@browser-ai/web-llm';
+
+const result = streamText({
+  model: webLLM('Qwen3-0.6B-q0f16-MLC'),
+  prompt: 'Hello, how are you',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+#### `@browser-ai/transformers-js`
+
+```ts
+import { streamText } from 'ai';
+import { transformersJS } from '@browser-ai/transformers-js';
+
+const result = streamText({
+  model: transformersJS('HuggingFaceTB/SmolLM2-360M-Instruct'),
+  prompt: 'Hello, how are you',
+});
+
+for await (const chunk of result.textStream) {
+  console.log(chunk);
+}
+```
+
+更多示例与 API 参考，请查阅[文档](https://www.browser-ai.dev/)。

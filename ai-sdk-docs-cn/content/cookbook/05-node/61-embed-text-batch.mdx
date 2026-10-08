@@ -1,0 +1,32 @@
+---
+title: 批量嵌入文本
+description: 了解如何使用 AI SDK 和 Node 批量嵌入多段文本
+tags: ['node', 'embedding']
+---
+
+# Embed Text in Batch
+
+在处理大型数据集或多段文本时，逐条处理嵌入（embedding）效率低下。批量嵌入允许你同时将多个文本输入转换为嵌入，显著提升性能并减少 API 调用。这在处理文档、聊天消息或任何需要向量化的文本集合时尤为有用。
+
+本示例展示如何使用 AI SDK 在单次操作中嵌入多个文本输入。单个文本嵌入请参阅我们的 [嵌入文本](/cookbook/node/embed-text) 示例；想了解实际应用，请查看我们的 [RAG 示例](/cookbook/node/retrieval-augmented-generation)，其中演示了批量嵌入在文档检索系统中的用法。
+
+```ts
+import { embedMany } from 'ai';
+import 'dotenv/config';
+
+async function main() {
+  const { embeddings, usage } = await embedMany({
+    model: 'openai/text-embedding-3-small',
+    values: [
+      'sunny day at the beach',
+      'rainy afternoon in the city',
+      'snowy night in the mountains',
+    ],
+  });
+
+  console.log(embeddings);
+  console.log(usage);
+}
+
+main().catch(console.error);
+```
