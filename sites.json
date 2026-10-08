@@ -21,6 +21,13 @@
     "repo": "https://github.com/mattpocock/skills"
   },
   {
+    "name": "Agency Agents",
+    "slug": "agency-agents",
+    "desc": "300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。",
+    "orig": "https://github.com/msitarzewski/agency-agents",
+    "repo": "https://github.com/msitarzewski/agency-agents"
+  },
+  {
     "name": "AI 编码词典",
     "slug": "ai-coding-dictionary",
     "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
