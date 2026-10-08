@@ -1,42 +1,42 @@
-// Teach / media-kit resources. Files live in public/teach/.
+// 教学 / 媒体包资源。文件位于 public/teach/（图片素材保持原样，不重绘）。
 
 export interface Diagram {
   slug: string;
   title: string;
   blurb: string;
   hue: number;
-  /** aspect ratio label for the preview frame */
+  /** 预览框的宽高比标签 */
 }
 
 export const diagrams: Diagram[] = [
   {
     slug: 'lifecycle',
-    title: 'The SDLC lifecycle',
-    blurb: 'Define to Ship, one command per phase. The core mental model in a single frame.',
+    title: '软件开发生命周期全景',
+    blurb: '从定义到上线，一个阶段一条命令。核心心智模型浓缩在一帧里。',
     hue: 205,
   },
   {
     slug: 'solo-workflow',
-    title: 'Solo daily loop',
-    blurb: 'How one developer drives spec, build, test, ship, plus the hands-off /build auto option.',
+    title: '个人日常回路',
+    blurb: '一个开发者如何跑完规格、构建、测试、上线，外加“放手不管”的 /build auto 选项。',
     hue: 175,
   },
   {
     slug: 'team-workflow',
-    title: 'Team review panel',
-    blurb: '/ship fans out to four specialist personas in parallel, then merges one go / no-go.',
+    title: '团队评审面板',
+    blurb: '/ship 并行展开四个专项评审角色，最后汇成一条放行 / 叫停结论。',
     hue: 145,
   },
   {
     slug: 'skill-anatomy',
-    title: 'Anatomy of a skill',
-    blurb: 'Frontmatter, workflow, guardrails, and verification. Why a skill is a process, not a prompt.',
+    title: '技能解剖',
+    blurb: 'frontmatter、工作流、护栏与验证。为什么技能是一个流程，而不是一句提示词。',
     hue: 255,
   },
   {
     slug: 'customize',
-    title: 'Four ways to customize',
-    blurb: 'Install all, pick a few, edit them, or write your own. Skills are plain Markdown.',
+    title: '四种自定义方式',
+    blurb: '全装、择几个用、改一改，或自己写。技能就是普通 Markdown。',
     hue: 340,
   },
 ];
@@ -55,29 +55,29 @@ export const decks: Deck[] = [
   {
     slug: 'agent-skills-101',
     level: '101',
-    title: 'Intro: what and why',
-    blurb: 'The problem with default agents, what a skill is, and how to install and get a first win.',
+    title: '入门：是什么，为什么',
+    blurb: '默认状态下智能体的问题、技能是什么，以及怎么安装并拿下第一个胜利。',
     slides: 8,
     hue: 205,
-    covers: ['The shortest-path problem', 'Skill anatomy', 'The lifecycle', 'Your first spec'],
+    covers: ['抄近路的问题', '技能解剖', '生命周期', '你的第一份规格'],
   },
   {
     slug: 'agent-skills-201',
     level: '201',
-    title: 'The SDLC, in practice',
-    blurb: 'The eight commands, the solo daily loop, and how each phase actually plays out.',
+    title: '软件开发生命周期的实战形态',
+    blurb: '八条命令、个人日常回路，以及每个阶段实际是怎样推进的。',
     slides: 8,
     hue: 175,
-    covers: ['Eight commands', 'The daily loop', 'Define to Ship', '/build auto'],
+    covers: ['八条命令', '日常回路', '从定义到上线', '/build auto'],
   },
   {
     slug: 'agent-skills-301',
     level: '301',
-    title: 'Teams and customization',
-    blurb: 'Review panels, context budgets, four ways to customize, evals, and rolling out to a team.',
+    title: '团队协作与自定义',
+    blurb: '评审面板、上下文预算、四种自定义方式、evals，以及向团队推广。',
     slides: 7,
     hue: 340,
-    covers: ['Review panel', 'Customize 4 ways', 'Context engineering', 'Evals and rollout'],
+    covers: ['评审面板', '四种自定义', '上下文工程', 'evals 与推广'],
   },
 ];
 
@@ -93,38 +93,38 @@ export interface UsageMode {
 export const usageModes: UsageMode[] = [
   {
     slug: 'solo',
-    label: 'Solo projects',
+    label: '个人项目',
     diagram: 'solo-workflow',
-    headline: 'Move through the whole SDLC on your own',
-    body: 'Install once, then drive each lifecycle phase with a single command. You approve at every checkpoint, and every slice is tested and committed on its own.',
+    headline: '一个人跑完整个软件开发生命周期',
+    body: '装一次装好，然后用单条命令驱动每个生命周期阶段。每个检查点都由你拍板，每个切片都独立完成测试与提交。',
     points: [
-      '/spec writes a short PRD before any code',
-      '/build lands thin, tested vertical slices',
-      '/build auto runs an approved plan hands-off',
+      '/spec 在任何代码出现之前先写一份简短 PRD',
+      '/build 落地薄而带测试的垂直切片',
+      '/build auto 会在一份经你批准的方案上放手执行',
     ],
   },
   {
     slug: 'team',
-    label: 'Team projects',
+    label: '团队项目',
     diagram: 'team-workflow',
-    headline: 'Ship past a panel, not a rubber stamp',
-    body: 'The same lifecycle scales to a team. /ship fans out to specialist review personas in parallel, then merges their findings into one honest go / no-go with the blocking items called out.',
+    headline: '过评审面板再上线，走真流程而不是走过场',
+    body: '同一套生命周期同样扛得住团队规模。/ship 并行展开专项评审角色，再把各方发现汇成一条不掺水的放行 / 叫停结论，阻塞项一并列明。',
     points: [
-      'code-reviewer, security-auditor, test-engineer, web-performance-auditor',
-      'Anti-rationalization guards keep every phase honest',
-      'Commit skills to version control for one shared source of truth',
+      'code-reviewer、security-auditor、test-engineer、web-performance-auditor',
+      '反合理化护栏让每个阶段都不掺水',
+      '把技能提交进版本控制，成为唯一事实来源',
     ],
   },
   {
     slug: 'customize',
-    label: 'Customize',
+    label: '自定义',
     diagram: 'customize',
-    headline: 'Bend the workflow to your stack',
-    body: 'Skills are plain Markdown, so you own them. Install all 24, load only the few a task needs, fork a SKILL.md to add your house style, or write your own with the same anatomy.',
+    headline: '让工作流迁就你自己的技术栈',
+    body: '技能就是普通 Markdown，所以它们归你所有。24 个全装、按任务只装几个、改一个 SKILL.md 写进团队风格，或者用同样的解剖结构写你自己的。',
     points: [
-      'Context is a budget: load only what the task needs',
-      'Fork any SKILL.md to encode team standards',
-      'New skills follow the same process, guardrails, and verification',
+      '上下文是一笔预算：只加载任务需要的内容',
+      '改任意 SKILL.md 编码团队规范',
+      '新技能照样遵循同样的流程、护栏与验证',
     ],
   },
 ];
@@ -143,8 +143,8 @@ export interface Sticker {
 export const stickers: Sticker[] = [
   {
     slug: 'retro-computer',
-    title: 'Retro terminal',
-    blurb: 'A beige-era workstation announcing the good news, flowers included.',
+    title: '复古终端',
+    blurb: '一台米色年代的工位机正在报喜，还自带一束花。',
     hue: 45,
     pngSize: '2.0 MB',
     webpSize: '0.6 MB',
@@ -153,8 +153,8 @@ export const stickers: Sticker[] = [
   },
   {
     slug: 'circuit-heart',
-    title: 'Circuit heart',
-    blurb: 'Old-school tattoo heart, rewired with traces and a happy robot.',
+    title: '电路之心',
+    blurb: '老派纹身爱心，用电路走线改接，还装了一只开心的小机器人。',
     hue: 340,
     pngSize: '1.3 MB',
     webpSize: '0.5 MB',
@@ -163,8 +163,8 @@ export const stickers: Sticker[] = [
   },
   {
     slug: 'merit-badge',
-    title: 'Merit badge',
-    blurb: 'A rosette, a star, and ribbons. You earned it, wear it.',
+    title: '荣誉徽章',
+    blurb: '一朵圆盘花、一颗星星和两条绶带。你挣来的，佩戴它吧。',
     hue: 205,
     pngSize: '1.4 MB',
     webpSize: '0.5 MB',
@@ -173,8 +173,8 @@ export const stickers: Sticker[] = [
   },
   {
     slug: 'tattoo-heart',
-    title: 'Robot romance',
-    blurb: 'Classic flash-art heart with a robot that clearly loves its job.',
+    title: '机器人浪漫',
+    blurb: '经典纹身画风的爱心，配上一个明显热爱本职工作的机器人。',
     hue: 5,
     pngSize: '1.4 MB',
     webpSize: '0.5 MB',
