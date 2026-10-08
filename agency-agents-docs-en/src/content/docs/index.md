@@ -13,7 +13,7 @@ hero:
       icon: right-arrow
       variant: primary
     - text: NEXUS quick start
-      link: /strategy/QUICKSTART/
+      link: /strategy/quickstart/
       icon: right-arrow
     - text: Division overview
       link: /catalog/#-代理公司名册
@@ -30,5 +30,22 @@ response commander, GIS analyst, spatial computing designer — 18 divisions fro
 It also ships **NEXUS** — a complete strategy playbook (strategy, playbooks, runbooks, and
 coordination templates) describing how to orchestrate these agents into a working multi-agent pipeline.
 
-Pages pair 1:1 with the Chinese mirror; anchors on translated pages differ. See the
-[repo](https://github.com/msitarzewski/agency-agents) for install instructions.
+## How to read this site
+
+- To meet the whole agency: start from the [full roster](/catalog/) — every division indexed
+- To use one expert: pick a division in the sidebar, or search top-left
+- To see them work together: the [strategy playbook](/strategy/quickstart/) and [examples](/examples/)
+- To install for your own machine: the [tool integrations](/integrations/) pages
+
+## Divisions at a glance
+
+<CardGrid>
+  <Card title="Engineering" icon="code">65 agents — architecture, data, DevOps, code review… the largest division.</Card>
+  <Card title="Specialized" icon="sparkles">59 cross-domain experts, from ATS resume tailoring to China network engineering.</Card>
+  <Card title="Marketing" icon="megaphone">37 agents — brand, content, SEO, growth.</Card>
+  <Card title="Strategy" icon="compass">The NEXUS manual: 7 playbook phases and 4 runbooks.</Card>
+</CardGrid>
+
+## About this mirror
+
+One-shot snapshot translation decisions live in the sister [Chinese mirror](https://lif3ng-vibe.github.io/docs-cn/agency-agents/); this English site pairs 1:1 page-for-page.

@@ -19,6 +19,7 @@ const DIVISIONS = [
 // repo-relative path -> docs-relative output path (no .md means skip)
 function mapPath(rel) {
   if (rel === 'README.md') return 'catalog.md';
+  if (rel === 'examples/README.md') return 'examples/index.md';
   if (rel === 'CONTRIBUTING.md') return 'contributing.md';
   if (rel === 'CONTRIBUTING_zh-CN.md') return 'contributing-zh-cn.md';
   if (rel === 'SECURITY.md') return 'security.md';
