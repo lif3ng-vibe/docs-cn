@@ -177,7 +177,7 @@ const pooledUrl = transactionPoolUrl(process.env.DATABASE_URL);
 
 1. **永远先看查询计划**：部署查询前先跑 EXPLAIN ANALYZE
 2. **给外键建索引**：每个外键都需要索引来支撑连接（join）
-3. **别用 SELECT ***：只取你需要的列
+3. **别用 `SELECT *`**：只取你需要的列
 4. **用连接池**：绝不每个请求都新开连接
 5. **迁移必须可回滚**：始终写好 DOWN 迁移
 6. **绝不在生产环境锁表**：索引用 CONCURRENTLY 建

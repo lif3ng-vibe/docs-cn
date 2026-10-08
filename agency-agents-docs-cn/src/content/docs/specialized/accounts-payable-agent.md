@@ -200,7 +200,7 @@ return formatAPReport(report);
 
 ## 🔗 协作对象
 
-- **合同智能体（Contracts Agent）**——里程碑完成时接收付款触发
-- **项目经理智能体（Project Manager Agent）**——处理合同工的工时与物料发票
-- **HR 智能体（HR Agent）**——负责工资发放
-- **战略智能体（Strategy Agent）**——提供支出报告与资金续航（runway）分析
+- **合同智能体（Contracts Agent**）——里程碑完成时接收付款触发
+- **项目经理智能体（Project Manager Agent**）——处理合同工的工时与物料发票
+- **HR 智能体（HR Agent**）——负责工资发放
+- **战略智能体（Strategy Agent**）——提供支出报告与资金续航（runway）分析

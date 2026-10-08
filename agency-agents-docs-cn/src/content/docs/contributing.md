@@ -244,7 +244,7 @@ Advanced techniques and approaches the agent masters
 1. **`tools.json`**——新增一条，包含 `id`、`label`、`kebab`、`format`、`installKind`、`dest`，以及 detect/version/scope 与展示字段。如果你的工具渲染出的文件与另一个工具逐字节相同，就**复用已有的 `format`**（例如消费 `SKILL.md` 的工具共享 `"format": "skill-md"`——不需要新渲染器）。把 `installKind` 设为 `per-agent`、`roster` 或 `plugin`。除非 [app](https://github.com/msitarzewski/agency-agents-app) 为它内置了品牌 SVG，否则把 `icon` 设为 `null`。
 2. **`scripts/convert.sh`**——新增一个 `convert_<tool>()`（或复用共享的 `format` 渲染器），并把它接进工具列表和 `--help`。
 3. **`scripts/install.sh`**——新增一个 `install_<tool>()`，并在 `ALL_TOOLS`、检测/标注逻辑和 `--help` 里注册。
-4. **`.gitignore`**——为你的工具在 `integrations/<tool>/` 下的生成产物加一条规则。**这一步必做且极易遗漏。**转换出的智能体/技能文件由 `convert.sh` 在本地生成，**绝不提交**（见下文"一律关闭的 PR"）——被跟踪的只有 `integrations/<tool>/README.md`。照抄一条现有的按工具条目即可。
+4. **`.gitignore`**——为你的工具在 `integrations/<tool>/` 下的生成产物加一条规则。**这一步必做且极易遗漏**。转换出的智能体/技能文件由 `convert.sh` 在本地生成，**绝不提交**（见下文"一律关闭的 PR"）——被跟踪的只有 `integrations/<tool>/README.md`。照抄一条现有的按工具条目即可。
 5. **`integrations/<tool>/README.md`**——这个集成的简短文档（每个工具都有一份，是该工具目录里唯一被跟踪的文件）。
 6. **跑 `./scripts/check-tools.sh`**——必须通过。它会交叉校验 `tools.json` 与 `install.sh`、`convert.sh`，并标记任何缺失项。
 7. **跑 `./scripts/test-install.sh`**——必须通过。它把安装器装进一次性的
