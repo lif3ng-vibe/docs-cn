@@ -29,6 +29,14 @@
     "en": "agency-agents-en"
   },
   {
+    "name": "Agency Agents (EN)",
+    "slug": "agency-agents-en",
+    "desc": "Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).",
+    "orig": "https://github.com/msitarzewski/agency-agents",
+    "repo": "https://github.com/msitarzewski/agency-agents",
+    "lang": "en"
+  },
+  {
     "name": "AI 编码词典",
     "slug": "ai-coding-dictionary",
     "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
@@ -79,14 +87,6 @@
     "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
     "orig": "https://skills.addy.ie/",
     "repo": "https://github.com/addyosmani/agent-skills"
-  },
-  {
-    "name": "Agency Agents (EN)",
-    "slug": "agency-agents-en",
-    "desc": "Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).",
-    "orig": "https://github.com/msitarzewski/agency-agents",
-    "repo": "https://github.com/msitarzewski/agency-agents",
-    "lang": "en"
   },
   {
     "name": "e2e",
