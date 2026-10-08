@@ -3,12 +3,12 @@ import { phases } from '../data/skills';
 // Ordered lifecycle phases (exclude meta).
 const flow = phases.filter((p) => p.id !== 'meta');
 const steps = [
-  { verb: 'Idea', sub: 'Refine' },
-  { verb: 'Spec', sub: 'PRD' },
-  { verb: 'Code', sub: 'Impl' },
-  { verb: 'Test', sub: 'Debug' },
-  { verb: 'QA', sub: 'Gate' },
-  { verb: 'Go', sub: 'Live' },
+  { verb: '想法', sub: '打磨' },
+  { verb: '规格', sub: 'PRD' },
+  { verb: '编码', sub: '实现' },
+  { verb: '测试', sub: '调试' },
+  { verb: '质检', sub: '门禁' },
+  { verb: '上线', sub: '就绪' },
 ];
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 const { compact = false } = Astro.props;
 ---
 
-<div class:list={['lifecycle', { compact }]} role="img" aria-label="Development lifecycle: Define, Plan, Build, Verify, Review, Ship">
+<div class:list={['lifecycle', { compact }]} role="img" aria-label="开发生命周期：定义、规划、构建、验证、评审、上线">
   <div class="lc-track" aria-hidden="true"></div>
   <ol class="lc-steps">
     {flow.map((p, i) => (
