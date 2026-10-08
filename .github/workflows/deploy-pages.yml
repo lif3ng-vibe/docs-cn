@@ -31,6 +31,7 @@ jobs:
             orca-docs-cn/package-lock.json
             mattpocock-skills-docs-cn/package-lock.json
             agency-agents-docs-cn/package-lock.json
+            agency-agents-docs-en/package-lock.json
             ai-coding-dictionary-docs-cn/package-lock.json
             ai-memory-docs-cn/package-lock.json
             ai-memory-docs-en/package-lock.json
@@ -69,6 +70,18 @@ jobs:
 
       # agency-agents 是标准 Starlight + npm（326 篇正文 md）：authored 内链已在
       # 源码一次性根绝对化（](/catalog/… 与 hero 的 link: /…），CI 统一补 base 前缀。
+      # agency-agents-en：与中文站同构的英文镜像（对照工具 origin 侧），同款 CI 补前缀。
+      - name: Build agency-agents-docs-en
+        working-directory: agency-agents-docs-en
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/agency-agents-en/
+        run: |
+          find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/agency-agents-en/|g' {} +
+          find src/content/docs -name '*.md' -exec sed -i "s|link: '/|link: '/docs-cn/agency-agents-en/|g; s|link: /|link: /docs-cn/agency-agents-en/|g" {} +
+          npm ci
+          npm run build
+
       - name: Build agency-agents-docs-cn
         working-directory: agency-agents-docs-cn
         env:
@@ -183,6 +196,7 @@ jobs:
           mv openrig-docs-cn/dist _site/openrig
           mv openrig-docs-en/dist _site/openrig-en
           mv agency-agents-docs-cn/dist _site/agency-agents
+          mv agency-agents-docs-en/dist _site/agency-agents-en
           mv nimbus-docs-cn/apps/www/dist _site/nimbus
           mv openship-docs-cn/apps/web/out _site/openship
           mv agent-skills-docs-cn/dist _site/agent-skills

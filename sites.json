@@ -25,7 +25,8 @@
     "slug": "agency-agents",
     "desc": "300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。",
     "orig": "https://github.com/msitarzewski/agency-agents",
-    "repo": "https://github.com/msitarzewski/agency-agents"
+    "repo": "https://github.com/msitarzewski/agency-agents",
+    "en": "agency-agents-en"
   },
   {
     "name": "AI 编码词典",
@@ -78,5 +79,13 @@
     "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
     "orig": "https://skills.addy.ie/",
     "repo": "https://github.com/addyosmani/agent-skills"
+  },
+  {
+    "name": "Agency Agents (EN)",
+    "slug": "agency-agents-en",
+    "desc": "Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).",
+    "orig": "https://github.com/msitarzewski/agency-agents",
+    "repo": "https://github.com/msitarzewski/agency-agents",
+    "lang": "en"
   }
 ]

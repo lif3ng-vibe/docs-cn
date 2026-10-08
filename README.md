@@ -10,6 +10,7 @@
 | Orca | `orca-docs-cn/` | https://www.onorca.dev/docs | https://github.com/stablyai/orca | 2026-08-19 |
 | Matt Pocock Skills | `mattpocock-skills-docs-cn/` | https://www.aihero.dev/skills | https://github.com/mattpocock/skills | 2026-08-20 |
 | Agency Agents | `agency-agents-docs-cn/` | 无（仓库即源） | https://github.com/msitarzewski/agency-agents（快照 `f99f6aa`） | 2026-10-08 |
+| Agency Agents (EN) | `agency-agents-docs-en/` | 无（仓库即源，对照 origin 侧） | https://github.com/msitarzewski/agency-agents（快照 `f99f6aa`） | 2026-10-08 |
 | AI 编码词典 | `ai-coding-dictionary-docs-cn/` | https://www.aihero.dev/ai-coding-dictionary | https://github.com/mattpocock/dictionary-of-ai-coding | 2026-08-20 |
 | ai-memory | `ai-memory-docs-cn/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-21 |
 | ai-memory (EN) | `ai-memory-docs-en/` | 无（仓库即源） | https://github.com/akitaonrails/ai-memory | 2026-08-25 |
@@ -56,6 +57,7 @@ docs-cn/
 ├── orca-docs-cn/          # Orca 中文文档（Starlight）
 ├── mattpocock-skills-docs-cn/          # Matt Pocock Skills 中文文档（Starlight）
 ├── agency-agents-docs-cn/              # Agency Agents 中文版（Starlight，18 部门 326 篇 + NEXUS 战略手册）
+├── agency-agents-docs-en/              # Agency Agents 英文镜像（Starlight，与中文站 1:1 配对）
 ├── ai-coding-dictionary-docs-cn/       # AI 编码词典中文版（Starlight）
 ├── ai-memory-docs-cn/                  # ai-memory 中文文档（Starlight，36 篇）
 ├── ai-memory-docs-en/                  # ai-memory 英文镜像（Starlight，脚本生成，36 篇）
@@ -123,6 +125,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - OpenShip：https://lif3ng-vibe.github.io/docs-cn/openship/
 - Agent Skills：https://lif3ng-vibe.github.io/docs-cn/agent-skills/
 - Agency Agents：https://lif3ng-vibe.github.io/docs-cn/agency-agents/
+- Agency Agents（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/agency-agents-en/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
