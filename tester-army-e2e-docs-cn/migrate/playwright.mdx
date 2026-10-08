@@ -1,0 +1,401 @@
+---
+title: 从 Playwright 迁移
+description: 让 e2e 与 Playwright 并行运行，并逐文件迁移测试。
+icon: "/images/icons/playwright.svg"
+---
+
+import { SetupPrompt } from '../snippets/setup-prompt-card.jsx';
+
+export const migrationPrompt = `将本项目的 Playwright 测试迁移到 e2e，一次迁移一个 spec。文档：\`https://e2e.tester.army/docs/migrate/playwright.md\`
+
+1. 阅读上面的迁移指南。它把每个 Playwright 配置键、API 和 CLI 旗标映射到 e2e，并标出 e2e 尚未具备的部分。
+2. 如果项目还没有 e2e 配置（\`e2e.config.ts\` 或 \`e2e.config.mts\`），运行 \`npx e2e init --yes\`（或对应的 pnpm/bun 命令）。它只写入一份配置和一个示例测试，不会安装任何东西。
+3. 阅读 e2e skill（\`npx e2e guide\` 打印它，\`npx e2e guide <topic>\` 打印某个主题），并在下面的每一步都遵循它。
+4. 如果你运行了 init，问我智能体步骤用哪个模型：ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅、一个 API key，或本地模型。用其提供者包配置。如果需要登录，给我 \`npx e2e login\` 命令，并等我确认。
+5. 按指南的 Config 表把 \`playwright.config.ts\` 迁移到 e2e 配置。\`baseURL\` 和 \`webServer\` 变成 target 的 \`app\`，\`projects\` 变成 \`targets\`，\`use\` 下的浏览器选项（viewport、locale、testIdAttribute）变成 \`web(...)\` 选项；\`trace\`、\`video\` 和各超时是顶层键。保留 \`@playwright/test\`，并让两类文件模式分开。
+6. 安装依赖。
+7. 列出 Playwright 的 spec，问我要先迁移哪一个。建议选一个步骤经常变化的流程，例如向导（wizard）或结账（checkout）。
+8. 把该 spec 改写为 \`tests/\` 下的 \`.e2e.ts\` 文件（e2e 默认运行 \`tests/**/*.e2e.ts\`）。按指南把每个 \`page\` 调用映射到 \`screen\`、\`app\` 或 \`browser\`。e2e 查询中的字符串匹配整段文本且区分大小写，在原来 Playwright 查询匹配片段的地方加 \`{ exact: false }\` 或正则。指南标注某功能暂缺的，用它给出的变通方案，或把该测试留在 Playwright 并告诉我原因。
+9. 用 \`app.open()\` 和定位器断言让导航与最终断言保持确定性。在一段脚本化交互经常挂掉的地方，改为为它提出一个 \`agent.act\` 目标。
+10. 用 \`npx e2e run <file>\` 运行新文件并修复直到通过。保留 Playwright spec，直到我确认它可以删除。
+11. 总结哪些测试已迁移、哪些留在 Playwright 以及原因。`;
+
+<SetupPrompt>
+
+<Prompt description={migrationPrompt} children={migrationPrompt} actions={["copy", "cursor"]} />
+
+</SetupPrompt>
+
+`@e2e-dev/web` 自带固定版本的 `playwright-core`，所以你的 `@playwright/test` 版本由你自己保留。两个 runner 可以共存于同一个项目。e2e 默认读取 `e2e.config.ts` 并查找 `tests/**/*.e2e.ts`，因此请把两类文件模式分开。
+
+按[快速上手](/quickstart)安装 e2e，并为智能体调用配置模型。本页把每个 Playwright 特性映射到对应的 e2e 特性，并说明它是否存在。细节在参考页：[screen](/reference/screen)、[expect](/reference/expect)、[test](/reference/test)、[config](/reference/config) 以及 [web 引擎](/reference/web)。
+
+## 配置
+
+每个 e2e 配置键要么是顶层键，要么是 `app` 这类 target 键，要么是 `web(...)` 的选项。runner 认得的 Playwright 键（`testDir`、`baseURL`、`webServer`、`projects`）会被拒绝，并在报错信息里指明该事实在本页的位置。
+
+### App 与 targets 及输出
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `use.baseURL` | target 上的 `app: { url }` | 更名 |
+| `webServer` | target 上的 `app: { url, command }`，见[启动你的应用](/web#启动你的应用) | 更名 |
+| `webServer` 数组 | 每个 target 各有 `app: { url, command }`；声明同一命令的 target 共享一个进程。其他依赖进程在本版本不会启动 | 暂缺 |
+| `webServer.reuseExistingServer` | `app.command: { reuseExisting: true }`；CI 会忽略它 | 更名 |
+| `globalSetup`, `globalTeardown` | 暂无；登录用 `test.setup`，setup 代码用钩子和 fixture | 暂缺 |
+| `projects` | `targets`，每个各起一个引擎实例 | 更名 |
+| `projects[].dependencies` 用于登录 | `test.setup` 与 `{ session }`，见[登录](/authentication) | 更名 |
+| `testDir`, `testMatch` | `tests`，glob 相对项目根解析 | 更名 |
+| `testIgnore` | `tests` 里带前导 `!` 的条目：`tests: ['tests/**/*.e2e.ts', '!tests/wip/**']` | 更名 |
+| `fullyParallel` | 暂无；一个文件的测试在一个 worker 上按顺序运行，文件之间并行 | 暂缺 |
+| `maxFailures` | `--max-failures <n>`；没有配置键 | 更名 |
+| `reporter` | `reporters: ['list', 'junit']`；另有 `json` 和 `markdown` | 更名 |
+| `reporter: 'html'` | 无对应物；`markdown` 会写 `.e2e/summary.md`，每个失败的测试在 `.e2e/results/` 下得到一个 `trace.md` 页面 | 暂缺 |
+| `outputDir` | `output`，默认 `.e2e`，在报告旁边存放 `results/`（运行开始时清空，同 `outputDir`） | 更名 |
+| `metadata` | 暂无 | 暂缺 |
+
+### 浏览器与超时及产物
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `use.viewport`, `use.browserName` | `web({ viewport, browser })` | 更名 |
+| `use.testIdAttribute` | `web({ testIdAttribute })` | 更名 |
+| `use.httpCredentials` | `web({ basicAuth })` | 更名 |
+| `use.extraHTTPHeaders` | `web({ headers })`，只发送到 app 的站点 | 更名 |
+| `use.connectOptions`, `connectOverCDP` | `web({ connect })` | 更名 |
+| `retries`, `workers`, `timeout` | 同名顶层键；默认值不同，见[下文](#默认值差异) | 相同 |
+| `expect.timeout` | `assertionTimeout` | 更名 |
+| `use.actionTimeout` | `actionTimeout` | 更名 |
+| `use.navigationTimeout` | `timeout`，即测试预算；`browser.goto(url, { timeout })` 可覆写单次调用 | 更名 |
+| `use.storageState` | `test.setup` 与 `{ session }`；不支持从文件导入，见[有意为之](#有意为之) | 有意为之 |
+| `use.trace` | `trace`，模式相同（`'off'`、`'on'`、`'retain-on-failure'`、`'on-first-retry'`、`'on-all-retries'`），可放在配置顶层、按 target、`test('x', { trace }, ...)`，单次运行用 `--trace [mode]`。链路是一页 markdown，即每个测试在 `.e2e/results/` 目录下的 `trace.md`，而不是 zip；默认值不同，见[下文](#默认值差异) | 相同 |
+| `use.video` | `video`，模式与 `trace` 相同，可放在配置顶层、按 target（代替 project）、`test('x', { video }, ...)`（代替 `test.use`），单次运行用 `--video [mode]` | 相同 |
+| `use.headless: false` | CLI 上的 `--headed` | 更名 |
+| `use.locale`, `use.timezoneId` | `web({ locale, timezoneId })` | 更名 |
+| `colorScheme`, `geolocation`, `permissions` | 暂无 | 暂缺 |
+| `use.userAgent` | `web({ userAgent })` | 更名 |
+| `devices['iPhone 15']`, `deviceScaleFactor`, `isMobile`, `hasTouch` | 暂无；`web({ viewport })` 只设置尺寸 | 暂缺 |
+| `ignoreHTTPSErrors`, `bypassCSP`, `offline`, `launchOptions`, `proxy` | 暂无 | 暂缺 |
+
+## 改写前后的测试
+
+```ts title="Playwright"
+import { test, expect } from '@playwright/test';
+
+test('checkout', async ({ page }) => {
+  await page.goto('/cart');
+  await page.getByRole('button', { name: 'Checkout' }).click();
+  await page.getByLabel('Card number').fill('4242424242424242');
+  await page.getByLabel('Expiry').fill('12/30');
+  await page.getByLabel('CVC').fill('123');
+  await page.getByRole('button', { name: 'Pay' }).click();
+  await expect(page.getByRole('heading')).toHaveText('Order confirmed');
+});
+```
+
+```ts title="e2e"
+import { test } from '@e2e-dev/web';
+import { expect } from 'e2e';
+
+test('checkout', async ({ app, agent, screen }) => {
+  await app.open('/cart');
+  await agent.act('pay with the test card 4242 4242 4242 4242, expiry 12/30, CVC 123');
+  await expect(screen.getByRole('heading')).toHaveText('Order confirmed');
+});
+```
+
+导航和最终断言保持显式。结账交互交给智能体处理，表单变化时它会自行适应。测试也可以完全确定化：每一行 `page.getBy*` 都有一行对应的 `screen.getBy*`。
+
+## API 对照表
+
+对 `screen`、`app`、`agent` 与 `expect(locator)` 的调用在每个 target 上运行，设备也包含在内。对 `browser` 的调用只在浏览器中运行：用到它的测试要声明 `requires: ['browser']`，其他 target 会跳过它。状态列取值为 `same`（相同）、`renamed`（更名）、`web only`（仅 web）、`by design`（有意为之，见[有意为之](#有意为之)）或 `missing`（暂缺），并给出今天的对策。
+
+### 定位器
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `page.getByRole`, `getByLabel`, `getByText`, `getByTestId`, `getByPlaceholder` | `screen` 上的同名方法；`getByRole` 还可按位置传入名称，即 `getByRole('button', 'Save')` | 相同 |
+| `getByRole(role, { name })`、`getByLabel`、`getByPlaceholder`、`getByText` 传入字符串 | 匹配整个字符串，区分大小写；`{ exact: false }` 对应 Playwright 的子串匹配，见[有意为之](#有意为之) | 有意为之 |
+| `getByRole('img')` | 相同；`img` 是 `image` 的别名，因此引擎、回放缓存和报告看到的都是 `image` | 相同 |
+| `getByAltText(alt)` | `getByRole('image', alt)` | 更名 |
+| `getByTitle` | 暂无；节点不携带 title | 暂缺 |
+| `getByRole(role, { includeHidden })` | 角色查询永远匹配不到隐藏节点；其他查询可用 `{ visible: true }` 剔除隐藏的孪生节点 | 有意为之 |
+| `locator.filter({ hasText, has })` | 相同 | 相同 |
+| `filter({ hasNot, hasNotText })` | 暂无；请用正向 filter 或 `nth`。单用负向 filter，或与 `hasText`、`has` 并用时，报 `INVALID_LOCATOR` | 暂缺 |
+| `first()`, `last()`, `nth(i)` | 相同 | 相同 |
+| `locator.and(other)`, `locator.or(other)` | 暂无 | 暂缺 |
+| `locator.count()` | 相同 | 相同 |
+| `locator.all()`, `allTextContents()` | 相同；`allInnerTexts()` 即 `allTextContents()` | 相同 |
+| `page.locator('css')`, `page.locator('xpath=...')` | `browser.locator('css')`：该字符串是一个 Playwright 选择器，因此 `xpath=`（或以 `//` 开头）和 `>>` 链也可用 | 仅 web |
+| `page.waitForSelector(selector)` | `browser.locator(selector).waitFor()`；定位器是 strict 的，匹配到多个的选择器要用 `>> visible=true` 步骤或 `first()` 收窄 | 更名 |
+| `locator.locator('css')` | 暂无；可用作用域内的语义查询（用 `cell.getByRole('textbox')` 替代 `cell.locator('input')`）、反过来的 `browser.locator('css').getByRole(...)`，或整条路径只用一个 `browser.locator` 选择器 | 暂缺 |
+| `page.frameLocator('#frame')` | `browser.frameLocator('#frame')`，然后在其内部用 `screen` 查询 | 仅 web |
+
+### 动作
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `locator.click()` | `locator.tap()`；`click()` 是别名 | 相同 |
+| `click({ button: 'right' })` | `secondaryTap()` | 更名 |
+| `dblclick()` | `doubleTap()` | 更名 |
+| `click({ position })` | `tap({ position })`，相对节点左上角的偏移 | 更名 |
+| `click({ force })` | 暂无；`tap({ position })` 会跳过除滚动进视野之外的所有可操作性检查 | 暂缺 |
+| `click({ modifiers })`, `dblclick({ modifiers })` | `tap({ modifiers })`、`doubleTap({ modifiers })`、`secondaryTap({ modifiers })`；暂不能与 `position` 同用 | 相同 |
+| `click({ clickCount, delay, trial })` | 暂无 | 暂缺 |
+| `check()`、`fill()` 等动作上的 `{ trial }`、`{ force }`、`{ noWaitAfter }` | 暂无；动作未声明的选项会在节点解析前报 `INVALID_ARGUMENT`，绝不静默忽略 | 暂缺 |
+| `fill(value)` | 相同；也接受 `Secret` | 相同 |
+| `pressSequentially(text, { delay })` | 相同；按键逐个走平台键盘，不接受 `Secret` | 相同 |
+| `press(key)` | 相同；修饰键用 `+` 连接，见[按键语法](/reference/engine#按键) | 相同 |
+| `clear()`, `focus()`, `hover()`, `setInputFiles()`, `dragTo()` | 相同 | 相同 |
+| `check()`, `uncheck()` | 相同，但有两点差异。点击后会持续读取勾选状态直到动作超时，而 Playwright 只读一次，因此异步更新的受控 checkbox 或 switch 也能通过。点击后被移除或导航离开的控件——例如 app 用已选中视图替换掉的单选按钮——也会通过：点击已生效，即使 app 在原位渲染了一个未勾选的控件。Playwright 会判它失败，因为它读不回状态。请对替换该控件的元素作断言 | 有意为之 |
+| `selectOption('pro')` | `selectOption('Pro')`：字符串只匹配选项的 label，而 Playwright 匹配 value 或 label 之一；匹配 value 用 `selectOption({ value: 'pro' })` | 有意为之 |
+| `selectOption(['a', 'b'])` | 暂无；一次只传一个选项。传数组报 `INVALID_ARGUMENT` | 暂缺 |
+| `setInputFiles({ name, buffer })` | 暂无；只支持路径，相对项目根解析 | 暂缺 |
+| `scrollIntoViewIfNeeded()` | `scrollIntoView()` | 更名 |
+| `locator.innerText()` | `textContent()`，空白塌缩为单个空格 | 更名 |
+| `locator.textContent()` | 返回渲染后的文本，即 `innerText()` 读取的内容，而非 DOM 的 `textContent`；取原始 DOM 文本用 `browser.evaluate` | 有意为之 |
+| `inputValue()`, `getAttribute()`, `isVisible()`, `isEnabled()`, `boundingBox()` | 相同 | 相同 |
+| `isChecked()` | 在 checkbox、radio 或 `aria-checked` 节点上相同；任何其他节点返回 `false`，而 Playwright 会抛错 | 有意为之 |
+| `isHidden()`, `isDisabled()` | 相同 | 相同 |
+| `isEditable()` | 暂无 | 暂缺 |
+| `waitFor({ state: 'visible' })`、`'hidden'`、`'attached'`、`'detached'` | 相同 | 相同 |
+| `locator.evaluate(fn)`, `evaluateAll(fn)` | 暂无；用 `browser.evaluate(fn, selector)` 并把 CSS 选择器作为参数 | 暂缺 |
+| `locator.screenshot()` | 暂无；`app.screenshot(label)` 捕获视口 | 暂缺 |
+| `innerHTML()`, `dispatchEvent()`, `selectText()`, `blur()`, `highlight()` | 暂无；可用 `browser.evaluate` | 暂缺 |
+| `ariaSnapshot()` | 暂无 | 暂缺 |
+| `page.keyboard.press`, `keyboard.type` | `browser.keyboard.press`, `browser.keyboard.type`；只能输入纯文本，绝不接受 `Secret` | 仅 web |
+| `keyboard.down`, `keyboard.up`, `keyboard.insertText` | 暂无 | 暂缺 |
+| `page.mouse.click(x, y)` | `screen.tapAt({ x, y })`，视口坐标 | 更名 |
+| 用 `mouse.move`, `down`, `up` 组合成拖拽 | `screen.swipe({ from, to })` | 更名 |
+| `page.dragAndDrop(source, target, { sourcePosition, targetPosition })` | `source.dragTo(target)`，不接受位置参数；需要 `sourcePosition` 或 `targetPosition` 时，用各 `boundingBox()` 原点加偏移量的 `screen.swipe({ from, to })` | 更名 |
+| `page.mouse.move`, `wheel`, `down`, `up` | `browser.mouse.*` | 仅 web |
+
+### 断言
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `expect(locator).toBeVisible()`, `toBeHidden()`, `toBeEnabled()`, `toBeDisabled()`, `toBeFocused()` | 相同 | 相同 |
+| `toBeChecked()` | 在可勾选节点上相同；在其他任何节点上 `.not.toBeChecked()` 通过，而 Playwright 会抛错 | 有意为之 |
+| `toHaveText()`, `toContainText()` | 比较渲染后的文本，相当于 Playwright 中的 `{ useInnerText: true }` | 有意为之 |
+| `toHaveValue()`, `toHaveAttribute()`, `toHaveCount()`, `toHaveAccessibleName()` | 相同 | 相同 |
+| 多个匹配上的 `toHaveText(['a', 'b'])`, `toContainText([...])` | 相同：`toHaveText` 要求数量一致，`toContainText` 要求有序子序列 | 相同 |
+| `toBeChecked({ checked: false })`、`toBeEnabled({ enabled })`、`toBeVisible({ visible })`、`toBeAttached({ attached })` | 相同 | 相同 |
+| `toHaveText()`、`toContainText()`、`toHaveAccessibleName()`、`toHaveAttribute(name, value)` 上的 `{ ignoreCase }` | 相同 | 相同 |
+| `toBeChecked({ indeterminate })`, `{ useInnerText }` | 暂无；报 `INVALID_ARGUMENT`，该匹配器不会带着默认值悄悄通过 | 暂缺 |
+| `toHaveAttribute('aria-selected', 'true')`、`'aria-expanded'` | `toBeSelected()`、`toBeExpanded()` | 更名 |
+| 多个匹配上的正向匹配器 | 立即报 `LOCATOR_AMBIGUOUS`；用 `filter`、`first` 或 `{ visible: true }` 收窄 | 有意为之 |
+| `toBeAttached()` | 相同；隐藏的匹配同样通过 | 相同 |
+| `toBeEmpty()`, `toBeInViewport()`, `toBeEditable()`, `toHaveRole()`, `toHaveAccessibleDescription()` | 暂无 | 暂缺 |
+| `expect(locator).toHaveClass(cls)` | `expect(browser).toHaveClass(locator, cls)`；DOM 属性经 `browser` 断言；读取的是 `class` 特性，因此 `''` 匹配 `class=""`，而不匹配缺失的特性 | 仅 web |
+| `toHaveCSS()`, `toHaveId()`, `toHaveJSProperty()`, `toContainClass()`, `toHaveValues()` | 暂无；用 `browser.evaluate` 配合值匹配器 | 暂缺 |
+| `expect(page).toHaveURL()`, `toHaveTitle()` | `expect(browser).toHaveURL()`、`toHaveTitle()`；`toHaveURL` 支持 `ignoreCase` | 仅 web |
+| `toHaveScreenshot()`, `toMatchSnapshot()` | 暂无；`agent.assert('...', { vision: true })` 是判定，不是像素对比 | 暂缺 |
+| `toMatchAriaSnapshot()` | 暂无 | 暂缺 |
+| `expect(value).toBe()`, `toEqual()`, `toMatch()`, `toBeTruthy()`, `toBeCloseTo()` 及其他 | 相同，但下文的 `toContain` 除外，见[值匹配器](/reference/expect#值匹配器) | 相同 |
+| `expect(collection).toContain()` | 按深层相等比较元素，如同 Playwright 的 `toContainEqual`：`toContain({ id: 1 })` 对 `[{ id: 1 }]` 通过，而 Playwright 的严格匹配会失败。字符串中的包含判断则一致 | 有意为之 |
+| `toHaveLength()`, `toMatchObject()`, `toHaveProperty()` | 相同 | 相同 |
+| `toStrictEqual()`, `toThrow()`, `toBeInstanceOf()` | 暂无；对需要的形状用 `toEqual` | 暂缺 |
+| `expect.any()`, `objectContaining()`, `arrayContaining()`, `stringMatching()` | 相同，另有 `anything()` 和 `stringContaining()`，见[非对称匹配器](/reference/expect#非对称匹配器) | 相同 |
+| `expect(async () => { ... }).toPass()` | `expect.poll(read).toBe(...)`；要同时轮询多个值，用 `toEqual([a, b])` 轮询数组 | 更名 |
+| `expect.poll()` | 相同 | 相同 |
+| `expect.soft()` | 相同；用例体结束后，被保留的失败会使该次尝试失败，见[软断言](/reference/expect#软断言) | 相同 |
+| `expect(locator, 'message')` | `expect(locator)`；只有值断言接受消息，定位器失败本身已写明定位器、匹配器与观测到的内容 | 有意为之 |
+| `expect.extend()` | 暂无 | 暂缺 |
+| `expect(promise).resolves`, `.rejects` | 暂无；先 `await`，再 `expect(value)` | 暂缺 |
+
+### 导航与 app
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `page.goto(path)` | `app.open(path)`；浏览器选项用 `browser.goto(url, { waitUntil, timeout })` | 更名 |
+| `const response = await page.goto()` | 不返回内容；响应从 `browser.waitForResponse` 取 | 有意为之 |
+| `page.goBack()` | `app.back()`，或 `browser.back()` | 更名 |
+| `page.goForward()`, `page.reload()` | `browser.forward()`、`browser.reload()` | 仅 web |
+| `page.url()`, `page.title()` | `browser.url()`、`browser.title()` | 仅 web |
+| `page.waitForURL()` | `browser.waitForURL()`；接受字符串或 `RegExp`，不接受谓词函数，且 `timeout` 是唯一选项，传 `waitUntil` 报 `INVALID_ARGUMENT` | 仅 web |
+| `page.waitForLoadState()` | 暂无；对导航本身用 `browser.goto(url, { waitUntil })` | 暂缺 |
+| `page.waitForFunction(fn)` | `expect.poll(() => browser.evaluate(fn)).toBeTruthy()` | 暂缺 |
+| `page.waitForTimeout(ms)` | 对你等待的状态用定位器断言：出现的内容用 `toBeVisible()`，消失的内容用 `toBeHidden()` | 有意为之 |
+| `page.setViewportSize()` | `browser.setViewport()`，首次导航前后均可 | 仅 web |
+| `page.viewportSize()` | 暂无；`browser.evaluate(() => ({ width: innerWidth, height: innerHeight }))` | 暂缺 |
+| `page.screenshot()` | `app.screenshot(label)`：视口截图，脱敏，附到报告；没有 `fullPage` | 更名 |
+| 每条测试一个全新 `context` | 每次尝试都从全新 context 开始；`app.restart()` 重建它，`app.clearState()` 还会清空存储 | 相同 |
+| `page.pause()` | 暂无；观看用 `--headed`，让编码智能体驱动 app 用 [`e2e mcp`](/reference/mcp) | 暂缺 |
+
+### 网络与 browser
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `page.route(pattern, handler)` | `browser.route(pattern, handler)`；接受字符串或 `RegExp` 模式，不接受谓词函数；handler 恰好决策一次 | 仅 web |
+| `route.fulfill({ json, body, path, status, headers, contentType })` | 相同；`json`、`body`、`path` 三选一，`path` 相对项目根解析 | 仅 web |
+| `route.continue({ url, method, headers, postData })`, `route.fallback()` | 相同；`url` 遵循导航规则，`fallback()` 不接受覆写 | 仅 web |
+| `route.fetch()`, `route.abort(code)`, `route.fallback(overrides)` | 暂无；`abort()` 不接受错误码 | 暂缺 |
+| `page.unroute()` | `browser.unroute()` | 仅 web |
+| `page.waitForResponse(pattern)` | `browser.waitForResponse(pattern)`：字符串或 `RegExp`，不接受谓词函数；响应上有 `url`、`status`、`headers`、`json()`、`text()` | 仅 web |
+| `response.ok()`, `response.body()`, `response.request()` | 暂无；有 `status` 和 `text()` | 暂缺 |
+| `page.waitForRequest()`, `request.postDataJSON()` | 暂无；`route.request.postData` 是字符串 | 暂缺 |
+| `routeFromHAR()`, `routeWebSocket()` | 暂无 | 暂缺 |
+| `page.on('dialog')` | `browser.onDialog('accept')`，或一个调用 `accept` 或 `dismiss` 的 handler | 仅 web |
+| `page.waitForEvent('download')` | `browser.waitForDownload(() => trigger)` | 仅 web |
+| `page.waitForEvent('popup')`, `context.on('page')` | 暂无；app 打开的窗口不受驱动 | 暂缺 |
+| `page.on('console')`, `page.on('pageerror')` | 暂无；对页面展示的内容作断言 | 暂缺 |
+| `page.evaluate(fn, arg)` | `browser.evaluate(fn, arg)`；进出均为 JSON，不支持句柄 | 仅 web |
+| `page.addInitScript(script, arg)`, `context.addInitScript()` | `browser.addInitScript(script, arg)`，或对所有测试生效的 `web({ initScripts })`；`{ content }` 以纯字符串传入 | 仅 web |
+| `page.exposeFunction()`, `addStyleTag()`, `setExtraHTTPHeaders()`, `emulateMedia()`, `clock` | 暂无；页面打开后可用 `browser.evaluate` 追加 `<style>`；因结果必须为 JSON，它返回 `null` | 暂缺 |
+| `context.addCookies()`, `context.cookies()` | `browser.setCookies()`、`browser.cookies()` | 仅 web |
+| `context.clearCookies()` | 暂无；`app.clearState()` 还会清除其他持久化状态并重建 context | 暂缺 |
+| `request` fixture | Node `fetch`，见 [API](/api-testing) | 有意为之 |
+| `context.storageState({ path })` | 暂无；会话按次运行存放且加密，见[有意为之](#有意为之) | 有意为之 |
+
+### 测试结构
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `import { test, expect } from '@playwright/test'` | `import { test } from '@e2e-dev/web'` 与 `import { expect } from 'e2e'` | 更名 |
+| `test(title, fn)`, `test.describe`, `beforeEach`, `afterEach` | 相同；`describe` 和钩子也可从顶层导入 | 相同 |
+| `test.beforeAll`, `afterAll` | 相同，唯一的 fixture 是 `platform`；没有 `browser` 或 `request` | 相同 |
+| 测试中的 `{ page }` | `{ screen, app, browser }`；测试中不出现原始 `Page`，见[有意为之](#有意为之) | 有意为之 |
+| `test.skip(title, fn)`, `test.skip(condition, reason)` | 相同 | 相同 |
+| `test.only` | 相同；CI 中会以 `ONLY_IN_CI` 拒绝 | 相同 |
+| `test.describe.only` | 暂无；对每个成员用 `test.only` | 暂缺 |
+| `test.describe.skip` | `test.describe(title, { skip: true }, fn)` | 更名 |
+| `test.describe.serial`, `describe.configure({ mode: 'serial' })` | `test.describe(title, { serial: true }, fn)`：一个重试单元，共享 app 状态 | 更名 |
+| `describe.configure({ mode: 'parallel' })` | 暂无；一个文件的测试在一个 worker 上按顺序运行 | 暂缺 |
+| `describe.configure({ retries, timeout })` | 组上的 `{ retries, timeout }` | 更名 |
+| `test.setTimeout(ms)`, `test.slow()` | `test(title, { timeout }, fn)` | 更名 |
+| `test.fixme()`, `test.fail()` | 暂无；用 `{ skip: 'reason' }` | 暂缺 |
+| `test.step(title, fn)` | 暂无；每个 `screen`、`browser`、`agent` 调用本身就是报告里的命名步骤 | 暂缺 |
+| `test.info()`, `attach()`, `annotations` | 暂无；`app.screenshot(label)` 附加截图 | 暂缺 |
+| `{ tag: '@smoke' }` | 测试或组上的 `{ tags: ['smoke'] }` | 更名 |
+| `test.use({ ... })` | 配置中按 target 设置；运行时用 `browser.setViewport` | 更名 |
+| `test.extend({ fixture })` | 形状相同；依赖其他 fixture 的 fixture 放进链式 `extend`。暂不支持按需 setup：链上每个 fixture 都会为经由该 `test` 注册的每条测试进行 setup，无论是否出现在参数里——而 Playwright 只 setup 测试点名的那些。给每个 setup 各自的 `test` | 暂缺 |
+| `{ scope: 'worker' }` fixture、选项 fixture | 暂无；每文件 setup 用 `beforeAll` | 暂缺 |
+| 带 `storageState` 的 `setup` project | `test.setup(title, { sessions }, fn)` 与 `session.save(name)` | 更名 |
+
+### CLI
+
+| Playwright | e2e | 状态 |
+| --- | --- | --- |
+| `npx playwright test` | `npx e2e run` | 更名 |
+| `npx playwright test tests/login.spec.ts` | `npx e2e run tests/login.e2e.ts`；目录、裸文件名或 glob 也可用于选择 | 相同 |
+| `--project web` | `--target web` | 更名 |
+| `-g`, `--grep`, `--grep-invert` | `--grep` 与 `--grep-invert`，匹配 describe 标题与测试标题以空格连接后的文本；标签用 `--tag` 和 `--exclude-tag` | 相同 |
+| `tests/login.spec.ts:12` | `tests/login.e2e.ts:12`，即 `test(` 调用起始于该行的那条测试 | 相同 |
+| `--headed` | 相同 | 相同 |
+| `--debug` | 暂无；观看用 `--headed`。`e2e run --debug` 打印各阶段耗时和智能体步骤表，而非检查器 | 暂缺 |
+| `--ui` | 暂无；观看用 `--headed`，让编码智能体驱动 app 用 `e2e mcp` | 暂缺 |
+| `--retries`, `--workers`, `--config`, `--pass-with-no-tests` | 相同 | 相同 |
+| `--reporter` | 同一个旗标；取值为 `list`、`json`、`junit`、`markdown` | 相同 |
+| `--output` | `--output`，结果目录；每条测试的链路页与产物都在其 `results/` 中 | 相同 |
+| `--trace <mode>` | `--trace [mode]`，模式相同；裸 `--trace` 等于 `on` | 相同 |
+| `--last-failed`, `--shard`, `--repeat-each`, `--max-failures` | 名称相同；`--shard` 会把串行组保持在一起 | 相同 |
+| `--quiet` | 暂无 | 暂缺 |
+| `--update-snapshots` | 无对应物；没有像素断言 | 暂缺 |
+| `--list` | `npx e2e list`，选择旗标相同 | 更名 |
+| `npx playwright codegen` | `npx e2e explore` 从一个目标出发走查 app 并报告发现；`npx e2e mcp` 给编码智能体一个实时会话，让它边驱动 app 边写测试，见[编码智能体](/coding-agents) | 更名 |
+| `npx playwright show-trace` | 无查看器；打开终端指出的 `.e2e/results/` 下的 `trace.md` | 有意为之 |
+| `npx playwright show-report` | 暂无；由 `markdown` 报告器输出 `.e2e/summary.md` | 暂缺 |
+| `npx playwright install` | `npx @e2e-dev/web install`，安装引擎固定的 Playwright 版本；引擎还会在每次运行计时开始前，为缺失的浏览器安装一次 | 更名 |
+
+## 页面对象
+
+包装 `page` 的页面对象改为接收它用到的 fixture：查询和动作用 `screen`，只有浏览器才有的能力（键盘、鼠标、CSS 选择器、`evaluate`）用 `browser`。用 `e2e` 的 `Screen` 和 `Locator` 以及 `@e2e-dev/web` 的 `Browser` 标注类型，并把它们作为 fixture 提供，让每条测试不写 `beforeEach` 就拿到页面对象：
+
+```ts title="tests/page-models/account-page.ts"
+import type { Locator, Screen } from 'e2e';
+import type { Browser } from '@e2e-dev/web';
+
+export class AccountPage {
+  readonly accountName: Locator;
+
+  constructor(
+    readonly screen: Screen,
+    readonly browser: Browser,
+  ) {
+    this.accountName = screen.getByTestId('account-name');
+  }
+
+  async filterByNote(note: string) {
+    await this.screen.getByRole('button', 'Filter').click();
+    await this.screen.getByRole('button', 'Note').click();
+    await this.browser.keyboard.type(note);
+  }
+}
+```
+
+```ts title="tests/fixtures.ts"
+import { test as base } from '@e2e-dev/web';
+import { AccountPage } from './page-models/account-page.ts';
+
+export const test = base.extend<{ accountPage: AccountPage }>({
+  accountPage: async ({ screen, browser }, use) => {
+    await use(new AccountPage(screen, browser));
+  },
+});
+```
+
+读取 `browser` 的 fixture 会让该 `test` 上的每条测试都仅限 web：在设备 target 上它会在 `beforeEach` 中报 `UNSUPPORTED_CAPABILITY` 而失败。给这些测试加 `requires: ['browser']`，或把可移植的测试留在基础 `test` 上。
+
+`locator.page()` 没有对应物：把 `browser` 和定位器一起传下去。在 `beforeEach` 中调 `browser.newPage()`、在 `afterEach` 中调 `page.close()` 的测试可以把两者都删掉，因为每次尝试都从全新 context 开始。
+
+## 有意为之
+
+以下差异是有意为之，并将保持不变。
+
+- 字符串名称是精确匹配。Playwright 的 `getByRole` 名称、`getByLabel`、`getByPlaceholder` 和 `getByText` 匹配大小写不敏感的子串；这里字符串匹配整段文本、区分大小写，见[查询](/reference/screen#查询)。对 `Save` 的子串匹配也会命中 `Save as draft`，而在错误节点上通过的测试比直接失败的测试更糟。想匹配片段时传 `{ exact: false }` 或 `RegExp`。查询未命中就等于什么也匹配不到，因此其上的否定断言会通过：请先用正向断言验证查询本身。
+
+  ```ts
+  // <button>Save changes</button>, <label>Email address <input></label>
+  screen.getByRole('button', 'Save');                  // no match
+  screen.getByRole('button', { name: 'Save', exact: false });    // matches
+  screen.getByRole('button', 'save changes');          // no match, case differs
+  screen.getByLabel('Email');                                    // no match
+  ```
+- 文本读取的是渲染后的文本。在 web 上，`textContent()` 和 `toHaveText` 读的是 `innerText` 的返回值，见[定位器读取](/reference/screen#定位器读取)。除非给 `toHaveText` 传 `useInnerText`，Playwright 读的是 DOM 的 `textContent`。查询仍匹配源文本，与 Playwright 一致：`getByText('Draft')` 能找到下面的标签，`getByText('DRAFT')` 找不到。读原始 DOM 文本用 `browser.evaluate`。
+
+  ```ts
+  // <span data-testid="tag" style="text-transform: uppercase">Draft</span>
+  // <p data-testid="total">Total <span style="display: none">debug</span>42</p>
+  // <p data-testid="address">Line one<br>Line two</p>
+  await expect(screen.getByTestId('tag')).toHaveText('DRAFT');                 // Playwright: 'Draft'
+  await expect(screen.getByTestId('total')).toHaveText('Total 42');            // Playwright: 'Total debug42'
+  await expect(screen.getByTestId('address')).toHaveText('Line one Line two'); // Playwright: 'Line oneLine two'
+  ```
+- 没有勾选状态的节点视为未勾选。在按钮或标题上 `isChecked()` 返回 `false`、`.not.toBeChecked()` 通过，而 Playwright 会抛出 `Not a checkbox or radio button`。被普通按钮替换掉的 checkbox 按 test id 查询时仍会通过未勾选断言，所以请按角色查询可勾选控件：控件变了种类，查询就会失败。
+
+  ```ts
+  await expect(screen.getByRole('checkbox', 'Subscribe')).not.toBeChecked();
+  ```
+- 要么恰好一个匹配，要么报 `LOCATOR_AMBIGUOUS`，`isVisible()` 也一样——Playwright 会静默读取第一个匹配。见 [screen](/reference/screen)。
+- `browser.evaluate` 只接收和返回 JSON。结果会记录进报告并脱敏；`JSHandle` 或 `ElementHandle` 无法这样做。要传值请通过 `arg`。
+- `goto` 不返回内容。`app.open` 和 `browser.goto` 解析为 `void`；导航的响应从 `browser.waitForResponse` 获取。
+- 密码是没有字符串值的 `Secret`，模型永远看不到它。见[登录](/authentication)。
+- 会话按次运行存放且加密。`test.setup` 把状态存到某个名字下，`{ session }` 恢复它。文件以 AES-256-GCM 加密，密钥只存在于内存并在清理时删除，因此没有可跨运行缓存的 `.auth/user.json`；setup 每次运行、每个 target 只跑一次。
+- 每个 `browser` 调用都是一步。它带着脱敏后的参数写进报告，因此失败时会展示确切的调用，无需 `test.step` 包裹。
+- 测试中不出现原始 `Page`。原始页面上的任何东西都不会被记录、脱敏或遮蔽，因此在填入机密之后调用 `page.screenshot()` 会把像素泄漏出去。`surfaceOf(engine)` 是为[自定义执行器](/executors#自己驱动页面)准备的，不是给测试代码用的。
+
+## 默认值差异
+
+| 配置项 | Playwright | e2e |
+| --- | --- | --- |
+| 测试超时 | 30 s | 120 s，`timeout` |
+| 动作超时 | 无 | 30 s，`actionTimeout` |
+| Expect 超时 | 5 s | 5 s，`assertionTimeout` |
+| 导航超时 | 无 | 120 s，即测试预算；`browser.goto(url, { timeout })` 可覆写单次调用 |
+| 重试 | 0 | CI 中 1 次，本地 0 次 |
+| Trace | `off`（脚手架生成的配置里是 `on-first-retry`） | `retain-on-failure` |
+| `getByRole` 名称、`getByLabel`、`getByPlaceholder`、`getByText` | 大小写不敏感子串 | 精确匹配 |
+| 多个匹配上的 `isVisible()` | 取第一个匹配，不报错 | `LOCATOR_AMBIGUOUS` |
+
+## 优先迁移什么
+
+从交互序列经常变化的流程开始，例如向导或结账；稳定的 Playwright 测试可以原地不动。
+
+<CardGroup cols={2}>
+  <Card title="核心概念" icon="pen-to-square" href="/core-concepts">
+    用目标、断言和定位器取代脚本化选择器。
+  </Card>
+  <Card title="Web 引擎参考" icon="masks-theater" href="/reference/web">
+    全部选项与所有 `browser` 方法。
+  </Card>
+</CardGroup>

@@ -38,6 +38,23 @@ jobs:
             openrig-docs-cn/package-lock.json
             openrig-docs-en/package-lock.json
             agent-skills-docs-cn/package-lock.json
+            tester-army-e2e-docs-cn/package-lock.json
+
+      # tester-army-e2e 是 Mintlify 站：登录凭据下 npx mint export 出纯静态站
+      # （53 页目录式 index.html，全部 RSC payload 内嵌于 HTML），postprocess-export.mjs
+      # 把 HTML 属性与内嵌 payload 里的根绝对引用改写为 /docs-cn/tester-army-e2e 前缀。
+      # 只改 HTML，不动 JS chunk（会语法损坏）。凭据经 repo secret MINT_CONFIG
+      # 还原到 mint CLI 的登录文件位置。
+      - name: Build tester-army-e2e-docs-cn
+        working-directory: tester-army-e2e-docs-cn
+        env:
+          MINT_CONFIG: ${{ secrets.MINT_CONFIG }}
+        run: |
+          npm ci
+          mkdir -p ~/.config/mintlify && printf '%s' "$MINT_CONFIG" > ~/.config/mintlify/config.json
+          npx mint export --output export.zip
+          mkdir -p dist-deploy && cd dist-deploy && unzip -qo ../export.zip && cd ..
+          node postprocess-export.mjs dist-deploy /docs-cn/tester-army-e2e
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -200,6 +217,7 @@ jobs:
           mv nimbus-docs-cn/apps/www/dist _site/nimbus
           mv openship-docs-cn/apps/web/out _site/openship
           mv agent-skills-docs-cn/dist _site/agent-skills
+          mv tester-army-e2e-docs-cn/dist-deploy _site/tester-army-e2e
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

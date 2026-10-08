@@ -19,8 +19,10 @@
 | OpenRig (EN) | `openrig-docs-en/` | 无（仓库即源） | https://github.com/mvschwarz/openrig | 2026-09-30 |
 | OpenShip | `openship-docs-cn/` | https://openship.io/docs | https://github.com/oblien/openship | 2026-09-30 |
 | Agent Skills | `agent-skills-docs-cn/` | https://skills.addy.ie/ | https://github.com/addyosmani/agent-skills（站点工程：[skills.addy.ie](https://github.com/addyosmani/skills.addy.ie)） | 2026-10-08 |
+| e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
+> e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
 > OpenShip 子站亦为 pnpm monorepo（fumadocs + Next.js 16 静态导出）：Next 按 `NEXT_BASE_PATH` 自动加前缀，**无需 sed**；canonical/sitemap 由 `NEXT_PUBLIC_SITE_URL` 注入；产物在 `apps/web/out/`（见 CI 的 openship 构建段与其 README）。
 > Agent Skills 子站：官网源码在上游独立仓库 `addyosmani/skills.addy.ie`，正文是 `.astro`/`.ts` 数据文件而非 markdown；站内链接已在源码级前缀化（`astro.config.mjs` 注释），**无需 env base 也无需 sed**。技能包本体（`skills/*/SKILL.md`，供智能体执行的英文提示词）不属于站点内容，不参与翻译。
 
@@ -66,6 +68,7 @@ docs-cn/
 ├── openrig-docs-en/                    # OpenRig 英文镜像（Starlight，脚本生成，90 篇）
 ├── openship-docs-cn/                   # OpenShip 中文文档（fumadocs + Next.js 16 静态导出，164 篇 + 营销站）
 ├── agent-skills-docs-cn/               # Agent Skills 官方站中文版（原版 Astro 5 营销/教程站，36 页）
+├── tester-army-e2e-docs-cn/            # e2e 中文文档（Mintlify 原班 + export 导出，52 篇 MDX）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -126,6 +129,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Agent Skills：https://lif3ng-vibe.github.io/docs-cn/agent-skills/
 - Agency Agents：https://lif3ng-vibe.github.io/docs-cn/agency-agents/
 - Agency Agents（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/agency-agents-en/
+- e2e：https://lif3ng-vibe.github.io/docs-cn/tester-army-e2e/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

@@ -1,0 +1,201 @@
+---
+title: 订阅
+description: 用你的 ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅执行智能体步骤。
+icon: "id-card"
+---
+
+直接使用现有订阅，无需单独的 API 密钥。在 `e2e init` 中选择你的套餐，安装依赖，然后登录：
+
+| 订阅 | 命令 |
+| --- | --- |
+| ChatGPT Plus or Pro | `npx e2e login openai` |
+| GitHub Copilot | `npx e2e login github-copilot` |
+| OpenCode Console (OpenCode Zen and OpenCode Go) | `npx e2e login opencode-console` |
+| SuperGrok or X Premium+ | `npx e2e login spacexai` |
+
+跟随终端提示操作，然后运行 `npx e2e run`。智能体调用计入你套餐的用量额度。新项目请从[快速上手](/quickstart)开始。
+
+不支持 Claude 订阅。要用 Claude，请配置 [API 提供者](/models)，或选用你的 Copilot 套餐中可用的模型。
+
+## 配置现有项目
+
+`e2e init` 不会改动现有配置。要把现有项目切换到订阅，安装该模型所包装的 AI SDK 提供者包，并替换配置中的模型。登录流程由 `e2e` 自身提供：
+
+<Tabs>
+  <Tab title="ChatGPT">
+<CodeGroup>
+```bash npm
+npm install -D ai @ai-sdk/openai
+npx e2e login openai
+```
+
+```bash pnpm
+pnpm add -D ai @ai-sdk/openai
+pnpm exec e2e login openai
+```
+
+```bash bun
+bun add -d ai @ai-sdk/openai
+bunx e2e login openai
+```
+</CodeGroup>
+
+```ts title="Model setup"
+import { chatgpt } from 'e2e/oauth/chatgpt';
+
+const agent = { model: chatgpt('gpt-6-luna') };
+```
+  </Tab>
+  <Tab title="GitHub Copilot">
+<CodeGroup>
+```bash npm
+npm install -D ai @ai-sdk/openai-compatible @ai-sdk/openai
+npx e2e login github-copilot
+```
+
+```bash pnpm
+pnpm add -D ai @ai-sdk/openai-compatible @ai-sdk/openai
+pnpm exec e2e login github-copilot
+```
+
+```bash bun
+bun add -d ai @ai-sdk/openai-compatible @ai-sdk/openai
+bunx e2e login github-copilot
+```
+</CodeGroup>
+
+```ts title="Model setup"
+import { copilot } from 'e2e/oauth/copilot';
+
+const agent = { model: copilot('claude-sonnet-5') };
+```
+  </Tab>
+  <Tab title="OpenCode Console">
+<CodeGroup>
+```bash npm
+npm install -D ai @ai-sdk/openai-compatible @ai-sdk/openai @ai-sdk/anthropic @ai-sdk/google
+npx e2e login opencode-console
+```
+
+```bash pnpm
+pnpm add -D ai @ai-sdk/openai-compatible @ai-sdk/openai @ai-sdk/anthropic @ai-sdk/google
+pnpm exec e2e login opencode-console
+```
+
+```bash bun
+bun add -d ai @ai-sdk/openai-compatible @ai-sdk/openai @ai-sdk/anthropic @ai-sdk/google
+bunx e2e login opencode-console
+```
+</CodeGroup>
+
+```ts title="Model setup"
+import { opencodeConsole } from 'e2e/oauth/opencode-console';
+
+// OpenCode Zen, billed to the workspace's credits
+const agent = { model: opencodeConsole('deepseek-v4.1-flash') };
+// OpenCode Go, billed to your Go subscription
+const goAgent = { model: opencodeConsole('go/deepseek-v4.1-flash') };
+```
+  </Tab>
+  <Tab title="SuperGrok">
+<CodeGroup>
+```bash npm
+npm install -D ai @ai-sdk/xai
+npx e2e login spacexai
+```
+
+```bash pnpm
+pnpm add -D ai @ai-sdk/xai
+pnpm exec e2e login spacexai
+```
+
+```bash bun
+bun add -d ai @ai-sdk/xai
+bunx e2e login spacexai
+```
+</CodeGroup>
+
+```ts title="Model setup"
+import { grok } from 'e2e/oauth/grok';
+
+const agent = { model: grok('grok-4') };
+```
+  </Tab>
+</Tabs>
+
+在 `e2e.config.ts` 中设置 `agents: { default: agent }`。请选择你的账户可用的模型。
+
+## 选择模型
+
+构造函数接受厂商使用的 ID，它并不总是应用里显示的名称。可向厂商询问你的登录能使用哪些 ID：
+
+<CodeGroup>
+```bash npm
+npx e2e models            # 所有已保存的登录
+npx e2e models openai     # 单个提供者
+```
+
+```bash pnpm
+pnpm exec e2e models            # 所有已保存的登录
+pnpm exec e2e models openai     # 单个提供者
+```
+
+```bash bun
+bunx e2e models            # 所有已保存的登录
+bunx e2e models openai     # 单个提供者
+```
+</CodeGroup>
+
+每一行包含：传给 `chatgpt()`、`copilot()`、`opencodeConsole()` 或
+`grok()` 的 ID、厂商显示名，以及关于该模型的说明——推理档位、视觉、预览或隐藏。ChatGPT 列出 Codex 后端向你的套餐提供的内容；Copilot 列出套餐内的聊天模型；
+OpenCode Console 列出工作区已启用的 Zen 与 Go 模型，并逐一标注由哪个套餐付费，但不列出自定义提供者；SuperGrok 列出该 token 覆盖到的语言模型。
+
+Copilot 也会列出 `copilot()` 无法调用的模型，并加以标记：
+
+- `not enabled`：你的套餐未开启该模型。请在 GitHub 的 Copilot 设置中开启；若席位由组织统一管理，则联系组织管理员。
+- `no chat or responses`：Copilot 仅通过 `copilot()` 不支持的 API（如 Anthropic 的 Messages API）提供该模型，请改选其他模型。
+
+首次调用时，`copilot()` 会从同一份清单里挑选端点：大多数模型走 chat completions，只在 Copilot 的 Responses API 上提供的模型走 Responses API。清单读不到时，该调用改走 chat completions，下次调用再重新读取。Responses
+调用经由 `@ai-sdk/openai`，因此要用那些模型，请把它与 `@ai-sdk/openai-compatible` 一起安装；`e2e init` 会把两者都装上。
+
+### OpenCode Console
+
+一次 OpenCode Console 登录即可覆盖经由它计费的两个套餐：
+
+- 裸 ID（如 `deepseek-v4.1-flash`）是 OpenCode Zen 模型，费用从工作区的 credits 中扣除。
+- 带 `go/` 前缀的 ID（如 `go/deepseek-v4.1-flash`）是 OpenCode Go 模型，费用计入 Go 订阅。只有你持有该工作区的 Go 订阅时，才会列出 Go 模型。
+
+列表会略去工作区已关闭的模型，以及 Zen 的免费模型——OpenCode 把它们留给自家客户端。
+
+首次调用时，`opencodeConsole()` 会读取工作区配置来选择模型的 API：chat completions、OpenAI Responses（`@ai-sdk/openai`）、Anthropic Messages（`@ai-sdk/anthropic`）或 Google（`@ai-sdk/google`）。请把它们与 `@ai-sdk/openai-compatible` 一起安装；`e2e init` 会把四个全部装上。在 `providerOptions` 中以对应 API 的键来设置：chat completions 模型（Zen 和 Go 一律如此）用 `opencode`，其余用 `openai`、`anthropic` 或 `google`。
+
+## 登录帮助
+
+- ChatGPT 会打开浏览器让你登录。改用设备码登录请用 `npx e2e login openai --device`。
+- Copilot 复用你的 GitHub CLI 登录。若不用 `gh`，可传 `--client-id` 指定你自己的、已启用设备流的 GitHub OAuth 应用。使用 GitHub Enterprise 时则传 `--enterprise-url`。
+- OpenCode Console 会打印一个设备码并打开批准页面，你在页面上批准并选择工作区；页面上 e2e 显示为未知客户端。要切换工作区，运行 `npx e2e logout opencode-console` 再重新登录。
+- SuperGrok 会打印设备码和输入该码的网址。
+
+运行 `npx e2e login` 可选择提供者并查看哪些账户已登录。运行 `npx e2e logout` 可移除已保存的登录。
+
+## 保存的凭据与 CI
+
+登录信息保存在 `~/.config/e2e/oauth.json`（或 `$XDG_CONFIG_HOME` 之下），文件权限仅限你的用户。token 会自动刷新。当厂商拒绝已保存的 token 或其 refresh token 时，运行会以 `LOGIN_REQUIRED` 失败，并提示应运行的 `npx e2e login <provider>` 命令。
+
+CI 中请使用 API 密钥。`E2E_OAUTH_CREDENTIALS` 可以代替本地文件提供凭据 JSON，但刷新后的 token 不会写回该变量。运行 `e2e login` 前请先取消它的设置——含轮换 refresh token 的值无法无限期复用。所有登录选项见 [CLI 参考](/reference/cli#e2e-login)。
+
+CI 中使用 OpenCode Console 时，请在 Console 里创建服务账户 API 密钥（Service Accounts，然后 API Keys）并设为 `OPENCODE_API_KEY`；`opencodeConsole()` 会用它代替已保存的登录。`e2e models` 仍读取已保存的登录。
+
+<CodeGroup>
+```bash npm
+OPENCODE_API_KEY=oc_sk_... npx e2e run
+```
+
+```bash pnpm
+OPENCODE_API_KEY=oc_sk_... pnpm exec e2e run
+```
+
+```bash bun
+OPENCODE_API_KEY=oc_sk_... bunx e2e run
+```
+</CodeGroup>

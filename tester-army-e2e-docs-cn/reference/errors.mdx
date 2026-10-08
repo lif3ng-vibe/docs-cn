@@ -1,0 +1,142 @@
+---
+title: 错误
+description: 你能见到的每一个代码、它的类别与退出码。
+icon: "triangle-exclamation"
+---
+
+每个错误都带类别。类别决定退出码，代码标识原因。模型永远不会选定其中的
+任何一个。
+
+| 类别 | 退出码 |
+| --- | ---: |
+| test | 1 |
+| configuration | 2 |
+| infrastructure | 3 |
+| internal | 4 |
+| interrupted | 130 |
+
+## AgentError
+
+```ts
+/** Runner-classified agent failure. */
+export class AgentError extends Error {
+  /** Closed union, assigned by the runner, never taken from model text. */
+  readonly code: AgentErrorCode;
+  /** Sanitized, bounded prose; the same value as `message`. */
+  readonly explanation: string;
+  /** Artifact path, present only when evidence was captured and permitted. */
+  readonly screenshot?: string;
+  /** True when this failure reports a blocked step, not a product failure. */
+  readonly blocked: boolean;
+}
+```
+
+测试文件在各自的模块域中加载，因此 `instanceof AgentError` 可能为 false。请用
+`e2e` 导出的 `isAgentError`，并按 `code` 分支：
+
+```ts
+import { isAgentError } from 'e2e';
+
+try {
+  await agent.act('upgrade the workspace to Pro');
+} catch (error) {
+  if (isAgentError(error) && error.code === 'STEP_TIMEOUT') {
+    // the step ran out of time; the message carries the last judgment
+  }
+  throw error;
+}
+```
+
+| 代码 | 何时发生 | 类别 | 退出码 |
+| --- | --- | --- | ---: |
+| `AUTH_CREDENTIAL_UNAVAILABLE` | `Secret` 或 `credentials.user()` 指到 `config.credentials` 里不存在的凭据；调用发生在活跃 runner 之外；或密码的 provider 返回了非字符串、或不满足至少 6 字符（码点）的东西 | configuration | 2 |
+| `AUTH_CREDENTIAL_INVALID` | 已配置的凭据被应用拒绝（blocked: credentials） | configuration | 2 |
+| `SECRET_UNAVAILABLE` | 运行中的 `Secret` 或 `secrets.get()` 指到 `config.secrets` 里不存在的机密；机密的 provider 返回了非字符串、或不满足至少 6 字符（码点）的东西；或 engine 解析了一个未在其 `secrets` 中声明的机密 | configuration | 2 |
+| `ENVIRONMENT_UNAVAILABLE` | 被测环境宕机或在应用之外不可达（blocked: environment） | infrastructure | 3 |
+| `SEED_DATA_MISSING` | 步骤依赖的数据在环境中不存在（blocked: seed_data） | configuration | 2 |
+| `TEST_SETUP_FAILED` | 产品之外的测试前置条件未能就绪（blocked: test_setup）。也适用于违反自身契约的 `test.extend()` fixture：没调用 `use()` 就返回、调用了两次、或重定义了 target 引擎贡献的 fixture | configuration | 2 |
+| `AUTOMATION_UNSUPPORTED` | 步骤需要的交互是现有工具集做不到的，例如拖放（blocked: automation） | test | 1 |
+| `MODEL_UNAVAILABLE` | 未配置模型：内建 agent 的 `agents.<name>.model` 中没有 AI SDK 模型实例；消息会指名被选中的 agent。每次运行在 `agent` fixture 首次获取时检查一次；记为一条终止运行的 run 级错误。`e2e explore` 在启动前检查——包括自定义 executor 的条目——因为 explore 跑的是内建 agent。没有模型的自定义 executor 不做检查：其 `act` 与 `assert` 步骤照跑，`waitFor` 或 `extract` 在第一次调用时以此码失败。不逐出任何[录制](/cache)。 | configuration | 2 |
+| `POLICY_DENIED` | 被禁目的地（`http:` 与 `https:` 之外的导航 scheme，`about:blank` 除外；URL 格式错误）、被禁填入（未声明的机密、不可编辑的输入位、把密码填进非密码字段），或机密填入之后的像素证据（`vision: 'only'` 被扣住像素；`act` 或 `vision: true` 步骤的语义截取先于步骤超时）。也包括从安全字段读取值、文本或属性——getter 与 `toHaveValue`、`toHaveText`、`toContainText`、`toHaveAttribute` 匹配器皆然。未知工具或未声明字段作为调用结果直接拒绝给模型，不算此码 | configuration | 2 |
+| `APP_UNREACHABLE` | 应用 URL 无法到达，或应用命令提前退出、或超出 `startupTimeout`。启动错误附最近日志输出，其中 `command.env` 的值已脱敏，且未配置 `log` 时会建议加上。在智能体之下，还涵盖没有更具体错误码的任何 engine 故障：设备上一个忙碌或卡死的 iOS 自动化 runner 会上报到此，消息指名 runner、会话与设备以及恢复办法；参见 [Mobile](/mobile#故障排除) | infrastructure | 3 |
+| `APP_ALREADY_RUNNING` | target 的 `app.command` 尚未启动且 `reuseExisting` 未生效，`readyUrl` 却已经应答；停掉那个进程，或本地设置 `reuseExisting: true` | infrastructure | 3 |
+| `MODEL_PROVIDER_FAILED` | 适配器的传输重试之后（每次模型调用最多 5 次，尊重 `retry-after`，受剩余步骤超时约束）仍然发生提供者传输失败（网络错误、5xx、限流，或请求 120 秒内无响应）。停滞的请求会在 120 秒处中止并重发，`agent.act` 步骤的 `--debug` transcript 会记下它。此上限覆盖整个请求，因此单次响应需要超过 120 秒的模型同样在此失败。不逐出任何[录制](/cache) | infrastructure | 3 |
+| `CANCELLED` | runner 在没有进程信号的情况下取消了操作：客户端取消请求、或连接已关闭、或被服务器关闭截断的 `e2e mcp` `open_session`，在它已启动的东西停止之后上报 | infrastructure | 3 |
+| `MODEL_OUTPUT_INVALID` | 修复预算花完之后，结构化输出仍未通过校验 | test | 1 |
+| `APP_NOT_OPEN` | 操作需要已打开的应用；`app.open()` 尚未运行，或 engine 报告状态无效 | test | 1 |
+| `LOCATOR_NOT_FOUND` | 截止期限内没有匹配节点，或某智能体动作指向已不可用的节点 | test | 1 |
+| `LOCATOR_AMBIGUOUS` | 单节点操作有多个匹配。立即失败，不轮询。 | test | 1 |
+| `ACTION_FAILED` | 可操作性失败、操作超时，或动作可能已经提交 | test | 1 |
+| `STEP_BUDGET_EXHAUSTED` | 模型调用或动作步骤的预算在得出结论之前用尽 | test | 1 |
+| `STEP_TIMEOUT` | 调用期限到期，包括落在其某个轮询周期内的操作超时。携带最后一次判定（若存在）；该判定不确定时附 `ASSERTION_INCONCLUSIVE` 的 vision 提示 | test | 1 |
+| `CONTEXT_OVERFLOW` | 请求超出模型的上下文窗口。`act` 会精简自己的历史并重试一次（若确能缩小请求）；判定则直接失败。调低 `agents.<name>.maxObservationBytes`，或把指令拆成更短的步骤。上报为 blocked: automation | test | 1 |
+| `ASSERTION_FAILED` | `agent.assert` 判定为假；或某个定位器、`browser` 或值匹配器失败 | test | 1 |
+| `ASSERTION_INCONCLUSIVE` | `agent.assert` 无法判定：屏幕上没有足以二选一的信息（相关部分不在屏、仍在加载，或不可读）。当模型回答屏幕上没有所请求数据时，`agent.extract` 也会抛此码，而不是返回占位结果。这是失败、绝不是通过；explanation 会说明缺了什么。不开 `vision` 仅凭树判定时，消息会加一句 `pass vision: true when the answer is in pixels`，作为一个条件（"如果引擎会截取像素……"），直到该尝试的某一步收到过像素为止；引擎声明不截屏、已填机密、或先前步骤的像素请求被降级时不给提示 | test | 1 |
+| `AUTHENTICATION_FAILED` | executor 得出"应用内登录失败"的结论：这是产品判定。`AUTH_CREDENTIAL_INVALID` 是其 blocked 对应情形——已配置凭据被应用拒绝 | test | 1 |
+| `STEP_NO_CONCLUSION` | executor 用完了每一轮也没有调用 `complete_step`；步骤以智能体最后一次的摘要失败 | test | 1 |
+| `REPLAY_STALE` | 在 `cache.strict` 或 `--strict-cache` 之下，该步骤的录制存在、但已无法回放（`step.cache.reason` 是 `invalid-entry`、`wrong-context`、`target-not-found`、`target-ambiguous`、`viewport-changed`、`action-failed`、`action-uncertain`、`end-mismatch` 或 `no-entry` 之一——其中 `no-entry` 指缓存目录（而非自定义 `cache.store`）在另一个键下保存着该步骤的录制，消息会指名那个键），因此步骤不做任何模型调用直接失败，而不是交给智能体。不重试：重试绝不回放、会真跑通过。修法：用不带该旗标的 read-write 运行重新录制，配置设置了 `cache.strict` 时把它一并关闭，然后提交变更的条目；消息会指名打开 strict 的那个开关，以及配置的缓存目录（或 `cache.store`） | configuration | 2 |
+
+## runner 代码
+
+这些以纯字符串代码的形式出现在终端输出与报告中。
+
+| 代码 | 何时发生 | 类别 | 退出码 |
+| --- | --- | --- | ---: |
+| `CONFIG_NOT_FOUND` | `--config <path>` 指向不存在的文件；或从工作目录向上到仓库根之间不存在 `e2e.config.ts` 或 `e2e.config.mts` | configuration | 2 |
+| `CONFIG_AMBIGUOUS` | 同一目录同时存在 `e2e.config.ts` 与 `e2e.config.mts` | configuration | 2 |
+| `CONFIG_LOAD_FAILED` | 配置模块导入失败：声明了但未安装的包、未声明的包、错误的子路径、已移除的导出，或其在求值期间的任何抛出。消息会给出修法。求值期间抛出的配置错误保留自身错误码：配置调用的工厂（`web()`、`mobile()`、`defineEngine()`、`decisionExecutor()`）拒绝的选项，或被变成字符串的 `secrets.get()` 句柄，都是 `INVALID_CONFIG` | configuration | 2 |
+| `INVALID_CONFIG` | 配置调用（`web()`、`mobile()`、`defineEngine()`、`decisionExecutor()`）的工厂拒绝选项，并给出工厂自己的消息；或出现未知键、越界值、非法枚举、缺 `targets`、target 键超出 `{ name, platform, engine, app, trace, video }`、target 的 `app` 键未知或形态错误、target 没有 engine 却带 `app`、`web()` target 缺 `app.url` 或带设备字段、`mobile()` target 缺 `app.bundleId` 或 `app.appPath`、`web()` target 带 `app.url`（尚不支持）、`bundleId` 里带链接、或权限名/权限状态未知（消息指名最接近的名字）、`web()` 或 `mobile()` 选项里出现未知键（含 `web({ connect })` 与 `web({ basicAuth })`，消息指名最接近的一个）、`trace` 或 `video` 不是录制模式、已移除的产物类别列表（`artifacts: [...]` 或 `artifacts.kinds`）与 `artifacts.trace` 块（消息指名其原意对应的 `trace` 模式）、已移除的 `artifacts.video` 块或 `video` 产物类别（消息指名 `video` 选项）、已移除的 `specVersion` 键、engine 选项里的 `secrets.get()` 指向不存在的 `secrets` 条目（凭据的密码不算）、配置求值期间被转成字符串（模板字面量、`String()`）或被放进需要字符串位置的 `secrets.get()` 引用（`app.command` 的 `args` 条目或 `env` 值；只有声明了 secrets 的 engine 选项才接受它）、不是字符串的 `app.command` `args` 条目或 `env` 值（`undefined` 的 `env` 值会被直接丢弃）、`app.command` 里出现未知键（消息指名最接近的一个）、`engine` 不是 `defineEngine` 句柄、`json` 报告器与 `list` 同时使用、target 名重复或形态错误、机密或凭据的密码不足 6 个码点、凭据不是 `{ username, password }`、其 `username` 不是字符串（只有 `password` 可以是函数）、或配置与 `E2E_USER_<NAME>_USERNAME` 里都没有 username、两个凭据或两个机密的名称映射到同一个 `E2E_USER_*` / `E2E_SECRET_*` 覆盖变量（如 `api-key` 与 `api_key`）、`agents.<name>.context` 超长、`expect.poll` 的 `timeout` 或 `interval` 不是有限的毫秒数、`tests` 值既不是 glob 也不是 glob 列表、`tests` 列表只剩 `!` 排除项、已移除的顶层 `limits` 键、agents 条目是裸 `StepExecutor`（消息指名 `{ executor }`）或模型实例（消息指名 `{ model }`）、未知的 agent 键（消息指名最接近的一个）、已移除的 agent 键 `timeout` 与 `maxTurns`（消息指名 `judgmentTimeout` 与 `maxModelCalls`）、`executor` 旁边出现 `system` 或 `tools`、`tools` 条目不是 `defineTool` 构建的、或与内建工具名（语法动词 `complete_step`、`locate`、`start_recording`、`stop_recording`、`report_finding`）重名、`createToolLoopExecutor({ maxTurns })`、对 `app.url` 要求空闲端口的应用用了 `reuseExisting`、或端口 0 的 `app.url` 没有提供服务的 `app.command` | configuration | 2 |
+| `CONFIG_NOT_DETERMINISTIC` | worker 重新解析配置模块，得到的摘要与 runner 的不同 | configuration | 2 |
+| `APP_URL_REQUIRED` | 在未声明 `app.url` 的 target 上导航或使用相对 URL；或有 `app.command` 却没有可供轮询的 `app.url` 或 `app.readyUrl` | configuration | 2 |
+| `INVALID_APP_URL` | Base URL 带 userinfo、query、fragment 或非 HTTP scheme；非回环主机上的纯 HTTP；非字面回环地址（`127.0.0.1`、`[::1]`）主机上的端口 0；运行无法绑定空闲端口的回环地址；或无法解析 | configuration | 2 |
+| `INVALID_GLOB` | 空模式；除 `tests` 排除项开头那一个 `!` 之外第一段又以 `!` 开头（`!!tests/**`、`./!tests/**`）；裸 `!`；花括号、字符类、extglob；反斜杠分隔符；绝对路径；`..` 段；结尾的 `/` 或 `.`；不含通配符却指向目录的 `tests` 条目（消息指名应写的 glob）；只指项目根的模式；或不是整段的 `**` | configuration | 2 |
+| `UNKNOWN_TARGET` | `--target` 点了未配置的 ID | configuration | 2 |
+| `TARGET_REQUIRED` | `e2e mcp`：配置声明了多个 target，而 `--target` 与 `open_session` 都未指名 | configuration | 2 |
+| `NO_SESSION` | `e2e mcp`：在 `open_session` 之前、或会话已结束之后调用 `call` 或 `tools`（消息说明原因）；或 `call`、`tools`、`close_session` 点了未打开或正在关闭的 `session` id | configuration | 2 |
+| `SESSION_REQUIRED` | `e2e mcp`：多个会话开着时，`call`、`tools` 或 `close_session` 不带 `session`；消息列出它们 | configuration | 2 |
+| `ENGINE_IN_USE` | `e2e mcp`：在一个其 engine 实例正被其他打开中会话驱动的 target 上 `open_session`——因为该实例来自包、由所有会话共享；请在配置或其按路径导入的文件中创建 engine | configuration | 2 |
+| `CONFIG_IN_USE` | `e2e mcp`：在打开中会话所用的那份配置之外的另一份配置上 `open_session`；凭据与机密按进程范围解析，请用那份配置打开、或先关闭那些会话 | configuration | 2 |
+| `SESSION_OPEN` | `e2e mcp`：所有会话槽位（`--max-sessions`，默认 4）都占着打开、打开中或关闭中的会话时，或服务器正在关闭时 `open_session`；请先关一个 | configuration | 2 |
+| `UNKNOWN_TOPIC` | `e2e mcp`：`e2e://guide/{topic}` 资源点了 skill 没有的主题；消息列出有效主题 | configuration | 2 |
+| `UNKNOWN_TOOL` | `e2e mcp`：`call` 或 `tools` 点了会话目录里没有的工具；消息列出目录 | configuration | 2 |
+| `UNSUPPORTED_ARTIFACT` | 一个设置在 target 上、或设置在将在该 target 上运行的测试上的 [`video` 模式](/reference/config#录制)确实会在某些尝试上录制，而 target 的引擎无法录视频。消息指名该 target；模式来自测试时还指名该测试。来自配置根或 `--video` 的模式绝不触发它：它作用于能录制的 target，并用一条通知指名其余 | configuration | 2 |
+| `UNSUPPORTED_CAPABILITY` | target 的引擎未声明某个 fixture、动作或层级：它不贡献的贡献式 fixture；没有 `locate` 的 `screen`；没有 `state` 的状态恢复；没有 `artifacts` 的截图；持久浏览器上下文上的 `app.clearState()`（消息指名模式） | configuration | 2 |
+| `NO_TESTS` | 可运行的普通测试-target 对为零。消息指名原因：没有文件匹配 `tests` glob（附相似文件）；某个位置参数没有任何匹配（附指名它排除了某文件的 `!` 条目）；某文件没有注册任何测试；或过滤器剔光了全部测试。用 `--pass-with-no-tests` 可豁免。 | configuration | 2 |
+| `NO_LAST_RUN` | `--last-failed` 在运行写报告的地方没有找到 `report.json`，或那里不是 `report-1` 文档。先不带该旗标跑一次。 | configuration | 2 |
+| `ONLY_IN_CI` | 一个 focused 测试进入了 CI 运行 | configuration | 2 |
+| `COLLECTION_ERROR` | 收集阶段之外的注册；非法标题；非函数主体；异步 `describe` 主体；嵌套串行组；串行组内被禁的选项；`describe` 内的搭建测试；非法的会话名；格式错误的测试选项，如 `tags` 不是互异名字的列表；调用不接受的测试或 `describe` 选项键（消息指名最接近的）；导入失败的测试文件（无位置参数运行中的任何文件，或位置参数选中的文件）；被选中测试消费、或 `e2e explore --session` 点名、却没有收集到的搭建测试产出的会话（消息列出已声明的会话）；其引擎没有 `state` 能力可保存被消费会话的 target；或项目根之外的位置参数路径 | configuration | 2 |
+| `POLICY_DENIED` | 被禁目的地（`http:` 与 `https:` 之外的导航 scheme，`about:blank` 除外；URL 格式错误）、被禁填入（未声明的机密、不可编辑的输入位、用途不匹配、进入 JSON 输入位的 `Secret`），或被污染的像素（机密填入后的 `app.screenshot()`；`vision: 'only'` 被扣住像素；`act` 或 `vision: true` 步骤的语义截取先于步骤超时）；参见[安全模型](/security)。未知工具或未声明字段作为调用结果返回给模型，绝不是此码 | configuration | 2 |
+| `SESSION_MISMATCH` | 保存的会话与当前的运行、target、engine、平台或应用身份不匹配 | configuration | 2 |
+| `SESSION_EXPIRED` | 恢复时保存的会话已过有效期；或搭建测试保存的状态，其有效期不晚于其创建时间 | configuration or test | 2 or 1 |
+| `SESSION_INVALID` | 保存的会话未通过认证。已被篡改或损坏。 | configuration | 2 |
+| `SESSION_UNAVAILABLE` | 某测试需要的会话，没有任何选中的搭建测试产出 | configuration | 2 |
+| `SESSION_CONTRACT` | 搭建测试保存会话两次、保存了未声明的名字，或结束时未保存已声明的会话 | test | 1 |
+| `TEST_TIMEOUT` | 尝试超出解析后的测试 `timeout`。函数体不会被强行打断：其所在的 harness 操作被取消，其 fixtures 随尝试一同终结，因此到不了下一个测试。阻塞事件循环的测试在超时的 `cleanupTimeout`（至少 5 秒）逝去后会被杀死其 worker；参见[钩子](/reference/test#钩子) | test | 1 |
+| `STEP_NOT_AWAITED` | 测试函数体收尾时，它启动的一个步骤仍在运行：一次没带 `await` 的步骤调用。该步骤在调用所在行被标失败并取消；函数体正常返回时，尝试以此码失败；函数体抛出时，保留其自身错误并把此码记入 `secondaryErrors`。函数体、`afterEach` 钩子或 fixture teardown 返回时仍在运行的 `expect.poll` 匹配器，同样在调用所在行使该阶段以同样方式失败并被取消；`beforeAll` 或 `afterAll` 钩子留下的，则以 `HOOK_FAILED` 使钩子失败 | test | 1 |
+| `UNHANDLED_REJECTION` | 没有测试在跑时 promise 被 reject。未处理的 rejection 会算到它浮现时正在运行的测试头上，因为 Node 说不清是哪个测试创建了该 promise；测试之间出现时算作本次 run 错误，并把 worker 中最后完成的测试列为疑似来源。worker 中还没有任何测试完成时，则改为终结 worker：rejection 即 run 错误，行进中的测试以 `WORKER_CRASH` 失败。留下该 rejection 的函数体像超过 `TEST_TIMEOUT` 一样继续跑完 | test | 1 |
+| `HOOK_FAILED` | `beforeAll` 或 `afterAll` 抛出。跳过该套件的测试。 | test | 1 |
+| `LAUNCH_TIMEOUT` | engine 初始化或尝试启动超出 `config.launchTimeout` | infrastructure | 3 |
+| `CLEANUP_TIMEOUT` | engine 的尝试收尾超出 `config.cleanupTimeout`；或 engine 为该测试运行的路由或对话框处理器，在尝试收尾时仍在运行 | infrastructure | 3 |
+| `BROWSER_INSTALL_FAILED` | 浏览器供给失败 | infrastructure | 3 |
+| `WORKER_INIT_FAILED` | worker 进程始终未能就绪 | infrastructure | 3 |
+| `WORKER_EXIT` | worker 在运行某文件期间异常退出：在途测试以 `WORKER_CRASH` 失败，该文件的其他测试跳过。退出前已完成的尝试保留在报告中——包括重试的更早尝试与串行组已完成的成员——崩溃记为它们之后的一次尝试；崩溃在最后一次尝试之后才发生（如 `afterAll`）时记在最后那次上。未处理的 rejection 算到浮现时正在运行的测试头上，或（测试之间出现）记为 `UNHANDLED_REJECTION`；在其任何测试完成之前出现则终结 worker，rejection 本身即为 run 错误，而非此码 | infrastructure | 3 |
+| `WORKER_CRASH` | worker 在运行某个特定测试期间退出 | infrastructure | 3 |
+| `WORKER_ENTRY_MISSING` | 无法解析 worker 入口模块。打包问题。 | infrastructure | 3 |
+| `NODE_UNSUPPORTED` | 运行时跑不了 e2e 的 TypeScript loader：`^22.22.3 \|\| >=24.8.0` 之外的 Node.js、Bun（无 `module.registerHooks`）、或 Deno。CLI 启动前检查此项并以同样一句话退出码 2 结束；不经 CLI 而运行 e2e runner 的宿主，loader 会在注册钩子处再检查一次 | infrastructure | 3 |
+| `TYPESCRIPT_COMPILER_UNAVAILABLE` | 编译 e2e TypeScript 的 oxc 无法加载；消息给出原因。最常见的是该平台的原生绑定（`@oxc-transform/binding-<platform>-<arch>`、`@oxc-parser/binding-<platform>-<arch>`）未安装：npm 在 `--omit=optional` 下、或在别的平台写就 `package-lock.json` 时（npm/cli#4828）会漏装。重新安装、不带 `--omit=optional`；或删除 `package-lock.json` 与 `node_modules`，再运行 `npm install` | infrastructure | 3 |
+| `ENGINE_FAILURE` | 没有任何更具体映射的 engine 故障 | infrastructure | 3 |
+| `WORKER_PROTOCOL` | worker 上报的单位与其正在运行的不一致；或在另一尝试仍在运行时又启动了一个尝试 | infrastructure | 3 |
+| `SESSION_KEY_INVALID` | worker 收到的会话密钥不是 32 字节。打包或 IPC 问题。 | infrastructure | 3 |
+| `REPORT_WRITE_FAILED` | `report.json` 或 `ai-trace.json` 写不出来。记为 run 错误；内存中的结果仍然完整。写不出的 `junit.xml` 改为 `junit` 报告器在 stderr 上的一行 | infrastructure | 3 |
+| `EVALUATE_FAILED` | `browser.evaluate` 在页面内抛出（`@e2e-dev/web`） | test | 1 |
+| `INTERRUPTED` | 用户或 CI 信号中止了运行 | interrupted | 130 |
+
+由测试代码中参数校验抛出的错误使用 `INVALID_ARGUMENT` 与 `INVALID_LOCATOR`，
+都是退出码 1 的测试失败。测试代码抛出的未分类值上报为 `ERROR`。`internal` 类
+与退出码 4 预留给 runner 不变量违规；目前没有任何第一方代码抛出该类的代码。
+
+## 退出码
+
+混合运行时，取出现的最高优先级码：`130 > 4 > 3 > 2 > 1 > 0`。报告保留每个
+单独结果。搭建阶段的断言失败是测试失败，并跳过其依赖者。搭建基础设施缺失
+保留其 configuration 或 infrastructure 类别。

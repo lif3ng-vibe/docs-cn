@@ -1,0 +1,212 @@
+---
+title: 编写引擎
+description: 为另一个 UI 平台实现 e2e 引擎契约。
+icon: "gear"
+---
+
+引擎通过 `e2e/engine` 契约，把 `screen`、`app` 和智能体调用接到某个 UI 平台上。用它来支持桌面应用、电视或其他平台。
+
+现有的 `@e2e-dev/web` 与 `@e2e-dev/mobile` 包用的是同一套公开 `defineEngine` API。阅读本指南时对照它们的实现，可以看到完整示例。
+
+## 所有权边界
+
+runner 管理测试与策略；引擎观测并控制 UI。
+
+| 关注点 | 负责方 |
+| --- | --- |
+| 用例收集、target、重试、钩子、会话 | runner |
+| 查询轮询与严格单匹配基数 | runner |
+| 断言轮询、步骤记录、超时 | runner |
+| 一次即时查询、一次节点读取 | 引擎 |
+| 单个节点的可操作性判定与输入派发 | 引擎 |
+| 智能体规划、提示词、预算、台账 | runner |
+| 工具授权与机密解析 | runner |
+| 进程、页面与设备的具体机制 | 引擎 |
+| 敏感观测的源头打码 | 引擎 |
+| 纵深防御式脱敏 | runner |
+
+`locate` 必须立即返回当前匹配，没有匹配时返回空数组也不例外。不要自行加查询重试，也不要拒绝多个匹配。轮询与单匹配检查由 runner 负责。
+
+## 引擎的形态
+
+从 `defineEngine` 返回一个句柄。配置加载时，它会校验清单并确定引擎的能力。
+
+这个骨架假定存在一个面向你平台的 `createClient` 适配器。其节点必须遵循下文描述的语义树契约。
+
+```ts title="src/index.ts" expandable
+import { ConfigurationError, defineEngine, resolveExpression, type EngineHandle } from 'e2e/engine';
+
+export function hyperdrive(options: { device: string }): EngineHandle {
+  const client = createClient(options);
+  let bundleId = '';
+  return defineEngine({
+    name: 'hyperdrive',
+    version: '1.0.0',
+    spiVersion: 1,
+    platform: 'ios',
+    validateApp(app, { targetName }) {
+      if (app.bundleId === undefined) {
+        throw new ConfigurationError('INVALID_CONFIG', `target "${targetName}" needs app.bundleId`);
+      }
+    },
+    async init(info) {
+      bundleId = info.app.bundleId!;
+      await client.boot();
+    },
+    async dispose(context) { await client.shutdown({ signal: context.signal }); },
+    async observe() {
+      const screen = await client.snapshot();
+      return {
+        location: screen.title,
+        // One root with a stable id: `perform(root, swipe)` is the viewport swipe.
+        root: { ref: { id: 'root', revision: '' }, role: 'window', children: screen.nodes },
+        viewport: screen.viewport,
+      };
+    },
+    async locate(expression) {
+      const screen = await client.snapshot();
+      return resolveExpression(expression, screen.nodes);
+    },
+    actions: ['tap', 'fill', 'swipe'],
+    async perform(ref, action) {
+      switch (action.kind) {
+        case 'tap': return client.tap(ref.id);
+        case 'fill': return client.type(ref.id, action.value);
+        case 'swipe': return client.scroll(ref.id === 'root' ? undefined : ref.id, action.direction);
+      }
+    },
+    session: {
+      async back() { await client.back(); },
+      async restart() { await client.relaunch(bundleId); },
+    },
+  });
+}
+```
+
+```ts title="e2e.config.ts"
+targets: [{ name: 'phone', engine: hyperdrive({ device: 'iPhone 16' }), app: { bundleId: 'com.example.app' } }],
+```
+
+`version` 是必需的：报告里会用到它，且已保存的会话只有在保存它的那个版本下才能恢复。回放缓存不以它为键，因为录像在回放时会重新寻找节点。实现 `perform` 时，还要声明 `actions` 列出支持的动作类型。`locate` 应答 `screen` 查询；导出的 `resolveExpression` 会把标准查询规则应用于语义树。被测应用就是 target 的 `app`，不是引擎选项：`validateApp` 在配置加载时检查它，`prepare` 和 `init` 以 `info.app` 收到它。`session` 提供打开或重启它的方法。
+
+## 引擎不是什么
+
+引擎驱动用户界面。收件箱、数据库、测试 API 之类的辅助服务请用 fixture。通过 [`test.extend`](/reference/test#自定义-fixture) 添加它们。
+
+<Note>
+从 `e2e/engine` 导入共享类型与辅助函数，并把 `e2e` 声明为 peer dependency，让引擎与 runner 共享同一套错误类。公开导出包括错误、文本与 URL 匹配、断言轮询、JSON 校验和取消辅助函数。没有内部子路径。
+</Note>
+
+## 能力
+
+实现你的平台支持的那些可选方法。这些方法的存在与否决定了可用能力。调用不支持的能力会失败并报 `UNSUPPORTED_CAPABILITY`。一个可用的引擎从这几项做起：
+
+| 成员 | 解锁 |
+| --- | --- |
+| `observe(context, options?)` | 智能体观测与回放缓存 |
+| `perform(ref, action, context)` + `actions` | 已声明类型的节点动作，包括通过 `swipe` 滚动视口 |
+| `locate(expression, context)` | `screen`、`Locator` 与 `expect(locator)` |
+| `validateApp(app, info)` | 配置加载时对 target `app` 的检查：平台需要或无法驱动的字段，抛出 `INVALID_CONFIG` 并指名 `info.targetName`。[参考](/reference/engine#应用) |
+| `session.{open?,back?,restart?,reset?}` | `app.open()`、`app.back()`、`app.restart()`、`app.clearState()`，以及智能体的 `navigate` 与 `back` 动词 |
+
+指针动作、键盘、保存的状态、产物和贡献的 fixture 各自都是可选能力；[引擎参考](/reference/engine#能力)列出了每个成员。
+
+`actions`、`location`、`pointer` 和 `keyboard` 都依赖 `observe`。智能体收到的工具仅限引擎支持的、且该步骤已声明凭据可用的那些：你声明的每种动作类型解锁对应动词（`hover` 解锁 `hover` 工具、`dragTo` 解锁 `drag` 工具、`setInputFiles` 解锁 `upload` 工具、`check` 与 `uncheck` 解锁 `check` 工具，等等；[引擎参考](/reference/engine#能力)列出了这套映射）。智能体动作与定位器动作都会以 `LocatorAction` 的形式到达 `perform`。若某个具体节点无法支持本已声明的能力，抛出 `UNSUPPORTED_CAPABILITY`。
+
+智能体的 `scroll` 和 `screen.swipe()` 会调用 `perform(root, { kind: 'swipe' })`。根 id 在多次观测之间保持稳定。对其他节点的 swipe 则在该节点内部滚动。
+
+用导出的 `parseKey` 解读 `press` 的按键，如 `Enter` 或 `ControlOrMeta+a`。书写无效时 runner 会以 `INVALID_ARGUMENT` 拒绝。把合法按键映射到你的平台，平台发不出去的按键抛出 `UNSUPPORTED_CAPABILITY`。见[按键语法](/reference/engine#按键)。
+
+观测中可包含 `location`，例如 URL、屏幕标题或窗口名。runner 会把回放缓存条目锚定在它上面，并在它能解析为 URL 时应用源（origin）检查。
+
+`session.open` 收到的 URL 已由 runner 解析。`restart` 或 `reset` 之后，runner 会通过 `open` 重新打开所配置的地址。若引擎没有 `open` 方法，就在这些钩子里重新启动应用。
+
+没有单独的安全填充能力开关。派发机密填充之前，runner 会检查已声明的凭据、当前观测和兼容的可编辑字段。引擎收到的 `fill` 动作带有 `sensitive: true`，必须安全地处理它，或抛出 `UNSUPPORTED_CAPABILITY`。此后 runner 停止截图；见[填充机密后的截图](/security#机密填充后的截图)。
+
+引擎选项也可以接收机密，比如引擎发给应用的密码。接受 `string | Secret`（用 `e2e/engine` 的 `isSecret` 区分二者），把每个句柄列入引擎的 `secrets`，并在 `startAttempt` 中通过 `context.resolveSecret(secret)` 读取值。配置加载会拒绝没有对应机密的名字，且从解析那一刻起 runner 就对值脱敏。当应用以另一种形式看到该值（比如对它编码过的请求头）时，用 `resolveSecret(secret, { derived })` 返回那种形式，使其以同一个名字脱敏。这层保护只覆盖文本：引擎解析过机密的会话仍保留其截图与像素。配置在运行尚不存在时就会调用 `secrets.get()`，因此在那之前句柄只是按名字的引用。
+
+### 生命周期
+
+按运行顺序：
+
+- `prepare`：每个 target 一次，在 runner 进程中。在这里安装运行时；它返回的 `env` 会传给每个 worker。
+- `init`：每个 worker 一次，在其第一次尝试之前。在这里启动设备。
+- `startAttempt`：每次尝试之前。创建测试用的 UI。
+- `settleAttempt`：在测试主体之后，又在 teardown 之后各一次。抛出未被任何步骤 await 的测试回调的错误，比如对话框处理器。
+- `endAttempt`：每次尝试之后。清理测试用的 UI；启动失败后它也会运行，所以要保证幂等。
+- `dispose`：worker 关闭时，即使 `init` 从未运行。
+- `finish`：只要 `prepare` 运行过，在最后一个 worker 离开后对每个 target 执行一次。释放 `prepare` 获取的资源。
+
+给衍生进程的环境通过 `info.env` 下发，进度用 `info.log` 汇报。[引擎参考](/reference/engine#生命周期)列出了每个钩子的参数与预算。
+
+### 节点与引用
+
+`observe` 返回 `SemanticNode` 树。`locate` 返回与表达式匹配的节点。分配在 UI 生存期内保持唯一的 id，且让根 id 保持稳定。revision 由 runner 分配，过期检查也在 runner。当 `perform` 收到 `{ id, revision }` 时，按 id 查找，节点已不存在就抛出 `NODE_STALE`。当某个匹配在 `locate` 读取它时离开了 UI，也要抛出可重试的 `NODE_STALE`，绝不要从已消失之物上读出节点：被移除的元素报不出尺寸，而从它读出的节点会在其替代者已在屏幕上时骗过 `toBeHidden`。runner 会在调用方的截止时间内重新解析。
+
+若平台可能返回无限大的树，请限制快照大小。截断节点时设置 `truncated`，让 runner 知道列表不完整。节点的名称用平台的无障碍名称。
+
+test ID 放进 `testId`——无论它来自文档属性、iOS accessibility identifier、Android resource id，还是桌面 automation id。`testId` 查询只匹配该字段。
+
+### 纯视觉的界面
+
+对于没有语义树的 UI，`observe` 返回无子节点的 `root` 和 `pixels`。实现 `performAt`，并在 `pointerActions` 中声明支持的动作类型。
+
+智能体收到截图，可通过 `tap_at` 之类的工具行动。没有已列出节点占据某个点时，runner 会把坐标传给 `performAt`。坐标动作只在录制时的视口尺寸下回放，且 runner 在接受回放之前会核对记录的结束状态。
+
+### 键盘
+
+实现 `keyboard`，以便智能体聚焦控件之后往其中输入。`keyboard.type` 必须像真人打字那样、经由平台的键盘路径递送文本，让按键事件到达平台所属之处的应用：浏览器引擎逐字符派发 `keydown`、`keypress`、`input` 和 `keyup`；设备引擎把文本经设备键盘送入。不经按键直接插入值不算合规实现。没有任何可编辑控件持有焦点时，必须抛出 `NOT_ACTIONABLE`。没有屏幕键盘的平台省略 `dismiss`。同一个钩子在 `focus` 动作之后，也是 `locator.pressSequentially` 输入所经之路；harness 会把两者组合起来，不再向引擎多要什么。
+
+### 状态即凭据
+
+`state` 快照可能包含 cookie 和令牌这类认证数据。runner 用每次运行独有的密钥加密它，把它绑定到本次运行、target、引擎与应用身份上，并在运行结束后删除。
+
+不要持久化、缓存、写日志，也不要把快照带进错误信息。`restore` 必须整体替换应用的持久化状态，而不是与之合并。
+
+### 错误
+
+抛出带有[引擎参考](/reference/engine)所列错误码的 `EngineError`。只有 `NODE_STALE` 和 `FRAME_NOT_FOUND` 可标记为可重试。当某个动作可能已经生效时使用 `ACTION_MAY_HAVE_COMMITTED`，runner 便不会重复它。
+
+`INVALID_STATE` 会被映射为 `APP_NOT_OPEN`，`UNSUPPORTED_CAPABILITY` 归为配置错误。未知错误归为基础设施故障。
+
+## 贡献的 fixture
+
+引擎可以贡献 fixture，比如 `browser` 或 `device`。用 `context.fixture` 包装它们的方法，把调用记录为 `<fixture>.<method>` 步骤，各自带自己的产物与失败。
+
+```ts
+fixtures: {
+  device: (context) => context.fixture('device', {
+    async setNetwork(state: 'online' | 'offline') { await client.network(state); },
+    async home() { await client.home(); },
+  }, {
+    setNetwork: { kind: 'resource', label: (state) => state },
+    home: { kind: 'resource' },
+  }),
+},
+```
+
+```ts title="tests/fixtures.ts"
+import { test as base } from 'e2e';
+import type { Device } from 'e2e-engine-hyperdrive';
+
+export const test = base.extend<{ device: Device }>();
+```
+
+fixture 上下文提供 URL 策略检查、超时、操作预算、产物附加，以及定位器与断言的工厂。比如 `expectable(target, factory)` 会为 `expect(fixture)` 添加匹配器。完整上下文见[引擎参考](/reference/engine)。
+
+## 发布工具包
+
+动作词汇表缺少的平台操作，可以做成一套用 `defineTool` 构建的[项目工具](/tools)随引擎发布，并设置 `platforms` 让每个工具只在兼容的 target 上提供。`@e2e-dev/mobile/tools` 就是一例。
+
+## 自行验证
+
+用你的引擎跑一个测试文件。检查生命周期顺序、观测、动作、错误与不支持的能力。[`engine-contract.test.ts`](https://github.com/tester-army/e2e/blob/main/packages/e2e/tests/integration/engine-contract.test.ts) 演示了 runner 的契约，并为这些检查提供了示例。
+
+<CardGroup cols={2}>
+  <Card title="引擎契约" icon="gear" href="/reference/engine">
+    `e2e/engine` 的每一个类型和钩子。
+  </Card>
+  <Card title="移动引擎参考" icon="mobile-screen" href="/reference/mobile">
+    一份可对照阅读的完整设备引擎实现。
+  </Card>
+</CardGroup>

@@ -1,0 +1,132 @@
+---
+title: Bitrise
+description: 在 Bitrise 上运行 iOS 与 Android 测试，流水线中每个平台各一个工作流。
+icon: "/images/icons/bitrise.svg"
+---
+
+此配置在一个流水线中为每个平台各设一个工作流。开始前请先读[移动端作业](/ci#移动端作业)，该节说明了每个作业在每个 CI 服务上需要什么。
+
+Bitrise 自带启动这两种设备的步骤：macOS 上的 `xcode-start-simulator`，以及 Linux 上的 `avd-manager` 配合 `wait-for-android-emulator`。请在 Gradle 构建之前启动仿真器，这样 APK 编译时仿真器就能并行完成启动。
+
+```yaml title="bitrise.yml" expandable
+format_version: '25'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+tools:
+  nodejs: 22:installed
+
+pipelines:
+  e2e:
+    triggers:
+      push:
+      - branch: main
+      pull_request:
+      - target_branch: main
+    workflows:
+      e2e-ios: {}
+      e2e-android: {}
+
+workflows:
+  e2e-ios:
+    meta:
+      bitrise.io:
+        stack: osx-xcode-26.6.x
+    steps:
+    - git-clone@8: {}
+    - script@1:
+        title: Install dependencies
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -euo pipefail
+            npm ci
+            cd ios && pod install
+    - xcode-build-for-simulator@3:
+        inputs:
+        - project_path: ios/MyApp.xcworkspace
+        - scheme: MyApp
+        - configuration: Release
+    - xcode-start-simulator@0:
+        inputs:
+        - destination: platform=iOS Simulator,name=iPhone 17,OS=26.5
+    - script@1:
+        title: Run e2e
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -euo pipefail
+            xcrun simctl install booted "$BITRISE_APP_DIR_PATH"
+            npx e2e run --target ios --reporter list,junit
+    - script@1:
+        title: Package the e2e output
+        is_always_run: true
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            if [ -d .e2e ]; then (cd .e2e && zip -qr "$BITRISE_DEPLOY_DIR/e2e-ios.zip" .); fi
+    - custom-test-results-export@1:
+        inputs:
+        - test_name: e2e-ios
+        - base_path: $BITRISE_SOURCE_DIR/.e2e/junit.xml
+        - search_pattern: '*'
+    - deploy-to-bitrise-io@2: {}
+
+  e2e-android:
+    meta:
+      bitrise.io:
+        stack: ubuntu-noble-24.04-bitrise-2025-android
+    steps:
+    - git-clone@8: {}
+    - script@1:
+        title: Install dependencies
+        inputs:
+        - content: npm ci
+    - avd-manager@2:
+        inputs:
+        - api_level: 35
+        - tag: google_apis
+        - abi: x86_64
+    - android-build@1:
+        inputs:
+        - project_location: $BITRISE_SOURCE_DIR/android
+        - module: app
+        - variant: release
+        - build_type: apk
+    - wait-for-android-emulator@1: {}
+    - script@1:
+        title: Run e2e
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -euo pipefail
+            adb install -r "$BITRISE_APK_PATH"
+            npx e2e run --target android --reporter list,junit
+    - script@1:
+        title: Package the e2e output
+        is_always_run: true
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            if [ -d .e2e ]; then (cd .e2e && zip -qr "$BITRISE_DEPLOY_DIR/e2e-android.zip" .); fi
+    - custom-test-results-export@1:
+        inputs:
+        - test_name: e2e-android
+        - base_path: $BITRISE_SOURCE_DIR/.e2e/junit.xml
+        - search_pattern: '*'
+    - deploy-to-bitrise-io@2: {}
+```
+
+## 注意事项
+
+- **产物**。`deploy-to-bitrise-io` 只上传 `$BITRISE_DEPLOY_DIR` 的顶层内容，因此工作流把 `.e2e/` 打成 zip 放进该目录。`custom-test-results-export` 会把 `junit.xml` 送入 Test Reports 标签页。这些步骤在某个步骤失败后也会运行。
+- **机密**。在应用的工作流编辑器的 Secrets 下添加模型密钥。只有开启 **Expose for Pull Requests** 后，拉取请求构建才能拿到机密；公开应用的构建永远拿不到机密。在这类构建上，确定性测试照常运行，但每次智能体判定和每个没有录制的 `agent.act` 步骤都会失败。
+- **Release 签名**。Release APK 必须有签名。React Native 与 Expo 模板会用 debug keystore 签名。
+
+<CardGroup cols={2}>
+  <Card title="CI 概览" icon="rotate" href="/ci">
+    CI 默认值、分片、重跑与退出码。
+  </Card>
+  <Card title="托管设备" icon="cloud" href="/mobile#托管设备">
+    从服务租用设备，这样 runner 就不需要自己启动设备了。
+  </Card>
+</CardGroup>

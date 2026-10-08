@@ -1,0 +1,118 @@
+---
+title: Bug 大排查
+description: 同时运行多个探索会话，再用失败的测试证明每一个 bug。
+icon: "bug"
+---
+
+import { ShowMore } from './snippets/show-more.jsx';
+import { Video } from './snippets/video.jsx';
+
+bug 大排查同时运行多个 `e2e explore` 会话，每个会话检查应用的一个区域。随
+后编码智能体为每一条发现编写测试。只有当测试失败时，智能体才把该发现报告
+为 bug。
+
+<Video>
+  <video src="/images/bug-bash.mp4" aria-label="一个编码智能体在有头浏览器中运行 bug 大排查。" muted loop playsInline controls />
+
+  编码智能体在运行 bug 大排查。每个浏览器是一次探索会话。
+</Video>
+
+## 开始之前
+
+- 确保应用能同时服务多个探索者。先把应用启动一次，并在 target 的
+  `app.command` 上设置 `reuseExisting: true`，或在应用 URL 中把端口设为
+  `0`，让每次运行都启动自己的副本。设置了 `CI` 时，e2e 会忽略
+  `reuseExisting`：请使用端口 `0`。参见[启动你的应用](/web#启动你的应用)。
+- 在移动端，为每台模拟器或仿真器声明一个 target。每个探索者都需要自己的
+  设备。
+- 每个探索会话都会调用模型。每次运行的最后几行会显示 token 数、费用与耗
+  时。
+- 在他人正在使用的已部署站点上，不要改动数据。
+
+其余的设置工作——比如预置账号与登录——由智能体依照 skill 完成。
+
+## 安装 skill
+
+编码智能体通过 `e2e` skill 运行 bug 大排查。在你的项目中安装该 skill：
+
+<CodeGroup>
+```bash npm
+npx skills add tester-army/e2e
+```
+
+```bash pnpm
+pnpm dlx skills add tester-army/e2e
+```
+
+```bash bun
+bunx skills add tester-army/e2e
+```
+</CodeGroup>
+
+`e2e init` 也会安装该 skill。参见[编码智能体](/coding-agents)。
+
+## 启动一次 bug 大排查
+
+给你的编码智能体发一句话提示：
+
+```text
+Bug bash the checkout and account settings on this branch.
+```
+
+## 智能体做什么
+
+<ShowMore id="bug-bash-steps">
+
+1. 读取应用的路由。在分支上时，还会读取 diff。
+2. 写出 5 到 10 个章程（charter）。章程是针对某一区域的一句话目标，各带一
+   种视角：初次使用者、数字与文案、边界输入、刷新后的状态，或错误路径。
+3. 为每个章程运行一次 `e2e explore`，同时最多 4 个。每个章程有自己的人设
+   （`--agent`）和自己的输出目录（`--output`）。
+4. 合并所有章程的发现。
+5. 剔除有已知原因的发现：探索者的局限（例如打开新标签页的链接）、本地环
+   境、有意的设计，或种子数据。
+6. 为剩下的每条发现编写复现测试，测试断言的是期望行为。智能体可以为每个
+   区域启动一个子智能体，每个子智能体打开自己的
+   [`e2e mcp` 会话](/reference/mcp#多个会话)，在运行中的应用上核验
+   定位器。
+7. 运行每一条复现测试。只有当测试以 `ASSERTION_FAILED` 失败时，该发现才算
+   bug。
+8. 按以下顺序报告：确认的 bug、本地无法验证的生产风险、按原因归类的被剔除
+   发现，以及警告。
+
+</ShowMore>
+
+每个确认的 bug 都附有复现测试与步骤。引擎有录制时，还会附上探索者的截图
+与视频。视频不做脱敏：如果探索者输入过密码，分享前请先检查视频。
+
+完整流程可运行 `npx e2e guide bug-bash` 阅读。
+
+## 复现测试
+
+复现测试在 bug 修复前会一直失败。智能体给每条复现测试打上 `bugbash` 标
+签。把这些测试排除在为合并把关的测试运行之外：
+
+<CodeGroup>
+```bash npm
+npx e2e run --exclude-tag bugbash
+```
+
+```bash pnpm
+pnpm exec e2e run --exclude-tag bugbash
+```
+
+```bash bun
+bunx e2e run --exclude-tag bugbash
+```
+</CodeGroup>
+
+修复之后测试就会通过。移除标签，把它保留为回归测试。
+
+<CardGroup cols={2}>
+  <Card title="不写测试的探索" icon="compass" href="/explore">
+    一次 `e2e explore` 运行做什么、它的预算，以及它的报告。
+  </Card>
+  <Card title="MCP 服务器" icon="plug" href="/reference/mcp">
+    供编码智能体使用的实时会话，可多个并行。
+  </Card>
+</CardGroup>

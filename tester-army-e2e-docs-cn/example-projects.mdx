@@ -1,0 +1,41 @@
+---
+title: 示例项目
+description: 用 Vite、Next.js、Expo、SwiftUI、Jetpack Compose、Kotlin Multiplatform 和 Flutter 运行独立的 e2e 示例。
+icon: "folder-open"
+---
+
+每个示例都是一个独立的问候应用，带三个 locator 测试和两个智能体测试。输入
+名字、按下 Greet、检查结果。这些项目从 npm 安装已发布的 e2e 包，在本仓库
+之外也能使用。
+
+<CardGroup cols={2}>
+  <Card title="Vite" icon="/images/examples/vite.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-vite" cta="查看示例" arrow>
+    React + Vite。在 Chromium 中运行 locator 测试与智能体测试。
+  </Card>
+  <Card title="Next.js" icon="/images/examples/nextjs.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-next" cta="查看示例" arrow>
+    Next.js App Router。runner 启动应用并在 Chromium 中测试它。
+  </Card>
+  <Card title="Expo" icon="/images/integrations/expo.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-expo" cta="查看示例" arrow>
+    React Native + Expo。同样的测试可跑在 web、iOS 模拟器或 Android 仿真器上。
+  </Card>
+  <Card title="SwiftUI" icon="/images/examples/swiftui.png" href="https://github.com/tester-army/e2e/tree/main/examples/with-swiftui" cta="查看示例" arrow>
+    带 Xcode 工程的原生 iOS 应用。在 iPhone 模拟器上运行测试。
+  </Card>
+  <Card title="Jetpack Compose" icon="/images/examples/jetpack-compose.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-compose" cta="查看示例" arrow>
+    带 Gradle 工程的原生 Android 应用。在 Android 仿真器上运行测试。
+  </Card>
+  <Card title="Kotlin Multiplatform" icon="/images/examples/kotlin.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-kotlin-multiplatform" cta="查看示例" arrow>
+    面向 Android 和 iOS 的单个 Compose Multiplatform 界面。同样的测试可跑在仿真器或模拟器上。
+  </Card>
+  <Card title="Flutter" icon="/images/examples/flutter.svg" href="https://github.com/tester-army/e2e/tree/main/examples/with-flutter" cta="查看示例" arrow>
+    面向 Android 和 iOS 的 Flutter 应用。同样的测试可跑在仿真器或模拟器上。
+  </Card>
+</CardGroup>
+
+安装、构建和运行命令请看各自项目的 README。配置和测试文件与应用放在一起；
+SwiftUI、Jetpack Compose、Kotlin Multiplatform 和 Flutter 项目把它们放在
+`e2e/` 目录中。
+
+locator 测试不需要模型。设置 `AI_GATEWAY_API_KEY` 才能运行智能体测试；没有
+它这些测试会跳过。模型配置见 [Models](/models)，把自己的应用接入 e2e 见
+[Quickstart](/quickstart)。

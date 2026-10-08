@@ -1,0 +1,71 @@
+---
+title: app
+description: 可移植的应用生命周期 fixture，在所有平台上可用。
+icon: "cube"
+---
+
+`app` 控制应用的生命周期并截取屏幕截图。每个方法都需要引擎的
+相应能力；不支持的操作会以 `UNSUPPORTED_CAPABILITY` 失败。
+
+```ts
+export interface App {
+  /**
+   * The resolved base URL of the target's app, with the port the run
+   * allocated when `app.url` declared port 0; undefined for a target that
+   * declares no `app.url`.
+   */
+  readonly baseUrl: string | undefined;
+  /**
+   * Opens the app: the declared URL, a path relative to it, or any absolute
+   * http(s) URL. On a device target, which has no URL, it launches the pinned
+   * app fresh and takes no path.
+   */
+  open(path?: string): Promise<void>;
+  /**
+   * Recreates the execution context while preserving persisted state, then
+   * reopens the app at its base URL when the target declares one.
+   */
+  restart(): Promise<void>;
+  /**
+   * Clears persisted client state, recreates the execution context, then
+   * reopens the app at its base URL when the target declares one.
+   */
+  clearState(): Promise<void>;
+  /** Navigates back once. */
+  back(): Promise<void>;
+  /** Captures a redacted evidence screenshot. */
+  screenshot(label?: string): Promise<string>;
+}
+```
+
+`app` 的方法使用下表列出的配置超时，以测试剩余超时封顶。
+它们不接受逐次调用的超时选项。
+
+| 方法 | 超时 | 抛出 |
+| --- | --- | --- |
+| `open(path?)` | `config.timeout`，120000 毫秒 | 目标未声明 `app.url` 却传入路径时为 `APP_URL_REQUIRED`；URL 的 scheme 不是 `http:` 或 `https:`（`about:blank` 除外）时为 `POLICY_DENIED`；另有 `APP_UNREACHABLE`、`ACTION_FAILED`；带 URL 的目标缺少 `session.open`、或无 URL 的目标（设备会启动其固定应用）缺少 `session.restart` 时为 `UNSUPPORTED_CAPABILITY` |
+| `restart()` | `config.timeout`，120000 毫秒 | `ACTION_FAILED`、`ENGINE_FAILURE`；缺少 `session.restart` 时为 `UNSUPPORTED_CAPABILITY` |
+| `clearState()` | `config.timeout`，120000 毫秒 | `ACTION_FAILED`、`ENGINE_FAILURE`；缺少 `session.reset` 时为 `UNSUPPORTED_CAPABILITY` |
+| `back()` | `config.actionTimeout`，30000 毫秒 | `APP_NOT_OPEN`、`ACTION_FAILED`；缺少 `session.back` 时为 `UNSUPPORTED_CAPABILITY` |
+| `screenshot(label?)` | `config.actionTimeout`，30000 毫秒 | 机密 fill 之后为 `POLICY_DENIED`；另有 `UNSUPPORTED_CAPABILITY`、`ENGINE_FAILURE` |
+
+`screenshot` 把文件登记为该次尝试的产物（artifact），并返回相对
+该尝试产物目录、位于 `screenshots/` 之下的路径；报告记录的是
+相对产物根目录的路径。`label` 命名该步骤，并拼进文件名。
+
+```ts
+await app.open('/settings/billing');
+const shot = await app.screenshot('after-checkout');
+```
+
+<Warning>
+serial 分组中的 `clearState` 会销毁该分组依赖的共享状态。
+请改在普通分组的 `beforeEach` 中使用它。
+</Warning>
+
+一旦 `Secret` 被 fill 过，像素在整个会话的其余时间里都会被扣留，
+serial 分组中后续的测试也不例外。此后 `app.screenshot()`
+会以 `POLICY_DENIED` 失败，且不产生产物。
+
+仅浏览器可用的操作在 [`browser`](/reference/web) fixture 上；
+设备操作在 [`device`](/reference/mobile) 上。

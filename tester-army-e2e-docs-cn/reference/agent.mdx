@@ -1,0 +1,525 @@
+---
+title: agent
+description: 执行 agent 动作、检查条件、提取结构化数据。
+icon: "robot"
+---
+
+用 `act` 与应用交互，`assert` 检查当前画面，`waitFor`
+等待一个条件，`extract` 读取结构化数据。
+每次调用都有自己的超时与模型调用预算。内置 agent
+要求配置了模型：没有模型时，第一次获取 `agent` fixture
+会记录一条 run 级的 `MODEL_UNAVAILABLE` 并停止运行（退出码 2）。
+[自定义执行器](/executors)可以在没有模型的情况下实现 `act` 与
+`assert`；`waitFor` 与 `extract` 仍然需要模型。
+
+```ts
+export interface Agent {
+  /** Plans and executes a bounded multi-action flow; resolves with what the step did. */
+  act(instruction: string, options?: ActOptions): Promise<ActResult>;
+  /** Polls a natural-language condition until true or timed out. */
+  waitFor(condition: string, options?: WaitForOptions): Promise<void>;
+  /** Extracts and validates structured screen data. */
+  extract<Schema extends StandardSchemaV1>(
+    instruction: string,
+    options: ExtractOptions<Schema>,
+  ): Promise<StandardSchemaV1.InferOutput<Schema>>;
+  /** Judges a natural-language assertion against a fresh observation. */
+  assert(assertion: string, options?: AssertOptions): Promise<void>;
+}
+```
+
+## 预算
+
+模型调用计入每一次模型请求，包括修复轮次。动作步骤计入已提交的
+引擎动作。每个超时都额外受测试剩余超时封顶。
+
+| 方法 | 模型调用 | 动作步骤 | 默认超时 |
+| --- | ---: | ---: | --- |
+| `act` | `agents.<name>.maxModelCalls`，25 | `agents.<name>.maxSteps`，25 | `config.timeout`，120000 毫秒 |
+| `waitFor` | `agents.<name>.maxModelCalls`，25 | 0 | `agents.<name>.judgmentTimeout`，30000 毫秒 |
+| `extract` | 2 | 0 | `agents.<name>.judgmentTimeout`，30000 毫秒 |
+| `assert` | 2 | 0 | `agents.<name>.judgmentTimeout`，30000 毫秒 |
+
+`actionTimeout` 限制的是引擎操作，不是模型调用。
+逐次调用的预算必须是正整数且不超过已配置的上限；超出即
+`INVALID_ARGUMENT`。所有时长单位均为毫秒。
+
+`assert` 一行适用于内置 agent。当所选 agent 带有自定义
+`executor` 时，`assert` 作为步骤派发给它：其预算是该 agent 的
+`maxSteps` 与 `maxModelCalls`，默认超时为 `config.timeout`，
+调用上的 `vision` 是 `UNSUPPORTED_CAPABILITY`；
+`screenshot` 仍然生效。
+
+## agent.act
+
+```ts
+act(instruction: string, options?: ActOptions): Promise<ActResult>;
+```
+
+规划并执行一段有界的多动作流程。判定通过时以 `ActResult`
+resolve；失败或被阻塞时抛出一个 `AgentError`，其 `code`
+与 `blocked` 标志说明原因。
+
+`instruction` 在 NFC 规范化后为 1 到 8192 个 UTF-8 字节。
+未知的 `agent` 名在步骤开启之前是 `INVALID_ARGUMENT`。
+
+值通过 `options.params` 来自你的代码，从不来自模型。
+模型眼中的 `Secret` 只有其名称与用途。runner
+在 fill 之前检查模型选中的字段：必须是一个已启用的可编辑输入框，
+且密码只进密码字段。`locator.fill` 不做这类检查——字段是你的代码选的。
+
+```ts
+await agent.act('invite {email} as an editor', { params: { email: 'ada@example.test' } });
+
+const member = credentials.user('member');
+const { summary, cache } = await agent.act('Sign in', {
+  params: { username: member.username, password: member.password },
+});
+```
+
+结果携带该步骤的 `summary`、花费的 `modelCalls` 与 `actions`，
+以及 `cache`：[回放缓存](/cache)如何参与
+（`self-finalized`、`agent-concluded`，或带 `reason` 的
+`missed`；未开启缓存时缺省）。
+
+### 动作工具
+
+内置 agent 为目标引擎声明的每个动词各提供一个工具。
+每个工具都从最新一次观测获取节点 ID，返回屏幕上发生的变化，
+并与它操作的节点一起记录到[回放缓存](/cache)。
+引擎没有声明的动词不会提供。
+
+| 工具 | 引擎动作 | 作用 |
+| --- | --- | --- |
+| `tap({ target })` | `tap` | 点击一个节点：适用于按钮、链接、菜单项、tab、复选框、行或字段的手势。 |
+| `double_tap({ target })` | `doubleTap` | 双击一个节点，适用于第二次点击才打开或进入编辑的条目。 |
+| `long_press({ target })` | `longPress` | 按住一个节点，适用于长按菜单或长按操作。 |
+| `right_click({ target })` | `secondaryTap` | 右击一个节点，打开它的上下文菜单。 |
+| `hover({ target })` | `hover` | 把指针移到一个节点上而不按下：悬停菜单、浮出层、tooltip、鼠标移过才现身的控件。 |
+| `type({ target?, value, replace? })` | `fill`；无 `target` 时 `keyboard` | 替换节点的值；不带 target 时，向当前聚焦的东西打字。 |
+| `type_secret({ target, name })` | `fill` | fill 步骤 params 中声明的机密。仅当步骤声明了机密时提供。 |
+| `press({ target?, key, times? })` | `press`；无 `target` 时 `keyboard` | 向一个节点或聚焦控件发送一个键，单次调用最多 20 次。每次按键是一个动作；带 target 时，第一次按键发给该节点，其余发给当前聚焦的控件，因此连续的 `Tab` 会一路走下去。 |
+| `select({ target, value })` | `selectOption` | 按可见 label 选中一个选项。 |
+| `check({ target, checked? })` | `check` 与 `uncheck` | 把复选框、switch 或单选框设为某种状态（默认 `true`）。已处于该状态的控件不动——与会把状态翻转的 tap 不同。 |
+| `scroll({ direction, target?, times? })` | `swipe` | 滚动视口或一个可滚动节点，单次调用最多 20 屏。 |
+| `scroll_to({ target })` 或 `scroll_to({ text, direction?, target? })` | `scrollIntoView`；带 `text` 时 `swipe` | 只带 `target` 时，把一个已列出的节点带进视口——树里在首屏之下或之上的节点用。带 `text` 时，把列表（`target`，否则视口）按 `direction`（默认向下）一屏一屏翻页，直到出现读到该文本的节点（表现为整段 label，或两侧没有把这个词围住的内容，因此 `Row 12` 永远不会停在 `Row 120`；`target` 指定了列表时只在该列表内找，因此别处同文的标题不会终止翻页），然后引擎能力允许时把它带进视口——适用于长列表或开窗列表深处、树还没有渲染出的行。翻多少屏都算一个动作，上限 800 屏；某屏停止移动或到达上限为 `LOCATOR_NOT_FOUND`。每种形式只随其动作种类一起提供。 |
+| `drag({ target, to })` | `dragTo` | 把一个节点拖到另一个节点上放下：重新排序、看板列、拖放区。 |
+| `upload({ target, files })` | `setInputFiles` | 向文件输入框附加文件。路径相对项目根；策略见下文。 |
+| `navigate({ url })` | `session.open` | 打开一个 URL 或应用内相对路径。 |
+| `back()` | `session.back` | 后退一次：页面上是浏览器历史，设备上是应用内返回。 |
+| `observe()` | | 再次观察，并报告模型收到的上一幅画面以来的变化。 |
+| `dismiss_keyboard()` | `keyboard.dismiss` | 收起屏幕上的软键盘。仅限设备引擎。 |
+
+`scroll_to({ text })` 会等每一屏滚动到位。在设备上，
+下一次观测会检查稳定性，而不再等第二轮滚动表现。
+带 `scrollIntoView` 的引擎仍会等待把匹配节点带进视野的最后调整。
+回放遵循同样的规则。
+
+`upload` 接受模型给出的路径，但由 runner 决定。每个路径都按
+`locator.setInputFiles` 的方式相对项目根解析，
+当它落在项目之外（经符号链接也一样）、或是隐藏文件、
+或位于隐藏目录（如 `.env`、`.git`、`.e2e`）之下时，
+以 `POLICY_DENIED` 拒绝。不指向普通文件的路径是
+`INVALID_ARGUMENT`，一次普通的动作失败，模型会读到并纠正它。
+每一次拒绝与最终的放行都是步骤上一个名为
+`upload.path` 的 `policy` 事件。所有路径通过之前，
+不会有任何东西抵达引擎。
+
+模型看到的画面，在聚焦字段值的后面以 `selection="..."`
+列出其中选中的文本——引擎报告了的话：web
+引擎对 input、textarea 与 `contenteditable` 编辑器会报告，
+安全字段则不报告。对值或文本含已注册机密的字段，
+runner 会去掉这一项；选择范围不在被显示的那一部分时，
+被截到长度上限的字段也一样去掉，因此机密的被选字符
+永远不会到达模型。`Shift+ArrowLeft` 的 `press`
+会展示它选中了什么，`times` 可以在一次调用里按同一个键数次，
+因此 agent 能再多一个回合把选区扩展到想要的那个词，
+然后再格式化或替换它。
+
+tap 的各种变体特意是独立的工具，而不是 `tap`
+的一个选项：如果作为可选的 `kind` 提供出来，
+模型会在普通按钮上也填它（对 Save 双击），
+而双击提交按钮会让表单提交两次。工具必须被明确选择，
+每一种都写明了什么情况该退回普通 tap。
+
+移动引擎声明 `hover`、`doubleTap`、`longPress`、`check`、
+`uncheck`、`dragTo` 与 `session.back`，因此设备上会提供
+`hover`、`double_tap`、`long_press`、`check`、`drag` 与 `back`；
+它们不声明 `secondaryTap`、`scrollIntoView` 或
+`setInputFiles`。切换 tab 尚无动词：新标签页对模型不可见。
+
+### 像素工具: screenshot 与按点动词
+
+`act` 读取语义树，并在需要时请求截图。
+没有任何列出交互节点的画面——比如画布——会以一张截图开场。
+同一个模型既读语义树也读截图；`act` 没有 `vision` 选项。
+
+内置 agent 在没有 fill 过机密时提供这些工具：
+
+| 工具 | 作用 |
+| --- | --- |
+| `screenshot()` | 返回一张脱敏的视口截图，并且此后步骤内每个动作之后都会附带一张新截图。 |
+| `tap_at({ x, y })` | 点击该点上的控件（按节点 ID），没有列出的控件时直接点击坐标。 |
+| `hover_at({ x, y })` | 悬停该点上的控件（按节点 ID），没有列出的控件时把指针移到坐标处。需要 `hover` 动作或 pointer kind。 |
+| `type_at({ x, y, value, replace? })` | 替换已列出输入框的值。对未列出的输入框，先 tap 聚焦，除非设置了 `replace`；然后在光标处打字。未列出的输入框需要键盘支持。 |
+| `press_at({ x, y, key })` | 向该点上的控件发送一个键。没有列出的控件时，先 tap 聚焦，再用引擎的键盘。 |
+| `select_at({ x, y, value })` | 按可见 label 在该点的控件中选中一个选项。 |
+
+坐标指最近一张截图。模型必须先取一张截图才能使用按点工具，
+并且对已列出的控件应优先用节点 ID。runner
+会把每个点与语义树核对。落在已列出控件上的点，
+与按 ID 的动作走相同的策略检查与[回放缓存](/cache)记录。
+
+使用截图之后，动作后的等待还会检测像素变化，包括画布重绘。
+截图长边最大 768 像素；旧图按批移除，保留最新的两张。
+
+在有键盘的引擎上（包括浏览器与设备引擎），`type` 与 `press`
+可以省略 `target` 而作用于聚焦的字段。`type` 在光标处插入；
+`replace: true` 先清空。浏览器引擎在没有可编辑字段聚焦时
+拒绝打字。设备引擎还提供 `dismiss_keyboard`。
+动作收起屏幕键盘时，结果会说明这一点：在触摸屏上
+那次 tap 常常实际花在了收起键盘上，模型会再次操作该控件。
+
+语义捕获超时时，能独立证明脱敏的引擎可以返回一张新截图，
+并附显式的语义树不可用警告。语义不可用的每一次 `act`
+观测都会自动包含这张图和警告。先前的节点 ID 失效，
+下一次成功的语义捕获会重新呈现整棵树。
+截图显示的是当前视口；语义树不可用并不能证明某个控件或信息不存在。
+fill 过机密之后没有回退：当语义捕获先于步骤超时，
+`act` 以及 `vision: true` 的判定都会以 `POLICY_DENIED` 失败。
+
+语义捕获失败时，链路回放停止，该步骤无法记录新的链路条目，
+即使树后来恢复了。
+
+步骤中 fill 过机密后，之后的每一张截图都被扣留
+（`PIXEL_TAINTED`）；在被污染的视口上开启的步骤，
+六个像素工具一个也不提供。`tap_at` 需要引擎的 `actions`
+或 `pointerActions` 包含 `tap`，`hover_at` 需要其中包含
+`hover`；没有 pointer kind 时，点必须落在已列出的控件上。
+裸坐标的 tap 或 hover，只有在录制时同等尺寸的视口、
+或位于包含它的已列出节点内的相同位置，才能从
+[回放缓存](/cache)回放。发送过像素的步骤记录
+`visionInput: true` 与 `metrics.pixelBytes`。
+
+失败或被阻塞的步骤抛出 `AgentError`。失败判定的错误码是
+`ACTION_FAILED`，除非执行器给出更具体的错误码，如
+`LOCATOR_NOT_FOUND` 或 `AUTHENTICATION_FAILED`。被阻塞的判定
+——未达成产品判定的步骤——携带下列错误码之一：
+
+| 阻塞于 | 错误码 |
+| --- | --- |
+| 凭据 | `AUTH_CREDENTIAL_UNAVAILABLE`、`AUTH_CREDENTIAL_INVALID`、`SECRET_UNAVAILABLE` |
+| 环境 | `ENVIRONMENT_UNAVAILABLE`、`APP_UNREACHABLE`、`APP_ALREADY_RUNNING` |
+| 种子数据 | `SEED_DATA_MISSING` |
+| 测试装配 | `TEST_SETUP_FAILED`、`APP_NOT_OPEN`、`POLICY_DENIED` |
+| 自动化 | `MODEL_UNAVAILABLE`、`AUTOMATION_UNSUPPORTED`、`STEP_BUDGET_EXHAUSTED`、`STEP_TIMEOUT`、`CONTEXT_OVERFLOW` |
+
+runner 自己的停止码有：预算或截止时刻耗尽时的
+`STEP_BUDGET_EXHAUSTED` 与 `STEP_TIMEOUT`；`CANCELLED`；
+轮次耗尽而未得出结论时的 `STEP_NO_CONCLUSION`；
+`CONTEXT_OVERFLOW`；`MODEL_PROVIDER_FAILED`；判定落在文法之外时的
+`MODEL_OUTPUT_INVALID`；以及严格缓存下的 `REPLAY_STALE`。
+每个错误码都收录在 [Errors](/reference/errors#agenterror)。
+
+`act` 还会抛出 `INVALID_ARGUMENT`——格式错误的 instruction、
+过大的 `params`、未知的选项、超过已配置上限的预算；
+以及 `UNSUPPORTED_CAPABILITY`——`act` 不接受 `schema` 或
+`vision` 时。
+
+## agent.assert
+
+```ts
+assert(assertion: string, options?: AssertOptions): Promise<void>;
+```
+
+检查一次新鲜的观测，不轮询。判定模型看到的只有这条断言和当前观测，
+绝不会看到之前的步骤或 `act` 的 summary。
+它回答 `holds`、`fails` 或 `inconclusive`。当断言所指的内容出现
+不止一处时——比如一个总额同时出现在 summary 和支付按钮上——
+每一处都必须一致：有一处矛盾即失败。想只判定某一处，
+请点名那个位置（`the order summary total is $42.00`）。
+关于某个条目的断言，如 `a todo is marked done`，
+只要有任意一个条目符合即成立。
+
+判定为假时抛出 `ASSERTION_FAILED`；画面信息不足以判定时抛出
+`ASSERTION_INCONCLUSIVE`。两者都携带解释，允许时还带截图路径。
+仅凭语义树做出的 inconclusive 判定，会在消息里附加
+`pass vision: true when the answer is in pixels`，措辞是一个条件
+（`if the engine captures pixels, ...`），直到该尝试已有某个步骤
+收到过像素。引擎声明不做截图捕获、已 fill 过机密、
+或先前某步骤的像素请求被降级时，没有这个提示：
+那时 `vision: true` 也添不进任何证据。提示是内置判定模型的；
+使用自定义 `executor` 时，`assert` 只携带执行器的解释。
+`screenshot: false` 或该尝试中已 fill 过机密之后，
+不会捕获任何证据。`screenshot` 控制判定之后附加的失败证据；
+`vision` 控制判定之前给模型看什么。自定义 `StepExecutor`
+自己判定断言：它尊重 `screenshot`，因为那证据是 runner
+在判定之后收集的；它拒绝 `vision` 并报
+`UNSUPPORTED_CAPABILITY`，因为它的模型看到什么由执行器决定。
+
+```ts
+await agent.assert('the dashboard shows a trial badge');
+```
+
+## agent.waitFor
+
+```ts
+waitFor(condition: string, options?: WaitForOptions): Promise<void>;
+```
+
+观测并判定一次。判定为假或 inconclusive 之后，先等满
+`interval`，随后每 500 毫秒观测一次（`interval`
+更短时按 `interval`），不消耗模型调用；只有当画面的内容
+——`vision` 开启时连同像素——与上一次判定过的画面不同时，
+才再次判定。第一次成立的判定即为成功。
+判定遵循 `agent.assert` 的规则，因此出现在多处的一个值，
+要等每一处都一致才算成立。
+
+截止时刻到时抛 `STEP_TIMEOUT`，预算耗尽时抛
+`STEP_BUDGET_EXHAUSTED`，二者都携带最后一次判定
+（当那一轮是 inconclusive 时，带与 `agent.assert`
+相同的 vision 提示）；超出范围的选项或 `waitFor`
+不接受的选项抛 `INVALID_ARGUMENT`。
+
+```ts
+await agent.waitFor('the upload progress reports completion', { interval: 500 });
+```
+
+## agent.extract
+
+```ts
+extract<Schema extends StandardSchemaV1>(
+  instruction: string,
+  options: ExtractOptions<Schema>,
+): Promise<StandardSchemaV1.InferOutput<Schema>>;
+```
+
+取一次新鲜的观测，请求结构化输出，校验它，并返回校验后的值。
+它不执行任何应用动作。
+
+当 schema 有 JSON Schema 投影（zod 有）时，模型会收到它的形状：
+类型、字段、必填字段、允许的字面量。`min`、`max`、长度、pattern、
+format 之类的取值规则留在你的 schema 里，由它来判定模型读到的值。
+模型也可以回答“画面上没有这些数据”，此时抛出
+`ASSERTION_INCONCLUSIVE` 并说明缺了什么，
+而不是返回 `""` 或 `0` 这样的占位值。想把“缺失”当作合法答案，
+请在 instruction 和 schema 里写明
+（用 `z.string().nullable()` 配合
+`'the phone number, or null when none is shown'`）。
+
+预算是两次模型调用：一次抽取，加一次修复轮次，
+用于校验失败的输出。不是 Standard Schema v1 的 schema 抛
+`INVALID_ARGUMENT`；画面不显示所需数据时抛
+`ASSERTION_INCONCLUSIVE`；修复之后校验仍失败时抛
+`MODEL_OUTPUT_INVALID`。
+
+```ts
+const summary = await agent.extract('the workspace name and plan', {
+  schema: z.object({ name: z.string(), plan: z.string() }),
+});
+```
+
+## 视觉
+
+`assert`、`waitFor` 与 `extract` 接受 `vision`。
+截图要求判定模型支持图片。
+
+| `vision` | 发给判定模型的证据 |
+| --- | --- |
+| `false`，默认 | 语义树 |
+| `true` | 语义树与一张脱敏截图 |
+| `'only'` | 仅脱敏截图 |
+
+视觉类检查用 `'only'`，比如浮层是否盖住了表单、图表看起来是否正常。
+截图显示的是当前视口，因此先滚动到相关内容。
+`act` 自己请求截图，不接受该选项。
+
+机密 fill 污染了视口时（步骤上为 `visionDegraded: "PIXEL_TAINTED"`）、
+引擎脱敏的区域少于其观测到的安全字段的数量时
+（`MASKING_UNPROVEN`）、或引擎无法捕获像素时
+（`UNSUPPORTED_CAPABILITY`），像素都会被扣留，只发送语义树。
+`'only'` 模式下这些情况改为以 `POLICY_DENIED` 失败。
+
+`vision: true` 或 `'only'` 时，可恢复的语义捕获失败在引擎能独立证明
+脱敏的情况下可以用一张新截图顶上。`vision: false` 时，
+或 fill 过机密之后，捕获失败会在任何模型调用之前终止判定。
+缺失的语义树撑不起关于空画面的判定。
+
+判定之前捕获失败时，报告记录零次模型调用，并省略
+`observationRevision` 与 `explanation`。步骤错误描述捕获失败。
+被封闭文法拒绝的回答是步骤上一个 `schema` 事件，
+并获得一次修复轮次；该回答再次被拒时，步骤以
+`MODEL_OUTPUT_INVALID` 失败，其 `explanation` 即拒绝理由。
+
+## 类型
+
+```ts
+/**
+ * Parameters and budgets for one `act` call.
+ */
+export interface ActOptions extends AgentOption {
+  /**
+   * JSON-safe values the instruction refers to, at most 64 KiB and 32 levels
+   * deep. A `Secret` reaches the model by name only; the runner fills it. A
+   * value wrapped in `unique()` is different on every run, and the replay
+   * cache records a slot for it instead of the value.
+   */
+  params?: AgentParams;
+  /** Step deadline in milliseconds; defaults to `config.timeout`. */
+  timeout?: number;
+  /** Action budget; defaults to `agents.<name>.maxSteps` and can only lower it. */
+  maxSteps?: number;
+  /** Model-call budget; defaults to `agents.<name>.maxModelCalls` and can only lower it. */
+  maxModelCalls?: number;
+}
+
+/** The configured agent (`agents.<name>`) one call runs with, in place of the test's. */
+export interface AgentOption {
+  agent?: string;
+}
+
+/** `assert` options: one judgment plus one repair round, within `timeout`. */
+export interface AssertOptions extends VisionOption, AgentOption {
+  /** Deadline in milliseconds; defaults to the agent's `judgmentTimeout`, 30000. */
+  timeout?: number;
+  /** Attach a redacted screenshot to the step; on by default, denied after a secret fill. */
+  screenshot?: boolean;
+}
+
+/** `waitFor` options: a judgment at most once per `interval` until `timeout`. */
+export interface WaitForOptions extends VisionOption, AgentOption {
+  /** Deadline in milliseconds; defaults to the agent's `judgmentTimeout`, 30000. */
+  timeout?: number;
+  /** Least time between two judgments, in milliseconds; 100 through 60000, default 3000. */
+  interval?: number;
+  /** Judgment budget; defaults to `agents.<name>.maxModelCalls` and can only lower it. */
+  maxModelCalls?: number;
+}
+
+/** `extract` options: one extraction plus one repair round, validated against `schema`. */
+export interface ExtractOptions<Schema extends StandardSchemaV1> extends VisionOption, AgentOption {
+  /** Any Standard Schema v1 validator; the output is validated against it, with one repair round. */
+  schema: Schema;
+  /** Deadline in milliseconds; defaults to the agent's `judgmentTimeout`, 30000. */
+  timeout?: number;
+}
+
+export interface VisionOption {
+  /** What the judge is shown; `false` by default. */
+  vision?: VisionMode;
+}
+
+/**
+ * Evidence for `assert`, `waitFor`, and `extract`.
+ *
+ * - `false`: the tree.
+ * - `true`: the tree and a screenshot, on every call.
+ * - `'only'`: the screenshot, and not the tree.
+ *
+ * When pixels cannot be safely captured, `true` falls back to the tree;
+ * `'only'` fails with `POLICY_DENIED`.
+ */
+export type VisionMode = boolean | 'only';
+
+/** What one passing `act` step did, as the report records it. */
+export interface ActResult {
+  /** The executor's one-line account of the step, or the replay's when the cache finished it. */
+  readonly summary: string;
+  /** How the replay cache took part; absent when caching is off for the step. */
+  readonly cache?: StepCacheInfo;
+  /** Model calls the step spent; 0 when a cached replay finished it. */
+  readonly modelCalls: number;
+  /** Grammar actions and mutating tool calls the step performed. */
+  readonly actions: number;
+}
+
+/**
+ * How the replay cache took part in one agent step. `self-finalized` means
+ * the full trace replayed and the step passed with zero model calls;
+ * `agent-concluded` means a replayed prefix handed the step to the executor;
+ * `missed` means the executor ran the step from the top.
+ */
+export interface StepCacheInfo {
+  mode: 'self-finalized' | 'agent-concluded' | 'missed';
+  /** The miss or hand-off reason token; absent on `self-finalized`. */
+  reason?: TraceReplayMissReason | ReplayHandOffReason;
+  /**
+   * On a `gap` at a typed value: the rule that made the value this run's
+   * data rather than the flow's. Absent for a gap at a project tool.
+   */
+  derived?: DerivedReason;
+  /**
+   * Why a passing step that ran live was still not recorded, when the cause
+   * is the call itself: `param-collision` when a `unique()` value equals, is
+   * spelled inside, or is the encoded form of another param's value, so the
+   * recording could not tell which param a recorded input came from.
+   */
+  notRecorded?: 'param-collision';
+  replayedActions: number;
+  totalActions: number;
+}
+
+type TraceReplayMissReason = 'retry' | 'no-entry' | 'invalid-entry' | 'truncated' | 'wrong-context';
+export type ReplayHandOffReason =
+  | 'gap'
+  | 'target-not-found'
+  | 'target-ambiguous'
+  | 'viewport-changed'
+  | 'action-failed'
+  | 'action-uncertain'
+  | 'end-mismatch';
+export type DerivedReason = 'pixels' | 'whole-node' | 'minted-token' | 'date';
+
+/** Values an `act` instruction refers to. */
+export type AgentParams = Readonly<Record<string, AgentParam>>;
+
+/** A JSON-safe value, a `Secret`, or a `Unique` string. */
+export type AgentParam =
+  | JsonPrimitive
+  | Secret
+  | Unique
+  | readonly AgentParam[]
+  | { readonly [key: string]: AgentParam };
+```
+
+每个 `StepCacheInfo.reason` 的解释见
+[为什么一个步骤没有被回放](/cache#步骤为什么没有被回放)。
+
+`Unique` 是 `unique()` 的返回类型：一个每次运行都不同的值，
+回放缓存把它记录为槽位（slot），回放时再替换回来。见
+[回放缓存](/cache)。
+
+## unique
+
+```ts
+import { unique } from 'e2e';
+
+/** A string param that differs on every run; the model sees `value`, the replay cache a slot. */
+export interface Unique {
+  readonly value: string;
+}
+
+/**
+ * Marks a value that is different on every run. Mark values the flow types
+ * or looks for, not choices that steer it: two runs whose `unique()` values
+ * differ replay the same recording.
+ */
+export function unique(value: string): Unique;
+```
+
+值不是字符串、为空或只有空白、或包含占位文本 `{{param:`
+时，抛出 `INVALID_ARGUMENT`。
+
+```ts
+await agent.act('create a company named {name}', {
+  params: { name: unique(`Acme ${Date.now()}`) },
+});
+```
+
+## AgentError
+
+每一次失败都是一个 `AgentError`，带封闭集合中的 `code`、一个
+`explanation`、可选的 `screenshot` 路径，以及 `blocked` 标志。
+判断它请用 `e2e` 里的 `isAgentError(error)`，不要用
+`instanceof`。该类与所有错误码收录在
+[Errors](/reference/errors#agenterror)。

@@ -1,0 +1,1370 @@
+---
+title: e2e/engine
+description: 通过观测、动作、生命周期钩子和 fixture 构建引擎。
+icon: "gear"
+---
+
+从 `e2e/engine` 导入引擎类型与辅助函数。`defineEngine` 会校验并冻结你的实现、推导其能力，并返回一个句柄供配置中的 `targets` 使用。
+
+```ts
+import { defineEngine, type EngineHandle } from 'e2e/engine';
+
+export function defineEngine(spec: Engine): EngineHandle;
+export function isEngineHandle(value: unknown): value is EngineHandle;
+```
+
+引擎驱动一个用户界面，例如浏览器或模拟器。它实现节点、定位器、动作与错误的
+共享类型。界面之外的资源（如 API 或数据库）请用 `test.extend` fixture 提供。
+
+出现以下情况时校验失败并报 `INVALID_CONFIG`：
+
+- spec 不是对象，或 `name` 缺失或为空；
+- `version` 缺失或为空，或 `spiVersion` 不是 `1`；
+- `platform` 为空，或 `workers` 不是正的安全整数；
+- 钩子（`observe`、`locate`、`perform`、`performAt`、`prepare`、`finish`、
+  `init`、`startAttempt`、`settleAttempt`、`endAttempt`、`dispose`、
+  `validateApp`）不是函数；
+- 对象字面量上出现未知顶层键（类实例自身的字段不做检查）；
+- `perform`、`locate`、`performAt` 或 `keyboard` 缺少 `observe`；
+- `perform` 与 `actions` 只出现其一；或 `actions` 列表为空、种类重复，
+  或包含 `LOCATOR_ACTION_KINDS` 之外的名字；
+- `performAt` 与 `pointerActions` 只出现其一；或 `pointerActions` 列表为空、
+  种类重复，或包含 `POINTER_ACTION_KINDS` 之外的名字；
+- `tapModifiers` 不是布尔值，或为 `true` 却缺少 `perform`；
+- `keyboard`、`state`、`artifacts` 或 `session` 的 manifest 含未知键或非函数
+  成员。`keyboard` 需要 `type` 和 `press`；`state` 需要 `capture` 和
+  `restore` 两者；`artifacts` 需要 `screenshot`；`startVideo` 与 `stopVideo`
+  必须成对（引擎在二者被移除之前发布时曾声明过的 `startTrace` 和 `stopTrace`
+  会被接受且从不调用）；
+- `secrets` 不是由 `secrets.get()` 句柄组成的数组；
+- 出现了 `app` 成员：被测应用声明在 target 上，引擎需要做的检查放在
+  `validateApp` 里进行；
+- `fixtures` 不是对象、某个 fixture 不是工厂函数、fixture 名不是小驼峰
+  标识符，或与 `agent`、`app`、`screen`、`platform`、`session` 重名。
+
+句柄上的每个函数都绑定到它所属的 spec，因此类实例与对象字面量一样是合法
+的实现体。
+
+## 引擎
+
+```ts
+/** The body of one target: typed, model-free, capability-graded. */
+export interface Engine {
+  /** Engine name, for diagnostics. */
+  readonly name: string;
+  /**
+   * Required implementation version, recorded in reports and sessions.
+   * A saved session never restores across engine versions; a cached trace
+   * replays across them and re-finds its nodes.
+   */
+  readonly version: string;
+  /**
+   * Contract version literal. Additive optional members never bump it;
+   * changed required semantics do.
+   */
+  readonly spiVersion: EngineSpiVersion;
+  /**
+   * Platform label this engine drives (`web`, `ios`, `android`, or a label of
+   * the engine's own). Tests filter on it through `platforms` and tool packs
+   * are scoped by it; the harness attaches no meaning to any value. A target
+   * inherits it; a target that names a platform of its own must agree with it.
+   */
+  readonly platform?: string;
+  /**
+   * Maximum workers for this target, such as the number of devices in a
+   * pool. The scheduler applies this cap even when `config.workers` is
+   * higher. Omit when the engine has no concurrency limit.
+   */
+  readonly workers?: number;
+  /** capability: observation. */
+  observe?(context: OperationContext, options?: EngineObserveOptions): Promise<EngineSnapshot>;
+  /**
+   * Performs one action on a ref from the newest observation or `locate`,
+   * with the platform's actionability checks. Both agent tools and locator
+   * actions call this method. A `swipe` on the observation root swipes the
+   * viewport.
+   *
+   * For safe trace replay, throw a retryable
+   * `NODE_STALE`-coded error when a ref no longer binds, and an
+   * `ACTION_MAY_HAVE_COMMITTED`-coded error when input may have reached the
+   * app. The runner never repeats an action that may have committed.
+   */
+  perform?(ref: NodeRef, action: LocatorAction, context: OperationContext): Promise<void>;
+  /**
+   * The action kinds `perform` honors, required with it. The harness offers
+   * the agent and the `screen` tier exactly these: a kind left out is never
+   * presented as a tool that can only decline, and `screen`/`Locator` methods
+   * for it fail with `UNSUPPORTED_CAPABILITY` before reaching the engine.
+   * `perform` still throws `UNSUPPORTED_CAPABILITY` for a declared kind one
+   * particular node cannot take (a `check` on a toggle whose state is unknown).
+   */
+  readonly actions?: readonly LocatorActionKind[];
+  /**
+   * capability: location - requires observation. Deterministic locator
+   * resolution for the `screen`/`expect` tier: resolve one expression to the
+   * nodes it currently matches. The harness owns polling, strictness, and
+   * staleness; an engine resolves once, immediately.
+   */
+  locate?(
+    expression: LocatorExpression,
+    context: OperationContext,
+  ): Promise<readonly SemanticNode[]>;
+  /**
+   * capability: pointer - requires observation. Performs one pointer action
+   * at a viewport point, in the CSS pixels of `SemanticNode.rect`, with no
+   * node behind it: the agent's `tap_at` verb lands here when the point the
+   * model named in a screenshot sits on nothing the tree lists (a shape on a
+   * canvas, a pin on a map, a control in a system sheet), and so do a test's
+   * `screen.tapAt`, `screen.swipe({ from, to })`, and `tap({ position })`.
+   * Dispatch the pointer at the point as given; the harness has clamped an
+   * agent's point to the viewport and validated a test's. Throw
+   * `UNSUPPORTED_CAPABILITY` for a declared kind the surface cannot deliver
+   * at this particular point.
+   */
+  performAt?(point: ViewportPoint, action: PointerAction, context: OperationContext): Promise<void>;
+  /**
+   * The pointer action kinds `performAt` honors, required with it. The
+   * harness routes a point-addressed action to the engine only for a kind
+   * listed here; an undeclared kind fails with `UNSUPPORTED_CAPABILITY`
+   * before reaching the engine.
+   */
+  readonly pointerActions?: readonly PointerActionKind[];
+  /**
+   * The surface honors `modifiers` on the `tap`, `doubleTap`, and
+   * `secondaryTap` actions `perform` receives. Without it the harness fails
+   * an action that carries modifiers with `UNSUPPORTED_CAPABILITY` before it
+   * reaches the engine.
+   */
+  readonly tapModifiers?: boolean;
+  /** capability: keyboard - requires observation. Input to whatever holds focus; see `EngineKeyboard`. */
+  readonly keyboard?: EngineKeyboard;
+  /**
+   * Named deterministic surfaces this engine contributes to TestFixtures
+   * (a device fixture, a document fixture - anything). Keys become fixture and
+   * capability names; `requires: ['<name>']` gates at selection.
+   */
+  readonly fixtures?: Readonly<Record<string, EngineFixtureFactory>>;
+  /** capability: state - opaque snapshot capture/restore for session reuse. */
+  readonly state?: EngineStateCapability;
+  /** capability: artifacts - screenshots under the attempt directory, and videos there or at a provider. */
+  readonly artifacts?: EngineArtifacts;
+  /**
+   * Checks the app a target declares against what this engine can drive, at
+   * config load, synchronously: throw `INVALID_CONFIG` naming
+   * `info.targetName` for a field the platform needs and the target left out
+   * (a URL, a bundle id) or one it cannot drive. The harness has already
+   * checked every field's shape.
+   */
+  validateApp?(app: EngineAppDeclaration, info: EngineAppCheckInfo): void;
+  /**
+   * The `secrets.get()` handles the engine's options hold, such as a
+   * basic-auth password. The config load checks each names a configured
+   * secret (`INVALID_CONFIG` otherwise), and only these resolve through
+   * `EngineAttemptContext.resolveSecret`. The handles carry names only, so
+   * no value reaches the config digest.
+   */
+  readonly secrets?: readonly Secret[];
+  /** Steering hooks: open, back, restart, reset. */
+  readonly session?: EngineSession;
+  /**
+   * Runs once per target in the runner, after collection and before workers,
+   * app commands, and the run's clock start. Download dependencies or boot
+   * devices here; report progress through `info.log`. No launch timeout
+   * applies. A failure ends the run as an infrastructure error.
+   * The result can lower the target's worker cap, for example after
+   * discovering how many devices are available.
+   */
+  prepare?(info: EnginePrepareInfo): Promise<void | EnginePrepareResult>;
+  /**
+   * Once per run and target in the runner process, after every worker of the
+   * target is gone, on every exit path, whenever `prepare` was called.
+   * Release what `prepare` acquired for the run (a leased cloud device).
+   * Runs within the cleanup budget, never cancelled by an interrupt; a
+   * failure is a cleanup-phase run error.
+   */
+  finish?(info: EngineFinishInfo): Promise<void>;
+  /**
+   * Once per worker, before the first step; boot devices here, not in a step
+   * budget. The same handle can be booted again after `dispose`: a config-held
+   * handle outlives an in-process worker, so init MUST work on a disposed
+   * engine as it does on a fresh one.
+   */
+  init?(info: EngineInitInfo): Promise<void>;
+  /** Before each attempt: set up per-test isolation. */
+  startAttempt?(context: EngineAttemptContext): Promise<void>;
+  /**
+   * After the body has settled, and again after teardown, before the verdict,
+   * within the cleanup budget: report a failure that landed on a path no step
+   * awaited (a callback the surface ran for the test: a request interceptor,
+   * a native dialog handler). Wait for one still running, then throw its
+   * error; the attempt fails with it the way a step would, an error already
+   * classified keeping its code. MUST report each failure once.
+   */
+  settleAttempt?(context: EngineCleanupContext): Promise<void>;
+  /**
+   * After each attempt, within the cleanup budget: tear that isolation down.
+   * MUST be idempotent, and safe to call after a failed `startAttempt`.
+   */
+  endAttempt?(context: EngineCleanupContext): Promise<void>;
+  /**
+   * Worker shutdown, within the cleanup budget; failure is a run error. Runs
+   * whether or not `init` ran, so it MUST tolerate a cold engine.
+   */
+  dispose?(context: EngineCleanupContext): Promise<void>;
+}
+```
+
+```ts
+/** What every engine call carries: budget, ids, and who is acting. */
+export interface OperationContext {
+  /** Aborts with the attempt or when the operation budget is spent. */
+  readonly signal: AbortSignal;
+  /** Remaining operation budget when the call starts. */
+  readonly timeoutMs: number;
+  /** The run id. */
+  readonly runId: string;
+  /** The attempt id. */
+  readonly attemptId: string;
+  /**
+   * Who asked: a test's own deterministic step, or the agent acting on a
+   * screen it observed. A deterministic step verifies its outcome with
+   * `expect`, so an engine may act as soon as the target holds still; an
+   * agent reads the screen right after acting, so an engine may wait for the
+   * transition to end first.
+   */
+  readonly origin: 'test' | 'agent';
+}
+```
+
+### 能力
+
+| 成员 | 能力 | 前置要求 | 解锁 |
+| --- | --- | --- | --- |
+| `observe` | `observation` | - | 判定层级、提示词快照、链路回放、视口滑动的根节点 |
+| `perform` + `actions` | `actions` | `observe` | 智能体的语法动词（`tap`、`double_tap`、`long_press`、`right_click`、`hover`、`type`、`press`、`select`、`check`、`type_secret`、`scroll`、`scroll_to`、`drag`、`upload`，以及落点命中已列出节点时的 `tap_at` 或 `hover_at`），以及带平台可操作性检查的 `screen`/`Locator` 动作集——各自仅限 `actions` 中列出的种类 |
+| `locate` | `location` | `observe` | `screen`、`Locator`、`expect(locator)` |
+| `tapModifiers: true` | - | `perform` | `tap`、`doubleTap` 与 `secondaryTap` 上的 `modifiers`（`row.click({ modifiers: ['Shift'] })`），在点击期间保持按住；没有它这类调用报 `UNSUPPORTED_CAPABILITY` |
+| `performAt` + `pointerActions` | `pointer` | `observe` | 落点不在树所列任何节点上时智能体的 `tap_at` 与 `hover_at` 动词（`tap` 与 `hover` 指针种类），以及测试的 `screen.tapAt` 与 `tap({ position })`（`tap` 种类）、`screen.swipe({ from, to })`（`swipeTo` 种类）：在以 `SemanticNode.rect` 的 CSS 像素度量的视口点上执行一次指针动作，背后没有节点 |
+| `keyboard.{type,press,dismiss?}` | `keyboard` | `observe` | 智能体不带目标的 `type` 与 `press`，`type_at` 与 `press_at` 在树中一无所有之点上的键盘回退，以及存在 `dismiss` 时的 `dismiss_keyboard`：向持有焦点的对象输入，适用于画在画布上的字段或被平台拍平出树外的字段；配合 `focus` 动作还有 `locator.pressSequentially`——harness 将其组合为先 `focus` 再 `keyboard.type` |
+| `fixtures.<name>` | `<name>` | - | 一个引擎贡献的 fixture；选择阶段以 `requires: ['<name>']` 门控 |
+| `state` | `state` | - | `test.setup` 会话与 `session:` 选项 |
+| `artifacts` | `artifacts` | - | `app.screenshot()`、断言证据、失败截图，以及除 `off` 外的每种 [`video` 模式](/reference/config#录制)——来源可以是配置、target、测试或 `--video` |
+| `validateApp` | - | - | 配置加载时对 target 的 `app` 做检查 |
+| `session` | - | - | `app.open()` 与智能体的 `navigate` 动词（`open`）、`app.back()` 与智能体的 `back` 动词（`back`）、`app.restart()`（`restart`）、`app.clearState()`（`reset`） |
+
+智能体只向模型提供 `actions` 声明的内容：`tap` 需要 `tap` 种类；
+`double_tap`、`long_press` 和 `right_click` 分别需要 `doubleTap`、`longPress`
+和 `secondaryTap`；`hover` 需要 `hover`；`type` 和 `type_secret` 需要 `fill`；
+`press` 需要 `press`；`select` 需要 `selectOption`；`check` 需要 `check` 和
+`uncheck` 两者，因为它设置的是一个状态而不是翻转一个状态；`scroll` 和
+`scroll_to({ text })` 需要 `swipe`；`scroll_to({ target })` 需要
+`scrollIntoView`；`drag` 需要 `dragTo`；`upload` 需要 `setInputFiles`；
+`navigate` 需要 `session.open`；`back` 需要 `session.back`；`tap_at` 和
+`hover_at` 需要 `actions` 或 `pointerActions` 中有 `tap` 或 `hover` 种类。
+`clear` 和 `focus` 不解锁任何动词。未声明的动词不会出现在工具集中，为未声明
+种类提供的 `screen`/`Locator` 方法会在到达引擎之前就报
+`UNSUPPORTED_CAPABILITY` 失败。
+
+`engine.capabilities` 是计算得到的 `ReadonlySet` 能力名集合，选择、报告以及
+`UNSUPPORTED_CAPABILITY` 消息读取的都是它。选择还会按 target 声明的应用
+种类而非其引擎来分级：带 `app.url` 的 target 归为 `browser`，带 `app.bundleId`
+或 `app.appPath` 的归为 `native-app`，这样测试就可以写 `requires: ['native-app']`。
+
+```ts
+/**
+ * Capability names: the closed harness capabilities plus one name per
+ * contributed fixture. `actions` is `perform`; `location` is `locate`; both
+ * require observation, because their refs live in the observation's id space.
+ * `pointer` is `performAt`, an action addressed by a viewport point rather
+ * than a node, and requires observation because the point is read off its
+ * pixels.
+ */
+export type EngineCapability =
+  | 'observation'
+  | 'actions'
+  | 'location'
+  | 'pointer'
+  | 'keyboard'
+  | 'state'
+  | 'artifacts'
+  | (string & {});
+
+/**
+ * capability: keyboard - requires observation. Input to whatever holds focus,
+ * with no node behind it: the agent's `type` and `press` without a target, and
+ * the fallback of its point-addressed `type_at` and `press_at` when the point
+ * lands on nothing the tree lists (a field drawn on a canvas, an input a
+ * platform flattens out of its accessibility tree). Focus is the app's: the
+ * harness tapped first, or the model said the field already has it.
+ */
+export interface EngineKeyboard {
+  /**
+   * Types `text` into the focused field as a person typing would, through
+   * the platform's keyboard path: a browser dispatches the key events of each
+   * character, a device sends the text through its keyboard. Where the
+   * platform has key events the app must receive them; setting the value
+   * without keystrokes is not a compliant implementation, since
+   * `locator.pressSequentially` and the agent's `type` rely on the app
+   * reacting as it does to a user. With `replace`, clears the field first
+   * (select-all and delete on a keyboard surface; the platform's clear on a
+   * device). Throw `NOT_ACTIONABLE` when nothing that accepts text has focus,
+   * so the keystrokes are never silently discarded into the document body.
+   */
+  type(text: string, options: { readonly replace: boolean }, context: OperationContext): Promise<void>;
+  /**
+   * Sends one key of the contract grammar (`Enter`, `Escape`, `Tab`,
+   * `Shift+Tab`, a character) to whatever holds focus. The harness has
+   * already validated the key's shape; refuse with `UNSUPPORTED_CAPABILITY`
+   * a key the surface cannot deliver.
+   */
+  press(key: string, context: OperationContext): Promise<void>;
+  /** Hides an on-screen keyboard. Platforms without one leave it undefined. */
+  dismiss?(context: OperationContext): Promise<void>;
+}
+```
+
+## 生命周期
+
+| 钩子 | 预算 |
+| --- | --- |
+| `prepare(info)` | 无预算；只有 `info.signal`（本次运行的打断）能将其截断。失败会在任何测试之前结束整场运行：runner 错误类（引擎无法遵从某选项时的 `ConfigurationError`）保留其错误码，`EngineError` 的 `CANCELLED` 仍按取消处理，其余任何情况——任何其他 `EngineError` 或普通 `Error`——都归为基础设施错误 `ENGINE_FAILURE` |
+| `finish(info)` | `cleanupTimeout`，由所有已 prepare 的 target 共享，不会被打断截短；失败是一次清理阶段运行错误 |
+| `init(info)` | `launchTimeout`；失败归为基础设施错误 |
+| `startAttempt(context)` | `launchTimeout`；失败或超时时 `context.signal` 中止并运行 `endAttempt` |
+| `settleAttempt(context)` | `cleanupTimeout`，在正文之后、又在 teardown 之后各运行一次；抛出的错误即为该次尝试的失败并保留其错误码 |
+| `endAttempt(context)` | `cleanupTimeout`；失败标记清理失败，测试保持自身状态 |
+| `dispose(context)` | `cleanupTimeout`；失败是一次运行错误 |
+
+```ts
+/**
+ * What `prepare` learned that the run must honour. `workers` replaces the
+ * engine's declared cap for this target and run: the surfaces the engine
+ * actually provisioned, `1` to `info.slots`. Declared `workers` stays the
+ * static answer for engines that know it up front.
+ */
+export interface EnginePrepareResult {
+  /** Lowers the target's worker cap for this run, `1` to `info.slots`. */
+  readonly workers?: number;
+  /**
+   * Variables every worker of this target is spawned with, on top of the
+   * run's environment: how a runner-side `prepare` hands what it provisioned
+   * (a device pool it discovered) to each worker's `init`. The run's own
+   * variables win on a clash.
+   */
+  readonly env?: Readonly<Record<string, string>>;
+}
+
+/**
+ * Facts handed to `prepare`, once per run and target in the runner process,
+ * before any worker exists.
+ */
+export interface EnginePrepareInfo {
+  /** The run id. */
+  readonly runId: string;
+  /** The target being prepared. */
+  readonly targetName: string;
+  /** Directory relative paths in the config resolve against; see `EngineInitInfo.projectRoot`. */
+  readonly projectRoot: string;
+  /** The app the target declares, as `init` receives it: what a device installs or warms up here. */
+  readonly app: EngineAppInfo;
+  /**
+   * The worker slots the run will start for this target, `0` to `slots - 1`:
+   * the run's worker cap, the engine's declared `workers`, and the work units
+   * selected for the target, whichever is smallest; `0` when nothing runs on
+   * it. Provision for exactly these slots (boot that many devices of a pool);
+   * `init` then finds them ready.
+   */
+  readonly slots: number;
+  /**
+   * The run's environment: what every worker is started with. A host may hand
+   * the run an environment other than the runner process's own, so anything
+   * provisioned here that a worker later looks up by environment (a browser
+   * cache location) must be resolved and spawned against this, not
+   * `process.env`.
+   */
+  readonly env: Readonly<Record<string, string | undefined>>;
+  /**
+   * Aborts on interrupt only. Provisioning has no budget: a first-run
+   * download is as long as the network makes it, and cutting it short would
+   * fail every test behind it.
+   */
+  readonly signal: AbortSignal;
+  /**
+   * Reports one line of progress. The runner streams it as a `notice` run
+   * event, so it reaches the reporter and every host sink instead of being
+   * written to a worker's stderr underneath the live status block.
+   */
+  readonly log: (line: string) => void;
+}
+
+/** Handed to `finish`, once per run and target after the last worker is gone, with the cleanup budget of one hook. */
+export interface EngineFinishInfo extends EngineCleanupContext {
+  /** The run id. */
+  readonly runId: string;
+  /** The target being finished. */
+  readonly targetName: string;
+  /** The run's environment, the same `prepare` saw. */
+  readonly env: Readonly<Record<string, string | undefined>>;
+  /** Reports one line of progress, streamed as a `notice` run event like `prepare`'s. */
+  readonly log: (line: string) => void;
+}
+
+/** Run identity and harness-resolved facts handed to `init`, once per worker before the first step. */
+export interface EngineInitInfo {
+  /** The run id. */
+  readonly runId: string;
+  /** The target this worker serves. */
+  readonly targetName: string;
+  /**
+   * Directory relative paths in the config resolve against: the config file's
+   * directory, or the run's `cwd` for a programmatic config. An engine option
+   * naming a file (a build to install) resolves here, never against
+   * `process.cwd()`, which an in-process run does not change.
+   */
+  readonly projectRoot: string;
+  /** The app the target declares: the site policy of its URL, and what a device launches. */
+  readonly app: EngineAppInfo;
+  /**
+   * This worker's environment: the run's, plus what this target's `prepare`
+   * returned in its result's `env`. Read what `prepare` provisioned from
+   * here, never from `process.env`: an in-process worker shares its process
+   * with the runner and every other target.
+   */
+  readonly env: Readonly<Record<string, string | undefined>>;
+  /** Whether the run asked for a visible surface (`--headed`). */
+  readonly headed: boolean;
+  /**
+   * This worker's 0-based slot among the target's workers: the lowest slot
+   * free when the worker was spawned, so a replacement worker takes over the
+   * slot of the one that exited. An engine with several devices hands each
+   * slot its own; `config.workers` bounds the slots a target can reach.
+   */
+  readonly workerSlot: number;
+  /** Aborts on interrupt and when init exceeds the launch timeout; init must stop promptly. */
+  readonly signal: AbortSignal;
+  /**
+   * Reports one line of progress. The runner streams it as a `notice` run
+   * event, prefixed with the target and worker slot, so it reaches the
+   * reporter and every host sink instead of being written to a worker's
+   * stderr underneath the live status block. This is where a fact that only
+   * exists once the worker is up belongs: the URL a hosted browser or device
+   * can be watched at, which simulator a slot got, a version it detected.
+   * Meant for `init` itself; a line logged later is still delivered while
+   * the worker lives and dropped once it has exited. The line is shown as is
+   * in reporters and host sinks, so keep tokens and other secrets out of it
+   * (a viewer URL without its credential).
+   */
+  readonly log: (line: string) => void;
+}
+
+/**
+ * The app the harness resolved from the target's declaration, handed to
+ * `prepare` and `init`: the site policy for the decisions only a surface can
+ * make (which nested documents enter an observation, which requests carry
+ * injected credentials), and what a device launches.
+ */
+export interface EngineAppInfo {
+  /**
+   * The app URL's registrable domain, as read by `siteOf`. Use `sameSite`
+   * to scope secret fills, injected headers, and observed child frames.
+   * Absent when the app has no URL. The runner passes navigation URLs
+   * separately through `session.open`.
+   */
+  readonly site?: string;
+  /** The installed app to launch, as the target declared it. */
+  readonly bundleId?: string;
+  /** The build to install, as the target declared it; relative to `projectRoot`. */
+  readonly appPath?: string;
+  /** Arguments every fresh launch passes the app. */
+  readonly launchArguments?: readonly string[];
+  /** Permissions the app holds on every fresh launch, by name. */
+  readonly permissions?: Readonly<Record<string, AppPermissionState>>;
+}
+
+/**
+ * Per-attempt isolation context. An engine that must give each test a fresh
+ * surface (a fresh isolated context per test, a reset device) sets it up in
+ * `startAttempt` and tears it down in `endAttempt`.
+ */
+export interface EngineAttemptContext {
+  /** The attempt id. */
+  readonly attemptId: string;
+  /** Absolute directory every artifact of this attempt is written under. */
+  readonly artifactsDir: string;
+  /**
+   * The plaintext of a secret the engine declared in `secrets`, for an
+   * option the engine hands the app itself (basic-auth credentials). A
+   * provider runs again on every call. The value, and every value
+   * `options.derived` computes from it, join the attempt's redaction before
+   * this resolves, so reports, logs, and every observation redact them, and
+   * the attempt's text downloads are rewritten. The protection is
+   * text only: unlike a fill, it withholds no screenshot or model pixels.
+   * A secret the engine did not declare is `SECRET_UNAVAILABLE`.
+   */
+  readonly resolveSecret: (secret: Secret, options?: ResolveSecretOptions) => Promise<string>;
+  /**
+   * Aborts with the attempt, and the moment `startAttempt` fails or exceeds
+   * the launch timeout: a hook still running then must stop, because the
+   * harness ends the attempt's isolation right behind it and may retry.
+   */
+  readonly signal: AbortSignal;
+  /**
+   * Reports something the app did on its own while the attempt ran: a
+   * console line, an uncaught exception, a request that failed. The harness
+   * redacts the text, keeps it with the step that was running (from an event
+   * callback outside any step, the step that started last; before the first
+   * step, with none), and shows it on the trace page. Call it from the moment `startAttempt` begins until
+   * `endAttempt`; entries past a per-attempt cap are dropped.
+   */
+  readonly appLog: (entry: AppLogEntry) => void;
+  /**
+   * Reports where the app went on its own, as one line (`navigated to
+   * /login`, `the app opened a new tab at /help`): a navigation the engine
+   * did not start, a tab, a frame. Shown under the step that was running.
+   */
+  readonly navigation: (line: string) => void;
+  /**
+   * Hands the harness a screen for the trace: the capture a `locate`
+   * matched against, or one read right after an action. A read after an
+   * action is on the action's path, so bound it and skip it where it is
+   * expensive; it never fails the action. The trace page shows how each
+   * step's screen changed. Refs in it are not valid for `perform`. Absent
+   * when the attempt keeps no trace.
+   */
+  readonly screen?: (snapshot: EngineSnapshot) => void;
+  /**
+   * What the attempt runs on, such as `{ browser: 'chromium 141.0' }` or
+   * `{ device: 'iPhone 16', os: 'iOS 26.0' }`, for the trace page. Later
+   * calls add to and overwrite earlier facts.
+   */
+  readonly environment: (facts: Readonly<Record<string, string>>) => void;
+}
+
+/** One line of what the app did during an attempt, as `EngineAttemptContext.appLog` takes it. */
+export interface AppLogEntry {
+  /**
+   * Where it came from: the app's `console`, an `error` nothing caught, the
+   * `network`, or the `system` the app runs on (a crash, an OS log).
+   */
+  readonly source: 'console' | 'error' | 'network' | 'system';
+  readonly level: 'error' | 'warning' | 'info';
+  /** One line, such as `GET /api/todos 500` or `TypeError: x is undefined`; the harness clips it. */
+  readonly text: string;
+}
+
+/** How `EngineAttemptContext.resolveSecret` treats what the engine makes of the value. */
+export interface ResolveSecretOptions {
+  /**
+   * The forms of the value the app sees instead of the value itself, for the
+   * same redaction under the secret's name: the base64 `user:password` an
+   * `Authorization: Basic` header carries, which a page echoing its request
+   * headers would otherwise show.
+   */
+  readonly derived?: (plaintext: string) => readonly string[];
+}
+
+/**
+ * Budget of one cleanup hook (`settleAttempt`, `endAttempt`, `dispose`). `signal` aborts when
+ * the budget is exhausted, so a hook that cannot finish in time stops instead
+ * of running on into the next attempt's setup.
+ */
+export interface EngineCleanupContext {
+  /** Aborts when the cleanup budget is spent. */
+  readonly signal: AbortSignal;
+  /** Remaining cleanup budget when the call starts. */
+  readonly timeoutMs: number;
+}
+```
+
+URL 只通过 `session.open` 传入；`init` 永远无从得知应用 URL。
+
+## 观测
+
+```ts
+/**
+ * One fresh semantic snapshot of the surface under test. The harness owns
+ * everything downstream: revision minting, secret redaction, and the
+ * observation byte budget apply to every engine equally.
+ */
+export interface EngineSnapshot {
+  /**
+   * Where the surface is, as an opaque address the platform understands: a
+   * URL on a document platform, the foreground screen or activity on a
+   * device, the front window on a desktop. The harness shows it to the model
+   * and to the report, anchors trace replay on it, and applies the origin
+   * policy to it only when it parses as a URL. Omit when the platform has no
+   * notion of a current location.
+   */
+  readonly location?: string;
+  /**
+   * The observation tree under one root the engine minted. The root's id MUST
+   * be stable for the surface across observations: `perform(root, swipe)` is
+   * the viewport swipe, and the harness addresses it from an earlier
+   * observation, possibly one taken before a `restart` or `reset`, so the
+   * root swipe MUST NOT depend on a live handle from that observation. A
+   * platform with several top-level elements (a device's windows) wraps them
+   * in a root of its own.
+   */
+  readonly root: SemanticNode;
+  /** The viewport `SemanticNode.rect` and `ViewportPoint` are measured in, in CSS pixels. */
+  readonly viewport: ViewportSize;
+  /**
+   * True when `root` leaves out nodes that are on the surface: the engine
+   * stopped reading at a node cap or a depth limit, or could not enter a
+   * child document. The harness tells the model the listing is incomplete
+   * and never calls such a screen unchanged. Omit or set false for a tree
+   * read whole.
+   */
+  readonly truncated?: boolean;
+  /** Semantic capture failed; only fresh, independently masked pixels are evidence. */
+  readonly treeUnavailable?: true;
+  /** Masked pixels, when requested and producible; omitted otherwise. */
+  readonly pixels?: ObservationPixels;
+  /** Regions masked in `pixels`; the harness checks it covers every secure node. */
+  readonly maskedRegionCount?: number;
+}
+
+export interface EngineObserveOptions {
+  /** Requests masked viewport pixels for the same revision as the tree. */
+  readonly pixels?: boolean;
+  /** Permits independently masked pixels to replace a failed semantic capture. */
+  readonly pixelFallback?: boolean;
+}
+```
+
+返回当前时刻的界面原貌。runner 会铸造修订号并盖到每个 ref 上、脱敏已登记的
+机密值、限制字节大小，并在有 `pixels` 时检查 `maskedRegionCount` 覆盖了
+每个 `secure` 节点。
+
+当节点上限或不可访问的子树导致内容缺失时设置 `truncated`。runner 会告知
+模型树不完整，且绝不把被截断的观测当作未变化。完整的树请省略它。
+
+合法的空树可以只有无子节点的根，并携带 `pixels`。
+
+若语义捕获超时，仅当 `pixelFallback` 为 true 且引擎能在没有该捕获的情况下
+证明截图遮蔽仍然有效时才可恢复。此时返回 `treeUnavailable: true`、全新的
+`pixels`，以及一个只含其稳定 `ref` 的 `root`。该引用支持视口动作，但不提供
+任何语义节点证据。更早的节点引用一律作废。这一标志用于区分「语义证据缺失」
+与「合法的空树」，绝不要凭它推断节点缺失。runner 在引擎边界校验这一形态：
+不带许可像素的回退判为 `UNSUPPORTED_CAPABILITY`，带回填语义根字段的判为
+`INVALID_STATE`。`EngineSnapshot` 仍是可扩展的接口；这些相依要求在运行时检查。
+
+没有许可、像素或独立的遮蔽证明时，请让捕获失败向上传播。取消、策略拒绝和
+严重的引擎错误同样必须向上传播。
+
+runner 允许 `act` 以及 `vision: true` 或 `'only'` 的判定使用回退，前提是尚未
+进行任何机密填充。即使初始观测只请求了树，返回结果中也会包含截图。丢失语义
+证据的步骤既无法记录链路，也无法靠回放链路收尾。遮蔽依赖自身语义捕获的引擎
+无法提供这种回退。
+
+## 动作
+
+```ts
+/**
+ * One deterministic action `perform` carries out on a node. The `swipe`
+ * kind on the observation's root node is the viewport swipe: the agent's
+ * `scroll` verb and `screen.swipe()` both arrive as `perform(root, swipe)`,
+ * so a surface implements scrolling once.
+ *
+ * `press` takes one key in the `Key` grammar below.
+ */
+export type LocatorAction =
+  | {
+      readonly kind: 'tap' | 'doubleTap' | 'secondaryTap';
+      /** Keys held for the click; only an engine that declares `tapModifiers` receives it. */
+      readonly modifiers?: readonly KeyModifier[];
+    }
+  | {
+      readonly kind:
+        | 'check'
+        | 'uncheck'
+        | 'clear'
+        | 'focus'
+        | 'hover'
+        | 'scrollIntoView';
+    }
+  | { readonly kind: 'longPress'; readonly durationMs?: number }
+  | { readonly kind: 'fill'; readonly value: string; readonly sensitive: boolean }
+  | { readonly kind: 'press'; readonly key: Key }
+  | { readonly kind: 'selectOption'; readonly value: SelectOption }
+  | { readonly kind: 'setInputFiles'; readonly paths: readonly string[] }
+  | { readonly kind: 'dragTo'; readonly target: NodeRef }
+  | {
+      readonly kind: 'swipe';
+      readonly direction: ScrollDirection;
+      readonly momentum?: Momentum;
+    };
+
+/** Every action kind; what an engine declares in `actions`. */
+export type LocatorActionKind = LocatorAction['kind'];
+
+/** The closed list of action kinds, in contract order; the type is derived from it. */
+export const LOCATOR_ACTION_KINDS = [
+  'tap',
+  'doubleTap',
+  'secondaryTap',
+  'longPress',
+  'fill',
+  'clear',
+  'press',
+  'check',
+  'uncheck',
+  'focus',
+  'hover',
+  'scrollIntoView',
+  'selectOption',
+  'setInputFiles',
+  'dragTo',
+  'swipe',
+] as const satisfies readonly LocatorActionKind[];
+```
+
+这套语法是封闭的。超出它的东西属于智能体侧的 `defineTool`。
+
+### 指针动作
+
+在没有语义节点可用时，指针动作使用视口坐标。`dragTo` 终止于另一点；
+`swipe` 在给定点开始一个滚动手势。`swipeTo` 是唯一没有节点形态的种类：
+从该点到 `target` 的手指轨迹，在设备上是一次触控滑动，在文档平台上是一次
+指针拖拽——区别于 `dragTo` 中平台先按住再拖拽的行为。支持哪些种类请声明在
+`pointerActions` 中。
+
+```ts
+export type PointerAction =
+  | { readonly kind: 'tap' | 'doubleTap' | 'secondaryTap' | 'hover' }
+  | { readonly kind: 'longPress'; readonly durationMs?: number }
+  | { readonly kind: 'dragTo'; readonly target: ViewportPoint }
+  | {
+      readonly kind: 'swipe';
+      readonly direction: ScrollDirection;
+      readonly momentum?: Momentum;
+    }
+  | {
+      readonly kind: 'swipeTo';
+      readonly target: ViewportPoint;
+      readonly durationMs?: number;
+    };
+
+/** Every pointer action kind; what an engine declares in `pointerActions`. */
+export type PointerActionKind = PointerAction['kind'];
+
+/** The closed list of pointer action kinds, in contract order; the type is derived from it. */
+export const POINTER_ACTION_KINDS = [
+  'tap',
+  'doubleTap',
+  'secondaryTap',
+  'longPress',
+  'hover',
+  'dragTo',
+  'swipe',
+  'swipeTo',
+] as const satisfies readonly PointerActionKind[];
+```
+
+### 按键
+
+```ts
+/**
+ * The key grammar of `press`, shared by every engine so a test's key names are
+ * portable: zero or more modifiers and one key, joined by `+`.
+ *
+ * - Modifiers: `Shift`, `Control`, `Alt`, `Meta`, `ControlOrMeta` (Control on
+ *   Windows and Linux, Meta on macOS).
+ * - Named keys: those in `KEY_NAMES` (`Enter`, `Escape`, `Tab`, `Backspace`,
+ *   `Delete`, `ArrowUp`..., `Home`, `End`, `PageUp`, `PageDown`, `Insert`,
+ *   `Space`, `F1`..`F12`).
+ * - Any single printable character (`a`, `A`, `1`, `$`), typed as itself.
+ *
+ * `Control+a`, `Shift+Tab`, `Enter`, `$`. A platform without a key maps it
+ * or throws `UNSUPPORTED_CAPABILITY`; it never reinterprets the spelling.
+ * `parseKey` is the one parser, exported so no engine carries its own.
+ */
+export type Key = string;
+
+export const KEY_MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta', 'ControlOrMeta'] as const;
+
+export const KEY_NAMES = [
+  'Enter',
+  'Escape',
+  'Tab',
+  'Backspace',
+  'Delete',
+  'Insert',
+  'Space',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Home',
+  'End',
+  'PageUp',
+  'PageDown',
+  'F1',
+  'F2',
+  'F3',
+  'F4',
+  'F5',
+  'F6',
+  'F7',
+  'F8',
+  'F9',
+  'F10',
+  'F11',
+  'F12',
+] as const;
+
+/** One parsed `press` key: its modifiers and either a named key or a single character. */
+export interface ParsedKey {
+  /** Modifiers, in the order written. */
+  readonly modifiers: readonly KeyModifier[];
+  /** The key itself. */
+  readonly key: { readonly kind: 'named'; readonly name: KeyName } | { readonly kind: 'char'; readonly char: string };
+}
+
+export function parseKey(key: string): ParsedKey | undefined;
+```
+
+## 应用
+
+被测应用声明在 target 上（`targets: [{ engine, app }]`，见[被测应用](/reference/config#被测应用)）；引擎只负责驱动它。harness 检查每个
+字段的形状，然后在配置加载时把声明交给 `validateApp`，让引擎可以要求其平台
+所需的字段、拒绝它无法驱动的字段。`@e2e-dev/web` 要求 `url`；
+`@e2e-dev/mobile` 要求 `bundleId` 或 `appPath` 并拒绝 `url`。
+
+```ts
+/**
+ * The app a target declares, as its engine reads it at config load: what it
+ * is and where it is served. `EngineAppInfo` (below) is what `prepare` and
+ * `init` receive; the declaration adds the URL, which a surface never gets.
+ */
+export type EngineAppDeclaration = EngineAppInfo & {
+  /** Base URL the target opens, as declared; see `TargetApp.url`. */
+  readonly url?: string;
+};
+
+/** Handed to `Engine.validateApp` beside the declaration. */
+export interface EngineAppCheckInfo {
+  /** The target declaring the app, for the message of a refusal. */
+  readonly targetName: string;
+}
+
+/** A permission's state when the app launches: held, refused, or not asked for yet, so the OS asks again. */
+export type AppPermissionState = 'grant' | 'deny' | 'reset';
+```
+
+```ts
+validateApp(app, { targetName }) {
+  if (app.url === undefined) {
+    throw new ConfigurationError('INVALID_CONFIG', `target "${targetName}" needs app.url`);
+  }
+},
+```
+
+`validateApp` 会对引擎服务的每个 target 运行，未声明 `app` 的 target 传入
+`{}`。解析后的应用以 `EnginePrepareInfo.app` 和 `EngineInitInfo.app` 回到
+引擎手中：其中是 URL 的站点（`e2e/engine` 的 `sameSite` 就是把某个 URL 归约
+到它），以及按 target 声明原样的设备字段。URL 本身留在 harness 手里，由它
+通过 `session.open` 打开。target 的 `command` 和 `readyUrl` 永远不会到达
+引擎：由 runner 启动应用。`CommandConfig` 从 `e2e` 导出，而非 `e2e/engine`。
+
+## 会话
+
+```ts
+/**
+ * Steering hooks behind the universal `app` fixture and the agent's
+ * `navigate` verb. The app itself is the target's `app`, handed over as data;
+ * node actions never live here, they are `perform`.
+ *
+ * `restart` and `reset` open nothing on an addressable surface: they end at
+ * a fresh surface with no location shown, and the harness reopens the app
+ * through `open` when the target has an address. A surface therefore never
+ * needs to know the app's URL, and an unreachable app after a restart is
+ * reported the same way as on first open. A surface without `open` (a
+ * device with a pinned app) relaunches the app inside `restart` and `reset`
+ * itself, since nothing else will.
+ */
+export interface EngineSession {
+  /**
+   * Opens one URL the harness already resolved against the base URL and the
+   * origin policy. Absent on a surface without addressable locations.
+   */
+  open?(url: string, context: OperationContext): Promise<void>;
+  /** Navigates back once in the surface's history. */
+  back?(context: OperationContext): Promise<void>;
+  /** Recreates the execution context, keeping persisted state. */
+  restart?(context: OperationContext): Promise<void>;
+  /** Clears persisted client state and recreates the execution context. */
+  reset?(context: OperationContext): Promise<void>;
+}
+```
+
+`open` 支撑着 `app.open()`、智能体的 `navigate` 动词，以及 `restart` 和
+`reset` 之后的重新打开；`back`、`restart` 和 `reset` 分别支撑着
+`app.back()`、`app.restart()` 和 `app.clearState()`。缺少某个钩子会让对应
+方法以 `UNSUPPORTED_CAPABILITY` 失败。
+
+## 错误
+
+```ts
+export class EngineError extends Error {
+  constructor(code: EngineErrorCode, message: string, options: { retryable: boolean; cause?: unknown });
+  /** One of `ENGINE_ERROR_CODES`. */
+  readonly code: EngineErrorCode;
+  /** Whether the runner may re-resolve and retry; only `RETRYABLE_ENGINE_ERROR_CODES` can be. */
+  readonly retryable: boolean;
+}
+
+/** The closed engine error code set; the type is derived from it, so the two cannot drift. */
+export const ENGINE_ERROR_CODES = [
+  'NODE_STALE',
+  'FRAME_NOT_FOUND',
+  'FRAME_AMBIGUOUS',
+  'NOT_ACTIONABLE',
+  'ACTION_MAY_HAVE_COMMITTED',
+  'OPERATION_TIMEOUT',
+  'CANCELLED',
+  'UNSUPPORTED_CAPABILITY',
+  'INVALID_STATE',
+  'ENGINE_FAILURE',
+] as const;
+
+/** One of `ENGINE_ERROR_CODES`. */
+export type EngineErrorCode = (typeof ENGINE_ERROR_CODES)[number];
+
+/**
+ * The only codes that may be retryable: both describe a repeatable read. Any
+ * other retryable claim, from this module's class or a foreign copy of it, is
+ * coerced to a non-retryable `ENGINE_FAILURE`.
+ */
+export const RETRYABLE_ENGINE_ERROR_CODES: ReadonlySet<EngineErrorCode> = new Set([
+  'NODE_STALE',
+  'FRAME_NOT_FOUND',
+]);
+```
+
+| 错误码 | runner 映射 | 可重试 |
+| --- | --- | --- |
+| `NODE_STALE` | 重新解析，然后 `LOCATOR_NOT_FOUND` | 是 |
+| `FRAME_NOT_FOUND` | 重新解析，然后 `LOCATOR_NOT_FOUND` | 是 |
+| `FRAME_AMBIGUOUS` | `LOCATOR_AMBIGUOUS` | 否 |
+| `NOT_ACTIONABLE`、`ACTION_MAY_HAVE_COMMITTED`、`OPERATION_TIMEOUT` | `ACTION_FAILED` | 否 |
+| `CANCELLED` | 基础设施 `CANCELLED` | 否 |
+| `UNSUPPORTED_CAPABILITY` | 配置类 `UNSUPPORTED_CAPABILITY` | 否 |
+| `INVALID_STATE` | `APP_NOT_OPEN` | 否 |
+| `ENGINE_FAILURE`、任何非 `EngineError` | 基础设施 `ENGINE_FAILURE` | 否 |
+
+若某次定位或读取在启动时距离等待调用的截止时间只剩不到 100 ms，且此前已有
+一次完成的读取，则它的 `OPERATION_TIMEOUT` 会改为终止这次等待：动作或
+`waitFor` 得到 `LOCATOR_NOT_FOUND`，断言得到 `ASSERTION_FAILED`，并以超时
+作为其原因。反向断言若在读取被截断之时其反向条件已经成立足够久，则在此处
+通过——详见下文 `pollCondition`。
+
+由引擎贡献的 fixture 方法抛出的 `EngineError` 按上表映射，因此包装在已结束
+会话之上的 fixture 会像观测一样报告 `APP_NOT_OPEN`。方法也可以用 runner
+自身的错误类让步骤失败，这些类从同一入口导出：
+
+```ts
+/** The runner's error base: `category` sets the exit code, `code` names the cause. */
+declare class E2EError extends Error {
+  readonly category: 'test' | 'configuration' | 'infrastructure' | 'internal' | 'interrupted';
+  readonly code: string;
+  readonly retryable: boolean;
+}
+
+/** A test failure: ASSERTION_FAILED, INVALID_LOCATOR, ACTION_FAILED, ... */
+export class TestError extends E2EError {
+  constructor(code: string, message: string, options?: { retryable?: boolean; cause?: unknown });
+}
+/** POLICY_DENIED, APP_URL_REQUIRED, UNSUPPORTED_CAPABILITY, ... */
+export class ConfigurationError extends E2EError {
+  constructor(code: string, message: string, options?: { cause?: unknown });
+}
+/** The surface itself failed: BROWSER_INSTALL_FAILED, ... */
+export class InfrastructureError extends E2EError {
+  constructor(code: string, message: string, options?: { cause?: unknown });
+}
+```
+
+`E2EError` 本身不导出；请构造三者之一。
+
+## 共享语义
+
+用这些辅助函数保持各引擎之间行为一致：
+
+| 导出 | 用途 |
+| --- | --- |
+| `matchesText(actual, pattern)`、`toTextPattern(match, { exact? })`、`describePattern(pattern)` | 供 `locate` 与文本匹配器使用的 `TextPattern` 匹配；`match` 既非字符串也非 `RegExp` 时 `toTextPattern` 抛出 `INVALID_ARGUMENT` |
+| `resolveExpression(expression, nodes, { selector? })` | 参考实现版 `locate`。按文档顺序在语义树上解析一个 `LocatorExpression`，当容器回显了后代的文本时，`text` 和 `label` 取最内层匹配。树即全部真相的引擎（设备）直接调用它；浏览器引擎则自行复刻该行为。`selector` 需要相应钩子，`frame` 判为 `FRAME_NOT_FOUND` |
+| `urlMatches(current, expected, baseHref, ignoreCase?)` | `toHaveURL` 风格的比较，`ignoreCase` 语义与定位器匹配器相同；`expected` 既非字符串也非 `RegExp` 时抛出 `INVALID_ARGUMENT`，同 `toTextPattern` |
+| `pollCondition({ deadline, signal, negated, evaluate, onTimeout })`、`Deadline` | 断言轮询与反向判定的宽限窗口。若某次 `evaluate` 启动时距截止时间不足 100 ms、且此前已有一次完成的调用，则它的 `OPERATION_TIMEOUT` 会终止轮询：`onTimeout(cause)` 用它构造失败，反向判定若在读取被截断时已成立足够久则通过。要用 `deadline` 约束 `evaluate` 发起的每次读取（`context.operation(deadline.remaining())`）：挂在动作预算上的读取可能比断言自身的更久 |
+| `validateJsonValue(value, label, rules?)` | 检查一个值是纯 JSON：顶层 `undefined` 通过；非有限数、循环引用、不是普通对象或数组的对象，以及内部出现的 function、symbol、bigint 或 `undefined` 都判 `INVALID_ARGUMENT` 并指名 `label`。`Secret` 会报 `POLICY_DENIED`，除非 `rules.onSecret` 自己抛出别的错误；`rules.maxDepth` 限制嵌套深度 |
+| `rejectUnknownKeys(label, value, keys, code?)` | 对 `value` 中第一个不在 `keys` 之内的自有键抛出 `INVALID_CONFIG`：疑似拼写错误时指名最接近的已知键（`web() has unknown key "viewprt"; did you mean "viewport"?`），否则列出全部已知键。这正是 runner 对自身配置对象做的检查，此处用于引擎工厂的选项。测试传给 fixture 方法的对象请传 `'INVALID_ARGUMENT'` 作为 `code` |
+| `rejectUnknownOptions(api, options, known, code?)` | 当 fixture 方法或匹配器不接受某个选项键时报 `INVALID_ARGUMENT`（或 `code`，定位器选项为 `INVALID_LOCATOR`），让 JavaScript 调用者传入的不受支持选项直接失败，而不是默默按默认值运行。`options` 必须是普通对象或 `undefined`；类实例或数组会被拒绝，不可枚举的自有键也算键 |
+| `obj`、`raceAbort`、`withTimeout`、`withinCleanupBudget` | 见[引擎贡献的 fixture](#引擎贡献的-fixture) |
+| `isProviderRecording(value)` | 提供者的 `record` 解析结果是否为一次录制：有可解析的 `startedAt` 和一个 `stop`。在保留之前先检查它，让畸形的录制以指名道姓的方式在开始时就失败，而不是拖到停止时 |
+| `stopProviderRecording(recording, { artifactsDir, provider, leaseId, signal })` | 结束托管服务的录制并将其登记为一个 `VideoSegment`；见[提供者录制](#提供者录制) |
+
+## 状态
+
+```ts
+/**
+ * An opaque, restorable snapshot of an engine's state. `data` is JSON the
+ * harness never inspects - a document platform's storage state, a device's app state, a
+ * desktop's window state all satisfy it identically. `format`/`version` let a
+ * engine reject a snapshot it can no longer read.
+ */
+export interface EngineState {
+  /** Engine-defined format name. */
+  readonly format: string;
+  /** Format version, for rejecting a snapshot the engine can no longer read. */
+  readonly version: number;
+  /** Opaque JSON the runner never inspects. */
+  readonly data: unknown;
+  /** Earliest moment the state is known to be invalid, if the engine knows one. */
+  readonly expiresAt?: string;
+}
+
+/**
+ * Platform-neutral state capture and restore. A setup test captures a
+ * snapshot; an ordinary test restores it at launch.
+ *
+ * Snapshots are credentials: cookies, tokens, and storage that authenticate
+ * the app under test. The duties split at the seam. The harness owns the
+ * snapshot from the moment `capture` returns: it encrypts it at rest with a
+ * per-run AES-256-GCM key that never touches disk, stores it under the run's
+ * private session directory, binds it to the run, target, engine, and app
+ * identity, and deletes it when the run ends; it never logs it, reports it,
+ * digests it, or sends it to a model. An engine MUST NOT persist, cache, or
+ * log a snapshot on its own, MUST NOT echo snapshot contents in an error
+ * message, and MUST treat `restore` as a replacement of the surface's whole
+ * persisted state, never a merge, so a restored session cannot leak into the
+ * next attempt.
+ */
+export interface EngineStateCapability {
+  /** Captures the surface's persisted state. */
+  capture(context: OperationContext): Promise<EngineState>;
+  /** Replaces the surface's persisted state with `state`. */
+  restore(state: EngineState, context: OperationContext): Promise<void>;
+}
+```
+
+## 产物
+
+```ts
+/**
+ * Evidence capture. Paths are relative to the attempt artifact directory the
+ * engine received in `startAttempt`.
+ */
+export interface EngineArtifacts {
+  /** Captures a redacted screenshot; secure fields are masked at the source. */
+  screenshot(label: string | undefined, context: OperationContext): Promise<string>;
+  /**
+   * Starts recording the surface for the attempt. Declared together with
+   * `stopVideo`. A surface that has nothing to show yet (no page open) may
+   * defer the actual capture to the moment it does; the segments returned by
+   * `stopVideo` say when each one began.
+   */
+  startVideo?(context: OperationContext): Promise<void>;
+  /**
+   * Stops recording and returns every segment written, in order. One segment
+   * is the common case; a surface whose recording is bound to a page returns
+   * one per page the attempt showed (a restart or a state reset opens a new
+   * one). An attempt that never showed anything returns none.
+   */
+  stopVideo?(context: OperationContext): Promise<readonly VideoSegment[]>;
+}
+
+/**
+ * One recorded video of an attempt: a file the engine wrote into the attempt
+ * artifact directory, or a recording a hosted service keeps and links to.
+ */
+export type VideoSegment = VideoFile | VideoLink;
+
+/** A video file in the attempt artifact directory. */
+export interface VideoFile {
+  /** Path relative to the attempt artifact directory. */
+  readonly path: string;
+  /** When the segment started recording, as an ISO timestamp; its first frame is at or just after it. */
+  readonly startedAt: string;
+}
+
+/** A recording a hosted service keeps, by URL: the report links to it and the runner never downloads it. */
+export interface VideoLink {
+  /** `http(s)` URL of the recording. */
+  readonly url: string;
+  /** Media type of what the URL serves: `video/mp4`, or `text/html` for a player page. */
+  readonly mediaType: string;
+  /** When the recording started, as an ISO timestamp; its first frame is at or just after it. */
+  readonly startedAt: string;
+}
+```
+
+runner 只会为记录视频的尝试（[`video` 模式](/reference/config#video)）调用
+`startVideo`，时机在 `startAttempt` 与任何会话恢复之后。它使用启动预算，并在
+清理预算内、于 `endAttempt` 之前停止；失败的 `startVideo` 会让启动失败。
+`stopVideo` 要按录制顺序返回分段。runner 决定保留哪些录制，并删除尝试不
+保留的文件。
+
+### 提供者录制
+
+从托管服务租用浏览器或设备的引擎可以让服务代为录制这次尝试，就像
+[`BrowserProvider.record`](/browser#提供者侧的录制) 和
+[`DeviceProvider.record`](/mobile#托管设备) 所做的那样。`e2e/engine`
+导出共享的类型与 `stopProviderRecording`，让每个引擎都能以同样的方式把一个
+提供者的录制变成一个 `VideoSegment`。
+
+```ts
+/** Handed to a provider's `record`, once per attempt that records video. */
+export interface ProviderRecordContext {
+  readonly runId: string;
+  readonly targetName: string;
+  /** The attempt the recording covers. */
+  readonly attemptId: string;
+  /** The run's environment, the same the provider's `acquire` saw. */
+  readonly env: Readonly<Record<string, string | undefined>>;
+  /** Aborts when the attempt is cancelled or its launch budget is spent. */
+  readonly signal: AbortSignal;
+}
+
+/** A recording a provider's service makes of the browser or device it leased, as `record` started it. */
+export interface ProviderRecording {
+  /** When the recording started, as an ISO timestamp; its first frame is at or just after it. */
+  readonly startedAt: string;
+  stop(context: ProviderRecordingStopContext): Promise<ProviderRecordingResult>;
+}
+
+/** Handed to `ProviderRecording.stop`, once per recording. */
+export interface ProviderRecordingStopContext {
+  /** Absolute directory, already created, a recording written as a file goes into. */
+  readonly dir: string;
+  /** Aborts when the cleanup budget is spent. */
+  readonly signal: AbortSignal;
+}
+
+/**
+ * What a stopped recording became: a file the provider wrote into the
+ * directory it was given, by name, or a recording its service keeps, by
+ * `http(s)` URL and media type.
+ */
+export type ProviderRecordingResult =
+  | { readonly file: string }
+  | { readonly url: string; readonly mediaType: string };
+
+export function stopProviderRecording(
+  recording: ProviderRecording,
+  target: {
+    /** Absolute attempt artifact directory; a file recording goes into its `video` directory. */
+    readonly artifactsDir: string;
+    /** The provider as error messages name it: `browser provider "kernel"`. */
+    readonly provider: string;
+    /** The lease the recording covers, named in error messages. */
+    readonly leaseId: string;
+    readonly signal: AbortSignal;
+  },
+): Promise<VideoSegment>;
+```
+
+`stopProviderRecording` 会创建这次尝试的 `video` 目录，用它调用 `stop`，并
+检查返回结果：文件必须是在该目录中真实存在的纯文件名，链接必须是带媒体类型
+的 `http(s)` URL。它返回 `{ path: 'video/<file>', startedAt }` 或
+`{ url, mediaType, startedAt }`，交给 `stopVideo` 转交回去。`stop` 抛错或
+返回其他任何东西都判为 `ENGINE_FAILURE`，并指名提供者与租期。target 参数的
+类型以 `ProviderRecordingTarget` 导出。
+
+视频不带遮蔽，标记为 `redaction: 'incomplete'`。引擎附带的 `download` 是
+应用的原始字节：当会话已知某个机密值时，runner 会通过台账（ledger）重写
+文本类的下载（`.txt`、`.csv`、`.json`、`.html`）并标记为 `complete`；其余
+下载保留原字节，标记 `redaction: 'incomplete'`。
+
+## 引擎贡献的 fixture
+
+```ts
+/**
+ * A contributed fixture: any record of async methods, sync accessors, and
+ * nested namespaces, declared through context.fixture so its metadata controls
+ * labels, deadlines and verification. The factory must return the declared
+ * surface; a plain one is rejected with INVALID_CONFIG.
+ */
+export type EngineFixtureFactory = (context: EngineFixtureContext) => object;
+
+/** Context handed to a contributed fixture factory, once per attempt. */
+export interface EngineFixtureContext {
+  /** The target the fixture serves. */
+  readonly targetName: string;
+  /** Records the declared operations before invoking them; undeclared accessors retain their identity. */
+  fixture<T extends object>(name: string, surface: T, operations: FixtureOperations<T>): T;
+  readonly app: EngineAppInfo & {
+    /**
+     * Resolves a navigation target against the base URL. Throws
+     * `APP_URL_REQUIRED` when the target declares no URL and `POLICY_DENIED`
+     * for any scheme but `http:` and `https:` (`about:blank` aside), so a
+     * fixture never re-implements the rule the harness owns.
+     */
+    resolveUrl(url: string): string;
+  };
+  /** Harness budgets, for fixtures that poll or navigate. */
+  readonly timeouts: {
+    readonly test: number;
+    readonly action: number;
+    readonly assertion: number;
+  };
+  /**
+   * The running phase's signal: the attempt's through `beforeEach` and the
+   * body, then a fresh one per `afterEach` hook so teardown can still drive
+   * the app after a body timeout. Read it per call; a fixture factory that
+   * captures it once keeps a signal that is dead by teardown.
+   */
+  readonly signal: AbortSignal;
+  /** Per-call operation budget: the action timeout (or an explicit one) plus the attempt signal. */
+  operation(timeoutMs?: number): OperationContext;
+  /** Registers a file the current step produced under the attempt artifact directory. */
+  attachArtifact(
+    kind: 'screenshot' | 'video' | 'download' | 'log',
+    relativePath: string,
+  ): void;
+  /** Records the viewport the current step established. */
+  attachViewport(viewport: { width: number; height: number; scale: number }): void;
+  /** Mints a public locator from a raw expression (a platform selector, say). */
+  locator(expression: LocatorExpression): Locator;
+  /** Mints a screen scope whose every query is wrapped by `scope` (a nested document, say). */
+  screen(scope: (expression: LocatorExpression) => LocatorExpression): Screen;
+  /**
+   * Attaches an expectation surface to a fixture object so `expect(fixture)`
+   * returns it. The harness records every matcher call as an assertion step
+   * named `expect.<matcher>`; the factory only decides what the matchers mean.
+   */
+  expectable<T extends object, E extends object>(target: T, factory: () => E): T & Expectable<E>;
+}
+```
+
+`context.fixture(name, surface, operations)` 声明哪些方法会被记录为步骤。
+每个操作声明一个 `kind: 'resource' | 'assertion'`、可选的 `label(...args)`、
+可选的 `timeout`（毫秒数、参数的函数，或由方法自管截止时间时的 `false`），
+以及可选的 `verifies`。默认超时是 `actionTimeout`；断言默认会被验证。嵌套的
+映射描述命名空间。记录是在对象上就地装饰，因此每次工厂调用都要创建新的
+surface。
+
+runner 会在调用被声明的方法之前先打开步骤，因此同步与异步工作产生的附件和
+失败都落在同一个步骤上。步骤关闭之后才到达的工作无法再挂到后面的步骤上。
+
+工厂必须返回它通过 `context.fixture` 声明的那样东西；若返回普通对象，
+测试第一次用它时就是 `INVALID_CONFIG`。`expectable` 会附加一个期望表面
+（expectation surface）让 `expect(fixture)` 返回它；用
+`context.fixture('expect', matchers, operations)` 声明匹配器记录。用
+`test.extend<{ name: Type }>()` 为 fixture 标注类型。
+
+入口还导出 `obj(value)`——丢弃值为 `undefined` 的键，让由可选输入构建的
+结果满足精确可选属性类型；还有 `raceAbort(work, signal, label)`、
+`withTimeout(promise, timeoutMs, onTimeout)` 和
+`withinCleanupBudget(promise, { signal, timeoutMs })`。给 `raceAbort` 传
+thunk 可在派发之前先检查取消。`isSecret(value)` 区分 `secrets.get()` 句柄
+与字符串，适用于两者皆可的选项。
+
+## 词汇表
+
+`OperationContext`、`TextPattern`、`SemanticQuery`、`LocatorExpression`、
+`NodeRef`、`SemanticNode`、`ViewportPoint`、`ViewportSize`、`ObservationPixels`、
+`LocatorAction`、`LocatorActionKind`、`PointerAction`、`PointerActionKind`、
+`ScrollDirection`、`Momentum`、`SelectOption`、`Key`、
+`KeyModifier`、`KeyName`、`ParsedKey`、`ENGINE_SPI_VERSION`、
+`LOCATOR_ACTION_KINDS`、`POINTER_ACTION_KINDS`、`KEY_MODIFIERS`、
+`KEY_NAMES`、`parseKey`、`ENGINE_ERROR_CODES`、`RETRYABLE_ENGINE_ERROR_CODES`、
+`Secret`、`isSecret`、`TextMatch`、`JsonValue`、`JsonValueRules`、
+`ResolveExpressionOptions`、`PollConditionOptions`、`WithoutUndefined`、
+`FixtureOperation`、`OBSERVED_NAME_LIMIT`（256）和 `OBSERVED_TEXT_LIMIT`
+（512）都从 `e2e/engine` 导出。截断被观测字段的引擎必须恰好截在其上限处：
+`name` 截在名称上限，`text` 以及任何被截断的 `value` 或 `selection` 截在
+文本上限。因此一个恰好达到上限的字段可能已被截断；更短的字段、或引擎保留
+完整的更长字段，则是完整的。保留开头、截去结尾：runner 会脱敏恰好达上限的
+字段末尾那截机密前缀——整值匹配是看不见它的。单节点读取没有上限，总是携带
+完整值。`selector` 表达式种类携带平台原生的选择器字符串；`frame` 把查询
+范围收进一个嵌套文档。
+
+```ts
+/** One node of an observation tree. */
+export interface SemanticNode {
+  /** Node reference, valid against the observation it came from. */
+  readonly ref: NodeRef;
+  /** Semantic role. */
+  readonly role?: string;
+  /** Accessible name, cut at `OBSERVED_NAME_LIMIT`. */
+  readonly name?: string;
+  /** Visible text, cut at `OBSERVED_TEXT_LIMIT`. */
+  readonly text?: string;
+  /** Current input value; never reported for a secure field. */
+  readonly value?: string;
+  /**
+   * Text selected inside the node, for the focused field or editing host
+   * whose selection the platform reports; absent when the selection is
+   * collapsed, and never reported for a secure field. Cut at `OBSERVED_TEXT_LIMIT`.
+   */
+  readonly selection?: string;
+  /**
+   * The node's test id, when the platform gives it one: the value of the
+   * project's test-id attribute on a document platform, an accessibility
+   * identifier on iOS, a resource id on Android, an automation id on a
+   * desktop. The `testId` query resolves against exactly this field, so the
+   * harness never knows where a platform keeps it.
+   */
+  readonly testId?: string;
+  /** What a field takes, deciding which secrets may fill it. */
+  readonly inputPurpose?: 'username' | 'password' | 'one-time-code' | 'generic-secret' | 'none';
+  /**
+   * Boolean states the platform reports. `pressed` is a toggle button's
+   * pressed state; `secure` marks a field whose value is never observed.
+   */
+  readonly states?: Readonly<
+    Partial<
+      Record<
+        'checked' | 'disabled' | 'selected' | 'expanded' | 'pressed' | 'focused' | 'hidden' | 'secure',
+        boolean
+      >
+    >
+  >;
+  /** Heading level of a heading node (`1` through `6` on a document platform); absent elsewhere. */
+  readonly level?: number;
+  /** Platform attributes, what `getAttribute` reads. */
+  readonly attributes?: Readonly<Record<string, string>>;
+  /**
+   * The node's box in the top-level viewport's CSS pixels (`ViewportPoint`
+   * space), for every node, including those inside nested documents: an
+   * engine that measures a child document against its own viewport shifts
+   * the boxes by the boundary element's before reporting them.
+   */
+  readonly rect?: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
+  /**
+   * Platform selector that addresses this node within its own document, when
+   * the platform has one. It is structural, not semantic: it survives the
+   * content changes that rename a node, and a runner may store it to re-find
+   * the node cheaply on a later run. It is never part of the node's identity,
+   * so whatever it resolves to is still checked before it is used.
+   *
+   * It SHOULD be anchored on an attribute naming the node or one of its
+   * ancestors, and SHOULD be absent rather than positional all the way to the
+   * document root: such a path is shifted by anything inserted above the node,
+   * so it does not survive to the later run it exists for.
+   */
+  readonly selector?: string;
+  /**
+   * Enclosing nested-document chain as selectors of each boundary node,
+   * outermost first. Absent for nodes in the main document.
+   */
+  readonly framePath?: readonly string[];
+  /** Child nodes. */
+  readonly children?: readonly SemanticNode[];
+}
+
+/** The `screen` query kinds. */
+export type QueryKind = 'role' | 'label' | 'placeholder' | 'text' | 'displayValue' | 'testId';
+```
+
+`visible: true` 的 `SemanticQuery` 只能匹配 `states.hidden` 为 false 的
+节点，判定谓词与引擎在 `SemanticNode` 上报告的完全一致，因此
+`getByText('x', { visible: true })` 与 `toBeVisible()` 永不矛盾。无论查询
+位于表达式中的哪个位置——处于某个 scope、过滤或索引之下——都要同样应用
+这一条件。

@@ -1,0 +1,154 @@
+---
+title: "拉取请求评论"
+sidebarTitle: "GitHub PR 评论"
+description: "@e2e-dev/github 报告器在 GitHub Actions 上每次运行发布一条评论，并保持其最新。"
+icon: "github"
+---
+
+`@e2e-dev/github` 把测试结果发布为一条拉取请求评论，内容包括失败详情、源码链接和工作流产物的链接。重跑会更新同一条评论，`--last-failed` 重跑也会作为同一次运行更新它。报告器还会把结果写入作业摘要（job summary）。
+
+## 设置
+
+<CodeGroup>
+```bash npm
+npm install --save-dev @e2e-dev/github
+```
+
+```bash pnpm
+pnpm add -D @e2e-dev/github
+```
+
+```bash bun
+bun add -d @e2e-dev/github
+```
+</CodeGroup>
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { github } from '@e2e-dev/github';
+
+export default {
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+  reporters: ['list', github()],
+} satisfies E2EConfig;
+```
+
+给工作流写拉取请求评论的权限，并把 `GITHUB_TOKEN` 传给测试步骤：
+
+```yaml title=".github/workflows/e2e.yml"
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  e2e:
+    steps:
+      # ...checkout, install, browsers
+      - name: Run e2e
+        run: npx e2e run --reporter list,junit
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-artifacts
+          path: .e2e/results
+```
+
+即使重试通过了也要上传产物。每条失败的证据链接会打开本次运行的 Artifacts 区；下载包里每个测试都有自己的目录（`billing-upgrades-to-pro-1a2b3c4d5e6f7a8b/attempt-1/`），因此保留 `path: .e2e/results` 即可与报告对上。`--last-failed` 重跑会保留首次运行的文件，并把本次产物放在每个测试的 `rerun-1/` 下，所以 flaky 测试那次失败的尝试仍能链接到自己的文件。检出根之下更低层级的项目（如 `packages/e2e-tests`），其源码链接会带上该路径前缀。检出根是 `GITHUB_WORKSPACE` 中最近的包含 `.git` 的目录，因此带 `path` 输入的 `actions/checkout` 也可以。
+
+## 评论内容
+
+```markdown expandable
+### 🔴 e2e: 1 failed, 1 flaky, 3 passed, 1 skipped
+9 agent steps · 4 replayed from cache · 31 model calls · 128k tokens (62% cached) · $0.31
+
+**🔴 billing › upgrades to Pro**  
+[tests/billing.e2e.ts:12](https://github.com/acme/shop/blob/1a2b3c/tests/billing.e2e.ts#L12)
+
+**ASSERTION_FAILED** at step 4 of 6: `agent.act` "Pick the Pro plan and pay", after 38.0s and 12 model calls
+
+> expected heading "Your cart" to be visible
+> The Pay button opened a page that still shows the Free plan.
+
+- Failed the same way on both attempts: **ASSERTION_FAILED** at step 4.
+- Turn 9: `tap({"target":"n41"})` → Screen changed: /checkout/plan. New: #n50 heading "Free plan"
+- Screen: `/checkout/plan`
+
+Evidence: [screenshot](https://github.com/acme/shop/actions/runs/123#artifacts), [video](https://github.com/acme/shop/actions/runs/123#artifacts)
+
+<details>
+<summary>⚠️ 1 flaky test passed on a retry</summary>
+
+**⚠️ invite a member by email**  
+[tests/team.e2e.ts:21](https://github.com/acme/shop/blob/1a2b3c/tests/team.e2e.ts#L21)
+
+**STEP_TIMEOUT** at step 3 of 3: `agent.waitFor` "the invitation email", after 30.0s
+
+> the invitation email took too long
+
+Evidence: [screenshot](https://github.com/acme/shop/actions/runs/123#artifacts)
+</details>
+
+<details>
+<summary>All 6 tests in 5 files</summary>
+
+| | Test | Agent | Time |
+| --- | --- | --- | --- |
+| 🔴 | **tests/billing.e2e.ts** · 1 failed | 3 steps · 19 calls | 41.2s |
+| 🔴 | billing › upgrades to Pro | 3 steps · 19 calls | 41.2s |
+| ⚠️ | **tests/team.e2e.ts** · 1 flaky | 1 step | 6.4s |
+| ⚠️ | invite a member by email (1 failed attempt first) | 1 step | 6.4s |
+...
+</details>
+
+<sub>e2e 0.13.0 · 2m 15s · web · [run artifacts](https://github.com/acme/shop/actions/runs/123#artifacts)</sub>
+```
+
+评论先显示测试计数与智能体用量，随后是每条失败的报错、源码行和证据链接。flaky 测试和完整测试列表默认折叠；列表是一张表，每个文件占一行、其测试列在其下，智能体列只在本次运行用到智能体时才出现。运行级错误显示在测试失败之上。过大的报告会被截短以符合 GitHub 的评论长度限制。被测应用界面中出现的、会被 GitHub 变成 @提及、issue 链接或 URL 的文字都以代码样式展示，因此屏幕上出现 `@someone` 或 `https://...` 不会通知任何人，也不会链接到任何地方。
+
+内置的 `markdown` 报告器会把同样的摘要写到 `.e2e/summary.md`。
+
+## 重跑失败的测试
+
+给失败测试第二次机会的步骤，会让两次执行共用同一条评论：
+
+```yaml
+      - name: Run e2e
+        run: npx e2e run || npx e2e run --last-failed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+评论覆盖整个套件，而不只是重跑重新执行的那些测试。先失败后通过的测试显示为 flaky；两次都失败的保持失败；先被中断后通过的显示为通过；其余保持首次执行的结果。只要重跑还欠着没跑的东西，评论就保持红色：某个失败的测试、被 `--max-failures` 叫停而没轮到的测试，或某个失败的 `beforeAll`/`afterAll` 且其测试被另一个过滤条件排除在重跑之外。当重跑漏掉了首次执行没跑完的测试时，评论会显示 ⏹️。重跑本身的退出码只统计它实际运行的部分。失败尝试的证据链接指向首次运行的文件，重跑会保留这些文件。
+
+## 矩阵作业
+
+报告器按项目、工作流和作业来标识一条评论。矩阵作业共享这些标识，因此给每个矩阵条目一个不同的 `key`：
+
+```ts
+reporters: ['list', github({ key: process.env.MATRIX_BROWSER })],
+```
+
+在步骤的 `env` 中设置 `MATRIX_BROWSER: ${{ matrix.browser }}`。该 key 也会出现在标题里，例如 `e2e chromium: 77 passed`。请在各次运行之间保持 key 稳定，这样重跑才会更新已有评论。
+
+## 什么都没发布时
+
+报告器从不改变运行的状态或退出码。当它无法发布时，会在摘要下方用一行说明原因：
+
+```
+       GitHub  not posted: set GITHUB_TOKEN in the step's env (GITHUB_TOKEN: ${{ github.token }}); written to the job summary
+```
+
+| 情形 | 会发生什么 |
+| --- | --- |
+| 不在 GitHub Actions 上 | 什么都不写；该行会说明这一点。 |
+| `push`、`schedule` 或 `workflow_dispatch` 运行 | 会写作业摘要；没有可评论的拉取请求。 |
+| 步骤的 `env` 里没有 `GITHUB_TOKEN` | 会写作业摘要；该行给出需要添加的内容。也会读取 `GH_TOKEN`。 |
+| 来自 fork 的 `pull_request` 事件 | 令牌是只读的，发布失败，报告器会说明原因。 |
+| `issue_comment` 事件 | 在拉取请求的会话线上，评论仍会发布但没有源码链接，因为检出的 commit 是默认分支。 |
+| 缺少 `pull-requests: write` | 同样的失败，并指明缺少的权限。 |
+
+令牌在运行结束时读取，且不会进入报告。GitHub Enterprise Server 使用 `GITHUB_SERVER_URL` 和 `GITHUB_API_URL`。

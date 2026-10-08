@@ -1,0 +1,344 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "e2e",
+  "description": "用于智能体端到端测试的开源框架（中文镜像）。",
+  "colors": {
+    "primary": "#171717",
+    "light": "#fafafa",
+    "dark": "#171717"
+  },
+  "logo": {
+    "light": "/logo-black.png",
+    "dark": "/logo-white.png"
+  },
+  "favicon": {
+    "light": "/favicon-black.png",
+    "dark": "/favicon-white.png"
+  },
+  "seo": {
+    "metatags": {
+      "og:image": "https://e2e.tester.army/docs/images/og.png",
+      "twitter:card": "summary_large_image",
+      "twitter:image": "https://e2e.tester.army/docs/images/og.png"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      {
+        "title": "在 Codex 中打开",
+        "description": "就此页面询问 Codex",
+        "icon": "/images/contextual/codex.svg",
+        "href": {
+          "base": "codex://new",
+          "query": [
+            {
+              "key": "prompt",
+              "value": "Read this documentation page, so I can ask questions about it:\n\nhttps://e2e.tester.army/docs$path.md"
+            }
+          ]
+        }
+      },
+      "claude",
+      {
+        "title": "在 Claude Code 中打开",
+        "description": "就此页面询问 Claude Code",
+        "icon": "/images/contextual/claude-code.svg",
+        "href": {
+          "base": "claude-cli://open",
+          "query": [
+            {
+              "key": "q",
+              "value": "Read this documentation page, so I can ask questions about it:\n\nhttps://e2e.tester.army/docs$path.md"
+            }
+          ]
+        }
+      },
+      {
+        "title": "在 Cursor 中打开",
+        "description": "就此页面询问 Cursor",
+        "icon": "/images/contextual/cursor.svg",
+        "href": {
+          "base": "https://cursor.com/link/prompt",
+          "query": [
+            {
+              "key": "text",
+              "value": "Read this documentation page, so I can ask questions about it:\n\nhttps://e2e.tester.army/docs$path.md"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "fonts": {
+    "heading": {
+      "family": "Geist",
+      "weight": 500
+    },
+    "body": {
+      "family": "Geist"
+    }
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "background": {
+    "color": {
+      "light": "#ffffff",
+      "dark": "#0a0a0a"
+    }
+  },
+  "styling": {
+    "codeblocks": {
+      "theme": {
+        "light": "github-light",
+        "dark": "github-dark"
+      }
+    },
+    "eyebrows": "breadcrumbs"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "label": "GitHub",
+      "href": "https://github.com/tester-army/e2e"
+    }
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "测试速度跟不上开发速度？",
+          "href": "https://tester.army/?utm_source=e2e&utm_medium=docs&utm_campaign=docs_sidebar_banner"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "tab": "文档",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "快速上手",
+            "pages": [
+              "index",
+              "quickstart",
+              "core-concepts",
+              "explore",
+              "coding-agents"
+            ]
+          },
+          {
+            "group": "平台",
+            "pages": [
+              "web",
+              "mobile",
+              "api-testing"
+            ]
+          },
+          {
+            "group": "模型与智能体",
+            "pages": [
+              "models",
+              "decision-models",
+              "subscriptions",
+              "cache"
+            ]
+          },
+          {
+            "group": "在 CI 中运行",
+            "pages": [
+              "ci",
+              "ci/github-actions",
+              "ci/eas-workflows",
+              "ci/bitrise",
+              "ci/codemagic",
+              "github"
+            ]
+          },
+          {
+            "group": "托管浏览器与设备",
+            "pages": [
+              "integrations/index",
+              "integrations/kernel",
+              "integrations/eas"
+            ]
+          },
+          {
+            "group": "扩展",
+            "pages": [
+              "tools",
+              "executors",
+              "writing-an-engine"
+            ]
+          },
+          {
+            "group": "深入细节",
+            "pages": [
+              "browser",
+              "bug-bash",
+              "authentication",
+              "security",
+              "telemetry",
+              "debugging",
+              "agents",
+              "agent-steps"
+            ]
+          },
+          {
+            "group": "迁移",
+            "pages": [
+              "migrate/playwright",
+              "migrate/cypress",
+              "migrate/selenium",
+              "migrate/detox",
+              "migrate/maestro"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "参考",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Test API",
+            "pages": [
+              "reference/test",
+              "reference/expect",
+              "reference/screen",
+              "reference/app",
+              "reference/agent"
+            ]
+          },
+          {
+            "group": "项目",
+            "pages": [
+              "reference/config",
+              "reference/cli",
+              "reference/mcp",
+              "reference/reporters",
+              "reference/environment",
+              "reference/errors"
+            ]
+          },
+          {
+            "group": "Web",
+            "pages": [
+              "reference/web"
+            ]
+          },
+          {
+            "group": "移动",
+            "pages": [
+              "reference/mobile"
+            ]
+          },
+          {
+            "group": "引擎契约",
+            "pages": [
+              "reference/engine"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "示例",
+        "icon": "folder-open",
+        "pages": [
+          "example-projects"
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/tester-army/e2e"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/mobile-ci",
+      "destination": "/ci#移动端作业"
+    },
+    {
+      "source": "/introduction",
+      "destination": "/"
+    },
+    {
+      "source": "/reference/device",
+      "destination": "/reference/mobile"
+    },
+    {
+      "source": "/reference/agent-device",
+      "destination": "/reference/mobile"
+    },
+    {
+      "source": "/reference/playwright",
+      "destination": "/reference/web"
+    },
+    {
+      "source": "/running-tests",
+      "destination": "/reference/cli"
+    },
+    {
+      "source": "/configuration",
+      "destination": "/reference/config"
+    },
+    {
+      "source": "/from-playwright",
+      "destination": "/migrate/playwright"
+    },
+    {
+      "source": "/troubleshooting",
+      "destination": "/debugging"
+    },
+    {
+      "source": "/writing-a-driver",
+      "destination": "/writing-an-engine"
+    },
+    {
+      "source": "/writing-a-backend",
+      "destination": "/writing-an-engine"
+    },
+    {
+      "source": "/reference/backend",
+      "destination": "/reference/engine"
+    },
+    {
+      "source": "/reference/app-web",
+      "destination": "/reference/web"
+    },
+    {
+      "source": "/writing-tests",
+      "destination": "/core-concepts"
+    },
+    {
+      "source": "/starting-your-app",
+      "destination": "/web#启动你的应用"
+    },
+    {
+      "source": "/viewports",
+      "destination": "/web#视口"
+    },
+    {
+      "source": "/physical-devices",
+      "destination": "/mobile#真机"
+    },
+    {
+      "source": "/goals",
+      "destination": "/core-concepts#目标"
+    },
+    {
+      "source": "/assertions",
+      "destination": "/core-concepts#断言"
+    },
+    {
+      "source": "/locators",
+      "destination": "/core-concepts#定位器"
+    }
+  ]
+}

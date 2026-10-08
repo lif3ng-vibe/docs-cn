@@ -1,0 +1,125 @@
+---
+title: 从 Selenium 迁移
+description: 用定位器、会重试的断言和智能体目标，在 TypeScript 中重写 Selenium 流程。
+icon: "/images/icons/selenium.svg"
+---
+
+import { SetupPrompt } from '../snippets/setup-prompt-card.jsx';
+
+export const migrationPrompt = `将本项目的 Selenium 测试迁移到 e2e，一次迁移一个流程。文档：\`https://e2e.tester.army/docs/migrate/selenium.md\`
+
+1. 阅读上面的迁移指南。它把 Selenium 的配置和 WebDriver 调用映射到 e2e。
+2. e2e 测试是 TypeScript。如果 Selenium 套件是 Java、Python 或其他语言，问我新测试项目应该放在哪里，例如一个自带 \`package.json\` 的 \`e2e/\` 目录。
+3. 如果该项目还没有 e2e 配置（\`e2e.config.ts\` 或 \`e2e.config.mts\`），就在那里运行 \`npx e2e init --yes\`（或对应的 pnpm/bun 命令）。它只写入一份配置和一个示例测试，不会安装任何东西。
+4. 阅读 e2e skill（\`npx e2e guide\` 打印它，\`npx e2e guide <topic>\` 打印某个主题），并在下面的每一步都遵循它。
+5. 如果你运行了 init，问我智能体步骤用哪个模型：ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅、一个 API key，或本地模型。用其提供者包配置。如果需要登录，给我 \`npx e2e login\` 命令，并等我确认。
+6. 把 target 的 \`app\` 设为每处 \`driver.get\` 所用的 URL；如果套件自己启动 app，也一并设置启动命令。把密码和 token 移入 \`credentials\` 或 \`secrets\`。
+7. 安装依赖。
+8. 列出页面对象及其所属流程，问我要先迁移哪些。建议一个页面对象及其流程。
+9. 把这些流程改写为 \`tests/\` 下的 \`.e2e.ts\` 文件（e2e 默认运行 \`tests/**/*.e2e.ts\`）。在 \`screen\` 上优先用角色、label 和 test id 查询，取代 \`By.id\`、CSS 和 XPath。把显式等待、隐式等待和 \`Thread.sleep\` 换成会重试的定位器断言。\`findElement\` 取第一个匹配，而 e2e 匹配到多个会失败，因此要收窄这些查询。把页面对象的 setup 代码改成 fixture。
+10. 用 \`app.open()\` 和定位器断言让导航与最终断言保持确定性。在一段脚本化交互经常挂掉的地方，改为为它提出一个 \`agent.act\` 目标。
+11. 用 \`npx e2e run <file>\` 运行新文件并修复直到通过。保留 Selenium 测试，直到我确认它们可以删除。
+12. 总结哪些流程已迁移、哪些留在 Selenium 以及原因。`;
+
+<SetupPrompt>
+
+<Prompt description={migrationPrompt} children={migrationPrompt} actions={["copy", "cursor"]} />
+
+</SetupPrompt>
+
+e2e 测试使用 TypeScript、基于角色和 label 的定位器，以及会一直重试直到通过或超时的断言。Java 或 Python 套件需要重写。迁移期间可以两套并行，一次只移一个流程。
+
+按[快速上手](/quickstart)安装 e2e。只有智能体调用才需要模型；下面基于定位器的示例没有模型也能跑。
+
+## 配置
+
+| Selenium | e2e |
+| --- | --- |
+| 每个 `driver.get` 里的 URL | target 上的 `app: { url }`，之后用相对路径 |
+| 用脚本启动 app | `app: { url, command }`，见[启动你的应用](/web#启动你的应用) |
+| 每种浏览器一个 driver | 每种浏览器一个 target，`web({ browser: 'firefox' })` |
+| Selenium Grid | 并行用 `workers`；`connect` 可经 CDP 挂上远程 Chromium，而 [Kernel](/integrations/kernel) 这类[浏览器提供者](/browser#托管浏览器)可租用托管浏览器 |
+| `manage().window().setSize` | `web({ viewport })` |
+| 隐式等待 | `actionTimeout` 与 `assertionTimeout`，分别为动作和断言设定期限 |
+| 用于登录的页面对象 | `test.setup` 与 `{ session }`，见[登录](/authentication) |
+
+## 改写前后的测试
+
+```java title="Selenium"
+driver.get("http://localhost:3000/login");
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+wait.until(visibilityOfElementLocated(By.id("username"))).sendKeys("admin@example.test");
+driver.findElement(By.id("password")).sendKeys(System.getenv("ADMIN_PASSWORD"));
+driver.findElement(By.xpath("//button[contains(., 'Sign in')]")).click();
+wait.until(urlContains("/dashboard"));
+assertEquals("Welcome back, admin!",
+    driver.findElement(By.cssSelector(".greeting")).getText());
+```
+
+```ts title="e2e"
+import { test } from '@e2e-dev/web';
+import { expect, credentials } from 'e2e';
+
+test('signs in', async ({ app, screen, browser }) => {
+  const admin = credentials.user('admin');
+  await app.open('/login');
+  await screen.getByLabel('Username').fill(admin.username);
+  await screen.getByLabel('Password').fill(admin.password);
+  await screen.getByRole('button', 'Sign in').tap();
+  await expect(browser).toHaveURL('/dashboard');
+  await expect(screen.getByRole('status')).toHaveText('Welcome back, admin!');
+});
+```
+
+定位器动作会等待目标出现，断言会自动重试。密码来自[配置好的凭据](/authentication)。也可以用 `agent.act`，从一个目标让智能体完成登录。
+
+## API 对照表
+
+| Selenium | e2e |
+| --- | --- |
+| `driver.get(url)` | `app.open(path)` |
+| `driver.navigate().back()`, `.refresh()` | `app.back()`, `browser.reload()` |
+| `By.id('x')` | `browser.locator('#x')`；或配 `web({ testIdAttribute: 'id' })` 后用 `screen.getByTestId('x')` |
+| `By.name('x')` | `browser.locator('[name="x"]')`，不可移植；优先用角色或 label |
+| `By.linkText`, `By.partialLinkText` | `screen.getByRole('link', { name })`，`name: /part/` |
+| `By.cssSelector`, `By.xpath` | `browser.locator('css or xpath')`，不可移植 |
+| `findElements(...).size()` | `await locator.count()` |
+| `findElements(...).get(n)` | `locator.nth(n)` |
+| `.click()` | `.tap()` |
+| `.sendKeys('text')` | `.fill('text')`，会替换全部内容 |
+| `.sendKeys(Keys.ENTER)` | `.press('Enter')` |
+| `.clear()` | `.clear()` |
+| `new Select(el).selectByVisibleText` | `.selectOption({ label })` |
+| `.getText()`, `.getAttribute()`, `.isDisplayed()` | `.textContent()`, `.getAttribute()`, `.isVisible()`，不会重试 |
+| `wait.until(visibilityOf(...))` | `await expect(locator).toBeVisible()` |
+| `wait.until(textToBe(...))` | `await expect(locator).toHaveText(...)` |
+| `wait.until(urlContains(...))` | `await expect(browser).toHaveURL(/.../)` |
+| `Actions.moveToElement` | `.hover()` |
+| `Actions.dragAndDrop` | `.dragTo(target)` |
+| `Actions.keyDown(CONTROL).sendKeys('a')` | `.press('ControlOrMeta+a')` |
+| `switchTo().frame()` | `browser.frameLocator('#frame')` |
+| `switchTo().alert().accept()` | 在动作之前先调 `browser.onDialog('accept')` |
+| `switchTo().window()` | 无对应物。不支持弹窗 |
+| `executeScript` | `browser.evaluate` |
+| `manage().addCookie` | `browser.setCookies` |
+| `getScreenshotAs` | `app.screenshot('label')`，已脱敏 |
+| `Thread.sleep` | 对所需条件用定位器断言 |
+| 页面对象 | 来自 `test.extend` 的 fixture，或一个 `agent.act` 目标 |
+
+行为与 WebDriver 不同之处：
+
+- `findElement` 返回第一个匹配；e2e 则报 `LOCATOR_AMBIGUOUS` 失败。用 `.filter()`、`.first()` 或 `.nth()` 收窄，见 [screen](/reference/screen)。
+- `textContent()` 只读一次、不重试。要用会轮询至期限为止的 `toHaveText()` 来断言。
+
+## 优先迁移什么
+
+从单个页面对象及其使用方流程开始；它的 setup 代码可以变成 fixture。
+
+<CardGroup cols={2}>
+  <Card title="核心概念" icon="pen-to-square" href="/core-concepts">
+    用目标、断言和定位器取代脚本化选择器。
+  </Card>
+  <Card title="screen 参考" icon="crosshairs" href="/reference/screen">
+    全部查询、精化、动作与读取。
+  </Card>
+</CardGroup>

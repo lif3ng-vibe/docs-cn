@@ -1,0 +1,206 @@
+---
+title: GitHub Actions
+description: 在 GitHub Actions 上运行 Web、iOS 与 Android 测试，上传报告，并把结果发布到拉取请求。
+icon: "/images/icons/github-actions.svg"
+---
+
+本页提供两个工作流：一个面向 Web 目标，一个面向 iOS 与 Android 目标。请先读 [CI 概览](/ci)，它说明了 CI 模式改变了什么、如何给作业提供模型凭据，以及每个退出码的含义。
+
+## Web
+
+此工作流在同一作业中运行确定性测试与智能体测试。它假设你的配置中有启动应用的 [command](/web#启动你的应用)，并由 AI Gateway 负责模型调用：
+
+```yaml title=".github/workflows/e2e.yml" expandable
+name: e2e
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4.2.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install browsers
+        run: pnpm exec e2e-web install chromium --with-deps
+
+      - name: Run e2e
+        run: npx e2e run --reporter list,junit
+        env:
+          APP_URL: http://127.0.0.1:3000
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          E2E_USER_ADMIN_USERNAME: ${{ secrets.E2E_USER_ADMIN_USERNAME }}
+          E2E_USER_ADMIN_PASSWORD: ${{ secrets.E2E_USER_ADMIN_PASSWORD }}
+
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-report
+          path: |
+            .e2e/report.json
+            .e2e/junit.xml
+          if-no-files-found: warn
+
+      - name: Upload artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-artifacts
+          path: .e2e/results
+          if-no-files-found: warn
+          retention-days: 7
+```
+
+该工作流把每个 action 固定到一个 commit SHA，并从锁文件安装依赖。`npx e2e` 运行的是已安装的版本。[安装命令](/reference/web#安装浏览器)会下载引擎锁定的 Playwright 版本所对应的浏览器及其系统库。
+
+上传步骤在任何未被取消的运行上都会执行。因此先失败、重试后通过的测试也能保留其证据。
+
+## iOS 与 Android
+
+此工作流有两个作业，每个平台一个。使用前请先读[移动端作业](/ci#移动端作业)，该节说明了每个作业在每个 CI 服务上需要什么。
+
+iOS 作业用 `xcodebuild` 为模拟器构建应用。你也可以用其他构建命令，但该命令必须产出一个模拟器 `.app`，且不能启动应用。对 Expo 项目，`npx expo run:ios --configuration Release --device generic --no-bundler --output build/ios` 可以不依赖模拟器构建，并把 `.app` 写到 `build/ios` 下。
+
+```yaml title=".github/workflows/e2e-mobile.yml" expandable
+name: e2e mobile
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: pod install
+        working-directory: ios
+
+      - name: Build for the simulator
+        run: |
+          xcodebuild -workspace ios/MyApp.xcworkspace -scheme MyApp \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.agent-device
+          key: agent-device-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Boot a simulator and install the app
+        run: |
+          UDID=$(xcrun simctl create e2e "iPhone 17" com.apple.CoreSimulator.SimRuntime.iOS-26-5)
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Release-iphonesimulator/MyApp.app
+
+      - run: npx e2e run --target ios --reporter list,junit
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-ios
+          path: .e2e
+          if-no-files-found: warn
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+          cache: npm
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # React Native and Expo templates sign release builds with the debug keystore.
+      - name: Build the APK
+        run: cd android && ./gradlew :app:assembleRelease
+
+      - name: Run on an emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            adb install -r android/app/build/outputs/apk/release/app-release.apk
+            npx e2e run --target android --reporter list,junit
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-android
+          path: .e2e
+          if-no-files-found: warn
+```
+
+仿真器 runner action 会启动仿真器，并在新 shell 中逐行运行 `script` 里的内容。步骤结束时，该 action 会停止仿真器。因此安装与运行必须在同一步骤中完成。
+
+本仓库自己的移动端套件就是这样运行的。参见 [`mobile.yml`](https://github.com/tester-army/e2e/blob/main/.github/workflows/mobile.yml)，该版本还额外做了这几件事：
+
+- 按原生指纹（native fingerprint）缓存 Expo 构建。
+- 为两个 worker 启动两台模拟器。
+- 用 `--last-failed` 重跑失败的测试。
+
+## 拉取请求评论
+
+添加 [`@e2e-dev/github` 报告器](/github)，把每个作业的结果作为一条评论发布到拉取请求上。重跑会更新同一条评论。报告器还会把结果写入作业摘要（job summary）。上面工作流的权限是只读的；要发布评论，作业需要 `pull-requests: write` 权限，并在测试步骤的 env 中提供 `GITHUB_TOKEN`。参见 [Setup](/github#设置)。对于来自 fork 的 `pull_request` 运行，GitHub 只发放只读令牌，此时报告器无法发布评论。参见 [When nothing is posted](/github#什么都没发布时)。
+
+要在运行失败时阻止合并，在仓库设置中把 e2e 作业设为必需检查。
+
+## 机密
+
+与上面工作流一样，把模型密钥放在仓库机密（repository secret）中。GitHub 不会把机密交给来自 fork 的拉取请求。参见[模型凭据](/ci#模型凭据)。
+
+<CardGroup cols={2}>
+  <Card title="拉取请求评论" icon="code-pull-request" href="/github">
+    每次运行一条评论，重跑时就地更新。
+  </Card>
+  <Card title="CI 概览" icon="rotate" href="/ci">
+    CI 默认值、分片、重跑与退出码。
+  </Card>
+</CardGroup>

@@ -1,0 +1,216 @@
+---
+title: 遥测
+description: CLI 发送什么、绝不发送什么，以及如何关闭。
+icon: "chart-line"
+---
+
+`e2e` CLI 发送匿名的使用数据，让我们了解哪些命令、引擎和功能被使用，运行又
+在何处失败。遥测默认开启。内容只有计数和版本信息，不含任何测试内容、应用内
+容或凭据。
+
+## 选择退出
+
+以下任一方式即可关闭：
+
+<CodeGroup>
+```bash npm
+npx e2e telemetry disable   # 保存在 ~/.config/e2e/telemetry.json
+export E2E_TELEMETRY_DISABLED=1          # 针对某个 shell 或 CI 任务
+export DO_NOT_TRACK=1                    # 跨工具通用约定
+```
+
+```bash pnpm
+pnpm exec e2e telemetry disable   # 保存在 ~/.config/e2e/telemetry.json
+export E2E_TELEMETRY_DISABLED=1          # 针对某个 shell 或 CI 任务
+export DO_NOT_TRACK=1                    # 跨工具通用约定
+```
+
+```bash bun
+bunx e2e telemetry disable   # 保存在 ~/.config/e2e/telemetry.json
+export E2E_TELEMETRY_DISABLED=1          # 针对某个 shell 或 CI 任务
+export DO_NOT_TRACK=1                    # 跨工具通用约定
+```
+</CodeGroup>
+
+`npx e2e telemetry` 会打印状态，已关闭时还会说明原因。`enable` 反转已保存的
+`disable`。环境变量优先于一切。运行中的命令在发送前会再次检查保存的设置，
+因此关闭遥测对已在另一个终端运行的命令同样生效。
+
+## 查看将要发送的内容
+
+<CodeGroup>
+```bash npm
+E2E_TELEMETRY_DEBUG=1 npx e2e run
+```
+
+```bash pnpm
+E2E_TELEMETRY_DEBUG=1 pnpm exec e2e run
+```
+
+```bash bun
+E2E_TELEMETRY_DEBUG=1 bunx e2e run
+```
+</CodeGroup>
+
+它会以 `[telemetry] {...}` 的形式把完整的事件负载打印到 stderr，而不发送任
+何数据。
+
+## 发送什么
+
+每个命令发送一个 session 事件。`run` 和 `explore` 还会另发一个 run 事件，
+`init` 发一个 init 事件，`mcp` 对每个 MCP 会话发一个事件。`--help` 和
+`--version` 什么都不发，即便附在某个命令上也是如此。事件在命令结束时随一
+个请求发出，所有遥测工作的时限为两秒。`e2e mcp` 与其客户端同生命周期，因
+此它在每个 MCP 会话结束时、以同样的时限、单独用一个请求发送该会话事件。
+
+每个事件都带有以下属性。
+
+谁在运行：
+
+| Property | Value |
+| --- | --- |
+| `distinct_id` | 一个随机 id，存于偏好文件中。CI 用 `ci:<vendor>`，代用户运行 e2e 的平台设置 `E2E_TELEMETRY_FLEET` 后用 `fleet:<name>` |
+| `project_id` | 由仓库根提交派生的哈希，完整克隆之间共享。在 git 之外及浅克隆中为 `null` |
+| `session_id` | 本次调用专属的一个随机 id |
+| `first_run`, `days_since_first_run` | 本命令是否创建了偏好文件，以及创建至今的整天数。CI 与 fleet 中没有持久的机器，为 `null`；偏好文件早于此字段开始记录时间时亦为 `null` |
+
+在哪里运行：
+
+| Property | Value |
+| --- | --- |
+| `os`, `os_release`, `arch`, `cpu_count`, `memory_gb`, `docker`, `wsl`, `tty` | 机器类别 |
+| `sandbox` | 内核自报的 microVM 类型（`firecracker`），否则为 `null` |
+| `ci`, `ci_name` | 是否设置了 `CI`，以及有厂商自报时的名号（`github-actions`、`gitlab`、`circleci` 等） |
+| `fleet` | 设了 `E2E_TELEMETRY_FLEET` 且为普通 token 时是它的值，不是时为 `other`，未设置时为 `null` |
+| `coding_agent` | 运行命令的 shell 所属的编码智能体，仅当它自报身份时（`claude-code`、`cursor`、`codex` 等） |
+
+版本：
+
+| Property | Value |
+| --- | --- |
+| `e2e_version`, `package_manager` | e2e 版本，以及调起 CLI 的包管理器 |
+| `runtime`, `runtime_version`, `node_version` | `node`、`bun` 或 `deno` 及其版本；`node_version` 是 Node 自身版本，或在 Bun/Deno 之下的 Node 兼容版本 |
+| `$lib`, `$lib_version`, `$process_person_profile`, `$geoip_disable` | 分别为 `e2e`、其版本、`false` 与 `true`：PostHog 不保存个人画像，也不推导地理位置 |
+
+`e2e_cli_session`，每个命令一次：
+
+| Property | Value |
+| --- | --- |
+| `command` | `init`, `run`, `list`, `cache ls`, `guide`, `telemetry`, ... |
+| `flags` | 所给旗标的名称（如 `--headed`、`--tag`）。绝不含其值 |
+| `exit_code`, `duration_ms` | 命令如何结束、耗时多久 |
+| `error_code` | 令命令未能真正运行就结束的失败的 runner 错误码（`CONFIG_NOT_FOUND`、`INVALID_CONFIG` 等）；被 CLI 拒绝的旗标或参数为 `CLI_USAGE`；其余为 `null`。非大写 token 形状的错误码一律上报为 `OTHER` |
+
+`e2e_init_completed`，每次 `e2e init` 一次：
+
+| Property | Value |
+| --- | --- |
+| `result` | `scaffolded`, `already-initialized`, `cancelled`, `install-failed`, `not-interactive`, or `invalid-project` |
+| `yes`, `existing_config` | 是否带 `--yes`，以及是否已存在配置、从而不再询问引擎或网关 |
+| `engine`, `gateway` | 为新配置选择的引擎与模型网关的 id（引擎：`web`、`mobile`、`none`；网关：`vercel`、`openrouter`、`openai-compatible`、`chatgpt`、`copilot`、`grok`、`none`），未询问时为 `null`。绝不发送为 OpenAI 兼容网关手工键入的端点 |
+| `skill`, `mcp`, `install` | 是否选择了安装 agent skill、注册 MCP 和安装依赖 |
+
+`e2e_run_completed`，每次 `e2e run` 或 `e2e explore` 一次，由 `report.json` 的数字与解析后的配置构建：
+
+| Property | Value |
+| --- | --- |
+| `command` | `run` or `explore` |
+| `status`, `exit_code`, `duration_ms` | 运行的结果 |
+| `flags` | 运行命令所给旗标的名称，绝不含其值 |
+| `tests_discovered`, `tests_selected`, `tests_executed`, `tests_passed`, `tests_failed`, `tests_interrupted`, `tests_flaky`, `tests_skipped` | 各项汇总计数 |
+| `attempts_total`, `tests_retried` | 运行在测试与串行组上共发出多少次尝试，其中多少需要不止一次 |
+| `targets`, `platforms`, `engines` | 各有多少 target、在哪些平台上、用哪些引擎与版本，以你的配置声明的形式呈现：`web`、`ios`、`web@0.6.1`，或你自研引擎的名称与版本。名称若不是字母、数字、点、连字符、下划线组成的普通 token，一律上报为 `other` |
+| `steps_total`, `steps_agent`, `steps_locator`, `steps_assertion`, `steps_screen`, `steps_app`, `steps_session`, `steps_resource` | 按类型统计的步骤数 |
+| `agent_steps_replayed`, `agent_steps_partial`, `agent_steps_missed`, `agent_steps_vision` | 回放缓存如何服务各智能体步骤，其中多少使用了像素证据 |
+| `agent_actions` | 智能体执行每种动作的次数，以 runner 自己的名称计：`{"tap": 12, "typeText": 3, "scroll": 2}`。项目自有工具合并计为 `tool`，其余计为 `other`；除此之外不发送任何名称 |
+| `model_gateway`, `model_provider`, `model_id`, `model_calls`, `model_tokens`, `model_cached_tokens`, `estimated_cost_usd` | 以首个使用模型的步骤为准：服务它的 AI SDK 提供者（Vercel AI Gateway 为 `gateway`，另有 `openrouter.chat`、`openai.chat` 等）、厂商（`vendor/model` 形式 id 的首段，否则为提供者）、公开的模型 id（微调或路由过的 id 一律上报为 `other`）；随后是本次运行的合计值 |
+| `cost_source` | 提供者为调用计过价时为 `provider`；运行产生了无出处计价的模型调用时为 `none`；没有模型调用的运行为 `null` |
+| `artifact_bytes` | 本次运行写出的产物大小 |
+| `errors`, `error_codes` | 运行级错误的数量，以及整个运行中见过的不同错误码（`LOCATOR_NOT_FOUND`、`APP_UNREACHABLE` 等），至多 20 个。不是大写 token 形状（所有 runner 错误码的标准形状）的错误码一律上报为 `OTHER` |
+| `primary_error_code` | 运行记录的第一个错误，即决定其状态的那个错误：运行级错误优先，其次为失败尝试的判定，再次为步骤的错误；干净的运行为 `null` |
+| `error_kinds` | 针对 `ENGINE_FAILURE`、`MODEL_PROVIDER_FAILED` 和 `ERROR`——这些码只说明失败在哪里浮出，不说明是什么：上报码与一个对照封闭列表从消息读出的类别（`auth`、`rate-limit`、`overloaded`、`timeout`、`network`、`server`、`bad-request`、`device`、`daemon`、`browser`、`permission`、`not-found`、`memory`、`other`），形如 `MODEL_PROVIDER_FAILED:rate-limit`。离开机器的只有类别名，绝不发送消息本身 |
+
+运行用到了配置中的哪些功能；配置未能加载时整组缺席。每项都是计数、布尔
+值，或 runner 自己的某个选项取值，绝不包含名称、路径或你随手写的自由文本：
+
+| Property | Value |
+| --- | --- |
+| `config_workers`, `config_retries` | 运行解析出的 worker 数与重试数 |
+| `config_agents`, `config_custom_executor`, `config_separate_judge`, `config_project_tools` | 配置了多少个 agent，其中是否有自定义 executor 或专属判定模型，以及它们共声明多少个不同的项目工具 |
+| `config_credentials`, `config_secrets` | 配置了多少条凭据与机密 |
+| `config_cache_mode`, `config_cache_store`, `config_cache_strict` | `off`、`read-only` 或 `read-write`；`file` 或 `custom`；严格回放是否开启 |
+| `config_reporters`, `config_custom_reporters`, `config_artifact_store` | 内置报告器 id（`list`、`json`、`junit`、`markdown`）、配置额外添加的报告器对象数，以及是否设置了 artifact store |
+| `config_trace_modes`, `config_video_modes` | 各 target 上出现过的录制模式（`off`、`on`、`retain-on-failure`、`on-first-retry`、`on-all-retries`） |
+| `config_app_commands`, `config_environments` | 有多少 target 启动应用命令，以及出现过的应用环境（`test`、`staging`、`production`） |
+
+仅 `e2e explore` 有：探索被给了什么、找到了什么，一律以计数呈现。目标、步
+骤的章程、发现的措辞绝不出现：
+
+| Property | Value |
+| --- | --- |
+| `explore_ended` | 为何停止：`finished`、`step-limit`、`time`、`stuck` 或 `aborted` |
+| `explore_max_steps`, `explore_timeout_ms` | 它实际使用的预算 |
+| `explore_steps`, `explore_steps_passed`, `explore_steps_failed`, `explore_steps_blocked`, `explore_steps_exhausted` | 探索步骤按其结局的统计 |
+| `explore_assessed` | 智能体是否给出了收尾评估 |
+| `explore_issues`, `explore_warnings`, `explore_findings_by_severity` | 按类型统计的发现，以及按严重度：`{"1": 0, "2": 1, "3": 0, "4": 0, "5": 1}` |
+
+`e2e_mcp_session`，`e2e mcp` 服务器每收到一次 `open_session` 发一条，在会话
+关闭或打开失败时发送。客户端杀死服务器时仍处于打开状态的会话不发：
+
+| Property | Value |
+| --- | --- |
+| `client`, `client_version` | MCP 客户端自报的名称与版本（`claude-code`、`cursor-vscode` 等）。不是普通 token 的值上报为 `other`；客户端尚未自报时为 `null` |
+| `outcome`, `error_code` | 成功打开的会话为 `closed`；打开失败为 `open-failed`，并带上失败的 runner 错误码（`APP_UNREACHABLE`、`ENGINE_FAILURE` 等） |
+| `ended_by` | `close_session` 为 `agent`；空闲关闭为 `idle`；达到时长上限为 `step`；服务器关闭为 `server`；打开失败为 `null` |
+| `platform`, `engine`, `headed` | target 的平台与引擎（含版本），与 run 一节所述相同，以及是否展示了 UI |
+| `duration_ms`, `sessions_open` | 会话存活时长，以及它打开时还有多少其他会话 |
+| `calls_total`, `calls_failed`, `calls` | 工具调用数、失败调用数，以及按会话自有工具名统计的调用：`{"observe": 4, "tap": 9, "locate": 2, "screenshot": 1}`。项目自有工具合并计为 `tool`，其余计为 `other`；除此之外不发送任何名称 |
+| `error_codes` | 每个 runner 错误码令调用失败的次数：`{"LOCATOR_NOT_FOUND": 2}`，至多 20 个。不是大写 token 形状的错误码一律上报为 `OTHER` |
+
+## 绝不发送什么
+
+测试标题、文件路径、URL、origin、指令、观测内容、页面内容、截图、错误消
+息、堆栈信息、环境变量的值、凭据或文件内容，一概不发。target、agent、凭
+据、机密或项目工具的名称，MCP 工具调用的参数或结果，探索的目标或其发现，
+也一概不发。事件只包含上面列出的属性。
+
+## 在 CI 中
+
+CI 中运行的遥测归到 CI 厂商名下而非某台机器，runner 上不写偏好文件，也不打
+印通知。在 shell 里自行设置 `CI` 而周围没有 CI 厂商的编码智能体，仍算作它
+所在的机器。在任务的 `env` 中设置 `E2E_TELEMETRY_DISABLED: '1'`，即可让 CI
+不发送任何数据。
+
+## 在 fleet 中
+
+代用户运行 e2e 的平台每次都把运行放到一台全新的机器上，而每台新机器本会被
+当作一个新用户。在这些机器上设置 `E2E_TELEMETRY_FLEET=<name>`，它们就会像
+CI 一样归到 `fleet:<name>` 名下：不写偏好文件，不打印通知。或者设
+`E2E_TELEMETRY_DISABLED=1`，什么都不发。
+
+## 发往哪里
+
+事件发往我们运营的一个 PostHog 项目，即对 `eu.i.posthog.com` 的单个请求。
+PostHog 不为这些 id 保存个人画像，也不存储请求地址；每个事件还要求它跳过
+GeoIP 步骤，因此不会从请求来源推导出国家、城市或坐标。数据只做聚合解读。
+遥测受[安全政策](https://github.com/tester-army/e2e/blob/main/SECURITY.md)
+约束。一次运行还能建立的其他连接，见
+[出站连接](/security#出站连接)。
+
+## 反馈
+
+[`e2e feedback`](/reference/cli#e2e-feedback) 不是遥测。在你——或你 shell
+里的编码智能体——运行它之前，它什么也不发；运行后，它把写进旗标的文字作为
+一个 `e2e_feedback` 事件发往同一个 PostHog 项目，并附上文的机器信息。由于
+这是显式请求，已保存的 `e2e telemetry disable` 拦不住它，但
+`E2E_TELEMETRY_DISABLED=1` 和 `DO_NOT_TRACK=1` 拦得住：设置了任一者的环境
+什么都不发，反馈也在内。`E2E_TELEMETRY_DEBUG=1` 与 `--dry-run` 会打印而非
+发送它。遥测开启时，该事件携带与你的遥测事件相同的匿名 id。名字像机密的
+环境变量值与已知的 token 形状，发送前都会被脱敏。
+
+## 通知
+
+首个命令会在 stderr 打印一条通知，说明如何退出。`e2e init` 豁免，因此脚手
+架以它的提问开场而非免责声明；其后的第一个命令照常打印通知。`e2e telemetry`
+也豁免，因为对通知采取行动本来就靠它。通知不影响 `--reporter json` 的输
+出。所收集数据发生重大变化后，通知会再次出现。

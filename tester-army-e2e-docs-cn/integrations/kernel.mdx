@@ -1,0 +1,113 @@
+---
+title: Kernel 浏览器
+sidebarTitle: Kernel
+description: 用 @e2e-dev/kernel 的浏览器提供者 kernel() 在 Kernel 托管的 Chromium 中运行 web target。
+icon: "/images/icons/kernel.svg"
+---
+
+来自 `@e2e-dev/kernel` 的 `kernel()` 是 [Kernel](https://kernel.sh) 的一个[浏览器提供者](/browser#托管浏览器)。默认情况下，每个 worker 槽位都有自己独享的托管 Chromium，在运行开始时创建、运行结束时删除；`scope: 'attempt'` 则改为每次测试尝试租用一个。测试与 CI 保持不变；配置只在 target 的 `browser` 一处变化。
+
+## 安装
+
+<CodeGroup>
+```bash npm
+npm install --save-dev @e2e-dev/kernel @onkernel/sdk
+```
+
+```bash pnpm
+pnpm add -D @e2e-dev/kernel @onkernel/sdk
+```
+
+```bash bun
+bun add -d @e2e-dev/kernel @onkernel/sdk
+```
+</CodeGroup>
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { kernel } from '@e2e-dev/kernel';
+
+export default {
+  targets: [
+    {
+      name: 'kernel',
+      engine: web({ browser: kernel() }),
+      app: { url: 'https://staging.example.com' },
+    },
+  ],
+} satisfies E2EConfig;
+```
+
+在 `e2e run` 启动所处的环境中设置 `KERNEL_API_KEY`，例如 CI 机密。每个 worker 各自独享一个浏览器，因此 `workers` 决定同时运行多少个。
+
+## 填满屏幕
+
+用 Kernel 的 `viewport` 设定屏幕尺寸，并将 web 引擎设为 `viewport: null`，让页面取窗口的大小：
+
+```ts
+web({
+  browser: kernel({ viewport: { width: 1920, height: 1080 } }),
+  viewport: null,
+})
+```
+
+这样每次尝试的窗口都会以最大化打开，页面随之[填满它](/web#填满窗口)：在 1920×1080 的屏幕上，扣除标签栏和地址栏后为 1920×993。若 web `viewport` 固定，页面会在一个更小的窗口内按该尺寸模拟，因此 Kernel 的实时视图里会看到页面被裁掉，或只占窗口的一部分。
+
+## 选项
+
+`kernel(options)` 原样接收 Kernel 的创建浏览器请求体：`stealth`、`headless`、`timeout_seconds`、`profile`、`proxy_id`、`proxy`、`viewport`、`extensions`、`region`、`tags`，以及你所安装的 `@onkernel/sdk` 中 `BrowserCreateParams` 的其余字段。在此之上另有：
+
+| 选项     | 默认值     | 含义 |
+| -------- | ---------- | ------- |
+| `scope`  | `'worker'` | `'worker'`：本次运行中每个 worker 槽位一个浏览器。`'attempt'`：每次测试尝试（含重试）租用一个全新浏览器。见[作用域](#作用域)。 |
+| `replay` | `true`     | 记录视频的尝试如何录制。`true`，或 Kernel 的 start-replay 请求体（`framerate`、`max_duration_in_seconds`、`record_audio`）：对浏览器屏幕的一段 Kernel 回放录像。`false`：web 引擎对页面的屏幕广播（screencast）。见[录制](#录制)。 |
+
+## 作用域
+
+`scope: 'worker'` 在整个运行期间为每个 worker 槽位保持一个浏览器，并像本地运行一样，让每次尝试都在其上获得新的浏览器上下文：一个测试绝不会看到其他测试的 cookie、存储或权限。Kernel 的初始标签页会留在尝试窗口之后。引擎创建的上下文不与浏览器的默认上下文共享，因此 Kernel `profile` 里保存的 cookie 和存储并不在其中。
+
+`scope: 'attempt'` 为每次尝试租用一个全新浏览器，并在该浏览器的默认上下文、它自己的第一个标签页上运行尝试，因此 `profile` 可以生效，实时视图里也只显示一个标签页。代价是每个测试都要启动一次浏览器，并带上[按尝试租用](/browser#托管浏览器)的限制：不能用 `headers`、`basicAuth`、`userAgent`、`locale` 或 `timezoneId`，不能用 `app.clearState()`，也没有[会话](/authentication)——这些配置会让运行在任何测试开始之前就失败。
+
+## 录制
+
+记录[视频](/reference/config#video)的尝试会得到一段浏览器屏幕的 Kernel 回放录像，保存在尝试产物目录下的 `video/replay.mp4`。回放显示整个窗口，包括标签页和地址栏；而 web 引擎的屏幕广播只显示页面。
+
+```ts title="e2e.config.ts"
+export default {
+  targets: [
+    {
+      name: 'kernel',
+      engine: web({ browser: kernel(), viewport: null }),
+      app: { url: 'https://staging.example.com' },
+      video: 'retain-on-failure',
+    },
+  ],
+} satisfies E2EConfig;
+```
+
+测试自己的 `video` 会覆盖 target 的设置，因此单个流程即使通过也能保留录像：
+
+```ts
+test('checkout', { video: 'on' }, async ({ agent }) => {
+  await agent.act('Buy the first product in the catalog');
+});
+```
+
+回放的尺寸即屏幕尺寸（由 Kernel 的 `viewport` 设定），帧率为 Kernel 默认的 10 fps。传入 Kernel 的 start-replay 请求体可改动它：`kernel({ replay: { framerate: 20, max_duration_in_seconds: 600 } })`。`framerate` 高于 20 时需要给浏览器设置 `gpu: true`。
+
+Kernel 只对有头浏览器（也是它的默认模式）做回放。设置 `headless: true` 或 `replay: false` 时，提供者不录制，改由 web 引擎录制页面的屏幕广播，与本地浏览器的做法相同。
+
+## 下载
+
+`browser.waitForDownload` 的行为与本地一致。每个浏览器把下载保存到自己磁盘的 `/tmp/e2e-downloads` 下，提供者会通过 Kernel 的浏览器文件系统 API 把下载完成的文件读回尝试的产物——两种作用域下皆然。
+
+## 提供者做的事
+
+- 给每个浏览器打上 `e2e_run`、`e2e_target`、`e2e_slot` 标签，并在每次尝试时打上 `e2e_attempt`，与你传入的 `tags` 合并，这样 Kernel 控制台中的会话就能标明启动它的运行。
+- 运行结束时，删除所有仍处于活动状态且带有本次运行的 `e2e_run` 与 `e2e_target` 标签的浏览器：无论哪种作用域，worker 在尝试中途死掉后，其浏览器都会随运行一同释放，而不是继续运行。
+- 将 `timeout_seconds` 默认设为 600，这是给运行自身死掉、来不及删除自己浏览器的情形兜底：Kernel 会在这么长时间后删除空闲浏览器。传入自己的值可更改。
+- 每创建一个浏览器，就向报告器记录一条 `browser <id>, watch at <live view URL>`：`worker` 作用域下在运行开始时记录；`attempt` 作用域下由 worker 为每次尝试的浏览器记录，浏览器意外退出后的替补浏览器也会记录。
+- 删除请求已取消后仍创建出来的浏览器，并把 Kernel 已不再记录的浏览器视为已删除。
+
+缺少 `KERNEL_API_KEY` 或出现 Kernel 错误，都会让租用失败并报出该消息。`worker` 作用域下，这会在任何测试之前结束运行，且其他槽位已获得的浏览器仍会被删除；`attempt` 作用域下则导致该尝试失败。

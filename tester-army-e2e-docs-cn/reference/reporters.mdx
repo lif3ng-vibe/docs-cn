@@ -1,0 +1,204 @@
+---
+title: 报告器
+description: 用自定义报告器接收运行事件并发布结果。
+icon: "file-lines"
+---
+
+把报告器对象加进 `e2e.config.ts` 的 `reporters`，与[内建报告器](/reference/cli#输出)
+并列。实时进度用 `onEvent`，处理最终报告与产物用 `onRunFinished`。
+
+```ts
+import type { E2EConfig, Reporter } from 'e2e';
+import { web } from '@e2e-dev/web';
+
+const upload: Reporter = {
+  name: 'upload',
+  async onRunFinished(run) {
+    const response = await fetch('https://example.test/runs', {
+      method: 'POST',
+      body: JSON.stringify(run.report),
+    });
+    const { url } = (await response.json()) as { url: string };
+    return [{ label: 'Results', text: url }];
+  },
+};
+
+export default {
+  targets: [{ engine: web(), app: { url: 'localhost:3000' } }],
+  reporters: ['list', upload],
+} satisfies E2EConfig;
+```
+
+## 契约
+
+```ts
+interface Reporter {
+  readonly name: string;
+  onEvent?(event: RunEvent): void;
+  onRunFinished?(run: FinishedRun, signal: AbortSignal): Promise<ReporterSummary | void>;
+}
+
+interface FinishedRun {
+  readonly report: Report;                 // the report-1 document, as written
+  readonly status: RunStatus;              // report.run.status
+  readonly exitCode: RunExitCode;
+  readonly projectRoot: string;            // what the terminal shows paths relative to
+  readonly reportPath: string | undefined; // absent when the write failed
+  readonly artifactsRoot: string;          // what the report's artifact paths are relative to
+  readonly aiTracePath: string | undefined;
+  readonly traces: ReadonlyMap<string, string>;      // result id -> its trace page, from the project root
+  readonly lastRun?: Report;               // with --last-failed, the report the rerun selected from
+}
+
+type ReporterSummary = readonly { label: string; text: string }[];
+```
+
+`Reporter`、`FinishedRun`、`ReporterSummary`、`Report`、`RunEvent` 与
+`RunEventOf` 均从主入口导出。
+
+内建的 `junit` 报告器是最小的完整范例：它读取 `run.report`，在
+`run.reportPath` 旁写出 `junit.xml`，并返回一行指名该文件。`markdown` 借助
+`renderMarkdownReport(report, options)`（同样导出）对 `summary.md` 做同样的
+事，因此你自己的报告器也可以把同一页面发表到别处；`traces` 按结果 id 把每个
+区块链接到其链路页。runner 在调用 `onRunFinished` 之前写好链路页
+`results/<test>/trace.md`。[`@e2e-dev/github`](/github) 就是 GitHub Actions
+上的那个报告器。
+
+需要有名字和至少一个处理器；缺了任何一样都是 `INVALID_CONFIG`。
+
+## 事件流
+
+`onEvent` 以纯 JSON 接收运行进度。`list` 报告器消费的也是同一批事件。每个事件
+有序号 `seq` 与 ISO 时间戳 `at`。
+
+```ts
+type RunEventFact =
+  | { type: 'run-started'; runId; projectId; projectRoot; artifactsRoot; ci; targets; agents?; model?; judge? }
+  | { type: 'plan'; total; files: { file; target; tests }[] }
+  | { type: 'notice'; target; message }
+  | { type: 'output'; target; pair; stream: 'stdout' | 'stderr'; text }
+  | { type: 'setup'; step: SetupStep; state: 'started' }
+  | { type: 'setup'; step: SetupStep; state: 'finished'; durationMs; outcome?: 'reused' }
+  | { type: 'test-started'; testId; agent; repeat; title; file; serialId; target }
+  | { type: 'step'; testId; agent; repeat; target; progress: StepProgress }
+  | { type: 'test-finished'; result: RunEventResult }
+  | { type: 'serial-group'; group: SerialGroupRecord }
+  | { type: 'explore'; progress: ExploreProgress }
+  | { type: 'run-error'; error: SerializedError }
+  | { type: 'run-interrupted'; mode: 'graceful' | 'forced' }
+  | { type: 'run-stopped'; failures; limit }
+  | { type: 'run-finished'; status; exitCode; reportPath?; aiTracePath?; traces? };
+```
+
+`output` 是测试向 stdout 或 stderr 写的一次内容；`pair` 指名当时正在运行的
+测试，测试之间为 undefined。`run-started` 上的 `judge` 是运行 agent 的判定
+模型，只在判定使用与 `model` 不同的模型时才出现。
+
+`phase` 字段描述步骤进度：
+
+- `start` 与 `end` 标出步骤的边界。
+- `event` 报告已完成的一次模型轮、工具调用或观测。
+- `activity` 报告工作开始：`observe`、`action` 或 `model`。
+- `replay` 报告缓存回放开始、或把控制权交还智能体的时刻。
+
+```ts
+type StepProgress = (
+  | { phase: 'start'; kind: StepKind; api: string; label: string }
+  | {
+      phase: 'end';
+      kind: StepKind;
+      api: string;
+      label: string;
+      status: 'passed' | 'failed' | 'blocked' | 'timed-out' | 'cancelled';
+      durationMs: number;
+      modelCalls: number;
+      error?: SerializedError;
+      explanation?: string;
+    }
+  | { phase: 'event'; api: string; event: StepEvent }
+  | { phase: 'activity'; api: string; activity: 'observe' | 'model' | 'action' }
+  | { phase: 'replay'; api: string; active: boolean }
+) & { identity?: StepProgressIdentity };
+```
+
+runner 发出的每个步骤阶段都带 `progress.identity`：
+
+```ts
+{ attemptId: string; attemptIndex: number; stepId: string; stepIndex: number }
+```
+
+这些 ID 与最终报告一致。两个 index 都从零起算。重试有新的 attempt ID 和更大的
+attempt index，其 step index 重新从零开始。串行组成员共享组的 attempt ID 与
+index，每个成员的 step ID 各自不同。用 `stepId` 匹配 start、activity、event、
+replay 与 end 各阶段，包括嵌套步骤。类型里 `identity` 可选，以便报告器也能
+接受较旧的流。
+
+`end` 阶段还可能带该步骤脱敏后的 `error` 与 `explanation`。请保留其
+`status`——包括 `blocked` 与 `cancelled`——不要把每个非 passed 的步骤都当成
+产品失败。
+
+`explore` 只出现在 `e2e explore` 运行中：`started`、`planning`、
+`step-started`、`step-finished`、`finding` 与 `finished`。其全部记录是报告中
+的 `run.explore`。
+
+事件类型会随时间增加。处理好你认识的类型并忽略其余；把 `switch` 的
+`default` 分支留空。
+
+`run-started` 最先、`run-finished` 最后。`test-finished` 携带完整结果记录，
+含每次尝试的产物。钉在多个 agent 上的测试对每个 agent 各启动、结束一次，因此
+运行中状态要以 test id、target、agent 三者一起作键。普通测试对该组合只发一次
+`test-started`。串行成员在其执行的每个组尝试上各发一次。用步骤进度 identity
+区分重试。在任何步骤之前就失败的尝试不发出任何步骤进度，只出现在最终结果中。
+机密在事件构建之前就已脱敏。错误消息只剔除控制字符——请当作不可信内容。
+
+`onEvent` 不得阻塞、不得抛出。抛出的报告器在本次运行余下时间内被隔离，stderr
+上打印一行，指名报告器、事件类型与错误；运行结果不受影响。慢活儿交给
+`onRunFinished`。
+
+## 已完成的运行
+
+`onRunFinished` 在报告写出、终端汇总打印之后运行。所有报告器并发运行，每个
+限时一分钟。超时、异常或无效返回值只在 stderr 上报告，不改变运行状态、退出码
+或报告。
+
+一次 Ctrl-C 仍会让报告器跑完。第二次 Ctrl-C 停止等待它们，但内建的 `junit` 与
+`markdown` 除外——它们仍会写出文件，让新报告旁不会挂着上一次运行的旧文件。
+
+第二个参数是 `AbortSignal`，在预算耗尽或运行被强制停止时中止。把它传给每个
+请求与计时器，否则被放弃的报告器会在运行结束之后还吊着 CLI。
+
+带 `--last-failed` 时，`lastRun` 是重跑所依据的那份报告。重跑自己的报告会把
+落选的测试列为未选中，因此要维护一处单一面板的报告器——就像 `@e2e-dev/github`
+维护一条拉取请求评论那样——应把重跑折进 `lastRun`，把两次运行当一次展示。
+重跑欠下、但被其他过滤器排除的测试在重跑的 `run.carried` 里：其上次结果、其
+尝试所属的串行组，以及范围覆盖它的 `beforeAll` 或 `afterAll` 失败，取自更早
+报告它们的运行。折算展示以 carried 结果顶替未选中的那个，并把 carried 的
+失败或钩子错误计入结局。两份报告点名的产物都在 `artifactsRoot` 之下的磁盘上。
+
+报告器解析出的行打印在 `list` 汇总之下，版式与其自有行相同；`json` 报告器不
+携带这些行：
+
+```
+   Test Files  2 passed (2)
+        Tests  6 passed (6)
+     Start at  14:02:11
+     Duration  8.41s
+
+        JUnit  .e2e/junit.xml
+      Results  https://example.test/runs/0192c…
+```
+
+报告中的产物路径是相对 `artifactsRoot` 的 POSIX 路径。`path`、`size` 与
+`sha256` 可选：文件从未出现、或被脱敏扣留的产物记录时不带它们。读取前先检查
+`path`。托管服务保存的视频用 `http(s)` `url` 代替 `path`。
+
+## `--reporter` 对报告器对象做什么
+
+`--reporter` 只替换内建报告器；配置的报告器对象照常运行。只用报告器对象的
+配置没有内建终端输出。
+
+## 报告器在哪里运行
+
+处理器在 runner 进程中运行。worker 也会加载配置，因此报告器的构造必须没有
+副作用。读 token、发起请求都放进处理器里。新增报告器不会使
+[回放缓存](/cache#必须匹配什么)失效。

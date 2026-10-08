@@ -1,0 +1,153 @@
+---
+title: 从 Detox 迁移
+description: 沿用现有的 app 构建和 testID，配合 screen、expect 和智能体目标。
+icon: "/images/icons/detox.svg"
+---
+
+import { SetupPrompt } from '../snippets/setup-prompt-card.jsx';
+
+export const migrationPrompt = `将本项目的 Detox 测试迁移到 e2e，一次迁移一个 spec。文档：\`https://e2e.tester.army/docs/migrate/detox.md\` 和 \`https://e2e.tester.army/docs/mobile.md\`
+
+1. 阅读上面的迁移指南。它把 \`.detoxrc.js\` 和 Detox API 映射到 e2e。移动端指南涵盖设备与 app 构建。
+2. 如果项目还没有 e2e 配置（\`e2e.config.ts\` 或 \`e2e.config.mts\`），运行 \`npx e2e init --yes\`（或对应的 pnpm/bun 命令）。它写入一份 web 配置和一个示例测试，不会安装任何东西。把 @e2e-dev/web 换成 @e2e-dev/mobile，并为移动引擎重写 \`tests/example.e2e.ts\`，或删掉它。
+3. 阅读 e2e skill（\`npx e2e guide\` 打印它，\`npx e2e guide <topic>\` 打印某个主题），并在下面的每一步都遵循它。
+4. 如果你运行了 init，问我智能体步骤用哪个模型：ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅、一个 API key，或本地模型。用其提供者包配置。如果需要登录，给我 \`npx e2e login\` 命令，并等我确认。
+5. 把 \`.detoxrc.js\` 迁移到 e2e 配置：每个平台一个 target 配 \`mobile({ platform })\`，target 上放 app 的 \`bundleId\` 和 \`appPath\`，设备类型用 \`mobile({ device })\`。e2e 使用正常的 debug 或 release 构建，没有 Detox framework。
+6. 安装依赖，然后运行 \`npx agent-device doctor\`，修复它报告的问题。
+7. 列出 Detox 的 spec，问我要先迁移哪一个。建议选一个需要频繁维护的流程。
+8. 把该 spec 改写为 \`tests/\` 下的 \`.e2e.ts\` 文件（e2e 默认运行 \`tests/**/*.e2e.ts\`），不要放在 Detox 目录里。以 \`app.open()\` 开头，因为没有任何东西会自行启动。\`testID\` 属性可配合 \`screen.getByTestId\` 使用。把 \`waitFor(...).withTimeout()\` 换成定位器断言及其 \`timeout\`。e2e 在查询匹配到多个节点时会失败，因此要收窄这些查询。
+9. 用 \`app.open()\` 和定位器断言让启动与最终断言保持确定性。在一段脚本化交互经常挂掉的地方，改为为它提出一个 \`agent.act\` 目标。
+10. 构建并安装 app，在每个平台 target 上用 \`npx e2e run <file>\` 运行新文件并修复直到通过。保留 Detox spec，直到我确认它可以删除。
+11. 总结哪些测试已迁移、哪些留在 Detox 以及原因。`;
+
+<SetupPrompt>
+
+<Prompt description={migrationPrompt} children={migrationPrompt} actions={["copy", "cursor"]} />
+
+</SetupPrompt>
+
+`@e2e-dev/mobile` 用你正常的 debug 或 release 构建驱动模拟器或仿真器，不需要 Detox framework。React Native 的 `testID` 属性在两个平台上都能配合 `getByTestId` 使用。
+
+按[移动端指南](/mobile)配置 target，按[快速上手](/quickstart)配置模型。一次迁移一个 spec 时，各个 runner 可以共用同一台模拟器。
+
+## 配置
+
+| Detox (`.detoxrc.js`) | e2e |
+| --- | --- |
+| `apps.<name>.binaryPath` | target 上的 `app: { appPath }`，外加 fixture 中每个设备一次 `device.installApp()`；引擎自身什么也不安装 |
+| `apps.<name>.bundleId` | target 上的 `app: { bundleId: 'com.example.app' }`，即 `app.open()` 启动的 app |
+| `devices.<name>.device.type` | `mobile({ device: 'iPhone 17' })` |
+| `configurations` | `targets`，每个平台一个引擎 |
+| Jest 配置, `maxWorkers` | `workers`，每个设备一个 |
+| `detox build` | 你正常的构建。没有 Detox framework，也没有 `detox build` 步骤 |
+| `device.launchApp({ permissions })` | target 上的 `app.permissions`，每次全新启动前都会设置；或对单次授权用 `device.openApp(app, { relaunch: true, permissions })`；`grant`、`deny`、`reset` 对应 `YES`、`NO`、`unset` |
+| `device.launchApp({ launchArgs })` | target 上的 `app.launchArguments`，或单次用 `device.openApp(app, { relaunch: true, launchArguments })`；是平台启动命令接受的一串字符串，不是映射表 |
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+export default {
+  targets: [
+    {
+      name: 'ios',
+      engine: mobile({ platform: 'ios' }),
+      app: { bundleId: 'com.example.app', appPath: 'ios/build/MyApp.app' },
+    },
+    {
+      name: 'android',
+      engine: mobile({ platform: 'android' }),
+      app: { bundleId: 'com.example.app', appPath: 'android/app/build/outputs/apk/debug/app-debug.apk' },
+    },
+  ],
+  workers: 1,
+} satisfies E2EConfig;
+```
+
+## 改写前后的测试
+
+```js title="Detox"
+describe('login', () => {
+  beforeAll(async () => { await device.launchApp({ newInstance: true }); });
+
+  it('shows the home screen', async () => {
+    await element(by.id('email')).typeText('ada@example.test');
+    await element(by.id('password')).typeText('hunter2');
+    await element(by.text('Sign in')).tap();
+    await waitFor(element(by.id('home'))).toBeVisible().withTimeout(10000);
+    await expect(element(by.text('Welcome, Ada'))).toBeVisible();
+  });
+});
+```
+
+```ts title="e2e"
+import { test } from '@e2e-dev/mobile';
+import { expect, credentials } from 'e2e';
+
+test('shows the home screen', async ({ agent, app, screen }) => {
+  await app.open();
+  const ada = credentials.user('ada');
+  await agent.act('sign in as {username}', { params: { username: ada.username, password: ada.password } });
+  await expect(screen.getByTestId('home')).toBeVisible({ timeout: 10_000 });
+  await expect(screen.getByText('Welcome, Ada')).toBeVisible();
+});
+```
+
+`app.open()` 全新启动所配置的 app；没有任何东西会自行启动。密码来自[配置好的凭据](/authentication)。
+
+## API 对照表
+
+| Detox | e2e |
+| --- | --- |
+| `by.id('x')` | `screen.getByTestId('x')` |
+| `by.text('t')` | `screen.getByText('t')` |
+| `by.label('l')` | `screen.getByLabel('l')` |
+| `by.type('RCTImageView')` | `device.locator('role=Image')`，agent-device 的选择器语法 |
+| `by.id('x').withAncestor(by.id('row'))` | `screen.getByTestId('row').getByTestId('x')` |
+| `.atIndex(n)` | `.nth(n)` |
+| `.tap()`, `.multiTap(2)`, `.longPress()` | `.tap()`, `.doubleTap()`, `.longPress()` |
+| `.tap({ x, y })` | `.tap({ position: { x, y } })` |
+| `.typeText(t)`, `.replaceText(t)` | `.fill(t)`，会替换全部内容 |
+| `.clearText()` | `.clear()` |
+| `.tapReturnKey()` | `.press('Enter')` |
+| `.swipe('up', 'fast')` | `.swipe({ direction: 'down', momentum: 'fast' })`：Detox 按手指移动的方向命名，e2e 按内容滚动的方向命名 |
+| `.scroll(200, 'down')` | `screen.swipe({ direction: 'down' })` |
+| `waitFor(el).toBeVisible().whileElement(list).scroll(...)` | `screen.scrollUntilVisible(el)` |
+| `waitFor(el).toBeVisible().withTimeout(ms)` | `await expect(el).toBeVisible({ timeout: ms })` |
+| `expect(el).toBeVisible()`, `.toExist()` | 可见性用 `.toBeVisible()`；存在性用 `.toHaveCount(1)` |
+| `expect(el).not.toBeVisible()` | `.toBeHidden()` |
+| `expect(el).toHaveText(t)` | `.toHaveText(t)` |
+| `expect(el).toHaveToggleValue(true)` | `.toBeChecked()` |
+| `expect(el).toHaveValue(v)` | `.toHaveValue(v)` |
+| `device.launchApp({ newInstance: true })` | `app.restart()` |
+| `device.launchApp({ delete: true })` | `app.clearState()` |
+| `device.reloadReactNative()` | 无对应物。`app.restart()` 最接近 |
+| `device.sendToHome()`, `device.pressBack()` | `device.home()`, `device.back()` |
+| `device.setLocation(lat, lon)` | `device.setLocation({ latitude, longitude })` |
+| `device.setOrientation('landscape')` | `device.setOrientation('landscape-left')` |
+| `device.setBiometricEnrollment(true)` | `device.enrollBiometrics('faceid', true)` |
+| `device.matchFace()`, `device.unmatchFace()` | `device.setBiometrics('faceid', 'match' \| 'nonmatch')` |
+| `device.setStatusBar`, `device.setURLBlacklist` | 无对应物 |
+| `device.disableSynchronization()` | 无对应物。e2e 依靠动作等待和重试断言撑过等待。 |
+| `device.takeScreenshot()` | `app.screenshot('label')`，受机密策略约束 |
+| 测试名中的 `:ios:` / `:android:` | 测试上的 `{ platforms: ['ios'] }` |
+
+行为与 Detox 不同之处：
+
+- 动作和单节点读取或断言要求恰好一个匹配；匹配到多个即报 `LOCATOR_AMBIGUOUS` 失败。用 `.filter()`、`.first()` 或 `.nth()` 收窄，见 [screen](/reference/screen)。
+- 设备上没有 `test.setup` 或 `{ session }`，见[与 web 的差异](/mobile#与-web-的差异)。
+
+`by.text` 在 Detox 中是精确匹配，这里的 `getByText` 同样是精确匹配。
+
+## 优先迁移什么
+
+从需要频繁维护的流程开始。如果它的界面需要时间才能稳定，可配置引擎的 [`settle` 和 `transition` 选项](/reference/mobile#引擎)。
+
+<CardGroup cols={2}>
+  <Card title="移动端" icon="mobile-screen" href="/mobile">
+    配置你的 app 与设备。
+  </Card>
+  <Card title="移动引擎参考" icon="book" href="/reference/mobile">
+    全部选项、`device` fixture 与工具包。
+  </Card>
+</CardGroup>

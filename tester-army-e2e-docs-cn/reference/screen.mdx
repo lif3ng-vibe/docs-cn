@@ -1,0 +1,723 @@
+---
+title: screen 与 Locator
+description: 查询、细化、动作与读取。
+icon: "display"
+---
+
+`Locator` 存储一个查询，并在动作、读取或断言运行时解析它。
+每个 `Screen` 查询方法在定位器上同样可用，范围限定在其子树内。
+`tapAt` 不受范围限定：在定位器上它点击的仍是视口点。
+
+```ts
+export interface Screen {
+  /** Creates a lazy role query. An alias such as `img` is rewritten to its role. */
+  getByRole(role: Role | RoleAlias, options?: RoleOptions): Locator;
+  /** Creates a lazy role query narrowed to an accessible name: `getByRole('button', 'Sign in')`. */
+  getByRole(role: Role | RoleAlias, name: TextMatch, options?: Omit<RoleOptions, 'name'>): Locator;
+  /** Creates a lazy accessible-label query. */
+  getByLabel(text: TextMatch, options?: TextMatchOptions): Locator;
+  /** Creates a lazy placeholder query. */
+  getByPlaceholder(text: TextMatch, options?: TextMatchOptions): Locator;
+  /** Creates a lazy visible-text query. */
+  getByText(text: TextMatch, options?: TextMatchOptions): Locator;
+  /** Creates a lazy displayed-value query. */
+  getByDisplayValue(value: TextMatch, options?: TextMatchOptions): Locator;
+  /** Creates a lazy test-id query: a string matches the whole id, case-sensitive; a RegExp tests it. */
+  getByTestId(id: TextMatch, options?: { visible?: boolean }): Locator;
+  /** Taps a viewport point, with no node behind it. */
+  tapAt(point: Point, options?: ActionOptions): Promise<void>;
+  /** Performs a viewport-level swipe: in a direction, or along a path from one point to another. */
+  swipe(options: SwipeOptions | SwipePathOptions): Promise<void>;
+  /** Scrolls until a locator resolves visibly or times out. */
+  scrollUntilVisible(
+    target: Locator,
+    options?: { direction?: ScrollDirection; momentum?: Momentum; timeout?: number },
+  ): Promise<void>;
+}
+```
+
+多数操作要求恰好一个匹配。读取只返回当前值，不会等待它变化：
+不在文档中的 frame 会立即作答；引擎报告为过时（stale）的节点
+（一次解析与导航撞车，或匹配节点在读取时被应用替换）会在动作超时内
+重新解析——这修复了竞态，而不必等待匹配出现。要等待，请用
+[`expect`](/reference/expect)。
+
+| 操作 | 零个匹配 | 多个匹配 |
+| --- | --- | --- |
+| 动作 | 轮询直到超时，然后 `LOCATOR_NOT_FOUND` | `LOCATOR_AMBIGUOUS` |
+| 读取 | `LOCATOR_NOT_FOUND` | `LOCATOR_AMBIGUOUS` |
+| `count()`、`all()`、`allTextContents()` | `0`、`[]`、`[]` | 计数、每个匹配一个定位器、每个匹配一段文本 |
+| `isVisible()`、`isHidden()` | `false`、`true` | `LOCATOR_AMBIGUOUS` |
+| 断言 | 轮询直到超时 | `LOCATOR_AMBIGUOUS` |
+| 以上任何操作，在不在文档中的 frame 之下 | `count()`、`all()`、`allTextContents()`、`isVisible()`、`isHidden()` 视作零个匹配；动作、读取与断言会轮询等待 frame，直到超时，然后 `LOCATOR_NOT_FOUND` | 多个 frame 均匹配时为 `LOCATOR_AMBIGUOUS` |
+
+## 查询
+
+每个查询同步返回一个 `Locator`，且不做任何工作。
+查询不接受的选项键（`{ nam: 'Save' }`）会抛出
+`INVALID_LOCATOR`，并指出它接受的键。
+
+`getByRole` 的第二个参数是可访问名称，字符串或 `RegExp`，
+其余选项跟在后面：`getByRole('button', 'Save', { exact: false })`。
+对象形式 `getByRole('button', { name: 'Save', disabled: true })`
+是同一个查询。
+
+作为名称传给 `getByRole`，以及传给 `getByLabel`、`getByPlaceholder`、
+`getByText`、`getByDisplayValue` 的字符串，在空白规范化之后
+按整段文本匹配、区分大小写：`getByRole('button', 'Save')`
+不会匹配 `Save changes`。`{ exact: false }` 让它变成大小写不敏感的
+子串匹配；`RegExp` 则按其写法匹配。
+
+`getByTestId` 匹配节点的 `testId`：在 web 上是引擎 test ID 属性
+（`web({ testIdAttribute })`，默认 `data-testid`）的值，
+在设备上是可访问性标识符或资源 ID。字符串按整段 ID 匹配、
+区分大小写；`RegExp`（如 `/total-budgeted$/`）
+按其写法匹配。
+
+```ts
+screen.getByRole('button', 'Save');
+screen.getByRole('heading', /welcome/i, { level: 1 });
+screen.getByLabel('Email');
+screen.getByText('Welcome back', { exact: false });
+screen.getByTestId('todo-3');
+```
+
+### 回显文本
+
+`getByText` 返回最内层的匹配节点，因此回显子节点文本的容器只算一次。
+浏览器原生如此；在设备上引擎应用同一条规则，因为 iOS
+会把 React Native 的 `Text` 报告为一个宿主视图加一个带相同 label 的
+`StaticText` 子节点。两个互不包含的匹配仍是 `LOCATOR_AMBIGUOUS`。
+
+### 隐藏的重复项
+
+每个查询都接受 `visible: true`，它会在“恰好一个”规则运行之前
+丢弃平台报告为隐藏的节点。框架常常在文档里保留内容的隐藏副本，
+比如关闭的抽屉或未激活的标签面板，没有 `visible`
+时两个副本都会匹配。
+
+```ts
+await browser.reload();
+// Two "No memories yet" nodes exist for a moment; one is display:none.
+await expect(screen.getByText('No memories yet', { visible: true })).toBeVisible();
+await screen.getByPlaceholder('Search memory...', { visible: true }).fill('launch');
+await screen.getByTestId('memory-list', { visible: true }).getByRole('listitem').first().tap();
+```
+
+`visible` 使用与 `toBeVisible()`、`isVisible()` 和 `waitFor()`
+相同的可见性检查：以 Playwright 的读法，凡是渲染的东西。
+`display: none`、`visibility: hidden`、无尺寸的盒子、关闭的
+`<details>` 内容、`content-visibility: hidden` 下的内容都是隐藏的；
+`aria-hidden` 不是——标了它的装饰性 spinner 仍然绘制，
+因此对它用 `toBeHidden()` 会一直等待它离开。在隐藏的父节点下
+设置 `visibility: visible` 的子节点是可见的。在 web 上，
+`visibility: hidden` 的 `display: contents` 元素之下的直接文本是隐藏的，
+而 Playwright 称其为可见。它与 scope、`filter`、`first`、`last`、`nth`
+配合使用：`getByText('Save', { visible: true }).first()`
+是第一个可见的匹配。比起把测试绑定到 CSS 的
+`browser.locator('p:visible')`，优先选它。
+
+## 细化 Refinement
+
+细化返回一个新的定位器，而不向应用发出查询。`hasText`
+带字符串时是对匹配节点及其后代的大小写不敏感子串匹配——
+与查询文本的精确匹配不同；更严格的要求请传 RegExp。
+`has` 保留其子树能解析出内部定位器的匹配节点。
+
+以下情况抛出 `INVALID_LOCATOR`：`filter` 既没有 `hasText`
+也没有 `has`；出现了其他键，哪怕在它们旁边（`hasNot`、`hasNotText`
+与 `visible` 在这里不是过滤器）；`has` 不是 runner
+定位器，或是由其他目标的 screen 制造的；`nth`
+得到负数或非整数索引。
+
+```ts
+const row = screen.getByRole('listitem').filter({ hasText: 'Invoice 42' });
+await row.getByRole('button', 'Void').tap();
+```
+
+<Note>
+在 web 引擎中，`getByDisplayValue` 定位器不能作为子查询或
+`has` 过滤器的 scope；两者都会以 `UNSUPPORTED_CAPABILITY` 失败。
+Playwright 没有针对控件当前值的 selector，因此引擎只能事后过滤候选节点。
+</Note>
+
+## screen.tapAt
+
+```ts
+tapAt(point: Point, options?: ActionOptions): Promise<void>;
+```
+
+以 CSS 像素点击一个视口点——`boundingBox()` 报告的坐标空间，
+不依赖其后的节点：画布上的图钉、树里没有列出的控件。
+它不解析、不等待任何东西；点击落到什么上由页面决定。
+使用 `config.actionTimeout`。坐标为负数或非有限值时抛
+`INVALID_ARGUMENT`；引擎的 pointer actions 中没有 `tap`
+时抛 `UNSUPPORTED_CAPABILITY`。
+
+```ts
+const map = await screen.getByRole('image', 'Map').boundingBox();
+await screen.tapAt({ x: map.x + 360, y: map.y + 70 });
+```
+
+树里列出控件时优先用定位器；点会随布局移动。
+节点内部的点，`tap({ position })` 会替你读取节点的盒子。
+
+## screen.swipe
+
+```ts
+swipe(options: SwipeOptions | SwipePathOptions): Promise<void>;
+```
+
+视口级手势，有两种形态。`{ direction, momentum? }`
+是对屏幕的滚动手势。`direction` 是内容滚动的方向，而不是手指的方向：
+`'down'` 展露出下方的内容。`momentum` 是其甩动（fling）强度，
+默认 `'none'`：`'none'` 是拖拽半屏的普通拖动，`'slow'` 是短距离甩动，
+`'fast'` 是长距离甩动。每种各能带多远由引擎决定。
+`{ from, to, duration? }` 是沿路径在两个视口点之间的滑动：
+在设备上是触摸滑动，在文档平台上是指针拖动——它用来露出行操作、
+关掉一个 sheet，或在列之间拖动卡片。`duration`
+设定手势持续的毫秒数；省略时使用引擎的默认时长。
+使用 `config.actionTimeout`。手势被拒绝时抛 `ACTION_FAILED`；
+两种形态混用、时长越界或坐标在平面之外时抛 `INVALID_ARGUMENT`；
+引擎的 actions 中没有 `swipe`（方向形态）或 pointer actions 中没有
+`swipeTo`（路径形态）时抛 `UNSUPPORTED_CAPABILITY`。
+
+```ts
+await screen.swipe({ direction: 'up', momentum: 'fast' });
+
+const row = await screen.getByText('Design review').boundingBox();
+await screen.swipe({
+  from: { x: row.x + row.width - 10, y: row.y + row.height / 2 },
+  to: { x: row.x + 10, y: row.y + row.height / 2 },
+  duration: 300,
+});
+```
+
+## screen.scrollUntilVisible
+
+```ts
+scrollUntilVisible(
+  target: Locator,
+  options?: { direction?: ScrollDirection; momentum?: Momentum; timeout?: number },
+): Promise<void>;
+```
+
+| 名称 | 类型 | 默认值 |
+| --- | --- | --- |
+| `target` | `Locator` | - |
+| `options.direction` | `ScrollDirection` | `'down'` |
+| `options.momentum` | `Momentum` | `'slow'`；每一步的手势强度，定义见 [`screen.swipe`](#screen-swipe)。步长更长则推进更快，但不得把目标带出屏幕之外而未被看到——虚拟化列表正是如此 |
+| `options.timeout` | `number` | `30000`，自己的默认值，不是 `config.actionTimeout`；它约束整个滚动过程，包括其中每次手势 |
+
+在 `screen` 上每一步都是一次视口手势。在定位器上，
+每一步是对该节点的一次手势，因此自带滚动容器的 feed 或表格
+无需指针先悬停即可翻页：
+`screen.getByRole('feed').scrollUntilVisible(row)`。
+
+非 runner 定位器或由其他目标的 screen 制造的定位器抛
+`INVALID_LOCATOR`；不接受选项抛 `INVALID_ARGUMENT`；
+截止时刻先到时抛 `LOCATOR_NOT_FOUND`——包括被它中途切断的手势。
+
+```ts
+await screen.scrollUntilVisible(screen.getByRole('button', 'Accept'));
+```
+
+## 定位器动作
+
+每个动作解析一个节点、等待可操作性、再执行一个操作。
+默认超时为 `config.actionTimeout`（30000 毫秒），
+可用 `{ timeout }` 覆盖。
+
+```ts
+export interface Locator extends Screen {
+  /** Taps exactly one matching actionable node; with `position`, taps that point of its box once it is in view, with no other actionability check. */
+  tap(options?: TapOptions): Promise<void>;
+  /** Alias of tap. */
+  click(options?: TapOptions): Promise<void>;
+  /** Double-taps exactly one matching actionable node. */
+  doubleTap(options?: ClickOptions): Promise<void>;
+  /** Performs a secondary tap, such as a right click or two-finger tap. */
+  secondaryTap(options?: ClickOptions): Promise<void>;
+  /** Long-presses exactly one matching actionable node. */
+  longPress(options?: LongPressOptions): Promise<void>;
+  /** Fills exactly one input. Secret values are never logged. */
+  fill(value: string | Secret, options?: ActionOptions): Promise<void>;
+  /**
+   * Focuses exactly one input and types `text` through the keyboard, one
+   * character at a time, so the app receives key events. A `Secret` is
+   * refused; it goes through `fill`.
+   */
+  pressSequentially(text: string, options?: PressSequentiallyOptions): Promise<void>;
+  /** Clears exactly one input. */
+  clear(options?: ActionOptions): Promise<void>;
+  /** Sends one key to exactly one node. */
+  press(key: string, options?: ActionOptions): Promise<void>;
+  /** Checks exactly one node. */
+  check(options?: ActionOptions): Promise<void>;
+  /** Unchecks exactly one node. */
+  uncheck(options?: ActionOptions): Promise<void>;
+  /** Selects one option from exactly one control. */
+  selectOption(value: SelectOption, options?: ActionOptions): Promise<void>;
+  /** Focuses exactly one node. */
+  focus(options?: ActionOptions): Promise<void>;
+  /** Hovers over exactly one matching actionable node. */
+  hover(options?: ActionOptions): Promise<void>;
+  /** Sets the files of exactly one file input; paths resolve from the project root. */
+  setInputFiles(paths: string | readonly string[], options?: ActionOptions): Promise<void>;
+  /** Drags exactly one node to exactly one target. */
+  dragTo(target: Locator, options?: ActionOptions): Promise<void>;
+  /** Scrolls exactly one node into view. */
+  scrollIntoView(options?: ActionOptions): Promise<void>;
+  /** Performs a swipe scoped to exactly one node. */
+  swipe(options: SwipeOptions & ActionOptions): Promise<void>;
+  /** Reads normalized text without retrying for a particular value. */
+  textContent(): Promise<string | null>;
+  /** Reads the current input value. */
+  inputValue(): Promise<string>;
+  /** Reads one attribute. */
+  getAttribute(name: string): Promise<string | null>;
+  /** Reads current visibility. */
+  isVisible(): Promise<boolean>;
+  /** Reads current hidden or absent state, the negation of `isVisible`. */
+  isHidden(): Promise<boolean>;
+  /** Reads current enabled state. */
+  isEnabled(): Promise<boolean>;
+  /** Reads current disabled state, the negation of `isEnabled`. */
+  isDisabled(): Promise<boolean>;
+  /** Reads current checked state. */
+  isChecked(): Promise<boolean>;
+  /** Reads the current viewport-relative rectangle. */
+  boundingBox(): Promise<{ x: number; y: number; width: number; height: number } | null>;
+  /** Counts current matches without auto-waiting. */
+  count(): Promise<number>;
+  /** One `nth(i)` locator per current match, without auto-waiting; empty when nothing matches. */
+  all(): Promise<Locator[]>;
+  /** Reads the normalized text of every current match, without auto-waiting; empty when nothing matches. */
+  allTextContents(): Promise<string[]>;
+  /**
+   * Waits for the requested locator state, `visible` by default: `attached`
+   * for one match, visible or not; `detached` for none; `hidden` for none or
+   * a hidden one.
+   */
+  waitFor(options?: { state?: 'attached' | 'detached' | 'visible' | 'hidden'; timeout?: number }): Promise<void>;
+  /** Adds deterministic locator filters. */
+  filter(options: { hasText?: TextMatch; has?: Locator }): Locator;
+  /** Selects the first current match. */
+  first(): Locator;
+  /** Selects the last current match. */
+  last(): Locator;
+  /** Selects one zero-based current match. */
+  nth(index: number): Locator;
+}
+```
+
+- 引擎的 `actions` 里没有列出的动作种类，会在抵达引擎之前抛
+  `UNSUPPORTED_CAPABILITY`。
+- 动作只接受其签名中列出的选项。任何其他键，包括 Playwright 的
+  `trial`、`force`、`noWaitAfter`，都会在节点被解析之前抛
+  `INVALID_ARGUMENT`，因此控件不会被碰到。
+- `click` 是 `tap` 的别名。
+- `tap`、`doubleTap` 与 `secondaryTap` 接受 `modifiers`——
+  点击期间按下的修饰键，如同 Shift 点击扩展选中一样：
+  `row.click({ modifiers: ['Shift'] })`。`ControlOrMeta`
+  在 Windows 和 Linux 上是 Control，macOS 上是 Meta。
+  未知或重复的修饰键是 `INVALID_ARGUMENT`，`modifiers`
+  与 `position` 并存亦然。浏览器引擎支持它们；未声明
+  `tapModifiers` 的引擎（移动引擎也在其中）在动作执行前
+  以 `UNSUPPORTED_CAPABILITY` 失败。
+- `tap({ position })` 以节点左上角的偏移量点击，单位 CSS 像素。
+  当引擎列出 `scrollIntoView` 时，节点会先滚入视野，
+  然后读取其盒子并在该点派发指针，手势背后没有依赖节点，
+  因此平台的其他可操作性检查（已启用、未被遮挡）不再运行。
+  引擎无法将节点滚入视野时，按引擎报告的方式失败
+  （浏览器引擎上是 `ACTION_FAILED`，因为它的滚动会等待可见性）；
+  解析成功却在超时内始终没有可见盒子的节点为 `LOCATOR_NOT_FOUND`。
+  没有 `tap` pointer action 的引擎是 `UNSUPPORTED_CAPABILITY`。
+- `press` 接受零个或多个修饰键（`Shift`、`Control`、`Alt`、`Meta`、
+  `ControlOrMeta`）加一个键，用 `+` 连接：命名的键（`Enter`、
+  `Escape`、`Tab`、`Backspace`、`Delete`、`Insert`、`Space`、方向键、
+  `Home`、`End`、`PageUp`、`PageDown`、`F1` 到 `F12`）
+  或一个可打印字符。`Shift++` 按下 `+`。平台没有的键抛
+  `UNSUPPORTED_CAPABILITY`。键的语法见
+  [key grammar](/reference/engine#按键)。
+- `longPress` 按住 `{ duration }` 毫秒，100 到 10000，
+  否则使用引擎的默认值：浏览器引擎 500 毫秒，移动引擎一秒，
+  超过 React Native `Pressable` 的 `delayLongPress`。
+- `fill` 替换当前内容。`Secret` 在调用前一刻才在宿主上解析，
+  且永远不会被记录到日志、写进报告，也不会发给模型。
+- `pressSequentially` 先聚焦输入框，再通过引擎的键盘把文本当作按键
+  逐字发入，追加到当前内容之后。`fill` 直接设置值、不触发键盘事件，
+  因此由 `keydown` 或 `keyup` 驱动的自动补全框、输入即搜索框
+  或掩码输入框都不会对它有反应；对这些控件应使用本动作。
+  `{ delay }` 在字符之间等待相应的毫秒数，每个字符走独立的
+  keyboard 调用；不设置时整段文本一次发完。聚焦、停顿与按键共享
+  同一个动作截止时刻：停顿会在截止处被切断，截止之后不再发送字符，
+  动作以 `ACTION_FAILED` 失败并指出实际落下了多少字符。
+  它需要引擎的 `focus` 动作和 `keyboard` 能力，
+  否则在任何节点解析之前抛 `UNSUPPORTED_CAPABILITY`；
+  它依赖[keyboard contract](/reference/engine#引擎)：`type`
+  必须像真人打字那样递交文本，平台有键盘事件的要把键盘事件送达应用。
+  `Secret` 是类型错误、运行时 `INVALID_ARGUMENT`：机密只能 fill，
+  永远不作为按键敲入。该步骤记录的是定位器而不是文本，与 `fill` 一样。
+- `setInputFiles` 的路径从项目根解析。空列表或空白数组项抛出
+  `INVALID_ARGUMENT`。
+- `dragTo` 的目标不是 runner 定位器，或由其他目标的 screen
+  制造时，抛出 `INVALID_LOCATOR`。
+- 定位器上的 `swipe` 是对这一个节点的手势：`{ direction,
+  momentum? }` 的含义见 [`screen.swipe`](#screen-swipe)，
+  另加 `timeout`。它没有 `{ from, to }` 形式。`screen.swipe`
+  不接受 `timeout`：在那里出现 `timeout` 键是 `INVALID_ARGUMENT`。
+- 可能已经生效的动作会以 `ACTION_FAILED` 浮现，
+  且永远不会重试。
+
+```ts
+await screen.getByLabel('Email').fill('ada@example.test');
+await screen.getByRole('checkbox', 'Remember me').check();
+await screen.getByLabel('Plan').selectOption({ label: 'Pro' });
+await screen.getByLabel('Plan').selectOption({ value: 'pro' });
+await screen.getByRole('button', 'Save').tap({ timeout: 10_000 });
+await screen.getByRole('image', 'Seat map').tap({ position: { x: 120, y: 48 } });
+await screen.getByRole('textbox', 'Search').press('Enter');
+await screen.getByRole('textbox', 'Notes').press('ControlOrMeta+a');
+await screen.getByLabel('City').pressSequentially('War', { delay: 50 });
+```
+
+## 定位器读取
+
+`waitFor` 的 `state` 默认 `'visible'`，`timeout` 默认
+`config.actionTimeout`，超时时抛出 `LOCATOR_NOT_FOUND`。
+`'attached'` 等待出现一个匹配（隐藏与否均可），`'detached'`
+等待无匹配，`'hidden'` 等待匹配隐藏或无匹配。
+任何状态下多个匹配都是 `LOCATOR_AMBIGUOUS`。其他任何一个 state，
+或除 `state` 与 `timeout` 之外的选项键，都会在任何东西被解析之前抛出
+`INVALID_ARGUMENT`。
+
+`textContent` 与 `allTextContents` 返回节点的渲染文本，
+空白折叠为单个空格。在 web 上这与 `innerText` 的读法一致，
+而不是 DOM 的 `textContent`：CSS `text-transform` 生效，
+`display: none` 的后代不被计入，`<br>` 读作空格。
+本身不渲染的节点（如 `display: none` 的节点）则读其 DOM 文本，
+与 `innerText` 的做法相同。
+
+`isChecked` 在没有选中状态的节点（如按钮或标题）上是 `false`，
+不会抛错。
+
+`textContent`、`inputValue`、`getAttribute` 与 `allTextContents`
+在安全字段上抛出 `POLICY_DENIED`，`expect(locator).toHaveValue`、
+`toHaveText`、`toContainText` 与 `toHaveAttribute` 同样如此。
+`isEnabled`、`isDisabled`、`isChecked` 与 `boundingBox`
+在该字段上是允许的。
+
+`boundingBox()` 对不产生盒子的节点（自身或祖先 `display: none`）
+返回 `null`；`visibility: hidden` 的节点仍保有一个盒子。
+复选框或单选框上的 `inputValue()` 与 `toHaveValue`
+读取其 value 属性，没有该属性时读作 `on`，与选中状态无关；
+`isChecked()` 读的才是状态。
+
+`isHidden` 即 `!isVisible()`，`isDisabled` 即 `!isEnabled()`，
+严格性规则相同：零个匹配时 `isHidden` 为 `true`，
+`isDisabled` 为 `LOCATOR_NOT_FOUND`；多个匹配时两者都是
+`LOCATOR_AMBIGUOUS`。
+
+```ts
+if (await screen.getByRole('alert').isVisible()) {
+  const message = await screen.getByRole('alert').textContent();
+}
+await screen.getByTestId('spinner').waitFor({ state: 'hidden' });
+```
+
+### 一次拿到全部匹配
+
+`all()` 只解析一次查询，为每个匹配交出一个 `nth(i)` 定位器，
+循环因此可以对每一行执行动作；`allTextContents()`
+一次调用读出每个匹配的规范化文本。两者都不等待，
+也不强制恰好一个：零个匹配得到空数组，与 `count()`
+是同一条快照规则。frame 不在文档中的 `frameLocator`
+在这里以及在 `isVisible()` 中都算零个匹配，
+动作或断言则会轮询等待它。`all()` 返回的每个定位器
+在使用时都会重新解析，因此循环过程中列表发生变化，
+后面的 `nth(i)` 可能指向另一行，或指向不存在的东西。
+在循环之后对列表做一次断言；如果目的只是检查这些文本，
+用 [`toHaveText([...])`](/reference/expect#定位器匹配器)
+代替循环。
+
+```ts
+for (const row of await screen.getByRole('row').all()) {
+  await row.getByRole('checkbox').check();
+}
+expect(await screen.getByRole('listitem').allTextContents()).toEqual(['Alpha', 'Beta']);
+```
+
+## 类型
+
+```ts
+/**
+ * The closed role vocabulary; an unsupported role is a type error. Every
+ * engine maps its platform's element types onto these names, so a role query
+ * reads the same against a browser and a device. A role the platform has no
+ * widget for matches nothing there; it is never a type error.
+ */
+export type Role =
+  | 'button'
+  | 'link'
+  | 'textbox'
+  | 'searchbox'
+  | 'combobox'
+  | 'listbox'
+  | 'option'
+  | 'checkbox'
+  | 'radio'
+  | 'radiogroup'
+  | 'switch'
+  | 'slider'
+  | 'spinbutton'
+  | 'progressbar'
+  | 'meter'
+  | 'image'
+  | 'heading'
+  | 'tab'
+  | 'tablist'
+  | 'tabpanel'
+  | 'menu'
+  | 'menubar'
+  | 'menuitem'
+  | 'menuitemcheckbox'
+  | 'menuitemradio'
+  | 'toolbar'
+  | 'tooltip'
+  | 'tree'
+  | 'treeitem'
+  | 'list'
+  | 'listitem'
+  | 'table'
+  | 'grid'
+  | 'row'
+  | 'rowgroup'
+  | 'rowheader'
+  | 'cell'
+  | 'gridcell'
+  | 'columnheader'
+  | 'separator'
+  | 'group'
+  | 'article'
+  | 'figure'
+  | 'form'
+  | 'status'
+  | 'alert'
+  | 'dialog'
+  | 'alertdialog'
+  | 'main'
+  | 'navigation'
+  | 'banner'
+  | 'contentinfo'
+  | 'complementary'
+  | 'region';
+
+/**
+ * Spellings `getByRole` accepts beside the vocabulary and rewrites to a `Role`
+ * before the query is built: `img` is the ARIA name of `image`. An alias never
+ * reaches an engine, the replay cache, or a report; a `Role` is what they see.
+ */
+export type RoleAlias = 'img';
+
+/** A string matches exactly; a RegExp uses its own source and flags. */
+export type TextMatch = string | RegExp;
+
+export interface TextMatchOptions {
+  /** Exact match, the default. `false` is case-insensitive substring matching; a RegExp ignores it. */
+  exact?: boolean;
+  /**
+   * When true, nodes the platform reports as hidden are excluded before the
+   * exactly-one rule is applied, so a visible node with a hidden twin (a
+   * prerendered copy kept after navigation, a closed drawer) still resolves.
+   * Omitted or false keeps every match, hidden ones included.
+   */
+  visible?: boolean;
+}
+
+/**
+ * Role query options. A role query never matches a node hidden from the
+ * accessibility tree, on every engine; `visible` (inherited) is the one knob
+ * that narrows the other query kinds, to the nodes `toBeVisible()` accepts.
+ */
+export interface RoleOptions extends TextMatchOptions {
+  /** Accessible name filter. */
+  name?: TextMatch;
+  /** Requires the checked state. */
+  checked?: boolean;
+  /** Requires the disabled state. */
+  disabled?: boolean;
+  /** Requires the selected state. */
+  selected?: boolean;
+  /** Requires the expanded state. */
+  expanded?: boolean;
+  /** Requires the pressed state of a toggle button. */
+  pressed?: boolean;
+  /** Requires a heading level, 1 through 6. */
+  level?: number;
+}
+
+export interface ActionOptions {
+  /** Deadline in milliseconds; defaults to `config.actionTimeout`. */
+  timeout?: number;
+}
+
+/** `longPress` options: the hold time in milliseconds, 100 through 10000, default the engine's own. */
+export interface LongPressOptions extends ActionOptions {
+  /** Hold time in milliseconds, 100 through 10000; unset, the engine's default. */
+  duration?: number;
+}
+
+/** `pressSequentially` options: an optional pause between characters. */
+export interface PressSequentiallyOptions extends ActionOptions {
+  /** Milliseconds to wait between characters; omitted types the whole text in one call. */
+  delay?: number;
+}
+
+export interface SwipeOptions {
+  /** Swipe direction. */
+  direction: ScrollDirection;
+  /** Fling strength; default `none`. The three values are defined under screen.swipe. */
+  momentum?: Momentum;
+  from?: never;
+  to?: never;
+  duration?: never;
+}
+
+/** A swipe along a path between two viewport points: a touch swipe on a device, a pointer drag on a document platform. */
+export interface SwipePathOptions {
+  /** Where the finger goes down. */
+  from: Point;
+  /** Where it lifts. */
+  to: Point;
+  /** Gesture duration in milliseconds; omitted = the engine's default. */
+  duration?: number;
+  direction?: never;
+  momentum?: never;
+}
+
+/**
+ * A point in CSS pixels. For `screen.tapAt` and `screen.swipe` the origin is
+ * the viewport's top-left corner, the space `boundingBox()` reports in; for
+ * `tap({ position })` it is the node's own top-left corner.
+ */
+export type Point = ViewportPoint; // { x: number; y: number }
+
+/** `tap`, `click`, `doubleTap`, and `secondaryTap` options: the action timeout and the keys held for the click. */
+export interface ClickOptions extends ActionOptions {
+  /**
+   * Keys held while the pointer clicks, as a Shift-click extends a selection:
+   * `Shift`, `Control`, `Alt`, `Meta`, or `ControlOrMeta` (Control on Windows
+   * and Linux, Meta on macOS). Needs an engine that declares `tapModifiers`,
+   * `UNSUPPORTED_CAPABILITY` otherwise.
+   */
+  modifiers?: readonly KeyModifier[];
+}
+
+/** A modifier key, for `modifiers` and the `press` key grammar. */
+export type KeyModifier = 'Shift' | 'Control' | 'Alt' | 'Meta' | 'ControlOrMeta';
+
+/** `tap` and `click` options. */
+export interface TapOptions extends ClickOptions {
+  /**
+   * Where to tap, relative to the node's top-left corner. Without it the
+   * platform picks a point of the node, usually its center, behind its own
+   * actionability checks; with it the pointer is dispatched at that point
+   * once the node is in view and has a box, which needs the engine's `tap`
+   * pointer action.
+   */
+  position?: Point;
+}
+
+/** One option of a select: its label (a bare string too), its `value` attribute, or its zero-based index. */
+export type SelectOption =
+  | string
+  | { label: string; value?: never; index?: never }
+  | { value: string; label?: never; index?: never }
+  | { index: number; label?: never; value?: never };
+
+/** A swipe or scroll direction. */
+export type ScrollDirection = 'up' | 'down' | 'left' | 'right';
+
+/** Fling strength of a swipe; defined under screen.swipe. */
+export type Momentum = 'none' | 'slow' | 'fast';
+```
+
+role 查询永远不会匹配从可访问性树中隐藏的节点：
+不渲染的节点，或位于 `aria-hidden` 之下的节点。
+`visible` 把其他查询种类缩窄到会渲染的节点，
+即 `toBeVisible()` 所做的那项检查，因此仍会绘制的
+`aria-hidden` 节点在那里算可见。见
+[隐藏的重复项](#隐藏的重复项)。
+
+`img` 是别名，不是 role：`getByRole('img', { name })` 与
+`getByRole('image', { name })` 构建的是同一个查询，
+从 Playwright 移植来的测试得以保留其拼写，
+而引擎、回放缓存与报告看到的都是 `image`。在 web 上，
+`image` 覆盖带 alt 文本的 `<img>` 以及任何带 `role="img"`
+的元素；`<img alt="">` 是装饰，什么也不匹配。
+
+web 引擎按 HTML-AAM 的方式从 HTML 推导 role：`<progress>`
+是 `progressbar`，`<meter>` 是 `meter`，`<hr>` 是
+`separator`，`<fieldset>` 与 `<details>` 是 `group`，
+`<input type="number">` 是 `spinbutton`，`<input type="file">`
+是 `button`（Chrome 与 Playwright 的读法），
+`<select size="3">` 与 `multiple` 的那个一样是 `listbox`，
+指向 `<datalist>` 的 `<input list>` 是 `combobox`，
+`role="grid"` 表格中的 `<td>` 是 `gridcell`，
+`<thead>` 与 `<tbody>` 是 `rowgroup`，`<th scope="row">`
+是 `rowheader`。旁边有带文本或子节点的数据单元格的无 scope
+`<th>` 也是 `rowheader`；只有表头的行保持 `columnheader`。
+单行表格里孤立的无 scope 表头没有 header role，
+而 `scope="col"` 与 `scope="colgroup"` 明确保留
+`columnheader`。
+`<figure>` 是 `figure`，`<article>` 是 `article`；
+`<header>` 与 `<footer>` 只在分节内容之外、
+或是在没有分节 role（`article`、`complementary`、`main`、
+`navigation`、`region`）的元素之上，才是 `banner` 与
+`contentinfo`；`<form>` 与 `<section>`
+只有在带 `aria-label`、`aria-labelledby` 或 `title`
+时才是 `form` 与 `region`。`<legend>`、`<figcaption>`、`<caption>`
+为它的 fieldset、figure 或 table 提供名称，
+因此 `toHaveAccessibleName` 读到的就是 `getByRole('group', { name })`
+所匹配的内容。accname 从内容取名的 role（按钮、链接、标题、tab、
+菜单项、option、复选框、单选框、switch、单元格、行或列表头、行、
+tree item、tooltip）由其后代命名，包括自定义元素的 shadow tree，
+因此 `getByRole('checkbox', { name })` 与
+`toHaveAccessibleName(name)` 在 `<div role="checkbox">`
+上是一致的。没有 `value` 的 `<input type="submit">`
+或 `type="reset"` 读作 `Submit` 或 `Reset`。
+`<menu>` 是 `list`；只有 `role="menu"` 才是 `menu`。
+设备引擎把它拥有的平台类型做映射（tab 栏或分段控件是
+`tablist`，进度指示器是 `progressbar`，步进器是
+`spinbutton`），其余类型原样保留，因此没有原生控件对应的
+role（如 `tooltip` 或 `figure`）在手机上什么也匹配不到。
+
+`contenteditable` 编辑宿主——TipTap、ProseMirror、Lexical 或
+Slate 编辑器渲染进去的根节点——是一个 `textbox`，
+其值就是它渲染出的文本（聚焦期间，其 `selection`
+则是其中被选中的文本）。该值保留空格与换行，因此 `toHaveValue`
+与 `inputValue()` 读 `white-space: pre-wrap` 编辑器时，
+读法与 textarea 相同。空编辑器——只装着 `<p><br></p>`
+或编辑器垫进空行的零宽不换行空格——读作 `''`，
+这种填充物永远不是值的一部分。它由 `aria-label`、
+`aria-placeholder` 或其编辑器涂画的 `data-placeholder`
+命名；其中的块是内容，不是 textbox。标签无关紧要
+（`<article contenteditable>` 是编辑器，不是 article），
+而原生控件或被设为可编辑的绘制表面保留自己的 role。
+`getByRole` 通过 Playwright 的 role selector 解析，
+该 selector 没有上述规则，因此只有宿主带 `role="textbox"`
+时测试才能按 role 找到编辑器；`getByLabel` 与
+`getByTestId` 则无论如何都能到达它。取自某个块的
+`data-placeholder`（TipTap、ProseMirror）的名称，在编辑器有了内容后
+就会消失，与涂画的提示一道；取自宿主自身
+`aria-label`、`aria-labelledby`、`aria-placeholder`
+或 `data-placeholder`（Quill）的名称则保留。
+把测试锚定在 label 或 test id 上，别锚定在占位符上。
+
+
+对于 `selectOption`，传一个 label 字符串，或 `label`、`value`、`index`
+三者中恰好一个。`value` 匹配 option 的 value 属性——
+也就是表单真正提交的东西。每次调用只选一个选项：
+传数组、对象上同时多于一个这类键、或负数/小数
+`index`，都会在引擎执行动作之前以 `INVALID_ARGUMENT` 失败。

@@ -1,0 +1,97 @@
+---
+title: 无需测试文件的探索
+description: 给智能体一个目标，而不是一个测试文件。它会规划步骤、操作应用，并汇报发现。
+icon: "compass"
+---
+
+import { Video } from './snippets/video.jsx';
+
+用 `e2e explore` 在没有测试文件的情况下检查某个流程。你只需给智能体一个目标：
+
+<CodeGroup>
+```bash npm
+npx e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+```
+
+```bash pnpm
+pnpm exec e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+```
+
+```bash bun
+bunx e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+```
+</CodeGroup>
+
+智能体规划一步、执行一步，并记录发现；如此往复，直到目标被覆盖或预算耗尽，然后写出一篇评估。单步失败不会终止运行。智能体使用与 `agent.act()` 相同的模型、工具和动作规则。
+
+<Video>
+  <video src="/images/explore.mp4" aria-label="e2e explore 在有头浏览器中驱动应用，并在终端实时汇报发现。" muted loop playsInline controls />
+
+  `e2e explore --headed` 会驱动应用，并随时汇报发现。
+</Video>
+
+## 写好一个目标
+
+把流程和用户目标点明，例如："以首次购买者的身份探索结账流程，检查总额与购物车一致"。必要时加上限制，例如"下单前停止"。不给目标时，explore 使用默认目标 `Explore the app and find bugs`。
+
+## 阅读结果
+
+智能体每汇报一条发现，终端就即时显示；每个步骤结束时也会显示：
+
+```text
+ ❯  web  Exploring  Explore this bookshop like a careful first-time buyer: browse the catalog, ...
+   ⚑ medium issue  Home greeting exposes an unresolved userName template (/)
+   ⚑ high issue  Neuromancer shows an impossible negative stock availability (/catalog)
+   ✓ 1  Catalog browsing 31.46s · 7 actions · 4 findings
+   ⚑ high issue  Cart total does not update when Hyperion quantity increases (/cart)
+   ⚑ trivial warning  Checkout newsletter label misspells Receive (/checkout)
+   ✓ 2  Cart quantities and removal 19.47s · 4 actions · 3 findings
+   ended: the agent covered the goal
+```
+
+`issue` 会让运行以退出码 1 失败，`warning` 则不会。最终报告会把最严重的问题排在最前。每条发现都附有复现步骤，条件允许时还附截图。采取行动之前，请对照证据核实每条发现。
+
+其余退出码、JSON 报告与产物路径，见 [CLI 参考](/reference/cli#e2e-explore)。
+
+## 以登录态开始
+
+要以已登录用户身份探索，用 `--session <name>`。名称对应一个由[准备测试](/authentication)保存的会话：
+
+<CodeGroup>
+```bash npm
+npx e2e explore --session admin 'Explore the admin settings and find bugs'
+```
+
+```bash pnpm
+pnpm exec e2e explore --session admin 'Explore the admin settings and find bugs'
+```
+
+```bash bun
+bunx e2e explore --session admin 'Explore the admin settings and find bugs'
+```
+</CodeGroup>
+
+explore 只会运行那条准备测试，然后恢复会话。探索者因此知道应用以登录态启动，不会规划登录步骤。
+
+如果准备过程填写了密码，整个探索过程将不发送截图。见[填写机密后的截图](/security#机密填充后的截图)。
+
+## 运行过早停止时
+
+一次运行在 8 步或 10 分钟后停止。如果停在你需要的流程部分之前，可调大 `--max-steps <n>`（最多 12）或 `--timeout <ms>`（最大 `900000`，即 15 分钟）。
+
+## 选择 target 与智能体
+
+explore 使用 `e2e.config.ts` 中的 target、应用启动命令、模型和智能体。用 `--target <name>` 与 `--agent <name>` 来选择。未指定 `--target` 时，explore 使用第一个 target。
+
+## 探索整个应用
+
+要测试整个应用或分支，可并行运行多次探索并核实其发现。见 [bug 大排查](/bug-bash)。
+
+<CardGroup cols={2}>
+  <Card title="CLI 参考" icon="terminal" href="/reference/cli#e2e-explore">
+    `e2e explore` 的全部旗标。
+  </Card>
+  <Card title="智能体与人设" icon="users" href="/agents">
+    explore 可以扮演的智能体。
+  </Card>
+</CardGroup>

@@ -1,0 +1,21 @@
+---
+title: 托管浏览器与设备
+sidebarTitle: 概览
+description: 与托管浏览器和设备服务的官方集成，一项服务一个包。
+icon: "plug"
+---
+
+官方集成通过各引擎的提供者接缝（provider seam）把 e2e 接入托管服务，一项服务一个包。测试与 CI 保持不变，配置只有一处可能变化：target 指定 `browser` 或 `device` 的地方——由集成决定它们来自哪里。
+
+<CardGroup cols={2}>
+  <Card title="Kernel" icon="/images/integrations/kernel.svg" href="/integrations/kernel">
+    `@e2e-dev/kernel`：为 web target 提供托管 Chromium，每个 worker 一个浏览器，或每个测试一个浏览器。
+  </Card>
+  <Card title="EAS 模拟器" icon="/images/integrations/expo.svg" href="/integrations/eas">
+    `@e2e-dev/eas`：为移动 target 提供托管 iOS 模拟器与 Android 仿真器。
+  </Card>
+</CardGroup>
+
+没有集成覆盖的服务，只需在你的项目里写一个小型提供者：web 引擎的 `BrowserProvider` 见[托管浏览器](/browser#托管浏览器)，移动引擎的 `DeviceProvider` 见[托管设备](/mobile#托管设备)。
+
+要让 e2e 在 GitHub Actions、EAS Workflows、Bitrise 或 Codemagic 等 CI 服务上运行，见[持续集成](/ci)。

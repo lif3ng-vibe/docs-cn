@@ -1,0 +1,305 @@
+---
+title: Web
+description: 将 web 引擎指向你的应用，或让 runner 启动它，并以多种视口尺寸运行套件。
+icon: "globe"
+---
+
+`@e2e-dev/web` 在浏览器中针对你的应用 URL 运行测试。本页介绍如何让应用为一个运行做好准备，以及如何以不同尺寸测试它。路由、Cookie、对话框、下载以及 `browser` fixture 的其余内容，见[使用浏览器](/browser)。
+
+## 启动你的应用
+
+在 target 的 `app` 中设置应用的 URL。如果还提供启动命令，runner 会启动应用，等待它就绪，并在运行结束时停止它。
+
+### 指向一个已在运行的应用
+
+从 `@e2e-dev/web` 导入 `web`，并把它放进导出的配置对象：
+
+```ts title="e2e.config.ts"
+export default {
+  targets: [{
+    engine: web(),
+    app: { url: process.env.APP_URL ?? 'http://localhost:3000' },
+  }],
+} satisfies E2EConfig;
+```
+
+`app.open('/path')` 会相对 `app.url` 解析。这份配置读取 `APP_URL`，因此无需编辑文件即可更改某次运行的地址。不带协议的 URL 使用 HTTPS，回环主机则使用 HTTP。
+
+### 让 runner 启动应用
+
+加上 `app.command`，runner 就会拉起开发服务器，等待 `app.url` 有响应，并在运行结束、失败或被中断时停止它：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { gateway } from 'ai';
+
+export default {
+  agents: {
+    default: {
+      model: gateway('openai/gpt-6-luna-fast'),
+      system: 'You are a thorough QA agent. Verify every outcome.',
+    },
+  },
+  targets: [{
+    engine: web(),
+    app: {
+      url: process.env.APP_URL ?? 'http://localhost:3000',
+      command: {
+        executable: 'npm',
+        args: ['run', 'dev'],
+        reuseExisting: true,
+        log: '.e2e/logs/app.log',
+      },
+    },
+  }],
+} satisfies E2EConfig;
+```
+
+```text
+ ✓ target "web" command ready 1.20s
+```
+
+主要的命令选项有：
+
+| 选项 | 用途 |
+| --- | --- |
+| `reuseExisting: true` | 在本地使用已在运行的服务器。CI 会忽略此选项并报告 `APP_ALREADY_RUNNING`。 |
+| `log` | 把应用的 stdout 与 stderr 保存到相对于项目的文件。启动错误会包含最后 20 行，其中 `command.env` 的值已脱敏；日志文件本身则不脱敏。 |
+| `env` | 应用的环境变量。子进程会继承 `PATH`、`HOME` 和临时目录变量，再加上这些。 |
+| `startupTimeout` | 等待就绪的时长，默认 60 秒。 |
+
+如果想探测健康检查端点而不是基础 URL，在 `command` 旁设置 `readyUrl`：`app: { url, command, readyUrl: 'http://localhost:3000/health' }`。
+
+命令不经过 shell 运行。`executable` 会在 `PATH` 中解析，`args` 按原样传入。子进程只继承 `PATH`、`HOME`、临时目录变量和 `env`，因此应用需要的环境变量要显式传入。全部选项见[命令参考](/reference/config#command)。
+
+#### 让 runner 选择端口
+
+使用端口 `0` 即可运行多个 checkout 而不会有端口冲突。runner 会挑选一个空闲端口，并替换命令 `args` 和 `env` 中的 `{port}`。你的应用命令必须使用该值：
+
+```ts
+engine: web(),
+app: {
+  url: 'http://127.0.0.1:0',
+  command: { executable: 'pnpm', args: ['dev', '--port', '{port}'], env: { PORT: '{port}' } },
+},
+```
+
+测试可以从 `app.baseUrl` 读取分配到的 URL。端口变化时缓存条目仍然有效。请使用 `127.0.0.1` 或 `[::1]`，与命令绑定的地址保持一致；`localhost:0` 会被拒绝。详见[空闲端口](/reference/config#空闲端口)。
+
+#### Next.js dev 目标
+
+Next.js 16 会拦截对其开发资源的跨源请求。当 target 打开 `127.0.0.1` 或 `[::1]`，而 `next dev` 自认为 `localhost` 时，页面会渲染但永远不会水合（hydrate）。定位器能解析、点击也能落点，但没有任何 React 处理器运行，因此测试失败，且每次重试都以同样的方式失败。
+
+把 target 打开的主机加入 `allowedDevOrigins`：
+
+```ts title="next.config.ts"
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  allowedDevOrigins: ['127.0.0.1'],
+};
+
+export default nextConfig;
+```
+
+当 `app.url` 打开 `http://[::1]:0` 时，在列表中使用 `'[::1]'`。
+
+`localhost` 上的 target 无需添加条目，因为 `next dev` 自认为 `localhost`。生产环境的 `next start` target 无论哪种情况都不受影响。
+
+### 依赖
+
+<Note>
+本版本只会启动 `app.command`（声明了同一命令的所有 target 共用一个进程）。应用所需的数据库、mock 及其他进程目前还不能由 runner 启动：请在运行前先把它们跑起来，或让 `app.command` 启动一个把它们一并拉起并伺服应用的脚本。services API 将在后续版本中提供。
+</Note>
+
+### 多个目标
+
+在同一个应用上跑两个浏览器，就是两个各自指向该应用的 target：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+
+const app = { url: 'http://localhost:3000' };
+
+export default {
+  targets: [
+    { name: 'chromium', engine: web(), app },
+    { name: 'webkit-mobile', engine: web({ browser: 'webkit', viewport: { width: 390, height: 844 } }), app },
+  ],
+} satisfies E2EConfig;
+```
+
+声明同一个 `app.command` 的两个 target 共用一个进程。除非用 `platforms` 或 `requires` 加以限定，每个测试都会在每个 target 上运行；`--target <name>` 在运行时进行选择。设备 target 可以与浏览器 target 并列在同一个列表中，见 [Mobile 引擎参考](/reference/mobile)。每个屏幕尺寸配一个 target，就是让套件以多种[视口](#视口)运行的方式。
+
+### 受保护的预览
+
+使用 `headers` 访问受保护的预览，或跳过隧道的中转页。例如 Vercel 预览可以使用防护绕过头：
+
+```ts title="Target fragment"
+engine: web({
+  headers: {
+    'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? '',
+  },
+}),
+app: {
+  url: process.env.PREVIEW_URL ?? 'http://localhost:3000',
+  identity: 'storefront',
+},
+```
+
+`headers` 作用于发往 target 站点（由其主机名决定）的请求。检查还包括子域名，并把 `vercel.app` 这类共享后缀视为同一站点。使用绕过机密前，请先阅读 [header 作用域](/security#导航与-origin)。对于 ngrok，使用 `'ngrok-skip-browser-warning': '1'`。
+
+当应用的预览 URL 发生变化时，`app.identity` 为它提供稳定的缓存标识。
+
+HTTP 基本认证使用 `basicAuth`。当任一源以 `401` 质询要求凭据时，浏览器会发送这些凭据：
+
+```ts title="Target fragment"
+engine: web({
+  basicAuth: { username: 'preview', password: process.env.PREVIEW_PASSWORD ?? '' },
+}),
+app: { url: 'https://staging.example.com' },
+```
+
+为了让密码不进入报告、日志以及智能体读到的内容，把它声明在 `secrets` 之下并传入 `secrets.get(name)`。引擎会在每次尝试开始时解析它，runner 会像对待其他已配置的机密一样将其脱敏；`secrets` 未声明的名称会让配置加载失败并报 `INVALID_CONFIG`：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { secrets } from 'e2e';
+import { web } from '@e2e-dev/web';
+
+export default {
+  targets: [
+    {
+      engine: web({
+        basicAuth: { username: 'preview', password: secrets.get('previewPassword') },
+      }),
+      app: { url: 'https://staging.example.com' },
+    },
+  ],
+  secrets: { previewPassword: () => process.env.PREVIEW_PASSWORD ?? '' },
+} satisfies E2EConfig;
+```
+
+<Note>
+设置 `headers` 会禁用浏览器的 HTTP 缓存，并阻止 service worker。
+</Note>
+
+## 视口
+
+在 target 上设置视口，即可按该尺寸运行套件。测试过程中可用 `browser.setViewport()` 调整尺寸。智能体使用当前尺寸，且不能更改它。
+
+### 每个目标一种尺寸
+
+`viewport` 设置每次尝试的初始尺寸，单位为像素，默认 1280×720。要测试几种尺寸，就为每种尺寸添加一个 target：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+
+const app = { url: 'http://localhost:3000' };
+
+export default {
+  targets: [
+    { name: 'desktop', engine: web(), app },
+    { name: 'tablet', engine: web({ viewport: { width: 820, height: 1180 } }), app },
+    { name: 'phone', engine: web({ browser: 'webkit', viewport: { width: 390, height: 844 } }), app },
+  ],
+} satisfies E2EConfig;
+```
+
+每个测试在每个 target 上各运行一次，结果分别标注为 `desktop`、`tablet` 或 `phone`。用 `npx e2e run --target phone` 只跑一种尺寸，用 `npx e2e list` 列出选中的测试-target 组合。
+
+要让 runner 为每种尺寸共用同一个开发服务器，给每个 target 配置相同的 `app.command`：声明同一命令的 target 共用一个进程，见[多个目标](#多个目标)。每次重试都以 target 配置的尺寸开始。
+
+### 填满窗口
+
+`viewport: null` 不设置尺寸，页面会填满浏览器窗口。智能体、截图和视频都使用该尺寸。把它用在有头的运行中，或者用在托管浏览器上——否则其实时视图会在角落里显示一个固定的 1280×720 页面：
+
+```ts title="e2e.config.ts"
+{ name: 'window', engine: web({ viewport: null }), app }
+```
+
+页面采用窗口大小（有头浏览器会减去工具栏）。本地有头启动会打开一个小窗口；托管浏览器则使用你向服务请求的窗口尺寸。`browser.setViewport` 仍然可用。
+
+### 在测试中调整尺寸
+
+`browser.setViewport` 调整页面尺寸并持续到本次尝试结束，且跨越 `app.restart()` 和 `app.clearState()` 依然生效：
+
+```ts
+import { test } from '@e2e-dev/web';
+import { expect } from 'e2e';
+
+test('the menu collapses on a narrow screen', async ({ app, screen, browser }) => {
+  await app.open('/');
+  await expect(screen.getByRole('navigation')).toBeVisible();
+
+  await browser.setViewport({ width: 390, height: 844 });
+  await expect(screen.getByRole('button', 'Menu')).toBeVisible();
+  await expect(screen.getByRole('navigation')).toBeHidden();
+});
+```
+
+当一个测试需要检查调整前后的布局时，可以使用这种方式。对于整个套件，请改为配置各自独立的 target。
+
+在 `app.open` 之前调用，让首个页面直接按该尺寸加载，应用便不会先渲染出桌面布局：
+
+```ts
+await browser.setViewport({ width: 390, height: 844 });
+await app.open('/');
+```
+
+这次调整会作为一步出现在报告中。要核对确切宽度，可以从页面读取：
+
+```ts
+const width = await browser.evaluate(() => window.innerWidth);
+expect(width).toBe(390);
+```
+
+### 智能体看到的内容
+
+智能体每次观测都会收到当前视口尺寸。截图覆盖该视口。视口外的元素仍可能出现在可访问性树中，点击它们会将其滚动到可视范围内。智能体可以滚动以显示懒加载的内容。
+
+在调用 `agent.act` 之前调整尺寸：
+
+```ts
+test('the mobile menu reaches pricing', async ({ app, agent, browser }) => {
+  await browser.setViewport({ width: 390, height: 844 });
+  await app.open('/');
+  await agent.act('open the navigation menu and go to Pricing');
+  await expect(browser).toHaveURL('/pricing');
+});
+```
+
+### 将测试限定在某一尺寸
+
+`platforms` 和 `requires` 无法选择视口；所有 Playwright target 使用的平台都是 `web`。要在某些尺寸下跳过某个测试，在测试内检查宽度即可：
+
+```ts
+test('the sidebar stays open', async ({ app, screen, browser }) => {
+  await app.open('/');
+  test.skip((await browser.evaluate(() => window.innerWidth)) < 768, 'desktop layout only');
+  await expect(screen.getByRole('complementary')).toBeVisible();
+});
+```
+
+要把整组依赖特定尺寸的测试分离开，给它们一份单独的配置，并用 `--config` 运行。
+
+### 限制
+
+窄视口测试的是响应式布局。它仍然使用缩放系数为 1 的桌面浏览器、桌面指针行为和常规 user agent，不会模拟触摸、配色方案或减弱动效偏好。在模拟器或仿真器上进行的测试，请使用[设备引擎](/mobile)。
+
+视频会保持开始录制时页面的大小；要固定一种尺寸，请设置 `web({ screencast: { size } })`。会进行录制的浏览器提供者（如 [Kernel](/integrations/kernel#录制)）录制的则是整个屏幕。
+
+<CardGroup cols={2}>
+  <Card title="使用浏览器" icon="globe" href="/browser">
+    路由、Cookie、对话框、下载以及 `browser` fixture 的其余内容。
+  </Card>
+  <Card title="配置参考" icon="sliders" href="/reference/config#被测应用">
+    `app`、`command` 以及每一个应用相关键。
+  </Card>
+  <Card title="Web 引擎参考" icon="masks-theater" href="/reference/web">
+    浏览器、视口、`connect`、`headers`、`basicAuth` 以及每一个 `browser` 方法。
+  </Card>
+</CardGroup>

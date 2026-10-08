@@ -1,0 +1,65 @@
+---
+title: 简介
+description: 面向 Web 与移动应用的开源 AI 测试框架。少花时间写测试，多花时间搭建产品。
+icon: "house"
+---
+
+import { VideoCard } from './snippets/video-card.jsx';
+
+e2e 是面向 Web 与移动应用的新一代测试框架，专为跟上当今软件的发布速度而生。
+
+每条测试的智能体化程度由你决定：可以用[定位器](/core-concepts#定位器)和[断言](/reference/expect#定位器匹配器)做到完全确定性，也可以用自然语言的[目标](/core-concepts#目标)完全交由智能体驱动，或在同一条测试中混合两者。
+
+<VideoCard
+  id="NEawZb6Hssw"
+  title="两分钟看懂 e2e"
+  subtitle="了解如何把智能体目标与确定性定位器检查串联起来、在 Web、iOS 与 Android 上运行同一套测试，以及如何在一分钟内完成项目配置。"
+/>
+
+```ts title="tests/checkout.e2e.ts"
+import { test, expect } from 'e2e';
+
+test('a member upgrades to Pro', async ({ app, agent, screen }) => {
+  await app.open('/settings/billing');
+
+  await agent.act('upgrade the workspace to the Pro plan');
+  await agent.assert('the invoice preview shows a prorated amount');
+
+  await expect(screen.getByRole('status')).toContainText('Pro');
+});
+```
+
+## 为什么选择 e2e
+
+测试不应拖慢你的发布速度，也不应削弱你对所发布内容的把握。
+
+- **把时间省回来**。写一个目标，而不是一长串选择器和等待。UI 变化时智能体会自行适应，你因此少花时间编写和修复测试，多花时间搭建产品。
+- **更低风险**。覆盖更多用户依赖的流程，覆盖 Web 与移动端，在回归抵达生产环境之前将其拦截。
+- **运行成本低**。经校验的 `agent.act` 步骤会[从缓存回放](/cache)，不调用模型。测试更多流程，无需承担 token 账单或缓慢的 CI。
+
+## 工作原理
+
+- **target**。每条测试对每个 target 各运行一次，例如 Chromium 或一台 iPhone 模拟器。[Web 引擎](/web)通过 Playwright 驱动浏览器，[移动引擎](/mobile)通过 agent-device 驱动 iOS 模拟器与 Android 仿真器，你也可以[自己编写引擎](/writing-an-engine)。
+- **智能体步骤**。`agent.act` 完成一个目标；`agent.assert`、`agent.waitFor` 与 `agent.extract` 对屏幕作出判定。可以使用你自己的[订阅](/subscriptions)、[API key 或本地模型](/models)。不含智能体步骤的测试无需模型。
+- **缓存**。被后续检查验证过的 `act` 步骤会被记录下来。下一次运行直接回放该步骤，应用发生变化时再交还给智能体处理。`assert`、`waitFor` 与 `extract` 始终调用模型。
+- **报告**。runner 会把已登记的机密从模型输入中[脱敏](/security)，并将步骤、失败与产物记录进一份[报告](/debugging)，供你或你的编码智能体查阅。
+
+## 开始使用
+
+<CardGroup cols={2}>
+  <Card title="快速上手" icon="rocket" href="/quickstart">
+    给你的编码智能体发一句话提示，或者手动配置。
+  </Card>
+  <Card title="示例项目" icon="folder-open" href="/example-projects">
+    运行基于 Vite、Next.js、Expo、SwiftUI、Jetpack Compose、Kotlin Multiplatform 或 Flutter 的独立应用。
+  </Card>
+  <Card title="核心概念" icon="pen-to-square" href="/core-concepts">
+    目标、断言与定位器。
+  </Card>
+  <Card title="编码智能体" icon="robot" href="/coding-agents">
+    让你的编码智能体编写、运行并调试测试。
+  </Card>
+  <Card title="移动端" icon="mobile-screen" href="/mobile">
+    在 iOS 模拟器与 Android 仿真器上运行测试。
+  </Card>
+</CardGroup>

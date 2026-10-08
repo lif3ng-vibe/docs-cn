@@ -1,0 +1,119 @@
+---
+title: 决策模型
+description: 用决策模型加一个小型文本模型代替完整的 LLM 智能体，执行受限动作。
+icon: "scale-balanced"
+---
+
+`@e2e-dev/decision` 通过决策模型而不是 LLM 运行 `agent.act` 和 `agent.assert`。对每个动作，决策模型只需回答一次请求：执行哪个操作；对可作用于多个元素的操作，再选定哪个元素——范围就是执行器根据最新语义树（semantic tree）构建出的那些选项。它从不生成自由文本：当选择为 `type` 时，字段值由一个小型语言模型写出。两个模型都是普通的 AI SDK 模型，因此任何能以概率分布回答 `choice` 问题的决策模型提供者（Jev），加上任意语言模型提供者都可以用；runner 仍会为每个分发的动作做授权。
+
+## 安装与配置
+
+<CodeGroup>
+```bash npm
+npm install -D @e2e-dev/decision
+```
+
+```bash pnpm
+pnpm add -D @e2e-dev/decision
+```
+
+```bash bun
+bun add -d @e2e-dev/decision
+```
+</CodeGroup>
+
+决策模型以概率分布回答 `choice` 问题；文本模型负责写出字段值。两者各以独立包安装。决策模型需要 `ai` 7（7.0.128 或更高版本）：
+
+<CodeGroup>
+```bash npm
+npm install -D @ai-sdk/typesafe-ai @openrouter/ai-sdk-provider
+```
+
+```bash pnpm
+pnpm add -D @ai-sdk/typesafe-ai @openrouter/ai-sdk-provider
+```
+
+```bash bun
+bun add -d @ai-sdk/typesafe-ai @openrouter/ai-sdk-provider
+```
+</CodeGroup>
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { decisionExecutor } from '@e2e-dev/decision';
+import { typeSafeAi } from '@ai-sdk/typesafe-ai';
+import { openrouter } from '@openrouter/ai-sdk-provider';
+
+export default {
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+  agents: {
+    default: {
+      executor: decisionExecutor({
+        model: typeSafeAi.decisionModel('jev-latest'),
+        textModel: openrouter('inception/mercury-2.5'),
+      }),
+    },
+  },
+} satisfies E2EConfig;
+```
+
+`evaluationModel()` 实例仍然可用。若 `model` 填的是模型 ID 字符串或普通语言模型，配置加载会以 `INVALID_CONFIG` 失败。
+
+测试保持纯自然语言，不需要任何参数：
+
+```ts title="tests/todos.e2e.ts"
+import { test, expect } from 'e2e';
+
+test('adds a todo', async ({ app, screen, agent }) => {
+  await app.open('/todos');
+  await agent.act('Add a todo named Buy coffee, and verify it is listed.');
+  await expect(screen.getByTestId('todo')).toContainText('Buy coffee');
+  await agent.assert('The todo list contains Buy coffee.');
+});
+```
+
+## 文本是如何输入的
+
+决策模型只会指名元素下标。当它选择 `type` 时，文本模型依据目标、字段标签和页面文本写出值，执行器原样输入这个字符串。模型输出永远不会变成选择器、URL 或按键。目标没有给出值时就不输入任何内容，决策模型会改选其他动作。密码字段永远不会到达文本模型；机密保持为已声明的句柄（declared handle），只有 `typeSecret` 能填写。
+
+文本模型同时也是智能体的判定层：它会暴露为执行器的 `model`，所以 `waitFor` 和 `extract` 也用它。它也可以改用 agents 条目的 `model`。两者都没有时，`type` 这个选项干脆不会出现。
+
+## 步骤的收尾
+
+当决策模型回答 `done` 或 `failed` 时，执行器会在刷新后的屏幕上用一个问题核实这一主张：步骤的任务完成了吗？它能看到步骤的非机密参数、已执行的动作及其中非机密的输入值，以及页面内容——包括具名状态区域的文本——但看不到模型推理或任何机密。核实通过的 `done` 让步骤通过，核实通过的 `failed` 让步骤以 `ACTION_FAILED` 失败。未被核实的主张会作为历史交回决策模型；第二次仍未核实即结束步骤：屏幕与目标矛盾时报 `ACTION_FAILED`，否则报 `blocked`（`AUTOMATION_UNSUPPORTED`）。
+
+## 闸门
+
+两个闸门默认关闭：执行器直接采纳概率最高的选择。设置 `minProbability` 或 `minConfidence` 后，较弱的动作会被拦截，较弱的完成检查会被拒绝，较弱的断言则判为无法定论而失败：
+
+```ts title="Executor setup"
+const executor = decisionExecutor({ model, minProbability: 0.9, minConfidence: 0.8 });
+```
+
+概率（probability）与置信度（confidence）是提供者的两个不同字段：概率是所选选项在回答分布中的占比，置信度是提供者单独给出的统计值。阈值属于策略选择；修改之前请先在自己的测试上测一测准确率。
+
+## 提供者选项
+
+`providerOptions` 会随每次 decide 调用发送，完成检查也不例外。用它传决策模型提供者的选项，例如 Vercel AI Gateway 的零数据留存：
+
+```ts title="Executor setup"
+import { gateway } from 'ai';
+
+const executor = decisionExecutor({
+  model: gateway.decisionModel('typesafe-ai/jev'),
+  textModel: gateway('openai/gpt-4.1-nano'),
+  providerOptions: { gateway: { zeroDataRetention: true } },
+});
+```
+
+这些选项只到达决策模型。文本模型取用 agents 条目的 `providerOptions`，因此只针对某一个模型的网关设置（如 fallback 列表）绝不会传到另一个模型。
+
+## 限制
+
+- 不支持视觉：截图不会到达模型；仅存在于 canvas 的控件和以图像为基准的目标均未实现。
+- 不支持 `navigate`：应用内导航就是对链接的 `tap`。URL 属于测试代码的事（`browser.goto`、`app.open`）。
+- v1 不支持多选 `listbox`。
+- 每个问题的选项上限为 255 个（TypeSafe 的限制）。屏幕较大时先列出视口内节点，其余元素计为略去，以便模型滚动；步骤绝不会只因页面过大就被卡住。
+- v1 不提供拖拽、上传和悬停。
+- `waitFor` 和 `extract` 经 runner 内置的判定层使用文本模型。

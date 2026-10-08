@@ -87,5 +87,12 @@
     "orig": "https://github.com/msitarzewski/agency-agents",
     "repo": "https://github.com/msitarzewski/agency-agents",
     "lang": "en"
+  },
+  {
+    "name": "e2e",
+    "slug": "tester-army-e2e",
+    "desc": "tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。",
+    "orig": "https://e2e.tester.army/docs",
+    "repo": "https://github.com/tester-army/e2e"
   }
 ]

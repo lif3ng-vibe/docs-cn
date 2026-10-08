@@ -1,0 +1,237 @@
+---
+title: 模型
+description: 用自己的订阅、API 密钥或本地服务器配置模型。
+icon: "brain"
+---
+
+import { ModelProvider } from './snippets/model-provider.jsx';
+
+智能体步骤使用 `e2e.config.ts` 中配置的模型。你可以使用[现有订阅](/subscriptions)、API 密钥或本地服务器。
+e2e 基于 [AI SDK](https://ai-sdk.dev/providers)。所有[支持工具调用的 AI SDK 提供者](#ai-sdk-提供者)都可以使用。
+`e2e init` 会提供这些选项并替你写好配置。首次设置请参照[快速上手](/quickstart#使用订阅或-api-key)。
+
+不含智能体步骤的测试不需要模型。[决策模型](/decision-models)——托管或本地托管，如 Clef、Jev——可以通过自定义执行器驱动受限动作并判定断言。对于内置智能体，请选择支持工具调用和图像的模型。无论使用哪家提供者，使用内置智能体的步骤都需要安装
+`ai` 包：
+
+<CodeGroup>
+```bash npm
+npm install -D ai
+```
+
+```bash pnpm
+pnpm add -D ai
+```
+
+```bash bun
+bun add -d ai
+```
+</CodeGroup>
+
+没有默认模型，也没有共享的 API 密钥变量。配置决定使用哪个模型，提供者自行从环境读取自己的密钥，例如
+`AI_GATEWAY_API_KEY`。若使用订阅，请改运行 `npx e2e login`。
+
+## 选择网关或提供者
+
+网关让你用一个 API 密钥访问多家提供者。提供者包则直接连接某一家提供者。要修改现有配置，替换其模型 import 和 `model` 值：
+
+<Tabs>
+  <Tab title="Vercel AI Gateway">
+
+`gateway` 已包含在 `ai` 包中。设置 `AI_GATEWAY_API_KEY`，或者不设密钥，改用
+[Vercel OIDC token](#用-vercel-oidc-代替密钥)。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { gateway } from 'ai';
+
+export default {
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+  agents: { default: { model: gateway('openai/gpt-6-luna-fast') } },
+} satisfies E2EConfig;
+```
+  </Tab>
+  <Tab title="OpenRouter">
+
+Install `@openrouter/ai-sdk-provider` and set `OPENROUTER_API_KEY`.
+
+```ts title="Model setup"
+import { openrouter } from '@openrouter/ai-sdk-provider';
+
+const agent = { model: openrouter('openai/gpt-6-luna-fast') };
+```
+
+在配置中把 `agent` 用作 `agents.default`。
+  </Tab>
+  <Tab title="提供者 API 密钥">
+
+安装该提供者的 AI SDK 包并设置其 API 密钥。以 OpenAI 为例，安装
+`@ai-sdk/openai` 并设置 `OPENAI_API_KEY`：
+
+```ts title="Model setup"
+import { openai } from '@ai-sdk/openai';
+
+const agent = { model: openai('gpt-6-luna') };
+```
+
+把 `agent` 用作 `agents.default`。其他 AI SDK 提供者的用法相同，各有自己的包、模型 ID 与认证设置。参见
+[AI SDK 提供者](#ai-sdk-提供者)。
+  </Tab>
+  <Tab title="本地或自托管">
+
+安装 `@ai-sdk/openai-compatible`，设置端点 URL 和该端点提供的模型 ID：
+
+```ts title="Model setup"
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const local = createOpenAICompatible({
+  name: 'local',
+  baseURL: 'http://127.0.0.1:11434/v1',
+  // apiKey: process.env.LLM_API_KEY,
+});
+
+const agent = { model: local.chatModel('your-model-id') };
+```
+
+把 `agent` 用作 `agents.default`。若服务器要求密钥，再加上 `apiKey`。
+  </Tab>
+</Tabs>
+
+模型 ID 取决于提供者。网关通常使用 `provider/model` 形式；直连提供者使用各自自带的模型 ID。
+
+### 用 Vercel OIDC 代替密钥
+
+没有 `AI_GATEWAY_API_KEY` 时，`gateway()` 会用 Vercel OIDC token 认证。只需用 Vercel CLI 登录并关联项目一次；之后网关便会为该项目签发短时效 token，并在过期时自动刷新：
+
+<CodeGroup>
+```bash npm
+npx vercel login
+npx vercel link
+npx e2e run
+```
+
+```bash pnpm
+pnpm dlx vercel login
+pnpm dlx vercel link
+pnpm exec e2e run
+```
+
+```bash bun
+bunx vercel login
+bunx vercel link
+bunx e2e run
+```
+</CodeGroup>
+
+该 token 可以是一个有效的 `VERCEL_OIDC_TOKEN`，否则就是为 `.vercel/project.json` 中的项目签发的 token——从当前工作目录沿目录树向上查找该文件。e2e 不加载任何 `.env` 文件，因此用 `npx vercel env pull` 拉取的 token，只有在 shell 导出了它，或配置通过
+[`process.loadEnvFile()`](/reference/config#加载) 加载了该文件时才会到达网关。
+
+OIDC 失败与密钥错误一样都报 `MODEL_PROVIDER_FAILED`，而 AI SDK 的报错信息只提到 `AI_GATEWAY_API_KEY`。在未设密钥的情况下，请检查 Vercel CLI 是否已登录，以及 `.vercel/project.json` 是否存在。
+
+## AI SDK 提供者
+
+选择一个提供者。下面三步展示该提供者的设置方法。
+
+<ModelProvider show="select" />
+
+列表列出的是支持工具调用的 AI SDK 提供者。不在列表中的提供者，只要遵循 AI SDK 语言模型规范 v2 及以上版本，同样可用。其模型必须支持工具调用和图像。
+
+### 安装提供者包
+
+安装 `ai` 和对应提供者的包。
+
+<ModelProvider show="install" />
+
+### 设置凭据
+
+提供者从环境读取凭据。e2e 不加载 `.env` 文件。请在 shell 或 CI 中导出这些变量，或在配置里用 [`process.loadEnvFile()`](/reference/config#加载) 加载文件。
+
+<ModelProvider show="env" />
+
+密钥缺失或错误时，第一个智能体步骤会以 `MODEL_PROVIDER_FAILED` 失败。有些提供者在配置加载时就读取密钥；对这类提供者，密钥缺失会让所有运行以 `CONFIG_LOAD_FAILED` 直接中止。
+
+### 把模型加入配置
+
+在 `agents.default` 中设置模型。其中的模型 ID 仅为示例，请换成支持工具调用和图像的模型。
+
+<ModelProvider show="config" />
+
+DeepSeek 的 V4 系列（`@ai-sdk/deepseek`）默认开启思考，在这种模式下会拒绝智能体步骤要求的强制工具选择。此时该步骤会以 `auto` 重新发送，并附带“只以工具调用作答”的指令；该模型上的后续步骤也会照此起步，因此思考可以保持开启。
+
+## 一个配置中的多个模型
+
+给智能体起不同的名字，即可使用不同的模型：
+
+```ts title="e2e.config.ts"
+export default {
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+  agents: {
+    default: { model: gateway('openai/gpt-6-luna-fast') },
+    careful: { model: gateway('anthropic/claude-sonnet-5') },
+  },
+} satisfies E2EConfig;
+```
+
+用 `npx e2e run --agent careful` 运行，或[在测试中选用智能体](/agents)。每个模型可以使用不同的提供者。智能体之间不互相继承：没有 `model` 的条目不会使用 `default` 的模型，参见[智能体与人设](/agents)。
+
+### 用环境变量切换模型
+
+不想编辑配置就切换模型时，读取你自己定义的环境变量即可：
+
+```ts title="Agent setup"
+const agent = {
+  model: gateway(process.env.MODEL ?? 'openai/gpt-6-luna-fast'),
+};
+```
+
+### 独立的判定模型
+
+默认情况下，同一个模型既驱动 `agent.act`，也负责回答 `agent.assert`、`agent.waitFor` 和 `agent.extract`。设置 `judge` 即可让这些检查改用另一个模型：
+
+```ts title="Agent setup"
+const agent = {
+  model: gateway('openai/gpt-6-luna-fast'),
+  judge: gateway('anthropic/claude-sonnet-5'),
+};
+```
+
+判定只使用当前屏幕和问题本身，不包含执行动作的智能体的记录或摘要。报告中会写明每次判定使用的模型。若你要替换内置智能体，参见[自定义执行器](/executors)。
+
+`judge` 接受 AI SDK 语言模型。Clef 和 Jev 使用的是另一套 API；若用它们执行 `agent.act` 和 `agent.assert`，请改用[决策执行器](/decision-models)。
+
+## 数据留存与合规
+
+模型输入包括脱敏后的屏幕、步骤指令，以及智能体主动要求的截图。收到响应后，e2e 不会再向提供者读取任何内容，因此一次运行不需要提供者侧保留任何状态。
+
+每个模型请求都会标明 e2e：`User-Agent` 以 `e2e/<version> (<platform>; <arch>)` 开头；`HTTP-Referer: https://tester.army/e2e` 与 `X-Title: e2e` 让流量在 Vercel AI Gateway 和 OpenRouter 上归因于 e2e。这些会覆盖在提供者实例上设置的同类请求头。
+
+**OpenAI 与 Azure OpenAI**：每条请求都带 `store: false` 和一个 prompt 缓存键。提供者不会留存对话副本，推理模型早前的轮次以加密内容形式随请求内联传递，prompt 缓存仍能命中重复前缀。零数据留存的组织无需任何配置。若想保留被存储的响应，在 `providerOptions` 中设置 `store`；Azure OpenAI 的键为 `azure`：
+
+```ts title="Agent setup"
+const agent = {
+  model: openai('gpt-6-luna'),
+  providerOptions: { openai: { store: true } },
+};
+```
+
+**受 BAA 覆盖的 Anthropic**：智能体步骤使用支持工具调用、prompt caching、图像和结构化输出的 Messages API，全部都在 Anthropic 的 HIPAA 就绪范围内。协议只覆盖 `api.anthropic.com`：请用 `@ai-sdk/anthropic` 直连，不要经由网关或 OpenRouter，并保持 `judge` 不设置，让一份协议覆盖所有请求。Anthropic 的 Covered Models 要求 30 天留存，不向零数据留存组织提供。
+
+## 故障与排查
+
+| 问题 | 代码 | 修复 |
+| --- | --- | --- |
+| 模型写成了字符串而不是 AI SDK 实例 | `INVALID_CONFIG` | 请实例化它，例如 `gateway('openai/gpt-6-luna-fast')`。 |
+| 内置智能体没有配置模型 | `MODEL_UNAVAILABLE` | 设置 `agents.<name>.model`。 |
+| 第一次模型调用认证失败 | `MODEL_PROVIDER_FAILED` | 检查提供者的 API 密钥或已关联的 Vercel 项目；若使用订阅，运行 `npx e2e login`。 |
+| 缺少 `ai` 包 | `MODEL_UNAVAILABLE` | 运行 `npm install -D ai`。 |
+| 步骤的第二轮以 `Item with id 'rs_…' not found` 失败 | `MODEL_PROVIDER_FAILED` | 保持 `providerOptions` 中 `store` 关闭（默认即为关闭），或改为直连 OpenAI 而不经过网关。 |
+| 自定义执行器自身的 `model` 或 `judge` 与 agents 条目中的不一致 | `INVALID_CONFIG` | 参见[自定义执行器](/executors#保留循环-更换词汇)。 |
+
+<CardGroup cols={2}>
+  <Card title="订阅" icon="key" href="/subscriptions">
+    使用 ChatGPT、Copilot、OpenCode Console 或 SuperGrok 登录。
+  </Card>
+  <Card title="智能体与人设" icon="users" href="/agents">
+    为测试和登录用户选择智能体。
+  </Card>
+</CardGroup>

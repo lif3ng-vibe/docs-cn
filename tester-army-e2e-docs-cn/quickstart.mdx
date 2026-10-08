@@ -1,0 +1,261 @@
+---
+title: 快速上手
+description: 给编码智能体发一句话提示，或按步骤手动配置 e2e。
+icon: "rocket"
+---
+
+import { ModelProvider } from './snippets/model-provider.jsx';
+import { SetupPrompt } from './snippets/setup-prompt-card.jsx';
+import { Video } from './snippets/video.jsx';
+
+export const setupPrompt = `在本项目中配置 e2e 端到端测试。文档：\`https://e2e.tester.army/docs/quickstart.md\`
+
+1. 运行 \`npx e2e init --yes\`（或本项目对应的 pnpm/bun 等价命令）。它会写入一份使用 Vercel AI Gateway 的 Web 配置、一个示例测试、e2e skill 以及 MCP 配置。此时不安装任何依赖。
+2. 阅读 e2e skill（\`npx e2e guide\` 输出全文，\`npx e2e guide <topic>\` 输出某个主题），并在下文每一步中遵循它。
+3. 把 target 指向本应用。Web 应用需设置其 URL 和启动 dev server 的命令；iOS 或 Android 应用需把 @e2e-dev/web 替换为 @e2e-dev/mobile，并按移动引擎改写示例测试。
+4. 问我智能体步骤使用哪个模型：ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅、API key，或本地模型。用对应的提供者软件包进行配置。如果需要登录，把 \`npx e2e login\` 命令给我并等我确认。
+5. 安装依赖，运行示例测试，修复配置问题直至通过。
+6. 为本应用最重要的用户流程编写一条测试，运行并迭代直至通过。`;
+
+## 用编码智能体配置
+
+在你的应用目录中打开 Claude Code、Codex、Cursor 或其他编码智能体，粘贴以下提示：
+
+<SetupPrompt>
+
+<Prompt description={setupPrompt} children={setupPrompt} actions={["copy", "cursor"]} />
+
+</SetupPrompt>
+
+智能体会安装 [e2e skill](/coding-agents)，因此之后诸如"给结账流程加一条测试"或"这次运行为什么失败"之类的提示无须再做任何配置。
+
+<Note>
+需要 Node.js 24.8 或更新版本（Node.js 22 系列需 22.22.3 或更新）。Windows 上请在 WSL 中运行。移动端测试还需要带 iOS 模拟器运行时的 Xcode，或带仿真器的 Android SDK。
+</Note>
+
+## 手动配置
+
+### 运行第一个测试
+
+<Steps>
+  <Step title="创建测试项目">
+  在你的应用目录中：
+
+  <CodeGroup>
+  ```bash npm
+  npx e2e init
+  ```
+
+  ```bash pnpm
+  pnpm dlx e2e init
+  ```
+
+  ```bash bun
+  bunx e2e init
+  ```
+  </CodeGroup>
+
+  选择 **Web (Playwright)** 或 **Mobile (iOS/Android)**，再选一个订阅或模型提供者；如果测试不用 AI，则选 **None**。向导会写好一份配置和一个示例测试、添加依赖，并主动询问是否配置你的编码智能体。现有文件保持原样。
+
+  <Tabs>
+    <Tab title="Web">
+    把应用的 dev server 跑在 `http://localhost:3000`，或在 `e2e.config.ts` 中设置其地址。也可以[让 e2e 来启动它](/web#启动你的应用)。
+
+    <Accordion title="Web 配置与测试示例">
+    此配置使用 Vercel AI Gateway。向导会按你选择的提供者来配置。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { gateway } from 'ai';
+
+export default {
+  agents: { default: { model: gateway('openai/gpt-6-luna-fast') } },
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+} satisfies E2EConfig;
+```
+
+```ts title="tests/example.e2e.ts"
+import { test } from '@e2e-dev/web';
+import { expect } from 'e2e';
+
+test('app opens', async ({ app, browser }) => {
+  await app.open('/');
+  await expect(browser.locator('body')).toBeVisible();
+});
+```
+    </Accordion>
+    </Tab>
+    <Tab title="移动端">
+    运行 `npx agent-device doctor` 检查环境。示例会直接打开设置应用，让你在接入自己的应用之前先试一试。向导在 macOS 上选择 iOS，其他平台选择 Android。
+
+    <Accordion title="iOS 配置与测试示例">
+    此配置使用 Vercel AI Gateway。若为 Android，向导会设置
+    `platform: 'android'` 和 `app: { bundleId: 'com.android.settings' }`。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { gateway } from 'ai';
+
+export default {
+  agents: { default: { model: gateway('openai/gpt-6-luna-fast') } },
+  targets: [{ name: 'ios', engine: mobile({ platform: 'ios' }), app: { bundleId: 'Settings' } }],
+  workers: 1,
+} satisfies E2EConfig;
+```
+
+```ts title="tests/example.e2e.ts"
+import { test } from '@e2e-dev/mobile';
+import { expect } from 'e2e';
+
+test('Settings opens', async ({ app, screen }) => {
+  await app.open();
+  await expect(screen.getByRole('button', 'General')).toBeVisible();
+});
+```
+    </Accordion>
+
+    要使用你自己的应用，见[移动端](/mobile)。
+    </Tab>
+  </Tabs>
+  </Step>
+  <Step title="运行示例">
+  <CodeGroup>
+  ```bash npm
+  npx e2e run
+  ```
+
+  ```bash pnpm
+  pnpm exec e2e run
+  ```
+
+  ```bash bun
+  bunx e2e run
+  ```
+  </CodeGroup>
+
+  e2e 会下载浏览器或启动模拟器/仿真器，检查应用能否打开，并输出结果。此时尚不调用模型，因此无需登录或 API key。
+  </Step>
+</Steps>
+
+<Video>
+  <video src="/images/init.mp4" aria-label="npx e2e init 依次询问引擎、模型网关与编码智能体配置，随后列出将要写入的文件。" muted loop playsInline controls />
+
+  `npx e2e init` 会先问几个问题，然后在写入任何内容之前展示全部改动。
+</Video>
+
+### 使用订阅或 API key
+
+把你在向导中选择的提供者接上。
+
+<Tabs>
+  <Tab title="订阅">
+  登录你已有的订阅方案即可，无需 API key。
+
+  | 订阅 | 命令 |
+  | --- | --- |
+  | ChatGPT Plus 或 Pro | `npx e2e login openai` |
+  | GitHub Copilot | `npx e2e login github-copilot` |
+  | OpenCode Console（OpenCode Zen 与 OpenCode Go） | `npx e2e login opencode-console` |
+  | SuperGrok 或 X Premium+ | `npx e2e login spacexai` |
+
+  如果可用，Copilot 会复用你的 GitHub CLI 登录。详情见[订阅](/subscriptions)。
+  </Tab>
+  <Tab title="API key">
+  选择你的提供者。安装其软件包，并在运行 e2e 的终端里设置它读取的环境变量（如有）。
+
+  <ModelProvider show="select" />
+
+  <ModelProvider show="install" />
+
+  <ModelProvider show="env" />
+
+  Vercel AI Gateway 读取 `AI_GATEWAY_API_KEY`；对于已用 `vercel link` 关联的项目，也可以使用
+  [Vercel OIDC token](/models#用-vercel-oidc-代替密钥)。OpenRouter 读取 `OPENROUTER_API_KEY`。
+
+  向导会为 Vercel AI Gateway、OpenRouter 以及 OpenAI 兼容端点写好配置。若使用其他提供者，请替换 `e2e.config.ts`
+  中的模型导入和 `model` 值，并把 `agent` 用作 `agents.default`：
+
+  <ModelProvider show="model" />
+
+  本地模型与更多选项见[模型](/models)。
+  </Tab>
+</Tabs>
+
+### 添加一个智能体步骤
+
+每次调用给 `agent.act` 一个目标，然后检查结果。把下面的示例改编成你应用中的某个流程：
+
+<Tabs>
+  <Tab title="Web">
+```ts title="tests/agent.e2e.ts"
+import { test } from '@e2e-dev/web';
+import { expect } from 'e2e';
+
+test('a visitor signs up for a trial', async ({ app, agent, screen }) => {
+  await app.open('/');
+
+  await agent.act('sign up for a free trial as {name} with email {email}', {
+    params: { name: 'Ada Lovelace', email: 'ada@example.test' },
+  });
+
+  await agent.assert('the welcome screen greets Ada by name');
+  await expect(screen.getByRole('status')).toContainText('trial');
+});
+```
+  </Tab>
+  <Tab title="移动端（iOS）">
+```ts title="tests/agent.e2e.ts"
+import { test } from '@e2e-dev/mobile';
+import { expect } from 'e2e';
+
+test('the agent opens General', async ({ agent, app, device }) => {
+  await app.open();
+  await agent.act('open {section} settings', { params: { section: 'General' } });
+
+  await agent.assert('the General settings screen is showing');
+  await expect(device.locator('role=NavigationBar id=General')).toBeVisible();
+});
+```
+
+  `app.open()` 会全新启动所配置的应用；不调用它时，测试会从上一个测试离开时设备所处的状态继续。`device.locator` 使用
+  [agent-device 选择器](/mobile#device-fixture)。
+  </Tab>
+</Tabs>
+
+`params` 用于填充目标中的占位符。`agent.assert` 对屏幕整体判定；
+`expect` 检查一个精确值。
+
+<CodeGroup>
+```bash npm
+npx e2e run tests/agent.e2e.ts
+```
+
+```bash pnpm
+pnpm exec e2e run tests/agent.e2e.ts
+```
+
+```bash bun
+bunx e2e run tests/agent.e2e.ts
+```
+</CodeGroup>
+
+在向导里选了 **None**？请先[添加模型](/models)。加 `--headed` 可以实时观看 Web 测试，加 `--no-cache` 则跳过对已缓存动作的回放。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="核心概念" icon="pen-to-square" href="/core-concepts">
+    目标、断言与定位器。
+  </Card>
+  <Card title="登录" icon="key" href="/authentication">
+    复用应用登录态，让密码远离模型输入。
+  </Card>
+  <Card title="调试" icon="bug" href="/debugging">
+    阅读失败详情、截图与链路。
+  </Card>
+  <Card title="持续集成" icon="code-branch" href="/ci">
+    在 GitHub Actions、EAS Workflows、Bitrise 或 Codemagic 上运行测试。
+  </Card>
+</CardGroup>

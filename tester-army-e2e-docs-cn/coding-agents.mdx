@@ -1,0 +1,132 @@
+---
+title: 编码智能体
+description: 让编码智能体拿到 skill、鲜活的应用会话和报告，用于编写和调试测试。
+icon: "robot"
+---
+
+`e2e init` 会安装一个用于编写和运行测试的 skill，外加用于检视应用的 MCP 配置。编码智能体用 CLI 运行测试，用报告排查失败。
+
+## skill
+
+<CodeGroup>
+```bash npm
+npx e2e init
+```
+
+```bash pnpm
+pnpm dlx e2e init
+```
+
+```bash bun
+bunx e2e init
+```
+</CodeGroup>
+
+| 路径 | 使用者 |
+| --- | --- |
+| `.agents/skills/e2e/` | 读取 `.agents/skills` 的智能体 |
+| `.claude/skills/e2e/` | Claude Code；两者同时安装时是指向 `.agents/skills/e2e/` 的符号链接 |
+
+实体目录里是 `SKILL.md` 和各主题参考；符号链接采用的正是 `npx skills add` 生成的布局，一份内容服务所有智能体。升级 e2e 之后请再跑一次 `init` 来刷新它。
+
+不跑 `init` 时，`npx skills add tester-army/e2e` 可以从仓库安装该 skill，`npx e2e guide [topic]` 则从已安装的包中输出它。
+
+npm 包还在其 `docs/` 目录下随附了这批文档的 `.mdx` 页面（单包项目里是 `node_modules/e2e/docs`），智能体因此可以离线阅读任何页面。诸如 `/reference/cli` 这样的链接对应 `docs/reference/cli.mdx`。
+
+需要显式指针的智能体，把下面这行加进你的项目指令即可。`init` 不会改动这些文件：
+
+```md title="AGENTS.md"
+End-to-end tests use e2e; read .agents/skills/e2e/SKILL.md before writing or running one.
+```
+
+## 智能体如何查看应用
+
+`e2e mcp` 让编码智能体打开应用并与之交互。每个智能体（包括 subagent）各开一个会话，因此多个智能体可以同时驱动应用。它的 `locate` 工具会用当前应用校验 `screen.*` 定位器，当恰好有一个元素命中时返回对应的测试代码。
+
+`init` 会为 Claude Code 在 `.mcp.json` 中注册该服务器，为 Cursor 注册到 `.cursor/mcp.json`。若要手动为 Claude Code 注册：
+
+<CodeGroup>
+```bash npm
+claude mcp add e2e -- npx e2e mcp
+```
+
+```bash pnpm
+claude mcp add e2e -- pnpm exec e2e mcp
+```
+
+```bash bun
+claude mcp add e2e -- bunx e2e mcp
+```
+</CodeGroup>
+
+其工具、会话规则与旗标见 [MCP 服务器参考](/reference/mcp)。运行测试与读取报告请通过 CLI。
+
+## 智能体如何编写测试
+
+skill 要求编码智能体先读配置和现有测试。它用 `agent.act` 一次执行一个目标，并用 `expect` 检查结果。已知字段和精确取值可以直接用 `screen`：
+
+```ts title="tests/checkout.e2e.ts"
+import { test, expect, credentials } from 'e2e';
+
+test('a signed-in user reaches checkout', async ({ screen, app, agent }) => {
+  const user = credentials.user('customer');
+  await app.open('/login');
+  await screen.getByLabel('Email').fill(user.username);
+  await screen.getByLabel('Password').fill(user.password);
+  await screen.getByRole('button', 'Sign in').click();
+  await expect(screen.getByRole('heading', 'Welcome back')).toBeVisible();
+
+  await agent.act('Add the cheapest item on the page to the cart and open the cart');
+  await expect(screen.getByRole('heading', 'Your cart')).toBeVisible();
+});
+```
+
+主要规则如下：
+
+- 每个目标一条 `agent.act`，后面紧跟一条 `expect`。断言让该步骤的缓存条目具备回放资格，也是智能体做错事时失败的那一环。
+- 不用 sleep。定位器会轮询，动作会等待目标出现，`expect` 会重试到超时为止。
+- 机密一律通过 `credentials.user(name)` 在配置中声明，绝不硬编码在测试里。
+
+## 智能体如何运行测试
+
+<CodeGroup>
+```bash npm
+npx e2e run tests/checkout.e2e.ts
+```
+
+```bash pnpm
+pnpm exec e2e run tests/checkout.e2e.ts
+```
+
+```bash bun
+bunx e2e run tests/checkout.e2e.ts
+```
+</CodeGroup>
+
+迭代时先只跑一个文件。模型配置与凭据见[模型](/models)。重试运行之前，先把 CLI、配置和收集阶段的错误修掉。
+
+## 智能体如何阅读结果
+
+凡是真正跑到测试的运行，都会为每条失败或 flaky 的测试写一个链路页，位置在其 `.e2e/results/` 下的同名目录（`.e2e` 是默认 `output`）。终端会在每条失败测试下方标出该页（`❯ trace .e2e/results/<test>/trace.md`）。从这里入手：页内有失败的行、每一步做了什么（动作命中的节点、断言读到的值、缓存的决策、控制台报错与失败请求）、智能体的最后几轮对话，以及失败时刻的屏幕。
+
+请读链路页，而不是 `.e2e/report.json`：报告只是为脚本保留同样的事实，没有链路页对它们所作的解读。脚本确实需要时，先查 `run.errors` 里的运行级失败，再看每条失败结果的最后一次尝试；`--reporter json` 会把它打印到 stdout。
+
+要查看模型调用细节，用 `--ai-trace` 并配合 [unbox-ai](/debugging#智能体步骤) 阅读链路。不要把原始链路塞进智能体的上下文——它会重复整段提示，体量可达数 MB。
+
+## 智能体如何使用缓存
+
+经过校验的 `agent.act` 在后续运行中可以从 `.e2e/cache/` 回放。改动测试之后想验证智能体的真实行为，或排查回放失败时，用 `--no-cache`。搭配 `--ai-trace` 可以捕获流程中的每一次模型调用。
+
+不要手动修改录制内容。一次失败的读写运行会移除有牵连的缓存条目，好让之后的校验运行重新写入。若失败发生时没有任何模型应答，则不牵连任何条目，也不移除任何条目。见[缓存](/cache)。
+
+<CardGroup cols={2}>
+  <Card title="CLI 参考" icon="terminal" href="/reference/cli">
+    init、guide、mcp 与 run 的逐项旗标。
+  </Card>
+  <Card title="MCP 服务器" icon="server" href="/reference/mcp">
+    写测试之前先检视应用。
+  </Card>
+  <Card title="调试一次运行" icon="bug" href="/debugging">
+    报告、产物，以及智能体相关旗标。
+  </Card>
+</CardGroup>

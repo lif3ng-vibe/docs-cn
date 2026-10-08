@@ -1,0 +1,147 @@
+---
+title: EAS 模拟器
+sidebarTitle: EAS 模拟器
+description: 用 @e2e-dev/eas 的设备提供者 easSimulators() 在 EAS 模拟器的托管 iOS 模拟器与 Android 仿真器上运行移动 target。
+icon: "/images/icons/expo.svg"
+---
+
+来自 `@e2e-dev/eas` 的 `easSimulators()` 是 [EAS 模拟器](https://expo.dev/services/simulators)的[设备提供者](/mobile#托管设备)。运行会得到托管的 iOS 模拟器或 Android 仿真器，随运行启动、随运行停止，引擎则通过 EAS 在每台设备旁边运行的 agent-device 守护进程驱动它们。测试、配置与 CI 保持不变。
+
+<Tip>
+运行 e2e 的机器不需要 Mac、Xcode 或 Android SDK。
+</Tip>
+
+<Note>
+本页讲的是 EAS 模拟器这一托管设备。要在 EAS 工作流（一种 CI 服务）中运行 e2e，见[EAS Workflows](/ci/eas-workflows)。
+</Note>
+
+## 安装
+
+<CodeGroup>
+```bash npm
+npm install --save-dev @e2e-dev/eas
+```
+
+```bash pnpm
+pnpm add -D @e2e-dev/eas
+```
+
+```bash bun
+bun add -d @e2e-dev/eas
+```
+</CodeGroup>
+
+EAS 模拟器目前为限制访问（limited access）；用 `npx eas-cli@latest simulator:availability` 检查你的可用性。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { easSimulators } from '@e2e-dev/eas';
+
+export default {
+  targets: [
+    {
+      name: 'ios',
+      engine: mobile({
+        platform: 'ios',
+        device: easSimulators({ buildId: process.env.EAS_BUILD_ID }),
+        videoTouches: false,
+      }),
+      app: { bundleId: 'com.example.app' },
+    },
+  ],
+  workers: 2,
+} satisfies E2EConfig;
+```
+
+会话归属于 app 配置所链接的 Expo 项目：`extra.eas.projectId`，即 `eas init` 写入的 id。提供者会从 `e2e.config.ts` 旁边的 app 配置里读取它：
+
+- **`app.json` 或 `app.config.json`**：按 JSON 读取，文件若含 `expo` 键则从其下读取。
+- **动态配置**（`app.config.ts`、`.js`、`.mjs`、`.cjs`、`.mts` 或 `.cts`）：由于配置可以计算该 id，提供者会在运行所处的环境中用项目自己的 `expo config --type public` 求值。与 eas-cli 一样，不加载 `.env` 文件（`EXPO_NO_DOTENV=1`），因此配置读取的变量必须存在于 `e2e run` 启动所处的环境中。项目中需装有 `expo`。
+
+提供者每次运行只读一次配置，在第一个会话启动之前；它还要求 `@e2e-dev/mobile` 会向设备提供者传递 `projectRoot`，旧版本会导致租用失败并提示升级或给出 `projectId`。当 `e2e.config.ts` 不在 app 的目录中，或 app 配置未链接任何项目时，用 `projectId` 传入该 id（是项目的 id，不是其 slug）。
+
+该包用 `fetch` 调用 Expo 的 API，因此无需安装 SDK。
+
+## 身份验证
+
+提供者采用与 eas-cli 相同的身份验证方式：
+
+* **`EXPO_TOKEN`**：有权访问该项目的账户或机器人的[访问令牌](https://expo.dev/settings/access-tokens)，放在 `e2e run` 启动所处的环境中。在 CI 中以机密形式使用它。
+* **eas-cli 登录**：当 `EXPO_TOKEN` 未设置时使用。在你运行过 `eas login` 的机器上，提供者会读取 eas-cli 保存在 `~/.expo/state.json` 里的会话，无需令牌。home 目录取运行时的 `HOME`，Windows 上则是 `USERPROFILE`。
+
+两者都在时 `EXPO_TOKEN` 优先。由它的账户启动会话，因此若要以机器人身份在一台以你自己登录的机器上运行，就设置它。会话总是连到生产环境的 `api.expo.dev`：eas-cli 的 staging 与 local 登录（`EXPO_STAGING`、`EXPO_LOCAL`）不会被读取。
+
+在 CI runner 或共享机器上，请设置 `EXPO_TOKEN`。否则，某人遗留在 runner home 目录里的登录会以其账户的名义创建计费会话。
+
+## 安装应用
+
+模拟器启动时没有任何应用。选择一种方式把你的应用装上去：
+
+- **一次 EAS Build**：`buildId` 指向一个模拟器构建（`eas.json` 中的 `"ios": { "simulator": true }`）或一个 APK，EAS 会在会话就绪之前安装并启动它。省去 target 的 `app.appPath`，但保留 `app.bundleId`，让 `app.open()` 知道要启动什么。构建不会离开 EAS。
+- **一个 URL**：`applicationArchiveUrl` 指向一个应用归档，EAS 以同样方式下载并安装。
+- **一个本地构建**：设置 target 的 `app.appPath`，并写一个调用 `device.installApp()` 的 fixture，与[本地模拟器](/mobile)相同。构建通过会话的守护进程上传到每台模拟器。省去 `buildId` 和 `applicationArchiveUrl`。
+
+```ts
+// EAS installs the build.
+{ engine: mobile({ platform: 'ios', device: easSimulators({ buildId }) }), app: { bundleId: 'com.example.app' } }
+
+// A fixture uploads the build with device.installApp().
+{ engine: mobile({ platform: 'ios', device: easSimulators() }), app: { bundleId: 'com.example.app', appPath: 'build/App.app' } }
+```
+
+## 选项
+
+| 选项                     | 默认值      | 含义 |
+| ----------------------- | ----------- | ------- |
+| `projectId`             | 取自 app 配置 | 会话归属的 Expo 项目。缺省时取 app 配置的 `extra.eas.projectId`。见[安装](#安装)。 |
+| `buildId`               | 无          | 由 EAS 在每台模拟器上安装并启动的 EAS Build。 |
+| `applicationArchiveUrl` | 无          | 一个应用归档 URL，由 EAS 安装以替代构建。与 `buildId` 互斥。 |
+| `device`                | 由 EAS 选定  | iOS 设备名或 UDID（`'iPhone 17 Pro'`），或 Android AVD 硬件配置（`'pixel_9'`）。 |
+| `maxIdleTimeMinutes`    | `10`        | 多少分钟没有 agent-device 命令后，EAS 停止该会话。EAS 要求它小于 `maxDurationMinutes`，因此时长更短时默认值会降到比它小 1。见[提供者做的事](#提供者做的事)。 |
+| `maxDurationMinutes`    | 账户上限     | 会话就绪后可以运行的分钟数。EAS 上限为 40，高优先级套餐为 115。 |
+| `agentDeviceVersion`    | 取自引擎     | EAS 启动会话守护进程所用的 agent-device 版本。默认为 `@e2e-dev/mobile` 锁定的版本，使远程守护进程按引擎客户端预期的方式应答；不设则 EAS 启动最新版。 |
+| `tags`                  | `[]`        | 打在每个会话上的标签，与运行自身的标签并列。 |
+
+出现本表之外的选项、同时给出 `buildId` 与 `applicationArchiveUrl`，或 `maxIdleTimeMinutes` 未低于同时传入的 `maxDurationMinutes`，都会让配置加载失败并报 `INVALID_CONFIG`。
+
+## 会话
+
+每个 target 最多启动 `workers` 个会话（`--workers` 可覆盖），测试文件较少时更少；全部就绪后测试才开始。一个会话从请求到就绪约需三分钟（排队、启动、安装构建），全部并行进行，此后运行的时钟才开始计时。
+
+一次运行必须能放进一个会话的生命周期内：EAS 会在会话就绪 `maxDurationMinutes` 后将其停止，普通优先级套餐默认 40 分钟，高优先级套餐 115 分钟。更长的套件请拆到更多 worker 或多个 CI 作业上。
+
+EAS 同时运行的会话数以 Expo 账户允许为上限，其余排队等待直至有会话结束。运行结束前没有会话会结束，因此要让 `workers` 乘以 EAS target 数保持在该上限之内。每个会话都会排队几秒；排队超过两分钟的会话会记录 `still queued at EAS after two minutes`。各 target 依次准备，因此已就绪 target 的会话会在下一个 target 排队与启动时闲置等待。若运行中的另一个会话已就绪满 `maxIdleTimeMinutes` 而某会话仍在排队，该会话的租用即告失败，运行会停止所有会话：EAS 正在停止那个闲置的。
+
+## 观看一次运行
+
+提供者在创建每个会话时记录其 expo.dev 页面：
+
+```text
+ℹ leasing 2 ios device(s) from eas-simulators
+ℹ eas-simulators (1 of 2): simulator session 01a0…, https://expo.dev/accounts/acme/projects/shop/simulator-sessions/01a0…
+ℹ eas-simulators: leased 01a0…
+```
+
+无需令牌即可打开的浏览器预览也会被记录为 `watch at <url>`。需要令牌的预览则不会记录：令牌会让任何读到 CI 日志的人控制这台模拟器。
+
+会话名为 `e2e <target> <n> of <total>`，并打上 `e2e`、`e2e-run:<run id>`、`e2e-target:<target>` 标签，因此用 `eas simulator:list --tag e2e-run:<run id>` 可找到一次运行的会话。
+
+## 录制
+
+记录[视频](/reference/config#video)的尝试通过模拟器上的 agent-device 录制，与本地一致，并把 `video/video.mp4` 保存到尝试产物目录下。
+
+按上文安装部分的设置，把移动引擎设为 `videoTouches: false`。agent-device 在录制停止时会把触控指示点画进录像，在一台 EAS iOS 模拟器上这要花几分钟，因此每个记录视频的尝试都会耗尽 `cleanupTimeout` 等它停止，最终不保留任何文件。没有指示点时，停止只需约两秒。
+
+## 提供者做的事
+
+- 当 `projectId` 缺省时，在第一个会话之前从 app 配置读取一次项目 id。未链接任何项目的配置会在任何会话开始之前导致租用失败，并指出是哪个文件。
+- 启动每个 `agent-device` 会话并等待其守护进程可达，然后把守护进程的 URL 和令牌交给引擎。
+- 将 `maxIdleTimeMinutes` 默认设为 10。若运行在引擎停止其会话之前就死掉，会话会闲置，EAS 会在这么久之后将其停止。
+- 以 `@e2e-dev/mobile` 锁定的 agent-device 版本启动每个守护进程。
+- 对创建前就被取消的请求，不启动任何会话。
+- 停止出现错误、被取消、在本运行另一会话闲置满 `maxIdleTimeMinutes` 时仍在排队、或出队 15 分钟后仍在启动的会话，并把 EAS 已不再记录的会话视为已停止。
+- 若被停止会话的作业仍在排队，则一并取消该作业：否则 EAS 稍后仍会启动它，并占用账户的并发会话额度。
+- 连续三次状态轮询失败（api.expo.dev 的小抖动）以内会扛过去，之后才放弃某个会话。
+
+既无 `EXPO_TOKEN` 又无 eas-cli 登录，会在发出任何 EAS 请求之前导致租用失败，并提示运行 `eas login` 或设置 `EXPO_TOKEN`。账户没有 EAS 模拟器权限、或某个会话启动失败，都会以 EAS 的报错消息导致租用失败。两者都会在任何测试之前结束运行，而运行中的其他会话——无论已启动还是在排队——仍会被停止。

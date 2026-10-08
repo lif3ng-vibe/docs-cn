@@ -1,0 +1,77 @@
+---
+title: 智能体步骤的运作方式
+description: 模型看到什么、可以做什么、步骤如何结束，以及开销有多大。
+icon: "list-check"
+---
+
+一个智能体步骤就是一次 `agent.act`、`agent.assert`、`agent.waitFor` 或 `agent.extract` 调用。模型阅读屏幕、请求动作，并以一个判定结束该步骤。runner 执行它允许的每个动作并记录结果。每个步骤都有时限与模型调用预算。
+
+## 契约的两面
+
+runner 负责脱敏、动作授权、预算、机密与报告。执行器决定请求哪些动作，并返回一个判定。除非 `agents` 条目设置了 `executor`，内置智能体就是执行器。[自定义执行器](/executors)同样拿到脱敏后的观测与经过校验的动作方法。
+
+## 模型看到什么
+
+对 `act`，开头提示里包含指令、params、已完成的步骤，以及一份屏幕角色、名称、文本与状态的脱敏文本快照。原始 HTML、cookie、标头与环境变量的值都不在其中。密码字段会被遮盖。屏幕上出现的已配置机密值会被替换为 `<secret:name>`。
+
+动作之后，模型会收到屏幕的变化。若屏幕大部分发生了变化，则收到一份新的完整快照。只要元素还存在，节点 id 就保持稳定。动作失败时也会返回当前屏幕，模型据此决定下一步做什么。
+
+`assert`、`waitFor` 与 `extract` 的判定只会看到指令与当前屏幕，看不到已完成的步骤，也看不到执行动作的智能体的总结。你可以另配一个[判定模型](/models#独立的判定模型)。
+
+`vision: true` 会在输入中附上一张脱敏截图，`vision: 'only'` 则只凭截图判定；各种模式见[智能体参考](/reference/agent#视觉)。[填写机密之后](/security#机密填充后的截图)不会有任何截图送达模型。
+
+## 模型可以做什么
+
+智能体会拿到 target 引擎支持的工具，例如 `tap`、`type`、`press`、`select`、`scroll` 和 `navigate`。声明了凭据（credential）的步骤还会拿到 `type_secret`。
+
+支持键盘的引擎可以在焦点所在控件中输入文字与按键。当文本快照描述不了某个控件时，像素工具让智能体请求截图并按坐标点操作。参见[工具参考](/reference/agent#像素工具-screenshot-与按点动词)。
+
+runner 会校验每个内置动作，并把它计入预算。按坐标点的动作最长超时为 15 秒。填写机密还要求声明过该机密且字段类型兼容。[项目工具](/tools)可以把你自己定义的操作加进来，同时声明各自的预算与支持的平台。
+
+循环会检测重复调用与打转。连续三次动作失败后，它会要求模型换一种做法；连续五次后则要求给出判定。当预算或时限临近时，它同样会请求判定。
+
+## 步骤如何结束
+
+一个智能体步骤返回三种判定之一：
+
+- `passed`：屏幕提供了步骤成功的证据。
+- `failed`：所需条件为假，或无法确立。证据不足时产生 `ASSERTION_INCONCLUSIVE`。
+- `blocked`：前置条件缺失、环境问题或执行上限，导致无法得到产品层面的判定。由错误码决定退出码。
+
+错误码只属于 `failed` 或 `blocked`。当内置智能体的模型在结论为 `passed` 的同时附带了错误码，错误码会被丢弃、步骤通过，该轮结果中会记下被丢弃的错误码。[自定义执行器](/executors)若返回这种结果，会被以 `MODEL_OUTPUT_INVALID` 拒收。
+
+| 阻碍 | 错误码 | 退出码 |
+| --- | --- | ---: |
+| 应用拒绝了凭据，或凭据未配置 | `AUTH_CREDENTIAL_INVALID`, `AUTH_CREDENTIAL_UNAVAILABLE` | 2 |
+| 环境不可用 | `ENVIRONMENT_UNAVAILABLE` | 3 |
+| 产品之外的种子数据或前置条件缺失 | `SEED_DATA_MISSING`, `TEST_SETUP_FAILED` | 2 |
+| 预算或时限用尽 | `STEP_BUDGET_EXHAUSTED`, `STEP_TIMEOUT` | 1 |
+| 工具集无法执行该交互 | `AUTOMATION_UNSUPPORTED` | 1 |
+
+判定可以携带的全部错误码，见[错误参考](/reference/errors#agenterror)。
+
+## 成本
+
+每种调用都有模型调用预算与默认超时，见[budgets](/reference/agent#预算) 一节。超出预算抛出 `STEP_BUDGET_EXHAUSTED`；到达时限抛出 `STEP_TIMEOUT`。影响成本的因素：
+
+- `assert` 与 `extract` 各做一次判定，若模型的答案格式不当，再加一次修复调用。`extract` 要的数据不在屏幕上时，会以 `ASSERTION_INCONCLUSIVE` 失败，而不是返回占位值。
+- 屏幕没有变化时，`waitFor` 不会做模型调用。
+- 每次附带截图的调用都会增加输入 token。`act` 只在文本快照不够时才会请求截图。
+- [回放缓存](/cache)重跑通过的 `act` 步骤，全程无需模型调用。
+
+精确检查交给 `expect`，并让每个 `act` 只聚焦一个目标。提供者支持提示缓存时，`--debug` 会显示每步输入 token 的缓存命中比例。在[自定义执行器](/executors#执行器处理什么)之下，`assert` 按 `act` 的预算运行。
+
+## 机密值去了哪里
+
+对 `Secret` 类型的参数，模型只收到它的名称与用途。runner 会校验模型选中的字段，然后自己填入值。该值绝不进入提示词、转录、报告或 AI 链路。填写之后还有哪些变化，见[安全模型](/security#机密)。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="项目工具" icon="wrench" href="/tools">
+    用你自己的工具扩展词汇。
+  </Card>
+  <Card title="自定义执行器" icon="gears" href="/executors">
+    换上你的提示词保留循环，或把循环整个替换掉。
+  </Card>
+</CardGroup>

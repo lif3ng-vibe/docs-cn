@@ -1,0 +1,281 @@
+---
+title: 调试一次运行
+description: 阅读链路页，打开证据，观看浏览器画面，查看发给模型的内容。
+icon: "magnifying-glass"
+---
+
+先看终端里的失败信息，再打开它指名的链路页：其中记录了每一步，链接到截图、下载与录像，并在能够捕获时展示失败时的屏幕画面。想要看一次运行的整体概况，可加上 `markdown` 报告器，它会写出 `.e2e/summary.md`。
+
+## 阅读失败信息
+
+`list` 报告器的 `Failed Tests` 部分展示了错误内容、失败的代码行、失败定位器的邻近匹配、应用记录了多少错误，以及链路页：
+
+```text
+ FAIL  |web| tests/todos.e2e.ts > shows the remaining count
+LOCATOR_NOT_FOUND: locator did not become visible: getByRole("heading", name: "Todos")
+ ❯ tests/todos.e2e.ts:31:3
+ ❯ at http://127.0.0.1:4271/nope
+ ❯ app 2 errors, 2 warnings logged
+ ❯ trace .e2e/results/todos-shows-the-remaining-count-796fac5f12ab34cd/trace.md
+```
+
+退出码标识了失败类型：
+
+| 退出码 | 含义 | 是否重试任务？ |
+| ---: | --- | --- |
+| 1 | 测试失败 | 仅当测试本身不稳定时 |
+| 2 | 配置、收集或策略问题 | 先修复报告的问题 |
+| 3 | 引擎、应用进程、模型提供者或产物故障 | 若原因是暂时性的 |
+| 4 | runner 内部错误 | 请上报 |
+| 130 | 运行被中断 | |
+
+## 链路
+
+凡是跑到了测试的运行，都会在该测试的[结果目录](#产物)中为每个失败、超时、被中断或不稳定的测试写出一个链路页 `trace.md`，并删除上一次运行的页面。[`trace`](/reference/config#trace) 模式决定哪些测试保留链路页，默认值为 `retain-on-failure`。链路页会说明测试运行在什么之上（浏览器与 user agent，或设备）。每一步都列出它做了什么：动作落在哪个节点、断言在等待期间读到的值、回放缓存的决策、期间应用记录了什么（控制台输出、未捕获异常、失败的请求、4xx 与 5xx 响应）、页面去了哪里（`↪ navigated to /login`、新开标签页或框架），以及屏幕自上一步以来的变化。接下来是应用日志（最多 50 行，每行标注所在步骤，行数超出时错误与警告优先；每次尝试最多保留 200 条错误与警告和 100 行其他内容）、智能体最后几轮对话，以及失败时的屏幕画面：
+
+````markdown
+# ✗ todos › shows the remaining count
+
+`tests/todos.e2e.ts` · failed · 2.2s
+
+**ASSERTION_FAILED**
+
+```text
+expect.toHaveText failed
+locator: getByRole("status", name: "Remaining")
+expected: text "1 remaining"
+observed: text "0 remaining" (match count 1)
+```
+
+Ran on: browser `chromium 141.0.7390.37` · user agent `Mozilla/5.0 (Macintosh; …) HeadlessChrome/141.0.7390.37 Safari/537.36`
+
+Look at: `tests/todos.e2e.ts:15`
+
+## Steps
+
+1. ✓ `app.open` `/todos` (37ms in beforeEach) — `tests/todos.e2e.ts:4`
+2. ✓ `agent.act` "Add a todo named Milk." (429ms, 2 model calls) — `tests/todos.e2e.ts:12`
+   - cache: no replay: nothing recorded for this step yet; recording saved (`.e2e/cache/1227d5a6….json`)
+   - type "Milk" into textbox "New todo" (17ms)
+   - press "Enter" on the focused field (5ms)
+   - ✗ network error: `POST /api/todos 500 Internal Server Error`
+   - screen: 6 changes since step 1 at `/todos`, 38 nodes
+     - `added listitem "Milk Delete Milk" testid="todo"`
+     - `added checkbox "Milk"`
+     - `changed status "Remaining" text="1 remaining" (was: status "Remaining" text="0 remaining")`
+     - 3 more
+3. ✓ `locator.check` `getByLabel("Milk")` (13ms) — `tests/todos.e2e.ts:14`
+   - check checkbox "Milk" (13ms)
+   - screen: 3 changes since step 2 at `/todos`, 38 nodes
+     - `added checkbox "Milk" [checked]`
+     - `changed status "Remaining" text="0 remaining" (was: status "Remaining" text="1 remaining")`
+     - `removed checkbox "Milk"`
+4. ✗ `expect.toHaveText` `getByRole("status", name: "Remaining")` (1.6s) — **ASSERTION_FAILED** — `tests/todos.e2e.ts:15`
+   - expect gave up after 16 reads in 1.6s: text "0 remaining" (1 match) x16
+
+## App log
+
+What the app logged, oldest first, with the step it happened in.
+
+- step 2 · ✗ network error: `POST /api/todos 500 Internal Server Error`
+
+## Screen at failure
+`http://127.0.0.1:4271/todos` · viewport 1280x720 · 38 nodes
+
+![screenshot at failure](attempt-1/screenshots/001-failure.png)
+
+```text
+#n29 textbox "New todo"
+#n30 button "Add"
+ #n35 listitem "Milk Delete Milk" testid="todo"
+  #n36 checkbox "Milk" [checked]
+#n40 status "Remaining" text="0 remaining"
+```
+````
+
+链路页会从其所在目录链接截图与该次尝试的其他文件，因此可以直接从编辑器的 markdown 预览里打开。
+
+断言全程只读到同一个值，说明期望本身写错了，或者应用从未到达该状态（去应用日志里查失败的请求）；如果读到的值在变化（`"2 remaining" x3 -> at 410ms "1 remaining"`），则是断言在和应用赛跑。一个步骤的屏幕画面是它最后看到的画面：web 上是动作结束后的画面；设备上则是该步骤所操作的画面。动作之后出现 `screen: unchanged` 表示该动作没有产生可见效果。每次失败的尝试中，runner 最多花 5 秒捕获屏幕画面与截图；应用未能及时响应时就没有屏幕部分。CI 会随报告一并上传这些页面；参见 [CI](/ci)。
+
+`--trace` 为一次运行中的每个测试（包含通过的，标题带 `✓`）各保留一个页面；`--trace off` 则全部不写。测试自身的 `trace` 选项优先于两者。
+
+## 供脚本使用的 report.json
+
+凡是跑到了测试的运行还会写出 `.e2e/report.json`，以带版本的 schema 承载与链路页相同的数据，面向脚本与集成，而非供人阅读。`--reporter json` 会将其打印到 stdout：
+
+```bash
+jq '.run | {status, exitCode, errors}' .e2e/report.json
+jq '.run.results[] | select(.status != "passed") | {titlePath, file, status}' .e2e/report.json
+jq '.run.results[] | select(.status != "passed") | .attempts[-1]
+    | {status, error, failure, steps: [.steps[] | select(.status != "passed") | {api, label, source, status, error}], artifacts}' .e2e/report.json
+```
+
+先检查 `run.errors` 中的运行级失败，再看每个失败结果的最后一次尝试：
+
+- `error` 包含错误码、消息、源代码行与断言细节。
+- `failure` 指明屏幕画面与截图产物，以及定位器候选。
+- `steps` 展示导致失败的调用。每一步的 `events` 记录它做了什么（`engine`）、轮询了什么（`poll`）、应用去了哪里（`navigation`）；智能体步骤还会附加 `cache` 与最近的模型对话轮次。
+- `appLog` 保存应用记录的日志；每行的 `step` 是事件所在步骤的 `index`，第一步之前发生的内容则没有该字段。
+- `artifacts` 列出捕获到的文件。
+
+## 产物
+
+每个测试都会在 `.e2e/results/` 下得到一个目录（若 [`output`](/reference/config#output) 被改动则为 `<output>/results/`），其中存放它的链路页，以及每次尝试对应的 `attempt-<n>`；串行组内的测试共享该组的目录存放各自的尝试：
+
+```text
+.e2e/results/todos-adds-a-todo-1a2b3c4d5e6f7a8b/trace.md
+.e2e/results/todos-adds-a-todo-1a2b3c4d5e6f7a8b/attempt-1/screen-at-failure.txt
+.e2e/results/todos-adds-a-todo-1a2b3c4d5e6f7a8b/attempt-1/screenshots/001-failure.png
+```
+
+每次运行都会先清空 `results/`，因此其中只保留最近一次运行的证据。`--last-failed` 重跑则不同：它会把目录清空到只剩它重跑的那份报告所指名的文件，并把自身的尝试写到每个测试的 `rerun-<n>/` 下：
+
+- **截图**：失败的尝试中，只要引擎有能力且允许像素，就会捕获一张。内置的 `agent.assert` 在两种判定之后也各捕获一张，除非 `screenshot: false` 禁用了它。捕获可能失败，也可能被扣留。可用 `app.screenshot('label')` 显式捕获一张。
+- **下载文件**：通过 `browser.waitForDownload` 保存，以 `download` 类型记录。它们是应用的原始字节：`redaction: "incomplete"`——除非会话掌握了某个机密值且文件为文本，此时 runner 会改写该文件并标记为 `complete`。
+- **录像**与**智能体转录**（agent transcript）：按需开启，见下文。
+
+填写机密之后，该次尝试的剩余部分不再截图；参见[填写机密后的截图](/security#机密填充后的截图)。
+
+录像不做任何遮蔽，始终标记为 `redaction: "incomplete"`。全部脱敏限制参见[安全模型](/security#脱敏的边界)。
+
+## 观看运行过程
+
+<CodeGroup>
+```bash npm
+npx e2e run --headed                      # 可见的浏览器窗口
+npx e2e run --video                       # 录制每次尝试
+npx e2e run --video=retain-on-failure     # 录制每次尝试，保留失败的
+```
+
+```bash pnpm
+pnpm exec e2e run --headed                      # 可见的浏览器窗口
+pnpm exec e2e run --video                       # 录制每次尝试
+pnpm exec e2e run --video=retain-on-failure     # 录制每次尝试，保留失败的
+```
+
+```bash bun
+bunx e2e run --headed                      # 可见的浏览器窗口
+bunx e2e run --video                       # 录制每次尝试
+bunx e2e run --video=retain-on-failure     # 录制每次尝试，保留失败的
+```
+</CodeGroup>
+
+每段录像都保存在对应尝试的产物目录下。Playwright 写 WebM，该尝试打开的每个页面各一个文件；agent-device 写 MP4。失败摘要会打印录像路径，或托管浏览器所存录像的 URL。每段录像都带有 `startedAt`，因此用步骤的 `startedAt` 减去录像的，就是该步骤在视频中的位置。
+
+不想加旗标，也可以在配置里设置 `video`。`on-first-retry` 是省钱的 CI 模式：首次就通过的测试什么也不录，不稳定的测试则会留下重试的录像。
+
+```ts
+export default {
+  video: 'on-first-retry',
+  retries: 1,
+  targets: [
+    { name: 'chromium', engine: web(), app: { url } },
+    { name: 'firefox', engine: web({ browser: 'firefox' }), app: { url }, video: 'retain-on-failure' },
+  ],
+} satisfies E2EConfig;
+```
+
+target 的 `video` 优先于全局配置，`--video` 又优先于前者，测试自身的选项则优先于以上全部——这样可以只录制你正在追查的那一个流程，而不录制整个套件：
+
+```ts
+test('checkout', { video: 'on' }, async ({ agent }) => {
+  await agent.act('Buy the first product in the catalog');
+});
+```
+
+`--video [mode]` 接受一个可选值，因此要么把测试文件放在它前面，要么写成 `--video=<mode>`。该旗标与配置里的 `video` 只作用于引擎能录制的 target，其余 target 会以一条提示列出。设在 target 或测试上的模式属于强制要求：引擎无法录制该模式时，运行会在任何测试开始之前以 `UNSUPPORTED_ARTIFACT` 失败。各种模式与文件详见[录制](/reference/config#录制)。
+
+## 控制台输出
+
+测试内的 `console.log` 与 `console.error` 会随测试运行即时打印，位于实时视图上方，标题注明输出流、target、文件与测试：
+
+```text
+stdout | web tests/todos.e2e.ts > adds a todo
+hello from the test
+```
+
+来自测试之外的输出（比如测试文件顶层或报告器的输出）会打印在 `stdout | runner` 或 `stderr | runner` 之下。两个流都打印到 stdout，在管道或 CI 日志里同样如此。不使用 `list` 报告器时，输出按写入原样送往各自的流。
+
+机密值会被[脱敏](/security#脱敏)。配置加载期间打印的输出，会在配置加载完成后、运行标头之前出现；若加载失败，这批输出会被丢弃并代之以一条警告。其余每行输出都在写入时即时出现。这些输出不属于报告；后续读者需要的任何内容，请用 `expect` 或产物来承载。
+
+## 智能体步骤
+
+用以下旗标检查智能体的行为：
+
+<CodeGroup>
+```bash npm
+npx e2e run --debug     # 在 stderr 上输出耗时与步骤表
+npx e2e run --ai-trace  # 记录每次模型调用，供链路查看器查看
+npx e2e run --no-cache  # 让智能体实时运行而非回放
+```
+
+```bash pnpm
+pnpm exec e2e run --debug     # 在 stderr 上输出耗时与步骤表
+pnpm exec e2e run --ai-trace  # 记录每次模型调用，供链路查看器查看
+pnpm exec e2e run --no-cache  # 让智能体实时运行而非回放
+```
+
+```bash bun
+bunx e2e run --debug     # 在 stderr 上输出耗时与步骤表
+bunx e2e run --ai-trace  # 记录每次模型调用，供链路查看器查看
+bunx e2e run --no-cache  # 让智能体实时运行而非回放
+```
+</CodeGroup>
+
+`--debug` 会在报告器输出之后附加两张表：一份是运行各阶段的耗时，另一份是每个智能体步骤一行的明细——包含耗时、模型调用数、token 数、提示缓存占比，以及提供者有报告时的费用。每个计划出的步骤还会把其模型转录保存为产物。
+
+```console
+[e2e debug] agent steps (execution order, model anthropic/claude-sonnet-4.5, total $0.0312)
+  step                                   total   model  observe  action  calls  tokens in/out  cached       cost
+  act "add a todo named groceries"       3.9s    2.8s    410ms   620ms      3  9412/388       61% (5740)   $0.0198
+  assert "the list shows groceries"      1.2s    1.1s     88ms     0ms      1  3120/41        0% (0)       $0.0114
+```
+
+`--ai-trace` 会把模型的请求与响应写入 `.e2e/ai-trace.json`。用 [unbox-ai](https://github.com/tester-army/unbox-ai) 读取它，以检视提示词、工具调用与 token 用量：
+
+<CodeGroup>
+```bash npm
+npx unbox-ai runs .e2e/ai-trace.json
+npx unbox-ai summary .e2e/ai-trace.json --run 1
+```
+
+```bash pnpm
+pnpm dlx unbox-ai runs .e2e/ai-trace.json
+pnpm dlx unbox-ai summary .e2e/ai-trace.json --run 1
+```
+
+```bash bun
+bunx unbox-ai runs .e2e/ai-trace.json
+bunx unbox-ai summary .e2e/ai-trace.json --run 1
+```
+</CodeGroup>
+
+每个智能体步骤在 AI 链路中呈现为一次 run，每次模型调用对应一个条目。其中包含发送给模型的脱敏输入；图像字节一律替换为字节数。请用 unbox-ai 检视，而不是直接去读庞大的原始 JSON 文件。
+
+被回放的步骤不会调用模型，也不会留下 AI 链路。需要检视整个流程或排除过期录制时，加上 `--no-cache`。参见[回放缓存](/cache)。
+
+## 常见错误
+
+| 代码 | 常见原因 | 修复方法 |
+| --- | --- | --- |
+| `APP_UNREACHABLE` | `app.url` 上没有任何响应，或 `app.command` 一直未能就绪；在设备上，消息指名的可能是 iOS 自动化 runner（忙碌、卡死，或无法呈现某个快照） | 设置 `app.command.log` 并查看；检查端口；调大 `app.command.startupTimeout`。对 runner，按消息中的恢复方法处理：`npx agent-device daemon stop`，重启模拟器（参见 [Mobile](/mobile#故障排除)） |
+| `APP_ALREADY_RUNNING` | runner 想启动 `app.command` 时，`app.url` 已有服务在监听 | 先停掉它，或本地运行时设置 `reuseExisting: true` |
+| `LOCATOR_NOT_FOUND` | 角色或名称不对、文本不精确、元素在 iframe 内、页面未打开 | 从标记中读取无障碍名称；尝试 `exact: false`；iframe 用 `browser.frameLocator`；加 `--headed` 亲眼看 |
+| `LOCATOR_AMBIGUOUS` | 匹配到两个：隐藏的重复元素，或重复的标签 | 加 `{ name }`、在容器下收窄范围、用 `filter`、`first()` 或 `{ visible: true }` |
+| `ASSERTION_FAILED` | 期望本身不对，或状态在 5 秒之后才稳定；对 `agent.assert` 而言是判定结果为假 | 对照截图；在匹配器上加 `{ timeout }`；换一种问法 |
+| `ASSERTION_INCONCLUSIVE` | `agent.assert` 所问、或 `agent.extract` 所要的内容屏幕上没有：值在另一个页面、仍在加载，或只存在于像素中 | 先打开或等待正确的屏幕；只问可见的内容；答案在像素里时加 `vision: true`（判定模型只读了树结构时消息会说明这一点） |
+| `ACTION_FAILED` | 元素被遮挡、禁用或已脱离，或某次操作超时 | 先用 `expect` 等待正确的条件；关掉浮层 |
+| `STEP_BUDGET_EXHAUSTED`, `STEP_TIMEOUT` | 智能体的动作数、模型调用数或时间耗尽 | 把目标收敛到一步。预算不足就调大智能体条目的 `maxSteps` 或 `maxModelCalls`；`act` 步骤超时则调大配置的 `timeout`；`assert`、`waitFor` 和 `extract` 调大智能体的 `judgmentTimeout` |
+| `MODEL_UNAVAILABLE` | 配置中没有任何模型构造成功 | 参见[模型](/models) |
+| `MODEL_PROVIDER_FAILED` | 密钥无效、触发限流、无剩余额度，或同一请求的全部尝试在 120 秒内都未得到响应 | 检查提供者读取的密钥与配额；本地模型太慢时，可减小屏幕尺寸（`agents.<name>.maxObservationBytes`）或换更快的模型 |
+
+全部错误码、对应的错误类与退出码，见[错误参考](/reference/errors)。
+
+<CardGroup cols={2}>
+  <Card title="CLI 参考" icon="terminal" href="/reference/cli#e2e-run">
+    `e2e run` 的全部旗标。
+  </Card>
+  <Card title="错误" icon="triangle-exclamation" href="/reference/errors">
+    全部错误码。
+  </Card>
+</CardGroup>

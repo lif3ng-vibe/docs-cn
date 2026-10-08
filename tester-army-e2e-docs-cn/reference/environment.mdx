@@ -1,0 +1,111 @@
+---
+title: 环境变量
+description: runner 与第一方引擎读取的每一个变量，以及各自的作用。
+icon: "dollar-sign"
+---
+
+这些变量配置 runner 与第一方包。下表中，`set` 表示变量存在，`value` 表示非空，
+`flag` 表示非空、非 `0` 且非 `false`。flag 值不区分大小写。
+
+## 模型
+
+在 `e2e.config.ts` 中配置模型。其提供者读取 API key：`gateway()` 用
+`AI_GATEWAY_API_KEY`，`openrouter()` 用 `OPENROUTER_API_KEY`，`openai()` 用
+`OPENAI_API_KEY`。没有 `AI_GATEWAY_API_KEY` 时，`gateway()` 使用
+[Vercel OIDC token](/models#用-vercel-oidc-代替密钥)。凭据缺失会在第一次
+模型调用时失败。订阅模型改用已保存的登录。
+参见[模型](/models)与[订阅](/subscriptions)。
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `E2E_OAUTH_CREDENTIALS` | value | 已存订阅登录的 JSON，即 `oauth.json` 的内容，用于无人能登录的机器。`e2e/oauth/*` 模型与 `e2e models` 读取它以代替 `$XDG_CONFIG_HOME/e2e/oauth.json`；`e2e login` 与 `e2e logout` 拒绝改动它，刷新后的 token 也不会写回 |
+| `OPENCODE_API_KEY` | value | OpenCode Console 的服务账号 key；`opencodeConsole()` 用它代替已存的 `opencode-console` 登录；`e2e models` 仍读取已存登录。OpenCode 也读取同一变量 |
+| `XDG_CONFIG_HOME` | value | 已存登录所在目录，即 `$XDG_CONFIG_HOME/e2e/oauth.json`；默认 `~/.config/e2e/oauth.json` |
+
+## 凭据与机密
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `E2E_USER_<NAME>_USERNAME` | set | 替换 `credentials.<name>.username` |
+| `E2E_USER_<NAME>_PASSWORD` | set | 替换 `credentials.<name>.password` |
+| `E2E_SECRET_<NAME>` | set | 替换 `secrets.<name>` 的值 |
+
+`<NAME>` 是名字全大写、且把 `A-Z0-9` 之外的每个字符换成 `_`，因此
+`power-user` 变成 `E2E_USER_POWER_USER_USERNAME`。两个凭据（或两个机密）若映射
+到同一个 `<NAME>`（`api-key` 与 `api_key` 都读 `E2E_SECRET_API_KEY`；`svc-a` 与
+`svc_a` 都读 `E2E_USER_SVC_A_USERNAME` 与 `_PASSWORD`），配置加载时是
+`INVALID_CONFIG`，无论变量是否设置——这样一次轮换绝不会顶掉两个条目；消息会
+指名涉及的条目与变量。凭据与机密可以同名，因为前缀不同。配置里不存在的名字
+所对应的变量被忽略。空值是 `INVALID_CONFIG`，短于 6 字符（码点）的密码或机密
+同样如此：脱敏会重写值的每一处出现，值太短会把普通文本一起吞掉。
+
+## 运行模式
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `CI` | flag | CI 模式：`retries` 默认 1、`workers` 默认 1，`cache` 默认 `read-only`，focused 测试报 `ONLY_IN_CI`，应用命令上的 `reuseExisting` 被忽略 |
+
+## 诊断
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `NO_COLOR` | set | 纯文本 CLI 输出。否则 TTY 或 CI 上有颜色，管道输出无颜色 |
+| `FORCE_COLOR` | set | 即使管道输出也为 CLI 着色 |
+| `TERM` | value | `dumb` 时静态绘制 `e2e init` 字标、不带动画，与 CI 中一样 |
+| `GITHUB_SHA`, `GITHUB_HEAD_REF`, `GITHUB_REF_NAME` | value | `git` 读不了项目根时，报告记录在 `run.vcs` 下的提交与分支。`GITHUB_HEAD_REF` 优先于 `GITHUB_REF_NAME` |
+
+`--debug` 与 `--ai-trace` 是旗标不是变量；参见 [CLI](/reference/cli#e2e-run)。
+
+## 遥测
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `E2E_TELEMETRY_DISABLED` | flag | 关闭匿名使用遥测。`e2e telemetry disable` 会把同样的选择存进偏好文件 |
+| `DO_NOT_TRACK` | flag | 与 `E2E_TELEMETRY_DISABLED` 相同 |
+| `E2E_TELEMETRY_DEBUG` | flag | 把每条遥测事件打印到 stderr，而不是发送 |
+| `E2E_TELEMETRY_FLEET` | value | 指名为 e2e 用户提供服务的平台；事件归属 `fleet:<name>` 而非每机 id，不写偏好文件，也不打印提示。非普通 token 的值会以 `other` 发送 |
+| `XDG_CONFIG_HOME` | value | 偏好文件所在目录，即 `$XDG_CONFIG_HOME/e2e`；默认 `~/.config/e2e` |
+| `APPDATA` | value | Windows 上同理，`%APPDATA%\e2e`；默认 `~/AppData/Roaming/e2e` |
+
+遥测还会检查 CI 厂商与编码智能体设置的标记。只发送派生出来的名字。
+
+| 标记 | 上报为 |
+| --- | --- |
+| `GITHUB_ACTIONS`, `GITLAB_CI`, `CIRCLECI`, `BUILDKITE`, `JENKINS_URL`, `TRAVIS`, `BITBUCKET_BUILD_NUMBER`, `TF_BUILD`, `TEAMCITY_VERSION`, `CODEBUILD_BUILD_ID`, `VERCEL`, `NETLIFY`, `DRONE`, `SEMAPHORE`, `APPVEYOR`, `WOODPECKER` | `ci_name`: `github-actions`, `gitlab`, `circleci`, `buildkite`, `jenkins`, `travis`, `bitbucket`, `azure-pipelines`, `teamcity`, `aws-codebuild`, `vercel`, `netlify`, `drone`, `semaphore`, `appveyor`, `woodpecker`；只设 `CI` 时为 `unknown` |
+| `CLAUDECODE`, `CLAUDE_CODE`, `CURSOR_AGENT`, `CURSOR_TRACE_ID`, `CODEX_SANDBOX`, `CODEX_THREAD_ID`, `CODEX_CI`, `GEMINI_CLI`, `COPILOT_GITHUB_TOKEN`, `COPILOT_MODEL`, `COPILOT_ALLOW_ALL`, `OPENCODE_CLIENT`, `AUGMENT_AGENT`, `ANTIGRAVITY_AGENT`, `REPL_ID`, `AI_AGENT` | `coding_agent`: `claude-code`, `cursor`, `codex`, `gemini-cli`, `copilot`, `opencode`, `augment`, `antigravity`, `replit`, `other` |
+| `WSL_DISTRO_NAME` | `wsl: true` |
+| `npm_config_user_agent` | `package_manager`: 调用方包管理器。`e2e init` 读取同一变量以挑选 install 命令 |
+
+发送了什么、如何解读，见[遥测](/telemetry)页。
+
+## 报告器
+
+`@e2e-dev/github` 在一次运行结束时读取 GitHub Actions 设置的变量：
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `GITHUB_ACTIONS` | value | 没有它时，报告器什么都不发帖，并说明缘由 |
+| `GITHUB_REPOSITORY`, `GITHUB_RUN_ID`, `GITHUB_EVENT_NAME`, `GITHUB_WORKFLOW`, `GITHUB_JOB` | value | runner 总会设置；作业缺了其中之一会让报告器失败，并指名该变量。repository 与 run id 构成产物链接；event name 出现在"不是拉取请求"那一行；workflow 与 job 参与标记，使重跑能找到自己的评论 |
+| `GITHUB_TOKEN`, `GH_TOKEN` | value | 发帖所用的 token；已设置的第一个优先。未设置时仍会写出 job 汇总 |
+| `GITHUB_EVENT_PATH`, `GITHUB_REF` | value | 来自事件 payload 的拉取请求编号与 head 提交，或来自 `refs/pull/N/merge` 的编号 |
+| `GITHUB_SHA` | value | 事件与拉取请求无关时，源码链接指向的提交 |
+| `GITHUB_WORKSPACE` | value | 检出根；源码链接在其上补项目的内部路径，因此子目录里的套件能链接到正确的文件 |
+| `GITHUB_SERVER_URL`, `GITHUB_API_URL` | value | GitHub 主机，供 Enterprise Server 使用；默认 `https://github.com` 与 `https://api.github.com` |
+| `GITHUB_STEP_SUMMARY` | value | 评论文字追加其上的 job 汇总文件 |
+
+## 引擎
+
+| 变量 | 读取条件 | 作用 |
+| --- | --- | --- |
+| `PLAYWRIGHT_BROWSERS_PATH` | value | Playwright 的浏览器缓存，engine 的 `prepare` 钩子会遵循它 |
+| `PLAYWRIGHT_SKIP_BROWSER_GC` | value | engine 安装浏览器时默认为 `1`，从而保留缓存中的其他浏览器。设 `0` 让安装清掉它们 |
+| `KERNEL_API_KEY` | value | `@e2e-dev/kernel` 的 `kernel()` 创建浏览器所用的 API key；未设置时浏览器租用失败。参见 [Kernel](/integrations/kernel) |
+| `EXPO_TOKEN` | value | `@e2e-dev/eas` 的 `easSimulators()` 启停模拟器会话所用的 Expo 访问 token；未设置时改用 `HOME`（Windows 为 `USERPROFILE`）下 `.expo/state.json` 中的 eas-cli 登录；两者皆无时设备租用失败。参见 [EAS Simulators](/integrations/eas) |
+| `HOME`, `USERPROFILE` | value | `EXPO_TOKEN` 未设置时，`easSimulators()` 寻找 eas-cli 登录的家目录：Windows 用 `USERPROFILE`，其他用 `HOME`；都未设置时用系统用户主目录 |
+| `E2E_AGENT_DEVICE_POOL_<TARGET>_<digest>` | value | 由 `@e2e-dev/mobile` 在 `prepare` 中写入、每个 worker 读取以找到自己已启动的设备。并非供手工设置 |
+
+## 应用进程继承什么
+
+应用 `command` 收到 `PATH`、`HOME`、`TMPDIR`、`TMP`、`TEMP`、`SystemRoot` 与
+`COMSPEC`，外加 `command.env` 设置的一切。`APP_URL` 由脚手架生成的配置模块
+读取，而不是 runner；若开发服务器也需要它，请经 `command.env` 传入。

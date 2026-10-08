@@ -1,0 +1,501 @@
+---
+title: 移动端
+description: iOS 和 Android 的移动引擎选项与 device fixture。
+icon: "mobile-screen"
+---
+
+`@e2e-dev/mobile` 通过
+[agent-device](https://github.com/callstack/agent-device) 驱动 iOS 模拟器、
+Android 仿真器和已连接的实体手机。`agent`、`app`、`screen` 和 `expect` 的
+行为与其他平台一致；本页只讲设备 target 特有的内容。从该包导入 `test` 即可
+获得带类型的 `device`，并在也要跑 web 的套件里声明 `requires: ['device']`。
+
+在 `e2e init` 里选 **Mobile (iOS/Android)** 即可连同 Settings 示例一起添加
+该包。iOS 需要 Xcode 和一台模拟器；Android 需要 Android SDK 和一台仿真器。
+
+该包内置了配套版本的 `agent-device`；无需单独安装。
+
+## 引擎
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { mobileTools } from '@e2e-dev/mobile/tools';
+import { gateway } from 'ai';
+
+const iphone = mobile({ platform: 'ios' });
+const pixel = mobile({ platform: 'android' });
+
+export default {
+  targets: [
+    { name: 'iphone', engine: iphone, app: { bundleId: 'Settings' } },
+    { name: 'pixel', engine: pixel, app: { bundleId: 'com.android.settings' } },
+  ],
+  workers: 1,
+  agents: {
+    default: {
+      model: gateway('openai/gpt-6-luna-fast'),
+      tools: mobileTools(iphone, pixel),
+    },
+  },
+} satisfies E2EConfig;
+```
+
+每个要测试的平台各建一个引擎。带有平台专属标签或操作的测试，请用
+`platforms: ['ios']` 或 `platforms: ['android']`。`app.open()` 全新启动
+target 的应用；尝试自身不会启动任何东西，因此一个测试始于上一个测试离开
+应用之处。设备上 `app.open` 不接受路径：链接要经 `device.openLink` 打开。
+
+被测应用是 target 的 `app`，不是引擎选项：`bundleId`、`appPath`、
+`launchArguments`、`permissions`、`identity` 和 `environment` 的文档见
+[被测应用](/reference/config#被测应用)。设备 target 需要
+`app.bundleId` 或 `app.appPath`。`app.url`（尚不支持）、在 `bundleId` 里填
+链接（测试要用 `device.openLink` 打开链接）以及未知的权限名都会在配置加载时
+报 `INVALID_CONFIG`。`mobile({ app })` 与其他旧的 app 选项会失败、并指名其
+在 `app` 之下的那道键。
+
+`app.appPath` 是套件所针对的构建。引擎不会自行安装：无路径的
+`device.installApp()` 会在套件指定之处为每台设备安装一次，设备提供者则会把
+它装在其租用的设备上。没有 `bundleId` 时，安装所得的 bundle id 或包名就成
+为 `app.open()` 启动的应用。构建路径每次运行都会变（比如内嵌版本号）时请
+声明 `identity`，让录制不受改名影响。
+
+`mobile()` 只接受设备驱动方式相关的内容：
+
+```ts
+/**
+ * Options of the device engine: which devices it drives and how. The app
+ * under test is the target's `app` (`bundleId`, `appPath`,
+ * `launchArguments`, `permissions`). Every optional value also accepts
+ * `undefined`, so values read straight from `process.env` need no
+ * conditional spread.
+ */
+export interface MobileOptions {
+  /** Platform the target's device runs. */
+  readonly platform: MobilePlatform;
+  /**
+   * Device to use: a simulator or emulator by name, simulator UDID, or
+   * emulator serial (`emulator-5554`), or a connected phone by name. A list
+   * is a pool: the
+   * engine declares one worker per entry and worker slot `n` drives the
+   * `n`th, so `workers` at or above the pool size runs the target's files
+   * across every device at once. Omitted, the pool is every booted device of
+   * the platform at `prepare`, as many as the run has slots; with none booted,
+   * agent-device boots one. A `DeviceProvider` leases hosted devices instead:
+   * one per worker slot at `prepare`, each driven through the daemon and
+   * client configuration the lease names, all released when the run ends.
+   */
+  readonly device?: string | readonly string[] | DeviceProvider | undefined;
+  /**
+   * agent-device session name, before the worker slot: slot `n` drives its
+   * device under `<session>-<n>`, `e2e-<target name>-<n>` by default. One run
+   * per session at a time: concurrent runs on the same session interleave
+   * taps.
+   */
+  readonly session?: string | undefined;
+  /**
+   * What an observation captures. `full` (default) includes static text, so
+   * judgments can read values; `interactive` keeps only actionable nodes and
+   * is cheaper on screens with long lists.
+   */
+  readonly snapshot?: 'full' | 'interactive' | undefined;
+  /**
+   * UI stability window after a tap, fill, screen scroll, or back, in
+   * milliseconds. Default 150. Raise it for slow transitions. `0` keeps only
+   * the first re-observation; `false` skips the wait.
+   */
+  readonly settle?: number | false | undefined;
+  /**
+   * Wait before acting on a control that just appeared or moved, in
+   * milliseconds. Default 500. Accessibility bounds cannot tell a sliding
+   * control from a landed one (iOS reports the final frame at once, Android
+   * the frame in flight), so the control is found again in a fresh snapshot
+   * once the wait is over and acted on where it landed. Unmoved controls are
+   * acted on immediately. Raise this for slower transitions.
+   */
+  readonly transition?: number | undefined;
+  /**
+   * Whether video recordings draw agent-device's touch indicator where a
+   * test tapped. Default `true`. `false` records the plain screen and skips
+   * drawing the indicator when the recording stops, which on a hosted daemon
+   * such as EAS Simulators' can outlast `cleanupTimeout`.
+   */
+  readonly videoTouches?: boolean | undefined;
+}
+
+/** A permission's state: held, refused, or not asked for yet, so the OS asks again. */
+export type PermissionState = 'grant' | 'deny' | 'reset';
+
+/** Permissions an app holds when it launches, by name. */
+export type LaunchPermissions = Readonly<Partial<Record<DevicePermission, PermissionState>>>;
+```
+
+空的 `device` 列表是 `INVALID_CONFIG`；`mobile()` 不接受的选项同样如此——
+疑似拼写错误时指名最接近的已知选项，否则列出全部选项。`device` 提供者对象
+租用托管设备；`DeviceProvider` 契约与示例提供者见[托管设备](/mobile#托管设备)。
+
+设备在 `prepare` 中启动——每场运行一次、在运行开始计时之前，因此 CI 上的
+冷启动绝不会计入 `launchTimeout`。agent-device 命令不接受中止信号，因此
+超时的命令会继续在设备上运行；下一次尝试会等它落定。在 iOS 上，`prepare`
+用 agent-device 的 `prepare ios-runner` 在每台设备上启动自动化 runner，把
+它的首次启动开销在第一个测试之前付掉；然后当 target 的 `app.bundleId` 已
+安装时，每台设备一次地把它拉起；套件自行安装的构建则由第一次 `app.open()`
+拉起——测试要求时它总会全新重启该应用。`prepare` 里没能启动的 runner 会被
+记录并留给第一次尝试处理，且该设备的应用不会在那次尝试中打开。
+
+`app.launchArguments` 和 `app.permissions` 搭在固定应用的每次全新启动上：
+`app.open()`、`app.restart()` 和 `app.clearState()`——后者在清数据的同时
+重置权限。iOS 把参数交给应用进程（`ProcessInfo.processInfo.arguments`）；
+Android 把它们附加到 `am start`，因此 `['--ez', 'e2e', 'true']` 是一个布尔
+intent extra。`deny` 在 iOS 上是一次记录在案的拒绝——应用不弹窗就直接被
+告知不许；在 Android 上则是一次吊销——应用再次请求权限时系统会重新询问。
+权限在应用启动之前设置，因为 iOS 会终止权限发生了变化的应用进程，Android
+会终止权限被吊销的应用进程。agent-device 把权限设在它当前会话所在的应用上
+，而只有一次 open 才会让会话落在一个应用上：`prepare` 里的预热 open 就是在
+worker 即将续用的会话之下完成的，因此 worker 的启动会立刻带上这些权限。没有
+`prepare` 的运行、`device.closeApp` 之后的首次启动、以及该会话尚未打开过的
+应用，都会先获得一次前台打开；那次 open 是任何权限都无法抢在其中的进程启动
+，其后的重启就带着权限了。预热不传任何 launch argument，也不碰任何权限。
+`device.openApp(app, { relaunch: true, launchArguments, permissions })` 对
+任意应用的某一次启动做同样的事。不属于 `DevicePermission` 的权限名（疑似
+拼写错误时指名最接近的一个）或不是 `grant`、`deny`、`reset` 的状态，都会在
+任何设备命令之前失败：在 `app.permissions` 中是 `INVALID_CONFIG`，在
+`device.openApp` 中是 `INVALID_ARGUMENT`。
+
+引擎为每台已配置的设备声明一个 worker。没有 `device` 时，`prepare` 使用它
+找到的已启动设备（以运行的槽位数为上限），一台都没有就再启动一台。两个
+worker 绝不会驱动同一台模拟器。要把一个 target 的文件拆分到多台设备，请
+传入设备池并把 `workers` 设为不低于其数量。
+
+```ts
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+const iphones = mobile({
+  platform: 'ios',
+  device: ['iPhone 17', 'iPhone 17 Pro'],
+});
+
+export default {
+  targets: [{ name: 'ios', engine: iphones, app: { bundleId: 'com.example.app' } }],
+  workers: 2,
+} satisfies E2EConfig;
+```
+
+### 能力
+
+| 契约成员 | 在设备上 |
+| --- | --- |
+| `observe` | 带 rect 的辅助功能树。iOS：`Button` 映射为 `button`，`TextField` 和 `SearchField` 为 `textbox`，`SecureTextField` 为安全 `textbox`，`Cell` 为 `listitem`，`StaticText` 为 `text`，`Switch` 为带 `checked` 的 `switch`，`TabBar` 和 `SegmentedControl` 为 `tablist`、其内部按钮为 `tab`，`ProgressIndicator` 为 `progressbar`，`ActivityIndicator` 为 `status`，`Stepper` 为 `spinbutton`，`Toolbar`、`Menu` 和 `RadioGroup` 分别为 `toolbar`、`menu` 和 `radiogroup`。Android：`TextView` 为 `text`；`EditText` 为 `textbox`，被 UIAutomator 标为 `password` 的与 `SecureTextField` 一样算安全 `textbox`；`Switch` 和 `CheckBox` 保持原有 role，`RadioButton` 为 `radio`，各带设备上报的 `checked` 状态；布局是 `group`；`RecyclerView` 和 `AbsListView`（React Native 的 `FlatList`）是 `list`；`TabLayout` 和 `BottomNavigationView` 为 `tablist`、其条目为 `tab`；`ProgressBar` 为 `progressbar`；`NumberPicker` 为 `spinbutton`；`Toolbar` 与 `RadioGroup` 保持原名。其他任何类型按原字样保留并转小写（如 `picker-wheel`），因此不对应词汇表中的任何 role——除非平台标记它可编辑，那样它就成为 `textbox`。iOS 上的 React Native 没有 `checkbox`、`radio` 等若干 role 的 trait，而是把 role 和状态写进辅助功能值（`checkbox, unchecked`、`radio button, checked`）；这类节点取该 role，`checked` 与 `expanded` 取自其中的状态词，且只把状态词之后的部分上报为值。iOS 的字段保留与其 label 相同的值（无 label 的字段以其文本命名）；Android 上文本视图把 label 回显为值的情况会被丢弃。辅助功能标识符（iOS）或 resource id（Android）就是节点的 `testId`。Android 节点以其应用设置的 content description（React Native 的 `accessibilityLabel`）命名，否则以其文本命名，而其 `text` 就是它显示的内容，因此带 label 的文本视图或已填值的字段对 `getByLabel` 按 label 作答、对 `getByText` 按文本作答；被标为标题的视图是 `heading`，React Native 为 Android 没有对应类的 role 写出的 role 描述（`Tab`、`Tab List`、`Radio Group`）会让节点获得该 role。字段的提示文本就是其 `placeholder` 属性，无论是否显示。有一个 Android 相关事实属于 agent-device 而非平台本身：`rect` 与所有点都是屏幕物理像素，它上报的显示密度尚未被应用。Android 的状态栏和导航栏——沿屏幕边缘的全宽 `com.android.systemui` 窗口，以及 agent-device 在该边缘带内单独上报的窄幅状态图标（时钟、信号、电池）——会被排除在外；通知栏、系统对话框，以及从两侧内缩的横幅通知或其他弹窗则保留。像素按需提供，每个安全节点的边界都涂成黑色。 |
+| `perform` | 可编辑字段上的 `tap`、`doubleTap`、`longPress`、`fill`、`clear`、`hover`、`check`、`uncheck`、`press`（`Enter` 或单个字符）、`swipe`、`dragTo` 与 `focus`。对 `switch` 或 `checkbox` 的点按落在其最内层控件上，因为 UIKit 会把一个设置行上报为带 label 的单个 switch、真实开关是它的子节点。`check` 与 `uncheck` 需要 `checked` 状态——Android 的 switch 缺它，iOS 上 React Native 的 checkbox 或 radio 则有。`doubleTap` 是两次按压，iOS 上相隔 284 到 285 ms（agent-device 的 XCTest 点按节奏）：agent-device 自带的双击手势抵达 React Native `Pressable` 时只算一次按压，检测窗口不超过 300 ms 的检测器可能把这一对读成两次单击。`longPress` 默认按住一秒，除非测试传入 `duration`——它超出 React Native `Pressable` 的 500 ms `delayLongPress` 以及应用设置的更长阈值；agent-device 自带的默认按住更短，在这些场景中会被判定为点按。`selectOption`、`setInputFiles`、`scrollIntoView` 和 `secondaryTap` 均未声明，`tapModifiers` 也未声明，因此带 `modifiers` 的 `tap` 或 `doubleTap` 是 `UNSUPPORTED_CAPABILITY`。 |
+| `performAt` | 在一个裸屏点上执行 `tap`、`doubleTap`、`longPress` 和 `swipeTo`，让 `screen.tapAt`、`tap({ position })`、`screen.swipe({ from, to })` 和智能体的 `tap_at` 能触达树未列出的控件。不在点上提供 `hover`、`secondaryTap` 或 `dragTo`：触屏离开节点就没有这些，`hover_at` 需要一个已列出的控件。 |
+| `keyboard` | 向持有焦点的字段 `type` 和 `press`——即智能体不带目标的 `type` 与 `press` 以及 `type_at`、`press_at` 的回退——外加 `dismiss`，即智能体的 `dismiss_keyboard`。 |
+| `locate` | 所有 `screen` 查询。text 与 label 查询以最内层匹配作答，因为设备会把这两者沿树向上回显（React Native 的 input 是宿主视图加其中的字段，两者都带 label）。 |
+| `validateApp` | 要求 `app.bundleId` 或 `app.appPath`，目前拒绝 `app.url`，并附一条「平台设备如何连回本机」的说明。二者有其一的 target 是 `native-app` target，因此 `requires: ['native-app']` 会选中设备 target。 |
+| `session` | 支持 `back`、`restart` 和 `reset`。没有 `open`：`app.open()` 不接受路径，由 runner 以 `restart`——固定应用的全新启动——来满足它；智能体的 `navigate` 动词不可用，`device.openLink(url)` 打开深链或 web 链接。 |
+| `artifacts` | 脱敏后的截图存到 `screenshots/NNN-<label>.png`；无法完成脱敏的截图直接失败、不落盘。视频——当尝试的 [`video` 模式](/reference/config#video)要求录制时——存为 `video/video.mp4`，或采用设备提供者自己的录制。 |
+| `location` | `<bundle id> / <screen title>`，回放缓存的锚点。标题在 iOS 上取导航栏，在 Android 上取工具栏。 |
+| `state` | 未声明。`test.setup` 与 `session:` 均不可用。 |
+
+## 设备上的回放缓存
+
+在 `com.apple.Preferences / General` 上录制的步骤，只有当 Settings 再次停在
+General 屏时才能回放。`open_app` 这类会改变状态的 project-tool 调用会终止
+回放。请声明 `app.bundleId` 并先调用 `app.open()`，让各步骤从同一个屏幕
+开始；切换应用请在步骤之间、经 `device` fixture 进行，而不是在一个步骤
+之内。
+
+## device fixture
+
+```ts
+/** Deterministic device management exposed to tests as `device`. */
+export interface Device {
+  /**
+   * A locator from an agent-device selector (`'id=SW_VERSION_SPECIFIER'`,
+   * `'role=StaticText label="26.2"'`), for nodes the closed `screen` query
+   * vocabulary cannot name. Same polling and strictness as any locator.
+   */
+  locator(selector: string): Locator;
+  /** Toggles the device's Wi-Fi. */
+  setNetwork(state: 'online' | 'offline'): Promise<void>;
+  /** Toggles airplane mode. */
+  setAirplaneMode(enabled: boolean): Promise<void>;
+  /**
+   * Grants, denies, or resets one permission for the pinned app, brought to
+   * the foreground first when the session is on no app. A change terminates
+   * a running app on iOS, a revoke one on Android, so it goes before the
+   * `app.open()` a test starts with.
+   */
+  setPermission(permission: DevicePermission, state: PermissionState): Promise<void>;
+  /** Sets the simulated location, switching location services on first on Android. */
+  setLocation(coordinates: { latitude: number; longitude: number }): Promise<void>;
+  /** Turns simulated location off; on Android that is location services off, until the next `setLocation`. */
+  clearLocation(): Promise<void>;
+  /** Sets the system appearance. */
+  setAppearance(mode: 'light' | 'dark'): Promise<void>;
+  /** Rotates the device. */
+  setOrientation(orientation: DeviceOrientation): Promise<void>;
+  /**
+   * Puts a foldable iOS simulator (iPhone Duo) in a hinge pose and resolves
+   * once agent-device reads the angle back from CoreDevice at that pose,
+   * typically 10 to 16 seconds later. `closed` lights the outer display;
+   * `half-open` (a 130° book) and `open` light the inner one, whose app
+   * window has a different size, so the next observation reads a new screen.
+   * Any device without a hinge is `UNSUPPORTED_CAPABILITY`.
+   */
+  fold(pose: FoldPose): Promise<void>;
+  /** Simulates one biometric attempt on the open app. */
+  setBiometrics(sensor: BiometricSensor, result: 'match' | 'nonmatch'): Promise<void>;
+  /** Enrolls or unenrolls the simulator's Face ID or Touch ID. */
+  enrollBiometrics(sensor: 'faceid' | 'touchid', enrolled: boolean): Promise<void>;
+  /**
+   * Installs a build (an iOS `.app` bundle or an Android `.apk`, resolved
+   * against the project root) on the device; without a path, the target's
+   * `app.appPath`. The engine installs nothing on its own, so a suite that runs
+   * against a build calls this once per device, in a fixture or a test.
+   * `reinstall: true` removes the app first so it starts with no data; a
+   * plain install replaces the binary and keeps its data. Resolves to the
+   * identity to `openApp` it by, which becomes the app `app.open()` launches
+   * when the target's build is installed and no `app.bundleId` is pinned.
+   */
+  installApp(appPath?: string, options?: InstallAppOptions): Promise<InstalledApp>;
+  /**
+   * Brings an app to the foreground by bundle id, package, or display name;
+   * `relaunch` restarts it fresh. `launchArguments` and `permissions` apply
+   * to this launch alone; the target's configured ones apply to a `relaunch`
+   * of the pinned app, and to no foreground-only open. A link is
+   * `INVALID_ARGUMENT` (`file:`, `data:`, `javascript:`, `view-source:`,
+   * `blob:`, and `filesystem:` are `POLICY_DENIED`): `openLink` opens one.
+   */
+  openApp(app: string, options?: OpenAppOptions): Promise<void>;
+  /**
+   * Opens a deep link (`myapp://orders/42`) or a web link (`https://...`)
+   * into `app` (default: the pinned app), which the session observes
+   * afterwards. iOS launches the app for a web link and then opens the URL;
+   * a web link the app does not claim goes to Safari, and the next
+   * observation brings the app back. Android starts the link on that
+   * package. Without an app, Android lets the OS route the link; iOS needs
+   * one (`INVALID_ARGUMENT` without). `file:`, `data:`, `javascript:`,
+   * `view-source:`, `blob:`, and `filesystem:` links are `POLICY_DENIED`.
+   */
+  openLink(url: string, options?: { app?: string }): Promise<void>;
+  /**
+   * Terminates the session's app and ends the session, so the next
+   * `openApp` launches it fresh. Until then the screen is unobservable and
+   * `foregroundApp` is `APP_NOT_OPEN`.
+   */
+  closeApp(): Promise<void>;
+  /**
+   * Resets the simulator's keychain, every app's, since simctl has no
+   * per-app reset: what `app.clearState()` leaves behind (a session token, a
+   * Firebase sign-in). iOS simulator only; Android is
+   * `UNSUPPORTED_CAPABILITY`. Launch the app afterwards to see it signed out.
+   */
+  clearKeychain(): Promise<void>;
+  /**
+   * The app the session is on. iOS answers from the session, not the
+   * device, so it names the app the session opened even after `home()`;
+   * Android reads the device's foreground activity. `APP_NOT_OPEN` once
+   * `closeApp` ended the session.
+   */
+  foregroundApp(): Promise<ForegroundApp>;
+  /** Sends the device to its home screen. */
+  home(): Promise<void>;
+  /** Navigates back once (in-app back). */
+  back(): Promise<void>;
+  /** Accepts or dismisses the visible system alert. */
+  alert(action: 'accept' | 'dismiss'): Promise<void>;
+  /**
+   * Dismisses the soft keyboard: the keyboard's own dismiss key where it has
+   * one (Android, iPad), else the way a user does it on an iPhone, a short
+   * drag at the centre of the screen that a scroll view turns into a
+   * dismissal, horizontal first and vertical second, stopping as soon as the
+   * keyboard is gone. The simulator's "Speed up your typing" tip goes through
+   * its Continue button first. A keyboard that outlives both drags fails with
+   * `UNSUPPORTED_CAPABILITY`; the message names the alternatives (the app's
+   * own Done or close control, or pressing Enter on the field).
+   */
+  dismissKeyboard(): Promise<void>;
+  /** Reads the clipboard. */
+  clipboard(): Promise<string>;
+  /** Writes the clipboard. */
+  setClipboard(text: string): Promise<void>;
+}
+
+/** How `device.openApp` launches an app. */
+export interface OpenAppOptions {
+  /** Terminate the app first, so it starts fresh; without it a running app is brought forward as it is. */
+  readonly relaunch?: boolean;
+  /**
+   * Arguments this launch hands the app: its process arguments on iOS,
+   * `am start` arguments on Android. Replaces the target's `app.launchArguments`
+   * for a relaunch of the pinned app.
+   */
+  readonly launchArguments?: readonly string[];
+  /**
+   * Permissions the app holds before this launch, each granted, denied, or
+   * reset. Replaces the target's `app.permissions` for a relaunch of the
+   * pinned app.
+   */
+  readonly permissions?: LaunchPermissions;
+}
+
+/** Permissions agent-device can grant, deny, or reset on an app. */
+export type DevicePermission =
+  | 'camera'
+  | 'microphone'
+  | 'photos'
+  | 'contacts'
+  | 'notifications'
+  | 'calendar'
+  | 'location'
+  | 'reminders'
+  | 'motion'
+  | 'siri'
+  | 'media-library';
+
+/** Orientations `setOrientation` accepts. */
+export type DeviceOrientation = 'portrait' | 'portrait-upside-down' | 'landscape-left' | 'landscape-right';
+
+/** Hinge poses `device.fold` accepts: `closed` lights the outer display, `half-open` and `open` the inner one. */
+export type FoldPose = 'closed' | 'half-open' | 'open';
+
+/** How `device.installApp` installs a build. */
+export interface InstallAppOptions {
+  /**
+   * Bundle id or package of the build. `reinstall` needs one: agent-device
+   * removes that app before installing. Defaults to the pinned app.
+   */
+  readonly app?: string;
+  /** Remove the installed app first so the build starts with no data. */
+  readonly reinstall?: boolean;
+}
+
+/** What an install put on the device, as agent-device identified it. */
+export interface InstalledApp {
+  /** The bundle id or package to open the app by. */
+  readonly app: string;
+  readonly bundleId?: string;
+}
+
+/** The app in the foreground, as `foregroundApp` reports it. */
+export interface ForegroundApp {
+  readonly name: string;
+  readonly bundleId?: string;
+}
+
+/** Sensors `setBiometrics` simulates. */
+export type BiometricSensor = 'faceid' | 'touchid' | 'fingerprint';
+```
+
+每个异步方法都是一个被记录的步骤，名为 `device.<method>`，受
+`config.actionTimeout` 约束。会话丢失是 `APP_NOT_OPEN`，预算耗尽是
+`ACTION_FAILED`，平台无法运行某命令是 `UNSUPPORTED_CAPABILITY`，其余都是带
+agent-device 消息的 `ENGINE_FAILURE`：设备自身上报的超时（一次启动、runner
+在连接）会保留其原文与提示，忙碌或卡死的 iOS 自动化 runner 会自我指名并给出
+恢复办法（见[故障排查](/mobile#故障排除)）。
+
+`back`、`home`、`alert`、`dismissKeyboard`、`setOrientation` 和 `fold` 都
+会改变屏幕，因此它们和点按一样计入 `transition` 预算：随它们揭示的屏幕一起
+出现的控件，要等预算走完，下一个动作才落到它上面。
+
+`closeApp` 终止当前会话所在的应用并结束会话，因此之后的 `openApp` 会全新
+启动应用、停在其首屏；中间做屏幕查询或 `foregroundApp` 会得到
+`APP_NOT_OPEN`。iOS 上的 `foregroundApp` 读会话而不是设备：agent-device 的
+`appstate` 在那里没有设备级答案，因此 `home()` 之后它仍报的是会话打开的
+应用。Android 则读取设备的前台 activity。
+
+`installApp` 在测试或 fixture 内安装构建：运行所针对的构建每台设备装一次
+（无路径时安装 `app.appPath`），也可安装另一个构建用于升级路径。普通安装
+保留应用的数据；`reinstall: true` 会先移除 `app` 指名的应用（默认是固定
+应用）。它解析出一个用于 `openApp` 该构建的标识：agent-device 从构建中读
+到的 bundle id 或包名，否则是传入的 `app`。既没有上报的 id 也没有 `app`
+时，安装以 `ENGINE_FAILURE` 失败，而不会拿文件路径冒充 id；见
+[故障排查](/mobile#故障排除)。
+
+```ts
+const { app } = await device.installApp('./build/MyApp.app', { reinstall: true });
+await device.openApp(app);
+```
+
+`clearKeychain` 重置模拟器的钥匙串——`app.clearState()` 动不了它：simctl
+重置的是整台模拟器的钥匙串，因此其上每个应用都会丢掉基于钥匙串的凭据。仅限
+iOS；在 Android 上、任何设备命令之前就是 `UNSUPPORTED_CAPABILITY`。之后
+启动应用即可看到它处于已登出状态。
+
+`openApp` 按 bundle id、包名或显示名（`Settings`）把应用带到前台；
+`relaunch: true` 会全新重启它，`launchArguments` 和 `permissions` 仅作用于
+这一次启动（target 自身的设置作用于固定应用的 `relaunch`）。它不接受链接：
+agent-device 会把任何 `scheme:rest` 字符串当 URL 打开，因此链接在设备见到
+之前就被拒绝。`file:`、`data:`、`javascript:`、`view-source:`、`blob:` 或
+`filesystem:` 链接是 `POLICY_DENIED`；其他任何链接都是 `INVALID_ARGUMENT`
+并指向 `openLink`。
+
+`openLink` 向 `app`（默认：固定应用）打开深链或 web 链接——用于 magic-link
+登录和深链路由——之后会话观测的就是该应用。iOS 对 web 链接先启动应用、
+再打开 URL；应用不认领的 web 链接会落到 Safari，下一次观测再把应用拉回来。
+Android 在该包上启动链接。不给应用时，Android 让系统来路由链接——发给经过
+验证的 app link 拥有者或浏览器——会话则跟随接下它的那个包。iOS 必须给应用
+：不绑定任何应用的 open 不会留下可供观测的应用会话，因此是
+`INVALID_ARGUMENT`。`file:`、`data:`、`javascript:`、`view-source:`、
+`blob:` 和 `filesystem:` 链接是 `POLICY_DENIED`。设备链接可能使用任何应用的
+自定义 scheme，因此该规则选择拒绝这些 scheme，而不是像 web 那样只放行
+http(s)。无法解析为绝对 URL 的字符串同样是 `INVALID_ARGUMENT`，且其消息不
+会提及输入的任何部分——输入可能在 query、path 或 userinfo 里带着 magic-link
+token。报告里显示的链接截断于其 query 与 fragment 之前——magic link 的
+token 正在那里。回放缓存以链接落地的位置为锚点：`openLink` 之后录制的步骤
+，在链接再次落在同一屏幕时才能回放。
+
+```ts
+await device.openLink('myapp://orders/42');
+await expect(screen.getByText('Order #42')).toBeVisible();
+```
+
+`screen` 查询表达不了的平台专属选择器，请用 `device.locator`。
+
+```ts
+await expect(device.locator('role=NavigationBar id=About')).toBeVisible();
+await expect(device.locator('role=StaticText label="iOS Version"')).toHaveText('iOS Version');
+await device.locator('id=SW_VERSION_SPECIFIER role=Button').tap();
+```
+
+选择器词条是 agent-device 的：`id`、`role`、`text`、`label`、`value`、
+`appname`、`windowtitle`，以及旗标 `visible`、`hidden`、`editable`、
+`selected`、`focused`、`enabled`、`hittable`。`role` 接受平台类型
+（`StaticText`）或契约 role（`text`）。
+
+## 智能体工具
+
+`mobileTools(...engines)` 把设备工具加入智能体的 `tools`。它至少要一个引擎
+；请在一次调用中传入所有设备引擎，工具会使用当前尝试的引擎。
+
+| 工具 | 回放 | 用途 |
+| --- | --- | --- |
+| `open_app` | gap | 按 id 把应用带到前台，可选全新重启。不接受链接，与 `device.openApp` 相同。 |
+| `swipe` | gap | 以逻辑像素在两点之间做自由滑动。 |
+| `alert` | gap | 接受或关闭一个系统弹窗；优先选已列出的按钮——点它才能回放。 |
+
+语法动词不需要工具包：引擎声明的动作为智能体提供了 `tap`、`double_tap`、
+`long_press`、`hover`、`type`、`press`、`check`、`scroll`、`drag`、按
+`text` 的 `scroll_to`（持续翻页，直到画出文本与之相符的一行）、`back` 和
+`dismiss_keyboard`；设备上没有 `right_click`、`select`、按节点 id 的
+`scroll_to`、`upload` 或 `navigate`。像素工具是 `screenshot`、`tap_at`、
+`hover_at`（仅限已列出的控件）、`type_at` 和 `press_at`；不提供
+`select_at`。点动作可以点击辅助功能树里没有的控件。步骤声明了机密时才
+提供 `type_secret`。
+
+机密填充之后，智能体不再提供 `screenshot` 和 `tap_at`——同一串行组的后续
+成员也不例外。遮蔽无法被引擎证明的像素会以 `MASKING_UNPROVEN` 为由扣下。
+
+辅助功能捕获失败仍会让观测中止。设备截图的遮蔽依赖那次捕获给出的安全字段
+边界，因此当边界缺失时，引擎无法证明一张回退截图是安全的。
+
+## 导出的类型
+
+`MobileOptions`、`MobilePlatform`、`DevicePermission`、`LaunchPermissions`、
+`PermissionState`、`DeviceClientConfig`、`DeviceConnection`、`DeviceDaemon`、
+`DeviceProvider`、`DeviceLease`、`DeviceReleaseContext`、`DeviceRequest`、
+`Device`、`DeviceOrientation`、`BiometricSensor`、`ForegroundApp`、
+`InstallAppOptions`、`InstalledApp` 和 `OpenAppOptions` 都从
+`@e2e-dev/mobile` 导出。运行时导出是 `mobile` 与带 `device` fixture 类型的
+`test`；`mobileTools` 来自 `@e2e-dev/mobile/tools`。

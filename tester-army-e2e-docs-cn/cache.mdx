@@ -1,0 +1,245 @@
+---
+title: 缓存
+description: 经校验的智能体动作无需调用模型即可回放；应用变化时智能体接管。
+icon: "box-archive"
+---
+
+回放缓存（replay cache）会在后续检查验证过结果之后，记录 `agent.act()` 步骤中的动作。下一次运行时，runner 无需调用模型即可回放这些动作。如果某个控件或预期的终态不再匹配，智能体就从当前屏幕接管。
+
+`agent.assert`、`agent.waitFor` 和 `agent.extract` 始终实时运行。
+
+运行摘要会报告结果：
+
+```text
+           AI  4.1k tokens · 2 model calls · anthropic/claude-sonnet-4.5
+        Cache  4 replayed · 1 handed off · 1 missed
+```
+
+| 运行摘要 | `step.cache.mode` | 含义 |
+| --- | --- | --- |
+| `replayed` | `self-finalized` | 录制完整走完，没有调用模型。 |
+| `handed off` | `agent-concluded` | 回放先启动，随后智能体接管。 |
+| `missed` | `missed` | 智能体从头执行了该步骤。 |
+
+未命中与接管还包含 `step.cache.reason`；`step.cache.detail`
+说明回放停在哪里、为什么停（`at action 2 of 3, tap button "Apply":
+...`）。`step.cache.entry` 是条目的键（在文件存储中的文件名，`<entry>.json`）；仅出现在报告里的 `step.cache.write` 则说明本次尝试结束后录制何去何从：
+
+| `step.cache.write` | 含义 |
+| --- | --- |
+| `saved` | 已记录，供下次运行使用。 |
+| `kept` | 条目保持原样。 |
+| `unconfirmed` | 未保存：该步骤之后没有任何检查通过。在其后跟一条定位器断言或 `agent.assert`。 |
+| `evicted` | 条目已被删除：它的回放以失败或修补告终，或直到尝试失败都没有检查确认过它。 |
+| `no-change` | 未记录任何内容：该步骤没有发生回放可检查的变化。 |
+| `not-written` | 未保存：存储没有写入该录制，例如超出了文件存储的大小限制。 |
+
+[链路页](/debugging#链路)会在步骤之下展示所有这些信息。`agent.act()`
+以 `result.cache` 返回缓存对象（不含 `write`）。该步骤关闭缓存时，就没有缓存对象。
+
+要排除缓存对失败的干扰，请不带缓存运行一次：
+
+<CodeGroup>
+```bash npm
+npx e2e run --no-cache
+```
+
+```bash pnpm
+pnpm exec e2e run --no-cache
+```
+
+```bash bun
+bunx e2e run --no-cache
+```
+</CodeGroup>
+
+## 回放是如何进行的
+
+1. 检查起始屏幕：路由相同即可，无论 record id 或 fragment 如何。重试永远实时运行。
+2. 找到每个已记录的控件并重复其动作。runner 按控件的角色、名称、test id 和上下文环境匹配控件。缺失的控件会等待，匹配含糊则停止。没有名称的控件，按它在同一名义行、列表项或分组内同类未命名控件中的位置找到；连这样的容器都没有、无法与同类控件区分时，就由智能体接手该步骤。
+3. 检查最终路由和原步骤造成的改变：出现过的控件（含其 checked、selected、expanded 或 pressed 状态）和消失了的控件。其中至少一个变化必须在回放中发生——以回放在其最终路由上看到的第一个屏幕为基准；因此那些本应产生结果的动作执行之前就已经在屏幕上的结果不算数；最后一步动作跳到另一路由的步骤，则以这次跳转作为它的证据。回放中弹出而录制时从未出现过的 alert 也会让回放终止。每次运行读起来都不同的文本——日期、时刻、时长、ID——不会被采用，alert 除外：其中它们会作为占位值读取。
+4. 在不调用模型的情况下完成，或者让智能体带着一份记录继续——上面写着执行了什么、回放为什么停下。
+
+路由由 origin、path 和 query 组成。path 或 query 中的 ID、token、时间戳和 cache buster 都按 ID 占位符读取，因此 `/orders/42?t=1727780000` 和 `/orders/7?t=1727780999` 是同一条路由。其余 query 值都算路由的一部分：`?mode=safe` 与 `?mode=unsafe`，或 `/companies` 与 `/companies?tab=notes`，属于不同屏幕；录制步骤时还不存在的追踪参数也是。只差一个词的两条路由——`/products/summer-sneaker` 与 `/products/winter-boot`——同样是不同屏幕，哪怕它们看上去很像。应用自身 origin 上的位置按 path 比较，因此录制会跟随应用迁移到共享 `app.identity` 的预览部署；任何其他 origin 上的页面则是另一条路由。
+
+会指明所数对象的数量文本，如 `3 records imported` 或 `Showing 1 to 9
+of 9 results`：当步骤使它出现在自己操作的屏幕上时，它算作结果的一部分，回放时必须读出同样的内容。原本就在屏幕上只是数值变动的数量——从 `41 items` 到 `42 items`——或步骤导航过去的屏幕上的数量，则不被采用，因为早前运行的遗留数据会再次改变它。徽标之类的裸数字从不被采用。
+
+输入的值按录制原样回放，即便之前的运行已在屏幕上留下同样的值。机密填写会按名称解析当前值，并重新走一遍授权。
+
+## 必须匹配什么
+
+一条缓存条目绑定特定的测试、target、指令、参数集和智能体。重命名测试或 target、改动指令或普通参数、用另一个配置好的智能体运行、修改智能体的 `context` 或测试的 `agentContext`、或换用另一个引擎，都会造成未命中。升级同一引擎不会：录制过的动作会在回放时重新定位自己的节点，因此新版本解析结果不同的节点到那时才未命中。按智能体各跑一遍的测试（`agent: ['buyer', 'admin']`）按每个智能体各录制一次。更换模型没有影响。智能体上下文以其脱敏文本的哈希参与键，其中的机密只贡献名称。
+
+时间戳或新邮箱地址会让每次运行都未命中。把这类值包在 `unique()` 里，runner 回放时会替换成当前值：
+
+```ts
+import { unique } from 'e2e';
+
+const name = `E2E ${Date.now()} Company`;
+await agent.act('create a company named {name}', { params: { name: unique(name) } });
+await expect(screen.getByRole('heading', { name })).toBeVisible();
+```
+
+流程要输入或检查的数据用 `unique()`。那些会改变流程走向的选择（如套餐名称）保持为普通参数。替换同样覆盖值在 URL 中的拼写——path 中的 `%20` 或查询串中的 `+`。
+
+当 `unique()` 的值等于另一个参数的值、或出现在另一个参数之中时，步骤通过但不被记录，`step.cache.notRecorded` 显示 `param-collision`。下次运行拿到新值后会照常录制。
+
+预览 URL 每次部署都会变的话，请设置
+[`app.identity`](/reference/config#被测应用) 保持缓存身份一致。在设备上，回放以
+[屏幕标题](/reference/mobile#设备上的回放缓存)作为路径。
+
+## 录制什么时候写入
+
+在 `read-write` 模式下，只要后续验证步骤通过，runner 就会在尝试结束时保存录制。没有执行动作的步骤什么都不录；对回放而言毫无变化可检查的步骤也不录：没有控件出现、消失或改变状态，路由也保持不变。
+
+| 算验证 | 不算 |
+| --- | --- |
+| `expect(locator).toHaveText(...)` 及其他定位器匹配器 | 作用于普通值的 `expect(value).toBe(...)` |
+| `expect(browser).toHaveURL(...)` 及其他引擎断言 | `expect.poll(...)` |
+| `locator.waitFor()`、`browser.waitForURL()` | `locator.textContent()` 及其他读取 |
+| `agent.assert(...)`、`agent.waitFor(...)` | `agent.extract(...)`、又一个 `act`、尝试通过本身 |
+
+每个 `act` 之后，紧跟一次对结果的检查：
+
+```ts title="tests/cart.e2e.ts"
+import { expect, test } from 'e2e';
+
+test('adds an item', async ({ app, agent, screen }) => {
+  await app.open('/cart');
+  await agent.act('add one item to the cart');
+  await expect(screen.getByRole('status')).toHaveText('1 item');
+});
+```
+
+失败的尝试仍可保存在失败之前已验证过的步骤。它会删除未经验证的条目，以及与这次失败有牵连的回放，包括 `end-mismatch`。为此项清理，自定义 store 需要 `delete` 方法。
+
+取消运行不会改动缓存。某次尝试的失败若全部属于“模型没有应答”一类，则它未确认过的条目全部保持不变：`MODEL_UNAVAILABLE`
+（未配置模型）与 `MODEL_PROVIDER_FAILED`（提供者返回错误——密钥缺失或被拒、限流、5xx 等——或请求在 120 秒内没有得到响应）。这些丝毫不反映应用状况，因此访问不了模型的一次 read-write 运行会保留自己的录制——包括某步骤在未能连上模型的
+`agent.assert` 之前回放过的一份——并仍会保存失败之前已验证的步骤。模型应答了但内容不可用（`MODEL_OUTPUT_INVALID`、`CONTEXT_OVERFLOW`），或步骤超时（`STEP_TIMEOUT`，即使请求仍开着）——这些都算流程失败；同一尝试中的其他任何失败（如 `afterEach` 断言）也算。
+
+## 步骤为什么没有被回放
+
+报告中的 `step.cache.reason` 说明原因：
+
+| 原因 | 发生了什么 | 怎么办 |
+| --- | --- | --- |
+| `no-entry` | 没有与该步骤及其参数匹配的录制。| 下一次通过的验证运行会录制它。 |
+| `retry` | 重试从不回放。 | 无需处理。 |
+| `invalid-entry` | 文件不可读、超过 1 MiB，或来自其他 schema 版本。 | `npx e2e cache clear`。 |
+| `truncated` | 录制触发了某项限制，见[下文](#限制与缺口)。 | 拆分步骤，或把机密作为 `Secret` 传入。 |
+| `wrong-context` | 应用不在录制该步骤时的那个屏幕上：origin、path 或 query 不同——不是 record id 或 fragment 不同。| 在步骤之前先打开同一个屏幕。 |
+| `target-not-found` | 某个录制过的控件在 15 秒内没有出现，或它没有名称、也没有具名容器能与同类控件区分。 | UI 变了：下一次通过的运行会重新录制。对未命名控件，给它一个可访问名称，或放进有名称的行或分组。 |
+| `target-ambiguous` | 匹配到的控件数量变了。 | 给重复的控件起不同的名称，或使用互不重复的测试数据。 |
+| `gap` | 某个动作无法回放，见[下文](#限制与缺口)。 | 智能体实时接手这一段。把稳定的值放进 `params`。 |
+| `action-failed` | 应用拒绝了某个被回放的动作。 | 检查应用。 |
+| `action-uncertain` | 某个被回放的动作以未知提交状态失败。智能体会被要求在再次行动前先检查。 | 检查应用。 |
+| `viewport-changed` | 裸坐标的点按或悬停录制于另一种尺寸的视口。 | 保持视口固定。 |
+| `end-mismatch` | 每个动作都执行了，但录制中的路由、本应出现或消失的控件、或某个录制状态没有重现；或结果在回放之前就已在屏幕上；或回放弹出了录制时从未见过的 alert。| 早前运行的遗留数据、时有时无的横幅，或一次回归。 |
+
+在任何动作执行之前的停止算未命中；回放开始之后的停止算接管。互不重复的测试数据和 `afterEach` 中的清理，有助于避免运行之间残留状态。
+
+### 限制与缺口
+
+当步骤执行了超过 50 个动作（仅当 `maxSteps` 调高到 50 以上才可能）、输入了超过 4,096 字符的值或 URL、或含有已注册机密的值，或操作了没有可用描述的控件时，录制即为 `truncated`。
+
+`gap` 指缓存无法重复执行的动作：会改动状态的[项目工具](/tools)，或智能体从屏幕上读出的值、看过截图后输入的值、由日期推算出的值。`step.cache.derived` 给出规则名：`whole-node`（控件的完整名称或文本）、`minted-token`（应用显示为自成一词的代码或 ID）、`date` 或 `pixels`。来自指令或 `params` 的值、智能体自行组合出的值，都可以回放。
+
+## 录制里保存了什么
+
+每个条目都是 `.e2e/cache/` 下以其键的哈希命名的 JSON 文件。内容包括动作、目标描述、输入的文本、步骤摘要，以及对最终状态的检查。这些检查包含：路由、步骤中最多八个出现过的控件（alert 与状态消息优先），以及最多八个消失了的控件。
+
+条目不包含提示词、对话、截图、观测到的树，也不含机密值。机密填写只保存机密的名称。其他输入值按原样保存，分享录制前请先审阅；参见[缓存信任](/security#缓存信任)。
+
+## 模式
+
+| 模式 | 回放 | 录制 | 默认 |
+| --- | --- | --- | --- |
+| `'read-write'` | 是 | 是 | 本地 |
+| `'read-only'` | 是 | 否 | CI 中未设置 `cache` 时 |
+| `'off'` | 否 | 否 | `--no-cache` 时的单次运行 |
+
+```ts title="e2e.config.ts fragment"
+cache: 'off',
+// or
+cache: { mode: 'read-write', dir: '.e2e/cache' },
+```
+
+`--no-cache` 覆盖配置。要让 CI 更新录制，需显式设置 `cache: 'read-write'`。在 `read-only` 模式下，过期条目会一直留存，直到某次 read-write 运行替换它们。
+
+自定义 `cache.store` 会替换文件存储，且在 CI 中不默认只读。`e2e explore` 和 `e2e mcp` 不使用缓存。参见[配置参考](/reference/config#cache)。
+
+## 提交回放缓存
+
+<span id="commit-your-traces" />
+
+`e2e init` 会把 `.e2e/cache/` 加入 `.gitignore`，因此每台机器各自录制，CI 一开始什么都没有。要共享回放，删掉那一行并提交该目录。除非你设置 `cache: 'read-write'`，CI 保持 `read-only`。把提交进仓库的条目当作测试数据对待，并在重新录制它们的那个 pull request 里审阅。
+
+本地运行不会弄脏已提交的目录——除非有东西变了。回放过的步骤绝不重写自己的条目；动作、路径和锚点完全相同的实时重录也不会写入：摘要、测得的结束等待，以及标记运行时输入值的那条规则，在同一条流程的两次实时运行之间都不相同，这些差异不作数。当 `e2e` 升级到改变条目匹配方式的版本时，每个条目的键都会变，因此升级后的首次运行会重新录制它们。出现以下情况时文件会改变：
+
+- 某步骤首次录制，
+- 智能体在接管后完成某步骤，重新录制它所看到的内容，
+- 某步骤回放后失败，或以一次需要智能体修补的 `end-mismatch` 告终——这会删除条目，
+- 有条目的步骤通过后没有留下任何可录的内容——这会删除条目，
+- 到尝试结束时没有任何验证步骤确认过该条目——这会删除它。
+
+回放仍能找到所有控件时什么都不刷新，因此对应缓慢漂移界面的条目，只有到某个控件再也找不到时才会被修补。
+
+## 过期录制让运行失败
+
+已提交的录制停止回放时，默认悄无声息：智能体接手这一步，测试照常通过，直到有人重新录制之前，每次 CI 运行都得为模型调用付费。`--strict-cache`（或 `cache: { strict: true }`）
+让它响起来。录制存在但已无法回放的步骤会以 `REPLAY_STALE` 失败，且不发起模型调用：
+
+<CodeGroup>
+```bash npm
+CI=1 npx e2e run --strict-cache
+```
+
+```bash pnpm
+CI=1 pnpm exec e2e run --strict-cache
+```
+
+```bash bun
+CI=1 bunx e2e run --strict-cache
+```
+</CodeGroup>
+
+会引发失败的，是那些意味着应用或条目发生了变化的原因：
+`invalid-entry`、`wrong-context`、`target-not-found`、`target-ambiguous`、
+`viewport-changed`、`action-failed`、`action-uncertain` 和 `end-mismatch`。当缓存目录里以另一个键保存着同一步骤的录制——来自某个改变条目键的 `e2e` 升级之前，或 project id、应用身份、智能体上下文发生变化之前——`no-entry` 的未命中也会失败。报错信息会点名那个文件；对由本版本或更新版本录制的条目，还会说明变化了什么（`the agent's context`）。一旦没有任何回放再用到它，就删掉它。自定义
+`cache.store` 不按此方式检查。在引入该检查之前录制的条目，只要被某次 `read-write` 运行回放或重录过，就纳入覆盖。从未录制过的步骤（指令或参数是新的或有改动）、重试、`gap` 和 `truncated` 录制仍照常实时运行。`REPLAY_STALE` 以退出码 2 退出，且不会重试——重试从不回放，实跑也会直接通过。条目留在原地，即使在 `read-write` 模式下也一样，因此在它被重新录制之前，每次 strict 运行都会在它上面失败：不带该旗标、以 `read-write` 模式运行该测试；若配置里设置了 `cache.strict`，也先关掉，然后提交改变后的条目；自定义 `cache.store` 则从那次运行接收新条目。报错信息会指出是哪个开关打开了 strict，以及条目所在的位置：缓存目录，或配置的 `cache.store`。读取失败的 store 不算过期录制；步骤照常实时运行。
+
+## 查看缓存
+
+<CodeGroup>
+```bash npm
+npx e2e cache ls      # 每个条目一行：测试、target、指令摘要、时间、动作数
+npx e2e cache stats   # 条目数量与大小
+npx e2e cache clear   # 删除所有条目
+```
+
+```bash pnpm
+pnpm exec e2e cache ls      # 每个条目一行：测试、target、指令摘要、时间、动作数
+pnpm exec e2e cache stats   # 条目数量与大小
+pnpm exec e2e cache clear   # 删除所有条目
+```
+
+```bash bun
+bunx e2e cache ls      # 每个条目一行：测试、target、指令摘要、时间、动作数
+bunx e2e cache stats   # 条目数量与大小
+bunx e2e cache clear   # 删除所有条目
+```
+</CodeGroup>
+
+<Note>
+AI 用量中的 `cached` 百分比指的是提供者的 prompt 缓存，它降低模型调用的成本。这里所说的回放缓存则完全跳过调用。
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="配置参考" icon="sliders" href="/reference/config#cache">
+    `mode`, `store`, `dir`.
+  </Card>
+  <Card title="CLI 参考" icon="terminal" href="/reference/cli#e2e-cache">
+    `e2e cache ls`, `stats`, `clear`.
+  </Card>
+</CardGroup>

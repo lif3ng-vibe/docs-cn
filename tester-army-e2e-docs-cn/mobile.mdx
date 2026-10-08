@@ -1,0 +1,523 @@
+---
+title: Mobile
+description: 把模拟器、仿真器或连接的手机配置为 target，编写设备测试，并了解它与 web 的差异。
+icon: "mobile-screen"
+---
+
+`@e2e-dev/mobile` 在 iOS 模拟器、Android 仿真器以及连接到你电脑的手机上运行测试。它构建于 [agent-device](https://github.com/callstack/agent-device) 之上。测试使用与浏览器测试相同的 `agent`、`screen` 和 `expect` API。测试通过 `app.open()` 启动所配置的应用；测试之间，应用停留在上一个测试离开时的状态。
+
+## 搭建环境
+
+安装带有 iOS 模拟器运行时的 Xcode，或带有仿真器的 Android SDK。用以下命令检查环境：
+
+<CodeGroup>
+```bash npm
+npx agent-device doctor
+```
+
+```bash pnpm
+pnpm exec agent-device doctor
+```
+
+```bash bun
+bunx agent-device doctor
+```
+</CodeGroup>
+
+按照[快速开始](/quickstart)操作，并选择 **Mobile (iOS/Android)**。向导在 macOS 上选择 iOS，在其他系统上选择 Android。它从设置（Settings）应用和单个 worker 开始：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+export default {
+  // Replace Settings with your app's bundle id.
+  targets: [{ name: 'ios', engine: mobile({ platform: 'ios' }), app: { bundleId: 'Settings' } }],
+  workers: 1,
+} satisfies E2EConfig;
+```
+
+runner 会在测试计时开始之前启动设备。启动时间不计入 `launchTimeout`。
+
+完整的搭建示例见 Expo、SwiftUI、Jetpack Compose、Kotlin Multiplatform 和 Flutter 的[示例项目](/example-projects)。
+
+## 指向你的应用
+
+被测应用就是 target 的 `app`；`mobile()` 只负责驱动它。把 `app.bundleId` 中的 `Settings` 替换为你的应用 bundle id 或包名：`app.open()`、`app.restart()` 和 `app.clearState()` 启动的就是这个应用。要预先安装构建产物，可加上 `appPath`：
+
+```ts
+{
+  name: 'ios',
+  engine: mobile({ platform: 'ios' }),
+  app: {
+    bundleId: 'com.example.app',
+    appPath: './build/MyApp.app', // the iOS .app bundle
+  },
+}
+```
+
+引擎自身不会安装任何东西：`app.appPath` 只是指出构建产物，套件在使用之处通过 `device.installApp()` 安装它（不传路径则安装 `app.appPath`），每个设备安装一次，例如放在每个测试都要使用的 fixture 中。iOS 使用 `.app` 包，Android 使用 `.apk`。若没有 `bundleId`，`app.open()` 启动的就是构建所安装的那个应用。设备 target 需要两者之一。
+
+在 CI 中运行套件见 [Mobile jobs](/ci#移动端作业)。已有 [GitHub Actions](/ci/github-actions#ios-与-android)、[EAS Workflows](/ci/eas-workflows)、[Bitrise](/ci/bitrise) 和 [Codemagic](/ci/codemagic) 的工作流。
+
+### 启动参数与权限
+
+`app.launchArguments` 会在引擎执行的每一次全新启动（`app.open()`、`app.restart()`、`app.clearState()`）时传给应用：iOS 上是进程参数，Android 上是 `am start` 参数。`app.permissions` 会在每次此类启动之前设置，因此应用启动时就已持有这些权限，不会出现系统弹窗；`app.clearState()` 在随数据一并重置之后会把它们补回来。`deny` 因平台而异：iOS 会记录拒绝，应用不弹窗即被告知不可用；Android 会撤销权限，应用再次请求时由系统再次询问。`prepare` 中的预热会用 agent-device 的 `prepare ios-runner` 启动 iOS runner，其启动预算足以覆盖冷启动的模拟器，随后不携带任何参数先把应用打开一次，把 worker 的会话停在该应用上；测试看到的进程来自 `app.open()`。由套件自行安装的构建只会进行 runner 启动，因此第一个测试的 `app.open()` 不会为此多耗时。会选择构建模式的参数会改变应用本身：为每种模式单独指定 `app.identity`，让它们的录制互不混淆。
+
+```ts
+app: {
+  bundleId: 'com.example.app',
+  launchArguments: ['-e2e', 'YES'],
+  permissions: { camera: 'grant', notifications: 'deny', location: 'reset' },
+},
+```
+
+单个测试可以通过 `device.openApp` 用自己的参数启动：
+
+```ts
+await device.openApp('com.example.app', { relaunch: true, permissions: { camera: 'deny' } });
+```
+
+### Expo 开发构建
+
+开发构建（`expo-dev-client`）会打开在开发启动器上，并从开发服务器加载其 JavaScript。在 iOS 模拟器上，启动参数会直接打开服务器，并关掉开发菜单、它的引导页和悬浮按钮，让没有任何东西遮挡应用。`app.command` 为本次运行启动服务器：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+export default {
+  targets: [
+    {
+      engine: mobile({ platform: 'ios' }),
+      app: {
+        bundleId: 'com.example.app',
+        launchArguments: [
+          '--initialUrl', 'http://localhost:8081',
+          '-EXDevMenuShowsAtLaunch', 'NO',
+          '-EXDevMenuIsOnboardingFinished', 'YES',
+          '-EXDevMenuShowFloatingActionButton', 'NO',
+        ],
+        command: { executable: 'npx', args: ['expo', 'start', '--port', '8081'] },
+        readyUrl: 'http://localhost:8081/status',
+      },
+    },
+  ],
+} satisfies E2EConfig;
+```
+
+每个测试都用 `app.open()` 开始：`prepare` 中的预热不传启动参数，因此停留在开发启动器上。首次启动要等开发服务器打包应用，测试的第一次检查可能需要比其余检查更长的超时时间。用自带 `launchArguments` 重新启动的测试会替换 target 的参数，因此需要重新列出这些参数。Android 上的 expo-dev-launcher 不读取 `--initialUrl`：在上面请用 `device.openLink` 与构建的 `exp+<slug>://expo-development-client/?url=<encoded server URL>` 链接打开服务器。
+
+## 多台设备
+
+为每个平台添加一个 target：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+const app = { bundleId: 'com.example.app' };
+
+export default {
+  targets: [
+    { name: 'iphone', engine: mobile({ platform: 'ios' }), app },
+    { name: 'pixel', engine: mobile({ platform: 'android' }), app },
+  ],
+  workers: 1,
+} satisfies E2EConfig;
+```
+
+测试会在两个 target 上都运行。对带平台专属标签或平台专属行为的测试，使用 `platforms: ['ios']` 或 `platforms: ['android']`。
+
+要并行运行文件，请提供设备池，并把 `workers` 设为至少等于池的大小。每台设备占用一个 worker：
+
+```ts
+mobile({ platform: 'ios', device: ['iPhone 17', 'iPhone 17 Pro'] })
+```
+
+未指定 `device` 时，引擎会使用已启动的设备，数量不超过 worker 上限；若没有任何已启动的设备，则启动一台。两个 worker 永远不会驱动同一台设备。
+
+## 真机
+
+agent-device 驱动插在电脑上的手机，方式与驱动模拟器相同，因此真机（physical device）不需要其他引擎或选项。先列出 agent-device 所看到的设备，再在 `device` 中按列表中的名称写明手机：
+
+<CodeGroup>
+```bash npm
+npx agent-device devices --platform ios
+```
+
+```bash pnpm
+pnpm exec agent-device devices --platform ios
+```
+
+```bash bun
+bunx agent-device devices --platform ios
+```
+</CodeGroup>
+
+```ts
+mobile({ platform: 'ios', device: 'QA iPhone' })
+```
+
+用名称而非 id 来指明手机。引擎只有当 `device` 字符串是模拟器 UDID 或 `emulator-<port>` 序列号时才把它当作 id，因此手机的 UDID 或 adb 序列号会按名称查找而找不到。名称匹配的第一台设备胜出，所以给每台手机一个独一无二的名称：两台都叫 `iPhone` 或 `Pixel 8` 的手机会让一台手机绑定到两个 worker。未指定 `device` 时，已连接的手机会被视为已启动，与已启动的模拟器一起进入设备池，因此要给它起名，确保某次运行会落到它上面。
+
+手机只需设置一次：
+
+- **iOS**：手机已配对并信任、已解锁，且开发者模式已开启。agent-device 会构建并签名其 XCTest runner 安装到手机上，因此要把 `AGENT_DEVICE_IOS_TEAM_ID` 设为你的团队 id，把 `AGENT_DEVICE_IOS_BUNDLE_ID` 设为一个唯一的反域（reverse-DNS）id（`com.example.agentdevice.runner`）；签名描述文件必须允许该 id 和 `<id>.uitests`。请在第一条 agent-device 命令之前设置它们，否则之后运行 `npx agent-device daemon stop`：正在运行的守护进程会保留它启动时的环境。第一次运行会构建 runner，耗时更长。`app.appPath` 必须是已签名的设备构建：模拟器的 `.app` 装不到手机上。
+- **Android**：USB 调试已开启且手机已授权，在 `adb devices` 中显示为 `device`。`app.appPath` 就是同一个 `.apk`。
+
+`npx agent-device doctor` 可以检查环境；`npx agent-device help physical-device` 详细说明了 iOS 签名。
+
+一些设备控制功能需要模拟器或仿真器，在手机上会失败并给出 agent-device 的报错信息：
+
+- 在 iPhone 上，所有设备设置都是仅限模拟器的：`app.permissions` 与 `device.setPermission`、`app.clearState()`、`device.setNetwork`、`device.setAirplaneMode`、`device.setLocation`、`device.clearLocation`、`device.setAppearance`、生物识别方法以及 `device.clearKeychain`。`device.clipboard`、`device.setClipboard` 和 `device.fold` 也是。要获得全新状态，用 `device.installApp(path, { reinstall: true })` 重新安装，并在 target 上配置 `app.bundleId` 或在选项中传入 `app`，让 agent-device 知道该移除哪个应用。
+- `xcrun devicectl list devices` 列不出来的旧款 iPhone 会以非 CoreDevice 方式驱动：点击、输入和读取屏幕可用，但安装、`--video`、`device.openLink` 和 `app.launchArguments` 会失败。请从 Xcode 安装构建，并固定 `app.bundleId`。
+- 在 Android 手机上，`device.setLocation` 仅限仿真器；`device.setBiometrics('fingerprint', ...)` 只在手机暴露 `cmd fingerprint` 时可用。
+- iPhone 上的 `--video` 由约每秒 15 帧的截图拼接而成，会丢帧。
+- 手机不是这台电脑本身，应用里的 `localhost` 指的是手机自身。让应用指向你电脑的网络地址，或在 Android 上用 `adb reverse tcp:<port> tcp:<port>` 转发端口。
+
+要在设备农场（device farm）的手机上运行，见[托管设备](#托管设备)。
+
+## 托管设备
+
+`device` 还可以是一个 `DeviceProvider`：一个在运行开始时为每个 worker 槽位租用一台托管设备、在运行结束时归还的对象。引擎通过租约所指定的 agent-device 守护进程驱动每一份租约，而不是用本地的那个，因此任何在模拟器、仿真器或真机旁运行 agent-device 守护进程的服务都能用。框架代码不认识任何厂商：对于 [EAS Simulators](/integrations/eas)，提供者是 `@e2e-dev/eas` 中的 `easSimulators()`；对于其他服务，一个提供者只需在你的项目里写几十行代码。
+
+```ts
+export interface DeviceProvider {
+  /** Label in progress lines and error messages. */
+  readonly name: string;
+  /** Called once per worker slot, for every slot at once, in the runner process. */
+  acquire(request: DeviceRequest): Promise<DeviceLease>;
+  /** Called once per lease when the run ends, on every exit path. */
+  release(lease: DeviceLease, context: DeviceReleaseContext): Promise<void>;
+  /** Optional: the service's own recording of the device, in the worker, for an attempt that records video. */
+  record?(lease: DeviceLease, context: ProviderRecordContext): Promise<ProviderRecording>;
+}
+
+export interface DeviceLease {
+  /** The provider's handle (a session id), handed back to `release`. */
+  readonly id: string;
+  /** The agent-device daemon the worker connects to; a lease names this, `client`, or both. */
+  readonly daemon?: { readonly baseUrl: string; readonly authToken?: string };
+  /** agent-device client configuration the worker's client is created with: a lease scope, a `stateDir`. */
+  readonly client?: DeviceClientConfig;
+  /** Device to select inside that daemon, when it hosts more than one. */
+  readonly device?: string;
+  /** Device to select inside that daemon by the id agent-device lists it under: a simulator UDID or an Android serial. */
+  readonly deviceId?: string;
+  /** Bundle id or package the provider installed itself; skips the target's `app.appPath`. */
+  readonly installedApp?: string;
+}
+```
+
+`acquire` 接收平台、run id、target、槽位、以 `app` 名义传入的 target `app.bundleId` 和以 `appPath` 名义传入的解析后的 `app.appPath`、引擎客户端所讲的 agent-device 版本（`agentDeviceVersion`，供启动指定版本守护进程的服务使用）、配置中相对路径所参照的目录（`projectRoot`）、运行的环境变量、中断信号，以及一条能送达报告器的 `log`。令牌请从 `request.env` 读取而不是 `process.env`，项目文件请置于 `request.projectRoot` 之下而不是 `process.cwd()`。没有要运行内容的 target 不会租用任何设备。引擎会持有每一份已授予的租约，包括随后被它拒绝的那一份：租用失败的槽位会在任何测试开始之前结束运行，而已成功的租约仍会被归还。归还发生在最后一个 worker 退出之后，覆盖包括失败、中断和抛错的 `prepare` 在内的每一条退出路径，且限于 `cleanupTimeout` 之内。`release` 收到的是 `acquire` 返回的那个对象，提供者可以在其上保留自己的字段；只有 `id`、`daemon`、`client`、`device`、`deviceId` 和 `installedApp` 会传递给 worker。仅当请求携带了 `appPath` 时才上报 `installedApp`。租用的设备像本地设备一样预热：启动、启动 iOS runner，并在运行计时开始之前打开一次。
+
+`client` 是 agent-device 客户端配置，是 worker 客户端在会话名称和 `daemon` 地址之外额外携带的 JSON 数据（`session`、`daemonBaseUrl`、`daemonAuthToken` 和 `daemonTransport` 归引擎所有，设置了它们的租约会被拒绝）。它是区分经由 agent-device 自身设备云运行时（device-cloud runtime）访问的设备的手段：守护进程会在每条命令上从租约范围（`tenant`、`runId`、`leaseId`、`leaseBackend`、`leaseProvider`，即 `leases.allocate` 返回的内容）解析出一台托管设备，不带范围的命令则回退到本地设备清单。其中的 `stateDir` 会把 worker 指向提供者自己启动的守护进程，这类提供者因此完全不需要 `daemon` 地址。
+
+会录制自身设备的服务也可以录制尝试的视频：实现 `record`，录制视频的尝试会从 worker 调用它，传入该 worker 驱动的租约，从而代替 agent-device 的屏幕录制。它返回一个 `ProviderRecording`（从 `e2e/engine` 导入类型），在尝试的视频结束时停止：`stop` 既可以把文件写进给定的目录并返回 `{ file }`（保存为 `video/<file>`，与其他尝试产物并列），也可以为服务持有的录制返回 `{ url, mediaType }`，报告会链接过去。`record` 拿到的租约是传输到 worker 时的租约，因此只有 `release` 才需要的字段不在其上。失败的 `record` 会让尝试的启动失败，并按提供者与租约命名；失败的 `stop` 会在尝试结束时再试一次。不能录制的提供者可以不实现 `record`，由引擎用 agent-device 录制。
+
+对接典型会话 API 的提供者只用三个请求：创建会话，轮询直到守护进程可达，然后停止会话。
+
+```ts title="device-provider.ts" expandable
+import type { DeviceProvider } from '@e2e-dev/mobile';
+
+/**
+ * Leases devices from a service that starts an agent-device daemon per
+ * session. Replace the three requests with your service's API.
+ */
+export function hostedDevices(options: { serviceUrl: string; image: string }): DeviceProvider {
+  return {
+    name: 'hosted-devices',
+    async acquire(request) {
+      const token = request.env['DEVICE_SERVICE_TOKEN'];
+      if (token === undefined || token === '') throw new Error('DEVICE_SERVICE_TOKEN is not set');
+      const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+      // 1. Ask for a device; name the session after the run so it can be found later.
+      const created = await fetch(`${options.serviceUrl}/sessions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          platform: request.platform,
+          image: options.image,
+          name: `e2e ${request.runId} ${request.targetName} ${request.slot + 1}/${request.slots}`,
+        }),
+        signal: request.signal,
+      });
+      if (!created.ok) throw new Error(`device service: HTTP ${created.status}`);
+      const { id } = (await created.json()) as { id: string };
+      // 2. Wait until the session exposes its agent-device daemon.
+      for (;;) {
+        const response = await fetch(`${options.serviceUrl}/sessions/${id}`, { headers, signal: request.signal });
+        const session = (await response.json()) as { status: string; daemonUrl?: string; daemonToken?: string; viewerUrl?: string };
+        if (session.status === 'ready' && session.daemonUrl !== undefined) {
+          if (session.viewerUrl !== undefined) request.log(`watch at ${session.viewerUrl}`);
+          return { id, daemon: { baseUrl: session.daemonUrl, authToken: session.daemonToken } };
+        }
+        if (session.status !== 'starting') throw new Error(`device service: session ${id} is ${session.status}`);
+        await new Promise((resolve) => setTimeout(resolve, 5_000));
+      }
+    },
+    async release(lease, context) {
+      // 3. Stop the session; the run waits for this within cleanupTimeout.
+      const token = context.env['DEVICE_SERVICE_TOKEN'] ?? '';
+      await fetch(`${options.serviceUrl}/sessions/${lease.id}/stop`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        signal: context.signal,
+      });
+    },
+  };
+}
+```
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { hostedDevices } from './device-provider.ts';
+
+export default {
+  targets: [
+    {
+      name: 'ios',
+      engine: mobile({
+        platform: 'ios',
+        device: hostedDevices({ serviceUrl: 'https://devices.example.com', image: 'ios-18-iphone-17' }),
+      }),
+      app: { bundleId: 'com.example.app' },
+    },
+  ],
+  workers: 2,
+} satisfies E2EConfig;
+```
+
+两个 worker 并行租用两个会话。托管会话按运行时间计费，因此把 `workers` 保持在套件能填满的数量。回放缓存以 `app.bundleId` 为键，因此本地记录的链路可以在托管设备上回放。
+
+agent-device 自己就能直连的设备云不需要你自己的会话 API：提供者通过为运行启动的守护进程分配租约，并把租约范围作为 `client` 交给 worker。
+
+```ts title="device-cloud-provider.ts" expandable
+import { createAgentDeviceClient } from 'agent-device';
+import type { DeviceProvider } from '@e2e-dev/mobile';
+
+/**
+ * Leases devices from a device cloud agent-device itself speaks to, through
+ * a daemon started for the run. The daemon's runtime for the cloud creates
+ * the instance when the lease is allocated and deletes it when the lease is
+ * released; the worker's client carries the lease, so every command lands on
+ * that instance. `provider` is agent-device's name for the cloud; its runtime
+ * reads the credentials from the environment the daemon starts with.
+ */
+export function cloudDevices(options: { provider: string; stateDir: string }): DeviceProvider {
+  const scopes = new Map<string, { tenant: string; runId: string; leaseId: string; leaseBackend: 'ios-instance' | 'android-instance'; leaseProvider: string }>();
+  return {
+    name: options.provider,
+    async acquire(request) {
+      // One daemon per run, under a directory of its own.
+      const stateDir = `${options.stateDir}/${request.runId}`;
+      const client = createAgentDeviceClient({ stateDir, session: `lease-${request.slot}` });
+      const leaseBackend = request.platform === 'ios' ? ('ios-instance' as const) : ('android-instance' as const);
+      const lease = await client.leases.allocate({
+        tenant: options.provider,
+        runId: request.runId,
+        leaseBackend,
+        leaseProvider: options.provider,
+        platform: request.platform,
+        target: 'mobile',
+      });
+      request.log(`leased ${lease.leaseId}`);
+      const scope = { tenant: lease.tenantId, runId: lease.runId, leaseId: lease.leaseId, leaseBackend, leaseProvider: options.provider };
+      scopes.set(lease.leaseId, scope);
+      // The worker's client is created with these fields; the daemon resolves the device from them.
+      return { id: lease.leaseId, client: { stateDir, ...scope } };
+    },
+    async release(lease) {
+      const scope = scopes.get(lease.id);
+      if (scope === undefined) return;
+      const client = createAgentDeviceClient({ stateDir: `${options.stateDir}/${scope.runId}`, session: 'release' });
+      await client.leases.release(scope);
+    },
+  };
+}
+```
+
+## 编写设备测试
+
+`screen` 将原生控件映射到 `button`、`textbox`、`listitem`、`switch` 等常见角色。原生元素标识符用 `getByTestId` 查询。
+
+```ts
+import { test } from '@e2e-dev/mobile';
+import { expect } from 'e2e';
+
+test('shows the version offline in dark mode', async ({ agent, app, device, screen }) => {
+  await device.setAppearance('dark');
+  await device.setNetwork('offline');
+  await app.open();
+  await agent.act('go to General, then About');
+  await expect(screen.getByRole('button', /^iOS Version/)).toBeVisible();
+  await expect(device.locator('role=NavigationBar id=About')).toBeVisible();
+});
+```
+
+设备不支持 `selectOption`、`setInputFiles`、`scrollIntoView`、`secondaryTap` 以及 `tap`/`doubleTap` 上的 `modifiers`。与原生控件交互请使用点击和滑动。
+
+### 各框架的 test ID
+
+`getByTestId` 在 iOS 上读取 accessibility identifier，在 Android 上读取 resource id。每种 UI 框架设置它们的方式不同。下面的每个[示例项目](/example-projects)都在同一个问候界面上写了相同的三个定位器测试：
+
+| 框架 | 设置 id 的方式 | 示例 |
+| --- | --- | --- |
+| React Native | `testID` | [with-expo](https://github.com/tester-army/e2e/tree/main/examples/with-expo) |
+| SwiftUI | `.accessibilityIdentifier()` | [with-swiftui](https://github.com/tester-army/e2e/tree/main/examples/with-swiftui) |
+| Jetpack Compose | `Modifier.testTag()` | [with-compose](https://github.com/tester-army/e2e/tree/main/examples/with-compose) |
+| Compose Multiplatform | `Modifier.testTag()` | [with-kotlin-multiplatform](https://github.com/tester-army/e2e/tree/main/examples/with-kotlin-multiplatform) |
+| Flutter | `Semantics(identifier:)` | [with-flutter](https://github.com/tester-army/e2e/tree/main/examples/with-flutter) |
+
+- 在根 composable 设置 `Modifier.semantics { testTagsAsResourceId = true }` 之前，Compose 不会把 test tag 放进 Android 无障碍树；没有它，`getByTestId` 在 Android 上查不到任何东西。iOS 原样读取 Compose Multiplatform 的 tag，因此共享界面要在其 Android activity 中设置这个开关。
+- 在 Flutter 中，把按钮的 `Semantics` 包在 `MergeSemantics` 里，让 id 和按钮角色落在同一个节点上。
+
+### `device` fixture
+
+用 `device` 管理网络状态、权限、外观、应用安装和其他设备设置，无需调用模型。每次调用都会作为一步 `device.<method>` 出现在报告中。
+
+对于 `screen` 查询识别不了的控件，`device.locator('...')` 接受 agent-device 选择器：
+
+```ts
+await expect(device.locator('role=NavigationBar id=About')).toBeVisible();
+await device.locator('id=SW_VERSION_SPECIFIER role=Button').tap();
+```
+
+在测试内可以用 `device.installApp` 检查升级或全新安装；不传路径时安装的是 target 的 `app.appPath`：
+
+```ts
+const { app } = await device.installApp('./build/MyApp.app', { reinstall: true });
+await device.openApp(app);
+```
+
+`device.openApp` 接受 bundle id、包名或显示名称，不接受链接。`device.openLink` 在已固定的应用中，或在其选项指定的 `app` 中打开深链（deep link）或网页链接，用于魔法链接登录和深链路由：
+
+```ts
+await device.openLink('myapp://orders/42');
+await expect(screen.getByText('Order #42')).toBeVisible();
+```
+
+`device.clearKeychain()` 会重置模拟器的钥匙串，而 `app.clearState()` 对它不动，因此已存储的会话令牌在下一次启动时消失。仅限 iOS；Android 没有可重置的钥匙串。
+
+`device.fold(pose)` 把可折叠的 iOS 模拟器 iPhone Duo 摆到铰链姿态：`closed` 点亮外屏，`half-open`（130° 的书本姿态）和 `open` 点亮内屏。模拟器上报铰链到达该角度后它才返回，通常需要 10 到 16 秒，因此 `actionTimeout` 要保持在 20 秒或以上，而下一次观测读取的将是另一块屏上的应用。引擎从不会重置姿态：重试和下一个测试都从上一个测试留下的姿态开始，因此在 `afterEach`（测试失败时也会执行）中折回去：
+
+```ts
+import { afterEach, test } from '@e2e-dev/mobile';
+
+afterEach(async ({ device }) => {
+  await device.fold('closed');
+});
+
+test('the list and the detail split across the fold', async ({ agent, app, device }) => {
+  await app.open();
+  await device.fold('half-open');
+  await agent.assert('the list and the detail sit on either side of the fold', { vision: true });
+});
+```
+
+全部方法都在 [Mobile 引擎参考](/reference/mobile#device-fixture)中。
+
+### 智能体工具
+
+智能体已经具备 `tap`、`type`、`scroll` 等基础动作。加上 `mobileTools` 即可获得应用切换、设备手势和系统弹窗：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { mobileTools } from '@e2e-dev/mobile/tools';
+import { gateway } from 'ai';
+
+const iphone = mobile({ platform: 'ios' });
+const pixel = mobile({ platform: 'android' });
+const app = { bundleId: 'com.example.app' };
+
+export default {
+  targets: [
+    { name: 'iphone', engine: iphone, app },
+    { name: 'pixel', engine: pixel, app },
+  ],
+  workers: 1,
+  agents: {
+    default: {
+      model: gateway('openai/gpt-6-luna-fast'),
+      tools: mobileTools(iphone, pixel),
+    },
+  },
+} satisfies E2EConfig;
+```
+
+把每个已配置的设备引擎传给 `mobileTools`。调用会路由到正在执行当前尝试的引擎。`open_app`、`swipe` 和 `alert` 都会改变设备状态，因此在缓存回放期间这些步骤由智能体接手。每个工具都在 [Mobile 引擎参考](/reference/mobile#智能体工具)中说明。
+
+## 与 web 的差异
+
+| 在 web 上 | 在设备上 |
+| --- | --- |
+| `app.open('/path')` 与智能体的 `navigate` 动词 | 没有应用 URL。`app.open()` 全新启动 target 的 `app.bundleId`，`device.openLink(url)` 向其中打开深链或网页链接，且没有 `navigate` |
+| `test.setup` 保存会话，`session:` 恢复会话 | 不可用。模拟器没有可迁移的会话快照；每个测试内单独登录，或为应用预置数据 |
+| 机密输入 | `type_secret` 和 `screen.getByLabel(...).fill(secret)` 会把已声明的机密填入安全输入框 |
+| `--video` 写出 WebM 屏幕录像 | `--video` 写出设备屏幕的 MP4 录像并标示点击位置（`videoTouches: false` 可隐藏），或保留设备提供者自己的录制 |
+| 缓存锚定在页面路径上 | 缓存锚定在位置 `<bundle id> / <screen title>` 上，即从 iOS 的导航栏、Android 的工具栏读到的标题 |
+
+### 已知的设备限制
+
+- 设备节点只有 `placeholder` 一个属性。
+- iOS 上的 React Native 标签页（`accessibilityRole="tab"`）角色是 `other`。按 test id 或标签查询，并用 `toBeSelected` 断言。复选框、单选框和 `toBeChecked` 在两个平台上都可用。
+- iOS 上普通的 React Native `View` 在树中没有子节点，因此对它执行 `filter({ has })` 以及以它为范围的查询都匹配不到任何东西。把范围限定到界面的 `ScrollView`（`device.locator('role=ScrollView')`），或给子节点设置 test id。
+- 绘制尺寸小于 48dp 的 Jetpack Compose 可点击元素会上报 48dp 的触摸区域，但角色节点仍按绘制尺寸呈现，于是树里出现两个按钮，点击会以 `has no parent-owned touch point` 失败。把控件做到至少 48dp——这是 Android 的最小触摸目标。
+- 用 `display: none` 隐藏的元素不会出现在树中，因此 `toBeAttached` 会失败。改用 `toHaveCount(0)` 或 `toBeHidden` 断言。
+- iOS 上的 `doubleTap()` 是两次相隔约 285 ms 的点击。给双击检测器设置 350 ms 以上的判定窗口。
+- iOS 上，`device.home()` 之后 `device.foregroundApp()` 仍报会话的应用。请改为检查屏幕内容。
+- 在 iPhone Duo 上，`--video` 只录制开始录制时点亮的那块屏。`device.fold` 把应用移到另一块屏后，视频剩余部分是黑的。
+
+## 故障排除
+
+设备失败会显示 agent-device 自己的报错信息。在智能体之下，没有更具体错误码的引擎故障会被报告为 `APP_UNREACHABLE`，因此要先读信息再看错误码：出问题的往往不是应用。
+
+**iOS 自动化 runner 正忙、卡死或无法呈现快照**。复杂或带动画的界面会让 runner 超时，而用 Ctrl-C 中断的运行也可能让它到下一次运行时仍然忙碌。报错信息如下：
+
+```text
+APP_UNREACHABLE: agent.act failed: snapshot failed: the iOS automation runner is still
+finishing a command that overran its watchdog (session e2e-ios-0 on iPhone 17 Pro):
+The iOS runner is still finishing a previous command that exceeded its execution
+watchdog (usually an accessibility capture on a heavy or animating screen). The app
+is fine. Wait a few seconds and rerun. If the next run meets it again, stop the
+daemon (`npx agent-device daemon stop`) and reboot the simulator
+(`xcrun simctl shutdown <udid>`, then `boot`).
+```
+
+照它说的做即可。
+
+**Android 上 `device.installApp()` 报不出 bundle id 或包名**。构建已安装，但 agent-device 说不清它是哪个包，`app.open()` 便无从启动。agent-device 0.21.18 无法解析用 aapt2 构建的 APK 的清单（如今所有 Android 构建都是如此），因此回退到 Android SDK 的 `aapt`，它会在 `ANDROID_SDK_ROOT`、`ANDROID_HOME` 或 `~/Android/Sdk` 下查找，而不是 macOS 默认的 `~/Library/Android/sdk`。没有 `aapt` 时，它只会报出本次安装新增的包，而仿真器上已有的构建不会新增。设置 target 的 `app.bundleId`，或者导出 `ANDROID_HOME` 并停止 agent-device 守护进程（下文的 `daemon stop`），让下次运行带着该变量启动它。
+
+**设备上的超时**。在设备上超时的模拟器启动、runner 连接或应用启动会以 `ENGINE_FAILURE` 附带 agent-device 的信息和提示报告，而不会是 e2e 自己的超时错误码（`LAUNCH_TIMEOUT`、`ACTION_FAILED`、`STEP_TIMEOUT`）。
+
+<CodeGroup>
+```bash npm
+npx agent-device doctor          # 工具链、守护进程与已启动的设备
+npx agent-device daemon stop     # 卡死之后：丢弃全部会话，下次运行会重新启动守护进程
+xcrun simctl shutdown <udid> && xcrun simctl boot <udid>
+```
+
+```bash pnpm
+pnpm exec agent-device doctor          # 工具链、守护进程与已启动的设备
+pnpm exec agent-device daemon stop     # 卡死之后：丢弃全部会话，下次运行会重新启动守护进程
+xcrun simctl shutdown <udid> && xcrun simctl boot <udid>
+```
+
+```bash bun
+bunx agent-device doctor          # 工具链、守护进程与已启动的设备
+bunx agent-device daemon stop     # 卡死之后：丢弃全部会话，下次运行会重新启动守护进程
+xcrun simctl shutdown <udid> && xcrun simctl boot <udid>
+```
+</CodeGroup>
+
+<CardGroup cols={2}>
+  <Card title="Mobile 引擎参考" icon="mobile-screen" href="/reference/mobile">
+    全部选项、`device` fixture 与工具包。
+  </Card>
+  <Card title="定位器" icon="crosshairs" href="/core-concepts#定位器">
+    在任意平台上用 `screen` 与 `expect` 进行精确的点击、滑动与检查。
+  </Card>
+</CardGroup>

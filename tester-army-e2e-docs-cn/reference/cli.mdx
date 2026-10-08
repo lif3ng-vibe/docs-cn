@@ -1,0 +1,808 @@
+---
+title: CLI
+description: 命令、旗标、输出格式与退出码。
+icon: "terminal"
+---
+
+<CodeGroup>
+```bash npm
+npx e2e init [directory]
+npx e2e login [provider]
+npx e2e logout [provider]
+npx e2e models [provider]
+npx e2e guide [topic]
+npx e2e mcp [options]
+npx e2e run [files...] [options]
+npx e2e explore [goal] [options]
+npx e2e list [files...] [options]
+npx e2e cache ls|clear|stats [--config <path>]
+npx e2e feedback -m <text> [options]
+npx e2e telemetry [status|enable|disable]
+npx e2e --help
+npx e2e --version
+```
+
+```bash pnpm
+pnpm dlx e2e init [directory]
+pnpm exec e2e login [provider]
+pnpm exec e2e logout [provider]
+pnpm exec e2e models [provider]
+pnpm exec e2e guide [topic]
+pnpm exec e2e mcp [options]
+pnpm exec e2e run [files...] [options]
+pnpm exec e2e explore [goal] [options]
+pnpm exec e2e list [files...] [options]
+pnpm exec e2e cache ls|clear|stats [--config <path>]
+pnpm exec e2e feedback -m <text> [options]
+pnpm exec e2e telemetry [status|enable|disable]
+pnpm exec e2e --help
+pnpm exec e2e --version
+```
+
+```bash bun
+bunx e2e init [directory]
+bunx e2e login [provider]
+bunx e2e logout [provider]
+bunx e2e models [provider]
+bunx e2e guide [topic]
+bunx e2e mcp [options]
+bunx e2e run [files...] [options]
+bunx e2e explore [goal] [options]
+bunx e2e list [files...] [options]
+bunx e2e cache ls|clear|stats [--config <path>]
+bunx e2e feedback -m <text> [options]
+bunx e2e telemetry [status|enable|disable]
+bunx e2e --help
+bunx e2e --version
+```
+</CodeGroup>
+
+CLI 需要 Node.js 24.8 及以上版本，或 Node.js 22 系的 22.22.3 及以上。任何包管理器都能安装它（npm、pnpm、开启或未开启 Plug'n'Play 的 Yarn、Bun）；CLI 本身运行在 Node.js 上，而不是 Bun 或 Deno 运行时（`bunx e2e` 也是在 Node.js 上运行它）。在 Node.js 24.8 至 24.11.0 的 Yarn Plug'n'Play 之下，`.cts` 文件会加载失败（Node.js 拒收 Yarn 的 loader 交上来的源码）；24.11.1 及之后可以加载。
+
+## 帮助与版本
+
+| 旗标 | 行为 |
+| --- | --- |
+| `-h`, `--help` | 打印所跟命令的帮助，并以退出码 0 结束。`e2e help run` 等同于 `e2e run --help`。 |
+| `-v`, `--version` | 打印已安装的 `e2e` 版本，并以退出码 0 结束。 |
+
+```console
+$ npx e2e --version
+0.14.0
+```
+
+在终端或 CI 中输出带颜色；管道输出或设置了 `NO_COLOR` 时为纯文本。`FORCE_COLOR`
+保留颜色。不带命令运行 `e2e` 时，会向 stderr 打印帮助并以退出码 2 结束。
+
+在宽度至少 55 列的终端上，`e2e --help` 开头会显示 e2e 字标——用块字符绘出的
+站名文字；管道输出与更窄的终端只显示文字。
+
+## e2e init
+
+为项目搭建脚手架，并把 `e2e` 加入 `devDependencies`。已有的配置与测试文件会
+跳过。传入 `directory` 参数时，项目会在该目录搭建。
+
+在终端上，向导开头会逐字母书写 e2e 字标，约一秒完成，如同笔尖写出。使用
+`--yes`、在 CI 中、在哑终端上、或在少于 11 行的终端上时，字标一次性打印；管道
+输出永不显示它。书写期间收到 Ctrl-C 或 SIGTERM 以退出码 130 结束。
+
+对新项目，向导会请你选择：
+
+- 引擎。**Web**（Playwright，默认）会添加 `@e2e-dev/web`。
+  **Mobile (iOS/Android)** 会添加 `@e2e-dev/mobile`，macOS 上默认 iOS，其他
+  平台默认 Android，并打开「设置」应用。**None** 不添加任何东西。
+- 供智能体步骤使用的模型提供者或订阅。可选 Vercel AI Gateway、OpenRouter、
+  OpenAI 兼容端点、ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok；
+  只用定位器编写的测试可选 None。向导会添加所需的包和模型配置。订阅用户随后
+  用 `e2e login` 登录。参见[模型](/models)与[订阅](/subscriptions)。
+- 智能体 skill 安装到哪里（参见 [e2e guide](#e2e-guide)）：Codex、Cursor、
+  Copilot、Gemini CLI、OpenCode 和 Zed 装在 `.agents/skills/`，Claude Code
+  装在 `.claude/skills/`。两者都预选中；同时选择时，`.claude/skills/e2e` 是
+  指向 `.agents/skills/e2e` 的软链接，与 `npx skills add` 生成的布局一致。
+- [MCP 服务器](/reference/mcp)注册到哪里：Claude Code 写 `.mcp.json`，
+  Cursor 写 `.cursor/mcp.json`。两者都预选中。
+
+确认文件变更后，再选择是否安装所选依赖。安装器遵循项目的 `packageManager`
+字段或锁文件，其次是你调用的包管理器，最后是 npm。
+
+| 参数或旗标 | 类型 | 默认值 | 行为 |
+| --- | --- | --- | --- |
+| `[directory]` | path | 工作目录 | 搭建位置；目录不存在时创建 |
+| `-y`, `--yes` | boolean | `false` | 使用 Web 引擎与 Vercel AI Gateway，在两个位置都安装 skill 与 MCP 配置，并跳过依赖安装 |
+
+| 创建 | 内容 |
+| --- | --- |
+| `package.json` | 缺失时创建为私有 ESM 包；否则只补充缺失的依赖与脚本。同级包（`@e2e-dev/web`、`@e2e-dev/mobile`）取与 CLI 一同发布版本的 caret 范围；CLI 为预发布版时则取该确切版本。不存在时添加 `test:e2e` 脚本，运行 `e2e run` |
+| `e2e.config.ts` | 为所选引擎生成一个 target，应用写在其 `app` 中。Playwright 会把 `APP_URL`（默认 `http://localhost:3000`）读进 `app.url`，并用注释展示 `app.command`。Mobile 在 iOS 上生成 `app: { bundleId: 'Settings' }`，在 Android 上生成 `com.android.settings`。选了网关时，`agents.default` 为 `{ model, system }` |
+| `tests/example.e2e.ts` | 一个打开应用即可通过的测试，另附一个注释掉的智能体测试示例。设备脚手架则以「设置」检查代替 |
+| `.gitignore` | 追加 `node_modules/`、`.e2e/results/`、`.e2e/cache/`、`.e2e/sessions/`、`.e2e/report.json`、`.e2e/ai-trace.json`、`.e2e/junit.xml`、`.e2e/summary.md`、`.e2e/logs/` 和 `.e2e/videos/`。提交缓存默认关闭；参见[提交回放缓存](/cache#提交回放缓存) |
+| `.agents/skills/e2e/`、`.claude/skills/e2e/` | `SKILL.md` 以及每个 `e2e guide` 主题一份 `references/<topic>.md`。同时选择两个位置时，Claude Code 目录是指向副本的相对软链接（`../../.agents/skills/e2e`） |
+| `.mcp.json`、`.cursor/mcp.json` | 注册 `e2e mcp`，不改其他服务器 |
+
+<CodeGroup>
+```bash npm
+npx e2e init --yes
+```
+
+```bash pnpm
+pnpm dlx e2e init --yes
+```
+
+```bash bun
+bunx e2e init --yes
+```
+</CodeGroup>
+
+重跑 `init` 会保留已有配置，并不为它补装包。MCP 注册在修复启动命令的同时，
+仍保留 e2e 服务器上的其他设置，例如环境变量与客户端超时。当前注册若已是最新，
+则逐字节原样保留。skill 目录一旦存在，后续运行会刷新与已安装版本不同的副本，
+且绝不添加项目未曾选择的目录。早前版本留下的 `.claude/skills/e2e/` 副本若只
+含随包文件，会改造为软链接；其中还有其他文件的则保持为副本并刷新。链接到别处
+或位于链接之下的 skill 目录绝不顺链写入：`--yes` 会跳过它并警告，指名链接与
+目标；交互式运行会提议把被链接的 skill 目录替换为副本，或替换为链接最终指向
+的位置。副本中该是文件的位置变成了目录（或相反）时，跳过并警告指名该条目；
+`init` 不会为修复而删除任何东西。经由软链接到达、或位于被链接目录之下的 MCP
+配置文件，同样跳过并警告、保持不变，因此服务器不注册到那里；普通配置照常合并。
+
+取消时文件保持原样，以退出码 0 结束。无效的 `package.json` 在任何写入之前以
+退出码 2 结束。stdin 与 stdout 若不是终端，不带 `--yes` 的 `init` 以退出码 2
+结束并指名该旗标。
+
+## e2e login
+
+<CodeGroup>
+```bash npm
+npx e2e login openai              # ChatGPT，浏览器登录
+npx e2e login openai --device     # 用设备码登录
+npx e2e login github-copilot --from-gh  # 复用 GitHub CLI 的登录态
+npx e2e login github-copilot --client-id <id> [--enterprise-url <host>]
+npx e2e login opencode-console    # OpenCode Console，设备码
+npx e2e login spacexai            # SuperGrok，设备码
+npx e2e login                     # 选择提供者
+```
+
+```bash pnpm
+pnpm exec e2e login openai              # ChatGPT，浏览器登录
+pnpm exec e2e login openai --device     # 用设备码登录
+pnpm exec e2e login github-copilot --from-gh  # 复用 GitHub CLI 的登录态
+pnpm exec e2e login github-copilot --client-id <id> [--enterprise-url <host>]
+pnpm exec e2e login opencode-console    # OpenCode Console，设备码
+pnpm exec e2e login spacexai            # SuperGrok，设备码
+pnpm exec e2e login                     # 选择提供者
+```
+
+```bash bun
+bunx e2e login openai              # ChatGPT，浏览器登录
+bunx e2e login openai --device     # 用设备码登录
+bunx e2e login github-copilot --from-gh  # 复用 GitHub CLI 的登录态
+bunx e2e login github-copilot --client-id <id> [--enterprise-url <host>]
+bunx e2e login opencode-console    # OpenCode Console，设备码
+bunx e2e login spacexai            # SuperGrok，设备码
+bunx e2e login                     # 选择提供者
+```
+</CodeGroup>
+
+登录某个订阅，并把凭据存到 `$XDG_CONFIG_HOME/e2e/oauth.json`（默认
+`~/.config/e2e/oauth.json`）。登录失败以退出码 1 结束，取消为 130；未知
+提供者为 2。模型配置参见[订阅](/subscriptions)。
+
+| 参数或旗标 | 类型 | 默认值 | 行为 |
+| --- | --- | --- | --- |
+| `[provider]` | `openai`、`github-copilot`、`opencode-console` 或 `spacexai` | 弹出选择器 | 要登录的订阅 |
+| `--device` | boolean | `false` | ChatGPT：不打开浏览器，而是显示一个待在另一台设备上输入的码 |
+| `--from-gh` | boolean | `false` | GitHub Copilot：复用已登录 GitHub CLI 的 token |
+| `--client-id <id>` | string | 无 | GitHub Copilot：你启用了设备流的 GitHub OAuth App 的 client id |
+| `--enterprise-url <host>` | string | 无 | GitHub Copilot：GitHub Enterprise 主机 |
+
+## e2e logout
+
+<CodeGroup>
+```bash npm
+npx e2e logout           # 从已存登录中选一个
+npx e2e logout openai    # 忘掉其中一个
+```
+
+```bash pnpm
+pnpm exec e2e logout           # 从已存登录中选一个
+pnpm exec e2e logout openai    # 忘掉其中一个
+```
+
+```bash bun
+bunx e2e logout           # 从已存登录中选一个
+bunx e2e logout openai    # 忘掉其中一个
+```
+</CodeGroup>
+
+## e2e models
+
+<CodeGroup>
+```bash npm
+npx e2e models           # 所有已存登录
+npx e2e models openai    # 单个提供者
+```
+
+```bash pnpm
+pnpm exec e2e models           # 所有已存登录
+pnpm exec e2e models openai    # 单个提供者
+```
+
+```bash bun
+bunx e2e models           # 所有已存登录
+bunx e2e models openai    # 单个提供者
+```
+</CodeGroup>
+
+向厂商询问已存登录能使用哪些模型，并为每个模型打印一行：`chatgpt()`、
+`copilot()`、`opencodeConsole()` 或 `grok()` 所用的 id、厂商为它起的名字，以及
+备注（推理等级、vision、preview、hidden；Copilot 在 `copilot()` 无法调用它时
+是 `not enabled` 或 `no chat or responses`；OpenCode Console 则是伺服它的订阅
+计划，Zen 或 Go）。没有已存登录、或所指提供者没有登录时，以退出码 1 结束并
+给出登录命令；多个登录中某一个列表失败时，其余照常打印，命令以退出码 1 结束。
+未知提供者以退出码 2 结束。参见[挑选模型](/subscriptions#选择模型)。
+
+## e2e guide
+
+<CodeGroup>
+```bash npm
+npx e2e guide            # 总览
+npx e2e guide setup      # 单个主题
+```
+
+```bash pnpm
+pnpm exec e2e guide            # 总览
+pnpm exec e2e guide setup      # 单个主题
+```
+
+```bash bun
+bunx e2e guide            # 总览
+bunx e2e guide setup      # 单个主题
+```
+</CodeGroup>
+
+打印 `init` 安装的 skill。单独的 `guide` 打印总览；`guide <topic>` 打印
+`setup`、`writing-tests`、`agent`、`running`、`explore`、`debugging`、`mcp`
+或 `bug-bash` 之一。未知主题以退出码 2 结束，并指名有效的主题。同一 skill 也可
+用 `npx skills add tester-army/e2e` 安装。参见[编码智能体](/coding-agents)。
+
+## e2e mcp
+
+<CodeGroup>
+```bash npm
+npx e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+
+```bash pnpm
+pnpm exec e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+
+```bash bun
+bunx e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+</CodeGroup>
+
+一个基于 stdio 的 MCP 服务器，为编码智能体提供应用上的实时会话。旗标、工具与
+会话规则见 [MCP 服务器](/reference/mcp)页。
+
+## e2e run
+
+### 位置参数
+
+```bash
+e2e run [files...]
+```
+
+测试文件、目录，或相对项目根的 glob：
+
+- 文件路径（`tests/signup.e2e.ts`）选中该文件；
+- 目录（`tests/agent`、`.`）选中其下所有被发现的测试文件；
+- 裸名字选中路径在段边界处以其结尾的每个已发现文件。`signup.e2e.ts` 和
+  `agent/signup.e2e.ts` 都会选中 `tests/agent/signup.e2e.ts`。不含 `/` 或
+  `.` 时按去掉扩展名后的文件名匹配，因此 `signup` 也能选中它；
+- 以上任何形式加 `:line` 后缀（`tests/signup.e2e.ts:12`、`signup:12`）只选中
+  这些文件在该行声明的测试：即 `test(` 调用所在的行，如编辑器或报告的
+  `source` 所示。行号点到串行组的一部分时，整个串行组运行。同一文件的多个
+  行号叠加；不带行号点名整个文件则整体选中。所指行上没有声明测试时，
+  `NO_TESTS` 会指名该位置参数以及该文件声明测试所在的行号。磁盘上按原样存在的
+  位置参数按路径处理，即使其名字以 `:12` 结尾；
+- glob（带引号的 `'tests/**/*.smoke.e2e.ts'`）使用配置 `tests` glob 的语法：
+  `*`、`?` 和整段 `**`。花括号、字符类与 extglob 都是 `INVALID_GLOB`，会提示
+  可写的模式，而不是悄悄匹配不到任何东西：不存在展开，因此每个备选项要单独
+  写一个 glob。`./`、`..`、末尾的 `/` 和项目内的绝对路径与其他位置参数路径
+  一样解析；无论名字如何拼写，已存在的文件或目录都按其路径选中。
+
+位置参数只会收窄配置 glob 与标签、平台、能力过滤器，绝不会绕过它们。名字与
+glob 在所有操作系统上都区分大小写。项目根之外的路径是 `COLLECTION_ERROR`。
+
+runner 会导入每个被发现的测试文件，即使你只选中了少数几个。这让被选中的测试
+能在另一个文件里找到自己的会话搭建。其他普通测试保持未选中状态。被选中文件
+中的收集错误、或无位置参数运行中任何文件的收集错误，都会使运行失败。位置参数
+未选中的文件若导入失败或未能注册测试，则跳过并给出通知——这样套件其他地方的
+半成品文件不会挡住 `npx e2e run tests/login.e2e.ts`；若被选中测试的会话随后
+找不到搭建测试，报错会指名该文件为搭建可能所在之处。
+
+以 `-` 开头且不对应任何文件的位置参数是用法错误，退出码 2。`pnpm test:e2e --
+--headed` 产生的正是这种输入：`--` 之后传给了 e2e，而 `--headed` 否则会被当成
+文件。报错会指名直接写法 `pnpm exec e2e run --headed`。
+npm 的直接写法是 `npm exec -- e2e run --headed`；npm 需要分隔符才能把旗标
+透传给二进制。
+
+当没有东西可运行时，`NO_TESTS` 会指名原因：没有文件匹配 glob（附相似文件名
+如 `tests/login.test.ts`）、某个位置参数没有匹配到任何东西（附最近的路径）、
+匹配到的文件没有注册任何测试，或所有测试都被过滤掉了。
+
+### 旗标
+
+| 旗标 | 类型 | 默认值 | 行为 |
+| --- | --- | --- | --- |
+| `--config <path>` | string | 自动发现 | 显式指定配置路径。文件缺失是 `CONFIG_NOT_FOUND`。 |
+| `--target <ids>` | comma-separated or repeated | 全部已配置 target | 按名字选择 target。只有被选中 target 的应用命令会启动。未知 ID 是 `UNKNOWN_TARGET`。 |
+| `--tag <tags>` | comma-separated or repeated | 无 | 只跑携带这些标签的测试：任一命中，或配合 `--tag-mode all` 要求全部命中。过滤后无测试可跑时，`NO_TESTS` 会清点它过滤掉的测试，标记没有测试声明的标签，并指出最接近的已声明标签。 |
+| `--tag-mode <mode>` | `any` or `all` | `any` | 多个标签如何组合：任一命中，或全部命中。 |
+| `--exclude-tag <tags>` | comma-separated or repeated | 无 | 剔除携带任一标签的测试，无论 `--tag` 或位置参数选中了什么。任一成员被选中时串行组仍整体运行；要排除整个流程，请给串行 `describe` 打标签。 |
+| `--grep <pattern>` | regular expression, repeatable | 无 | 只跑标题匹配任一模式的测试。匹配的文本是 describe 标题与测试标题以单空格连接（`checkout pays`）；文件与标签不在其中。裸模式区分大小写；`'/pattern/i'` 可加旗标。编译不过的模式是用法错误，退出码 2。 |
+| `--grep-invert <pattern>` | regular expression, repeatable | 无 | 剔除标题匹配任一模式的测试。文本与模式写法同 `--grep`；两者并用时，保留 `--grep` 匹配、剔除 `--grep-invert` 匹配的部分。 |
+| `--last-failed` | boolean | `false` | 只跑上一次运行未通过的测试，从本次运行即将覆盖的 `report.json` 读取，即 `<output>/report.json`（取 `--output`，否则配置的 [`output`](/reference/config#output)）：失败、超时、被中断，或因搭建、串行前驱、钩子或 worker 失败、`--max-failures` 先行停止运行而被跳过的测试，外加它在 describe 或文件中、该 target 上、其 `beforeAll` 或 `afterAll` 失败的所有测试（搭建失败则是消费其会话的测试）。重跑若再次执行该钩子且仍失败会再次上报；重跑执行了其范围内的任何测试而钩子未失败则解除责任。其他过滤器（`--grep`、`--tag`、`--target`、`--agent`、位置参数）把某个测试排除出重跑时，它仍是欠账：重跑报告在 `run.carried` 下携带其上次结果及所属的钩子失败，下一次 `--last-failed` 会再次选中它，且 [`@e2e-dev/github`](/github) 页面在它通过前一直报红（⏹️ 表示上次运行中被中断的测试）。重跑自身的退出码与汇总只统计它实际运行的内容。它保留上一份报告点名的产物，并把本次产物写到每个测试的 `rerun-<n>/` 下，因此任何尝试都不会覆盖更早尝试的文件。测试按 target 与 agent 分别点名。没有报告是 `NO_LAST_RUN`；上一次运行没有失败则不选中任何测试，除非 `--pass-with-no-tests`，否则是 `NO_TESTS`。 |
+| `--shard <index/total>` | `2/3` | 无 | 把选中的测试切成一个连续片段运行，切分发生在其他所有过滤器之后。各片段大小相差不超过一个测试；串行组算一个且绝不拆分；每个 shard 只携带自己的测试所需的搭建测试。每个 shard 用同一命令配不同 index 运行；顺序即报告顺序，因此同一套件在每台机器上都以相同方式分片。没分到测试的 shard 是 `NO_TESTS`，除非 `--pass-with-no-tests`。参见[分片](/ci#分片)。 |
+| `--headed` | boolean | `false` | 引擎支持时显示可见 UI。 |
+| `--agent <names>` | comma-separated or repeated | `default` | 未钉住 agent 的测试按每个选中 agent 各跑一次。对带 `{ agent }` 的测试，若有交集则选中共同的名字；否则保持该测试自己的选择。未知名字是 `INVALID_CONFIG`。 |
+| `--retries <n>` | integer 0-10 | config | 替换 `config.retries`。 |
+| `--workers <n>` | integer 1-1024 | config | 替换 `config.workers`。 |
+| `--repeat-each <n>` | integer, at least 1 | `1` | 每个选中的测试运行这么多次。每次都是一份独立结果，`repeat` 取 0 到 `n - 1`，各自有 `id`；list 报告器把后续运行标为 `(repeat #1)`、`(repeat #2)`，其产物放在 `repeat-<n>` 目录下。搭建测试只跑一次。回放缓存开启时，第一次运行记录、后续运行回放，因此请搭配 `--no-cache`，让每次都真正驱动模型。`list` 汇总增加一行 `Repeats`（如 `1 of 2 tests passed all 5 runs`），并为每个未全通过的测试各列一行，指名失败的运行；`markdown` 页做同样统计。 |
+| `--max-failures <n>` | integer, at least 1 | 无 | 一旦有这么多测试失败或超时就停止运行。不再派发新任务；其他 worker 上正在运行的测试以 `interrupted` 结束；未开始的测试——包括触发上限的那个文件中剩余的测试——以原因 `failure-limit` 跳过，理由为 `run stopped after 3 failures (--max-failures 3)`。退出码取失败本身的 1，而非 130。 |
+| `--reporter <ids>` | comma-separated list | config | 替换 `config.reporters` 中的内建 ID：`list`、`json`、`junit`、`markdown`。`json` 与 `list` 同用是 `INVALID_CONFIG`。配置中的[报告器对象](/reference/reporters)继续照常运行。 |
+| `--output <dir>` | string | config，否则 `.e2e` | 本次运行的结果目录，高于配置的 [`output`](/reference/config#output)：报告、报告器文件、AI trace、`results/`（运行测试开始时清空；`--last-failed` 重跑时保留上一份报告点名的文件）和 `sessions/`。相对项目根解析；运行无法拥有的目录是 `INVALID_CONFIG`。已移除的 `--artifacts <dir>` 以其映射的 `--output` 报错：`--artifacts out/artifacts` 即 `--output out`；父目录是项目根或在其之外的目录映射为 `--output .e2e`。 |
+| `--no-cache` | boolean | `false` | 本次运行关闭回放缓存，无论 `config.cache` 如何设置。 |
+| `--strict-cache` | boolean | `false` | 本次运行开启 `cache.strict`：录制存在但已无法回放的步骤以 `REPLAY_STALE` 失败，而不是交给智能体。参见[录制过期即失败](/cache#过期录制让运行失败)。 |
+| `--pass-with-no-tests` | boolean | `false` | 未选中任何测试时以退出码 0 结束，而不是 `NO_TESTS`。 |
+| `--debug` | boolean | `false` | 运行结束后在 stderr 上打印各阶段耗时与智能体步骤表。 |
+| `--ai-trace` | boolean | `false` | 把每次模型调用记录到 `<output>/ai-trace.json`，一个 AI SDK devtools 数据库。用 [unbox-ai](https://github.com/tester-army/unbox-ai) 打开它。 |
+| `--trace [mode]` | `off`, `on`, `retain-on-failure`, `on-first-retry`, or `on-all-retries` | config | 哪些测试保留链路页（`<output>/results/<test>/trace.md`），高于配置与所有 target 的 `trace`；测试自身的 `trace` 仍然最高。裸 `--trace` 等于 `on`，为每个测试生成链路页；`--trace off` 只是不为没有自有 `trace` 的测试生成。该值可选且贪婪，因此 `--trace tests/a.e2e.ts` 会把文件名当成模式并失败：请写 `--trace=<mode>`，或把测试文件放在 `--trace` 之前。参见 [trace](/reference/config#trace)。 |
+| `--video [mode]` | a recording mode, as `--trace` | config | 哪些尝试录制视频（浏览器引擎 WebM，设备引擎 MP4），高于配置与所有 target 的 `video`；测试自身的 `video` 仍然最高。裸 `--video` 等于 `on`。它只作用于引擎能录制的 target；运行会用一条通知指名其余 target。与 `--trace` 一样贪婪：请写 `--video=<mode>`，或把测试文件放在 `--video` 之前。参见 [video](/reference/config#video)。 |
+
+越界的 `--retries` 与 `--workers` 会在任何东西启动之前以 `INVALID_CONFIG`
+失败，与配置值越界时相同。`--target`、`--tag`、`--exclude-tag` 与 `--agent`
+的每个名字只取一次；空值（`--tag ''`，或变量未设置时的 `--tag "$TAGS"`）是用法
+错误，退出码 2，绝不会变成更宽的选择。
+
+过滤器只收窄，且逐层生效：先位置参数，再 `.only`、`--tag`、`--exclude-tag`、
+`--grep`、`--grep-invert`、`--last-failed`，然后是平台与能力规则，最后
+`--shard`。过滤后无东西可跑时，`NO_TESTS` 会清点每个过滤器剔除的测试，指名
+标签与模式，并标记没有测试声明的标签。
+
+`--debug` 会向 stderr 追加两张表。阶段耗时对 runner 与所有 worker 求和。智能体
+步骤表按执行顺序列出每个智能体步骤及其分阶段耗时、模型调用次数、token，以及
+提供者报告的成本（若有）。
+
+```console
+$ npx e2e run --debug
+...
+[e2e debug] phase timings (wall 14.2s)
+  phase               count   total     avg     max
+  scheduler               1   11.8s   11.8s   11.8s
+  test.body               6   10.1s   1.7s    3.9s
+  session.launch          6    1.1s   183ms   410ms
+  engine.prepare          1   612ms   612ms   612ms
+  collect                 1   420ms   420ms   420ms
+  config.load             1   118ms   118ms   118ms
+  realm.import            1    96ms    96ms    96ms
+  session.close           6    88ms    15ms    31ms
+  engine.init             1    74ms    74ms    74ms
+
+[e2e debug] agent steps (execution order, model anthropic/claude-sonnet-4.5, total $0.0312)
+  step                                   total   model  observe  action  calls  tokens in/out  cached       cost
+  act "add a todo named groceries"       3.9s    2.8s    410ms   620ms      3  9412/388       61% (5740)   $0.0198
+  assert "the list shows groceries"      1.2s    1.1s     88ms     0ms      1  3120/41        0% (0)       $0.0114
+```
+
+`cached` 是提供者从其提示缓存供应的输入 token 占比；未报告该细分时为 `-`。
+报告按步骤记录同样内容（`model.cacheReadTokens`、`model.cacheWriteTokens`），
+按运行记录（`usage.modelCachedTokens`）。
+
+<CodeGroup>
+```bash npm
+npx e2e run
+npx e2e run tests/signup.e2e.ts --tag smoke
+npx e2e run tests/signup.e2e.ts:12
+npx e2e run tests/agent
+npx e2e run 'tests/**/*.smoke.e2e.ts'
+npx e2e run --target web,webkit --tag smoke,billing --tag-mode all
+npx e2e run --tag smoke --exclude-tag slow
+npx e2e run --grep checkout --grep-invert '/refund/i'
+npx e2e run --last-failed
+npx e2e run --shard 2/3
+npx e2e run --reporter json --workers 4 --retries 2
+npx e2e run --max-failures 3
+npx e2e run --repeat-each 5 --no-cache tests/checkout.e2e.ts
+npx e2e run --reporter list,junit
+```
+
+```bash pnpm
+pnpm exec e2e run
+pnpm exec e2e run tests/signup.e2e.ts --tag smoke
+pnpm exec e2e run tests/signup.e2e.ts:12
+pnpm exec e2e run tests/agent
+pnpm exec e2e run 'tests/**/*.smoke.e2e.ts'
+pnpm exec e2e run --target web,webkit --tag smoke,billing --tag-mode all
+pnpm exec e2e run --tag smoke --exclude-tag slow
+pnpm exec e2e run --grep checkout --grep-invert '/refund/i'
+pnpm exec e2e run --last-failed
+pnpm exec e2e run --shard 2/3
+pnpm exec e2e run --reporter json --workers 4 --retries 2
+pnpm exec e2e run --max-failures 3
+pnpm exec e2e run --repeat-each 5 --no-cache tests/checkout.e2e.ts
+pnpm exec e2e run --reporter list,junit
+```
+
+```bash bun
+bunx e2e run
+bunx e2e run tests/signup.e2e.ts --tag smoke
+bunx e2e run tests/signup.e2e.ts:12
+bunx e2e run tests/agent
+bunx e2e run 'tests/**/*.smoke.e2e.ts'
+bunx e2e run --target web,webkit --tag smoke,billing --tag-mode all
+bunx e2e run --tag smoke --exclude-tag slow
+bunx e2e run --grep checkout --grep-invert '/refund/i'
+bunx e2e run --last-failed
+bunx e2e run --shard 2/3
+bunx e2e run --reporter json --workers 4 --retries 2
+bunx e2e run --max-failures 3
+bunx e2e run --repeat-each 5 --no-cache tests/checkout.e2e.ts
+bunx e2e run --reporter list,junit
+```
+</CodeGroup>
+
+### 输出
+
+| 报告器 | 写出内容 |
+| --- | --- |
+| `list` | 终端进度、附源码帧的失败，以及运行汇总。TTY 上实时进度包括当前智能体步骤、模型轮次、工具调用与推理摘录。不可信字段上限 8 KiB，并剔除控制字符。 |
+| `json` | 只把报告文档写进 stdout、此外什么都不写，因此 `e2e run --reporter json \| jq` 可用。与 `<output>/report.json` 是同一文档，由包内的 `schema/report-v1.schema.json` 描述。形状只随 `schemaVersion` 字段变化（当前为 `report-1`）。不能与 `list` 同用。 |
+| `junit` | 在报告旁写 `junit.xml`。每个文件一个 `<testsuite>`，每个测试-target 对一个 `<testcase>`，名为 `title > path [target]`。测试类错误是 `<failure>`，其他是 `<error>`；跳过是带原因的 `<skipped>`。被中断的测试没有得出判定，因此是消息以 `interrupted:` 开头的 `<skipped>`。运行级错误形成一个 `run` 套件。 |
+| `markdown` | 在报告旁写 `summary.md`，含计数、成本、错误与失败详情；保留链路页的失败会点名其链路页。探索运行展示 findings。[`@e2e-dev/github`](/github) 用这份汇总生成拉取请求评论。 |
+
+凡是跑到了测试阶段的运行，无论报告器如何，都会为脚本在[输出目录](/reference/config#output)
+（默认 `.e2e`）下写出 `report.json`，在其 [`trace`](/reference/config#trace)
+模式保留时写各测试在 `results/` 下的链路页，并在报告旁写报告器文件。在此之前
+就停止的运行（配置或收集错误、`NO_TESTS`、`NO_LAST_RUN`、`UNSUPPORTED_ARTIFACT`、
+应用命令启动失败、中断）一项也不写，上一次运行的文件原地保留；其错误只体现在
+终端与退出码上。没能写出的 `junit.xml` 或 `summary.md` 只是 stderr 上的一行，
+绝不是运行错误。
+
+报告中的 `run.summary` 统计结果。`discovered` 是 runner 收集到的全部
+测试-target 对，`selected` 是本次运行选中的；被选后又排除的对在 `results` 里
+以 `selected: false` 出现，但不计入其他任何计数。`passed`、`failed`（含超时）、
+`interrupted`、`flaky` 和 `skipped` 统计选中的结果，合计等于 `selected`。
+`interrupted` 是运行在其得出判定之前停止的测试（信号、`--max-failures`、或
+`MODEL_UNAVAILABLE` 之类的运行级错误），绝不算失败。`executed` 是至少跑过一次
+尝试的选中结果。
+
+使用 `--ai-trace` 时，运行还会写 `<output>/ai-trace.json`：每次模型往返一条，
+含精确的提示词、工具定义、响应、用量与提供者元数据。其中的观测已经脱敏。
+内联图片与文件字节都替换为字节数。用 `npx unbox-ai .e2e/ai-trace.json` 打开
+默认输出；参见[调试一次运行](/debugging#智能体步骤)。
+
+### 信号
+
+信号会逐级升级。
+
+1. 第一次 `SIGINT` 或 `SIGTERM` 触发中断。正在运行的测试以 `interrupted` 状态
+   结束，其 `afterEach` 钩子与会话关闭在清理预算内执行，每个 worker 都释放
+   自己的 engine。未开始的测试以原因 `infrastructure-unavailable`、理由
+   `run interrupted before execution` 跳过，因此报告会列出每个计划中的测试，
+   `--last-failed` 会再次运行被中断与未开始的测试。runner 写出报告并以退出码
+   130 结束。在任何测试开始之前被中断（收集期间、engine 的 `prepare`、应用
+   启动中）则不写报告，上一份保留原位。
+2. 第二个信号强制。worker 立即释放 engine，清理预算耗尽即被杀死。报告仍会
+   写出；`junit` 与 `markdown` 报告器开启时，`junit.xml` 与 `summary.md`
+   同样写出；自定义报告器的 `onRunFinished` 被放弃。
+3. 第三个信号当场退出，先杀死运行启动的所有应用命令的进程组。经
+   `reuseExisting` 附着的进程不被动。
+
+其 runner 消失的 worker 会释放自己的 engine，并在清理预算内退出。
+
+## e2e explore
+
+```bash
+e2e explore [goal]
+```
+
+一次没有测试文件的运行。智能体得到一个目标，一次规划一个探索步骤，通过
+`report_finding` 工具上报缺陷，最后给出评估。默认目标是
+`Explore the app and find bugs`。参见[无需测试的探索](/explore)。
+
+| 旗标 | 类型 | 默认值 | 行为 |
+| --- | --- | --- | --- |
+| `--config <path>` | string | 自动发现 | 显式配置路径，错误处理与 `run` 相同。 |
+| `--target <id>` | string | 第一个已配置 target | 要探索的那一个 target。有多个 target 且未给旗标时，探索第一个并在 stderr 说明。未知名字是 `UNKNOWN_TARGET`。 |
+| `--agent <name>` | string | `default` | 探索以哪个已配置 agent 的身份运行。其模型、`system`、工具与 context 均被沿用；手写的 `StepExecutor` 会被替换为内建 agent，并给出通知。条目没有模型——包括自定义 executor 的——时，启动之前是 `MODEL_UNAVAILABLE`。未知名字是 `INVALID_CONFIG`。 |
+| `--session <name>` | string | 无 | 以已登录状态开始。配置测试文件中声明该会话的搭建测试先运行，探索随后恢复其保存的内容，如同带 `{ session }` 的测试一样。其他测试都不运行。没有搭建测试声明的名字是 `COLLECTION_ERROR`，在任何应用进程启动之前就会指名已声明的那几个。参见[以已登录状态开始](/explore#以登录态开始)。 |
+| `--max-steps <n>` | integer 1-12 | `8` | 探索步数上限。越界以退出码 2 结束。 |
+| `--timeout <ms>` | integer 180000-900000 | `600000` | 本次运行的挂钟时间。最后一分钟留给收尾评估。越界以退出码 2 结束。 |
+| `--headed` | boolean | `false` | 引擎支持时请求可见 UI。 |
+| `--reporter <ids>` | comma-separated list | 已解析的配置值 | 同 `run`。探索汇总行打印在 `list` 汇总之下；`json` 在报告中携带记录；`markdown` 把 findings 写到 `<output>/summary.md`。 |
+| `--output <dir>` | string | config，否则 `.e2e` | 同 `run`；finding 的证据截图是 `<output>/results` 下该尝试产物之一。 |
+| `--debug` | boolean | `false` | 同 `run`：各阶段耗时与智能体步骤表。 |
+| `--ai-trace` | boolean | `false` | 同 `run`。 |
+| `--trace [mode]` | a recording mode | config | 同 `run`：为探索生成链路页。裸 `--trace` 等于 `on`；`retain-on-failure` 只在探索未通过时保留。探索只有一次尝试，因此重试模式不会保留，计划期通知会提示传 `--trace on`。请把目标放在 `--trace` 之前，或写 `--trace=<mode>`。 |
+| `--video [mode]` | a recording mode | config | 同 `run`：整场探索一段视频（浏览器引擎 WebM，设备引擎 MP4）。裸 `--video` 等于 `on`；`retain-on-failure` 只在探索未通过时保留。不能录制的引擎会打印通知。探索只有一次尝试，因此重试模式录不到东西，计划期通知会提示传 `--video on`。请把目标放在 `--video` 之前，或写 `--video=<mode>`。 |
+
+这次运行只有一个结果，挂在虚拟文件 `explore` 名下，以目标为标题。target 声明了
+`app.url` 时，探索会先打开应用。带 `--session` 时，报告还包含搭建测试的结果，
+并把项目的其他测试列为以原因 `filtered` 跳过，就像 `run` 列出未被位置参数点名
+的文件一样。
+无论配置如何，探索都以回放缓存关闭、零重试运行。`--session` 的搭建测试照
+`run` 的方式运行，使用配置的 agents、cache 与 retries。
+`<output>/report.json` 会新增 `run.explore`：目标、预算、运行结束的原因
+（`finished`、`step-limit`、`time`、`stuck` 或 `aborted`）、评估、步骤与
+findings。
+
+每一步有自己的预算：40 个动作与 40 次模型调用，除非 agent 设置了 `maxSteps` 或
+`maxModelCalls`（1 到 100）。用尽动作或时间预算的步骤会被限时收尾，其 findings
+仍然有效。单步失败不结束运行；连续三步失败或受阻且无新 finding 才会
+（`stuck`）。
+
+类型为 `issue` 的 finding 是功能性缺陷；`warning` 是外观问题。严重程度从
+`trivial`（1）到 `critical`（5），报告把 issue 列在 warning 之前，最严重的在
+前。每个 finding 都有位置、期望与实际行为、复现步骤，以及截图（允许截图且成功
+时）。机密填入之后，finding 不带截图；参见
+[机密填入后的截图](/security#机密填充后的截图)。
+
+产物写入以目标开头几个词，加上目标、target 与 agent 的摘要命名的目录，如
+`<output>/results/explore-check-the-cart-totals-1a2b3c4d5e6f7a8b/`，因此同一
+目标在同一 target 与 agent 上的重跑会写入同一目录。
+
+| 结局 | 运行状态 | 退出码 |
+| --- | --- | --- |
+| 跑了步骤、没有 `issue` finding、且并非每步都受阻 | passed | 0 |
+| 至少一个 `issue` finding | failed | 1 |
+| 一步未跑且无可上报 | blocked | 1 |
+| 每一步都受阻、无 `issue` finding | blocked | 1、2 或 3，取第一个阻塞者 |
+| 配置、engine 或模型提供者错误 | error | 2 或 3 |
+| Ctrl-C | | 130 |
+
+<CodeGroup>
+```bash npm
+npx e2e explore
+npx e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+npx e2e explore --target web --max-steps 4 --headed
+npx e2e explore 'Hunt for broken forms and dead links' --agent thorough --video
+```
+
+```bash pnpm
+pnpm exec e2e explore
+pnpm exec e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+pnpm exec e2e explore --target web --max-steps 4 --headed
+pnpm exec e2e explore 'Hunt for broken forms and dead links' --agent thorough --video
+```
+
+```bash bun
+bunx e2e explore
+bunx e2e explore 'Explore the checkout flow like a first-time buyer and report anything off'
+bunx e2e explore --target web --max-steps 4 --headed
+bunx e2e explore 'Hunt for broken forms and dead links' --agent thorough --video
+```
+</CodeGroup>
+
+## e2e list
+
+```bash
+e2e list [files...]
+```
+
+一次演习（dry run）。`list` 以与 `run` 完全相同的方式选择测试，为每个
+测试-target 对打印一行，然后退出。不启动任何应用进程、engine 或 worker，也不写
+任何东西。
+
+位置参数与选择旗标（`--config`、`--target`、`--tag`、`--tag-mode`、
+`--exclude-tag`、`--grep`、`--grep-invert`、`--last-failed`、`--shard`、
+`--pass-with-no-tests`）与 `run` 的相同；`--last-failed` 读取配置
+[`output`](/reference/config#output) 下的 `report.json`。`--reporter` 接受
+`list`（默认）或 `json`。
+
+| 报告器 | 写出内容 |
+| --- | --- |
+| `list` | 每对一行，`file › title [target]`，按选择顺序，describe 路径以 ` › ` 连接（`tests/billing.e2e.ts › checkout › pays [web]`），随后是该测试声明的标签，写作 `#tag`（`tests/billing.e2e.ts › checkout › pays [web] #smoke #billing`）。被跳过的测试保留其行并追加 `(skipped: <reason>)`。搭建测试与其他测试一样列出。 |
+| `json` | 向 stdout 输出 `{ "pairs": [...] }`。每一对携带 `file`、`title`、`titlePath`、`kind`（`test` 或 `setup`）、`tags`（测试声明的标签，无则为 `[]`）、`target`、`disposition`（`run` 或 `skip`），跳过时还有 `skipReason`。 |
+
+被过滤器剔除的对不列出。
+
+<CodeGroup>
+```bash npm
+npx e2e list
+npx e2e list tests/signup.e2e.ts
+npx e2e list --tag smoke --target web
+npx e2e list --grep checkout --exclude-tag slow
+npx e2e list --reporter json
+```
+
+```bash pnpm
+pnpm exec e2e list
+pnpm exec e2e list tests/signup.e2e.ts
+pnpm exec e2e list --tag smoke --target web
+pnpm exec e2e list --grep checkout --exclude-tag slow
+pnpm exec e2e list --reporter json
+```
+
+```bash bun
+bunx e2e list
+bunx e2e list tests/signup.e2e.ts
+bunx e2e list --tag smoke --target web
+bunx e2e list --grep checkout --exclude-tag slow
+bunx e2e list --reporter json
+```
+</CodeGroup>
+
+## e2e cache
+
+查看或清空回放缓存。这些命令加载已发现的配置或 `--config <path>`，尊重
+`cache.dir`，空库时以退出码 0 结束。默认目录为 `.e2e/cache/`。
+
+| 命令 | 输出内容 |
+| --- | --- |
+| `e2e cache ls` | 每条目一行：录制它的测试与 target、其指令摘要的前 12 个字符、年龄，以及一次回放会运行多少个动作（命中动作上限时附 `(truncated)`）。行按测试分组、再按 target，最旧的在前。 |
+| `e2e cache stats` | 存储目录、可读条目数、总大小，以及不可读文件的数量（若有）。 |
+| `e2e cache clear` | 删除每个缓存文件，随后若无别的残留则连目录一并删除，并报告删除了多少文件。 |
+
+<CodeGroup>
+```bash npm
+npx e2e cache ls
+npx e2e cache stats
+npx e2e cache clear
+npx e2e cache ls --config packages/web/e2e.config.ts
+```
+
+```bash pnpm
+pnpm exec e2e cache ls
+pnpm exec e2e cache stats
+pnpm exec e2e cache clear
+pnpm exec e2e cache ls --config packages/web/e2e.config.ts
+```
+
+```bash bun
+bunx e2e cache ls
+bunx e2e cache stats
+bunx e2e cache clear
+bunx e2e cache ls --config packages/web/e2e.config.ts
+```
+</CodeGroup>
+
+```text
+TEST                             TARGET  INSTRUCTION   AGE  ACTIONS
+tests/billing.e2e.ts::upgrades   web     4f1c0a9d3b62  2h   4
+tests/signup.e2e.ts::signs%20up  web     9ab7715ce004  3d   7 (truncated)
+```
+
+在条目开始携带来源信息之前录制的条目，会在这些列打印 `-`，但仍可回放。
+store 读不了的文件（被截断、超过 1 MiB 上限、或来自更新的 schema）会在 stderr
+上单独计数，运行中当作未命中，并由 `clear` 移除。runner 从未写过的文件不被动。
+
+<Note>
+这些命令只读文件存储。配置了自定义 `cache.store` 时，它们以退出码 2 结束并说明。
+</Note>
+
+## e2e feedback
+
+<CodeGroup>
+```bash npm
+npx e2e feedback -m <text> [--type bug|docs|feature|other] [options]
+```
+
+```bash pnpm
+pnpm exec e2e feedback -m <text> [--type bug|docs|feature|other] [options]
+```
+
+```bash bun
+bunx e2e feedback -m <text> [--type bug|docs|feature|other] [options]
+```
+</CodeGroup>
+
+就 e2e 本身向 e2e 团队发送一份反馈：出了问题、文档或 skill 误导了你、或缺少
+某项能力。编码智能体在遇到 e2e 的问题（而非被测应用的问题）时，也欢迎发送。
+
+| 旗标 | 含义 |
+| --- | --- |
+| `-m, --message <text>` | 必填。一两句描述问题，最多 2000 字符 |
+| `--type <type>` | `bug`、`docs`、`feature` 或 `other`（默认） |
+| `--task <text>` | 你当时想做什么 |
+| `--expected <text>` | 你期望发生什么 |
+| `--actual <text>` | 实际发生了什么，附错误码与消息 |
+| `--approach <text>` | 你尝试过什么，包括变通办法 |
+| `--command <text>` | 涉及的 e2e 命令或 API，最多 200 字符 |
+| `--agent <text>` | 发送它的编码智能体与模型，最多 200 字符 |
+| `--dry-run` | 打印将要发送的事件，但不发送 |
+
+`--task`、`--expected`、`--actual` 与 `--approach` 各最多 4000 字符。空值或超长
+以退出码 2 结束。
+
+<CodeGroup>
+```bash npm
+npx e2e feedback --type bug -m "list ignores --grep" --command "e2e list --grep checkout"
+npx e2e feedback --type docs -m "The mcp topic never says how to close a session"
+npx e2e feedback --type feature -m "Need a way to set the viewport per test" --dry-run
+```
+
+```bash pnpm
+pnpm exec e2e feedback --type bug -m "list ignores --grep" --command "e2e list --grep checkout"
+pnpm exec e2e feedback --type docs -m "The mcp topic never says how to close a session"
+pnpm exec e2e feedback --type feature -m "Need a way to set the viewport per test" --dry-run
+```
+
+```bash bun
+bunx e2e feedback --type bug -m "list ignores --grep" --command "e2e list --grep checkout"
+bunx e2e feedback --type docs -m "The mcp topic never says how to close a session"
+bunx e2e feedback --type feature -m "Need a way to set the viewport per test" --dry-run
+```
+</CodeGroup>
+
+反馈以一条 `e2e_feedback` 事件、连同每条遥测事件都携带的匿名机器信息，发往与
+[遥测](/telemetry#反馈)相同的 PostHog 项目。发送之前，名字含 `KEY`、
+`TOKEN`、`SECRET`、`PASS`、`_PWD`、`CREDENTIAL`、`AUTH`、`COOKIE` 或
+`PRIVATE` 的每个环境变量，只要其值至少 6 个字符——配置机密的下限，更短的会
+改写普通单词——就变成 `<secret:NAME>`。Bearer token、URL 凭据、私钥、JWT 和
+常见 API key 形态会变成 `<redacted>`。请勿粘贴应用数据、页面内容或测试文件。
+
+反馈只在你运行该命令时发送，因此保存过的 `e2e telemetry disable` 挡不住它。
+`E2E_TELEMETRY_DISABLED=1` 与 `DO_NOT_TRACK=1` 可以：设置任一个，命令就以退出码
+2 结束且什么都不发送，因此选择退出的 CI 任务或机器集群即使由智能体代跑也不会
+发送。`E2E_TELEMETRY_DEBUG=1` 则像 `--dry-run` 一样打印。PostHog 确认收到事件
+后，打印引用 id 并以退出码 0 结束；未被确认则以 3 结束——报告可能仍已到达，
+因此消息会给出其引用 id。
+
+## e2e telemetry
+
+显示匿名使用遥测是否开启，并可切换它。[遥测](/telemetry)列出发送的每一个
+属性。
+
+| 命令 | 效果 |
+| --- | --- |
+| `e2e telemetry`、`e2e telemetry status` | 打印 `Status: enabled`，或带原因的 `Status: disabled`：设置了的环境变量、保存的选择，或无法写入的偏好目录。 |
+| `e2e telemetry disable` | 把退出选择保存到 `~/.config/e2e/telemetry.json`（设置了 `$XDG_CONFIG_HOME` 时为 `$XDG_CONFIG_HOME/e2e/`，Windows 上为 `%APPDATA%\e2e\`），并打印状态。 |
+| `e2e telemetry enable` | 保存加入选择并打印状态。环境变量仍然优先，状态里会说明。 |
+
+<CodeGroup>
+```bash npm
+npx e2e telemetry
+npx e2e telemetry disable
+E2E_TELEMETRY_DEBUG=1 npx e2e run
+```
+
+```bash pnpm
+pnpm exec e2e telemetry
+pnpm exec e2e telemetry disable
+E2E_TELEMETRY_DEBUG=1 pnpm exec e2e run
+```
+
+```bash bun
+bunx e2e telemetry
+bunx e2e telemetry disable
+E2E_TELEMETRY_DEBUG=1 bunx e2e run
+```
+</CodeGroup>
+
+`E2E_TELEMETRY_DISABLED=1` 与 `DO_NOT_TRACK=1` 会关闭遥测，且不改动该文件。
+`E2E_TELEMETRY_DEBUG=1` 把每条事件打到 stderr，且什么都不发送。一台机器上除
+`e2e init` 和 `e2e telemetry` 之外的第一条命令，会打印一次提示；CI 中什么都不
+打印，也不写文件。
+
+## 退出码
+
+| 退出码 | 含义 |
+| ---: | --- |
+| 0 | 所有选中的测试通过、flaky，或被显式跳过 |
+| 1 | 测试或搭建的最终失败，或测试超时 |
+| 2 | CLI、配置、收集、依赖、凭据、模型配置或策略错误 |
+| 3 | engine、应用进程、模型提供者、产物或清理基础设施失败；未能投递的 `e2e feedback` |
+| 4 | runner 内部不变量或未处理的 runner 错误 |
+| 130 | 被用户或 CI 信号中断 |
+
+混合运行的优先级是 `130 > 4 > 3 > 2 > 1 > 0`。报告保留每个单独结果；优先级只
+影响进程退出码。
+
+参数解析失败以退出码 2 结束，并在 stderr 输出一行错误。
+
+## 诊断信息
+
+拒绝某个名字的消息会建议最接近的有效名字。来自其他测试框架配置的键
+（`testDir`、`baseURL`、`webServer`、`projects`）会指出这个概念在这个运行里叫
+什么。配置或测试文件中失败的 `import` 会附上项目包管理器的 install 或 add
+命令，或该包导出的子路径。被提供者拒绝的模型凭据会指名提供者读取的变量。

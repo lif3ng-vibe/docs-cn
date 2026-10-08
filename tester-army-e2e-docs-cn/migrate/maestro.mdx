@@ -1,0 +1,216 @@
+---
+title: 从 Maestro 迁移
+description: 把 Maestro 流程改写为 TypeScript，配上定位器、断言与智能体目标。
+icon: "/images/icons/maestro.svg"
+---
+
+import { SetupPrompt } from '../snippets/setup-prompt-card.jsx';
+
+export const migrationPrompt = `将本项目的 Maestro 流程迁移到 e2e，一次迁移一个流程。文档：\`https://e2e.tester.army/docs/migrate/maestro.md\` 和 \`https://e2e.tester.army/docs/mobile.md\`
+
+1. 阅读上面的迁移指南。它把每个 Maestro 配置项和命令映射到 e2e，并标出 e2e 尚未具备的部分。移动端指南涵盖设备与 app 构建。
+2. e2e 测试是 TypeScript。如果项目没有 \`package.json\`，例如 Native 的 iOS 或 Android 项目，就在 app 旁的 \`e2e/\` 目录里创建测试项目。
+3. 如果测试项目还没有 e2e 配置（\`e2e.config.ts\` 或 \`e2e.config.mts\`），就在那里运行 \`npx e2e init --yes\`（或对应的 pnpm/bun 命令）。它写入一份 web 配置和一个示例测试，不会安装任何东西。把 @e2e-dev/web 换成 @e2e-dev/mobile，并为移动引擎重写 \`tests/example.e2e.ts\`，或删掉它。
+4. 阅读 e2e skill（\`npx e2e guide\` 打印它，\`npx e2e guide <topic>\` 打印某个主题），并在下面的每一步都遵循它。
+5. 如果你运行了 init，问我智能体步骤用哪个模型：ChatGPT、GitHub Copilot、OpenCode Console 或 SuperGrok 订阅、一个 API key，或本地模型。用其提供者包配置。如果需要登录，给我 \`npx e2e login\` 命令，并等我确认。
+6. 把流程的 \`appId\` 和 \`.maestro/config.yaml\` 迁移到 e2e 配置：每个平台一个 target 配 \`mobile({ platform })\`，每个 target 上放 \`app: { bundleId }\`，标签用测试上的 \`{ tags }\`。把密码和 token 从 \`env\` 移入 \`credentials\` 或 \`secrets\`。
+7. 安装依赖，然后运行 \`npx agent-device doctor\`，修复它报告的问题。
+8. 列出各流程，问我要先迁移哪一个。建议选 \`optional\` 步骤和 \`runFlow: { when }\` 分支经常需要更新的流程。
+9. 把该流程改写为 \`tests/\` 下的 \`.e2e.ts\` 测试（e2e 默认运行 \`tests/**/*.e2e.ts\`），每条命令对应一个 await 的调用。以 \`app.open()\` 开头，因为没有任何东西会自行启动。Maestro 把文本和 id 当正则匹配，并在多个匹配中点第一个；e2e 匹配整段字符串、在多个匹配时报错，因此流程依赖这些行为的地方要用 \`RegExp\`、\`.first()\` 或 \`.nth()\`。\`optional\` 和 \`runFlow: { when }\` 变成 \`if (await locator.isVisible())\`。\`below\` 这类相对选择器没有对应移植；请改用 label、test id 或一个目标。指南标注某条命令暂缺的，用它给出的变通方案，或把该流程留在 Maestro 并告诉我原因。
+10. 用 \`app.open()\` 和定位器断言让启动与最终断言保持确定性。在一段脚本化点按经常挂掉的地方，改为为它提出一个 \`agent.act\` 目标。
+11. 构建并安装 app，在每个平台 target 上用 \`npx e2e run <file>\` 运行新文件并修复直到通过。保留 Maestro flow，直到我确认它可以删除。
+12. 总结哪些流程已迁移、哪些留在 Maestro 以及原因。`;
+
+<SetupPrompt>
+
+<Prompt description={migrationPrompt} children={migrationPrompt} actions={["copy", "cursor"]} />
+
+</SetupPrompt>
+
+把 Maestro 命令翻译成 await 的 TypeScript 调用。精确的交互保留为定位器调用，或者给智能体一个可覆盖多条交互的目标。两个 runner 可以共用同一台模拟器或仿真器。
+
+按[移动端指南](/mobile)配置 target，按[快速上手](/quickstart)配置模型，然后一次迁移一个流程。本页把每条 Maestro 命令映射到对应的 e2e 命令，并说明它是否存在。细节在参考页：[screen](/reference/screen)、[expect](/reference/expect)、[test](/reference/test) 以及[移动引擎](/reference/mobile)。
+
+## 配置
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| 每条流程顶部的 `appId` | target 上的 `app: { bundleId: 'com.example.app' }`，即 `app.open()` 启动的 app | 更名 |
+| 每条流程各不相同的 `appId` | 测试内用 `device.openApp(id)`，或为每个 app 建独立的配置和运行；每条测试都会在每个被选中的 target 上运行 | 更名 |
+| `--platform ios` | `mobile({ platform: 'ios' })`，每个平台一个引擎 | 更名 |
+| `--device` | `mobile({ device: 'iPhone 17' })`；列表是设备池，每台设备一个 worker | 更名 |
+| `.maestro/config.yaml` 的 `flows` | `tests`，默认 `tests/**/*.e2e.ts`；Maestro 只扫一层目录，e2e 会递归 | 更名 |
+| `flows: ['!helper.yaml']` | `tests` 里带前导 `!` 的条目：`tests: ['tests/**/*.e2e.ts', '!tests/helpers/**']` | 更名 |
+| `tags` 和 `--include-tags` | 测试或组上的 `{ tags: [...] }`，CLI 上用 `--tag` | 更名 |
+| `--exclude-tags` | `--exclude-tag` | 更名 |
+| `env` 和 `${VAR}` | 模块级常量，以及目标中的 `params`，见[选择器](#选择器) | 更名 |
+| `MAESTRO_*` 变量 | 配置里的 `process.env`；密码或 token 放到 `credentials` 或 `secrets` 下 | 更名 |
+| `--format junit`, `--output` | `--reporter list,junit`，写入 `.e2e/junit.xml` | 更名 |
+| `--format html` | 无对应物；`markdown` 会写 `.e2e/summary.md`，每个失败的测试在 `.e2e/results/` 下得到一个 `trace.md` 页面 | 暂缺 |
+| `properties`（JUnit `<property>`） | 暂无 | 暂缺 |
+| `--shards`, `--shard-split` | `device: [...]` 配合 `workers` 可把一个 target 的文件拆到同一台机器的多台设备上；`--shard <index/total>` 把套件拆到多台机器上，见[分片](/ci#分片) | 更名 |
+| `maestro record`, `startRecording` | `npx e2e run --video`，每次尝试录一段设备 MP4，或在配置里用 `video` | 更名 |
+| `maestro test -c`, Maestro Studio | 暂无；`npx e2e mcp` 给编码智能体一条设备上的实时会话，见[编码智能体](/coding-agents) | 暂缺 |
+| `maestro hierarchy` | 暂无；对 `screen` 说不出名字的节点，`device.locator` 可用 agent-device 选择器 | 暂缺 |
+| Maestro Cloud | 你自己的 CI，见[持续集成](/ci) | 有意为之 |
+
+## 改写前后的流程
+
+```yaml title="Maestro"
+appId: com.example.app
+---
+- launchApp:
+    clearState: true
+- tapOn: "Get started"
+- tapOn:
+    id: "email"
+- inputText: "ada@example.test"
+- tapOn: "Continue"
+- assertVisible: "Check your inbox"
+- scrollUntilVisible:
+    element: "Resend"
+- assertVisible:
+    id: "resend"
+```
+
+```ts title="e2e"
+import { test } from '@e2e-dev/mobile';
+import { expect } from 'e2e';
+
+test('asks for the email', async ({ app, agent, screen }) => {
+  await app.clearState();
+  await agent.act('get started with the email {email}', { params: { email: 'ada@example.test' } });
+  await expect(screen.getByText('Check your inbox')).toBeVisible();
+  await screen.scrollUntilVisible(screen.getByTestId('resend'));
+  await expect(screen.getByTestId('resend')).toBeVisible();
+});
+```
+
+上手引导交给智能体。定位器断言检查确认信息和 Resend 控件。流程也可以完全确定化：每个 `tapOn` 都有一行对应的 `screen.getBy*(...).tap()`。
+
+## 命令对照表
+
+对 `screen`、`app`、`agent` 与 `expect(locator)` 的调用在每个 target 上运行，浏览器也包含在内。对 `device` 的调用只在设备上运行：用到它的测试要声明 `requires: ['device']`，其他 target 会跳过它。状态列取值为 `same`（相同）、`renamed`（更名）、`device only`（仅 device）、`by design`（有意为之，见[选择器](#选择器)与[有意为之](#有意为之)）或 `missing`（暂缺），并给出今天的对策。
+
+### App 生命周期
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `launchApp` | `app.open()`，全新启动 target 的 `app.bundleId`；没有任何东西会自行启动 | 更名 |
+| `launchApp: { clearState: true }`, `clearState` | `app.clearState()` | 更名 |
+| `launchApp: { stopApp: false }` | 不带 `relaunch` 的 `device.openApp(id)` | 仅 device |
+| `launchApp: { arguments }` | target 上的 `app.launchArguments`，或单次启动用 `device.openApp(app, { relaunch: true, launchArguments })`；是一串字符串，不是映射表 | 更名 |
+| `launchApp: { permissions }` | target 上的 `app.permissions`，每次全新启动前都会设置，或单次授予用 `device.openApp(app, { relaunch: true, permissions })`；`grant`、`deny`、`reset` 对应 `allow`、`deny`、`unset`；没有 `all`，未点名的权限一律不授予 | 更名 |
+| `stopApp`, `killApp` | `device.closeApp()` | 仅 device |
+| 先 `stopApp` 再 `launchApp` | `app.restart()` | 更名 |
+| `clearKeychain` | `device.clearKeychain()`，清的是整个模拟器的钥匙串；仅 iOS | 更名 |
+| `openLink` | `device.openLink(url, { app })`；iOS 上链接在 `app` 中打开，默认为固定的那个 app | 更名 |
+| `addMedia` | 暂无 | 暂缺 |
+| `back` | `app.back()`，或 `device.back()` | 更名 |
+
+### 点按与输入
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `tapOn: "Text"` | `screen.getByText('Text').tap()`；精确匹配，见[选择器](#选择器) | 更名 |
+| `tapOn: { id: x }` | `screen.getByTestId('x').tap()` | 更名 |
+| `tapOn: { text, index: 2 }` | `.nth(2)` | 更名 |
+| `tapOn: { below: "Email" }`、`above`、`leftOf`、`rightOf`、`containsDescendants` | 无对应物，见[选择器](#选择器) | 有意为之 |
+| `tapOn: { point: "x,y" }` | `screen.tapAt({ x, y })`；节点内部用 `.tap({ position: { x, y } })` | 更名 |
+| `retryTapIfNoChange`, `waitToSettleTimeoutMs` | `mobile({ settle, transition })`，对整个引擎生效；没有每次调用的旋钮 | 更名 |
+| `doubleTapOn`, `longPressOn` | `.doubleTap()`, `.longPress({ duration })` | 更名 |
+| `inputText` | `screen.getByTestId('field').fill('text')` | 更名 |
+| `inputRandomEmail`, `inputRandomText`, `faker` | 在 `act` 参数的值外面包一层 `unique()`，这样缓存仍能回放；其余随意用任意 npm faker | 更名 |
+| `eraseText` | `.clear()` | 更名 |
+| `hideKeyboard` | `device.dismissKeyboard()`，与 Maestro 用同样的收起键或中央拖拽；仅当键盘在两种拖拽下都收不起来时才失败 | 更名 |
+| `pressKey: Enter` | 字段上的 `.press('Enter')` | 更名 |
+| `pressKey: Home`, `back` | `device.home()`, `device.back()` | 仅 device |
+| `pressKey: lock`、`power`、`volume up`、电视遥控键 | 暂无 | 暂缺 |
+| `copyTextFrom`, `pasteText` | 先 `await locator.textContent()`，再 `.fill(text)` | 更名 |
+| `setClipboard` | `device.setClipboard(text)`；读取用 `device.clipboard()` | 仅 device |
+| 命令上的 `label: "..."` | 暂无；每个 `screen`、`device`、`agent` 调用本身就是以调用命名的报告步骤 | 暂缺 |
+
+### 手势
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `swipe: { direction: UP }` | `screen.swipe({ direction: 'down' })`，或在单个节点内用 `locator.swipe(...)`；Maestro 按手指移动的方向命名，e2e 按内容滚动的方向命名 | 更名 |
+| `swipe: { start, end }` | `screen.swipe({ from: { x, y }, to: { x, y } })` | 更名 |
+| `scroll` | `screen.swipe({ direction: 'down' })` | 更名 |
+| `scrollUntilVisible: { element }` | `screen.scrollUntilVisible(locator, { direction })` | 更名 |
+| `waitForAnimationToEnd` | 对稳定下来的状态作断言；引擎层面用 `mobile({ settle, transition })` | 更名 |
+
+### 断言与等待
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `assertVisible`, `assertNotVisible` | `await expect(locator).toBeVisible()`, `.toBeHidden()` | 更名 |
+| `assertVisible: { text, enabled: true }` | `.toBeVisible()` 与 `.toBeEnabled()` | 更名 |
+| `assertVisible: { checked, selected, focused }` | `.toBeChecked()`, `.toBeSelected()`, `.toBeFocused()` | 更名 |
+| `assertTrue: ${...}` | `expect(value).toBe(true)`；仍在变化的值用 `expect.poll` | 更名 |
+| `extendedWaitUntil: { visible, timeout }` | `.toBeVisible({ timeout })` | 更名 |
+| `assertScreenshot: { path, thresholdPercentage }` | 暂无；`agent.assert('...', { vision: true })` 是判定，不是像素对比 | 暂缺 |
+| `assertDarkMode`, `assertLightMode` | 暂无；对主题化控件作断言 | 暂缺 |
+| `retry: { maxRetries, commands }` | 值用 `expect.poll`，整条流程用测试上的 `{ retries }` | 更名 |
+| `takeScreenshot` | `app.screenshot('label')`，已脱敏，填入机密之后不会附上 | 更名 |
+
+### 设备
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `setLocation` | `device.setLocation({ latitude, longitude })` | 仅 device |
+| `travel: { points }` | 循环调用 `device.setLocation` | 仅 device |
+| `setAirplaneMode`, `toggleAirplaneMode` | `device.setAirplaneMode(true)` 或 `false`，直接设你想要的状态 | 仅 device |
+| `setDarkMode`, `toggleDarkMode` | `device.setAppearance('dark')` 或 `'light'` | 仅 device |
+| `setOrientation` | `device.setOrientation('landscape-left')` | 仅 device |
+| `setPermissions` | `device.setPermission(name, 'grant' \| 'deny' \| 'reset')`，一次一个权限，作用于打开的 app | 仅 device |
+| 流程中途的第二个 `appId` | `device.openApp(id)`；`open_app` 工具允许智能体在目标内切换，见[智能体工具](/mobile#智能体工具) | 仅 device |
+| 平台专属选择器 | `device.locator('role=StaticText label="..."')`，agent-device 的选择器语法 | 仅 device |
+
+### AI 命令与流程控制
+
+| Maestro | e2e | 状态 |
+| --- | --- | --- |
+| `assertWithAI`, `assertNoDefectsWithAI` | `agent.assert('...')`、`agent.assert('...', { vision: true })` | 更名 |
+| `extractTextWithAI` | `agent.extract('...', { schema })` | 更名 |
+| `runFlow: file.yaml` | 一个函数，或来自 `test.extend` 的 fixture | 更名 |
+| `runFlow: { when: { visible } }` | `if (await locator.isVisible()) { ... }`，见[选择器](#选择器) | 更名 |
+| 命令上的 `optional: true` | 同样的 `isVisible()` 检查 | 更名 |
+| `repeat: { times: n }`, `repeat: { while }` | `for` 或 `while` 循环 | 更名 |
+| `runScript`, `evalScript`, `${output.x}` | 测试里的 TypeScript | 更名 |
+| `http.get`, `http.post`, `json()` | Node `fetch`，见 [API](/api-testing) | 更名 |
+| `onFlowStart`, `onFlowComplete` | `beforeEach`, `afterEach` | 更名 |
+| `startRecording`, `stopRecording` | `test('x', { video: 'on' }, ...)` 记录该测试的全部尝试；在设备上由移动引擎录制；测试内不能随时启停 | 更名 |
+
+## 选择器
+
+Maestro 的选择器简写无法一一对应移植。五处差异占了大多数改动。
+
+- Maestro 里文本和 id 都是正则，因此 `tapOn: ".*Save.*"` 能匹配任何含 Save 的文本。`getByText` 是精确匹配。要匹配模式就写 `getByText(/Save/)`；要大小写不敏感的子串就写 `{ exact: false }`。`getByTestId` 匹配字符串时按完整 id 匹配；要按模式就写 `getByTestId(/^row-/)`。
+- `index: 2` 即 `.nth(2)`。多个节点匹配而未给 index 时，Maestro 会静默点第一个；e2e 报 `LOCATOR_AMBIGUOUS` 失败。当第一个匹配正是你要的，写 `.first()`。
+- `optional: true` 和 `runFlow: { when: { visible } }` 变成 `if (await locator.isVisible())`。`isVisible()` 是一次读取：零个匹配返回 `false`，多个匹配报 `LOCATOR_AMBIGUOUS`。若可能存在隐藏的孪生节点，在查询上加 `{ visible: true }` 或在定位器上加 `.first()`。
+- `below`、`above`、`leftOf`、`rightOf` 与 `containsDescendants` 没有对应移植。e2e 有 `filter({ has, hasText })` 和链式查询来表达结构，但没有任何空间关系表述；锚定在布局上的选择器在下一次改版就会失效。没有 label 的输入框，可以用 `getByLabel` 锚定、给它一个 test id，或把这一步交给一个目标：`agent.act('enter {email} in the email field', { params })` 会读屏幕并找到那个字段。
+- `env:` 和 `${VAR}` 变成模块常量，以及目标内的 `params`：`agent.act('sign in as {email}', { params: { email } })`。`MAESTRO_*` 变量变成配置里的 `process.env`。密码或 token 放到 `credentials` 或 `secrets` 下，模型永远看不到值。
+
+## 有意为之
+
+以下差异是有意为之，并将保持不变。
+
+- 要么恰好一个匹配，要么报 `LOCATOR_AMBIGUOUS`，见[选择器](#选择器)。
+- 密码是模型永远看不到的 `Secret`，见[登录](/authentication)。
+- 每个 `device` 调用都是一步。它以 `device.<method>` 的形式写进报告，因此失败时会展示确切的调用，无需 `label`。
+- 测试中没有 agent-device 客户端。`device.locator` 覆盖平台专属选择器；其余一切经由 `screen`、`app`、`device` 与智能体，因此都会被记录并脱敏。
+- 设备上没有 `test.setup` 或 `session:`，见[与 web 的差异](/mobile#与-web-的差异)。
+
+## 优先迁移什么
+
+从 `optional` 步骤和 `runFlow: { when }` 分支经常需要更新的流程开始。
+
+<CardGroup cols={2}>
+  <Card title="移动端" icon="mobile-screen" href="/mobile">
+    配置你的 app 与设备。
+  </Card>
+  <Card title="核心概念" icon="pen-to-square" href="/core-concepts">
+    用目标、断言和定位器取代脚本化选择器。
+  </Card>
+</CardGroup>

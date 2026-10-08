@@ -1,0 +1,221 @@
+---
+title: 持续集成
+sidebarTitle: 概览
+description: 在 GitHub Actions、EAS Workflows、Bitrise、Codemagic 或任何能运行 Node 的 CI 服务上运行 e2e。
+icon: "rotate"
+---
+
+e2e 可以在任何能运行 Node 的 CI 服务上运行。无论哪个服务，CI 作业都执行同样的步骤：安装依赖、启动应用或设备、运行 `npx e2e run`。不同的只是作业文件的语法。需要自行启动设备的移动端作业还需要一台 Mac（iOS）或一台带 KVM 的 Linux 机器（Android）；参见[移动端作业](#移动端作业)。托管设备服务则两者都不需要。
+
+## 选择你的 CI 服务
+
+<CardGroup cols={2}>
+  <Card title="GitHub Actions" icon="/images/integrations/github-actions.svg" href="/ci/github-actions">
+    Web 与移动端工作流。将结果发布为拉取请求评论。
+  </Card>
+  <Card title="EAS Workflows" icon="/images/integrations/expo.svg" href="/ci/eas-workflows">
+    在 EAS 上构建 Expo 应用，然后对其运行 iOS 与 Android 测试。
+  </Card>
+  <Card title="Bitrise" icon="/images/integrations/bitrise.svg" href="/ci/bitrise">
+    iOS 与 Android 工作流，附带用于模拟器和仿真器的 Bitrise 步骤。
+  </Card>
+  <Card title="Codemagic" icon="/images/integrations/codemagic.svg" href="/ci/codemagic">
+    在 Mac mini 与 Linux 实例上运行的 iOS 与 Android 工作流。
+  </Card>
+</CardGroup>
+
+若使用其他 CI 服务，可以拿 [GitHub Actions](/ci/github-actions) 工作流当模板。步骤是一样的。
+
+若要从托管服务获取浏览器或设备，而不是在 runner 上启动它们，参见[托管浏览器与设备](/integrations)。
+
+## 报告
+
+每次运行到测试阶段都会写出 `.e2e/report.json`。使用 `junit` 报告器（如示例中的 `--reporter list,junit`）时，运行还会写出 `.e2e/junit.xml`。`.e2e/results/` 存放每个测试的链路页、截图和屏幕转储。加 `--video` 时，其中还包括每个引擎可录制目标的视频。请在每个作业结束时上传 `.e2e/`，测试失败时也要上传。
+
+`.e2e/` 是默认输出目录，[`output`](/reference/config#output) 选项可以移动它。
+
+把 CI 服务的测试报告集成配置为读取 `.e2e/junit.xml`。该文件还包含 `run` 套件中的启动失败，例如 `APP_UNREACHABLE`。在 GitHub 上，添加 [GitHub 报告器](/github) 把结果发布到拉取请求。
+
+## 移动端作业
+
+移动端 CI 作业在每个服务上都做四步：
+
+1. 针对模拟器或仿真器构建应用。
+2. 启动一台设备。
+3. 安装构建产物。
+4. 运行 `npx e2e run`。
+
+| | iOS | Android |
+| --- | --- | --- |
+| 机器 | 带 Xcode 与模拟器运行时的 macOS | 带 KVM（嵌套虚拟化）的 Linux |
+| 构建 | Release 模拟器 `.app`，无需签名 | Release `.apk` |
+| 设备 | 一台已启动的模拟器 | 一台已启动的仿真器 |
+| Node | 24.8 或更高；22 系列则 22.22.3 或更高 | 24.8 或更高；22 系列则 22.22.3 或更高 |
+
+两个平台都请构建 Release 版本。React Native 或 Expo 的 debug 构建会从 Metro 加载 JavaScript，而这些页面上的任何 CI 作业都不启动 Metro，因此 debug 构建启动后会停在报错界面。示例使用仓库中含 `ios/` 和 `android/` 目录的 React Native 项目。如果 Expo 项目没有这两个目录，先运行 `npx expo prebuild`。
+
+配置通过 bundle id 或包名指定应用。作业在运行之前安装构建产物：
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+
+export default {
+  targets: [
+    { name: 'ios', engine: mobile({ platform: 'ios' }), app: { bundleId: 'com.example.app' } },
+    { name: 'android', engine: mobile({ platform: 'android' }), app: { bundleId: 'com.example.app' } },
+  ],
+  workers: 1,
+} satisfies E2EConfig;
+```
+
+<CodeGroup>
+```bash npm
+# iOS
+xcrun simctl install booted path/to/MyApp.app
+npx e2e run --target ios --reporter list,junit
+
+# Android
+adb install -r path/to/app.apk
+npx e2e run --target android --reporter list,junit
+```
+
+```bash pnpm
+# iOS
+xcrun simctl install booted path/to/MyApp.app
+pnpm exec e2e run --target ios --reporter list,junit
+
+# Android
+adb install -r path/to/app.apk
+pnpm exec e2e run --target android --reporter list,junit
+```
+
+```bash bun
+# iOS
+xcrun simctl install booted path/to/MyApp.app
+bunx e2e run --target ios --reporter list,junit
+
+# Android
+adb install -r path/to/app.apk
+bunx e2e run --target android --reporter list,junit
+```
+</CodeGroup>
+
+引擎会使用已启动的设备。没有设备在运行时，它会让 agent-device 启动一台。但仍应在单独的步骤中启动设备：
+
+- 全新的 Linux runner 在你安装仿真器镜像之前没有镜像可用。
+- 在单独步骤中启动设备，能把启动慢或启动失败与测试失败区分开。
+
+若要让套件自己安装构建产物，设置 `app.appPath` 并调用 `device.installApp()`。参见 [Point at your app](/mobile#指向你的应用)。
+
+以下规则适用于每个服务：
+
+- **每个平台一个作业**。在 Mac 上运行 `--target ios`，在带 KVM 的 Linux 机器上运行 `--target android`。托管的 Mac 使用 Apple Silicon，无法嵌套虚拟化，Android 仿真器在其上无法启动。
+- **固定 iOS 运行时**。按名称选择的模拟器（`iPhone 17`）会使用镜像默认的 iOS 版本。辅助功能树（accessibility tree）在 iOS 各版本之间会变化，runner 镜像更新后，即使代码未变，定位器断言也可能因此失败。示例会在指定的运行时上创建模拟器，并按 UDID 启动。把 `iOS-26-5` 替换成镜像自带的运行时（`xcrun simctl list runtimes`），且只在你主动决定时才更换。
+- **iOS runner 首次使用时需要编译**。agent-device 在第一次驱动模拟器时，会把它的 XCUITest runner 编译到 `~/.agent-device`。如果服务允许，请缓存该目录。
+- **回放本地录制的动作**。[提交回放缓存](/cache#提交回放缓存)。之后 `agent.act` 步骤无需调用模型即可回放。智能体判定（`agent.assert`、`agent.waitFor`、`agent.extract`）始终调用模型。缓存键包含 `app`，所以在你本地模拟器上录制的动作可以在 CI 模拟器上回放。
+- **不要把模型密钥交给不可信的代码**。运行拉取请求代码的作业会把密钥交给那些代码，包括其测试和依赖。只把密钥交给受信任分支的构建。参见[模型凭据](#模型凭据)与[安全模型](/security)。
+
+## CI 模式的变化
+
+当 `CI` 的值不是空字符串、`0` 或 `false` 时，CI 模式开启。想在本地获得同样的默认值，运行 `CI=1 npx e2e run`：
+
+| 配置项 | 本地 | CI |
+| --- | --- | --- |
+| `retries` | `0` | `1` |
+| `workers` | 你的一半核心数 | `1` |
+| 未设置时的 `cache` | `read-write` | `read-only` |
+| `.only` | 允许 | 拒绝并报 `ONLY_IN_CI` |
+| `command.reuseExisting` | 生效 | 忽略并提示 |
+
+要修改 worker 与重试的默认值，使用旗标：
+
+<CodeGroup>
+```bash npm
+npx e2e run --workers 4 --retries 0
+```
+
+```bash pnpm
+pnpm exec e2e run --workers 4 --retries 0
+```
+
+```bash bun
+bunx e2e run --workers 4 --retries 0
+```
+</CodeGroup>
+
+若不想让 CI 发送[遥测](/telemetry#在-ci-中)，在作业的 `env` 中加上 `E2E_TELEMETRY_DISABLED: '1'`。
+
+## 分片
+
+`--shard <index/total>` 让每个作业运行套件中的一片。每个作业运行同一条命令，只是索引不同。同一套件在每台机器上的分片方式一致。没有测试的分片会以 `NO_TESTS` 失败。如果矩阵的分片数可能多于测试数，加 `--pass-with-no-tests`。切片规则见 [CLI 参考](/reference/cli#旗标)。
+
+在 GitHub Actions 上，矩阵为每个分片运行一个作业：
+
+```yaml
+jobs:
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      # ...
+      - run: npx e2e run --shard ${{ matrix.shard }}/3 --reporter list,junit
+```
+
+每个分片写自己的 `report.json` 和 `junit.xml`。上传时为它们取包含分片索引的名称。把多份文档合并为一份的功能尚未实现。
+
+## 重跑失败的测试
+
+`--last-failed` 只运行上一次运行中未通过的测试。它从 [`output`](/reference/config#output) 目录（默认 `.e2e`）下的 `report.json` 读取这些测试。重跑会保留首次报告列出的产物，并把本次产物写在每个测试的 `rerun-1/` 下。这样两个步骤之后一次上传就能拿到各自的证据。如果换用别的过滤条件把某个测试排除在重跑之外，该测试仍处于欠账状态：下一次 `--last-failed` 会运行它。哪些情况算未通过，[CLI 参考](/reference/cli#旗标)有完整列表。本地用法是在一次失败的运行之后执行：
+
+<CodeGroup>
+```bash npm
+npx e2e run
+npx e2e run --last-failed
+```
+
+```bash pnpm
+pnpm exec e2e run
+pnpm exec e2e run --last-failed
+```
+
+```bash bun
+bunx e2e run
+bunx e2e run --last-failed
+```
+</CodeGroup>
+
+在 CI 中，报告是作业产物，不是下一台 runner 上的文件。请在重跑步骤之前把它下载到输出目录（默认 `.e2e/`），或者直接重新运行失败的作业。
+
+## 模型凭据
+
+给作业提供你的提供者所需的凭据，例如 `AI_GATEWAY_API_KEY`。提供者的设置见[模型](/models)。从不使用 `agent` 的测试不需要模型凭据。
+
+把密钥放在 CI 机密（secrets）中，并在可行之处设置消费限额。作业中的代码能读到这些密钥，包括测试代码和依赖。GitHub 不会把机密交给来自 fork 的拉取请求。完全回放的 Action 步骤不需要调用模型，但实时动作和智能体判定需要。运行不可信代码时，不要提供机密和写令牌。参见[安全模型](/security)。
+
+## 以智能体步骤把关拉取请求
+
+智能体步骤失败会让作业失败，正如 `expect` 失败一样。为了让检查结果可预期，给每个 `agent.act` 只设定一个目标，然后用定位器断言或 `agent.assert` 检查其结果。
+
+要在 CI 中复用已验证的动作，请[共享回放缓存](/cache#提交回放缓存)。缓存命中可以让该动作步骤不调用模型。智能体判定仍然实时运行，缓存未命中或交接时也会用到模型。
+
+默认情况下，CI 会把失败的测试再运行一次。只在重试时才通过的测试会被标记为 flaky。利用这一点找出需要关注的功能流程。
+
+`--max-failures <n>` 在失败测试达到该数量时停止运行。这样部署损坏时，就不会为剩余每个智能体步骤花费一次模型调用。未开始的测试会以 `failure-limit` 为原因被跳过；正在运行的测试以 `interrupted` 结束，单独计数、不计入失败。作业以退出码 1 结束。
+
+要在运行失败时阻止合并，把 e2e 作业设为仓库的必需检查（required check）。
+
+## 退出码
+
+任何非零退出码都会让作业失败。[调试一次运行](/debugging#阅读失败信息)列出了每个退出码，并说明重试作业是否有帮助。
+
+<CardGroup cols={2}>
+  <Card title="拉取请求评论" icon="code-pull-request" href="/github">
+    每次运行一条评论，重跑时就地更新。
+  </Card>
+  <Card title="CLI 参考" icon="terminal" href="/reference/cli">
+    旗标、报告器与全部退出码。
+  </Card>
+</CardGroup>

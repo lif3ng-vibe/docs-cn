@@ -1,0 +1,130 @@
+---
+title: 项目工具
+description: 为测试 API、数据准备和设备操作添加工具。
+icon: "screwdriver-wrench"
+---
+
+把工具放进智能体的 `tools`，智能体就能在目标执行期间调用你的测试 API，或执行其他项目特有的操作。用 `defineTool` 包装每个 AI SDK 工具，声明它是否改变状态、支持哪些平台。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { defineTool } from 'e2e/agent';
+import { web } from '@e2e-dev/web';
+import { gateway, tool } from 'ai';
+import { z } from 'zod';
+
+const APP_URL = process.env.APP_URL ?? 'http://localhost:3000';
+
+const seedCart = defineTool(
+  tool({
+    description: 'Seed the cart with a SKU via the store test API',
+    inputSchema: z.object({ sku: z.string() }),
+    execute: async ({ sku }) => {
+      const response = await fetch(`${APP_URL}/api/test/cart?sku=${encodeURIComponent(sku)}`);
+      if (!response.ok) throw new Error(`Cart seeding failed: HTTP ${response.status}`);
+      return response.text();
+    },
+  }),
+  { mutates: true },
+);
+
+export default {
+  targets: [{ engine: web(), app: { url: APP_URL } }],
+  agents: { default: { model: gateway('openai/gpt-6-luna-fast'), tools: { seedCart } } },
+} satisfies E2EConfig;
+```
+
+现在，智能体可以在结账前先往购物车里填入商品：
+
+```ts
+await agent.act('seed the cart with SKU {sku}, then check out', {
+  params: { sku: 'SHIRT-BLUE-M' },
+});
+```
+
+内置工具名是保留名。以下情况都会让配置加载失败并报 `INVALID_CONFIG`：项目工具用了语法动词式的名字（`tap`、`screenshot`）；与 harness 添加的工具重名（每个步骤中的 `complete_step`，`e2e mcp` 会话中的 `locate`、`start_recording` 与 `stop_recording`，`e2e explore` 下的 `report_finding`）；或值不是由 `defineTool` 构建的。工具归属于内置智能体：带自定义 `executor` 的条目不能同时设置 `tools`。
+
+## 声明工具的行为
+
+`defineTool` 接收 AI SDK 工具以及以下注解：
+
+| 注解 | 含义 |
+| --- | --- |
+| `mutates: true` | 改变状态。该调用计入步骤的动作预算，并与其他动作按顺序执行。[回放缓存](/cache)无法回放它，因此智能体会现场执行步骤的这一部分。 |
+| `mutates: false` | 只读。不占用动作槽位即可运行，并且可以观测屏幕。 |
+| `platforms: ['ios', 'android']` | 只在这些平台上提供该工具。省略则在每个 target 上提供。 |
+
+失败的调用同样消耗其动作槽位。runner 会在派发前检查预算，包括模型一次请求多次调用的情形。
+
+## 从工具中观测
+
+只读工具可以观测脱敏后的屏幕。下面的示例在像素可用时，把一张打码后的截图保存为报告证据：
+
+```ts
+import { randomUUID } from 'node:crypto';
+import { defineTool, getToolContext } from 'e2e/agent';
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const captureEvidence = defineTool(
+  tool({
+    description: 'Save a screenshot as evidence in the report',
+    inputSchema: z.object({}),
+    execute: async (_input, executionOptions) => {
+      const context = getToolContext(executionOptions);
+      const observation = await context.observe({ pixels: true });
+      const pixels = observation.pixels;
+      if (pixels === undefined) {
+        return { withheld: observation.pixelsWithheld ?? 'UNSUPPORTED_CAPABILITY' };
+      }
+      const id = await context.attachScreenshot(pixels, `evidence-${randomUUID()}`);
+      return { evidence: id };
+    },
+  }),
+  { mutates: false },
+);
+```
+
+`observe()` 返回脱敏后的文本快照。用 `tree: true` 请求节点树，或用 `pixels: true` 请求打码截图。内置智能体的限制依旧适用，包括[填充机密之后](/security#机密填充后的截图)不提供像素。
+
+请在单独的只读工具里观测。会改变状态的工具已占用动作队列，在它内部观测就得等在它自己的操作上。
+
+`attachScreenshot(pixels, label)` 把图片加入步骤的产物并返回其产物 id。每次采集用不同的唯一标签，以免覆盖早前的图片。
+
+## 设备工具包
+
+`@e2e-dev/mobile` 为其引擎自带一套现成工具包。把每个设备引擎都传给一次 `mobileTools` 调用，然后展开该工具包，让自己的工具与它并列加入：
+
+```ts
+import type { E2EConfig } from 'e2e';
+import { mobile } from '@e2e-dev/mobile';
+import { mobileTools } from '@e2e-dev/mobile/tools';
+import { gateway } from 'ai';
+
+const iphone = mobile({ platform: 'ios' });
+const pixel = mobile({ platform: 'android' });
+
+export default {
+  targets: [
+    { name: 'iphone', engine: iphone, app: { bundleId: 'Settings' } },
+    { name: 'pixel', engine: pixel, app: { bundleId: 'com.android.settings' } },
+  ],
+  agents: {
+    default: {
+      model: gateway('openai/gpt-6-luna-fast'),
+      tools: { ...mobileTools(iphone, pixel) /* , ...your own tools */ },
+    },
+  },
+} satisfies E2EConfig;
+```
+
+该工具包在设备 target 上添加 `open_app`、`swipe` 和 `alert`。截图与点按动作来自引擎的内置工具。见[移动引擎参考](/reference/mobile#智能体工具)。
+
+<CardGroup cols={2}>
+  <Card title="自定义执行器" icon="gears" href="/executors">
+    替换提示词或决策循环。
+  </Card>
+  <Card title="智能体步骤如何工作" icon="stairs" href="/agent-steps">
+    模型能看到什么、能做什么。
+  </Card>
+</CardGroup>

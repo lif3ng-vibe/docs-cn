@@ -1,0 +1,183 @@
+---
+title: 智能体与人设
+description: 在一个套件中配置多个智能体，将测试固定到指定智能体，并让同一流程以每个人设各跑一遍。
+icon: "users"
+---
+
+在 `agents` 里定义具名智能体，让测试用上不同的模型、指令或工具。除非你另行选择，测试都会使用 `default`。
+
+```ts title="e2e.config.ts"
+import type { E2EConfig } from 'e2e';
+import { web } from '@e2e-dev/web';
+import { gateway } from 'ai';
+
+const vocabulary = 'Plans are called tiers. Billing lives under Settings. "Approve" on an order refunds it.';
+
+export default {
+  targets: [{ engine: web(), app: { url: 'http://localhost:3000' } }],
+  agents: {
+    default: { model: gateway('openai/gpt-6-luna-fast'), context: vocabulary },
+    thorough: {
+      model: gateway('anthropic/claude-opus-5'),
+      system: 'Verify every claim on screen before concluding a step.',
+      context: vocabulary,
+    },
+    buyer: { model: gateway('openai/gpt-6-luna-fast'), system: 'You are a first-time buyer.', context: vocabulary },
+    admin: { model: gateway('openai/gpt-6-luna-fast'), system: 'You manage orders and approve refunds.', context: vocabulary },
+  },
+} satisfies E2EConfig;
+```
+
+每个条目都是一个普通对象。对内置智能体，它可以包含模型、`system` 提示词、应用的 `context`、[工具](/tools)、预算以及 `providerOptions`。对[自定义执行器](/executors)，则把执行器放在 `executor` 下；模型、判定模型、context 与预算依然生效，而 `system` 和 `tools` 会被拒收，因为执行器自带提示词与工具。
+
+智能体之间不互相继承。每个条目都从内置默认值出发，绝不会取 `default` 条目的值，所以请为每个条目配上它需要的模型与 context，比如像上面那样用一个共享常量。
+
+`model` 同时负责动作与判定，除非你单独设置 `judge`。接收截图的模型必须支持图像输入。参见[模型](/models)与[配置参考](/reference/config#agents)。
+
+## 指令与词汇
+
+智能体接收两类文本，而它们的读者不同。
+
+| | `system` | `context` |
+|---|---|---|
+| 解答什么 | 执行动作的智能体该如何工作？ | 这个应用把东西叫什么？ |
+| 谁来读 | 只有动作循环 | 每次模型调用：动作轮次，以及 `assert`、`waitFor`、`extract` 背后的判定模型 |
+| 适合放什么 | 人设、注意事项、收尾前要核实什么、如何应付意外的对话框 | 屏幕与菜单的名称、功能在什么位置、哪个按钮提交表单、领域术语 |
+| 在哪设置 | `agents.<name>.system` | `agents.<name>.context`，上限 16 KiB |
+
+这样切分是有意的。判定模型负责判断屏幕上是否呈现了测试所声称的内容，因此它必须懂应用的用词：不知道「套餐叫 tier」的判定模型，无法检查是否选对了 tier。反过来，判定模型绝不能知道动作方的指令，否则一条写着「表单一关就算步骤完成」的 `system` 提示词也会拉低判定门槛。`system` 里的任何内容都不会送达判定模型。
+
+经验法则：如果换一个测试人员、用同一个应用，这句话仍然成立，那它属于 `context`；如果换成另一个应用，这句话仍然成立，那它属于 `system`。
+
+```ts title="e2e.config.ts"
+agents: {
+  default: {
+    model: gateway('openai/gpt-6-luna-fast'),
+    // How to work: read by the act loop only.
+    system: 'Verify a visible confirmation before completing a step. Close cookie and feedback notices you did not ask for.',
+    // What things are called: read by every model call, judges included.
+    context: 'Plans are called tiers. Billing lives under Settings. Sales documents are quotes until "Convert to order".',
+    maxSteps: 40,
+  },
+},
+```
+
+`maxSteps` 限制一个步骤最多可执行的动作数，`maxModelCalls` 限制其模型调用数；两者默认 25，可上调至 100。
+
+测试或分组可以用 `agentContext` 追加自己的词汇，它会附在该测试所用智能体的 `context` 之后：种子数据的 id、会改变某个标签的功能开关，任何只有该测试才知道的信息。
+
+```ts title="tests/billing.e2e.ts"
+import { describe, test } from 'e2e';
+
+describe('billing', { agentContext: 'The seeded workspace is called "Acme Trial".' }, () => {
+  test('upgrades the tier', async ({ agent }) => { /* ... */ });
+});
+```
+
+指令不要放进 `agentContext`，理由与不要放进 `context` 相同：它会送达判定模型。
+
+## 调优智能体
+
+某个步骤失败或调用次数过多时，先查看它的报告，或用 `--debug` 运行来查看转录。从指令入手；如果问题影响多个测试，再调整智能体：
+
+1. 在目标里使用屏幕上实际显示的标签。
+2. 共享词汇放进 `context`，只属于一个测试的放进 `agentContext`。
+3. 给动作方的指令（比如完成步骤前先核实可见的确认信息）放进 `system`。
+4. 为需要额外操作的场景添加[工具](/tools)，比如通过测试 API 预置购物车。
+5. 用 `--agent <name>` 跑同一批测试，比较不同的模型或 `providerOptions`。
+
+具名智能体同样可以使用[回放缓存](/cache)。每个智能体以自己的名称与 context 为键分别记录条目，因此同时以 `buyer` 和 `admin` 身份运行的测试，绝不会把一个人设的步骤回放给另一个人设用；`agentContext` 一变就会重新记录。自定义工具与执行器有各自的回放约束，见[项目工具](/tools)与[自定义执行器](/executors#回放缓存)。
+
+## 按运行选择智能体
+
+用 `--agent` 为未指定智能体的测试选择智能体：
+
+<CodeGroup>
+```bash npm
+npx e2e run --agent thorough tests/checkout.e2e.ts
+```
+
+```bash pnpm
+pnpm exec e2e run --agent thorough tests/checkout.e2e.ts
+```
+
+```bash bun
+bunx e2e run --agent thorough tests/checkout.e2e.ts
+```
+</CodeGroup>
+
+写多个名字会让每个未固定的测试在每个智能体上各跑一遍：
+
+<CodeGroup>
+```bash npm
+npx e2e run --agent buyer,admin
+```
+
+```bash pnpm
+pnpm exec e2e run --agent buyer,admin
+```
+
+```bash bun
+bunx e2e run --agent buyer,admin
+```
+</CodeGroup>
+
+## 在套件中固定智能体
+
+测试、describe 块或单次调用都可以指定智能体。就近设置优先，顺序为：调用、测试、外层分组、运行。
+
+下面的简化测试展示了在每个层级如何指定智能体。
+
+```ts title="tests/checkout.e2e.ts"
+import { describe, test } from 'e2e';
+
+describe('checkout as a first-time buyer', { agent: 'buyer' }, () => {
+  test('pays for one item', async ({ app, agent }) => { /* ... */ });
+
+  describe('refunds', { agent: 'admin' }, () => {
+    test('refunds the order', async ({ agent }) => { /* ... */ });
+  });
+
+  test('reorders, and the admin approves', async ({ app, agent }) => {
+    await app.open('/orders');
+    await agent.act('reorder the most recent order');
+    // The admin's act call sees what the earlier steps of this test did.
+    await agent.act('approve the pending reorder', { agent: 'admin' });
+    await agent.assert('the reorder shows as approved');
+  });
+});
+```
+
+`--agent` 不会替换已显式指定的智能体。测试或分组上写了未知智能体，会在收集阶段失败；调用上写了未知智能体，会抛出 `INVALID_ARGUMENT`。报告会记录每个步骤用的是哪个智能体。
+
+## 同一流程 多种人设
+
+指定多个智能体，让同一个测试在每个智能体上各跑一遍：
+
+```ts title="tests/checkout.e2e.ts"
+import { describe, test } from 'e2e';
+
+describe('checkout', { agent: ['buyer', 'admin'] }, () => {
+  test('pays for one item', async ({ app, agent }) => { /* runs once per persona */ });
+  test('applies a promo code', async ({ app, agent }) => { /* ... */ });
+});
+```
+
+每个智能体得到各自独立的结果与产物目录。终端与 JUnit 的测试名会带上智能体名，例如 `[admin]`。
+
+就上面的列表而言，`--agent admin` 只选中 `admin`。若旗标里没有能匹配上的名字（比如 `--agent thorough`），则两个已选定的智能体都保持不变。
+
+串行组在每个智能体下作为一个整体运行，因此组内成员共享该组的固定设置。一个 setup 测试最多固定一个智能体。
+
+选择智能体并不会切换已登录的用户。要让登录人设与智能体搭配，请在单独的 describe 块中把每个智能体与其 `session` 成对配置。[登录](/authentication#多个已登录用户)说明了如何创建会话并运行测试。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="项目工具" icon="wrench" href="/tools">
+    给智能体一个测试 API 或设备工具箱。
+  </Card>
+  <Card title="自定义执行器" icon="gears" href="/executors">
+    自定义智能体选择与执行动作的方式。
+  </Card>
+</CardGroup>

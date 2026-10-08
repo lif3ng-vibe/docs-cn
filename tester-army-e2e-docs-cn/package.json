@@ -1,0 +1,17 @@
+{
+  "name": "tester-army-e2e-docs-cn",
+  "private": true,
+  "description": "e2e 文档站中文镜像（非官方翻译），基于 Mintlify，源 https://e2e.tester.army/docs",
+  "type": "module",
+  "scripts": {
+    "dev": "mint dev",
+    "validate": "mint validate",
+    "check": "mint validate && mint broken-links"
+  },
+  "devDependencies": {
+    "mint": "4.2.909"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

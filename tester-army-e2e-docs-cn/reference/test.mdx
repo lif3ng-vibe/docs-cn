@@ -1,0 +1,457 @@
+---
+title: test
+description: 测试、setup 测试、分组、钩子、选项与 fixture。
+icon: "flask-vial"
+---
+
+测试、分组与钩子在测试文件被导入时同步声明。用 `test.extend` 添加
+fixture，用 `test.skip` 在注册时或在测试体内跳过一个测试。
+
+```ts
+export interface TestAPI<Fixtures = TestFixtures> {
+  /** Registers one test synchronously during module evaluation. */
+  (title: string, fn: TestFn<Fixtures>): TestCase;
+  /** Registers one configured test synchronously during module evaluation. */
+  (title: string, options: TestOptions, fn: TestFn<Fixtures>): TestCase;
+  /** Registers one skipped test. */
+  skip(title: string, fn: TestFn<Fixtures>): TestCase;
+  /**
+   * Inside a running test: skips it when `condition` is true (or always,
+   * with no condition), ending the body there. The attempt is reported
+   * `skipped` with `reason`; steps that already ran stay in the report, and
+   * teardown still runs. A setup test cannot skip: its sessions are owed.
+   * Outside a test body this form is `COLLECTION_ERROR`; use the `skip`
+   * option to skip at collection.
+   */
+  skip(condition: boolean, reason?: string): void;
+  skip(reason?: string): void;
+  /** Registers one focused local test. CI rejects focused tests. */
+  only(title: string, fn: TestFn<Fixtures>): TestCase;
+  /** Registers one setup test with statically declared session outputs. */
+  setup(title: string, options: SetupOptions, fn: SetupFn<Fixtures>): TestCase;
+  /**
+   * Returns the same runtime `test`, typed with an engine's contributed
+   * fixtures. A pure type refinement, the fixtures still resolve from the
+   * target's engine at runtime, so a project types its device/desktop/web
+   * surface without a global `declare module` augmentation:
+   *
+   *   export const test = base.extend<{ device: Device }>();
+   */
+  extend<Extra>(): TestAPI<Fixtures & Extra>;
+  /**
+   * Returns a new `test` whose registrations carry these fixture
+   * definitions on top of the ones it already had. Each attempt sets them up
+   * in declaration order after the engine's fixtures, runs the hooks and the
+   * body with them, and tears them down in reverse order after `afterEach`:
+   *
+   *   export const test = base.extend<{ workspace: Workspace }>({
+   *     workspace: async ({ browser }, use) => {
+   *       const workspace = await createWorkspace();
+   *       await use(workspace);
+   *       await workspace.cleanup();
+   *     },
+   *   });
+   */
+  extend<Extra>(fixtures: FixtureDefinitions<Fixtures, Extra>): TestAPI<Fixtures & Extra>;
+  /** Declares a group synchronously. */
+  describe<Result>(title: string, body: SynchronousBody<Result>): void;
+  /** Declares a configured group synchronously. */
+  describe<Result>(
+    title: string,
+    options: DescribeOptions,
+    body: SynchronousBody<Result>,
+  ): void;
+  /** Registers a test-attempt setup hook. */
+  beforeEach(fn: TestHookFn<Fixtures>): void;
+  /** Registers a test-attempt teardown hook. */
+  afterEach(fn: TestHookFn<Fixtures>): void;
+  /** Registers a suite-instance setup hook. */
+  beforeAll(fn: SuiteHookFn): void;
+  /** Registers a suite-instance teardown hook. */
+  afterAll(fn: SuiteHookFn): void;
+}
+
+export const test: TestAPI;
+export const describe: TestAPI['describe'];
+export const beforeEach: TestAPI['beforeEach'];
+export const afterEach: TestAPI['afterEach'];
+export const beforeAll: TestAPI['beforeAll'];
+export const afterAll: TestAPI['afterAll'];
+```
+
+`describe` 和四个钩子也是顶层导出，与 `test.describe`、`test.beforeEach`
+等是完全相同的函数：`import { describe, beforeEach, test } from 'e2e'`。
+从 `e2e` 导入的按测试钩子以核心 fixture 做类型。`@e2e-dev/web` 与
+`@e2e-dev/mobile` 也导出 `test`、`describe` 和全部四个钩子，分别以它们的
+`browser` 或 `device` fixture 做类型，于是一个测试文件从一处导入即可完成所有注册；
+而你用自定义 fixture 扩展过的 `test`，通过 `test.beforeEach`
+注册的钩子也能看到这些 fixture。
+
+在模块求值之外注册测试、分组或钩子会抛出 `COLLECTION_ERROR`。
+
+测试或分组的标题在 NFC 规范化后为 1 到 512 个 UTF-8 字节，不含 NUL 字符。
+同一文件中出现两条标题路径相同的测试——分组标题加上测试自身标题——
+属于 `COLLECTION_ERROR`。
+
+## 成员
+
+被跳过的测试默认不影响退出码。使用 `test.only` 时，其余测试报告为
+`filtered`，CI 运行会以 `ONLY_IN_CI` 失败。
+
+在测试内调用 `test.skip(condition, reason)`，用于只能在运行时才知道的条件，
+比如某个被禁用的功能开关。当条件为真时，该调用会抛出：测试体像
+Playwright 里那样在这一行停止，测试报告为 `skipped` 并附 `reason`，不重试。
+调用之后的任何内容都不会运行；调用之前的步骤按实际执行情况留在报告中。
+调用之前的软失败仍保留在该次尝试的 `secondaryErrors` 中，CLI
+会把该测试列在 `Skipped After Failure` 之下。一次失败的尝试在重试后又跳过，
+同样会出现在那里，并保留其原始错误。钩子与 fixture 仍会执行各自的清理。
+当条件是前置条件时，应在任何步骤之前最先调用它。
+
+设置 [`failOnSkippedFailure: true`](/reference/config)，当同一测试在失败之后又发生运行时跳过时，
+让整个运行以退出码 1 失败。该测试仍报告为 `skipped` 并附原因，
+跳过也不会触发再一次重试。纯粹的跳过与重试通过的情况不受影响。默认为 `false`。
+
+setup 测试不能这样跳过，因为其他测试依赖它保存的会话；调用会以
+`INVALID_ARGUMENT` 失败。在测试体之外，条件形式的 `skip`
+属于 `COLLECTION_ERROR`。要在声明测试时跳过，请使用 `skip` 选项。
+
+```ts
+test('switches organizations', { session: 'admin' }, async ({ app, agent }) => {
+  const organizations = await listOrganizations();
+  test.skip(organizations.length < 2, 'the demo tenant has a single organization');
+  await app.open('/backend');
+  await agent.act(`switch to the organization "${organizations[1].name}"`);
+});
+```
+`test.setup` 必须写在顶层，不能位于 `describe` 内。`async` 的
+`describe` 函数体既是类型错误，也是 `COLLECTION_ERROR`。
+
+```ts
+import { describe, test } from '@e2e-dev/web';
+import { expect } from 'e2e';
+
+test('app opens', async ({ app, browser }) => {
+  await app.open();
+  await expect(browser).toHaveURL('/');
+});
+
+test('checks out', { tags: ['billing'], retries: 2, timeout: 60_000 }, async ({ app }) => {
+  await app.open('/checkout');
+});
+
+describe('checkout', { tags: ['smoke'], serial: true }, () => {
+  test('adds an item', async ({ screen }) => {});
+  test('pays', async ({ screen }) => {});
+});
+```
+
+`test.setup` 声明它要保存的会话，且每个会话必须恰好保存一次：
+
+```ts
+import { credentials } from 'e2e';
+
+test.setup('authenticate', { sessions: ['member'] }, async ({ app, screen, session }) => {
+  await app.open('/login');
+  await screen.getByLabel('Email').fill(credentials.user('member').username);
+  await screen.getByLabel('Password').fill(credentials.user('member').password);
+  await screen.getByRole('button', 'Sign in').tap();
+  await session.save('member');
+});
+```
+
+会话名必须匹配 `/^[A-Za-z0-9_.-]{1,128}$/` 且唯一。
+声明了却未保存，或保存了两次，都会在运行时抛出 `SESSION_CONTRACT`。
+
+```ts
+export interface SetupSession {
+  /** Saves state under a setup-declared name. */
+  save(name: string): Promise<void>;
+}
+```
+
+## 钩子
+
+`beforeEach` 钩子先运行最外层分组的，再在分组内部按声明顺序运行。
+`afterEach` 钩子先运行最内层的，按声明的逆序运行，在失败或超时之后也会运行。
+`beforeAll` 在首次进入作用域时对每个套件实例运行一次；`afterAll`
+在该作用域于 realm 内的最后一个测试结束时运行。钩子的顺序遵循作用域的嵌套，
+而非文件中的书写位置，因此声明在测试之后的钩子仍然对它生效。
+
+模块会为每次重试、每个 serial 分组和每个 setup 测试重新导入，
+因此 `beforeAll` 在每种情形下都会再运行一次。作用域的 `afterAll`
+在该作用域于 realm 内的最后一个测试结束后立即运行。因失败而被丢弃的 realm，
+会对所有 `beforeAll` 已经开始执行的作用域运行 `afterAll`。
+
+`beforeEach` 与测试体共享测试超时。每个 `afterEach` 钩子都有独立的
+`cleanupTimeout` 预算，且 fixture 在此期间仍然可用，因此即使测试体已经超时，
+清理阶段仍能继续操作应用。
+
+阻塞所在 worker 事件循环的测试（fixture、`beforeEach`、测试体或
+`afterEach` 中出现 `while (true) {}`）会停掉该 worker 里的所有计时器，
+worker 因此无法对它计时。`beforeAll` 或 `afterAll` 阻塞则仍会让运行挂起。
+当测试超时后，worker 在 `cleanupTimeout`（至少 5 秒）内仍未响应，
+runner 会杀掉它。该次尝试报告为 `timed-out`，附 `TEST_TIMEOUT`、
+无任何产物（artifacts），排在它之前的尝试之后，且不会重试。
+文件的其余部分改在一个新的 worker 上运行。在 serial 分组中，
+它之后的成员被跳过。测试开始时已附加调试器的 worker
+（编辑器的 auto-attach，或 `NODE_OPTIONS=--inspect=0`）
+永远不会被这样杀掉，断点可以一直保持暂停。通过内联配置或内存内测试
+以编程方式发起的运行，跑在 runner 自己的进程里，没有可杀的 worker：
+阻塞的事件循环会让它挂起。
+
+`beforeAll` 或 `afterAll` 内抛出的异常属于 `HOOK_FAILED`，会跳过
+套件中的测试，原因（cause）为 `hook-failed`。在 serial 分组内，
+它会跳过其余所有成员，并让该分组失败且不重试。
+
+## Options
+
+```ts
+export interface TestOptions {
+  /** Attempt deadline in milliseconds; defaults to `config.timeout`. Innermost wins. */
+  timeout?: number;
+  /** Retries, 0 through 10; defaults to `config.retries`. Inside a serial group the group's value applies. */
+  retries?: number;
+  /** Tags for `--tag`: distinct names, none blank, with no comma and no leading or trailing whitespace; every layer's tags are unioned. */
+  tags?: readonly string[];
+  /** Skips the test; a string is the reason. Any truthy layer skips. */
+  skip?: boolean | string;
+  /** Focuses the test locally. CI rejects it with `ONLY_IN_CI`. */
+  only?: boolean;
+  /** Platforms the test runs on; other targets skip it. Innermost wins. */
+  platforms?: readonly string[];
+  /** Capabilities the target must have; otherwise the test is skipped at selection. Innermost wins. */
+  requires?: readonly Capability[];
+  /** Session a setup test saved, restored before the body runs. */
+  session?: string;
+  /** Extra context for agent steps; layers are concatenated outermost first. */
+  agentContext?: string;
+  /**
+   * The configured agent (`agents.<name>`) this test or group runs with, in
+   * place of the run's agents. A list runs the test once per agent named, as
+   * one result each. Innermost wins; a call's own `agent` option wins over
+   * it. `--agent` narrows a list to the names both name and never overrides
+   * a pin the flag does not name.
+   */
+  agent?: string | readonly string[];
+  /**
+   * Whether the test keeps a trace page, in place of the run's: the same
+   * modes as the config's `trace`. Innermost wins, over `--trace` too;
+   * inside a serial group the group's value applies.
+   */
+  trace?: RecordingMode;
+  /**
+   * Which of the test's attempts record a video, in place of the run's:
+   * the same modes as the config's `video`. Innermost wins, over `--video`
+   * too; inside a serial group the group's value applies, since the group
+   * records as one unit. A mode set here is required of the target's engine.
+   */
+  video?: RecordingMode;
+}
+
+export interface DescribeOptions extends Omit<TestOptions, 'only'> {
+  /** Runs the group as one ordered retry unit with shared app state. Nesting one serial group in another is a `COLLECTION_ERROR`. */
+  serial?: boolean;
+}
+
+export interface SetupOptions extends Omit<TestOptions, 'session' | 'only' | 'skip' | 'agent'> {
+  /** Session names this setup test MUST save. */
+  sessions: readonly string[];
+  /** A setup test runs once per target, so it pins at most one agent. */
+  agent?: string;
+}
+```
+
+`timeout` 必须是正的安全整数；`retries` 必须是 0 到 10 之间的整数。
+分组不接受 `only`。调用不接受的选项键（如 `{ timout: 1000 }`）
+属于 `COLLECTION_ERROR`：如果它像是一个拼写错误，错误信息会指出最接近的
+已知键；否则列出该调用可接受的全部键。`test.setup` 要求 `sessions`
+是静态的、非空的、各元素唯一的数组。
+
+解析顺序：测试、最近的分组、外层分组、config、内置默认值。
+
+`requires` 写的是目标引擎具备的能力（capability）：harness
+自带的（`observation`、`actions`、`location`、`pointer`、`keyboard`、`state`、
+`artifacts`）、每个被贡献的 fixture 对应的一个（`browser`、`device`；见
+[引擎契约](/reference/engine#引擎)），或目标声明应用种类的：
+有 `app.url` 为 `browser`，有 `app.bundleId` 或 `app.appPath` 为
+`native-app`。缺少所需能力的目标会在选择（selection）阶段跳过该测试：
+
+```ts
+test('onboarding asks for the camera', { requires: ['native-app'] }, async ({ app, agent }) => {
+  await app.open();
+  await agent.assert('The app asks for camera access');
+});
+```
+
+`agent` 引用了 `agents` 中未定义的名字，属于选择阶段的
+`COLLECTION_ERROR`，在任何测试运行之前就会发生。
+
+`trace` 与 `video` 接受[录制模式](/reference/config#录制)：
+`off`、`on`、`retain-on-failure`、`on-first-retry` 或 `on-all-retries`。
+测试或分组自己的取值优先于 `--trace` / `--video`、目标引擎的以及
+config 的，因此单个测试可以在什么都不录制的运行中启用录制，
+也可以从全部录制的运行中退出。此处设置的 `video` 模式是必需的：
+当它在某次尝试开启录制、而目标引擎无法录制视频时，运行会在任何测试开始前
+以 `UNSUPPORTED_ARTIFACT` 失败，并指出测试名：
+
+```ts
+test('checkout', { video: 'on' }, async ({ agent }) => {
+  await agent.act('Buy the first product in the catalog');
+});
+```
+
+`serial: true` 让分组成为一个按序重试的整体单元，共享应用状态与机密状态：
+机密输入之后，该分组这次尝试的其余部分将屏蔽像素。一次重试会全新开始。
+在成员上设置的 `retries`、`trace`、`video`、`session`、`platforms`、
+`requires`、`skip`、`only` 以及嵌套的 `serial` 都是收集错误（`COLLECTION_ERROR`），
+请把它们设在分组上。成员继承 serial `describe` 或其外层分组上的
+`trace` 与 `video`，分组按每次分组尝试录制一个视频。因文件加载失败或
+会话启动失败而无法启动的分组尝试，会让第一个成员以该错误失败，
+并以原因 `serial-predecessor-failed` 跳过其余成员。若运行在启动期间被中断，
+则所有成员都改为跳过。重试时，成员保留前一次尝试的判定。
+退出码遵循错误的类别，与其他测试一样。
+
+## Fixtures
+
+```ts
+export interface TestFixtures {
+  /** Agent steps. Acquiring the built-in agent without a configured model is `MODEL_UNAVAILABLE`. */
+  readonly agent: Agent;
+  /** App lifecycle: open, restart, clear state, back, screenshot. */
+  readonly app: App;
+  /** Semantic queries and the actions on their matches. */
+  readonly screen: Screen;
+  /** The target's platform label: `web`, `ios`, `android`, or an engine's own string. */
+  readonly platform: string;
+}
+
+export interface SetupFixtures extends TestFixtures {
+  /** Saves the sessions the setup test declared. */
+  readonly session: SetupSession;
+}
+
+export interface SuiteFixtures {
+  /** The target's platform label: `web`, `ios`, `android`, or an engine's own string. */
+  readonly platform: string;
+}
+```
+
+其余一切 fixture 都由目标的引擎贡献，或者是[你自定义的](#自定义-fixture)
+fixture。`@e2e-dev/web` 贡献 [`browser`](/reference/web) fixture，
+并导出以它做类型的 `test`；设备引擎贡献 `device`。
+使用引擎未贡献的 fixture 会以 `UNSUPPORTED_CAPABILITY` 失败；
+要改用 `requires: ['browser']` 在选择阶段跳过这类测试。
+
+上面的 fixture 都是惰性的。在参数列表中解构时，它们会在测试体的第一条语句
+之前被获取。你自定义的 fixture 不是：测试注册所经过的 `extend` 链中的每个
+fixture 都会为该测试装配，即使其参数列表中没有解构它。
+
+### 自定义 fixture
+
+`test.extend(fixtures)` 定义在每个测试之前装配、之后清理的资源，
+测试失败之后同样清理。在每个 fixture 函数中，`await use(value)`
+之前的代码负责装配资源；测试收到 `value`，`use` 之后的代码负责清理。
+
+```ts
+import { test as base } from '@e2e-dev/web';
+
+export const test = base.extend<{ workspace: Workspace }>({
+  workspace: async ({ browser }, use) => {
+    const workspace = await createWorkspace();
+    await signIn(browser, workspace);
+    await use(workspace); // the hooks and the body run here
+    await workspace.cleanup(); // teardown, after the body even when it failed
+  },
+});
+
+test('renames the workspace', async ({ workspace, screen }) => {
+  await screen.getByLabel('Name').fill(`${workspace.name} (renamed)`);
+});
+```
+
+```ts
+/**
+ * Defines one fixture: everything before `await use(value)` is its setup,
+ * everything after is its teardown. The body, its hooks, and later fixtures
+ * run while `use` is pending; it resolves once they are done, whether or not
+ * the body failed.
+ */
+export type FixtureFn<Fixtures, Value> = (
+  fixtures: Fixtures,
+  use: (value: Value) => Promise<void>,
+) => Promise<void>;
+
+/**
+ * One definition per fixture `test.extend()` adds. A definition sees the
+ * fixtures of the `test` it extends, not its siblings: a fixture that needs
+ * another one goes in a chained `extend()`. A name the base already has is a
+ * type error (and a `COLLECTION_ERROR` at runtime).
+ */
+export type FixtureDefinitions<Base, Extra> = {
+  readonly [K in keyof Extra]: K extends keyof Base ? never : FixtureFn<Base, Extra[K]>;
+};
+```
+
+`extend` 返回一个新的 `test`，被调用的那个保持不变。定义的类型依据是
+它所 `extend` 的那个 `test` 的 fixture，而不是同一调用中的兄弟 fixture。
+需要另一个 fixture 的定义应放进链式调用的下一个 `extend`：
+`base.extend({ a }).extend({ b })` 让 `b` 拿到的 fixture 对象里已经有 `a`。
+
+每次尝试：
+
+1. 每个定义按声明顺序运行直到调用 `use`，无论测试是否解构了它：
+   打开页面或改变应用状态的 fixture 会对该 `test` 的每个测试都这么做，
+   因此测试需要不同装配的文件应通过不同的 `extend` 链注册。
+   装配计入测试的 `timeout`；其失败在 `beforeEach` 阶段报告，
+   先于任何 `beforeEach` 钩子运行。
+2. `beforeEach` 钩子、测试体、然后 `afterEach` 钩子，都使用同一个
+   fixture 对象。这个 fixture 集合就是测试自己的链：通过 `base`
+   注册的测试，其钩子读取 `workspace` 会以 `UNSUPPORTED_CAPABILITY` 失败。
+3. 清理按逆序在最后一个 `afterEach` 之后运行，无论测试体是否通过，
+   每段清理都有独立的 `cleanupTimeout` 预算。那里的错误会让本已通过的
+   尝试在 `afterEach` 阶段失败；在测试体已失败时，则并入
+   `secondaryErrors`。
+
+失败情形与失败位置：
+
+| 写法错误 | 失败位置 |
+| --- | --- |
+| 值不是由函数组成的纯对象、名字为空、用了核心名（`agent`、`app`、`screen`、`platform`、`session`）、或用了链中更早的 `extend` 已定义的名字 | 导入时以 `COLLECTION_ERROR` 失败，并指出 fixture 名 |
+| 用了目标引擎贡献的名字（Playwright 目标上的 `browser`） | 该次尝试，`beforeEach` 阶段，`TEST_SETUP_FAILED` |
+| 定义未调用 `use` 就返回 | 该次尝试，`beforeEach` 阶段，`TEST_SETUP_FAILED` |
+| 定义调用了两次 `use` | 该次尝试，清理阶段，`TEST_SETUP_FAILED` |
+| 定义在 `use` 之前抛出异常 | 该次尝试，`beforeEach` 阶段，携带该错误 |
+| 定义在 `use` 之后抛出异常 | 该次尝试，`afterEach` 阶段，携带该错误 |
+
+触到测试 `timeout` 的测试体或钩子是被放弃（abandon）而非取消，
+因此清理可能在它仍在运行时就开始。这样被放弃的装配之后走到 `use`
+时会立即得到 resolve，其清理独立于本次运行而进行，
+它分配的资源仍然会被释放。
+
+## 函数类型
+
+```ts
+/** A test body. */
+export type TestFn<Fixtures = TestFixtures> = (fixtures: Fixtures) => void | Promise<void>;
+
+/** A setup test body; `session.save` is the extra fixture. */
+export type SetupFn<Fixtures = TestFixtures> = (
+  fixtures: Fixtures & SetupFixtures,
+) => void | Promise<void>;
+
+/** A `beforeEach` or `afterEach` body. */
+export type TestHookFn<Fixtures = TestFixtures> = (fixtures: Fixtures) => void | Promise<void>;
+
+/** A `beforeAll` or `afterAll` body. */
+export type SuiteHookFn = (fixtures: SuiteFixtures) => void | Promise<void>;
+
+/** A `describe` body. An async body is a type error. */
+export type SynchronousBody<Result> = Extract<Result, PromiseLike<unknown>> extends never
+  ? () => Result
+  : never;
+
+/** Opaque handle of a registered test. */
+export interface TestCase {
+  readonly [testCaseBrand]: true;
+}
+```

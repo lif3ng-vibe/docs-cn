@@ -1,0 +1,53 @@
+---
+title: API
+description: 用 fetch 和值匹配器检查你的 API，与 UI 测试同文件、同一次运行。
+icon: "server"
+---
+
+API 测试与 UI 测试写在同样的文件里、在同一次运行中执行。只接收 `app` 的测试不会调用模型。用 `fetch` 调用 API，并用值匹配器检查响应。
+
+```ts title="tests/users-api.e2e.ts"
+import { test, expect } from 'e2e';
+import { z } from 'zod';
+
+const User = z.object({ id: z.number(), name: z.string() });
+
+test('GET /api/users returns the seeded users', async ({ app }) => {
+  const response = await fetch(new URL('/api/users', app.baseUrl));
+  expect(response.status).toBe(200);
+  expect(response.headers.get('content-type')).toContain('application/json');
+  const users = expect(await response.json()).toMatchSchema(z.array(User));
+  expect(users).toHaveLength(3);
+  expect(users.map((user) => user.name)).toEqual(['Ada', 'Grace', expect.any(String)]);
+});
+```
+
+`toMatchSchema` 接受任何 [Standard Schema](/reference/expect#与-schema-匹配)（Zod、Valibot、ArkType），因此你的应用解析 API 时所用的 schema 就能检查 API 是否仍然符合它，并且返回带类型的值。
+
+## API 运行在哪里
+
+`app.baseUrl` 就是 target 的 `app.url`；当 target 声明端口 0 时，它带上的是本次运行所分配的端口，因此同一个文件既可以跑在配置启动的 `app.command` 上，也可以跑在一个已部署的预览上。对于 API 在响应之后才写入的状态，用 [`expect.poll`](/reference/expect#轮询值) 反复读取，直到某个匹配器通过。
+
+## 已登录的请求
+
+要以已登录用户的身份调用 API，编写一个在每次请求时附带 `browser.cookies()` 的 [fixture](/reference/test#自定义-fixture)。通过这个 `test` 注册的每个测试都会获取 `browser`，因此它需要一个 web target：
+
+```ts title="tests/api.ts"
+import { test as base } from '@e2e-dev/web';
+
+export const test = base.extend<{ api: (path: string, init?: RequestInit) => Promise<Response> }>({
+  api: async ({ app, browser }, use) => {
+    await use(async (path, init) => {
+      const url = new URL(path, app.baseUrl);
+      if (url.origin !== new URL('/', app.baseUrl).origin) throw new Error(`${url} is not on the app`);
+      const headers = new Headers(init?.headers);
+      headers.set('cookie', (await browser.cookies()).map((c) => `${c.name}=${c.value}`).join('; '));
+      return fetch(url, { ...init, headers });
+    });
+  },
+});
+```
+
+## 不用浏览器
+
+在 web target 上，API 测试仍会打开一个浏览器上下文。没有引擎的 target 什么都不打开，但它也没有 `app.baseUrl`，所以要从环境变量读取 URL。在引擎提示处选择 **None** 时，`e2e init` 就会配置这样一个 target。

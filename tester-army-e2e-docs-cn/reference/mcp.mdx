@@ -1,0 +1,188 @@
+---
+title: MCP 服务器（e2e mcp）
+description: 让编码智能体通过 MCP 检查你的应用并与它交互。
+icon: "plug"
+---
+
+<CodeGroup>
+```bash npm
+npx e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+
+```bash pnpm
+pnpm exec e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+
+```bash bun
+bunx e2e mcp [--config <path>] [--target <name>] [--headed] [--max-sessions <n>]
+```
+</CodeGroup>
+
+`e2e mcp` 让 Claude Code、Cursor 之类的编码智能体检查你的应用、试定位器，并在
+编写测试之前截取脱敏截图。它通过 stdio 运行，使用项目配置的 engine。
+
+四个 MCP 工具管理会话并调用应用可用的工具。应用工具目录在每次会话打开时从
+配置重新加载。
+
+## 接入
+
+该服务器随 `e2e` 一起附带。`e2e init` 会提议把它注册到 `.mcp.json`
+（Claude Code）与 `.cursor/mcp.json`（Cursor）。手动方式：
+
+<CodeGroup>
+```bash npm
+claude mcp add e2e -- npx e2e mcp
+```
+
+```bash pnpm
+claude mcp add e2e -- pnpm exec e2e mcp
+```
+
+```bash bun
+claude mcp add e2e -- bunx e2e mcp
+```
+</CodeGroup>
+
+对于使用 `mcpServers` 配置的客户端，添加：
+
+```json
+{
+  "mcpServers": {
+    "e2e": { "command": "npx", "args": ["e2e", "mcp"] }
+  }
+}
+```
+
+服务器不需要模型：没有可选 `ai` 包的项目也能打开会话，并用确定性工具驱动
+应用。
+
+在项目目录中启动服务器。配置发现与 `e2e run` 相同。用 `--config` 指定其他
+位置，或只在单次会话中给 `open_session` 传入 `config`。
+
+| 旗标 | 行为 |
+| --- | --- |
+| `--config <path>` | 每次会话加载的配置，除非 `open_session` 另行指名。每次 `open_session` 都会重新加载配置，包括它们按路径导入的所有文件。 |
+| `--target <name>` | 每次会话打开的 target。否则由 `open_session` 指名，或使用唯一的那个 target；有多个 target 且未指名是 `TARGET_REQUIRED`。 |
+| `--headed` | engine 支持时，在 `open_session` 未设置 `headed` 的每个会话中显示浏览器或模拟器。会话默认无头，与 `e2e run` 相同。 |
+| `--max-sessions <n>` | 同时可开的会话数，1 到 16；默认 4。每个会话有自己的浏览器或设备。 |
+
+运维输出走 stderr，前缀 `e2e mcp:`。stdout 只承载协议。你的代码通过 `console`、
+`process.stdout` 或 `process.stderr` 写出的内容（配置顶层代码、项目工具）会
+转到 stderr，并对其中的机密值脱敏。配置加载期间打印的输出在其加载完成后出现；
+加载失败时该输出被扣留，因为配置的机密尚不可知。无人捕获的错误会脱敏记录并
+关闭服务器。继承服务器 stdio 的子进程可以绕过这一切。
+
+## 工具
+
+| 工具 | 参数 | 结果 |
+| --- | --- | --- |
+| `open_session` | `target`（可选）、`config`（可选路径）、`headed`（可选布尔值） | 加载配置，启动 target 的应用命令，拉起 engine，开始一次尝试，engine 可导航时打开应用 URL。返回会话 id、工具目录与第一份观测。`headed: true` 显示本会话的浏览器或模拟器，`false` 隐藏；不设则跟随 `--headed`。 |
+| `tools` | `tool`（可选）、`session`（开了多个会话时必填） | 工具目录，每个工具一行。带 `tool` 时，给出其完整描述与参数 schema。 |
+| `call` | `tool`、`args`（可选）、`session`（开了多个会话时必填） | 运行一个目录中的工具。参数先对照工具的封闭 schema 校验：类型错误或工具未声明的参数是 `INVALID_ARGUMENT`，什么也不运行。执行失败的动作是一个错误结果，仍携带重新观测到的屏幕，并以前置的失败详情开头——先列工具、其 target 与错误码，如 `navigate file:///etc/passwd failed: POLICY_DENIED: forbidden URL scheme: file:`。 |
+| `close_session` | `session`（开了多个会话时必填） | 保存仍在进行的录制，结束尝试，释放 engine；在没有其他会话使用时停止该会话启动的应用进程。 |
+
+项目工具遵循其 AI SDK `toModelOutput` 渲染器，`execute` 返回字符串时也一样。
+渲染出的 `error-text` 与 `error-json` 输出是 MCP 错误结果（`isError: true`），
+以便编码智能体区分失败与成功的工具调用。
+
+## 多个会话
+
+可以同时开多个会话，上限为 `--max-sessions`，各自有独立的尝试与自己的浏览器或
+设备。并行的智能体——例如编码智能体的子智能体——就是这样共享一个服务器的：
+各自打开会话，并把自己的 id 传给每一次 `tools`、`call` 与 `close_session`。
+
+- 只在恰好一个会话开着时才可以省略 `session`。多个会话同时打开时，不带它的
+  调用以 `SESSION_REQUIRED` 失败，并附上打开中的会话列表。
+- 未打开的 `session` id 以 `NO_SESSION` 失败；对正在关闭或已结束的会话，消息
+  会说明原因。
+- 超出上限的 `open_session` 以 `SESSION_OPEN` 失败。会话从 `open_session` 起
+  占住它的槽位，直到其尝试关闭——因此仍在启动或仍在关闭中的会话也计入。
+- 同时打开的会话共享同一份配置：凭据与机密通过每进程一个的注册表解析。指向
+  另一份配置的 `open_session` 以 `CONFIG_IN_USE` 失败，直到其他会话关闭。
+- 服务器关闭时，它会取消仍在打开中的会话并等待它们，关闭每个会话，并以
+  `SESSION_OPEN` 拒绝新的。客户端取消一个 `open_session` 或断开连接，同样会
+  取消它。被取消的 open 在它已启动的东西停止后（比如某个仍在等 `readyUrl` 的
+  应用命令）以 `CANCELLED` 失败。
+- 每个会话都重新加载配置，直到其按路径导入的文件（例如它展开的基配置），因此
+  各得一份自己的 engine 实例。包内创建的 engine 是所有会话共用的同一实例，其上
+  的第二个会话以 `ENGINE_IN_USE` 失败。
+- 同一应用命令上的会话共享其进程：第一个会话启动它，最后一个会话关闭时停止。
+  声明端口 `0` 的 URL 在每个会话里各得自己的端口，因此也各有自己的进程。一次
+  所有等待中的会话都放弃的共享启动会被取消，由下一个会话重新启动。
+- 在移动端，每个会话需要自己的模拟器或仿真器：为每台设备各声明一个
+  target（各自指名自己的 `device`），并在各自的 target 上打开会话。
+
+[Bug 大排查](/bug-bash)就用这个：每个验证子智能体驱动自己的会话。
+
+### 工具目录
+
+`call` 能运行什么，取决于会话的 target：
+
+| 目录工具 | 参数 | 结果 |
+| --- | --- | --- |
+| `observe` | 无 | 一份新的观测，每行一个节点，形如 `#id role "name" ...`，附当前路径与版本号。链接的 `href` 在应用 URL 的 origin 上时就是其路径，否则为 origin 加路径；`mailto:`、`tel:` 与 `blob:` 目标保留其 scheme。`…` 标记省略的部分：`?…` 是 query，`#…` 是 fragment，`data:…` 或 `javascript:…` 是内联 payload，行尾 `…` 是在 256 字符处截断的 target。 |
+| `tap`、`double_tap`、`long_press`、`right_click`、`hover`、`type`、`press`、`select`、`check`、`scroll`、`scroll_to`、`drag`、`upload`、`navigate`、`back`、`type_secret` | 最新观测中的节点 id，外加值、按键、`checked` 状态、方向、拖放目标、相对项目的 `files`、URL 或机密名 | 该动作的摘要与屏幕上的变化。engine 未声明的动词不会出现在目录中。`upload` 拒绝项目外的路径、隐藏文件或隐藏目录下的文件，报 `POLICY_DENIED`。配置声明了 `credentials` 或 `secrets` 时才会列出 `type_secret`；明文永远不会到达智能体。 |
+| `dismiss_keyboard` | 无 | 隐藏屏幕上的键盘。engine 的键盘声明了 `dismiss` 时列出，各设备引擎即是如此。 |
+| `locate` | `role`（可带 `name`）、`text`、`label`、`placeholder`、`testId` 中恰好一个；`exact` | 多少个节点匹配、是哪些，以及应写给测试的 `screen.*` 调用。零个或多个匹配时会给出与测试中相同的错误。它展示的节点内容同样通过机密台账，与 `observe` 一致：已填入的机密显示为 `<secret:name>`。 |
+| `screenshot` | 无 | 脱敏视口的图像。从这时起，每个动作结果都携带一张新截图。一旦有机密被填入，本会话剩余时间内一律改为回答 `PIXEL_TAINTED`。 |
+| `tap_at` | 最新截图像素坐标中的 `x`、`y` | 点击该点：其下有列出的控件则按 id 点击，否则通过 engine 的 `performAt` 点击裸坐标；没有 `performAt` 时，该点必须落在列出的控件上。engine 声明 `tap` 或 `performAt` 时列出。 |
+| `hover_at` | 最新截图像素坐标中的 `x`、`y` | 以同样方式悬停该点：其下有列出的控件则按 id 悬停，否则通过 `performAt` 的 `hover` 类别悬停裸坐标。engine 声明 `hover` 动作或指针类别时列出。 |
+| `type_at` | `x`、`y`、`value`；带键盘的 engine 还有 `replace` | 按 id 填入该点下列出的输入。有键盘时，其余情况会点击聚焦并输入，除非设置了 `replace`，否则输入发生在光标处；没有键盘时，点在未列出内容上即失败。engine 声明 `type` 或键盘时列出。 |
+| `press_at` | `x`、`y`、`key` | 把按键发给该点下列出的控件（按 id）；有键盘时，其余情况先点击聚焦，键随后经键盘发送。engine 声明 `press` 或键盘时列出。 |
+| `select_at` | `x`、`y`、`value`，选项的可见标签 | 在该点下列出的 select 类控件中选中该选项；那里没有列出内容即失败。engine 声明 `select` 时列出。 |
+| `start_recording` | `name`（可选；最多 64 个字母、数字、`-` 与 `_`，以字母或数字开头） | 开始录制应用视频。一次只能录一段；再次启动会报告正在录制的那个。engine 能录视频时列出。 |
+| `stop_recording` | 无 | 停止录制，返回每个视频文件的绝对路径。engine 能录视频时列出。 |
+
+五个坐标工具在有机密被填入后回答 `PIXEL_TAINTED`。在会话第一次 `screenshot`
+之前，每个都回一句"先截一张图"的提示，不计成本。
+
+`agents.default.tools` 中的项目工具也会以自己的名字出现在目录里，限定在
+target 的平台。传入 `mobileTools(...)` 的移动端项目还会得到 `open_app`、
+`swipe` 和 `alert`。与内建工具同名的项目工具会让配置加载以 `INVALID_CONFIG`
+失败。未知名字以 `UNKNOWN_TOOL` 失败，并附名字列表。
+
+### 录制
+
+会话只在 `start_recording` 与 `stop_recording` 之间录制视频，想录几次录几次；
+配置的 [`video`](/reference/config#video) 模式适用于运行而非会话，且会话不写
+[链路](/reference/config#trace)。每段录制保存为
+`<output>/videos/<session>/<n>[-<name>].webm`（移动端为 `.mp4`；
+[`output`](/reference/config#output) 默认 `.e2e`），其中 `n` 是该会话的第几段
+录制。跨重启或状态重置的 web 录制每页一个文件，按播放顺序命名为 `-part2`、
+`-part3` 等。自行录制租用期的浏览器或设备提供者改录会话：
+[Kernel](/integrations/kernel) 下载其回放，与其他文件一样存为
+`<n>[-<name>].mp4`；把录制保存在自己那边的提供者则改列 URL 而非文件。
+`close_session`、空闲超时与会话 TTL 会保存仍在进行的录制，关闭结果中列出其
+文件。
+
+录制不做遮蔽，也不因填过机密而被扣留：它们是给人看的文件，没有任何工具会返回
+其像素。录制期间输入到普通输入框中的机密在视频里是可读的；填过机密之后才停止
+的录制会说明这一点。
+
+会话是单个 target 上的一次尝试。任何会话打开之前的 `call` 以 `NO_SESSION`
+失败。会话在 `close_session`、空闲 30 分钟、满 4 小时、客户端断开连接，以及
+SIGINT 或 SIGTERM 时关闭。客户端关闭服务器的 stdin 或进程退出即算断开——管道
+在服务器之下断开，每个会话就此关闭，会话启动的应用命令停止，服务器退出。
+
+会话执行与测试相同的规矩。节点 id 只对最新的观测有效。机密只能经 `type_secret`
+填入；一旦填过，`screenshot` 与坐标工具（`tap_at`、`hover_at`、`type_at`、
+`press_at`、`select_at`）仍留在目录中，但在会话剩余时间内回答 `PIXEL_TAINTED`。
+工具返回的每个文本——`locate` 找到的节点、动作结果、`open_session` 或
+`close_session` 的失败、清理输出行——都在配置加载后对配置机密值脱敏，服务器自身的日志行亦然。会话做的任何事都不记为测试结果，也不进回放缓存；其产物落在
+`<output>/results/mcp/<target>-<attemptId>/` 下，视频在 `<output>/videos/` 下。
+之后一次 `e2e run` 会清空 `<output>/results`；视频保留。
+
+被客户端取消的排队调用，轮到它时不再执行。
+
+## 资源
+
+| URI | 内容 |
+| --- | --- |
+| `e2e://guide` | 智能体 skill 的总览，即 `e2e guide` 打印的文字。 |
+| `e2e://guide/{topic}` | 单个主题：`setup`、`writing-tests`、`agent`、`running`、`explore`、`debugging`、`mcp`、`bug-bash`。 |
+
+## 退出码
+
+客户端断开连接——无论是否有会话开着——或有信号结束时，`e2e mcp` 以退出码 0
+结束；命令行无效时为 2。配置与 engine 失败以工具错误返回，错误码与 CLI 打印的
+相同。
