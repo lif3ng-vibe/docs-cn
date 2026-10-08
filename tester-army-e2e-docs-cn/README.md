@@ -3,7 +3,7 @@
 [e2e](https://github.com/tester-army/e2e)（tester.army 出品的智能体端到端测试框架）官方文档站的**非官方中文镜像**。
 
 - 源站：https://e2e.tester.army/docs （Mintlify）
-- 上游快照：[tester-army/e2e](https://github.com/tester-army/e2e) `main` 分支，2026-10-07（docs/ 目录，52 篇 MDX）
+- 上游快照：[tester-army/e2e](https://github.com/tester-army/e2e) `main` @ `f1a1ac2410`（feat(decision): send providerOptions with every decide call），2026-10-07（docs/ 目录，52 篇 MDX）
 - 许可：上游 Apache-2.0；本镜像仅做翻译，正文之外的结构/样式尽量保持上游原样
 - 翻译为一次性快照，不做上游持续同步；要对照上游差异，用上面的快照信息手动 diff
 
