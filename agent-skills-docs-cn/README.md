@@ -1,84 +1,41 @@
-# skills.addy.ie
+# agent-skills-docs-cn
 
-The developer site for **[agent-skills](https://github.com/addyosmani/agent-skills)** - production-grade
-engineering skills for AI coding agents.
+**Agent Skills 官方站**（[skills.addy.ie](https://skills.addy.ie/)）的简体中文镜像，非官方翻译，一次性快照。
 
-Built with [Astro](https://astro.build). Zero client-side framework, a small amount of
-vanilla JS for search, tabs, and copy buttons. Dark, Vercel-inspired design system.
+- 原站：https://skills.addy.ie/
+- 站点工程源仓库：https://github.com/addyosmani/skills.addy.ie （快照 commit：`976c6fd`）
+- 技能包上游仓库：https://github.com/addyosmani/agent-skills （快照 commit：`1401c8b`）
+- 快照日期：2026-10-08
+- 许可：MIT（翻译内容同样遵循）
 
-## Develop
+## 范围与决策
+
+- 原站是 Astro 5 纯静态营销/教程站（无框架运行时；正文在 `.astro` 页面与 `.ts` 数据文件里，**没有 markdown**）。
+- 技能包本体（`skills/*/SKILL.md` 等英文提示词，在 agent-skills 仓库里）不参与翻译——它们是给智能体执行的功能性输入，翻译会破坏功能。详情页的「Read the full SKILL.md」仍指回原仓库。
+- 教程里的 `prompt` 字段（复制进智能体的提示词）同样保持英文原文；其余说明文字（does/why/checkpoint/tip/intro 等）全译。
+- `public/teach/` 下的 deck（`.html`/`.pptx`）、图示 SVG/PNG、贴纸等媒体资产保持英文原样、不重绘（站点界面上对它们的介绍文字已译）。
+- skills 页过滤 `tags` 保留英文（过滤 token）。
+
+## 部署形态（并入 docs-cn hub）
+
+- `astro.config.mjs` 固定 `base: '/docs-cn/agent-skills/'`、site 指向 Pages 域；站内 authored 链接已在源码一次性写成带前缀的绝对路径，**dev 与 CI 产物一致，无需 env base，也无需 sed**。
+- 产物 `dist/` 在根层（Astro 的 base 只影响生成 URL，不改文件落点），hub CI 的 Assemble 直接 `mv dist _site/agent-skills`。
+
+## 本地运行 / 构建
+
+前置要求（来自 `engines`）：Node 18.20.8 / ^20.3.0 / ≥22.0.0，npm ≥ 9.6.5。
 
 ```bash
 npm install
-npm run dev      # http://localhost:4321
+npm run dev      # http://localhost:4321/docs-cn/agent-skills/ （base 固定，dev 也带前缀）
+npm run build    # 产出 dist/（36 页）
+npm run preview
 ```
 
-## Build
+## 翻译口径
 
-```bash
-npm run build    # static output to ./dist
-npm run preview  # preview the production build
-```
+术语统一见 `GLOSSARY.md`（agent→智能体、skill→技能、spec→规格、gate→门禁、loop→回路、ship→上线 等，与 [[mattpocock-skills-docs-cn]] 的译名基准保持一致）。
 
-## Deploy
+## 上游同步
 
-The site is fully static - deploy `dist/` anywhere. On **Vercel**, no config is needed:
-import the repo and it auto-detects Astro (`npm run build`, output `dist`). Set the custom
-domain to `skills.addy.ie`.
-
-## Structure
-
-```
-src/
-├── data/
-│   ├── skills.ts        # the 24-skill catalog: phases, tags, commands
-│   └── agents.ts        # review personas, slash commands, reference checklists
-├── components/          # Nav, Footer, CopyCommand, SkillCard, Lifecycle
-├── layouts/Base.astro   # <head>, SEO/OG, nav + footer shell
-├── pages/
-│   ├── index.astro          # landing
-│   ├── skills/index.astro   # searchable / filterable catalog
-│   ├── skills/[slug].astro  # generated detail page per skill
-│   ├── lifecycle.astro      # phases + commands
-│   ├── compare.astro        # honest positioning
-│   ├── docs/getting-started.astro
-│   └── 404.astro
-└── styles/global.css    # design tokens + primitives
-```
-
-## Updating the catalog
-
-Skill content is sourced from the [agent-skills](https://github.com/addyosmani/agent-skills)
-repo. To add or edit a skill card, update [`src/data/skills.ts`](src/data/skills.ts) - detail
-pages, the explorer, the lifecycle page, and the sitemap all regenerate from that single file.
-
-## Teach / media kit assets
-
-The `/teach` page serves reusable resources from `public/teach/`:
-
-- **Diagrams** (`public/teach/diagrams/*.svg`) are hand-authored. Their `.png` twins are
-  rasterized with resvg (see the OG one-liner below, pointed at the diagrams folder).
-- **Decks** (`public/teach/decks/`) are generated from one source of truth,
-  [`scripts/deck-data.mjs`](scripts/deck-data.mjs):
-
-  ```bash
-  node scripts/build-decks.mjs      # writes the self-contained HTML decks + deck-data.json
-  python3 scripts/build_pptx.py     # writes the PPTX decks (needs python-pptx)
-  ```
-
-  Edit the slide content in `deck-data.mjs`, then rerun both. HTML decks inline the diagram
-  SVGs so they work offline; PPTX decks embed the PNGs. Keep all of it free of em dashes.
-
-## Regenerating the OG image
-
-The social card lives at `public/og.png`, rasterized from `scripts/og.svg`:
-
-```bash
-npm i -D @resvg/resvg-js
-node -e "const{Resvg}=require('@resvg/resvg-js');const fs=require('fs');const r=new Resvg(fs.readFileSync('scripts/og.svg'),{fitTo:{mode:'width',value:1200},font:{loadSystemFonts:true}});fs.writeFileSync('public/og.png',r.render().asPng())"
-npm uninstall @resvg/resvg-js
-```
-
-## License
-
-MIT - same as agent-skills.
+本站为一次性快照，不做上游持续同步。要同步时，diff 上述两个快照 commit 之后的上游变更，手工补译。

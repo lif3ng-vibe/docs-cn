@@ -14,5 +14,9 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.2.1",
     "astro": "^5.13.0"
+  },
+  "engines": {
+    "node": "18.20.8 || ^20.3.0 || >=22.0.0",
+    "npm": ">=9.6.5"
   }
 }
