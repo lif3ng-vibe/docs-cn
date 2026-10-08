@@ -17,15 +17,17 @@ const {
   noindex = false,
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://skills.addy.ie');
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogFile = ogImage.startsWith('/') ? ogImage.slice(1) : ogImage;
+const ogUrl = new URL(import.meta.env.BASE_URL + ogFile, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/docs-cn/agent-skills/favicon.svg" />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
 
@@ -38,14 +40,14 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://skills.addy
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL(ogImage, canonical)} />
+    <meta property="og:image" content={ogUrl} />
     <meta property="og:site_name" content="agent-skills" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={new URL(ogImage, canonical)} />
+    <meta name="twitter:image" content={ogUrl} />
     <meta name="twitter:creator" content="@addyosmani" />
 
     <!-- Fonts: Geist + Geist Mono -->
@@ -55,7 +57,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://skills.addy
       href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="sitemap" href="/docs-cn/agent-skills/sitemap-index.xml" />
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://skills.addy.ie/sitemap-index.xml
+Sitemap: https://lif3ng-vibe.github.io/docs-cn/agent-skills/sitemap-index.xml

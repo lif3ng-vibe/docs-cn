@@ -46,7 +46,7 @@ const orderedGroups = skillsByPhase.filter((g) => g.skills.length > 0);
       implements every task in one approved pass - you approve the plan once, then it runs
       autonomously. It removes the human stepping <em>between</em> tasks, not the verification:
       every task is still test-driven and committed individually, and it pauses on failures.
-      Running the skills inside loops or a software factory? See <a href="/loops/">loop engineering</a>.
+      Running the skills inside loops or a software factory? See <a href="/docs-cn/agent-skills/loops/">loop engineering</a>.
     </p>
   </section>
 
@@ -70,7 +70,7 @@ const orderedGroups = skillsByPhase.filter((g) => g.skills.length > 0);
           <ul class="phase-skills">
             {group.skills.map((s) => (
               <li>
-                <a href={`/skills/${s.slug}/`} class="phase-skill">
+                <a href={`/docs-cn/agent-skills/skills/${s.slug}/`} class="phase-skill">
                   <span class="phase-skill-name mono">{s.name}</span>
                   <span class="phase-skill-sum">{s.summary}</span>
                   <span class="phase-skill-arrow" aria-hidden="true">→</span>

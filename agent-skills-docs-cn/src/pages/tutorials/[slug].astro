@@ -22,7 +22,7 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
     <div class="tt-hero-bg grid-bg"></div>
     <div class="container tt-head">
       <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/tutorials/">Tutorials</a>
+        <a href="/docs-cn/agent-skills/tutorials/">Tutorials</a>
         <span aria-hidden="true">/</span>
         <span class="crumb-cur">{tutorial.scenario}</span>
       </nav>
@@ -35,7 +35,7 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
       <p class="tt-intro">{tutorial.intro}</p>
 
       <figure class="tt-figure">
-        <img src={`/teach/diagrams/${tutorial.diagram}.svg`} alt={tutorial.title} width="1280" height="720" loading="lazy" />
+        <img src={`/docs-cn/agent-skills/teach/diagrams/${tutorial.diagram}.svg`} alt={tutorial.title} width="1280" height="720" loading="lazy" />
       </figure>
     </div>
 
@@ -66,7 +66,7 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
                 <div class="step-chips">
                   {s.command && <span class="step-cmd mono">{s.command}</span>}
                   {s.skill && (
-                    <a href={`/skills/${s.skill}/`} class="step-skill mono">{skillName(s.skill)}</a>
+                    <a href={`/docs-cn/agent-skills/skills/${s.skill}/`} class="step-skill mono">{skillName(s.skill)}</a>
                   )}
                 </div>
               </div>
@@ -112,7 +112,7 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
         <div class="recap">
           {tutorial.recap.map((r) => (
             <div class="recap-row">
-              <a href={`/skills/${r.skill}/`} class="recap-skill mono">{skillName(r.skill)}</a>
+              <a href={`/docs-cn/agent-skills/skills/${r.skill}/`} class="recap-skill mono">{skillName(r.skill)}</a>
               <span class="recap-arrow" aria-hidden="true">→</span>
               <span class="recap-got">{r.got}</span>
             </div>
@@ -122,19 +122,19 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
 
       <div class="tt-next">
         {next ? (
-          <a href={`/tutorials/${next.slug}/`} class="tt-next-card card" style={`--h:${next.hue}`}>
+          <a href={`/docs-cn/agent-skills/tutorials/${next.slug}/`} class="tt-next-card card" style={`--h:${next.hue}`}>
             <span class="tt-next-label mono">Next tutorial</span>
             <span class="tt-next-title">{next.title}</span>
             <span class="tt-next-arrow" aria-hidden="true">→</span>
           </a>
         ) : (
-          <a href="/loops/" class="tt-next-card card" style={`--h:145`}>
+          <a href="/docs-cn/agent-skills/loops/" class="tt-next-card card" style={`--h:145`}>
             <span class="tt-next-label mono">Go deeper</span>
             <span class="tt-next-title">The loop engineering guide</span>
             <span class="tt-next-arrow" aria-hidden="true">→</span>
           </a>
         )}
-        <a href="/skills/" class="tt-next-card card ghost">
+        <a href="/docs-cn/agent-skills/skills/" class="tt-next-card card ghost">
           <span class="tt-next-label mono">Reference</span>
           <span class="tt-next-title">Browse all 24 skills</span>
           <span class="tt-next-arrow" aria-hidden="true">→</span>

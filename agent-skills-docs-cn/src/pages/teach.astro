@@ -57,11 +57,11 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
               {d.covers.map((c) => <li>{c}</li>)}
             </ul>
             <div class="deck-actions">
-              <a href={`/teach/decks/${d.slug}.html`} target="_blank" rel="noopener" class="btn btn-primary deck-btn">
+              <a href={`/docs-cn/agent-skills/teach/decks/${d.slug}.html`} target="_blank" rel="noopener" class="btn btn-primary deck-btn">
                 Present
                 <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
-              <a href={`/teach/decks/${d.slug}.pptx`} download class="btn btn-secondary deck-btn">
+              <a href={`/docs-cn/agent-skills/teach/decks/${d.slug}.pptx`} download class="btn btn-secondary deck-btn">
                 <svg viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 PPTX
               </a>
@@ -89,8 +89,8 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
       <div class="diagram-grid reveal">
         {diagrams.map((d) => (
           <figure class="card diagram-card" style={`--h:${d.hue}`}>
-            <a href={`/teach/diagrams/${d.slug}.svg`} target="_blank" rel="noopener" class="diagram-frame">
-              <img src={`/teach/diagrams/${d.slug}.svg`} alt={d.title} loading="lazy" width="1280" height="720" />
+            <a href={`/docs-cn/agent-skills/teach/diagrams/${d.slug}.svg`} target="_blank" rel="noopener" class="diagram-frame">
+              <img src={`/docs-cn/agent-skills/teach/diagrams/${d.slug}.svg`} alt={d.title} loading="lazy" width="1280" height="720" />
             </a>
             <figcaption class="diagram-meta">
               <div class="diagram-text">
@@ -98,8 +98,8 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
                 <p class="diagram-blurb">{d.blurb}</p>
               </div>
               <div class="diagram-dl">
-                <a href={`/teach/diagrams/${d.slug}.svg`} download class="dl-btn">SVG</a>
-                <a href={`/teach/diagrams/${d.slug}.png`} download class="dl-btn">PNG</a>
+                <a href={`/docs-cn/agent-skills/teach/diagrams/${d.slug}.svg`} download class="dl-btn">SVG</a>
+                <a href={`/docs-cn/agent-skills/teach/diagrams/${d.slug}.png`} download class="dl-btn">PNG</a>
               </div>
             </figcaption>
           </figure>
@@ -125,8 +125,8 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
       <div class="modes reveal">
         {usageModes.map((m, i) => (
           <article class="mode-row" style={`--h:${m.hue ?? 205}`} data-flip={i % 2 === 1}>
-            <a href={`/teach/diagrams/${m.diagram}.svg`} target="_blank" rel="noopener" class="mode-figure">
-              <img src={`/teach/diagrams/${m.diagram}.svg`} alt={m.headline} loading="lazy" width="1280" height="720" />
+            <a href={`/docs-cn/agent-skills/teach/diagrams/${m.diagram}.svg`} target="_blank" rel="noopener" class="mode-figure">
+              <img src={`/docs-cn/agent-skills/teach/diagrams/${m.diagram}.svg`} alt={m.headline} loading="lazy" width="1280" height="720" />
             </a>
             <div class="mode-copy">
               <span class="mode-label mono">{m.label}</span>
@@ -169,8 +169,8 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
         <div class="card share-card">
           <h3 class="share-title">Brand assets</h3>
           <div class="asset-links">
-            <a href="/favicon.svg" download class="dl-btn">Logo SVG</a>
-            <a href="/og.png" download class="dl-btn">Social card PNG</a>
+            <a href="/docs-cn/agent-skills/favicon.svg" download class="dl-btn">Logo SVG</a>
+            <a href="/docs-cn/agent-skills/og.png" download class="dl-btn">Social card PNG</a>
             <a href={REPO} target="_blank" rel="noopener" class="dl-btn">GitHub ↗</a>
           </div>
         </div>
@@ -200,7 +200,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
           <article class="card sticker-card" style={`--h:${s.hue}`}>
             <div class="sticker-frame">
               <img
-                src={`/teach/stickers/${s.slug}-preview.webp`}
+                src={`/docs-cn/agent-skills/teach/stickers/${s.slug}-preview.webp`}
                 alt={`"I got agent skills" sticker - ${s.title}`}
                 loading="lazy"
                 width="640"
@@ -215,13 +215,13 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
               <div class="sticker-dl">
                 <div class="dl-group">
                   <span class="dl-group-label mono">300 DPI</span>
-                  <a href={`/teach/stickers/${s.slug}.png`} download class="dl-btn">PNG &middot; {s.pngSize}</a>
-                  <a href={`/teach/stickers/${s.slug}.webp`} download class="dl-btn">WebP &middot; {s.webpSize}</a>
+                  <a href={`/docs-cn/agent-skills/teach/stickers/${s.slug}.png`} download class="dl-btn">PNG &middot; {s.pngSize}</a>
+                  <a href={`/docs-cn/agent-skills/teach/stickers/${s.slug}.webp`} download class="dl-btn">WebP &middot; {s.webpSize}</a>
                 </div>
                 <div class="dl-group">
                   <span class="dl-group-label mono">600 DPI</span>
-                  <a href={`/teach/stickers/${s.slug}-600dpi.png`} download class="dl-btn">PNG &middot; {s.png600Size}</a>
-                  <a href={`/teach/stickers/${s.slug}-600dpi.webp`} download class="dl-btn">WebP &middot; {s.webp600Size}</a>
+                  <a href={`/docs-cn/agent-skills/teach/stickers/${s.slug}-600dpi.png`} download class="dl-btn">PNG &middot; {s.png600Size}</a>
+                  <a href={`/docs-cn/agent-skills/teach/stickers/${s.slug}-600dpi.webp`} download class="dl-btn">WebP &middot; {s.webp600Size}</a>
                 </div>
               </div>
             </div>
@@ -244,7 +244,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
       <h2 class="t-cta-title">Made something with these?</h2>
       <p class="t-cta-sub">Tag the project so others can find it. Everything here is MIT licensed and free to reuse.</p>
       <div class="t-cta-links">
-        <a href="/docs/getting-started/" class="btn btn-primary">Get started</a>
+        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">Get started</a>
         <a href={REPO} target="_blank" rel="noopener" class="btn btn-secondary">Star on GitHub</a>
       </div>
     </div>
