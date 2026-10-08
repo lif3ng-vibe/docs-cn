@@ -1,28 +1,28 @@
 ---
-title: '⚙️ Phase 2 Playbook — Foundation & Scaffolding'
+title: '⚙️ 第 2 阶段 playbook——奠基与脚手架'
 ---
 
-# ⚙️ Phase 2 Playbook — Foundation & Scaffolding
+# ⚙️ 第 2 阶段 playbook——奠基与脚手架
 
-> **Duration**: 3-5 days | **Agents**: 6 | **Gate Keepers**: DevOps Automator + Evidence Collector
+> **周期**：3-5 天 | **智能体**：6 个 | **守门人**：DevOps Automator + Evidence Collector
 
 ---
 
-## Objective
+## 目标
 
-Build the technical and operational foundation that all subsequent work depends on. Get the skeleton standing before adding muscle. After this phase, every developer has a working environment, a deployable pipeline, and a design system to build with.
+构建后续所有工作都依赖的技术与运营地基。先让骨架立起来，再往上长肌肉。本阶段结束后，每个开发者都有可用的开发环境、可部署的流水线，以及一套可用来开发的设计系统。
 
-## Pre-Conditions
+## 前置条件
 
-- [ ] Phase 1 Quality Gate passed (Architecture Package approved)
-- [ ] Phase 1 Handoff Package received
-- [ ] All architecture documents finalized
+- [ ] 第 1 阶段质量关卡已通过（架构包获批准）
+- [ ] 已收到第 1 阶段交接包
+- [ ] 全部架构文档已定稿
 
-## Agent Activation Sequence
+## 智能体激活序列
 
-### Workstream A: Infrastructure (Day 1-3, Parallel)
+### 工作流 A：基础设施（第 1-3 天，并行）
 
-#### 🚀 DevOps Automator — CI/CD Pipeline + Infrastructure
+#### 🚀 DevOps Automator——CI/CD 流水线 + 基础设施
 ```
 Activate DevOps Automator for infrastructure setup on [PROJECT].
 
@@ -53,7 +53,7 @@ Format: Working CI/CD pipeline with IaC templates
 Timeline: 3 days
 ```
 
-#### 🏗️ Infrastructure Maintainer — Cloud Infrastructure + Monitoring
+#### 🏗️ Infrastructure Maintainer——云基础设施 + 监控
 ```
 Activate Infrastructure Maintainer for monitoring setup on [PROJECT].
 
@@ -80,7 +80,7 @@ Format: Infrastructure Readiness Report with dashboard access
 Timeline: 3 days
 ```
 
-#### ⚙️ Studio Operations — Process Setup
+#### ⚙️ Studio Operations——流程搭建
 ```
 Activate Studio Operations for process setup on [PROJECT].
 
@@ -106,9 +106,9 @@ Format: Operations Playbook
 Timeline: 2 days
 ```
 
-### Workstream B: Application Foundation (Day 1-4, Parallel)
+### 工作流 B：应用奠基（第 1-4 天，并行）
 
-#### 🎨 Frontend Developer — Project Scaffolding + Component Library
+#### 🎨 Frontend Developer——项目脚手架 + 组件库
 ```
 Activate Frontend Developer for project scaffolding on [PROJECT].
 
@@ -140,7 +140,7 @@ Format: Working application skeleton with component library
 Timeline: 3 days
 ```
 
-#### 🏗️ Backend Architect — Database + API Foundation
+#### 🏗️ Backend Architect——数据库 + API 奠基
 ```
 Activate Backend Architect for API foundation on [PROJECT].
 
@@ -174,7 +174,7 @@ Format: Working API scaffold with database and auth
 Timeline: 4 days
 ```
 
-#### 🏛️ UX Architect — CSS System Implementation
+#### 🏛️ UX Architect——CSS 体系实现
 ```
 Activate UX Architect for CSS system implementation on [PROJECT].
 
@@ -205,9 +205,9 @@ Format: Implemented CSS design system with theme toggle
 Timeline: 2 days
 ```
 
-## Verification Checkpoint (Day 4-5)
+## 验证检查点（第 4-5 天）
 
-### Evidence Collector Verification
+### Evidence Collector 验证
 ```
 Activate Evidence Collector for Phase 2 foundation verification.
 
@@ -225,27 +225,27 @@ Format: Evidence Package with screenshots
 Verdict: PASS / FAIL with specific issues
 ```
 
-## Quality Gate Checklist
+## 质量关卡检查清单
 
-| # | Criterion | Evidence Source | Status |
+| # | 标准 | 证据来源 | 状态 |
 |---|-----------|----------------|--------|
-| 1 | CI/CD pipeline builds, tests, and deploys | Pipeline execution logs | ☐ |
-| 2 | Database schema deployed with all tables/indexes | Migration success output | ☐ |
-| 3 | API scaffold responding on health check | curl response evidence | ☐ |
-| 4 | Frontend skeleton renders in browser | Evidence Collector screenshots | ☐ |
-| 5 | Monitoring dashboards showing metrics | Dashboard screenshots | ☐ |
-| 6 | Design system tokens implemented | Component library demo | ☐ |
-| 7 | Theme toggle functional (light/dark/system) | Before/after screenshots | ☐ |
-| 8 | Git workflow and processes documented | Studio Operations playbook | ☐ |
+| 1 | CI/CD 流水线可构建、测试并部署 | 流水线执行日志 | ☐ |
+| 2 | 数据库 schema 已部署，含全部表/索引 | 迁移成功输出 | ☐ |
+| 3 | API 脚手架健康检查有响应 | curl 响应证据 | ☐ |
+| 4 | 前端骨架可在浏览器中渲染 | Evidence Collector 截图 | ☐ |
+| 5 | 监控仪表盘已展示指标 | 仪表盘截图 | ☐ |
+| 6 | 设计系统令牌已实现 | 组件库演示 | ☐ |
+| 7 | 主题切换可用（浅色/深色/跟随系统） | 切换前后截图 | ☐ |
+| 8 | Git 工作流与流程已成文 | Studio Operations playbook | ☐ |
 
-## Gate Decision
+## 关卡决策
 
-**Dual sign-off required**: DevOps Automator (infrastructure) + Evidence Collector (visual)
+**需要双重签署放行**：DevOps Automator（基础设施）+ Evidence Collector（视觉证据）
 
-- **PASS**: Working skeleton with full DevOps pipeline → Phase 3 activation
-- **FAIL**: Specific infrastructure or application issues → Fix and re-verify
+- **PASS**：可运行的骨架 + 完整 DevOps 流水线 → 激活第 3 阶段
+- **FAIL**：个别基础设施或应用问题 → 修复后重新验证
 
-## Handoff to Phase 3
+## 向第 3 阶段交接
 
 ```markdown
 ## Phase 2 → Phase 3 Handoff Package
@@ -279,4 +279,4 @@ Verdict: PASS / FAIL with specific issues
 
 ---
 
-*Phase 2 is complete when the skeleton application is running, the CI/CD pipeline is operational, and the Evidence Collector has verified all foundation elements with screenshots.*
+*当骨架应用已在运行、CI/CD 流水线已可用、且 Evidence Collector 已用截图验证全部奠基要素时，第 2 阶段即告完成。*

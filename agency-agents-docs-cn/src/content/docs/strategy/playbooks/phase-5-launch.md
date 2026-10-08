@@ -1,29 +1,29 @@
 ---
-title: '🚀 Phase 5 Playbook — Launch & Growth'
+title: '🚀 第 5 阶段 playbook——发布与增长'
 ---
 
-# 🚀 Phase 5 Playbook — Launch & Growth
+# 🚀 第 5 阶段 playbook——发布与增长
 
-> **Duration**: 2-4 weeks (T-7 through T+14) | **Agents**: 12 | **Gate Keepers**: Studio Producer + Analytics Reporter
+> **周期**：2-4 周（T-7 至 T+14）| **智能体**：12 个 | **守门人**：Studio Producer + Analytics Reporter
 
 ---
 
-## Objective
+## 目标
 
-Coordinate go-to-market execution across all channels simultaneously. Maximum impact at launch. Every marketing agent fires in concert while engineering ensures stability.
+统筹所有渠道的上市（go-to-market，GTM）执行，同时发力，在发布时打出最大声量。工程侧保障稳定的同时，每个营销智能体协同开火。
 
-## Pre-Conditions
+## 前置条件
 
-- [ ] Phase 4 Quality Gate passed (Reality Checker READY verdict)
-- [ ] Phase 4 Handoff Package received
-- [ ] Production deployment plan approved
-- [ ] Marketing content pipeline ready (from Phase 3 Track B)
+- [ ] 第 4 阶段质量关卡已通过（Reality Checker 裁定 READY）
+- [ ] 已收到第 4 阶段交接包
+- [ ] 生产部署计划已批准
+- [ ] 营销内容流水线已就绪（来自第 3 阶段轨道 B）
 
-## Launch Timeline
+## 发布时间线
 
-### T-7: Pre-Launch Week
+### T-7：发布前一周
 
-#### Content & Campaign Preparation (Parallel)
+#### 内容与活动筹备（并行）
 
 ```
 ACTIVATE Content Creator:
@@ -51,7 +51,7 @@ ACTIVATE App Store Optimizer (if mobile):
 - Configure in-app review prompts
 ```
 
-#### Technical Preparation (Parallel)
+#### 技术筹备（并行）
 
 ```
 ACTIVATE DevOps Automator:
@@ -73,7 +73,7 @@ ACTIVATE Project Shepherd:
 - Brief stakeholders on launch plan
 ```
 
-### T-1: Launch Eve
+### T-1：发布前夜
 
 ```
 FINAL CHECKLIST (Project Shepherd coordinates):
@@ -107,9 +107,9 @@ Support:
 ☐ Feedback collection active
 ```
 
-### T-0: Launch Day
+### T-0：发布日
 
-#### Hour 0: Deployment
+#### 第 0 小时：部署
 
 ```
 ACTIVATE DevOps Automator:
@@ -129,7 +129,7 @@ ACTIVATE Infrastructure Maintainer:
 5. Confirm: SYSTEMS STABLE
 ```
 
-#### Hour 1-2: Marketing Activation
+#### 第 1-2 小时：营销启动
 
 ```
 ACTIVATE Twitter Engager:
@@ -158,7 +158,7 @@ ACTIVATE TikTok Strategist:
 - Adjust content based on early performance
 ```
 
-#### Hour 2-8: Monitoring & Response
+#### 第 2-8 小时：监控与响应
 
 ```
 ACTIVATE Support Responder:
@@ -180,7 +180,7 @@ ACTIVATE Feedback Synthesizer:
 - Prioritize user-reported problems
 ```
 
-### T+1 to T+7: Post-Launch Week
+### T+1 至 T+7：发布后一周
 
 ```
 DAILY CADENCE:
@@ -203,7 +203,7 @@ Evening:
 └── DevOps Automator → Deployment of hotfixes (if needed)
 ```
 
-### T+7 to T+14: Optimization Week
+### T+7 至 T+14：优化周
 
 ```
 ACTIVATE Growth Hacker:
@@ -231,27 +231,27 @@ ACTIVATE Executive Summary Generator:
 - Resource reallocation suggestions
 ```
 
-## Quality Gate Checklist
+## 质量关卡检查清单
 
-| # | Criterion | Evidence Source | Status |
+| # | 标准 | 证据来源 | 状态 |
 |---|-----------|----------------|--------|
-| 1 | Deployment successful (zero-downtime) | DevOps Automator deployment logs | ☐ |
-| 2 | Systems stable (no P0/P1 in 48 hours) | Infrastructure Maintainer monitoring | ☐ |
-| 3 | User acquisition channels active | Analytics Reporter dashboard | ☐ |
-| 4 | Feedback loop operational | Feedback Synthesizer report | ☐ |
-| 5 | Stakeholders informed | Executive Summary Generator output | ☐ |
-| 6 | Support operational | Support Responder metrics | ☐ |
-| 7 | Growth metrics tracking | Growth Hacker channel reports | ☐ |
+| 1 | 部署成功（零停机） | DevOps Automator 部署日志 | ☐ |
+| 2 | 系统稳定（48 小时内无 P0/P1） | Infrastructure Maintainer 监控 | ☐ |
+| 3 | 用户获取渠道已激活 | Analytics Reporter 仪表盘 | ☐ |
+| 4 | 反馈回路已运转 | Feedback Synthesizer 报告 | ☐ |
+| 5 | 干系人已知情 | Executive Summary Generator 产出 | ☐ |
+| 6 | 客户支持已就绪 | Support Responder 指标 | ☐ |
+| 7 | 增长指标在追踪 | Growth Hacker 渠道报告 | ☐ |
 
-## Gate Decision
+## 关卡决策
 
-**Dual sign-off**: Studio Producer (strategic) + Analytics Reporter (data)
+**双重签署放行**：Studio Producer（战略）+ Analytics Reporter（数据）
 
-- **STABLE**: Product launched, systems stable, growth active → Phase 6 activation
-- **CRITICAL**: Major issues requiring immediate engineering response → Hotfix cycle
-- **ROLLBACK**: Fundamental problems → Revert deployment, return to Phase 4
+- **STABLE**：产品已发布、系统稳定、增长启动 → 激活第 6 阶段
+- **CRITICAL**：出现重大问题，需工程侧立即响应 → 进入热修复循环
+- **ROLLBACK**：存在根本性问题 → 回滚部署，退回第 4 阶段
 
-## Handoff to Phase 6
+## 向第 6 阶段交接
 
 ```markdown
 ## Phase 5 → Phase 6 Handoff Package
@@ -278,4 +278,4 @@ ACTIVATE Executive Summary Generator:
 
 ---
 
-*Phase 5 is complete when the product is deployed, systems are stable for 48+ hours, growth channels are active, and the feedback loop is operational.*
+*当产品已部署、系统稳定 48 小时以上、增长渠道已激活、反馈回路已运转时，第 5 阶段即告完成。*

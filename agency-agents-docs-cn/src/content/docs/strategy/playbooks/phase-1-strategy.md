@@ -1,28 +1,28 @@
 ---
-title: '🏗️ Phase 1 Playbook — Strategy & Architecture'
+title: '🏗️ 第 1 阶段 playbook——战略与架构'
 ---
 
-# 🏗️ Phase 1 Playbook — Strategy & Architecture
+# 🏗️ 第 1 阶段 playbook——战略与架构
 
-> **Duration**: 5-10 days | **Agents**: 8 | **Gate Keepers**: Studio Producer + Reality Checker
+> **周期**：5-10 天 | **智能体**：8 个 | **守门人**：Studio Producer + Reality Checker
 
 ---
 
-## Objective
+## 目标
 
-Define what we're building, how it's structured, and what success looks like — before writing a single line of code. Every architectural decision is documented. Every feature is prioritized. Every dollar is accounted for.
+在写下第一行代码之前，先定义我们要构建什么、如何组织结构、成功是什么样。每一项架构决策都记录在案，每一个功能都排好优先级，每一块钱都有账可查。
 
-## Pre-Conditions
+## 前置条件
 
-- [ ] Phase 0 Quality Gate passed (GO decision)
-- [ ] Phase 0 Handoff Package received
-- [ ] Stakeholder alignment on project scope
+- [ ] 第 0 阶段质量关卡（quality gate）已通过（GO 决策）
+- [ ] 已收到第 0 阶段交接包（handoff package）
+- [ ] 干系人就项目范围达成一致
 
-## Agent Activation Sequence
+## 智能体激活序列
 
-### Step 1: Strategic Framing (Day 1-3, Parallel)
+### 第 1 步：战略框定（第 1-3 天，并行）
 
-#### 🎬 Studio Producer — Strategic Portfolio Alignment
+#### 🎬 Studio Producer——战略组合对齐
 ```
 Activate Studio Producer for strategic portfolio alignment on [PROJECT].
 
@@ -39,7 +39,7 @@ Format: Strategic Portfolio Plan Template
 Timeline: 3 days
 ```
 
-#### 🎭 Brand Guardian — Brand Identity System
+#### 🎭 Brand Guardian——品牌身份体系
 ```
 Activate Brand Guardian for brand identity development on [PROJECT].
 
@@ -55,7 +55,7 @@ Format: Brand Identity System Document
 Timeline: 3 days
 ```
 
-#### 💰 Finance Tracker — Budget and Resource Planning
+#### 💰 Finance Tracker——预算与资源规划
 ```
 Activate Finance Tracker for financial planning on [PROJECT].
 
@@ -71,9 +71,9 @@ Format: Financial Plan with ROI Projections
 Timeline: 2 days
 ```
 
-### Step 2: Technical Architecture (Day 3-7, Parallel, after Step 1 outputs available)
+### 第 2 步：技术架构（第 3-7 天，并行，待第 1 步产出可用后启动）
 
-#### 🏛️ UX Architect — Technical Architecture + UX Foundation
+#### 🏛️ UX Architect——技术架构 + UX 奠基
 ```
 Activate UX Architect for technical architecture on [PROJECT].
 
@@ -96,7 +96,7 @@ Format: Developer-Ready Foundation Package
 Timeline: 4 days
 ```
 
-#### 🏗️ Backend Architect — System Architecture
+#### 🏗️ Backend Architect——系统架构
 ```
 Activate Backend Architect for system architecture on [PROJECT].
 
@@ -116,7 +116,7 @@ Format: System Architecture Specification
 Timeline: 4 days
 ```
 
-#### 🤖 AI Engineer — ML Architecture (if applicable)
+#### 🤖 AI Engineer——ML 架构（如适用）
 ```
 Activate AI Engineer for ML system architecture on [PROJECT].
 
@@ -136,7 +136,7 @@ Format: ML System Design Document
 Timeline: 3 days
 ```
 
-#### 👔 Senior Project Manager — Spec-to-Task Conversion
+#### 👔 Senior Project Manager——规格转任务
 ```
 Activate Senior Project Manager for task list creation on [PROJECT].
 
@@ -160,9 +160,9 @@ Format: Task List with acceptance criteria
 Timeline: 3 days
 ```
 
-### Step 3: Prioritization (Day 7-10, Sequential, after Step 2)
+### 第 3 步：优先级排序（第 7-10 天，串行，在第 2 步之后）
 
-#### 🎯 Sprint Prioritizer — Feature Prioritization
+#### 🎯 Sprint Prioritizer——功能优先级排序
 ```
 Activate Sprint Prioritizer for backlog prioritization on [PROJECT].
 
@@ -185,27 +185,27 @@ Format: Prioritized Sprint Plan
 Timeline: 2 days
 ```
 
-## Quality Gate Checklist
+## 质量关卡检查清单
 
-| # | Criterion | Evidence Source | Status |
+| # | 标准 | 证据来源 | 状态 |
 |---|-----------|----------------|--------|
-| 1 | Architecture covers 100% of spec requirements | Senior PM task list cross-referenced with architecture | ☐ |
-| 2 | Brand system complete (logo, colors, typography, voice) | Brand Guardian deliverable | ☐ |
-| 3 | All technical components have implementation path | Backend Architect + UX Architect specs | ☐ |
-| 4 | Budget approved and within constraints | Finance Tracker plan | ☐ |
-| 5 | Sprint plan is velocity-based and realistic | Sprint Prioritizer backlog | ☐ |
-| 6 | Security architecture defined | Backend Architect security spec | ☐ |
-| 7 | Compliance requirements integrated into architecture | Legal requirements mapped to technical decisions | ☐ |
+| 1 | 架构覆盖 100% 的规格要求 | Senior PM 任务清单与架构交叉核对 | ☐ |
+| 2 | 品牌体系完整（logo、色彩、字体排印、语调） | Brand Guardian 交付物 | ☐ |
+| 3 | 所有技术组件都有实现路径 | Backend Architect + UX Architect 规格 | ☐ |
+| 4 | 预算已批准且未超约束 | Finance Tracker 计划 | ☐ |
+| 5 | sprint 计划基于速率且切合实际 | Sprint Prioritizer 待办清单 | ☐ |
+| 6 | 安全架构已定义 | Backend Architect 安全规格 | ☐ |
+| 7 | 合规要求已并入架构 | 法规要求已映射到技术决策 | ☐ |
 
-## Gate Decision
+## 关卡决策
 
-**Dual sign-off required**: Studio Producer (strategic) + Reality Checker (technical)
+**需要双重签署放行**：Studio Producer（战略）+ Reality Checker（技术）
 
-- **APPROVED**: Proceed to Phase 2 with full Architecture Package
-- **REVISE**: Specific items need rework (return to relevant Step)
-- **RESTRUCTURE**: Fundamental architecture issues (restart Phase 1)
+- **APPROVED**：携带完整架构包进入第 2 阶段
+- **REVISE**：个别条目需要返工（回到相应步骤）
+- **RESTRUCTURE**：架构存在根本性问题（重启第 1 阶段）
 
-## Handoff to Phase 2
+## 向第 2 阶段交接
 
 ```markdown
 ## Phase 1 → Phase 2 Handoff Package
@@ -239,4 +239,4 @@ Timeline: 2 days
 
 ---
 
-*Phase 1 is complete when Studio Producer and Reality Checker both sign off on the Architecture Package.*
+*当 Studio Producer 与 Reality Checker 双双在架构包上签署放行时，第 1 阶段即告完成。*

@@ -145,7 +145,7 @@ for r in json.load(open("strategy/runbooks.json"))["runbooks"]:
 | 🧭 [Codebase Onboarding Engineer](engineering/engineering-codebase-onboarding-engineer.md) | 快速开发者上手、只读代码库探索、事实性讲解 | 通过阅读代码、追踪代码路径、陈述结构与行为事实，帮助新开发者快速理解陌生仓库 |
 | 📚 [Technical Writer](engineering/engineering-technical-writer.md) | 开发者文档、API 参考、教程 | 清晰准确的技术文档 |
 | 💬 [WeChat Mini Program Developer](engineering/engineering-wechat-mini-program-developer.md) | 微信生态、小程序、支付集成 | 为微信生态构建高性能应用 |
-| 👁️ [Code Reviewer](engineering/engineering-code-reviewer.md) | 建设性代码评审、安全、可维护性 | PR 评审、代码质量门禁、以评审带教 |
+| 👁️ [Code Reviewer](engineering/engineering-code-reviewer.md) | 建设性代码评审、安全、可维护性 | PR 评审、代码质量关卡禁、以评审带教 |
 | 🗄️ [Database Optimizer](engineering/engineering-database-optimizer.md) | Schema 设计、查询优化、索引策略 | PostgreSQL/MySQL 调优、慢查询排查、迁移规划 |
 | 🌿 [Git Workflow Master](engineering/engineering-git-workflow-master.md) | 分支策略、约定式提交、高级 Git | Git 工作流设计、历史清理、对 CI 友好的分支管理 |
 | 🏛️ [Software Architect](engineering/engineering-software-architect.md) | 系统设计、DDD、架构模式、权衡分析 | 架构决策、领域建模、系统演进策略 |
@@ -321,7 +321,7 @@ for r in json.load(open("strategy/runbooks.json"))["runbooks"]:
 | 智能体 | 专长 | 何时使用 |
 |-------|-----------|-------------|
 | 📸 [Evidence Collector](testing/testing-evidence-collector.md) | 基于截图的 QA、可视化凭证 | UI 测试、视觉验证、bug 记录 |
-| 🔍 [Reality Checker](testing/testing-reality-checker.md) | 基于证据的认证、质量门禁 | 生产就绪、质量批准、发布认证 |
+| 🔍 [Reality Checker](testing/testing-reality-checker.md) | 基于证据的认证、质量关卡禁 | 生产就绪、质量批准、发布认证 |
 | 📊 [Test Results Analyzer](testing/testing-test-results-analyzer.md) | 测试评估、指标分析 | 测试输出分析、质量洞察、覆盖率报告 |
 | ⚡ [Performance Benchmarker](testing/testing-performance-benchmarker.md) | 性能测试、优化 | 速度测试、压力测试、性能调优 |
 | 🔌 [API Tester](testing/testing-api-tester.md) | API 验证、集成测试 | API 测试、端点验证、集成 QA |
@@ -533,7 +533,7 @@ for r in json.load(open("strategy/runbooks.json"))["runbooks"]:
 | 🖥️ [GIS Analyst](gis/gis-analyst.md) | 制图生产、数据质检、符号化、版面、空间查询 | 日常 GIS 运营、制作可出版级地图、维护数据完整性 |
 | 📦 [Spatial Data Engineer](gis/gis-spatial-data-engineer.md) | 地理空间 ETL、格式转换、CRS 重投影、自动化流水线 | 摄取任意来源的杂乱数据、构建可复用的数据转换流水线 |
 | ⚙️ [Geoprocessing Specialist](gis/gis-geoprocessing-specialist.md) | ArcPy、Python 工具箱（.pyt）、Model Builder、批处理自动化 | 自动化重复的 GIS 工作流、构建自定义地理处理工具 |
-| ✅ [GIS QA Engineer](gis/gis-qa-engineer.md) | 拓扑校验、元数据审计、CRS 一致性、精度评估 | 数据发布前的质量门禁、合规校验、数据完整性审计 |
+| ✅ [GIS QA Engineer](gis/gis-qa-engineer.md) | 拓扑校验、元数据审计、CRS 一致性、精度评估 | 数据发布前的质量关卡禁、合规校验、数据完整性审计 |
 | 🤖 [GeoAI/ML Engineer](gis/gis-geoai-ml-engineer.md) | 特征提取、目标检测、语义分割、土地覆盖分类 | 从影像中提取建筑/道路/车辆、变化检测、环境监测 |
 | 🏗️ [BIM/GIS Specialist](gis/gis-bim-specialist.md) | Revit/IFC 转 GIS、室内地图、数字孪生架构、设施管理 | 智慧园区、机场数字孪生、室内导航、楼宇运营 |
 | 🏔️ [3D & Scene Developer](gis/gis-3d-scene-developer.md) | Cesium、ArcGIS Scene Viewer、3D Tiles、点云、地形可视化 | 3D 城市场景、地形飞行漫游、点云网页查看器、OAuth 门控的场景分享 |
@@ -604,7 +604,7 @@ for r in json.load(open("strategy/runbooks.json"))["runbooks"]:
 5. 📸 **Evidence Collector**——质量验证
 6. 🔍 **Reality Checker**——生产就绪把关
 
-**结果**：企业级交付，带质量门禁与文档。
+**结果**：企业级交付，带质量关卡禁与文档。
 
 ---
 

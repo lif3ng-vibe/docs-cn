@@ -17,6 +17,7 @@
 | playbook | playbook（不译；如需说明可写"作战手册（playbook）"仅首次） |
 | runbook | runbook（不译；首次可注"场景手册（runbook）"） |
 | orchestration / orchestrate | 编排 |
+| quality gate | 质量关卡（Gate Keeper → 守门人） |
 | handoff | 交接 |
 | frontmatter | frontmatter（不译） |
 | division lead / lead agent | 部门主管 |

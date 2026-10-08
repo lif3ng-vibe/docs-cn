@@ -1,48 +1,48 @@
 ---
-title: '📢 Runbook: Multi-Channel Marketing Campaign'
+title: '📢 Runbook：多渠道营销活动'
 ---
 
-# 📢 Runbook: Multi-Channel Marketing Campaign
+# 📢 Runbook：多渠道营销活动
 
-> **Mode**: NEXUS-Micro to NEXUS-Sprint | **Duration**: 2-4 weeks | **Agents**: 10-15
+> **模式**：NEXUS-Micro 到 NEXUS-Sprint | **周期**：2-4 周 | **智能体**：10-15 个
 
 ---
 
-## Scenario
+## 场景
 
-You're launching a coordinated marketing campaign across multiple channels. Content needs to be platform-specific, brand-consistent, and data-driven. The campaign needs to drive measurable acquisition and engagement.
+你要跨多个渠道发起一场协同的营销活动。内容需要贴合各平台、保持品牌一致、以数据驱动。活动要带来可衡量的获客与互动。
 
-## Agent Roster
+## 智能体名册（roster）
 
-### Campaign Core
-| Agent | Role |
+### 活动核心
+| 智能体 | 职责 |
 |-------|------|
-| Social Media Strategist | Campaign lead, cross-platform strategy |
-| Content Creator | Content production across all formats |
-| Growth Hacker | Acquisition strategy, funnel optimization |
-| Brand Guardian | Brand consistency across all channels |
-| Analytics Reporter | Performance tracking and optimization |
+| 社交媒体策略师 | 活动负责人，跨平台策略 |
+| 内容创作者 | 全格式内容生产 |
+| Growth Hacker | 获客策略，漏斗优化 |
+| 品牌守护者 | 全渠道品牌一致性 |
+| 分析报告专员 | 效果跟踪与优化 |
 
-### Platform Specialists
-| Agent | Role |
+### 平台专员
+| 智能体 | 职责 |
 |-------|------|
-| Twitter Engager | Twitter/X campaign execution |
-| TikTok Strategist | TikTok content and growth |
-| Instagram Curator | Instagram visual content |
-| Reddit Community Builder | Reddit authentic engagement |
-| App Store Optimizer | App store presence (if mobile) |
+| Twitter Engager | Twitter/X 活动执行 |
+| TikTok Strategist | TikTok 内容与增长 |
+| Instagram Curator | Instagram 视觉内容 |
+| Reddit Community Builder | Reddit 真实互动 |
+| 应用商店优化师 | 应用商店露出（移动端适用） |
 
-### Support
-| Agent | Role |
+### 支持力量
+| 智能体 | 职责 |
 |-------|------|
-| Trend Researcher | Market timing and trend alignment |
-| Experiment Tracker | A/B testing campaign variations |
-| Executive Summary Generator | Campaign reporting |
-| Legal Compliance Checker | Ad compliance, disclosure requirements |
+| 趋势研究员 | 市场时机与趋势对齐 |
+| 实验追踪员 | 活动变体的 A/B 测试 |
+| 高管摘要生成器 | 活动汇报 |
+| 法务合规审查专员 | 广告合规、披露要求 |
 
-## Execution Plan
+## 执行计划
 
-### Week 1: Strategy & Content Creation
+### 第 1 周：策略与内容创作
 
 ```
 Day 1-2: Campaign Strategy
@@ -108,7 +108,7 @@ Day 3-5: Content Production
     └── AMA preparation (if applicable)
 ```
 
-### Week 2: Launch & Activate
+### 第 2 周：上线与激活
 
 ```
 Day 1: Pre-Launch
@@ -135,7 +135,7 @@ Day 4-5: Optimize
 └── Content Creator → Response content based on reception
 ```
 
-### Week 3-4: Sustain & Optimize
+### 第 3-4 周：维持与优化
 
 ```
 Daily:
@@ -156,36 +156,36 @@ End of Campaign:
 └── Social Media Strategist → Lessons learned and recommendations
 ```
 
-## Campaign Metrics
+## 活动指标
 
-| Metric | Target | Owner |
+| 指标 | 目标 | 责任人 |
 |--------|--------|-------|
-| Total reach | [Target based on budget] | Social Media Strategist |
-| Engagement rate | > 3% average across platforms | Platform agents |
-| Click-through rate | > 2% on CTAs | Growth Hacker |
-| Conversion rate | > 5% landing page | Growth Hacker |
-| Cost per acquisition | < [Target CAC] | Growth Hacker |
-| Brand sentiment | Net positive | Brand Guardian |
-| Content pieces published | [Target count] | Content Creator |
-| A/B tests completed | ≥ 5 | Experiment Tracker |
+| 总触达 | [按预算定目标] | 社交媒体策略师 |
+| 互动率 | 跨平台平均 > 3% | 平台智能体 |
+| 点击率 | CTA 上 > 2% | Growth Hacker |
+| 转化率 | 落地页 > 5% | Growth Hacker |
+| 单次获客成本 | < [CAC 目标] | Growth Hacker |
+| 品牌舆情 | 净正面 | 品牌守护者 |
+| 发布内容数量 | [目标数量] | 内容创作者 |
+| 完成的 A/B 测试 | ≥ 5 | 实验追踪员 |
 
-## Platform-Specific KPIs
+## 平台专属 KPI
 
-| Platform | Primary KPI | Secondary KPI | Agent |
+| 平台 | 主要 KPI | 次要 KPI | 智能体 |
 |----------|------------|---------------|-------|
-| Twitter/X | Impressions + engagement rate | Follower growth | Twitter Engager |
-| TikTok | Views + completion rate | Follower growth | TikTok Strategist |
-| Instagram | Reach + saves | Profile visits | Instagram Curator |
-| Reddit | Upvotes + comment quality | Referral traffic | Reddit Community Builder |
-| Email | Open rate + CTR | Unsubscribe rate | Content Creator |
-| Blog | Organic traffic + time on page | Backlinks | Content Creator |
-| Paid ads | ROAS + CPA | Quality score | Growth Hacker |
+| Twitter/X | 曝光量 + 互动率 | 粉丝增长 | Twitter Engager |
+| TikTok | 播放量 + 完播率 | 粉丝增长 | TikTok Strategist |
+| Instagram | 触达 + 收藏数 | 主页访问 | Instagram Curator |
+| Reddit | 点赞数 + 评论质量 | 引荐流量 | Reddit Community Builder |
+| 邮件 | 打开率 + CTR | 退订率 | 内容创作者 |
+| 博客 | 自然流量 + 页面停留时长 | 反向链接 | 内容创作者 |
+| 付费广告 | ROAS + CPA | 质量得分 | Growth Hacker |
 
-## Brand Consistency Checkpoints
+## 品牌一致性检查点
 
-| Checkpoint | When | Agent |
+| 检查点 | 时机 | 智能体 |
 |-----------|------|-------|
-| Content review before publishing | Every piece | Brand Guardian |
-| Visual consistency audit | Weekly | Brand Guardian |
-| Voice and tone check | Weekly | Brand Guardian |
-| Compliance review | Before launch + weekly | Legal Compliance Checker |
+| 发布前内容审查 | 每一条 | 品牌守护者 |
+| 视觉一致性审计 | 每周 | 品牌守护者 |
+| 语气与口吻检查 | 每周 | 品牌守护者 |
+| 合规审查 | 上线前 + 每周 | 法务合规审查专员 |

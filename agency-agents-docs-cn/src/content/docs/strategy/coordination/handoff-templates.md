@@ -1,16 +1,16 @@
 ---
-title: '📋 NEXUS Handoff Templates'
+title: '📋 NEXUS 交接模板'
 ---
 
-# 📋 NEXUS Handoff Templates
+# 📋 NEXUS 交接模板
 
-> Standardized templates for every type of agent-to-agent handoff in the NEXUS pipeline. Consistent handoffs prevent context loss — the #1 cause of multi-agent coordination failure.
+> 为 NEXUS 流水线中每一类智能体间交接提供标准化模板。格式一致的交接能防止上下文丢失——这正是多智能体协作失败的头号原因。
 
 ---
 
-## 1. Standard Handoff Template
+## 1. 标准交接模板
 
-Use for any agent-to-agent work transfer.
+用于任意两个智能体之间的工作移交。
 
 ```markdown
 # NEXUS Handoff Document
@@ -50,9 +50,9 @@ Use for any agent-to-agent work transfer.
 
 ---
 
-## 2. QA Feedback Loop — PASS
+## 2. QA 反馈循环——PASS
 
-Use when Evidence Collector or other QA agent approves a task.
+当 Evidence Collector 或其他 QA 智能体批准一个任务时使用。
 
 ```markdown
 # NEXUS QA Verdict: PASS ✅
@@ -93,9 +93,9 @@ Use when Evidence Collector or other QA agent approves a task.
 
 ---
 
-## 3. QA Feedback Loop — FAIL
+## 3. QA 反馈循环——FAIL
 
-Use when Evidence Collector or other QA agent rejects a task.
+当 Evidence Collector 或其他 QA 智能体驳回一个任务时使用。
 
 ```markdown
 # NEXUS QA Verdict: FAIL ❌
@@ -149,9 +149,9 @@ Use when Evidence Collector or other QA agent rejects a task.
 
 ---
 
-## 4. Escalation Report
+## 4. 上报报告
 
-Use when a task exceeds 3 retry attempts.
+当一个任务用尽 3 次重试机会时使用。
 
 ```markdown
 # NEXUS Escalation Report 🚨
@@ -208,9 +208,9 @@ Use when a task exceeds 3 retry attempts.
 
 ---
 
-## 5. Phase Gate Handoff
+## 5. 阶段门交接
 
-Use when transitioning between NEXUS phases.
+在 NEXUS 各阶段之间切换时使用。
 
 ```markdown
 # NEXUS Phase Gate Handoff
@@ -254,9 +254,9 @@ Use when transitioning between NEXUS phases.
 
 ---
 
-## 6. Sprint Handoff
+## 6. sprint 交接
 
-Use at sprint boundaries.
+在 sprint 边界使用。
 
 ```markdown
 # NEXUS Sprint Handoff
@@ -300,9 +300,9 @@ Use at sprint boundaries.
 
 ---
 
-## 7. Incident Handoff
+## 7. 事故交接
 
-Use during incident response.
+在事故响应期间使用。
 
 ```markdown
 # NEXUS Incident Handoff
@@ -348,14 +348,14 @@ Use during incident response.
 
 ---
 
-## Usage Guide
+## 使用指南
 
-| Situation | Template to Use |
+| 场景 | 使用的模板 |
 |-----------|----------------|
-| Assigning work to another agent | Standard Handoff (#1) |
-| QA approves a task | QA PASS (#2) |
-| QA rejects a task | QA FAIL (#3) |
-| Task exceeds 3 retries | Escalation Report (#4) |
-| Moving between phases | Phase Gate Handoff (#5) |
-| End of sprint | Sprint Handoff (#6) |
-| System incident | Incident Handoff (#7) |
+| 向其他智能体分派工作 | 标准交接模板（#1） |
+| QA 批准任务 | QA PASS（#2） |
+| QA 驳回任务 | QA FAIL（#3） |
+| 任务重试用尽 | 上报报告（#4） |
+| 阶段之间切换 | 阶段门交接（#5） |
+| sprint 结束 | sprint 交接（#6） |
+| 系统事故 | 事故交接（#7） |

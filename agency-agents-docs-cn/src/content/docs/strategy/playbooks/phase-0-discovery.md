@@ -1,28 +1,28 @@
 ---
-title: '🔍 Phase 0 Playbook — Intelligence & Discovery'
+title: '🔍 第 0 阶段 playbook——情报与发现'
 ---
 
-# 🔍 Phase 0 Playbook — Intelligence & Discovery
+# 🔍 第 0 阶段 playbook——情报与发现
 
-> **Duration**: 3-7 days | **Agents**: 6 | **Gate Keeper**: Executive Summary Generator
+> **周期**：3-7 天 | **智能体**：6 个 | **守门人**：Executive Summary Generator
 
 ---
 
-## Objective
+## 目标
 
-Validate the opportunity before committing resources. No building until the problem, market, and regulatory landscape are understood.
+在投入资源之前先验证机会。在理解问题、市场与监管环境之前，绝不开始构建。
 
-## Pre-Conditions
+## 前置条件
 
-- [ ] Project brief or initial concept exists
-- [ ] Stakeholder sponsor identified
-- [ ] Budget for discovery phase approved
+- [ ] 已有项目简报或初步概念
+- [ ] 已确定干系人发起人（sponsor）
+- [ ] 发现阶段的预算已获批准
 
-## Agent Activation Sequence
+## 智能体激活序列
 
-### Wave 1: Parallel Launch (Day 1)
+### 第一波：并行启动（第 1 天）
 
-#### 🔍 Trend Researcher — Market Intelligence Lead
+#### 🔍 Trend Researcher——市场情报负责人
 ```
 Activate Trend Researcher for market intelligence on [PROJECT DOMAIN].
 
@@ -38,7 +38,7 @@ Format: Strategic Report with executive summary
 Timeline: 3 days
 ```
 
-#### 💬 Feedback Synthesizer — User Needs Analysis
+#### 💬 Feedback Synthesizer——用户需求分析
 ```
 Activate Feedback Synthesizer for user needs analysis on [PROJECT DOMAIN].
 
@@ -53,7 +53,7 @@ Format: Synthesized Feedback Report with priority matrix
 Timeline: 3 days
 ```
 
-#### 🔍 UX Researcher — User Behavior Analysis
+#### 🔍 UX Researcher——用户行为分析
 ```
 Activate UX Researcher for user behavior analysis on [PROJECT DOMAIN].
 
@@ -68,9 +68,9 @@ Format: Research Findings Report with personas and journey maps
 Timeline: 5 days
 ```
 
-### Wave 2: Parallel Launch (Day 1, independent of Wave 1)
+### 第二波：并行启动（第 1 天，与第一波相互独立）
 
-#### 📊 Analytics Reporter — Data Landscape Assessment
+#### 📊 Analytics Reporter——数据全景评估
 ```
 Activate Analytics Reporter for data landscape assessment on [PROJECT DOMAIN].
 
@@ -85,7 +85,7 @@ Format: Data Audit Report with signal map
 Timeline: 2 days
 ```
 
-#### ⚖️ Legal Compliance Checker — Regulatory Scan
+#### ⚖️ Legal Compliance Checker——监管扫描
 ```
 Activate Legal Compliance Checker for regulatory scan on [PROJECT DOMAIN].
 
@@ -100,7 +100,7 @@ Format: Compliance Requirements Matrix
 Timeline: 3 days
 ```
 
-#### 🛠️ Tool Evaluator — Technology Landscape
+#### 🛠️ Tool Evaluator——技术全景
 ```
 Activate Tool Evaluator for technology landscape assessment on [PROJECT DOMAIN].
 
@@ -115,9 +115,9 @@ Format: Tech Stack Assessment with recommendation matrix
 Timeline: 2 days
 ```
 
-## Convergence Point (Day 5-7)
+## 汇合点（第 5-7 天）
 
-All six agents deliver their reports. The Executive Summary Generator synthesizes:
+六个智能体全部交付报告，由 Executive Summary Generator 汇总综合：
 
 ```
 Activate Executive Summary Generator to synthesize Phase 0 findings.
@@ -135,24 +135,24 @@ Decision required: GO / NO-GO / PIVOT
 Include: Quantified market opportunity, validated user needs, regulatory path, technology feasibility
 ```
 
-## Quality Gate Checklist
+## 质量关卡检查清单
 
-| # | Criterion | Evidence Source | Status |
+| # | 标准 | 证据来源 | 状态 |
 |---|-----------|----------------|--------|
-| 1 | Market opportunity validated with TAM > minimum viable threshold | Trend Researcher report | ☐ |
-| 2 | ≥3 validated user pain points with supporting data | Feedback Synthesizer + UX Researcher | ☐ |
-| 3 | No blocking compliance issues identified | Legal Compliance Checker matrix | ☐ |
-| 4 | Key metrics and data sources identified | Analytics Reporter audit | ☐ |
-| 5 | Technology stack feasible and assessed | Tool Evaluator assessment | ☐ |
-| 6 | Executive summary delivered with GO/NO-GO recommendation | Executive Summary Generator | ☐ |
+| 1 | 市场机会已验证，TAM 高于最低可行门槛 | Trend Researcher 报告 | ☐ |
+| 2 | 已有 ≥3 个经数据验证的用户痛点 | Feedback Synthesizer + UX Researcher | ☐ |
+| 3 | 未发现阻塞性合规问题 | Legal Compliance Checker 矩阵 | ☐ |
+| 4 | 关键指标与数据源已识别 | Analytics Reporter 审计 | ☐ |
+| 5 | 技术栈可行且已评估 | Tool Evaluator 评估 | ☐ |
+| 6 | 高管简报已交付，附 GO/NO-GO 建议 | Executive Summary Generator | ☐ |
 
-## Gate Decision
+## 关卡决策
 
-- **GO**: Proceed to Phase 1 — Strategy & Architecture
-- **NO-GO**: Archive findings, document learnings, redirect resources
-- **PIVOT**: Modify scope/direction based on findings, re-run targeted discovery
+- **GO**：进入第 1 阶段——战略与架构
+- **NO-GO**：归档调研成果，记录经验教训，资源转投他处
+- **PIVOT**：根据发现调整范围/方向，重跑一次聚焦式发现
 
-## Handoff to Phase 1
+## 向第 1 阶段交接
 
 ```markdown
 ## Phase 0 → Phase 1 Handoff Package
@@ -179,4 +179,4 @@ Include: Quantified market opportunity, validated user needs, regulatory path, t
 
 ---
 
-*Phase 0 is complete when the Executive Summary Generator delivers a GO decision with supporting evidence from all six discovery agents.*
+*当 Executive Summary Generator 交付 GO 决策、并附上全部六个发现智能体的支持证据时，第 0 阶段即告完成。*

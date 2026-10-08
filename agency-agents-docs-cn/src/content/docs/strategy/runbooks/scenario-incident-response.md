@@ -1,60 +1,60 @@
 ---
-title: '🚨 Runbook: Incident Response'
+title: '🚨 Runbook：事故响应'
 ---
 
-# 🚨 Runbook: Incident Response
+# 🚨 Runbook：事故响应
 
-> **Mode**: NEXUS-Micro | **Duration**: Minutes to hours | **Agents**: 3-8
+> **模式**：NEXUS-Micro | **周期**：数分钟到数小时 | **智能体**：3-8 个
 
 ---
 
-## Scenario
+## 场景
 
-Something is broken in production. Users are affected. Speed of response matters, but so does doing it right. This runbook covers detection through post-mortem.
+生产环境出了问题，用户受到了影响。响应速度固然重要，但把事做对同样重要。本 runbook 覆盖从发现到复盘的全过程。
 
-## Severity Classification
+## 严重程度分级
 
-| Level | Definition | Examples | Response Time |
+| 等级 | 定义 | 示例 | 响应时限 |
 |-------|-----------|----------|--------------|
-| **P0 — Critical** | Service completely down, data loss, security breach | Database corruption, DDoS attack, auth system failure | Immediate (all hands) |
-| **P1 — High** | Major feature broken, significant performance degradation | Payment processing down, 50%+ error rate, 10x latency | < 1 hour |
-| **P2 — Medium** | Minor feature broken, workaround available | Search not working, non-critical API errors | < 4 hours |
-| **P3 — Low** | Cosmetic issue, minor inconvenience | Styling bug, typo, minor UI glitch | Next sprint |
+| **P0——严重** | 服务完全中断、数据丢失、安全入侵 | 数据库损坏、DDoS 攻击、认证系统故障 | 立即响应（全员上阵） |
+| **P1——高** | 重大功能不可用、性能显著劣化 | 支付处理中断、错误率 50%+、延迟 10 倍 | < 1 小时 |
+| **P2——中** | 次要功能不可用、有临时替代方案 | 搜索失效、非关键 API 报错 | < 4 小时 |
+| **P3——低** | 外观问题、轻微不便 | 样式 bug、错别字、轻微 UI 故障 | 下一个 sprint |
 
-## Response Teams by Severity
+## 按严重程度组建的响应团队
 
-### P0 — Critical Response Team
-| Agent | Role | Action |
+### P0——严重响应团队
+| 智能体 | 职责 | 动作 |
 |-------|------|--------|
-| **Infrastructure Maintainer** | Incident commander | Assess scope, coordinate response |
-| **DevOps Automator** | Deployment/rollback | Execute rollback if needed |
-| **Backend Architect** | Root cause investigation | Diagnose system issues |
-| **Frontend Developer** | UI-side investigation | Diagnose client-side issues |
-| **Support Responder** | User communication | Status page updates, user notifications |
-| **Executive Summary Generator** | Stakeholder communication | Real-time executive updates |
+| **基础设施维护专员** | 事故指挥官 | 评估影响范围，统筹响应 |
+| **DevOps Automator** | 部署/回滚 | 必要时执行回滚 |
+| **Backend Architect** | 根因排查 | 诊断系统问题 |
+| **Frontend Developer** | UI 侧排查 | 诊断客户端问题 |
+| **客户支持响应专员** | 用户沟通 | 更新状态页、通知用户 |
+| **高管摘要生成器** | 干系人沟通 | 实时向高管通报 |
 
-### P1 — High Response Team
-| Agent | Role |
+### P1——高响应团队
+| 智能体 | 职责 |
 |-------|------|
-| **Infrastructure Maintainer** | Incident commander |
-| **DevOps Automator** | Deployment support |
-| **Relevant Developer Agent** | Fix implementation |
-| **Support Responder** | User communication |
+| **基础设施维护专员** | 事故指挥官 |
+| **DevOps Automator** | 部署支持 |
+| **相关开发智能体** | 修复实现 |
+| **客户支持响应专员** | 用户沟通 |
 
-### P2 — Medium Response
-| Agent | Role |
+### P2——中响应
+| 智能体 | 职责 |
 |-------|------|
-| **Relevant Developer Agent** | Fix implementation |
-| **Evidence Collector** | Verify fix |
+| **相关开发智能体** | 修复实现 |
+| **证据收集员** | 验证修复 |
 
-### P3 — Low Response
-| Agent | Role |
+### P3——低响应
+| 智能体 | 职责 |
 |-------|------|
-| **Sprint Prioritizer** | Add to backlog |
+| **Sprint 优先级排序师** | 加入待办事项 |
 
-## Incident Response Sequence
+## 事故响应流程
 
-### Step 1: Detection & Triage (0-5 minutes)
+### 第 1 步：发现与分诊（0-5 分钟）
 
 ```
 TRIGGER: Alert from monitoring / User report / Agent detection
@@ -72,7 +72,7 @@ Infrastructure Maintainer:
 Output: Incident classification + response team activated
 ```
 
-### Step 2: Investigation (5-30 minutes)
+### 第 2 步：排查（5-30 分钟）
 
 ```
 PARALLEL INVESTIGATION:
@@ -98,7 +98,7 @@ DevOps Automator:
 Output: Root cause identified (or narrowed to component)
 ```
 
-### Step 3: Mitigation (15-60 minutes)
+### 第 3 步：止损（15-60 分钟）
 
 ```
 DECISION TREE:
@@ -129,7 +129,7 @@ THROUGHOUT:
   → Executive Summary Generator: Brief stakeholders (P0 only)
 ```
 
-### Step 4: Resolution Verification (Post-fix)
+### 第 4 步：恢复验证（修复完成后）
 
 ```
 Evidence Collector:
@@ -150,7 +150,7 @@ API Tester (if API-related):
 Output: Incident resolved confirmation
 ```
 
-### Step 5: Post-Mortem (Within 48 hours)
+### 第 5 步：复盘（48 小时内）
 
 ```
 Workflow Optimizer leads post-mortem:
@@ -187,9 +187,9 @@ Workflow Optimizer leads post-mortem:
 Output: Post-Mortem Report → Sprint Prioritizer adds prevention tasks to backlog
 ```
 
-## Communication Templates
+## 沟通模板
 
-### Status Page Update (Support Responder)
+### 状态页更新（客户支持响应专员）
 ```
 [TIMESTAMP] — [SERVICE NAME] Incident
 
@@ -199,7 +199,7 @@ Current action: [What we're doing about it]
 Next update: [When to expect the next update]
 ```
 
-### Executive Update (Executive Summary Generator — P0 only)
+### 高管通报（高管摘要生成器——仅限 P0）
 ```
 INCIDENT BRIEF — [TIMESTAMP]
 
@@ -210,12 +210,12 @@ IMPACT: [Business impact — revenue, users, reputation]
 NEXT UPDATE: [Timestamp]
 ```
 
-## Escalation Matrix
+## 上报矩阵
 
-| Condition | Escalate To | Action |
+| 条件 | 上报给 | 动作 |
 |-----------|------------|--------|
-| P0 not resolved in 30 min | Studio Producer | Additional resources, vendor escalation |
-| P1 not resolved in 2 hours | Project Shepherd | Resource reallocation |
-| Data breach suspected | Legal Compliance Checker | Regulatory notification assessment |
-| User data affected | Legal Compliance Checker + Executive Summary Generator | GDPR/CCPA notification |
-| Revenue impact > $X | Finance Tracker + Studio Producer | Business impact assessment |
+| P0 在 30 分钟内未解决 | 工作室制作人 | 追加资源，向供应商升级 |
+| P1 在 2 小时内未解决 | 项目牧羊人 | 重新分配资源 |
+| 疑似数据外泄 | 法务合规审查专员 | 评估监管通报义务 |
+| 用户数据受影响 | 法务合规审查专员 + 高管摘要生成器 | GDPR/CCPA 通报 |
+| 营收影响超过 $X | 财务追踪专员 + 工作室制作人 | 业务影响评估 |

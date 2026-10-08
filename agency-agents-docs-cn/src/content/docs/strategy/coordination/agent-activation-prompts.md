@@ -1,16 +1,16 @@
 ---
-title: '🎯 NEXUS Agent Activation Prompts'
+title: '🎯 NEXUS 智能体激活提示词'
 ---
 
-# 🎯 NEXUS Agent Activation Prompts
+# 🎯 NEXUS 智能体激活提示词
 
-> Ready-to-use prompt templates for activating any agent within the NEXUS pipeline. Copy, customize the `[PLACEHOLDERS]`, and deploy.
+> 即拿即用的提示词模板，覆盖 NEXUS 流水线中的每一个智能体。复制后替换 `[PLACEHOLDERS]`，即可部署。
 
 ---
 
-## Pipeline Controller
+## 流水线控制器
 
-### Agents Orchestrator — Full Pipeline
+### Agents Orchestrator——完整流水线
 ```
 You are the Agents Orchestrator executing the NEXUS pipeline for [PROJECT NAME].
 
@@ -37,7 +37,7 @@ Quality principles:
 Available agents: See strategy/nexus-strategy.md Section 10 for full coordination matrix
 ```
 
-### Agents Orchestrator — Dev↔QA Loop
+### Agents Orchestrator——Dev↔QA 循环
 ```
 You are the Agents Orchestrator managing the Dev↔QA loop for [PROJECT NAME].
 
@@ -64,7 +64,7 @@ Track and report:
 
 ---
 
-## Engineering Division
+## 工程部门
 
 ### Frontend Developer
 ```
@@ -190,7 +190,7 @@ Build only what's needed to test the hypothesis.
 
 ---
 
-## Design Division
+## 设计部门
 
 ### UX Architect
 ```
@@ -247,9 +247,9 @@ Requirements:
 
 ---
 
-## Testing Division
+## 测试部门
 
-### Evidence Collector — Task QA
+### Evidence Collector——任务 QA
 ```
 You are Evidence Collector performing QA within the NEXUS Dev↔QA loop.
 
@@ -280,7 +280,7 @@ If FAIL: Provide specific issues with screenshot evidence and fix instructions.
 Use the NEXUS QA Feedback Loop Protocol format.
 ```
 
-### Reality Checker — Final Integration
+### Reality Checker——最终集成
 ```
 You are Reality Checker performing final integration testing for [PROJECT NAME].
 
@@ -330,7 +330,7 @@ Include: curl commands for reproducibility
 
 ---
 
-## Product Division
+## 产品部门
 
 ### Sprint Prioritizer
 ```
@@ -359,7 +359,7 @@ Rules:
 
 ---
 
-## Support Division
+## 客户支持部门
 
 ### Executive Summary Generator
 ```
@@ -389,17 +389,17 @@ No assumptions beyond provided data
 
 ---
 
-## Quick Reference: Which Prompt for Which Situation
+## 快速参考：什么场景用哪个提示词
 
-| Situation | Primary Prompt | Support Prompts |
+| 场景 | 主提示词 | 辅助提示词 |
 |-----------|---------------|-----------------|
-| Starting a new project | Orchestrator — Full Pipeline | — |
-| Building a feature | Orchestrator — Dev↔QA Loop | Developer + Evidence Collector |
-| Fixing a bug | Backend/Frontend Developer | API Tester or Evidence Collector |
-| Running a campaign | Content Creator | Social Media Strategist + platform agents |
-| Preparing for launch | See Phase 5 Playbook | All marketing + DevOps agents |
-| Monthly reporting | Executive Summary Generator | Analytics Reporter + Finance Tracker |
-| Incident response | Infrastructure Maintainer | DevOps Automator + relevant developer |
-| Market research | Trend Researcher | Analytics Reporter |
-| Compliance audit | Legal Compliance Checker | Executive Summary Generator |
-| Performance issue | Performance Benchmarker | Infrastructure Maintainer |
+| 启动新项目 | Orchestrator——完整流水线 | — |
+| 构建功能 | Orchestrator——Dev↔QA 循环 | 开发智能体 + Evidence Collector |
+| 修复 bug | Backend/Frontend Developer | API Tester 或 Evidence Collector |
+| 开展营销活动 | Content Creator | Social Media Strategist + 各平台智能体 |
+| 准备发布 | 参见第 5 阶段 playbook | 所有市场营销智能体 + DevOps 智能体 |
+| 月度汇报 | Executive Summary Generator | Analytics Reporter + Finance Tracker |
+| 事故响应 | Infrastructure Maintainer | DevOps Automator + 相关开发智能体 |
+| 市场调研 | Trend Researcher | Analytics Reporter |
+| 合规审计 | Legal Compliance Checker | Executive Summary Generator |
+| 性能问题 | Performance Benchmarker | Infrastructure Maintainer |

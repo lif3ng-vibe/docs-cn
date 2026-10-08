@@ -1,41 +1,41 @@
 ---
-title: '🛡️ Phase 4 Playbook — Quality & Hardening'
+title: '🛡️ 第 4 阶段 playbook——质量与加固'
 ---
 
-# 🛡️ Phase 4 Playbook — Quality & Hardening
+# 🛡️ 第 4 阶段 playbook——质量与加固
 
-> **Duration**: 3-7 days | **Agents**: 8 | **Gate Keeper**: Reality Checker (sole authority)
+> **周期**：3-7 天 | **智能体**：8 个 | **守门人**：Reality Checker（唯一裁决权）
 
 ---
 
-## Objective
+## 目标
 
-The final quality gauntlet. The Reality Checker defaults to "NEEDS WORK" — you must prove production readiness with overwhelming evidence. This phase exists because first implementations typically need 2-3 revision cycles, and that's healthy.
+最后一道质量关。Reality Checker 的默认裁定是 NEEDS WORK——你必须用压倒性的证据证明生产就绪。之所以设这个阶段，是因为第一版实现通常要经历 2-3 轮修订，这是健康的。
 
-## Pre-Conditions
+## 前置条件
 
-- [ ] Phase 3 Quality Gate passed (all tasks QA'd)
-- [ ] Phase 3 Handoff Package received
-- [ ] All features implemented and individually verified
+- [ ] 第 3 阶段质量关卡已通过（全部任务过 QA）
+- [ ] 已收到第 3 阶段交接包
+- [ ] 全部功能已实现并逐项验证
 
-## Critical Mindset
+## 关键心态
 
-> **The Reality Checker's default verdict is NEEDS WORK.**
-> 
-> This is not pessimism — it's realism. Production readiness requires:
-> - Complete user journeys working end-to-end
-> - Cross-device consistency (desktop, tablet, mobile)
-> - Performance under load (not just happy path)
-> - Security validation (not just "we added auth")
-> - Specification compliance (every requirement, not most)
+> **Reality Checker 的默认裁定是 NEEDS WORK。**
 >
-> A B/B+ rating on first pass is normal and expected.
+> 这不是悲观——这是务实。生产就绪要求：
+> - 完整的用户旅程端到端可用
+> - 跨设备一致性（桌面、平板、手机）
+> - 负载下的性能（而不只是理想路径）
+> - 安全验证（而不只是"我们加了鉴权"）
+> - 规格遵从（每一条要求，而不是大多数）
+>
+> 首轮拿到 B/B+ 属于正常且在预期之内。
 
-## Agent Activation Sequence
+## 智能体激活序列
 
-### Step 1: Evidence Collection (Day 1-2, All Parallel)
+### 第 1 步：证据收集（第 1-2 天，全部并行）
 
-#### 📸 Evidence Collector — Comprehensive Visual Evidence
+#### 📸 Evidence Collector——全面视觉证据
 ```
 Activate Evidence Collector for comprehensive system evidence on [PROJECT].
 
@@ -63,7 +63,7 @@ Format: Screenshot Evidence Package with test-results.json
 Timeline: 2 days
 ```
 
-#### 🔌 API Tester — Full API Regression
+#### 🔌 API Tester——完整 API 回归
 ```
 Activate API Tester for complete API regression on [PROJECT].
 
@@ -87,7 +87,7 @@ Format: API Test Report with pass/fail per endpoint
 Timeline: 2 days
 ```
 
-#### ⚡ Performance Benchmarker — Load Testing
+#### ⚡ Performance Benchmarker——负载测试
 ```
 Activate Performance Benchmarker for load testing on [PROJECT].
 
@@ -114,7 +114,7 @@ Format: Performance Certification Report
 Timeline: 2 days
 ```
 
-#### ⚖️ Legal Compliance Checker — Final Compliance Audit
+#### ⚖️ Legal Compliance Checker——最终合规审计
 ```
 Activate Legal Compliance Checker for final compliance audit on [PROJECT].
 
@@ -142,9 +142,9 @@ Format: Compliance Certification Report
 Timeline: 2 days
 ```
 
-### Step 2: Analysis (Day 3-4, Parallel, after Step 1)
+### 第 2 步：分析（第 3-4 天，并行，在第 1 步之后）
 
-#### 📊 Test Results Analyzer — Quality Metrics Aggregation
+#### 📊 Test Results Analyzer——质量指标汇总
 ```
 Activate Test Results Analyzer for quality metrics aggregation on [PROJECT].
 
@@ -169,7 +169,7 @@ Format: Quality Metrics Dashboard
 Timeline: 1 day
 ```
 
-#### 🔄 Workflow Optimizer — Process Efficiency Review
+#### 🔄 Workflow Optimizer——流程效率评审
 ```
 Activate Workflow Optimizer for process efficiency review on [PROJECT].
 
@@ -188,7 +188,7 @@ Format: Optimization Recommendations Report
 Timeline: 1 day
 ```
 
-#### 🏗️ Infrastructure Maintainer — Production Readiness Check
+#### 🏗️ Infrastructure Maintainer——生产就绪检查
 ```
 Activate Infrastructure Maintainer for production readiness on [PROJECT].
 
@@ -217,9 +217,9 @@ Format: Infrastructure Readiness Report
 Timeline: 1 day
 ```
 
-### Step 3: Final Judgment (Day 5-7, Sequential)
+### 第 3 步：终审（第 5-7 天，串行）
 
-#### 🔍 Reality Checker — THE FINAL VERDICT
+#### 🔍 Reality Checker——最终裁定
 ```
 Activate Reality Checker for final integration testing on [PROJECT].
 
@@ -258,23 +258,23 @@ Format: Reality-Based Integration Report
 Default: NEEDS WORK unless proven otherwise
 ```
 
-## Quality Gate — THE FINAL GATE
+## 质量关卡——最后一道关
 
-| # | Criterion | Threshold | Evidence Required |
+| # | 标准 | 门槛 | 所需证据 |
 |---|-----------|-----------|-------------------|
-| 1 | User journeys complete | All critical paths working end-to-end | Reality Checker screenshots |
-| 2 | Cross-device consistency | Desktop + Tablet + Mobile all working | Responsive screenshots |
-| 3 | Performance certified | P95 < 200ms, LCP < 2.5s, uptime > 99.9% | Performance Benchmarker report |
-| 4 | Security validated | Zero critical vulnerabilities | Security scan + compliance report |
-| 5 | Compliance certified | All regulatory requirements met | Legal Compliance Checker report |
-| 6 | Specification compliance | 100% of spec requirements implemented | Point-by-point verification |
-| 7 | Infrastructure ready | Production environment validated | Infrastructure Maintainer report |
+| 1 | 用户旅程完整 | 所有关键路径端到端可用 | Reality Checker 截图 |
+| 2 | 跨设备一致性 | 桌面 + 平板 + 手机全部可用 | 响应式截图 |
+| 3 | 性能已认证 | P95 < 200ms，LCP < 2.5s，uptime > 99.9% | Performance Benchmarker 报告 |
+| 4 | 安全已验证 | 零关键漏洞 | 安全扫描 + 合规报告 |
+| 5 | 合规已认证 | 满足全部监管要求 | Legal Compliance Checker 报告 |
+| 6 | 规格遵从 | 100% 的规格要求已实现 | 逐条核对 |
+| 7 | 基础设施就绪 | 生产环境已验证 | Infrastructure Maintainer 报告 |
 
-## Gate Decision
+## 关卡决策
 
-**Sole authority**: Reality Checker
+**唯一裁决权**：Reality Checker
 
-### If READY (proceed to Phase 5):
+### 若为 READY（进入第 5 阶段）：
 ```markdown
 ## Phase 4 → Phase 5 Handoff Package
 
@@ -296,7 +296,7 @@ Default: NEEDS WORK unless proven otherwise
 - Rollback procedures confirmed
 ```
 
-### If NEEDS WORK (return to Phase 3):
+### 若为 NEEDS WORK（退回第 3 阶段）：
 ```markdown
 ## Phase 4 → Phase 3 Return Package
 
@@ -315,7 +315,7 @@ Default: NEEDS WORK unless proven otherwise
 ### Expected: 2-3 revision cycles is normal
 ```
 
-### If NOT READY (return to Phase 1/2):
+### 若为 NOT READY（退回第 1/2 阶段）：
 ```markdown
 ## Phase 4 → Phase 1/2 Return Package
 
@@ -333,4 +333,4 @@ Default: NEEDS WORK unless proven otherwise
 
 ---
 
-*Phase 4 is complete when the Reality Checker issues a READY verdict with overwhelming evidence. NEEDS WORK is the expected first-pass result — it means the system is working but needs polish.*
+*当 Reality Checker 以压倒性证据给出 READY 裁定时，第 4 阶段即告完成。NEEDS WORK 是预期的首轮结果——它意味着系统在运转，但还需要打磨。*
