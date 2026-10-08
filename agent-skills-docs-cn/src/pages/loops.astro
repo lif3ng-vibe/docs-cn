@@ -182,12 +182,10 @@ const costs = [
   <!-- LIGHTS ON / OFF -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">04</span> Which loops earn the dark</span>
-      <h2 class="lp-h2">Decide where to leave the lights on</h2>
+      <span class="eyebrow"><span class="lp-num">04</span> 哪些回路配得上黑暗</span>
+      <h2 class="lp-h2">决定把灯留在哪里</h2>
       <p class="lp-sub">
-        A dark factory ships code no human has read, verified only by other machines. That is fine
-        for some loops and dangerous for others. The skilled job is flipping each switch on purpose,
-        not setting them all to the same mode.
+        一座黑暗的工厂上线的代码没有人读过，只有别的机器验证过。这对某些回路没问题，对另一些则是危险。有技能的活法是有意识地拨每一个开关，而不是把所有开关拨到同一档。
       </p>
     </div>
 
@@ -195,14 +193,14 @@ const costs = [
       <div class="switch-card off">
         <div class="switch-head">
           <span class="switch-dot"></span>
-          <h3>Lights out is fine when</h3>
+          <h3>这些情况下关灯无妨</h3>
         </div>
         <ul>{lightsOff.map((x) => <li>{x}</li>)}</ul>
       </div>
       <div class="switch-card on">
         <div class="switch-head">
           <span class="switch-dot"></span>
-          <h3>Keep the lights on when</h3>
+          <h3>这些情况下请一直开灯</h3>
         </div>
         <ul>{lightsOn.map((x) => <li>{x}</li>)}</ul>
       </div>
@@ -214,27 +212,25 @@ const costs = [
   <!-- WORKED EXAMPLE -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">05</span> A loop with skills in it</span>
-      <h2 class="lp-h2">The maker and the checker are different agents</h2>
+      <span class="eyebrow"><span class="lp-num">05</span> 一个装着技能的回路</span>
+      <h2 class="lp-h2">制造者与检查者是不同的智能体</h2>
       <p class="lp-sub">
-        The most useful structural move in a loop is splitting the agent that writes from the agent
-        that checks. The model that wrote the code grades its own homework too kindly. This is
-        exactly what <code class="ic">/ship</code> does when it fans out to review personas, and
-        what <code class="ic">doubt-driven-development</code> does to any confident decision.
+        回路里最有用的结构动作，是把写代码的智能体和检查代码的智能体分开。写了代码的那个模型给自己的作业打分，手总是偏松。这正是
+        <code class="ic">/ship</code> 分身出多个评审角色在做的事，也是
+        <code class="ic">doubt-driven-development</code> 对任何自信的决策所做的事。
       </p>
     </div>
 
     <ol class="flow">
-      <li><span class="flow-n mono">1</span><div><strong>An automation runs on a schedule.</strong> Its prompt calls a triage skill that reads yesterday’s CI failures, open issues, and recent commits, and writes findings to a state file.</div></li>
-      <li><span class="flow-n mono">2</span><div><strong>Each finding opens an isolated worktree.</strong> A subagent drafts the fix following <code class="ic">incremental-implementation</code> and <code class="ic">test-driven-development</code> - thin slices, each tested and committed.</div></li>
-      <li><span class="flow-n mono">3</span><div><strong>A second subagent reviews the draft.</strong> It applies <code class="ic">code-review-and-quality</code> and, where it matters, the <code class="ic">security-auditor</code> persona, against the project skills and existing tests.</div></li>
-      <li><span class="flow-n mono">4</span><div><strong>Evidence crosses the boundary.</strong> The loop opens a PR with the diff, the passing tests, and a short rationale. Anything it cannot verify lands in your inbox.</div></li>
-      <li><span class="flow-n mono">5</span><div><strong>You give the verdict.</strong> You read the evidence and decide: ship, block, redirect, or narrow. The state file remembers what passed, so tomorrow’s run picks up where this one stopped.</div></li>
+      <li><span class="flow-n mono">1</span><div><strong>一项自动化任务按计划运行。</strong>它的提示词调用一个分诊技能，读取昨天的 CI 失败、开放 issue 和最近的提交，并把发现写进一个状态文件。</div></li>
+      <li><span class="flow-n mono">2</span><div><strong>每条发现各开一个隔离的工作树。</strong>一个子智能体按 <code class="ic">incremental-implementation</code> 和 <code class="ic">test-driven-development</code> 起草修复——薄切片，每一片都测试过并提交。</div></li>
+      <li><span class="flow-n mono">3</span><div><strong>第二个子智能体评审这份草稿。</strong>它套用 <code class="ic">code-review-and-quality</code>，在要紧处再叠加 <code class="ic">security-auditor</code> 角色，对照项目技能和既有测试来查。</div></li>
+      <li><span class="flow-n mono">4</span><div><strong>证据跨过边界。</strong>回路开出一个 PR，附上 diff、通过的测试和一段简短理由。任何它验证不了的东西，都会落到你的收件箱里。</div></li>
+      <li><span class="flow-n mono">5</span><div><strong>你给出裁决。</strong>你读证据、做决定：上线、否决、改道，还是收窄范围。状态文件记得哪些已通过，于是明天的运行从这次停下之处接着走。</div></li>
     </ol>
     <p class="flow-note">
-      You designed that once. You did not prompt any single step. And it runs the same in Codex or
-      Claude Code, because the primitives are the same - the skills are the part that stays constant
-      as you move between harnesses.
+      这套东西你只设计了一次，其中任何一步你都没有亲手发过提示词。而它在 Codex 和 Claude
+      Code 里跑起来一个样，因为原语是同一套——在你更换框架时保持不变的，正是技能。
     </p>
   </section>
 
@@ -243,12 +239,10 @@ const costs = [
   <!-- WHAT IT DOESN'T DO -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">06</span> What the loop does not do for you</span>
-      <h2 class="lp-h2">Three costs that get sharper, not softer</h2>
+      <span class="eyebrow"><span class="lp-num">06</span> 回路不会替你做的事</span>
+      <h2 class="lp-h2">三笔不降反升的代价</h2>
       <p class="lp-sub">
-        A loop running unattended is a loop making mistakes unattended. The skills give you back
-        pressure, but "done" is a claim, not a proof. These three costs grow as the loop gets
-        smoother, so design against them deliberately.
+        无人值守地运行的回路，也就是无人值守地犯错的回路。技能还给你反向压力，但“完成”只是一个主张，不是证明。回路越顺滑，这三笔代价越沉重，所以要刻意设计去对冲它们。
       </p>
     </div>
     <div class="costs">
@@ -266,54 +260,51 @@ const costs = [
   <!-- ANTHROPIC-GROUNDED -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">07</span> The grounded take</span>
-      <h2 class="lp-h2">What we recommend</h2>
+      <span class="eyebrow"><span class="lp-num">07</span> 有据可依的立场</span>
+      <h2 class="lp-h2">我们的建议</h2>
       <p class="lp-sub">
-        This is how we suggest running the skills inside loops. It lines up with widely shared
-        guidance on building agents, which is part of why the skills are shaped the way they are.
+        以下是我们建议在回路里运行技能的方式。它与广为流传的智能体构建指南相合，这也是技能被塑造成如今这副样子的部分原因。
       </p>
     </div>
     <div class="tenets">
       <div class="tenet">
-        <h3>Prefer the simplest thing that works</h3>
-        <p>Use a predefined workflow or graph where you can, and reach for open-ended autonomy only when the task genuinely needs it. A skill is a workflow with a shape you can trust, not a free-running agent.</p>
+        <h3>优先选择能奏效的最简单方案</h3>
+        <p>能用预定义工作流或图的地方就用，只在任务真的需要时才伸手要开放式自主。一个技能是一个形状可信赖的工作流，不是一个自由放养的智能体。</p>
       </div>
       <div class="tenet">
-        <h3>Give the agent ground truth at each step</h3>
-        <p>Effective agents check progress against the environment - tool results, test runs, code execution - rather than their own say-so. Every skill ends in exactly that: evidence, not "seems right."</p>
+        <h3>在每一步把地面真值交给智能体</h3>
+        <p>有效的智能体靠环境来核对进展——工具结果、测试运行、代码执行——而不是自己说了算。每个技能的结尾正是这个：证据，而不是“看起来没问题”。</p>
       </div>
       <div class="tenet">
-        <h3>Pause for a human where evaluation is clear</h3>
-        <p>Agents should stop for human feedback at checkpoints and on blockers. The verdict step and the human checkpoint between phases are those pauses, placed where a wrong call is expensive.</p>
+        <h3>在判定要紧处暂停等人</h3>
+        <p>智能体应该在检查点上和被卡住时停下来等人的反馈。裁决步骤与阶段之间的人工检查点就是这两处暂停，安放在错误决断代价高昂的位置。</p>
       </div>
       <div class="tenet">
-        <h3>Understanding is not free</h3>
-        <p>Anthropic’s own controlled trial found engineers who leaned on AI scored lower on comprehension of the resulting code. Reading what the loop makes is the antidote, and the reason to keep the lights on where it counts.</p>
+        <h3>理解不是免费的</h3>
+        <p>Anthropic 自己的对照实验发现，依赖 AI 的工程师对所得代码的理解得分更低。读懂回路做出来的东西就是解药，也是要在要紧处一直开灯的理由。</p>
       </div>
     </div>
     <p class="tenets-src">
-      Informed by public guidance on agent design, including Anthropic’s
-      <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>,
-      <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective harnesses for long-running agents</a>, and
-      <a href="https://www.anthropic.com/research/AI-assistance-coding-skills" target="_blank" rel="noopener">research on AI assistance and coding skills</a>. References, not endorsements.
+      本节立场参考了公开的智能体设计指南，包括 Anthropic 的
+      <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents</a>、
+      <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective harnesses for long-running agents</a>，以及
+      <a href="https://www.anthropic.com/research/AI-assistance-coding-skills" target="_blank" rel="noopener">research on AI assistance and coding skills</a>。仅作参考，不构成背书。
     </p>
   </section>
 
   <!-- CTA -->
   <section class="container lp-cta-wrap">
     <div class="lp-cta card">
-      <h2 class="lp-cta-title">Build the loop. Stay the engineer.</h2>
+      <h2 class="lp-cta-title">把回路搭起来。工程师仍然是你。</h2>
       <p class="lp-cta-sub">
-        Two people can build the same loop and get opposite results. One uses it to move faster on
-        work they understand; the other to avoid understanding the work. The loop cannot tell the
-        difference. You can.
+        两个人可以搭出一模一样的回路，得到截然相反的结果。一个用它在自己理解的工作上走得更快；另一个用它逃避理解工作。回路分不出这两种人。你分得出。
       </p>
       <div class="lp-cta-links">
-        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">Install the skills</a>
-        <a href="/docs-cn/agent-skills/lifecycle/" class="btn btn-secondary">See the lifecycle</a>
+        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">安装技能</a>
+        <a href="/docs-cn/agent-skills/lifecycle/" class="btn btn-secondary">查看生命周期</a>
       </div>
       <div class="lp-reading">
-        <span class="lp-reading-label mono">Further reading</span>
+        <span class="lp-reading-label mono">延伸阅读</span>
         <a href="https://addyosmani.com/blog/loop-engineering/" target="_blank" rel="noopener">Loop Engineering</a>
         <a href="https://addyosmani.com/blog/own-the-outer-loop/" target="_blank" rel="noopener">Own the Outer Loop</a>
         <a href="https://addyosmani.com/blog/software-factories/" target="_blank" rel="noopener">Software Factories</a>
