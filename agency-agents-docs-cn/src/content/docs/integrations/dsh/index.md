@@ -2,8 +2,6 @@
 title: 'DeepSeek Harness 集成'
 ---
 
-# DeepSeek Harness 集成
-
 把代理公司（The Agency）的完整名册安装为 DeepSeek Harness（DSH）技能。
 每个智能体都加 `agency-` 前缀，以避免与内置技能冲突。
 

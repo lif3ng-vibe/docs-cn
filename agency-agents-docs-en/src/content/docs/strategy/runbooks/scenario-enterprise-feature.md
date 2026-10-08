@@ -2,8 +2,6 @@
 title: '🏢 Runbook: Enterprise Feature Development'
 ---
 
-# 🏢 Runbook: Enterprise Feature Development
-
 > **Mode**: NEXUS-Sprint | **Duration**: 6-12 weeks | **Agents**: 20-30
 
 ---

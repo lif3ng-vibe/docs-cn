@@ -2,8 +2,6 @@
 title: '安全策略'
 ---
 
-# 安全策略
-
 ## 报告漏洞
 
 如果你发现本项目存在安全漏洞，请负责任地报告。不要为安全漏洞开公开的 GitHub issue。请通过 GitHub 的 Security 标签页发起私密安全公告（security advisory）。

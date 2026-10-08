@@ -2,8 +2,6 @@
 title: 'Antigravity 集成'
 ---
 
-# Antigravity 集成
-
 把代理公司（The Agency）的完整名册安装为 Antigravity 技能。每个智能体
 都加 `agency-` 前缀，以避免与现有技能冲突。
 

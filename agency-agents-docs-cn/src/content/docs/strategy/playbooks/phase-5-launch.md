@@ -2,8 +2,6 @@
 title: '🚀 第 5 阶段 playbook——发布与增长'
 ---
 
-# 🚀 第 5 阶段 playbook——发布与增长
-
 > **周期**：2-4 周（T-7 至 T+14）| **智能体**：12 个 | **守门人**：Studio Producer + Analytics Reporter
 
 ---

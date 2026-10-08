@@ -2,8 +2,6 @@
 title: 'Gemini CLI 集成'
 ---
 
-# Gemini CLI 集成
-
 把代理公司（The Agency）的所有智能体打包为 Gemini CLI 子智能体。
 这些智能体安装到 `~/.gemini/agents/`。
 

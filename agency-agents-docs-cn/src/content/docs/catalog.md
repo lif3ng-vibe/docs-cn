@@ -2,8 +2,6 @@
 title: '🎭 代理公司（The Agency）：一支随时准备变革你工作流的 AI 专家团队'
 ---
 
-# 🎭 代理公司（The Agency）：一支随时准备变革你工作流的 AI 专家团队
-
 > **一家触手可及的完整 AI 代理公司**——从前端奇才到 Reddit 社区忍者，从趣味注入者到现实核查者。每个智能体都是一位拥有个性、流程与经过验证的交付物的专家。
 
 [![GitHub stars](https://img.shields.io/github/stars/msitarzewski/agency-agents?style=social)](https://github.com/msitarzewski/agency-agents)

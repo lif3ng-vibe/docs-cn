@@ -2,8 +2,6 @@
 title: 'Hermes 的 agency-agents 路由插件'
 ---
 
-# Hermes 的 agency-agents 路由插件
-
 由 `scripts/convert.sh --tool hermes` 生成。
 
 这个集成安装一个名为 `agency-agents-router` 的 Hermes 插件，而不是

@@ -2,8 +2,6 @@
 title: 'Cursor 集成'
 ---
 
-# Cursor 集成
-
 把代理公司（The Agency）的完整名册转换为 Cursor `.mdc` 规则文件。
 规则是**项目级**的——请从你的项目根目录安装。
 

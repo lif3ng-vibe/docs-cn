@@ -2,8 +2,6 @@
 title: '多智能体工作流：带持久记忆的创业公司 MVP'
 ---
 
-# 多智能体工作流：带持久记忆的创业公司 MVP
-
 > 和 [workflow-startup-mvp.md](/examples/workflow-startup-mvp/) 里是同一套创业公司 MVP 工作流，但由 MCP 记忆服务器在智能体之间打理状态。再也不用复制粘贴交接了。
 
 ## 手动交接的问题

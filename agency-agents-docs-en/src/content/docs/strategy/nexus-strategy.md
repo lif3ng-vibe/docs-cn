@@ -2,8 +2,6 @@
 title: '🌐 NEXUS — Network of EXperts, Unified in Strategy'
 ---
 
-# 🌐 NEXUS — Network of EXperts, Unified in Strategy
-
 ## The Agency's Complete Operational Playbook for Multi-Agent Orchestration
 
 > **NEXUS** transforms The Agency's independent AI specialists into a synchronized intelligence network. This is not a prompt collection — it is a **deployment doctrine** that turns The Agency into a force multiplier for any project, product, or organization.

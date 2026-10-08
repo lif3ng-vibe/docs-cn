@@ -2,8 +2,6 @@
 title: 'Windsurf 集成'
 ---
 
-# Windsurf 集成
-
 代理公司（The Agency）的完整名册被合并成单个 `.windsurfrules` 文件。
 规则是**项目级**的——请从你的项目根目录安装。
 

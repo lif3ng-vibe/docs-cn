@@ -2,8 +2,6 @@
 title: 'GitHub Copilot Integration'
 ---
 
-# GitHub Copilot Integration
-
 The Agency works with GitHub Copilot out of the box. No conversion needed —
 agents use the existing `.md` + YAML frontmatter format.
 

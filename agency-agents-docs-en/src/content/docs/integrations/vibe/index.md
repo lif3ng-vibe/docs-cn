@@ -2,8 +2,6 @@
 title: 'Mistral Vibe Integration'
 ---
 
-# Mistral Vibe Integration
-
 Mistral Vibe uses two files per agent:
 - A TOML configuration file (`~/.vibe/agents/<slug>.toml`)
 - A Markdown prompt file (`~/.vibe/prompts/<slug>.md`)

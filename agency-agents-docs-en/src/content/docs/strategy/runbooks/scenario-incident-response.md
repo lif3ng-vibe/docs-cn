@@ -2,8 +2,6 @@
 title: '🚨 Runbook: Incident Response'
 ---
 
-# 🚨 Runbook: Incident Response
-
 > **Mode**: NEXUS-Micro | **Duration**: Minutes to hours | **Agents**: 3-8
 
 ---

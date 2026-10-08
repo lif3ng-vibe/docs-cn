@@ -2,8 +2,6 @@
 title: 'Multi-Agent Workflow: Startup MVP'
 ---
 
-# Multi-Agent Workflow: Startup MVP
-
 > A step-by-step example of how to coordinate multiple agents to go from idea to shipped MVP.
 
 ## The Scenario

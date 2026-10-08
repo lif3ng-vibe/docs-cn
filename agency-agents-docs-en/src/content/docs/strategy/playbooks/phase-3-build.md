@@ -2,8 +2,6 @@
 title: '🔨 Phase 3 Playbook — Build & Iterate'
 ---
 
-# 🔨 Phase 3 Playbook — Build & Iterate
-
 > **Duration**: 2-12 weeks (varies by scope) | **Agents**: 15-30+ | **Gate Keeper**: Agents Orchestrator
 
 ---

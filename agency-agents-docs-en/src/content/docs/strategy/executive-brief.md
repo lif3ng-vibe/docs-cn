@@ -2,8 +2,6 @@
 title: '📑 NEXUS Executive Brief'
 ---
 
-# 📑 NEXUS Executive Brief
-
 ## Network of EXperts, Unified in Strategy
 
 ---

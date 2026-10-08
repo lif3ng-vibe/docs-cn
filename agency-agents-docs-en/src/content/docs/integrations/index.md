@@ -2,8 +2,6 @@
 title: '🔌 Integrations'
 ---
 
-# 🔌 Integrations
-
 This directory contains The Agency integrations and converted formats for
 supported agentic coding tools.
 

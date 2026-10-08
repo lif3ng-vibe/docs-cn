@@ -2,8 +2,6 @@
 title: 'OpenCode 集成'
 ---
 
-# OpenCode 集成
-
 > **❌ 不要这样做：**
 >
 > ```bash

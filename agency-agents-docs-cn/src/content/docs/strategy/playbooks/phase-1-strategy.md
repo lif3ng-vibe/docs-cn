@@ -2,8 +2,6 @@
 title: '🏗️ 第 1 阶段 playbook——战略与架构'
 ---
 
-# 🏗️ 第 1 阶段 playbook——战略与架构
-
 > **周期**：5-10 天 | **智能体**：8 个 | **守门人**：Studio Producer + Reality Checker
 
 ---

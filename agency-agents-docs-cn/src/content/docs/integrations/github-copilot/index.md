@@ -2,8 +2,6 @@
 title: 'GitHub Copilot 集成'
 ---
 
-# GitHub Copilot 集成
-
 代理公司（The Agency）开箱即支持 GitHub Copilot。无需转换——智能体使用
 现有的 `.md` + YAML frontmatter 格式。
 

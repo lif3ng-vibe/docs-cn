@@ -2,8 +2,6 @@
 title: 'MCP 记忆集成'
 ---
 
-# MCP 记忆集成
-
 > 给任意智能体加上跨会话的持久记忆，用的是模型上下文协议（Model Context Protocol，MCP）。
 
 ## 它能做什么

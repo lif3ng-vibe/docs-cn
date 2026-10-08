@@ -2,8 +2,6 @@
 title: 'DeepSeek Harness Integration'
 ---
 
-# DeepSeek Harness Integration
-
 Installs the full Agency roster as DeepSeek Harness (DSH) skills. Each agent
 is prefixed with `agency-` to avoid conflicts with built-in skills.
 

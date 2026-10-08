@@ -2,8 +2,6 @@
 title: 'Cursor Integration'
 ---
 
-# Cursor Integration
-
 Converts the full Agency roster into Cursor `.mdc` rule files. Rules are
 **project-scoped** — install them from your project root.
 

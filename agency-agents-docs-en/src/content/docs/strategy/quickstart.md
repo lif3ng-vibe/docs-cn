@@ -2,8 +2,6 @@
 title: '⚡ NEXUS Quick-Start Guide'
 ---
 
-# ⚡ NEXUS Quick-Start Guide
-
 > **Get from zero to orchestrated multi-agent pipeline in 5 minutes.**
 
 ---

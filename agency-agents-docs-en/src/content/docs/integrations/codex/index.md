@@ -2,8 +2,6 @@
 title: 'Codex Integration'
 ---
 
-# Codex Integration
-
 Converts all Agency agents into Codex custom agent TOML files. Each source
 agent becomes one standalone `.toml` file containing the minimal Codex-required
 fields: `name`, `description`, and `developer_instructions`.

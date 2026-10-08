@@ -2,8 +2,6 @@
 title: '⚙️ Phase 2 Playbook — Foundation & Scaffolding'
 ---
 
-# ⚙️ Phase 2 Playbook — Foundation & Scaffolding
-
 > **Duration**: 3-5 days | **Agents**: 6 | **Gate Keepers**: DevOps Automator + Evidence Collector
 
 ---

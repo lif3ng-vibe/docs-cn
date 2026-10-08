@@ -2,8 +2,6 @@
 title: 'Aider 集成'
 ---
 
-# Aider 集成
-
 `CONVENTIONS.md` 是名册（roster）索引：每个智能体的名字、它是干什么的、
 所属部门，以及指向其完整说明的路径。
 

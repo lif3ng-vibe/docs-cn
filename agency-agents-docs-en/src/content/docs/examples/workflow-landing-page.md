@@ -2,8 +2,6 @@
 title: 'Multi-Agent Workflow: Landing Page Sprint'
 ---
 
-# Multi-Agent Workflow: Landing Page Sprint
-
 > Ship a conversion-optimized landing page in one day using 4 agents.
 
 ## The Scenario

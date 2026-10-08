@@ -2,8 +2,6 @@
 title: '🏗️ Phase 1 Playbook — Strategy & Architecture'
 ---
 
-# 🏗️ Phase 1 Playbook — Strategy & Architecture
-
 > **Duration**: 5-10 days | **Agents**: 8 | **Gate Keepers**: Studio Producer + Reality Checker
 
 ---

@@ -2,8 +2,6 @@
 title: 'Aider Integration'
 ---
 
-# Aider Integration
-
 `CONVENTIONS.md` is the roster index: every agent's name, what it is for, its
 division, and the path to its full instructions.
 

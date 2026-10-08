@@ -2,8 +2,6 @@
 title: 'Windsurf Integration'
 ---
 
-# Windsurf Integration
-
 The full Agency roster is consolidated into a single `.windsurfrules` file.
 Rules are **project-scoped** — install them from your project root.
 

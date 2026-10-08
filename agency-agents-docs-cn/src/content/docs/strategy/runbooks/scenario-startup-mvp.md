@@ -2,8 +2,6 @@
 title: '🚀 Runbook：创业公司 MVP 构建'
 ---
 
-# 🚀 Runbook：创业公司 MVP 构建
-
 > **模式**：NEXUS-Sprint | **周期**：4-6 周 | **智能体**：18-22 个
 
 ---

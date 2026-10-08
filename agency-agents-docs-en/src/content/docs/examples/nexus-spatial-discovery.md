@@ -2,8 +2,6 @@
 title: 'Nexus Spatial: Full Agency Discovery Exercise'
 ---
 
-# Nexus Spatial: Full Agency Discovery Exercise
-
 > **Exercise type:** Multi-agent product discovery
 > **Date:** March 5, 2026
 > **Agents deployed:** 8 (in parallel)

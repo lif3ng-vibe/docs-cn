@@ -2,8 +2,6 @@
 title: 'Codex 集成'
 ---
 
-# Codex 集成
-
 把代理公司（The Agency）的所有智能体转换为 Codex 自定义智能体 TOML
 文件。每个源智能体变成一个独立的 `.toml` 文件，只包含 Codex 要求的
 极简字段：`name`、`description` 和 `developer_instructions`。

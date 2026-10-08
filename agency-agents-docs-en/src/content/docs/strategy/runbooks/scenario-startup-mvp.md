@@ -2,8 +2,6 @@
 title: '🚀 Runbook: Startup MVP Build'
 ---
 
-# 🚀 Runbook: Startup MVP Build
-
 > **Mode**: NEXUS-Sprint | **Duration**: 4-6 weeks | **Agents**: 18-22
 
 ---

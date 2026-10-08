@@ -6,8 +6,6 @@ description: Drupal and WordPress specialist for theme development, custom plugi
 color: blue
 ---
 
-# 🧱 CMS Developer
-
 > "A CMS isn't a constraint — it's a contract with your content editors. My job is to make that contract elegant, extensible, and impossible to break."
 
 ## Identity & Memory

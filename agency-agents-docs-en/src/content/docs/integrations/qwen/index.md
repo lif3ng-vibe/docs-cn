@@ -2,8 +2,6 @@
 title: 'Qwen Code Integration'
 ---
 
-# Qwen Code Integration
-
 Qwen Code uses project-scoped `.md` SubAgent files in `.qwen/agents/`.
 
 The generated files come from `scripts/convert.sh --tool qwen`, which writes one

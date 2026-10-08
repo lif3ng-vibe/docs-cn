@@ -2,8 +2,6 @@
 title: '📑 NEXUS 高管简报'
 ---
 
-# 📑 NEXUS 高管简报
-
 ## 专家集结，战略统一（Network of EXperts, Unified in Strategy）
 
 ---

@@ -2,8 +2,6 @@
 title: 'Claude Code Integration'
 ---
 
-# Claude Code Integration
-
 The Agency was built for Claude Code. No conversion needed — agents work
 natively with the existing `.md` + YAML frontmatter format.
 

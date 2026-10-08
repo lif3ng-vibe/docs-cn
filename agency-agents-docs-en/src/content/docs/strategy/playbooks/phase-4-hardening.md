@@ -2,8 +2,6 @@
 title: '🛡️ Phase 4 Playbook — Quality & Hardening'
 ---
 
-# 🛡️ Phase 4 Playbook — Quality & Hardening
-
 > **Duration**: 3-7 days | **Agents**: 8 | **Gate Keeper**: Reality Checker (sole authority)
 
 ---

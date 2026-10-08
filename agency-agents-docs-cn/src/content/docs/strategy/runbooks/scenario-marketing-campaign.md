@@ -2,8 +2,6 @@
 title: '📢 Runbook：多渠道营销活动'
 ---
 
-# 📢 Runbook：多渠道营销活动
-
 > **模式**：NEXUS-Micro 到 NEXUS-Sprint | **周期**：2-4 周 | **智能体**：10-15 个
 
 ---

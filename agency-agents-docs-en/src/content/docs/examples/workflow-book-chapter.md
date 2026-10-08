@@ -2,8 +2,6 @@
 title: 'Workflow Example: Book Chapter Development'
 ---
 
-# Workflow Example: Book Chapter Development
-
 > A focused single-agent workflow for turning rough source material into a strategic first-person chapter draft with explicit revision loops.
 
 ## When to Use This

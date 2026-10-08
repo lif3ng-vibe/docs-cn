@@ -2,8 +2,6 @@
 title: '🔍 第 0 阶段 playbook——情报与发现'
 ---
 
-# 🔍 第 0 阶段 playbook——情报与发现
-
 > **周期**：3-7 天 | **智能体**：6 个 | **守门人**：Executive Summary Generator
 
 ---

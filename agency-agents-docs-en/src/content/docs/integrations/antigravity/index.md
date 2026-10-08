@@ -2,8 +2,6 @@
 title: 'Antigravity Integration'
 ---
 
-# Antigravity Integration
-
 Installs the full Agency roster as Antigravity skills. Each agent is prefixed
 with `agency-` to avoid conflicts with existing skills.
 

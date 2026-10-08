@@ -2,8 +2,6 @@
 title: 'ZCode 集成'
 ---
 
-# ZCode 集成
-
 [ZCode](https://z.ai) 是 Z.ai 基于 GLM 的编码智能体 harness。
 每个智能体被渲染为一个带 `name` 和 `description` frontmatter 的
 独立 Markdown 智能体文件，ZCode 会从其智能体目录中发现它们。

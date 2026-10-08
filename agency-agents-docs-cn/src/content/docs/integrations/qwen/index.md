@@ -2,8 +2,6 @@
 title: 'Qwen Code 集成'
 ---
 
-# Qwen Code 集成
-
 Qwen Code 使用 `.qwen/agents/` 下的项目级 `.md` 子智能体文件。
 
 生成的文件来自 `scripts/convert.sh --tool qwen`，它为每个智能体

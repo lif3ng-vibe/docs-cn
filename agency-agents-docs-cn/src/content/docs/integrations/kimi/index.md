@@ -2,8 +2,6 @@
 title: 'Kimi Code CLI 集成'
 ---
 
-# Kimi Code CLI 集成
-
 把代理公司（The Agency）的所有智能体转换为 Kimi Code CLI 智能体规格。
 每个智能体变成一个目录，内含 `agent.yaml`（智能体规格）和 `system.md`
 （系统提示词）。

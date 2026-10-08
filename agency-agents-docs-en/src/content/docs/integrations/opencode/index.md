@@ -2,8 +2,6 @@
 title: 'OpenCode Integration'
 ---
 
-# OpenCode Integration
-
 > **❌ Don't do this:**
 >
 > ```bash

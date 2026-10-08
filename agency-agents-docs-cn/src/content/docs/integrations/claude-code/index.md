@@ -2,8 +2,6 @@
 title: 'Claude Code 集成'
 ---
 
-# Claude Code 集成
-
 代理公司（The Agency）就是为 Claude Code 而生的。无需转换——智能体以
 现有的 `.md` + YAML frontmatter 格式原生工作。
 

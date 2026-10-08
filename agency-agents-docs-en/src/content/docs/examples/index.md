@@ -2,8 +2,6 @@
 title: 'Examples'
 ---
 
-# Examples
-
 This directory contains example outputs demonstrating how the agency's agents can be orchestrated together to tackle real-world tasks.
 
 ## Why This Exists

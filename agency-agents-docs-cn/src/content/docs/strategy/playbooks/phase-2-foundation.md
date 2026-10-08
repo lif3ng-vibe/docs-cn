@@ -2,8 +2,6 @@
 title: '⚙️ 第 2 阶段 playbook——奠基与脚手架'
 ---
 
-# ⚙️ 第 2 阶段 playbook——奠基与脚手架
-
 > **周期**：3-5 天 | **智能体**：6 个 | **守门人**：DevOps Automator + Evidence Collector
 
 ---

@@ -2,8 +2,6 @@
 title: '📢 Runbook: Multi-Channel Marketing Campaign'
 ---
 
-# 📢 Runbook: Multi-Channel Marketing Campaign
-
 > **Mode**: NEXUS-Micro to NEXUS-Sprint | **Duration**: 2-4 weeks | **Agents**: 10-15
 
 ---

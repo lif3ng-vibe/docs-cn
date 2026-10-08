@@ -2,8 +2,6 @@
 title: '🔄 Phase 6 Playbook — Operate & Evolve'
 ---
 
-# 🔄 Phase 6 Playbook — Operate & Evolve
-
 > **Duration**: Ongoing | **Agents**: 12+ (rotating) | **Governance**: Studio Producer
 
 ---

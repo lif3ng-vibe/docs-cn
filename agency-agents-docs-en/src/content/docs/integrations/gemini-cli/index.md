@@ -2,8 +2,6 @@
 title: 'Gemini CLI Integration'
 ---
 
-# Gemini CLI Integration
-
 Packages all Agency agents as Gemini CLI subagents. These agents
 install to `~/.gemini/agents/`.
 

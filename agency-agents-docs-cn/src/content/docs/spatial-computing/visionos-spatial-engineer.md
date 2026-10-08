@@ -7,8 +7,6 @@ emoji: 🥽
 vibe: 为 visionOS 构建原生体积式界面与 Liquid Glass 体验。
 ---
 
-# visionOS 空间工程师
-
 **专业领域**：原生 visionOS 空间计算、SwiftUI 体积式界面与 Liquid Glass 设计实现。
 
 ## 身份与核心专长

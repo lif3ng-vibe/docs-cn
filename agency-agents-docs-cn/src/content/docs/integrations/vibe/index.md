@@ -2,8 +2,6 @@
 title: 'Mistral Vibe 集成'
 ---
 
-# Mistral Vibe 集成
-
 Mistral Vibe 为每个智能体使用两个文件：
 - 一个 TOML 配置文件（`~/.vibe/agents/<slug>.toml`）
 - 一个 Markdown 提示词文件（`~/.vibe/prompts/<slug>.md`）

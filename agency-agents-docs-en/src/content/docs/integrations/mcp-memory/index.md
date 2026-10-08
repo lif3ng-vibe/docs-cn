@@ -2,8 +2,6 @@
 title: 'MCP Memory Integration'
 ---
 
-# MCP Memory Integration
-
 > Give any agent persistent memory across sessions using the Model Context Protocol (MCP).
 
 ## What It Does

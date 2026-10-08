@@ -2,8 +2,6 @@
 title: 'OpenClaw 集成'
 ---
 
-# OpenClaw 集成
-
 OpenClaw 智能体以工作区形式安装，内含 `SOUL.md`、`AGENTS.md`
 和 `IDENTITY.md` 文件。安装器把每个工作区复制到
 `~/.openclaw/agency-agents/`，并在 `openclaw` CLI 可用时注册它。

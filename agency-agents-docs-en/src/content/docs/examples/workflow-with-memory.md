@@ -2,8 +2,6 @@
 title: 'Multi-Agent Workflow: Startup MVP with Persistent Memory'
 ---
 
-# Multi-Agent Workflow: Startup MVP with Persistent Memory
-
 > The same startup MVP workflow from [workflow-startup-mvp.md](/examples/workflow-startup-mvp/), but with an MCP memory server handling state between agents. No more copy-paste handoffs.
 
 ## The Problem with Manual Handoffs

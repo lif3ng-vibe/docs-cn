@@ -2,8 +2,6 @@
 title: '🌐 NEXUS —— 专家集结，战略统一'
 ---
 
-# 🌐 NEXUS —— 专家集结，战略统一（Network of EXperts, Unified in Strategy）
-
 ## 代理公司多智能体编排的完整作战手册（playbook）
 
 > **NEXUS** 将代理公司（The Agency）各自为战的 AI 专家变成一张同步运转的智能网络。这不是一份提示词合集——它是一套**部署条令（deployment doctrine）**，能把代理公司变成任何项目、产品或组织的力量倍增器。

@@ -2,8 +2,6 @@
 title: 'ZCode Integration'
 ---
 
-# ZCode Integration
-
 [ZCode](https://z.ai) is Z.ai's GLM-based coding agent harness. Each agency
 agent is rendered as a standalone Markdown agent file with `name` and
 `description` frontmatter, which ZCode discovers from its agents directory.
