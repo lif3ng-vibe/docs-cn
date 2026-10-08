@@ -1,52 +1,52 @@
 ---
-title: 'Examples'
+title: '示例'
 ---
 
-# Examples
+# 示例
 
-This directory contains example outputs demonstrating how the agency's agents can be orchestrated together to tackle real-world tasks.
+本目录收录了一批示例产出，演示如何把代理公司的智能体编排起来，协作完成真实世界的任务。
 
-## Why This Exists
+## 为什么有这个目录
 
-The agency-agents repo defines dozens of specialized agents across engineering, design, marketing, product, support, spatial computing, and project management. But agent definitions alone don't show what happens when you **deploy them all at once** on a single mission.
+agency-agents 仓库定义了几十个专业智能体，覆盖工程、设计、市场营销、产品、客户支持、空间计算和项目管理。但光有智能体定义，看不出当你**一次性全员部署**去执行同一项任务时会发生什么。
 
-These examples answer the question: *"What does it actually look like when the full agency collaborates?"*
+这些示例回答的问题是：*"当整个代理公司协同作战时，实际是什么样子？"*
 
-## Contents
+## 内容
 
 ### [nexus-spatial-discovery.md](./nexus-spatial-discovery.md)
 
-**What:** A complete product discovery exercise where 8 agents worked in parallel to evaluate a software opportunity and produce a unified plan.
+**是什么**：一场完整的产品发现演练——8 个智能体并行工作，评估一个软件机会并产出统一规划。
 
-**The scenario:** Web research identified an opportunity at the intersection of AI agent orchestration and spatial computing. The entire agency was then deployed simultaneously to produce:
+**场景**：网络调研发现了 AI 智能体编排与空间计算交汇处的一个机会。随后整个代理公司同时全员上阵，产出：
 
-- Market validation and competitive analysis
-- Technical architecture (8-service system design with full SQL schema)
-- Brand strategy and visual identity
-- Go-to-market and growth plan
-- Customer support operations blueprint
-- UX research plan with personas and journey maps
-- 35-week project execution plan with 65 sprint tickets
-- Spatial interface architecture specification
+- 市场验证与竞争分析
+- 技术架构（8 服务系统设计，含完整 SQL schema）
+- 品牌战略与视觉识别
+- 上市与增长计划
+- 客户支持运营蓝图
+- UX 研究计划（用户画像与旅程地图）
+- 35 周项目执行计划（65 个 sprint 工单）
+- 空间界面架构规范
 
-**Agents used:**
-| Agent | Role |
+**使用的智能体：**
+| 智能体 | 职责 |
 |-------|------|
-| Product Trend Researcher | Market validation, competitive landscape |
-| Backend Architect | System architecture, data model, API design |
-| Brand Guardian | Positioning, visual identity, naming |
-| Growth Hacker | GTM strategy, pricing, launch plan |
-| Support Responder | Support tiers, onboarding, community |
-| UX Researcher | Personas, journey maps, design principles |
-| Project Shepherd | Phase plan, sprints, risk register |
-| XR Interface Architect | Spatial UI specification |
+| Product Trend Researcher | 市场验证、竞争格局 |
+| Backend Architect | 系统架构、数据模型、API 设计 |
+| Brand Guardian | 定位、视觉识别、命名 |
+| Growth Hacker | GTM 战略、定价、发布计划 |
+| Support Responder | 支持分层、新客引导、社区 |
+| UX Researcher | 用户画像、旅程地图、设计原则 |
+| Project Shepherd | 阶段计划、sprint、风险登记册 |
+| XR Interface Architect | 空间 UI 规范 |
 
-**Key takeaway:** All 8 agents ran in parallel and produced coherent, cross-referencing plans without coordination overhead. The output demonstrates the agency's ability to go from "find an opportunity" to "here's the full blueprint" in a single session.
+**关键启示**：8 个智能体全部并行运行，在零协调开销的情况下产出了彼此自洽、互相引用的规划。这份输出展示了代理公司的能力——在单次会话里从"找一个机会"走到"这是完整蓝图"。
 
-## Adding New Examples
+## 添加新示例
 
-If you run an interesting multi-agent exercise, consider adding it here. Good examples show:
+如果你跑了一场有意思的多智能体演练，可以考虑收录进来。好的示例应当体现：
 
-- Multiple agents collaborating on a shared objective
-- The breadth of the agency's capabilities
-- Real-world applicability of the agent definitions
+- 多个智能体围绕同一目标协作
+- 代理公司能力的广度
+- 智能体定义在真实场景中的适用性

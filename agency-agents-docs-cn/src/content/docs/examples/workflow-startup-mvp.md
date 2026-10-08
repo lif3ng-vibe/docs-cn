@@ -1,32 +1,32 @@
 ---
-title: 'Multi-Agent Workflow: Startup MVP'
+title: '多智能体工作流：创业公司 MVP'
 ---
 
-# Multi-Agent Workflow: Startup MVP
+# 多智能体工作流：创业公司 MVP
 
-> A step-by-step example of how to coordinate multiple agents to go from idea to shipped MVP.
+> 一个循序渐进的示例：如何协调多个智能体，从点子走到上线的 MVP。
 
-## The Scenario
+## 场景
 
-You're building a SaaS MVP — a team retrospective tool for remote teams. You have 4 weeks to ship a working product with user signups, a core feature, and a landing page.
+你在做一个 SaaS MVP——一个面向远程团队的复盘工具。你有 4 周时间，要交付一个能用的产品：有用户注册、有核心功能、有落地页。
 
-## Agent Team
+## 智能体团队
 
-| Agent | Role in this workflow |
+| 智能体 | 在本工作流中的职责 |
 |-------|---------------------|
-| Sprint Prioritizer | Break the project into weekly sprints |
-| UX Researcher | Validate the idea with quick user interviews |
-| Backend Architect | Design the API and data model |
-| Frontend Developer | Build the React app |
-| Rapid Prototyper | Get the first version running fast |
-| Growth Hacker | Plan launch strategy while building |
-| Reality Checker | Gate each milestone before moving on |
+| Sprint Prioritizer | 把项目拆成每周 sprint |
+| UX Researcher | 用快速用户访谈验证点子 |
+| Backend Architect | 设计 API 与数据模型 |
+| Frontend Developer | 实现 React 应用 |
+| Rapid Prototyper | 让第一版尽快跑起来 |
+| Growth Hacker | 边开发边规划发布战略 |
+| Reality Checker | 每个里程碑放行前把关 |
 
-## The Workflow
+## 工作流
 
-### Week 1: Discovery + Architecture
+### 第 1 周：发现 + 架构
 
-**Step 1 — Activate Sprint Prioritizer**
+**步骤 1——激活 Sprint Prioritizer**
 
 ```
 Activate Sprint Prioritizer.
@@ -39,7 +39,7 @@ Constraints: solo developer, React + Node.js stack, deploy to Vercel + Railway.
 Break this into 4 weekly sprints with clear deliverables and acceptance criteria.
 ```
 
-**Step 2 — Activate UX Researcher (in parallel)**
+**步骤 2——同时激活 UX Researcher（并行）**
 
 ```
 Activate UX Researcher.
@@ -55,7 +55,7 @@ Run a quick competitive analysis and identify:
 Output a 1-page research brief.
 ```
 
-**Step 3 — Hand off to Backend Architect**
+**步骤 3——交接给 Backend Architect**
 
 ```
 Activate Backend Architect.
@@ -73,9 +73,9 @@ Deliver:
 4. Auth strategy recommendation
 ```
 
-### Week 2: Build Core Features
+### 第 2 周：实现核心功能
 
-**Step 4 — Activate Frontend Developer + Rapid Prototyper**
+**步骤 4——激活 Frontend Developer + Rapid Prototyper**
 
 ```
 Activate Frontend Developer.
@@ -91,7 +91,7 @@ Start with the Board view — it's the core experience.
 Focus on real-time: when one user adds a card, everyone sees it.
 ```
 
-**Step 5 — Reality Check at midpoint**
+**步骤 5——中点现实检查**
 
 ```
 Activate Reality Checker.
@@ -109,9 +109,9 @@ Evaluate:
 3. Any technical debt that will bite us at launch?
 ```
 
-### Week 3: Polish + Landing Page
+### 第 3 周：打磨 + 落地页
 
-**Step 6 — Frontend Developer continues, Growth Hacker starts**
+**步骤 6——Frontend Developer 继续，Growth Hacker 开工**
 
 ```
 Activate Growth Hacker.
@@ -127,9 +127,9 @@ Create a launch plan:
 4. Metrics to track in week 1
 ```
 
-### Week 4: Launch
+### 第 4 周：发布
 
-**Step 7 — Final Reality Check**
+**步骤 7——最终现实检查**
 
 ```
 Activate Reality Checker.
@@ -145,15 +145,15 @@ Run through the launch checklist and give a GO / NO-GO decision.
 Require evidence for each criterion.
 ```
 
-## Key Patterns
+## 关键模式
 
-1. **Sequential handoffs**: Each agent's output becomes the next agent's input
-2. **Parallel work**: UX Researcher and Sprint Prioritizer can run simultaneously in Week 1
-3. **Quality gates**: Reality Checker at midpoint and before launch prevents shipping broken code
-4. **Context passing**: Always paste previous agent outputs into the next prompt — agents don't share memory
+1. **串行交接**：上一个智能体的输出就是下一个智能体的输入
+2. **并行工作**：第 1 周里 UX Researcher 和 Sprint Prioritizer 可以同时跑
+3. **质量关卡**：中点和发布前的 Reality Checker 把关，防止把坏代码发上线
+4. **上下文传递**：始终把上一个智能体的完整输出粘进下一个提示词——智能体之间不共享记忆
 
-## Tips
+## 技巧
 
-- Copy-paste agent outputs between steps — don't summarize, use the full output
-- If a Reality Checker flags an issue, loop back to the relevant specialist to fix it
-- Keep the Orchestrator agent in mind for automating this flow once you're comfortable with the manual version
+- 步骤之间完整复制粘贴智能体输出——不要摘要，用全文
+- 如果 Reality Checker 标记了问题，回到对应专家智能体修复
+- 熟练掌握手动流程后，可以考虑用 Orchestrator 智能体把这条流程自动化

@@ -1,22 +1,22 @@
 ---
-title: 'Workflow Example: Book Chapter Development'
+title: '工作流示例：图书章节开发'
 ---
 
-# Workflow Example: Book Chapter Development
+# 工作流示例：图书章节开发
 
-> A focused single-agent workflow for turning rough source material into a strategic first-person chapter draft with explicit revision loops.
+> 一个聚焦的单智能体工作流：把粗糙的原始素材变成一份策略清晰的第一人称章节草稿，并带明确的修订循环。
 
-## When to Use This
+## 何时使用
 
-Use this workflow when an author has voice notes, fragments, or strategic notes, but not yet a clean chapter draft. The goal is not generic ghostwriting. The goal is to produce a chapter that strengthens category positioning, preserves the author's voice, and exposes open editorial decisions clearly.
+适用的场景：作者手里有语音笔记、片段或策略性想法，但还没有一份干净的章节草稿。目标不是代笔套模板，而是产出一个能强化品类定位、保留作者声音、并把待定的编辑决策明明白白摆出来的章节。
 
-## Agent Used
+## 使用的智能体
 
-| Agent | Role |
+| 智能体 | 职责 |
 |-------|------|
-| Book Co-Author | Converts source material into a versioned chapter draft with editorial notes and next-step questions |
+| Book Co-Author | 把原始素材转换成带版本号的章节草稿，附编辑备注和下一步问题 |
 
-## Example Activation
+## 激活示例
 
 ```text
 Activate Book Co-Author.
@@ -40,9 +40,9 @@ Produce:
 5. Specific next-step revision requests
 ```
 
-## Expected Output Shape
+## 预期输出形态
 
-The Book Co-Author should respond in five parts:
+Book Co-Author 应当分五部分回应：
 
 1. `Target Outcome`
 2. `Chapter Draft`
@@ -50,10 +50,10 @@ The Book Co-Author should respond in five parts:
 4. `Feedback Loop`
 5. `Next Step`
 
-## Quality Bar
+## 质量标准
 
-- The draft stays in first-person voice
-- The chapter has one clear promise and internal logic
-- Claims are tied to source material or flagged as assumptions
-- Generic motivational language is removed
-- The output ends with explicit revision questions, not a vague handoff
+- 草稿保持第一人称的声音
+- 章节有一个清晰的主张和内在逻辑
+- 所有论断要么锚定在原始素材上，要么明确标注为假设
+- 删掉空泛的鸡汤式语言
+- 输出以明确的修订问题收尾，而不是含糊的交接（handoff）

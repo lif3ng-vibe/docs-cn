@@ -1,14 +1,14 @@
 ---
-title: 'Multi-Agent Workflow: Startup MVP with Persistent Memory'
+title: '多智能体工作流：带持久记忆的创业公司 MVP'
 ---
 
-# Multi-Agent Workflow: Startup MVP with Persistent Memory
+# 多智能体工作流：带持久记忆的创业公司 MVP
 
-> The same startup MVP workflow from [workflow-startup-mvp.md](workflow-startup-mvp.md), but with an MCP memory server handling state between agents. No more copy-paste handoffs.
+> 和 [workflow-startup-mvp.md](workflow-startup-mvp.md) 里是同一套创业公司 MVP 工作流，但由 MCP 记忆服务器在智能体之间打理状态。再也不用复制粘贴交接了。
 
-## The Problem with Manual Handoffs
+## 手动交接的问题
 
-In the standard workflow, every agent-to-agent transition looks like this:
+标准工作流里，每次智能体之间的衔接长这样：
 
 ```
 Activate Backend Architect.
@@ -20,16 +20,16 @@ Design the API and database schema for RetroBoard.
 ...
 ```
 
-You are the glue. You copy-paste outputs between agents, keep track of what's been done, and hope you don't lose context along the way. It works for small projects, but it falls apart when:
+你就是那层胶水。你在智能体之间复制粘贴输出、记录哪些做完了，还要祈祷中途别丢上下文。小项目凑合能用，但遇到这些情况就会散架：
 
-- Sessions time out and you lose the output
-- Multiple agents need the same context
-- QA fails and you need to rewind to a previous state
-- The project spans days or weeks across many sessions
+- 会话超时，输出丢了
+- 多个智能体需要同一份上下文
+- QA 挂了，需要回滚到之前的状态
+- 项目跨越多个会话，持续数天甚至数周
 
-## The Fix
+## 修复方案
 
-With an MCP memory server installed, agents store their deliverables in memory and retrieve what they need automatically. Handoffs become:
+装上 MCP 记忆服务器后，智能体把各自的交付物存进记忆，需要时自动取回。交接变成：
 
 ```
 Activate Backend Architect.
@@ -38,35 +38,35 @@ Project: RetroBoard. Recall previous context for this project
 and design the API and database schema.
 ```
 
-The agent searches memory for RetroBoard context, finds the sprint plan and research brief stored by previous agents, and picks up from there.
+智能体从记忆里检索 RetroBoard 的上下文，找到先前智能体存好的 sprint 计划和研究简报，接着往下做。
 
-## Setup
+## 安装
 
-Install any MCP-compatible memory server that supports `remember`, `recall`, and `rollback` operations. See [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md) for setup.
+安装任意一个支持 `remember`、`recall`、`rollback` 操作的 MCP 兼容记忆服务器即可。配置方法见 [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md)。
 
-## The Scenario
+## 场景
 
-Same as the standard workflow: a SaaS team retrospective tool (RetroBoard), 4 weeks to MVP, solo developer.
+与标准工作流相同：SaaS 团队复盘工具（RetroBoard），4 周到 MVP，单人开发者。
 
-## Agent Team
+## 智能体团队
 
-| Agent | Role in this workflow |
+| 智能体 | 在本工作流中的职责 |
 |-------|---------------------|
-| Sprint Prioritizer | Break the project into weekly sprints |
-| UX Researcher | Validate the idea with quick user interviews |
-| Backend Architect | Design the API and data model |
-| Frontend Developer | Build the React app |
-| Rapid Prototyper | Get the first version running fast |
-| Growth Hacker | Plan launch strategy while building |
-| Reality Checker | Gate each milestone before moving on |
+| Sprint Prioritizer | 把项目拆成每周 sprint |
+| UX Researcher | 用快速用户访谈验证点子 |
+| Backend Architect | 设计 API 与数据模型 |
+| Frontend Developer | 实现 React 应用 |
+| Rapid Prototyper | 让第一版尽快跑起来 |
+| Growth Hacker | 边开发边规划发布战略 |
+| Reality Checker | 每个里程碑放行前把关 |
 
-Each agent has a Memory Integration section in their prompt (see [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md) for how to add it).
+每个智能体的提示词里都有一段"记忆集成"章节（如何添加见 [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md)）。
 
-## The Workflow
+## 工作流
 
-### Week 1: Discovery + Architecture
+### 第 1 周：发现 + 架构
 
-**Step 1 — Activate Sprint Prioritizer**
+**步骤 1——激活 Sprint Prioritizer**
 
 ```
 Activate Sprint Prioritizer.
@@ -80,9 +80,9 @@ Break this into 4 weekly sprints with clear deliverables and acceptance criteria
 Remember your sprint plan tagged for this project when done.
 ```
 
-The Sprint Prioritizer produces the sprint plan and stores it in memory tagged with `sprint-prioritizer`, `retroboard`, and `sprint-plan`.
+Sprint Prioritizer 产出 sprint 计划，并以 `sprint-prioritizer`、`retroboard`、`sprint-plan` 为标签存入记忆。
 
-**Step 2 — Activate UX Researcher (in parallel)**
+**步骤 2——同时激活 UX Researcher（并行）**
 
 ```
 Activate UX Researcher.
@@ -98,9 +98,9 @@ Run a quick competitive analysis and identify:
 Output a 1-page research brief. Remember it tagged for this project when done.
 ```
 
-The UX Researcher stores the research brief tagged with `ux-researcher`, `retroboard`, and `research-brief`.
+UX Researcher 把研究简报以 `ux-researcher`、`retroboard`、`research-brief` 为标签存入记忆。
 
-**Step 3 — Hand off to Backend Architect**
+**步骤 3——交接给 Backend Architect**
 
 ```
 Activate Backend Architect.
@@ -117,11 +117,11 @@ Design:
 Remember each deliverable tagged for this project and for the frontend-developer.
 ```
 
-The Backend Architect recalls the sprint plan and research brief from memory automatically. No copy-paste. It stores its schema and API spec tagged with `backend-architect`, `retroboard`, `api-spec`, and `frontend-developer`.
+Backend Architect 自动从记忆里召回 sprint 计划和研究简报。零复制粘贴。它把自己的 schema 和 API 规范以 `backend-architect`、`retroboard`、`api-spec`、`frontend-developer` 为标签存入记忆。
 
-### Week 2: Build Core Features
+### 第 2 周：实现核心功能
 
-**Step 4 — Activate Frontend Developer + Rapid Prototyper**
+**步骤 4——激活 Frontend Developer + Rapid Prototyper**
 
 ```
 Activate Frontend Developer.
@@ -138,9 +138,9 @@ Focus on real-time: when one user adds a card, everyone sees it.
 Remember your progress tagged for this project.
 ```
 
-The Frontend Developer pulls the API spec from memory and builds against it.
+Frontend Developer 从记忆里拉取 API 规范，据此开发。
 
-**Step 5 — Reality Check at midpoint**
+**步骤 5——中点现实检查**
 
 ```
 Activate Reality Checker.
@@ -157,11 +157,11 @@ Evaluate:
 Remember your verdict tagged for this project.
 ```
 
-The Reality Checker has full visibility into everything produced so far — the sprint plan, research brief, schema, API spec, and frontend progress — without you having to collect and paste it all.
+Reality Checker 能看到目前为止产出的一切——sprint 计划、研究简报、schema、API 规范、前端进度——不用你手动收集再粘过去。
 
-### Week 3: Polish + Landing Page
+### 第 3 周：打磨 + 落地页
 
-**Step 6 — Frontend Developer continues, Growth Hacker starts**
+**步骤 6——Frontend Developer 继续，Growth Hacker 开工**
 
 ```
 Activate Growth Hacker.
@@ -181,9 +181,9 @@ Create a launch plan:
 Remember the launch plan tagged for this project.
 ```
 
-### Week 4: Launch
+### 第 4 周：发布
 
-**Step 7 — Final Reality Check**
+**步骤 7——最终现实检查**
 
 ```
 Activate Reality Checker.
@@ -202,9 +202,9 @@ Run through the launch checklist and give a GO / NO-GO decision.
 Require evidence for each criterion.
 ```
 
-### When QA Fails: Rollback
+### 当 QA 挂掉：回滚
 
-In the standard workflow, when the Reality Checker rejects a deliverable, you go back to the responsible agent and try to explain what went wrong. With memory, the recovery loop is tighter:
+标准工作流里，Reality Checker 拒收一份交付物后，你得回到负责的智能体，努力解释哪里出了问题。有了记忆，恢复循环更紧：
 
 ```
 Activate Backend Architect.
@@ -215,28 +215,28 @@ Roll back to your last known-good schema and address the specific issues raised.
 Remember the updated deliverables when done.
 ```
 
-The Backend Architect can see exactly what the Reality Checker flagged, recall its own previous work, roll back to a checkpoint, and produce a fix — all without you manually tracking versions.
+Backend Architect 能看清 Reality Checker 到底标了什么、召回自己先前的工作、回滚到某个检查点、产出修复——全程不需要你手动管版本。
 
-## Before and After
+## 前后对比
 
-| Aspect | Standard Workflow | With Memory |
+| 维度 | 标准工作流 | 带记忆 |
 |--------|------------------|-------------|
-| **Handoffs** | Copy-paste full output between agents | Agents recall what they need automatically |
-| **Context loss** | Session timeouts lose everything | Memories persist across sessions |
-| **Multi-agent context** | Manually compile context from N agents | Agent searches memory for project tag |
-| **QA failure recovery** | Manually describe what went wrong | Agent recalls feedback + rolls back |
-| **Multi-day projects** | Re-establish context every session | Agent picks up where it left off |
-| **Setup required** | None | Install an MCP memory server |
+| **交接** | 在智能体之间复制粘贴完整输出 | 智能体自动召回所需内容 |
+| **上下文丢失** | 会话超时就全丢 | 记忆跨会话持久保存 |
+| **多智能体上下文** | 手动汇总 N 个智能体的上下文 | 智能体按项目标签检索记忆 |
+| **QA 失败恢复** | 手动描述哪里出了问题 | 智能体召回反馈并回滚 |
+| **跨天项目** | 每次会话重建上下文 | 智能体从上次中断处继续 |
+| **前置条件** | 无 | 安装 MCP 记忆服务器 |
 
-## Key Patterns
+## 关键模式
 
-1. **Tag everything with the project name**: This is what makes recall work. Every memory gets tagged with `retroboard` (or whatever your project is).
-2. **Tag deliverables for the receiving agent**: When the Backend Architect finishes an API spec, it tags the memory with `frontend-developer` so the Frontend Developer finds it on recall.
-3. **Reality Checker gets full visibility**: Because all agents store their work in memory, the Reality Checker can recall everything for the project without you compiling it.
-4. **Rollback replaces manual undo**: When something fails, roll back to the last checkpoint instead of trying to figure out what changed.
+1. **一切用项目名打标签**：这是召回能成立的前提。每条记忆都打上 `retroboard`（或你的项目名）标签。
+2. **给接收方智能体打标签**：Backend Architect 完成 API 规范后，会给记忆打上 `frontend-developer` 标签，Frontend Developer 召回时就能找到。
+3. **Reality Checker 拥有完整可见性**：所有智能体都把工作存进记忆，Reality Checker 无需你汇总就能召回项目的全部内容。
+4. **用回滚代替手动撤销**：出了问题就回滚到上一个检查点，别去人肉排查改了什么。
 
-## Tips
+## 技巧
 
-- You don't need to modify every agent at once. Start by adding Memory Integration to the agents you use most and expand from there.
-- The memory instructions are prompts, not code. The LLM interprets them and calls the MCP tools as needed. You can adjust the wording to match your style.
-- Any MCP-compatible memory server that supports `remember`, `recall`, `rollback`, and `search` tools will work with this workflow.
+- 不必一次改完所有智能体。先给你最常用的几个加上"记忆集成"，再逐步铺开。
+- 记忆指令是提示词，不是代码。LLM 会自行解释并按需调用 MCP 工具，措辞可以按你的风格调整。
+- 任何支持 `remember`、`recall`、`rollback`、`search` 工具的 MCP 兼容记忆服务器都能配合这套工作流。
