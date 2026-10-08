@@ -85,4 +85,21 @@ function walk2(dir, rel = '') {
   }
 }
 walk2(targetDir);
-console.log(`处理 ${files} 个 HTML，改写 ${changed} 个（BASE=${BASE}）`);
+// 4. 折叠目录 index 页：Mintlify 按页面 key 建目录（integrations/index/index.html），
+//    GitHub Pages 不会把 /integrations 折叠到 integrations/index/——把
+//    <key>/index/index.html 复制一层为 <key>/index.html，两种 URL 都可达。
+let folded = 0;
+function foldIndexDirs(dir, rel = '') {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (!e.isDirectory()) continue;
+    const nested = join(dir, e.name, 'index', 'index.html');
+    if (existsSync(nested)) {
+      writeFileSync(join(dir, e.name, 'index.html'), readFileSync(nested));
+      folded++;
+    }
+    foldIndexDirs(join(dir, e.name), r);
+  }
+}
+foldIndexDirs(targetDir);
+console.log(`处理 ${files} 个 HTML，改写 ${changed} 个，折叠 index 目录 ${folded} 个（BASE=${BASE}）`);
