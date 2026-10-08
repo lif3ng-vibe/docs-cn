@@ -77,12 +77,12 @@ When something fails and you need to recover:
 
 ## 示例：增强版 Backend Architect
 
-完整示例见 [backend-architect-with-memory.md](backend-architect-with-memory.md)
+完整示例见 [backend-architect-with-memory.md](/integrations/mcp-memory/backend-architect-with-memory)
 ——标准 Backend Architect 智能体加上一个记忆集成章节。
 
 ## 示例：带记忆的工作流
 
-见 [../../examples/workflow-with-memory.md](../../examples/workflow-with-memory.md)：
+见 [../../examples/workflow-with-memory.md](/examples/workflow-with-memory/)：
 Startup MVP 工作流加上持久记忆的增强版，展示智能体如何通过记忆
 而非复制粘贴来传递上下文。
 

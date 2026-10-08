@@ -116,7 +116,7 @@ See [full API reference →](https://docs.yourproject.com/api)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+参见[贡献指南](/contributing/)
 
 ## License
 

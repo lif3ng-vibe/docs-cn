@@ -32,4 +32,4 @@ Use the Reality Checker agent to verify this feature is production-ready.
 
 ## 智能体目录
 
-智能体按部门组织。当前完整名册见[主 README](../../README.md)。
+智能体按部门组织。当前完整名册见[主 README](/catalog/)。

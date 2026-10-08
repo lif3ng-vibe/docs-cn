@@ -38,7 +38,7 @@ title: '🤝 为代理公司（The Agency）做贡献'
 2. **选择合适的部门**——或者提议一个新部门。部门是智能体目录的顶层（如
    `engineering/`、`security/`、`gis/`、`marketing/`、`finance/`……）；
    浏览一下，找到你的智能体该放哪里。带标签、图标和颜色的权威清单在仓库根目录的
-   [`divisions.json`](divisions.json)里，永远保持最新。
+   [`divisions.json`](/divisions.json)里，永远保持最新。
 
    > **部门由 `divisions.json`（仓库根目录）定义**——这是部门集合的唯一事实来源，
    > 由 CI 里的 `scripts/check-divisions.sh` 校验。**提议一个新部门**意味着：
@@ -440,10 +440,10 @@ interface AgentExample {
 
 ### 给新贡献者
 
-- [README.md](README.md)——总览与智能体目录
-- [示例：Frontend Developer](engineering/engineering-frontend-developer.md)——结构良好的智能体示例
-- [示例：Reddit Community Builder](marketing/marketing-reddit-community-builder.md)——出色性格示例
-- [示例：Whimsy Injector](design/design-whimsy-injector.md)——创意型专家示例
+- [README.md](/catalog/)——总览与智能体目录
+- [示例：Frontend Developer](/engineering/engineering-frontend-developer/)——结构良好的智能体示例
+- [示例：Reddit Community Builder](/marketing/marketing-reddit-community-builder/)——出色性格示例
+- [示例：Whimsy Injector](/design/design-whimsy-injector/)——创意型专家示例
 
 ### 给智能体设计
 

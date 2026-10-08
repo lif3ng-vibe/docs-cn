@@ -4,7 +4,7 @@ title: '多智能体工作流：带持久记忆的创业公司 MVP'
 
 # 多智能体工作流：带持久记忆的创业公司 MVP
 
-> 和 [workflow-startup-mvp.md](workflow-startup-mvp.md) 里是同一套创业公司 MVP 工作流，但由 MCP 记忆服务器在智能体之间打理状态。再也不用复制粘贴交接了。
+> 和 [workflow-startup-mvp.md](/examples/workflow-startup-mvp/) 里是同一套创业公司 MVP 工作流，但由 MCP 记忆服务器在智能体之间打理状态。再也不用复制粘贴交接了。
 
 ## 手动交接的问题
 
@@ -42,7 +42,7 @@ and design the API and database schema.
 
 ## 安装
 
-安装任意一个支持 `remember`、`recall`、`rollback` 操作的 MCP 兼容记忆服务器即可。配置方法见 [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md)。
+安装任意一个支持 `remember`、`recall`、`rollback` 操作的 MCP 兼容记忆服务器即可。配置方法见 [integrations/mcp-memory/README.md](/integrations/mcp-memory/)。
 
 ## 场景
 
@@ -60,7 +60,7 @@ and design the API and database schema.
 | Growth Hacker | 边开发边规划发布战略 |
 | Reality Checker | 每个里程碑放行前把关 |
 
-每个智能体的提示词里都有一段"记忆集成"章节（如何添加见 [integrations/mcp-memory/README.md](../integrations/mcp-memory/README.md)）。
+每个智能体的提示词里都有一段"记忆集成"章节（如何添加见 [integrations/mcp-memory/README.md](/integrations/mcp-memory/)）。
 
 ## 工作流
 

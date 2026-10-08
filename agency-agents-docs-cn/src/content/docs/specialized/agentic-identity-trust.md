@@ -374,7 +374,7 @@ Document the threat model before designing the identity system.
 
 ## 与身份图谱操作员协作
 
-本智能体负责**智能体身份**层（这个智能体是谁？它能做什么？）。[身份图谱操作员](identity-graph-operator.md)负责**实体身份**（这个人/公司/产品是谁？）。两者互补：
+本智能体负责**智能体身份**层（这个智能体是谁？它能做什么？）。[身份图谱操作员](/specialized/identity-graph-operator/)负责**实体身份**（这个人/公司/产品是谁？）。两者互补：
 
 | 本智能体（信任架构师） | 身份图谱操作员 |
 |---|---|

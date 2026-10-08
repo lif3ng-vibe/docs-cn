@@ -14,7 +14,7 @@ agency-agents 仓库定义了几十个专业智能体，覆盖工程、设计、
 
 ## 内容
 
-### [nexus-spatial-discovery.md](./nexus-spatial-discovery.md)
+### [nexus-spatial-discovery.md](/examples/nexus-spatial-discovery/)
 
 **是什么**：一场完整的产品发现演练——8 个智能体并行工作，评估一个软件机会并产出统一规划。
 

@@ -19,9 +19,9 @@ title: '🔌 集成'
 - **[Windsurf](#windsurf)**——`.windsurfrules` 在 `windsurf/`
 - **[Kimi Code](#kimi-code)**——YAML 智能体规格在 `kimi/`
 - **[Qwen Code](#qwen-code)**——项目级 `.md` 子智能体在 `.qwen/agents/`
-- **[Mistral Vibe](vibe/README.md)**——`.toml` 智能体 + 提示词文件生成在 `vibe/`
+- **[Mistral Vibe](/integrations/vibe/)**——`.toml` 智能体 + 提示词文件生成在 `vibe/`
 - **Osaurus**——`SKILL.md` 技能生成在 `osaurus/`
-- **[Hermes](hermes/README.md)**——lazy-router 插件生成在 `hermes/`
+- **[Hermes](/integrations/hermes/)**——lazy-router 插件生成在 `hermes/`
 
 ## 快速安装
 
@@ -76,7 +76,7 @@ cp -r <category>/*.md ~/.claude/agents/
 ./scripts/install.sh --tool claude-code
 ```
 
-详见 [claude-code/README.md](claude-code/README.md)。
+详见 [claude-code/README.md](/integrations/claude-code/)。
 
 ---
 
@@ -89,7 +89,7 @@ cp -r <category>/*.md ~/.claude/agents/
 ./scripts/install.sh --tool copilot
 ```
 
-详见 [github-copilot/README.md](github-copilot/README.md)。
+详见 [github-copilot/README.md](/integrations/github-copilot/)。
 
 ---
 
@@ -102,7 +102,7 @@ cp -r <category>/*.md ~/.claude/agents/
 ./scripts/install.sh --tool antigravity
 ```
 
-详见 [antigravity/README.md](antigravity/README.md)。
+详见 [antigravity/README.md](/integrations/antigravity/)。
 
 ---
 
@@ -118,7 +118,7 @@ cp -r <category>/*.md ~/.claude/agents/
 ./scripts/install.sh --tool gemini-cli
 ```
 
-详见 [gemini-cli/README.md](gemini-cli/README.md)。
+详见 [gemini-cli/README.md](/integrations/gemini-cli/)。
 
 ---
 
@@ -130,7 +130,7 @@ cp -r <category>/*.md ~/.claude/agents/
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool opencode
 ```
 
-详见 [opencode/README.md](opencode/README.md)。
+详见 [opencode/README.md](/integrations/opencode/)。
 
 ---
 
@@ -151,7 +151,7 @@ cd /your/project && /path/to/agency-agents/scripts/install.sh --tool opencode
 ./scripts/install.sh --tool openclaw
 ```
 
-详见 [openclaw/README.md](openclaw/README.md)。
+详见 [openclaw/README.md](/integrations/openclaw/)。
 
 ---
 
@@ -164,7 +164,7 @@ cd /your/project && /path/to/agency-agents/scripts/install.sh --tool opencode
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool cursor
 ```
 
-详见 [cursor/README.md](cursor/README.md)。
+详见 [cursor/README.md](/integrations/cursor/)。
 
 ---
 
@@ -179,7 +179,7 @@ token 的正文全部内联进来。
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool aider
 ```
 
-详见 [aider/README.md](aider/README.md)。
+详见 [aider/README.md](/integrations/aider/)。
 
 ---
 
@@ -192,7 +192,7 @@ cd /your/project && /path/to/agency-agents/scripts/install.sh --tool aider
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool windsurf
 ```
 
-详见 [windsurf/README.md](windsurf/README.md)。
+详见 [windsurf/README.md](/integrations/windsurf/)。
 
 ---
 
@@ -225,7 +225,7 @@ kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml \
      --work-dir /your/project
 ```
 
-详见 [kimi/README.md](kimi/README.md)。
+详见 [kimi/README.md](/integrations/kimi/)。
 
 ---
 
@@ -245,7 +245,7 @@ kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml \
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool qwen
 ```
 
-详见 [qwen/README.md](qwen/README.md)。
+详见 [qwen/README.md](/integrations/qwen/)。
 
 ---
 
@@ -262,4 +262,4 @@ cd /your/project && /path/to/agency-agents/scripts/install.sh --tool qwen
 ./scripts/install.sh --tool codex
 ```
 
-详见 [codex/README.md](codex/README.md)。
+详见 [codex/README.md](/integrations/codex/)。

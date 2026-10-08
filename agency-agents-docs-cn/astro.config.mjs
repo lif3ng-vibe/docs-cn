@@ -2,6 +2,10 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+// hub Pages 部署注入（无 env 时本地开发走根路径）
+const DOCS_SITE = process.env.DOCS_SITE || 'http://localhost:4321';
+const DOCS_BASE = (process.env.DOCS_BASE || '/').replace(/\/+$/, '') || '/';
+
 // [中文侧边栏组名, docs 子目录]
 const DIVISIONS = [
   ['战略手册（NEXUS）', 'strategy'],
@@ -28,7 +32,8 @@ const DIVISIONS = [
 ];
 
 export default defineConfig({
-  site: 'http://localhost:4321',
+  site: DOCS_SITE,
+  base: DOCS_BASE,
   integrations: [
     starlight({
       title: 'Agency Agents 中文镜像',
