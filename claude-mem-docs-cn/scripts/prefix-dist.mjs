@@ -73,6 +73,24 @@ function reJs(s) {
   return out;
 }
 
+// 0. 扁平化 <dir>/index/ 页面到 <dir>/（Mintlify 把 xxx/index 渲染在 /xxx）
+import { renameSync, existsSync } from 'node:fs';
+function flattenIndex(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (!e.isDirectory()) continue;
+    const idx = join(p, 'index', 'index.html');
+    if (existsSync(idx)) {
+      renameSync(idx, join(p, 'index.html'));
+      try {
+        rmSync(join(p, 'index'), { recursive: true });
+      } catch {}
+    }
+    flattenIndex(p);
+  }
+}
+flattenIndex(DIST);
+
 for (const f of ['Start Docs.bat', 'Start Docs.command', 'serve.js']) {
   try {
     unlinkSync(join(DIST, f));
