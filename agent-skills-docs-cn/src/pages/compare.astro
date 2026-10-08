@@ -5,55 +5,55 @@ import { REPO_URL } from '../data/skills';
 const cols = ['agent-skills', 'Superpowers', 'Matt Pocock’s skills'];
 const rows = [
   {
-    label: 'Core idea',
+    label: '核心理念',
     values: [
-      'Encode the full senior-engineering lifecycle as skills',
-      'A complete development methodology built on composable skills',
-      'One expert’s Claude Code workflow, open-sourced',
+      '把资深工程师的完整工程生命周期编码为技能',
+      '一套建立在可组合技能之上的完整开发方法论',
+      '一位专家的 Claude Code 工作流，开源分享',
     ],
   },
   {
-    label: 'Organizing principle',
+    label: '组织原则',
     values: [
-      'SDLC phases (Define → Ship) behind a meta-skill router',
-      'A single disciplined loop: brainstorm, plan, execute, review',
-      'A curated toolbox of focused, composable commands',
+      '软件开发生命周期（SDLC）各阶段（定义 → 上线）由元技能路由驱动',
+      '一条纪律严明的单一回路：头脑风暴、规划、执行、评审',
+      '一个精选工具箱，命令聚焦且可组合',
     ],
   },
   {
-    label: 'Catalog size',
-    values: ['24 skills across the whole lifecycle', '~14 skills, deep on the inner build loop', '~30 skills, grouped by area'],
+    label: '目录规模',
+    values: ['覆盖完整生命周期的 24 个技能', '约 14 个技能，深耕构建内环', '约 30 个技能，按领域分组'],
   },
   {
-    label: 'Lifecycle coverage',
+    label: '生命周期覆盖',
     values: [
-      'Broad: idea → API/UI → security → perf → CI/CD → observability → launch',
-      'Deep but narrow: TDD, debugging, planning, review, skill authoring',
-      'Define & Build heavy: grilling, PRDs, issues, TDD, triage',
+      '广：创意 → API/UI → 安全 → 性能 → CI/CD → 可观测性 → 发布',
+      '深而窄：TDD、调试、规划、评审、技能编写',
+      '定义与构建偏重：grilling、PRD、issue 处理、TDD、分诊',
     ],
   },
   {
-    label: 'Distinctive mechanisms',
+    label: '独特机制',
     values: [
-      'Anti-rationalization tables + Red Flags in every skill; parallel review personas; reference checklists; a three-tier eval framework in CI',
-      'Subagent-driven development with a task reviewer and fix loop; git-worktree isolation; skills-that-write-skills',
-      'The grilling primitive; seam-based TDD; explicit user- vs model-invoked split',
+      '每个技能内置反合理化表 + Red Flags；并行评审角色（persona）；参考清单；CI 内的三层 evals（评估套件）框架',
+      '子智能体驱动开发，配任务评审者与修复回路；git worktree 隔离；会写技能的技能',
+      'grilling 原语；基于接缝（seam）的 TDD；显式区分用户调用与模型调用',
     ],
   },
   {
-    label: 'Quality measurement',
+    label: '质量度量',
     values: [
-      'Trigger, routing & behavioral evals against the catalog (some in CI)',
-      'Pressure-testing is core; the eval suite lives in a separate repo',
-      'None shipped in-repo',
+      '针对目录的触发、路由与行为 evals（部分跑在 CI）',
+      '压力测试是核心；evals（评估套件）放在独立仓库',
+      '仓库内未随附 evals',
     ],
   },
   {
-    label: 'Best for',
+    label: '最适合',
     values: [
-      'Driving a feature through every phase with a checkpoint at each',
-      'Long, autonomous, reasoning-heavy or exploratory work',
-      'A pragmatic, battle-tested daily loop - strongest at requirements & TDD',
+      '带着逐阶段检查点，把一个功能推进过每个阶段',
+      '长周期、自主、重推理或探索性的工作',
+      '务实、经实战检验的日常回路——在需求与 TDD 上最强',
     ],
   },
 ];
@@ -63,47 +63,45 @@ const projects = [
     name: 'Superpowers',
     by: 'obra / Jesse Vincent',
     href: 'https://github.com/obra/superpowers',
-    body: 'A full development methodology that bets on autonomy and upfront reasoning. A session runs a deliberately linear pipeline - Socratic brainstorming, executable plans, then subagent-driven execution with a task reviewer signing off before each task closes. Git worktrees isolate parallel work. Strong when you hand off a sizable chunk and want a reviewed result back; heavier on small changes.',
+    body: '一套押注自主性与前置推理的完整开发方法论。一次会话运行刻意保持线性的流水线——苏格拉底式头脑风暴、可执行的计划，然后是子智能体驱动的执行，每个任务收尾前都有任务评审者签字确认。Git worktree 隔离并行工作。当你交出一大块工作、想拿回一份经过评审的结果时，它表现出色；在小改动上则偏重。',
   },
   {
     name: 'Matt Pocock’s skills',
     by: 'mattpocock',
     href: 'https://github.com/mattpocock/skills',
-    body: 'The Claude Code skills one very good engineer actually uses, developed in public with visible in-progress/ and deprecated/ folders. The center of gravity is grilling - a reusable one-question-at-a-time interrogation loop. Authentic and sharp; Claude-Code-first in practice, with thinner coverage past Build and no in-repo evals.',
+    body: '一位顶尖工程师真正在用的 Claude Code 技能集，以公开方式开发，in-progress/ 与 deprecated/ 目录一目了然。重心是 grilling——一个可复用的“一次只问一个问题”的盘问回路。真实而犀利；实践上以 Claude Code 为先，构建（Build）之后的覆盖较薄，仓库内也没有 evals。',
   },
 ];
 ---
 
 <Base
-  title="How it compares - agent-skills"
-  description="An honest, side-by-side map of agent-skills vs Superpowers and Matt Pocock’s skills. None is best in the abstract - it depends on the work in front of you."
+  title="横向对比 - agent-skills"
+  description="一张诚实并排的对比图：agent-skills vs Superpowers 与 Matt Pocock’s skills。脱离具体场景没有谁最好——取决于你手头的工作。"
 >
   <section class="cmp-hero">
     <div class="grid-bg"></div>
     <div class="container cmp-hero-inner">
-      <span class="eyebrow">Honest positioning</span>
-      <h1 class="cmp-h1">How agent-skills compares</h1>
+      <span class="eyebrow">诚实的定位</span>
+      <h1 class="cmp-h1">agent-skills 的横向对比</h1>
       <p class="cmp-lede">
-        People ask how this relates to the two other collections they hear about most -
-        <strong>Superpowers</strong> and <strong>Matt Pocock’s skills</strong>. All three
-        are good, share DNA, and are worth learning from. This is an honest map of how they’re
-        <em>shaped</em> differently, so you can pick what fits - or borrow across all three.
+        经常有人问它与大家最常听到的另外两个技能集——<strong>Superpowers</strong> 和
+        <strong>Matt Pocock’s skills</strong>——是什么关系。三者都很优秀、共享同一血统，也都值得学习。这是一张诚实的地图，讲清它们各自的
+        <em>形态</em>差异，方便你选出合适的——或者三家都取经。
       </p>
       <div class="cmp-tldr">
         <span class="cmp-tldr-tag mono">TL;DR</span>
         <p>
-          They optimize for different moments. <strong>agent-skills</strong> organizes the
-          whole lifecycle with review personas, anti-rationalization guards, and an in-repo eval
-          framework. <strong>Superpowers</strong> leans into autonomous, reasoning-heavy runs.
-          <strong>Matt Pocock’s skills</strong> are a sharp, opinionated daily toolkit with a
-          signature “grill me” loop.
+          它们各自为不同的时刻优化。<strong>agent-skills</strong> 用评审角色、反合理化护栏和仓库内
+          evals（评估套件）框架来组织整个生命周期。<strong>Superpowers</strong>
+          倾向自主、重推理的长程运行。<strong>Matt Pocock’s skills</strong>
+          则是一套犀利、有主见的日常工具箱，招牌是“grill me”盘问回路。
         </p>
       </div>
     </div>
   </section>
 
   <section class="container cmp-section">
-    <h2 class="cmp-h2">At a glance</h2>
+    <h2 class="cmp-h2">一览</h2>
     <div class="table-scroll">
       <table class="cmp-table">
         <thead>
@@ -127,13 +125,12 @@ const projects = [
       </table>
     </div>
     <p class="cmp-note">
-      We deliberately leave out star counts and adoption figures - they’re cited wildly
-      differently and change weekly. All three are actively used and maintained.
+      我们刻意略去 star 数与采用率数据——各家引用口径天差地别，而且每周都在变。三者都在被积极使用和维护。
     </p>
   </section>
 
   <section class="container cmp-section">
-    <h2 class="cmp-h2">The other two, in their own terms</h2>
+    <h2 class="cmp-h2">另外两家，用它们自己的话说</h2>
     <div class="proj-grid">
       {projects.map((p) => (
         <article class="card proj-card">
@@ -143,7 +140,7 @@ const projects = [
           </div>
           <p class="proj-body">{p.body}</p>
           <a href={p.href} target="_blank" rel="noopener" class="proj-link">
-            View repo
+            查看仓库
             <svg viewBox="0 0 16 16" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </article>
@@ -153,15 +150,13 @@ const projects = [
 
   <section class="container cmp-section">
     <div class="h2h card">
-      <span class="eyebrow">A real head-to-head</span>
-      <h2 class="cmp-h2">Superpowers vs. agent-skills, same repo &amp; prompt</h2>
+      <span class="eyebrow">一场真刀真枪的对决</span>
+      <h2 class="cmp-h2">Superpowers vs. agent-skills：同一仓库、同一提示词</h2>
       <p class="h2h-body">
-        Om Mishra ran a controlled experiment - same model, same repo, same prompt in Claude
-        Code, changing only the skill framework. agent-skills moved to code faster
-        (~8 min vs ~12) and ran <strong>more validation passes</strong> (7 vs 5, including the
-        full test suite), which caught a compatibility issue outside the immediate feature.
-        Superpowers invested more upfront architectural reasoning. Token efficiency was
-        effectively identical. His honest conclusion: pick the tool to the task.
+        Om Mishra 做了一次受控实验——同一模型、同一仓库、在 Claude Code
+        里用同一提示词，只换技能框架。agent-skills 更快进入编码（约 8 分钟 vs 约 12 分钟），并跑了
+        <strong>更多轮验证</strong>（7 轮 vs 5 轮，含完整测试套件），从而抓到了直接功能范围之外的一个兼容性问题。Superpowers
+        则在前期投入了更多架构推理。Token 效率基本持平。他诚实的结论是：按任务选工具。
       </p>
       <a
         href="https://www.linkedin.com/pulse/superpowers-vs-agent-skills-faster-shipping-safer-reasoning-om-mishra-dzakf/"
@@ -169,7 +164,7 @@ const projects = [
         rel="noopener"
         class="btn btn-secondary"
       >
-        Read the write-up
+        阅读完整文章
         <svg viewBox="0 0 16 16" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </div>
@@ -179,11 +174,11 @@ const projects = [
     <hr class="hairline" />
     <div class="cmp-cta-inner">
       <div>
-        <h2 class="cmp-h2">Read the full comparison</h2>
-        <p class="cmp-p">The complete write-up covers how to decide in practice, phase by phase.</p>
+        <h2 class="cmp-h2">阅读完整对比</h2>
+        <p class="cmp-p">完整的对比文章逐阶段讲清实践中如何抉择。</p>
       </div>
       <a href={`${REPO_URL}/blob/main/docs/comparison.md`} target="_blank" rel="noopener" class="btn btn-primary">
-        Full comparison on GitHub
+        GitHub 上的完整对比
         <svg viewBox="0 0 16 16" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </div>

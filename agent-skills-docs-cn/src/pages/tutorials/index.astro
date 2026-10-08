@@ -6,32 +6,30 @@ import { INSTALL_CMD } from '../../data/skills';
 ---
 
 <Base
-  title="Tutorials - agent-skills"
-  description="Run these end-to-end with your agent: build a new app, add a feature to an existing codebase, or wrap the skills in a loop. Reproducible in Claude Code or Codex, grounded in the real pack."
+  title="实战教程 - agent-skills"
+  description="用你的智能体端到端跑完这些实战教程：构建一个全新应用、给既有代码库加功能，或把技能包进一个回路。可在 Claude Code 或 Codex 里复现，基于真实技能包。"
 >
   <section class="tut-hero">
     <div class="grid-bg"></div>
     <div class="tut-hero-glow" aria-hidden="true"></div>
     <div class="container tut-hero-inner">
-      <span class="eyebrow">Tutorials</span>
-      <h1 class="tut-h1">Learn the pack by shipping something</h1>
+      <span class="eyebrow">实战教程</span>
+      <h1 class="tut-h1">上线一个东西，学会整个技能包</h1>
       <p class="tut-lede">
-        Three walkthroughs you run with your own agent, start to finish. Each maps every step
-        to a real command and skill, tells you what it buys you, and works the same in Claude
-        Code or Codex. Copy a prompt, watch the agent work, understand why the step matters.
+        三篇由你自己的智能体从头到尾跑完的实战教程。每篇都把每一步映射到真实命令与技能，告诉你它帮你赢来什么，在
+        Claude Code 和 Codex 里用法一致。复制一条提示词，看智能体干活，理解这一步为什么重要。
       </p>
       <div class="tut-hero-cmd">
-        <CopyCommand command={INSTALL_CMD} label="First, install the pack" />
+        <CopyCommand command={INSTALL_CMD} label="第一步，先装好技能包" />
       </div>
     </div>
   </section>
 
   <section class="container tut-run">
     <div class="run-card">
-      <h2 class="run-title">How to run each step</h2>
+      <h2 class="run-title">每一步怎么运行</h2>
       <p class="run-sub">
-        Every step below has a copyable prompt that works in any agent. If your tool has native
-        commands, the shorthand is faster.
+        下面每一步都带一条可复制的提示词，在任何智能体里都能用。如果你的工具自带命令，用简写更快。
       </p>
       <div class="run-grid">
         {RUN_MODES.map((m) => (
@@ -50,12 +48,12 @@ import { INSTALL_CMD } from '../../data/skills';
         <div class="tut-card-main">
           <div class="tut-card-top">
             <span class="tut-scenario"><span class="tut-dot"></span>{t.scenario}</span>
-            <span class="tut-meta mono">{t.steps.length} steps · {t.time} · {t.difficulty}</span>
+            <span class="tut-meta mono">{t.steps.length} 步 · {t.time} · {t.difficulty}</span>
           </div>
           <h3 class="tut-card-title">{t.title}</h3>
           <p class="tut-card-sum">{t.summary}</p>
           <span class="tut-start">
-            Start tutorial
+            开始教程
             <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
         </div>
@@ -67,12 +65,11 @@ import { INSTALL_CMD } from '../../data/skills';
   <section class="container tut-foot">
     <div class="tut-foot-inner">
       <p>
-        These teach the workflow, not a stack. The apps are vehicles. Once the loop feels natural,
-        the same sequence works on anything you build.
+        这些教程教的是工作流，不是某个技术栈。应用只是载体。当回路变得顺手，同一套流程适用于你构建的任何东西。
       </p>
       <div class="tut-foot-links">
-        <a href="/docs-cn/agent-skills/lifecycle/" class="btn btn-secondary">See the lifecycle</a>
-        <a href="/docs-cn/agent-skills/loops/" class="btn btn-secondary">Loop engineering</a>
+        <a href="/docs-cn/agent-skills/lifecycle/" class="btn btn-secondary">看看生命周期</a>
+        <a href="/docs-cn/agent-skills/loops/" class="btn btn-secondary">回路工程</a>
       </div>
     </div>
   </section>

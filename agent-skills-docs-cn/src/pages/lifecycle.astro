@@ -8,18 +8,16 @@ const orderedGroups = skillsByPhase.filter((g) => g.skills.length > 0);
 ---
 
 <Base
-  title="The lifecycle - agent-skills"
-  description="Eight slash commands mapped one-to-one to the software lifecycle: Define, Plan, Build, Verify, Review, Ship. Each activates the right skills automatically."
+  title="生命周期 - agent-skills"
+  description="八条斜杠命令与软件开发生命周期一一对应：定义、规划、构建、验证、评审、上线。每条命令都会自动激活合适的技能。"
 >
   <section class="lc-hero">
     <div class="grid-bg"></div>
     <div class="container lc-hero-inner">
-      <span class="eyebrow">The lifecycle</span>
-      <h1 class="lc-h1">Define → Ship, one command per phase</h1>
+      <span class="eyebrow">生命周期</span>
+      <h1 class="lc-h1">定义 → 上线，每个阶段一条命令</h1>
       <p class="lc-lede">
-        Most skill packs are a flat list. agent-skills is organized the way software
-        actually gets built - six phases, eight commands, with a human checkpoint at
-        each step and the right skills loading automatically.
+        多数技能包只是一份平铺的清单。agent-skills 按照软件实际被构建的方式组织——六个阶段、八条命令，每一步都有人工检查点，并自动加载合适的技能。
       </p>
     </div>
   </section>
@@ -31,7 +29,7 @@ const orderedGroups = skillsByPhase.filter((g) => g.skills.length > 0);
   </section>
 
   <section class="container lc-commands">
-    <h2 class="lc-h2">The eight commands</h2>
+    <h2 class="lc-h2">八条命令</h2>
     <div class="cmd-grid">
       {commands.map((c) => (
         <div class="card cmd-card">
@@ -42,17 +40,13 @@ const orderedGroups = skillsByPhase.filter((g) => g.skills.length > 0);
       ))}
     </div>
     <p class="lc-auto-note">
-      <strong>Want fewer manual steps?</strong> <code>/build auto</code> generates the plan and
-      implements every task in one approved pass - you approve the plan once, then it runs
-      autonomously. It removes the human stepping <em>between</em> tasks, not the verification:
-      every task is still test-driven and committed individually, and it pauses on failures.
-      Running the skills inside loops or a software factory? See <a href="/docs-cn/agent-skills/loops/">loop engineering</a>.
+      <strong>想减少手动步骤？</strong><code>/build auto</code> 会生成计划并在一次批准后实现所有任务——你只需批准一次计划，之后它自主运行。它去掉的是人在任务<em>之间</em>的介入，而不是验证：每个任务仍然测试驱动、单独提交，失败即暂停。要在回路或软件工厂里运行这些技能？参见 <a href="/docs-cn/agent-skills/loops/">回路工程</a>。
     </p>
   </section>
 
   <section class="container lc-phases">
-    <h2 class="lc-h2">Skills by phase</h2>
-    <p class="lc-p">Reach for any skill directly, or let the meta-skill route you.</p>
+    <h2 class="lc-h2">各阶段的技能</h2>
+    <p class="lc-p">可以直接调用任何技能，也可以让元技能为你路由。</p>
 
     <div class="phase-list">
       {orderedGroups.map((group) => (

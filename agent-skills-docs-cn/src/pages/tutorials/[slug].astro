@@ -15,21 +15,21 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
 ---
 
 <Base
-  title={`${tutorial.title} - agent-skills tutorial`}
+  title={`${tutorial.title} - agent-skills 实战教程`}
   description={tutorial.summary}
 >
   <article class="tt" style={`--h:${tutorial.hue}`}>
     <div class="tt-hero-bg grid-bg"></div>
     <div class="container tt-head">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/docs-cn/agent-skills/tutorials/">Tutorials</a>
+      <nav class="crumbs" aria-label="面包屑导航">
+        <a href="/docs-cn/agent-skills/tutorials/">实战教程</a>
         <span aria-hidden="true">/</span>
         <span class="crumb-cur">{tutorial.scenario}</span>
       </nav>
       <div class="tt-top">
         <span class="tt-level mono">{tutorial.level}</span>
         <span class="chip"><span class="tt-dot"></span>{tutorial.scenario}</span>
-        <span class="tt-meta mono">{tutorial.steps.length} steps · {tutorial.time} · {tutorial.difficulty}</span>
+        <span class="tt-meta mono">{tutorial.steps.length} 步 · {tutorial.time} · {tutorial.difficulty}</span>
       </div>
       <h1 class="tt-title">{tutorial.title}</h1>
       <p class="tt-intro">{tutorial.intro}</p>
@@ -42,13 +42,13 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
     <div class="container tt-body">
       <aside class="tt-prereq">
         <div class="prereq-card">
-          <h2 class="prereq-title">Before you start</h2>
+          <h2 class="prereq-title">开始之前</h2>
           <ul class="prereq-list">
             {tutorial.prereqs.map((p) => <li>{p}</li>)}
           </ul>
           <p class="prereq-note">
-            Each step has a copyable prompt that works in any agent. In Claude Code the slash
-            command is faster; in Codex invoke the skill with <code>@name</code>.
+            每一步都带一段可复制的提示词，在任何智能体里都能用。在 Claude Code 里斜杠命令更快；在
+            Codex 里用 <code>@name</code> 按名字调用技能。
           </p>
         </div>
       </aside>
@@ -72,16 +72,16 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
               </div>
 
               <div class="step-prompt">
-                <CopyCommand command={s.prompt} prompt="›" size="sm" label="Prompt (paste into your agent)" />
+                <CopyCommand command={s.prompt} prompt="›" size="sm" label="提示词（粘贴进你的智能体）" />
               </div>
 
               <div class="step-grid">
                 <div class="step-cell">
-                  <span class="step-cell-label">What happens</span>
+                  <span class="step-cell-label">会发生什么</span>
                   <p>{s.does}</p>
                 </div>
                 <div class="step-cell">
-                  <span class="step-cell-label accent">Why it matters</span>
+                  <span class="step-cell-label accent">为什么重要</span>
                   <p>{s.why}</p>
                 </div>
               </div>
@@ -89,14 +89,14 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
               {s.tip && (
                 <div class="step-tip">
                   <svg viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><path d="M8.5 1.5 2.5 9h4l-1 5.5 6-7.5h-4l1-5.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-                  <span><b>Faster path.</b> {s.tip}</span>
+                  <span><b>更快路径。</b> {s.tip}</span>
                 </div>
               )}
 
               {s.checkpoint && (
                 <div class="step-check">
                   <svg viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.2"/><path d="m5.4 8.2 1.7 1.7L11 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  <span><b>Checkpoint.</b> {s.checkpoint}</span>
+                  <span><b>检查点。</b> {s.checkpoint}</span>
                 </div>
               )}
             </div>
@@ -107,7 +107,7 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
 
     <div class="container tt-outcome-wrap">
       <div class="tt-outcome">
-        <span class="eyebrow">What you end up with</span>
+        <span class="eyebrow">你最终会得到</span>
         <p class="tt-outcome-text">{tutorial.outcome}</p>
         <div class="recap">
           {tutorial.recap.map((r) => (
@@ -123,20 +123,20 @@ const skillName = (slug?: string) => (slug && getSkill(slug) ? getSkill(slug)!.n
       <div class="tt-next">
         {next ? (
           <a href={`/docs-cn/agent-skills/tutorials/${next.slug}/`} class="tt-next-card card" style={`--h:${next.hue}`}>
-            <span class="tt-next-label mono">Next tutorial</span>
+            <span class="tt-next-label mono">下一篇教程</span>
             <span class="tt-next-title">{next.title}</span>
             <span class="tt-next-arrow" aria-hidden="true">→</span>
           </a>
         ) : (
           <a href="/docs-cn/agent-skills/loops/" class="tt-next-card card" style={`--h:145`}>
-            <span class="tt-next-label mono">Go deeper</span>
-            <span class="tt-next-title">The loop engineering guide</span>
+            <span class="tt-next-label mono">更进一步</span>
+            <span class="tt-next-title">回路工程指南</span>
             <span class="tt-next-arrow" aria-hidden="true">→</span>
           </a>
         )}
         <a href="/docs-cn/agent-skills/skills/" class="tt-next-card card ghost">
-          <span class="tt-next-label mono">Reference</span>
-          <span class="tt-next-title">Browse all 24 skills</span>
+          <span class="tt-next-label mono">参考</span>
+          <span class="tt-next-title">浏览全部 24 个技能</span>
           <span class="tt-next-arrow" aria-hidden="true">→</span>
         </a>
       </div>

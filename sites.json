@@ -64,5 +64,12 @@
     "desc": "开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。",
     "orig": "https://openship.io/docs",
     "repo": "https://github.com/oblien/openship"
+  },
+  {
+    "name": "Agent Skills",
+    "slug": "agent-skills",
+    "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
+    "orig": "https://skills.addy.ie/",
+    "repo": "https://github.com/addyosmani/agent-skills"
   }
 ]

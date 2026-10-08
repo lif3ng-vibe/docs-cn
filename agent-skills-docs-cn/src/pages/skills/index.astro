@@ -8,18 +8,16 @@ const filterPhases = phases; // includes meta
 ---
 
 <Base
-  title="Skills catalog - agent-skills"
-  description={`Browse all ${totalSkills} agent skills by lifecycle phase. Search, filter, and copy the install command for each structured engineering workflow.`}
+  title="技能目录 —— agent-skills"
+  description={`按生命周期阶段浏览全部 ${totalSkills} 项智能体技能。可搜索、过滤，并复制每套结构化工程工作流的安装命令。`}
 >
   <section class="skills-hero">
     <div class="grid-bg"></div>
     <div class="container skills-hero-inner">
-      <span class="eyebrow">The catalog</span>
-      <h1 class="skills-h1">{totalSkills} skills, one per job</h1>
+      <span class="eyebrow">技能目录</span>
+      <h1 class="skills-h1">{totalSkills} 项技能，一事一技</h1>
       <p class="skills-lede">
-        Each skill is a structured workflow - steps, verification gates, and
-        anti-rationalization tables - not a loose prompt. Filter by phase or search
-        by what you’re doing.
+        每项技能都是一套结构化工作流——步骤、验证门禁与反合理化表——而不是一句松散的提示词（prompt）。可按阶段过滤，或按你正在做的事搜索。
       </p>
       <div class="skills-hero-cmd">
         <CopyCommand command={INSTALL_CMD} />
@@ -37,15 +35,15 @@ const filterPhases = phases; // includes meta
         <input
           type="search"
           id="skill-search"
-          placeholder="Search skills - try “tests”, “security”, “api”…"
+          placeholder="搜索技能——试试“tests”“security”“api”…"
           autocomplete="off"
-          aria-label="Search skills"
+          aria-label="搜索技能"
         />
         <kbd class="search-kbd">/</kbd>
       </div>
-      <div class="filters" role="tablist" aria-label="Filter by phase">
+      <div class="filters" role="tablist" aria-label="按阶段过滤">
         <button class="filter active" data-filter="all" role="tab" aria-selected="true">
-          All <span class="filter-count">{totalSkills}</span>
+          全部 <span class="filter-count">{totalSkills}</span>
         </button>
         {filterPhases.map((p) => (
           <button class="filter" data-filter={p.id} style={`--h:${p.hue}`} role="tab" aria-selected="false">
@@ -63,8 +61,8 @@ const filterPhases = phases; // includes meta
     </div>
 
     <div class="no-results" id="no-results" hidden>
-      <p>No skills match that search.</p>
-      <button class="btn btn-secondary" id="clear-search">Clear</button>
+      <p>没有技能匹配该搜索。</p>
+      <button class="btn btn-secondary" id="clear-search">清除</button>
     </div>
   </section>
 </Base>
@@ -253,8 +251,8 @@ const filterPhases = phases; // includes meta
       if (visible) shown++;
     }
     countEl.textContent = shown === cards.length
-      ? `${shown} skills`
-      : `${shown} of ${cards.length} skills`;
+      ? `${shown} 项技能`
+      : `${shown} / ${cards.length} 项技能`;
     noResults.hidden = shown !== 0;
     grid.style.display = shown === 0 ? 'none' : '';
   }

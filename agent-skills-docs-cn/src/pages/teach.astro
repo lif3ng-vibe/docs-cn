@@ -4,29 +4,27 @@ import CopyCommand from '../components/CopyCommand.astro';
 import { diagrams, decks, usageModes, stickers, REPO } from '../data/teach';
 import { INSTALL_CMD } from '../data/skills';
 
-const tagline = 'Production-grade engineering skills for AI coding agents. Encode senior-engineer workflows across the full software lifecycle.';
-const shareLine = 'agent-skills: production-grade skills that make AI coding agents follow a real SDLC. Install into 70+ agents with one command. https://skills.addy.ie';
+const tagline = '面向 AI 编码智能体的生产级工程技能。把资深工程师的工作流编码到完整的软件生命周期中。';
+const shareLine = 'agent-skills：让 AI 编码智能体遵循真实软件开发生命周期（SDLC）的生产级技能。一条命令装进 70+ 智能体。https://skills.addy.ie';
 ---
 
 <Base
-  title="Teach & share - agent-skills media kit"
-  description="Ready-to-share, on-brand resources: SVG and PNG workflow diagrams, 101/201/301 slide decks (HTML and PPTX), and clear solo, team, and customization guides for the agent-skills SDLC."
+  title="教学与分享 - agent-skills 媒体包"
+  description="即取即用的品牌风格资源：SVG 与 PNG 工作流图示、101/201/301 幻灯片（HTML 与 PPTX），以及面向 agent-skills SDLC 的个人、团队与自定义指南。"
 >
   <!-- HERO -->
   <section class="t-hero">
     <div class="grid-bg"></div>
     <div class="t-hero-glow" aria-hidden="true"></div>
     <div class="container t-hero-inner">
-      <span class="eyebrow">Teach &amp; share</span>
-      <h1 class="t-h1">A media kit for the whole SDLC story</h1>
+      <span class="eyebrow">教学与分享</span>
+      <h1 class="t-h1">一套把 SDLC 故事讲全的媒体包</h1>
       <p class="t-lede">
-        Everything you need to explain, teach, or post about agent-skills. Branded
-        workflow diagrams, ready-to-present decks, and plain-language guides for solo work,
-        teams, and customization. Grab anything here and reuse it freely. MIT licensed, no sign-up.
+        讲解、授课、发帖所需的一切都在这里：品牌风格的工作流图示、随时可讲的幻灯片（deck），以及个人工作、团队协作与自定义的通俗指南。随手取用，自由复用。MIT 许可，无需注册。
       </p>
       <div class="t-hero-cta">
-        <a href="#diagrams" class="btn btn-primary">Get the diagrams</a>
-        <a href="#decks" class="btn btn-secondary">Browse the decks</a>
+        <a href="#diagrams" class="btn btn-primary">获取图示</a>
+        <a href="#decks" class="btn btn-secondary">浏览幻灯片</a>
       </div>
     </div>
   </section>
@@ -35,12 +33,10 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <section class="section" id="decks">
     <div class="container">
       <div class="t-head reveal">
-        <span class="eyebrow"><span class="t-num">01</span> Learning tracks</span>
-        <h2 class="section-title">101, 201, 301 - present or share in minutes</h2>
+        <span class="eyebrow"><span class="t-num">01</span> 学习路径</span>
+        <h2 class="section-title">101、201、301——几分钟内开讲或分享</h2>
         <p class="section-lede">
-          Three self-contained decks that build from first principles to team rollout. Present
-          the HTML version right in the browser (arrow keys, F for fullscreen, P for PDF), or
-          download the PPTX to edit and make your own.
+          三套自成体系的幻灯片（deck），从第一性原理一路讲到团队落地。HTML 版直接在浏览器里演示（方向键翻页，F 全屏，P 导出 PDF），也可以下载 PPTX 自行编辑，改造成你自己的版本。
         </p>
       </div>
 
@@ -49,7 +45,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
           <article class="card deck-card" style={`--h:${d.hue}`}>
             <div class="deck-top">
               <span class="deck-level mono">{d.level}</span>
-              <span class="deck-slides mono">{d.slides} slides</span>
+              <span class="deck-slides mono">{d.slides} 页</span>
             </div>
             <h3 class="deck-title">{d.title}</h3>
             <p class="deck-blurb">{d.blurb}</p>
@@ -58,7 +54,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
             </ul>
             <div class="deck-actions">
               <a href={`/docs-cn/agent-skills/teach/decks/${d.slug}.html`} target="_blank" rel="noopener" class="btn btn-primary deck-btn">
-                Present
+                演示
                 <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
               <a href={`/docs-cn/agent-skills/teach/decks/${d.slug}.pptx`} download class="btn btn-secondary deck-btn">
@@ -78,11 +74,10 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <section class="section" id="diagrams">
     <div class="container">
       <div class="t-head reveal">
-        <span class="eyebrow"><span class="t-num">02</span> Workflow diagrams</span>
-        <h2 class="section-title">Drop-in visuals, on brand</h2>
+        <span class="eyebrow"><span class="t-num">02</span> 工作流图示</span>
+        <h2 class="section-title">拿来即用的视觉素材，风格与品牌统一</h2>
         <p class="section-lede">
-          Five diagrams that explain the model at a glance. Download the SVG to keep it crisp
-          at any size, or the PNG for a quick paste into a post, slide, or thread.
+          五张图示，一眼讲清这套模型。下载 SVG 可在任意尺寸下保持清晰，下载 PNG 则方便直接贴进帖子、幻灯片或推文串。
         </p>
       </div>
 
@@ -114,11 +109,10 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <section class="section">
     <div class="container">
       <div class="t-head reveal">
-        <span class="eyebrow"><span class="t-num">03</span> How you use it</span>
-        <h2 class="section-title">Same lifecycle, solo or as a team</h2>
+        <span class="eyebrow"><span class="t-num">03</span> 使用方式</span>
+        <h2 class="section-title">同一套生命周期，单干或组队都适用</h2>
         <p class="section-lede">
-          The SDLC is the spine of the whole project. Here is how it plays out when you work
-          alone, when you work on a team, and how to customize it for your own stack.
+          软件开发生命周期（SDLC）是整个项目的脊柱。这里展示它在你独自工作、团队协作时分别如何展开，以及如何针对你自己的技术栈做自定义。
         </p>
       </div>
 
@@ -148,29 +142,29 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <section class="section">
     <div class="container">
       <div class="t-head reveal">
-        <span class="eyebrow"><span class="t-num">04</span> Share kit</span>
-        <h2 class="section-title">Copy, paste, post</h2>
-        <p class="section-lede">Snippets and assets sized for a quick share. Everything is copy-ready.</p>
+        <span class="eyebrow"><span class="t-num">04</span> 分享包</span>
+        <h2 class="section-title">复制、粘贴、发布</h2>
+        <p class="section-lede">为快速分享而备的文案与素材，一切皆可直接复制。</p>
       </div>
 
       <div class="share-grid reveal">
         <div class="card share-card">
-          <h3 class="share-title">Install command</h3>
+          <h3 class="share-title">安装命令</h3>
           <CopyCommand command={INSTALL_CMD} size="sm" />
         </div>
         <div class="card share-card">
-          <h3 class="share-title">One-line tagline</h3>
+          <h3 class="share-title">一句话标语</h3>
           <CopyCommand command={tagline} size="sm" />
         </div>
         <div class="card share-card share-wide">
-          <h3 class="share-title">Ready-to-post blurb</h3>
+          <h3 class="share-title">现成的发布文案</h3>
           <CopyCommand command={shareLine} size="sm" />
         </div>
         <div class="card share-card">
-          <h3 class="share-title">Brand assets</h3>
+          <h3 class="share-title">品牌素材</h3>
           <div class="asset-links">
             <a href="/docs-cn/agent-skills/favicon.svg" download class="dl-btn">Logo SVG</a>
-            <a href="/docs-cn/agent-skills/og.png" download class="dl-btn">Social card PNG</a>
+            <a href="/docs-cn/agent-skills/og.png" download class="dl-btn">社交分享卡 PNG</a>
             <a href={REPO} target="_blank" rel="noopener" class="dl-btn">GitHub ↗</a>
           </div>
         </div>
@@ -184,14 +178,10 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <section class="section" id="stickers">
     <div class="container">
       <div class="t-head reveal">
-        <span class="eyebrow"><span class="t-num">05</span> Stickers</span>
-        <h2 class="section-title">Print your own "I got agent skills" stickers</h2>
+        <span class="eyebrow"><span class="t-num">05</span> 贴纸</span>
+        <h2 class="section-title">打印属于你的“I got agent skills”贴纸</h2>
         <p class="section-lede">
-          Four die-cut-ready designs with transparent backgrounds, in two resolutions: 300 DPI
-          (2508&times;2508) covers most sticker printing, and 600 DPI (5016&times;5016) is there
-          if your printer wants the extra density. Both print crisp up to about 8 in / 21 cm.
-          Download one, upload it to your favorite sticker printer (Sticker Mule, Vistaprint,
-          a local shop), and slap it on a laptop near you.
+          四款透明底、可直送异形裁切的设计，各备两种分辨率：300 DPI（2508&times;2508）覆盖绝大多数贴纸印刷场景，600 DPI（5016&times;5016）留给对精度有额外要求的印刷商。两种分辨率最高都能在约 8 in / 21 cm 的尺寸内保持清晰。下载一张，上传到你常用的贴纸印刷服务（Sticker Mule、Vistaprint 或本地打印店），然后贴在你手边最近的笔记本电脑上。
         </p>
       </div>
 
@@ -201,7 +191,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
             <div class="sticker-frame">
               <img
                 src={`/docs-cn/agent-skills/teach/stickers/${s.slug}-preview.webp`}
-                alt={`"I got agent skills" sticker - ${s.title}`}
+                alt={`“I got agent skills”贴纸——${s.title}`}
                 loading="lazy"
                 width="640"
                 height="640"
@@ -230,10 +220,7 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
       </div>
 
       <p class="sticker-note">
-        Printing tip: pick "die-cut" and the printer will cut along the sticker outline
-        automatically. The transparent PNG is the safe bet everywhere; WebP is the same
-        image in a smaller file, if your printer accepts it. 300 DPI is what most services
-        ask for; grab 600 DPI for large prints or picky print shops.
+        印刷小贴士：选择“异形裁切（die-cut）”，印刷商会沿贴纸轮廓自动裁切。透明底 PNG 到处都稳妥；WebP 是同一张图的更小文件，前提是你的印刷商支持。多数服务要求 300 DPI；大幅印刷或挑剔的印刷商就选 600 DPI。
       </p>
     </div>
   </section>
@@ -241,11 +228,11 @@ const shareLine = 'agent-skills: production-grade skills that make AI coding age
   <!-- CTA -->
   <section class="section t-cta">
     <div class="container t-cta-inner reveal">
-      <h2 class="t-cta-title">Made something with these?</h2>
-      <p class="t-cta-sub">Tag the project so others can find it. Everything here is MIT licensed and free to reuse.</p>
+      <h2 class="t-cta-title">用这些素材做出了作品？</h2>
+      <p class="t-cta-sub">给项目打上标签，让更多人找到它。这里的一切皆采用 MIT 许可，可自由复用。</p>
       <div class="t-cta-links">
-        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">Get started</a>
-        <a href={REPO} target="_blank" rel="noopener" class="btn btn-secondary">Star on GitHub</a>
+        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">开始使用</a>
+        <a href={REPO} target="_blank" rel="noopener" class="btn btn-secondary">在 GitHub 上加星</a>
       </div>
     </div>
   </section>

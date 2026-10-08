@@ -4,87 +4,85 @@ import { REPO_URL } from '../data/skills';
 
 // From prompting to loops: the five primitives, and where skills sit.
 const primitives = [
-  { name: 'Automations', job: 'Discovery and triage on a schedule', tools: 'Codex Automations · Claude Code /loop, cron, hooks' },
-  { name: 'Worktrees', job: 'Isolate parallel work so agents do not collide', tools: 'git worktree · isolation: worktree' },
-  { name: 'Skills', job: 'Encode project knowledge and the checks that make done mean something', tools: 'SKILL.md, this pack', highlight: true },
-  { name: 'Connectors', job: 'Let the loop act in your real tools', tools: 'MCP servers, plugins' },
-  { name: 'Subagents', job: 'Keep the maker away from the checker', tools: '.claude/agents · .codex/agents' },
-  { name: 'State', job: 'Remember what is done across runs', tools: 'Markdown, a Linear board' },
+  { name: '自动化', job: '按计划做发现与分诊', tools: 'Codex Automations · Claude Code /loop, cron, hooks' },
+  { name: '工作树', job: '隔离并行的工作，让智能体互不打架', tools: 'git worktree · isolation: worktree' },
+  { name: '技能', job: '固化项目知识，以及让“完成”二字有分量的检查', tools: 'SKILL.md、本技能包', highlight: true },
+  { name: '连接器', job: '让回路能在你的真实工具里动手', tools: 'MCP 服务器、插件' },
+  { name: '子智能体', job: '让制造者与检查者彼此分离', tools: '.claude/agents · .codex/agents' },
+  { name: '状态', job: '跨运行记住哪些事已经做完', tools: 'Markdown、一个 Linear 看板' },
 ];
 
 // Autonomy ladder: how much you delegate, and what agent-skills does at each rung.
 const ladder = [
   {
-    rung: 'Interactive',
-    where: 'Human in the inner loop',
+    rung: '交互式',
+    where: '人在内层回路里',
     cmds: '/spec · /plan · /build · /review',
-    body: 'You drive each phase and approve at every step. The skills structure the work and force the verification; you read every result. This is where you build understanding of unfamiliar or high-stakes code.',
+    body: '你驱动每一个阶段，步步都要你批准。技能负责组织工作、强制验证；每一个结果你都亲自读。面对陌生或高风险的代码，你正是在这里建立理解的。',
     hue: 205,
   },
   {
-    rung: 'Supervised autonomy',
-    where: 'Human at the plan gate and on failures',
+    rung: '受监督的自主',
+    where: '人守在计划门禁和失败点',
     cmds: '/build auto',
-    body: 'You approve the plan once, then the agent implements every task in one pass. It stays test-driven and commits per task, and it pauses on failures or risky steps. You removed the stepping between tasks, not the verification.',
+    body: '你只批准一次计划，然后智能体一口气实现所有任务。它保持测试驱动、按任务提交，遇到失败或高风险步骤会暂停。你省掉的是任务之间的人工挪步，不是验证。',
     hue: 40,
   },
   {
-    rung: 'Unattended loop',
-    where: 'Human at the boundary, reviewing evidence',
-    cmds: 'your harness /loop or /goal, around the skills',
-    body: 'A loop primitive in your harness, not part of this pack (Claude Code /loop, or a run-until-done /goal in Claude Code and Codex), runs the skills on a cadence or until a verifiable stop condition holds, with a separate checker grading the result. You review the evidence and give the verdict. Only earn this rung for loops you can cheaply and reliably verify.',
+    rung: '无人值守回路',
+    where: '人守在边界上评审证据',
+    cmds: '你的框架的 /loop 或 /goal，包在技能外面',
+    body: '由你所用框架里的一个回路原语（它不属于本技能包——Claude Code 的 /loop，或 Claude Code 与 Codex 里“跑到完成为止”的 /goal）按节奏运行技能，或一直运行到某个可验证的停止条件成立为止，再由一个独立的检查者给结果打分。你评审证据、给出裁决。只有对那些你能又便宜又可靠地验证的回路，才配得上这一档。',
     hue: 145,
   },
 ];
 
 const lightsOff = [
-  'The check is cheap, high-frequency, and hard to fake: a green-or-red oracle',
-  'test-driven-development: the suite passes or it does not',
-  'browser-testing-with-devtools and performance-optimization: Core Web Vitals targets are met or missed',
-  'code-review-and-quality run by a subagent against a real rubric',
-  'The loop is short (roughly three to ten steps) so mistakes cannot hide in the corners',
+  '检查便宜、高频、难造假：一个绿红判官',
+  'test-driven-development：测试套件要么过、要么不过',
+  'browser-testing-with-devtools 与 performance-optimization：Core Web Vitals 指标要么达标、要么不达标',
+  'code-review-and-quality 由一个子智能体按真实评分口径执行',
+  '回路很短（大约三到十步），错误没有角落可藏',
 ];
 
 const lightsOn = [
-  'A wrong answer is expensive and only a person can catch it',
-  'security-and-hardening: auth, secrets, untrusted input, anything in the OWASP surface',
-  'api-and-interface-design: a public contract that Hyrum’s Law will freeze',
-  'Large blast radius, billing, migrations, or a decision that shapes a year of work',
-  'Brownfield behavior that lives in the scars, not the code',
+  '答错的代价高昂，而且只有人抓得住',
+  'security-and-hardening：认证、密钥、不可信输入，以及 OWASP 攻击面上的任何东西',
+  'api-and-interface-design：会被 Hyrum 定律钉死的公开契约',
+  '大爆炸半径、计费、迁移，或一个影响一整年工作的决策',
+  '存活在旧伤疤里、而不在代码里的存量项目行为',
 ];
 
 const costs = [
   {
-    name: 'Cognitive surrender',
-    body: 'A loop that runs itself makes it tempting to accept whatever it returns. The skills’ anti-rationalization tables and verdict step exist to keep an opinion in the room. The output is still your answer, with all the accountability attached.',
+    name: '认知缴械',
+    body: '一个自己会跑的回路，很容易诱你对它交回的东西照单全收。技能里的反合理化表和裁决步骤，就是为了在房间里留住一个有意见的人。产出仍然是你的答案，连同附在上面的全部责任。',
   },
   {
-    name: 'Comprehension debt',
-    body: 'The faster the loop ships code you did not write, the wider the gap between what exists and what you understand. Sampling and reading are how you pay it down. A smooth loop grows the debt faster, with the tests green the whole way.',
+    name: '理解债',
+    body: '回路越快上线你没写过的代码，实际存在的东西和你理解的东西之间的差距就越大。抽样和阅读是你还债的方式。顺滑的回路会让这笔债涨得更快，而测试一路全绿。',
   },
   {
-    name: 'Orchestration tax',
-    body: 'It is easy to spin up many agents; your review bandwidth does not parallelize. Your attention is the real ceiling on how many loops you can run, not the tooling. Spend it on the constraints and the dangerous assumptions.',
+    name: '编排税',
+    body: '拉起很多个智能体很容易，你的评审带宽却不能并行扩展。你能同时跑多少个回路，真正的天花板是你的注意力，而不是工具。把它花在约束和危险的假设上。',
   },
 ];
 ---
 
 <Base
-  title="Loop engineering with agent-skills - keep the human on the outer loop"
-  description="How to use agent-skills when you move from prompting to designing loops, software factories, and loop primitives in Claude Code and Codex. A grounded take: the skills are the verification inside the loop, so you can own the outer loop."
+  title="agent-skills 回路工程——把人留在外层回路"
+  description="当你从逐轮写提示词转向设计回路、软件工厂与回路原语时，如何在 Claude Code 与 Codex 中使用 agent-skills。一个有据可依的立场：技能是回路内部的验证，于是外层回路归你。"
 >
   <!-- HERO -->
   <section class="lp-hero">
     <div class="grid-bg"></div>
     <div class="container lp-hero-inner">
-      <span class="eyebrow">Guide · Loop engineering</span>
-      <h1 class="lp-h1">Put the skills in the loop.<br />Keep yourself on the outer one.</h1>
+      <span class="eyebrow">指南 · 回路工程</span>
+      <h1 class="lp-h1">把技能装进回路。<br />把自己留在外层回路。</h1>
       <p class="lp-lede">
-        The way you work with coding agents is shifting from prompting turn by turn to
-        <strong>designing loops that prompt the agent for you</strong> - automations, worktrees,
-        subagents, software factories in Claude Code and Codex. agent-skills is built for that
-        shift. The skills are the verification you put <em>inside</em> the loop, so its output is
-        evidence you can stand behind on the <em>outside</em>.
+        你与编码智能体协作的方式，正从一轮一轮地写提示词，转向<strong>设计替你向智能体发提示词的回路</strong>——自动化、工作树、子智能体，以及
+        Claude Code 与 Codex 里的软件工厂。agent-skills
+        正是为这一转变而生。技能就是你放进回路<em>里面</em>的验证，于是它的产出就成了你在<em>外面</em>能为之背书的证据。
       </p>
     </div>
   </section>
@@ -92,23 +90,17 @@ const costs = [
   <!-- THE SHIFT -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">01</span> The shift</span>
-      <h2 class="lp-h2">From prompting to loops</h2>
+      <span class="eyebrow"><span class="lp-num">01</span> 转变</span>
+      <h2 class="lp-h2">从提示词到回路</h2>
     </div>
     <div class="lp-prose">
       <p>
-        Boris Cherny, who leads Claude Code at Anthropic, put it bluntly: <em>"I don't prompt
-        Claude anymore. I have loops running that prompt Claude and figuring out what to do. My
-        job is to write loops."</em> A loop is one agent doing a single job on repeat: gather
-        context, act, check the result, and go again until some condition is met. Stack loops and
-        you get a software factory - many harnessed loops feeding a review gate, with a human
-        owning the whole thing from above.
+        领导 Anthropic Claude Code 的 Boris Cherny 说得很直白：<em>“我已经不再直接向
+        Claude 发提示词了。我有一堆回路在跑，由它们向 Claude 发提示词、想清楚要做什么。我的工作就是写回路。”</em>一个回路就是一个智能体反复做同一件工作：收集上下文、动手、检查结果，然后重来，直到某个条件满足。回路叠起来就是一座软件工厂——许多被套上缰绳的回路汇入一道评审门禁，而一个人从上面掌管全局。
       </p>
       <p>
-        A loop needs five primitives plus somewhere to keep state, and Claude Code and Codex both
-        ship all of them now. Skills are one of the five. Their job in the loop is specific and it
-        is the reason this pack matters here: <strong>they encode the project knowledge the agent
-        would otherwise guess, and the checks that make "done" mean something.</strong>
+        一个回路需要五个原语，外加一个存放状态的地方——Claude Code 和 Codex
+        如今两者都齐了。技能是五者之一。它在回路里的职责很具体，也是这个技能包在此有意义的原因：<strong>它们把智能体原本只能瞎猜的项目知识固化下来，并把那些让“完成”二字有分量的检查一并固化。</strong>
       </p>
     </div>
 
@@ -128,23 +120,19 @@ const costs = [
   <!-- MENTAL MODEL + DIAGRAM -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">02</span> The mental model</span>
-      <h2 class="lp-h2">Agents run the inner loop. You own the outer loop.</h2>
+      <span class="eyebrow"><span class="lp-num">02</span> 心智模型</span>
+      <h2 class="lp-h2">智能体跑内层回路，外层回路归你。</h2>
       <p class="lp-sub">
-        Inside the system there is one kind of thing: capability - investigate, implement, verify,
-        repeat. Outside there is one kind of thing: agency - decide, verify, approve, own. The
-        boundary between them is evidence.
+        系统之内只有一种东西：能力——调查、实现、验证、循环往复。系统之外也只有一种东西：主动权——决策、验证、批准、担责。两者之间的边界，是证据。
       </p>
     </div>
 
     <figure class="lp-figure">
       <a href="/docs-cn/agent-skills/teach/diagrams/inner-outer-loop.svg" target="_blank" rel="noopener">
-        <img src="/docs-cn/agent-skills/teach/diagrams/inner-outer-loop.svg" alt="Agents run the inner loop; you own the outer loop, with evidence crossing the boundary" width="1280" height="720" loading="lazy" />
+        <img src="/docs-cn/agent-skills/teach/diagrams/inner-outer-loop.svg" alt="智能体跑内层回路，外层回路归你，证据跨过边界" width="1280" height="720" loading="lazy" />
       </a>
       <figcaption>
-        The skills live inside the loop and force the verification. What crosses the boundary is
-        evidence - diffs, tests, logs. You stay in the constraints, sampling, audit, and ownership
-        loops, and you keep the verdict.
+        技能住在回路内部，强制执行验证。跨过边界的只有证据——diff、测试、日志。你留在约束、抽样、审计与归属这几个回路里，裁决权始终在你手上。
         <a href="/docs-cn/agent-skills/teach/diagrams/inner-outer-loop.svg" download class="fig-dl">SVG</a>
         <a href="/docs-cn/agent-skills/teach/diagrams/inner-outer-loop.png" download class="fig-dl">PNG</a>
       </figcaption>
@@ -152,12 +140,7 @@ const costs = [
 
     <div class="lp-prose">
       <p>
-        Trusting the loop does not mean removing the human. It means the human does not need to be
-        in the <em>inner</em> loop. You move to the loops only a person can hold: what constraints
-        and invariants to set, how much output to sample and read, what evidence to keep and be
-        able to explain, and which part of the production boundary you own. The agent can ship more
-        than you can review, so the scarce resource is your judgment, informed by the quality
-        signals the skills produce.
+        信任回路不等于把人拿掉，而是人不必再待在<em>内层</em>回路里。你挪到只有人能握住的那几个回路上：该定哪些约束和不变量、产出该抽样读多少、该留存并能讲清哪些证据、生产边界上哪一块归你所有。智能体能上线的量会超出你能评审的量，所以稀缺资源是你的判断力——它由技能产出的质量信号供养。
       </p>
     </div>
   </section>
@@ -167,13 +150,10 @@ const costs = [
   <!-- AUTONOMY LADDER -->
   <section class="container lp-section">
     <div class="lp-head">
-      <span class="eyebrow"><span class="lp-num">03</span> Back pressure</span>
-      <h2 class="lp-h2">Grant only as much autonomy as you can verify</h2>
+      <span class="eyebrow"><span class="lp-num">03</span> 反向压力</span>
+      <h2 class="lp-h2">只授予你验证得了的自主权</h2>
       <p class="lp-sub">
-        The rule for a factory: hand a loop only as much autonomy as you can cheaply and reliably
-        verify, and not one inch more. The skill commands, and the loop primitives you wrap around
-        them, map to rungs of that ladder. The skills are what make each rung safe, because they
-        force the check that produces the evidence.
+        这是工厂的铁律：交给回路的自主权，只到你能又便宜又可靠地验证的程度为止，一寸都不多给。技能里的命令，以及你包裹在它们外面的回路原语，正对应这架梯子的每一级。技能让每一级都安全，因为它们强制执行那道产出证据的检查。
       </p>
     </div>
 

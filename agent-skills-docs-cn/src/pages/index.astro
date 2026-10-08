@@ -13,27 +13,27 @@ const compatible = [
 
 const pillars = [
   {
-    tag: 'Anti-rationalization',
-    title: 'Agents stop talking their way out of the work',
-    body: 'Every skill ships a table of the exact excuses an agent makes to skip a step - “I’ll add tests later,” “this is too simple to spec” - each one rebutted inline. The shortcut is closed before it’s taken.',
+    tag: '反合理化',
+    title: '智能体没法把工作说没',
+    body: '每个技能都内置一张借口对照表，列出智能体跳步时会说的原话——“回头再补测试”“这个太简单，不用写规格”——并逐条内联反驳。捷径还没被走，就已经封死。',
     icon: 'shield',
   },
   {
-    tag: 'Verification gates',
-    title: 'Evidence, not “seems right”',
-    body: 'Each skill ends with exit criteria: tests passing, build output, real runtime data. Nothing is “done” on vibes. Verification is the whole point, not a nicety bolted on at the end.',
+    tag: '验证门禁',
+    title: '要证据，不要“看起来没问题”',
+    body: '每个技能都以退出标准收尾：测试通过、构建产物、真实运行时数据。凭感觉不算做完。验证本身就是全部意义所在，而不是最后随手补上的点缀。',
     icon: 'check',
   },
   {
-    tag: 'Parallel personas',
-    title: 'A review panel on every ship',
-    body: '/ship fans out to a code-reviewer, security-auditor, test-engineer and web-performance-auditor in parallel, then merges their findings into a single go / no-go decision.',
+    tag: '并行评审角色',
+    title: '每次上线都有评审团坐镇',
+    body: '/ship 会并行展开代码评审员、安全审计员、测试工程师与 Web 性能审计员四个角色，再把他们的发现合并成一次放行/叫停（go/no-go）决定。',
     icon: 'users',
   },
   {
-    tag: 'In-repo evals',
-    title: 'The skills are measured, not asserted',
-    body: 'A three-tier eval framework checks structure, routing (no two skills collide on the words users say), and real execution traces - some of it in CI. The catalog is held to its own standard.',
+    tag: '仓库内 evals',
+    title: '技能是被测出来的，不是被吹出来的',
+    body: '三层评估套件（evals）检查结构、路由（任何两个技能不会在用户措辞上撞车）和真实执行轨迹——其中一部分跑在 CI 里。这套目录也用同样的标准要求自己。',
     icon: 'gauge',
   },
 ];
@@ -61,21 +61,19 @@ function iconSvg(name: string): string {
     <div class="container hero-inner">
       <a href={REPO_URL} target="_blank" rel="noopener" class="hero-badge">
         <span class="dot"></span>
-        <span>Trending on GitHub</span>
+        <span>GitHub 热门趋势</span>
         <span class="hero-badge-sep">·</span>
-        <span class="text-muted">{totalSkills} skills, MIT licensed</span>
+        <span class="text-muted">{totalSkills} 个技能，MIT 许可</span>
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
 
       <h1 class="hero-title">
-        Production-grade skills<br />
-        for AI coding agents.
+        为 AI 编码智能体打造的<br />
+        生产级技能。
       </h1>
 
       <p class="hero-sub">
-        Encode the workflows, quality gates, and judgment senior engineers bring to
-        production - packaged so your agent follows them consistently across every
-        phase, from first idea to live deploy.
+        把资深工程师带进生产环境的工作流、质量门禁与判断力沉淀成技能包，让你的智能体从最初想法到线上部署，在每个阶段都始终如一地遵循它们。
       </p>
 
       <div class="hero-cmd">
@@ -84,14 +82,14 @@ function iconSvg(name: string): string {
 
       <div class="hero-cta">
         <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">
-          Get started
+          开始使用
           <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="/docs-cn/agent-skills/skills/" class="btn btn-secondary">Browse the {totalSkills} skills</a>
+        <a href="/docs-cn/agent-skills/skills/" class="btn btn-secondary">浏览全部 {totalSkills} 个技能</a>
       </div>
 
       <div class="hero-compat">
-        <span class="hero-compat-label">Works with 70+ agents</span>
+        <span class="hero-compat-label">兼容 70+ 智能体</span>
         <div class="hero-compat-list">
           {compatible.map((c) => <span class="hero-compat-item">{c}</span>)}
         </div>
@@ -103,12 +101,11 @@ function iconSvg(name: string): string {
   <section class="section lifecycle-section">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow"><span class="eyebrow-num">01</span> The lifecycle</span>
-        <h2 class="section-title">One command per phase. Skills load automatically.</h2>
+        <span class="eyebrow"><span class="eyebrow-num">01</span> 生命周期</span>
+        <h2 class="section-title">每个阶段一条命令。技能自动加载。</h2>
         <p class="section-lede">
-          Eight slash commands map to the way software actually gets built. Each one
-          activates the right skills for the moment - designing an API pulls in
-          contract-first design, building UI pulls in accessibility, and so on.
+          八条斜杠命令对应软件真实的构建方式。每条命令都会激活当下最合适的技能——设计
+          API 时引入契约先行设计，构建 UI 时引入无障碍，以此类推。
         </p>
       </div>
 
@@ -135,15 +132,14 @@ function iconSvg(name: string): string {
     <div class="container">
       <div class="sec-head sec-head-row reveal">
         <div>
-          <span class="eyebrow"><span class="eyebrow-num">02</span> The catalog</span>
-          <h2 class="section-title">{totalSkills} skills spanning the whole SDLC</h2>
+          <span class="eyebrow"><span class="eyebrow-num">02</span> 技能目录</span>
+          <h2 class="section-title">覆盖软件开发生命周期（SDLC）全流程的 {totalSkills} 个技能</h2>
           <p class="section-lede">
-            Not prompts - structured workflows with steps, checkpoints, and exit
-            criteria. Reach for one directly, or let the meta-skill route you.
+            不是提示词——而是带步骤、检查点和退出标准的结构化工作流。可以直接点名某个技能，也可以让元技能替你路由。
           </p>
         </div>
         <a href="/docs-cn/agent-skills/skills/" class="btn btn-secondary sec-head-cta">
-          View all skills
+          查看全部技能
           <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
@@ -160,11 +156,10 @@ function iconSvg(name: string): string {
   <section class="section">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow"><span class="eyebrow-num">03</span> Why it works</span>
-        <h2 class="section-title">AI agents default to the shortest path.<br />These skills close the shortcut.</h2>
+        <span class="eyebrow"><span class="eyebrow-num">03</span> 为什么有效</span>
+        <h2 class="section-title">AI 智能体默认走最短路径。<br />这些技能把捷径封死。</h2>
         <p class="section-lede">
-          Left alone, agents skip specs, tests, and reviews - the practices that make
-          software reliable. Four mechanisms hold the line.
+          放任不管，智能体会跳过规格、测试和评审——恰恰是让软件可靠的那些做法。四套机制守住底线。
         </p>
       </div>
 
@@ -188,15 +183,13 @@ function iconSvg(name: string): string {
     <div class="container">
       <div class="personas-layout">
         <div class="personas-copy reveal">
-          <span class="eyebrow"><span class="eyebrow-num">04</span> Specialist review</span>
-          <h2 class="section-title">Ship past a panel, not a rubber stamp</h2>
+          <span class="eyebrow"><span class="eyebrow-num">04</span> 专家评审</span>
+          <h2 class="section-title">上线要过评审团，而不是橡皮图章</h2>
           <p class="section-lede">
-            <code class="inline-cmd">/ship</code> runs a pre-launch checklist and fans
-            out to four specialist personas in parallel. Each brings a different
-            perspective; their findings merge into one honest go / no-go.
+            <code class="inline-cmd">/ship</code> 会执行发布前清单，并并行展开四个专家评审角色。每人带来不同的视角；他们的发现最终汇成一次诚实的放行/叫停（go/no-go）。
           </p>
           <a href="/docs-cn/agent-skills/skills/shipping-and-launch/" class="btn btn-secondary personas-cta">
-            See the /ship flow
+            查看 /ship 流程
             <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
@@ -224,16 +217,16 @@ function iconSvg(name: string): string {
   <section class="section final-cta">
     <div class="hero-glow final-glow" aria-hidden="true"></div>
     <div class="container final-inner reveal">
-      <h2 class="final-title">Give your agent a senior engineer’s instincts.</h2>
-      <p class="final-sub">One command installs all {totalSkills} skills into 70+ agents.</p>
+      <h2 class="final-title">给你的智能体一位资深工程师的直觉。</h2>
+      <p class="final-sub">一条命令即可把全部 {totalSkills} 个技能装进 70+ 智能体。</p>
       <div class="final-cmd">
         <CopyCommand command={INSTALL_CMD} size="lg" />
       </div>
       <div class="final-links">
-        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">Get started</a>
+        <a href="/docs-cn/agent-skills/docs/getting-started/" class="btn btn-primary">开始使用</a>
         <a href={REPO_URL} target="_blank" rel="noopener" class="btn btn-secondary">
           <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-          Star on GitHub
+          在 GitHub 上加星
         </a>
       </div>
     </div>

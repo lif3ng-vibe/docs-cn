@@ -20,12 +20,12 @@ const skillCmd = `${INSTALL_CMD} --skill ${skill.slug}`;
 const ghUrl = `${REPO_URL}/blob/main/skills/${skill.slug}/SKILL.md`;
 
 const anatomy = [
-  { k: 'Overview', v: 'What this skill does' },
-  { k: 'When to Use', v: 'Triggering conditions' },
-  { k: 'Process', v: 'Step-by-step workflow' },
-  { k: 'Rationalizations', v: 'Excuses + rebuttals' },
-  { k: 'Red Flags', v: 'Signs something’s wrong' },
-  { k: 'Verification', v: 'Evidence requirements' },
+  { k: '概述', v: '这个技能做什么' },
+  { k: '何时使用', v: '触发条件' },
+  { k: '流程', v: '逐步执行的工作流' },
+  { k: '合理化', v: '借口与反驳' },
+  { k: '危险信号', v: '出问题的征兆' },
+  { k: '验证', v: '证据要求' },
 ];
 ---
 
@@ -36,14 +36,14 @@ const anatomy = [
   <article class="detail">
     <div class="detail-grid-bg grid-bg"></div>
     <div class="container detail-head" style={`--h:${phase.hue}`}>
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/docs-cn/agent-skills/skills/">Skills</a>
+      <nav class="crumbs" aria-label="面包屑导航">
+        <a href="/docs-cn/agent-skills/skills/">技能</a>
         <span aria-hidden="true">/</span>
         <span class="crumb-phase">{phase.label}</span>
       </nav>
 
       <div class="detail-top">
-        <span class="chip phase-chip"><span class="phase-dot"></span>{phase.label} phase</span>
+        <span class="chip phase-chip"><span class="phase-dot"></span>{phase.label} 阶段</span>
         {skill.command && <span class="detail-cmd-badge mono">{skill.command}</span>}
       </div>
 
@@ -51,7 +51,7 @@ const anatomy = [
       <p class="detail-summary">{skill.description}</p>
 
       <div class="detail-when">
-        <span class="detail-when-label">Use when</span>
+        <span class="detail-when-label">何时使用</span>
         <span>{skill.useWhen}</span>
       </div>
 
@@ -63,21 +63,20 @@ const anatomy = [
     <div class="container detail-body">
       <div class="detail-main">
         <section class="panel">
-          <h2 class="panel-title">Install just this skill</h2>
+          <h2 class="panel-title">只安装这一个技能</h2>
           <p class="panel-lede">
-            Grab it on its own via the open <a href="https://github.com/vercel-labs/skills" target="_blank" rel="noopener">skills CLI</a>,
-            or install the whole pack.
+            通过开源的 <a href="https://github.com/vercel-labs/skills" target="_blank" rel="noopener">skills CLI</a> 单独获取它，或者安装整个技能包。
           </p>
           <div class="panel-cmds">
-            <CopyCommand command={skillCmd} label="This skill only" size="sm" />
-            <CopyCommand command={INSTALL_CMD} label="All skills" size="sm" />
+            <CopyCommand command={skillCmd} label="仅此技能" size="sm" />
+            <CopyCommand command={INSTALL_CMD} label="全部技能" size="sm" />
           </div>
         </section>
 
         <section class="panel">
-          <h2 class="panel-title">How this skill is structured</h2>
+          <h2 class="panel-title">这个技能的结构</h2>
           <p class="panel-lede">
-            Every skill follows the same anatomy - a workflow the agent follows, not a doc it reads.
+            每个技能都遵循相同的结构——它是智能体遵循的工作流，而不是一篇供通读的文档。
           </p>
           <ul class="anatomy">
             {anatomy.map((a, i) => (
@@ -89,7 +88,7 @@ const anatomy = [
             ))}
           </ul>
           <a href={ghUrl} target="_blank" rel="noopener" class="btn btn-primary panel-btn">
-            Read the full SKILL.md
+            阅读完整 SKILL.md
             <svg viewBox="0 0 16 16" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </section>
@@ -97,15 +96,15 @@ const anatomy = [
 
       <aside class="detail-side">
         <div class="side-card">
-          <h3 class="side-title">{phase.label} phase</h3>
+          <h3 class="side-title">{phase.label} 阶段</h3>
           <p class="side-blurb">{phase.blurb}</p>
           {phase.command && (
             <div class="side-row">
-              <span>Command</span>
+              <span>命令</span>
               <code class="mono">{phase.command}</code>
             </div>
           )}
-          <a href="/docs-cn/agent-skills/lifecycle/" class="side-link">See the full lifecycle →</a>
+          <a href="/docs-cn/agent-skills/lifecycle/" class="side-link">查看完整生命周期 →</a>
         </div>
       </aside>
     </div>
@@ -113,7 +112,7 @@ const anatomy = [
     {related.length > 0 && (
       <div class="container detail-related">
         <hr class="hairline" />
-        <h2 class="related-title">More in the {phase.label} phase</h2>
+        <h2 class="related-title">{phase.label} 阶段的更多技能</h2>
         <div class="related-grid">
           {related.map((s) => <SkillCard skill={s} />)}
         </div>

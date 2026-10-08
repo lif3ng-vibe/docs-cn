@@ -35,6 +35,7 @@ jobs:
             ai-memory-docs-en/package-lock.json
             openrig-docs-cn/package-lock.json
             openrig-docs-en/package-lock.json
+            agent-skills-docs-cn/package-lock.json
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -143,6 +144,15 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --filter @repo/web build
 
+      # agent-skills 是普通 Astro 营销/教程站（非 Starlight、无正文 markdown）：
+      # 站内 authored 链接已在源码一次性带 /docs-cn/agent-skills/ 前缀
+      # （见其 astro.config.mjs 注释），无需 sed，直接 npm ci + build。
+      - name: Build agent-skills-docs-cn
+        working-directory: agent-skills-docs-cn
+        run: |
+          npm ci
+          npm run build
+
       - name: Assemble Pages artifact
         run: |
           mkdir -p _site
@@ -160,6 +170,7 @@ jobs:
           mv openrig-docs-en/dist _site/openrig-en
           mv nimbus-docs-cn/apps/www/dist _site/nimbus
           mv openship-docs-cn/apps/web/out _site/openship
+          mv agent-skills-docs-cn/dist _site/agent-skills
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

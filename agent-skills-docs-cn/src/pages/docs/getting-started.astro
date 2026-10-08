@@ -7,52 +7,52 @@ const platforms = [
   {
     id: 'claude-code',
     name: 'Claude Code',
-    intro: 'Install as a plugin via the marketplace, or point Claude at a local clone.',
+    intro: '通过 marketplace 以插件形式安装，或让 Claude 指向本地克隆。',
     steps: [
-      { label: 'Add the marketplace', cmd: '/plugin marketplace add addyosmani/agent-skills', prompt: '›' },
-      { label: 'Install the plugin', cmd: '/plugin install agent-skills@addy-agent-skills', prompt: '›' },
+      { label: '添加 marketplace', cmd: '/plugin marketplace add addyosmani/agent-skills', prompt: '›' },
+      { label: '安装插件', cmd: '/plugin install agent-skills@addy-agent-skills', prompt: '›' },
     ],
-    note: 'SSH errors on install? Add the marketplace with the full HTTPS URL, or run `git config --global url."https://github.com/".insteadOf git@github.com:`.',
+    note: '安装时遇到 SSH 报错？用完整的 HTTPS URL 添加 marketplace，或运行 `git config --global url."https://github.com/".insteadOf git@github.com:`。',
     docHref: `${REPO_URL}#claude-code-recommended`,
   },
   {
     id: 'codex',
     name: 'Codex',
-    intro: 'Install as a native Codex plugin (Codex CLI v0.122+). Invoke skills with @ in chat.',
+    intro: '以原生 Codex 插件形式安装（Codex CLI v0.122+）。在对话中用 @ 调用技能。',
     steps: [
-      { label: 'Add the marketplace', cmd: 'codex plugin marketplace add addyosmani/agent-skills', prompt: '$' },
+      { label: '添加 marketplace', cmd: 'codex plugin marketplace add addyosmani/agent-skills', prompt: '$' },
     ],
-    note: 'Codex reads the root skills/ directory directly through .codex-plugin/plugin.json.',
+    note: 'Codex 通过 .codex-plugin/plugin.json 直接读取根目录的 skills/ 目录。',
     docHref: `${REPO_URL}/blob/main/docs/codex-setup.md`,
   },
   {
     id: 'cursor',
     name: 'Cursor',
-    intro: 'Put workflow skills under .cursor/skills/ and short policies in .cursor/rules/*.mdc - don’t paste full skills into rules.',
+    intro: '把工作流技能放在 .cursor/skills/ 下，把简短策略放进 .cursor/rules/*.mdc——不要把完整技能整篇粘进 rules。',
     steps: [
-      { label: 'Install via the skills CLI', cmd: INSTALL_CMD, prompt: '$' },
+      { label: '通过 skills CLI 安装', cmd: INSTALL_CMD, prompt: '$' },
     ],
-    note: 'See the Cursor setup guide for the rules-vs-skills split.',
+    note: 'rules 与 skills 的分工详见 Cursor 配置指南。',
     docHref: `${REPO_URL}/blob/main/docs/cursor-setup.md`,
   },
   {
     id: 'antigravity',
     name: 'Antigravity',
-    intro: 'Install as a native plugin for skills, subagents, and slash commands.',
+    intro: '以原生插件形式安装，覆盖技能、子智能体与斜杠命令。',
     steps: [
-      { label: 'Install from the repo', cmd: 'agy plugin install https://github.com/addyosmani/agent-skills.git', prompt: '$' },
+      { label: '从仓库安装', cmd: 'agy plugin install https://github.com/addyosmani/agent-skills.git', prompt: '$' },
     ],
-    note: 'See the Antigravity setup guide for local-clone installs.',
+    note: '本地克隆的安装方式详见 Antigravity 配置指南。',
     docHref: `${REPO_URL}/blob/main/docs/antigravity-setup.md`,
   },
   {
     id: 'others',
-    name: 'Others',
-    intro: 'Windsurf, OpenCode, Copilot, Cline, Kiro and any agent that accepts Markdown instructions all work. Skills are plain Markdown.',
+    name: '其他',
+    intro: 'Windsurf、OpenCode、Copilot、Cline、Kiro，以及任何接受 Markdown 指令的智能体都可用。技能就是纯 Markdown。',
     steps: [
-      { label: 'Universal - any of 70+ agents', cmd: INSTALL_CMD, prompt: '$' },
+      { label: '通用——适用于 70+ 种智能体', cmd: INSTALL_CMD, prompt: '$' },
     ],
-    note: 'The open skills CLI installs into 70+ agents. Or copy any SKILL.md into your rules/system prompt.',
+    note: '开放的 skills CLI 可安装到 70+ 种智能体。也可以把任意 SKILL.md 复制进你的 rules/系统提示词。',
     docHref: `${REPO_URL}/blob/main/docs/getting-started.md`,
   },
 ];
@@ -60,54 +60,54 @@ const platforms = [
 const first10 = [
   {
     n: '1',
-    t: 'Install the pack',
-    d: 'One command drops all 24 skills into your agent. Nothing to configure - the meta-skill routes work to the right one.',
+    t: '安装技能包',
+    d: '一条命令把全部 24 个技能装进你的智能体。无需任何配置——元技能会把工作路由到合适的技能。',
   },
   {
     n: '2',
-    t: 'Start with a spec',
-    d: 'Run /spec (or ask your agent to “follow spec-driven-development”). It writes a short PRD before any code - the single highest-leverage habit.',
+    t: '从规格（spec）开始',
+    d: '运行 /spec（或让智能体“遵循 spec-driven-development”）。它会在写任何代码之前先写一份简短 PRD——这是杠杆率最高的单一习惯。',
   },
   {
     n: '3',
-    t: 'Build test-first',
-    d: '/build works in thin vertical slices; /test enforces red-green-refactor. Every slice is committed and verified individually.',
+    t: '测试先行地构建',
+    d: '/build 以薄的垂直切片推进；/test 强制红-绿-重构。每个切片都单独提交、单独验证。',
   },
   {
     n: '4',
-    t: 'Review before merge',
-    d: '/review runs a five-axis quality gate. /ship fans out to specialist personas and returns a go / no-go.',
+    t: '合并前先评审',
+    d: '/review 运行五轴质量门禁。/ship 展开各专家评审角色（persona），最终给出放行/叫停（go/no-go）。',
   },
 ];
 ---
 
 <Base
-  title="Getting started - agent-skills"
-  description="Install agent-skills into Claude Code, Codex, Cursor, and 70+ other agents. One command, then your first 10 minutes."
+  title="快速上手 - agent-skills"
+  description="把 agent-skills 安装到 Claude Code、Codex、Cursor 以及 70+ 种其他智能体。一条命令，然后是你的头 10 分钟。"
 >
   <div class="doc-hero">
     <div class="grid-bg"></div>
     <div class="container doc-hero-inner">
-      <span class="eyebrow">Documentation</span>
-      <h1 class="doc-h1">Get started in under a minute</h1>
+      <span class="eyebrow">文档</span>
+      <h1 class="doc-h1">一分钟内即可上手</h1>
       <p class="doc-lede">
-        The fastest path works with any agent - one command via the open
-        <a href="https://github.com/vercel-labs/skills" target="_blank" rel="noopener">skills CLI</a>,
-        which installs into 70+ tools. Prefer a native integration? Pick your tool below.
+        最快的路径适用于任何智能体——用开放的
+        <a href="https://github.com/vercel-labs/skills" target="_blank" rel="noopener">skills CLI</a>
+        一条命令搞定，可安装到 70+ 种工具。偏好原生集成？在下方选择你的工具。
       </p>
       <div class="doc-hero-cmd">
-        <CopyCommand command={INSTALL_CMD} size="lg" label="Fastest path - any agent" />
-        <CopyCommand command={`${INSTALL_CMD} --list`} size="sm" label="Browse before installing" />
+        <CopyCommand command={INSTALL_CMD} size="lg" label="最快路径——任意智能体" />
+        <CopyCommand command={`${INSTALL_CMD} --list`} size="sm" label="安装前先浏览" />
       </div>
     </div>
   </div>
 
   <section class="container doc-section">
-    <h2 class="doc-h2">Native setup by tool</h2>
-    <p class="doc-p">Each tool has a first-class path. Tabs below cover the most common ones.</p>
+    <h2 class="doc-h2">按工具做原生配置</h2>
+    <p class="doc-p">每种工具都有自己的一等路径。下方标签页覆盖最常用的几种。</p>
 
     <div class="tabs" data-tabs>
-      <div class="tab-list" role="tablist" aria-label="Platform">
+      <div class="tab-list" role="tablist" aria-label="平台">
         {platforms.map((p, i) => (
           <button
             class:list={['tab', { active: i === 0 }]}
@@ -135,7 +135,7 @@ const first10 = [
           </div>
           {p.note && <p class="panel-note">{p.note}</p>}
           <a href={p.docHref} target="_blank" rel="noopener" class="panel-doclink">
-            Full {p.name} guide
+            完整 {p.name} 指南
             <svg viewBox="0 0 16 16" fill="none"><path d="M5 3.5h7.5V11M12.5 3.5 3.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
@@ -144,10 +144,9 @@ const first10 = [
   </section>
 
   <section class="container doc-section">
-    <h2 class="doc-h2">Your first 10 minutes</h2>
+    <h2 class="doc-h2">你的头 10 分钟</h2>
     <p class="doc-p">
-      Don’t load all {totalSkills} skills at once - it wastes context. Follow the lifecycle and
-      the right skills activate as you go.
+      不要一次加载全部 {totalSkills} 个技能——那会浪费上下文。跟着生命周期走，合适的技能会随推进自动激活。
     </p>
     <ol class="first10">
       {first10.map((s) => (
@@ -165,24 +164,24 @@ const first10 = [
   <section class="container doc-section">
     <div class="next-cards">
       <a href="/docs-cn/agent-skills/tutorials/" class="card next-card">
-        <h3>Run a tutorial →</h3>
-        <p>Ship a new app, add a feature, or build a loop, step by step with your agent.</p>
+        <h3>跑一遍实战教程 →</h3>
+        <p>和你的智能体一步一步地上线一个新应用、加一个功能，或搭一条回路。</p>
       </a>
       <a href="/docs-cn/agent-skills/skills/" class="card next-card">
-        <h3>Browse the catalog →</h3>
-        <p>All {totalSkills} skills, searchable and filterable by phase.</p>
+        <h3>浏览技能目录 →</h3>
+        <p>全部 {totalSkills} 个技能，可搜索，也可按阶段过滤。</p>
       </a>
       <a href="/docs-cn/agent-skills/lifecycle/" class="card next-card">
-        <h3>Learn the lifecycle →</h3>
-        <p>How the eight commands map to Define → Ship.</p>
+        <h3>了解生命周期 →</h3>
+        <p>八个命令如何映射到 定义 → 上线。</p>
       </a>
       <a href="/docs-cn/agent-skills/loops/" class="card next-card">
-        <h3>Loop engineering →</h3>
-        <p>Using the skills inside loops and software factories, and where the human stays.</p>
+        <h3>回路工程 →</h3>
+        <p>如何在回路和软件工厂里使用这些技能，以及人该守在哪一环。</p>
       </a>
       <a href="/docs-cn/agent-skills/compare/" class="card next-card">
-        <h3>How it compares →</h3>
-        <p>Honest positioning vs Superpowers and Matt Pocock’s skills.</p>
+        <h3>横向对比 →</h3>
+        <p>相对 Superpowers 与 Matt Pocock 技能集的诚实定位。</p>
       </a>
     </div>
   </section>
