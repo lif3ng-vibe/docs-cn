@@ -1,0 +1,156 @@
+---
+title: "Kimi Code 集成"
+description: "为 Kimi Code CLI 提供持久记忆（persistent memory）——基于 hook 的观察记录、提交提示词时的上下文注入，以及 MCP 检索工具"
+icon: "terminal"
+---
+
+## 概览
+
+Kimi Code harness 让 claude-mem 为运行在 Kimi Code CLI 中的智能体提供持久记忆。它做三件事：
+
+1. **观察记录** —— 捕获来自 Kimi hook 系统的工具调用，发给 claude-mem worker 做 AI 处理
+2. **上下文注入（context injection）** —— 通过 `UserPromptSubmit` hook 的 stdout（链在 `session-init` 之后）在每次会话开始时注入观察时间线（每次压缩后也会再注入一次），把 `MEMORY.md` 留给智能体自己维护记忆
+3. **MCP 检索工具** —— 注册 `mcp-search` stdio 服务器，让你能在 Kimi 会话内手动查询记忆
+
+<Info>
+Kimi Code 使用一套与 Claude Code 类似的 hook 系统，由 `~/.kimi-code/config.toml` 驱动。claude-mem 安装器会把 hook 规则合并进该文件，并在 `~/.kimi-code/mcp.json` 中注册一个 MCP 服务器，全程不碰你的个人 `AGENTS.md` 或 `~/.agents/` 文件。
+</Info>
+
+## 工作原理
+
+```plaintext
+Kimi Code CLI
+  │
+  ├── SessionStart (startup|resume) ──→ worker start
+  ├── UserPromptSubmit ───────────────→ Init session + context injection (first prompt of session only)
+  ├── PostToolUse ────────────────────→ Record observation
+  ├── PostToolUseFailure ─────────────→ Record observation (failed call)
+  ├── PreToolUse (Read) ──────────────→ File-context observation
+  ├── Stop ───────────────────────────→ Summarize session
+  └── PreCompact (manual|auto) ───────→ Summarize session
+                    │
+                    ▼
+         Claude-Mem Worker (per-user port)
+           ├── POST /api/sessions/init
+           ├── POST /api/sessions/observations
+           ├── POST /api/sessions/summarize
+           ├── POST /api/sessions/complete
+           └── GET  /api/context/inject ──→ First-prompt context (once per session)
+```
+
+### 事件生命周期
+
+<Steps>
+  <Step title="会话开始（SessionStart startup|resume）">
+    Kimi 启动或恢复会话时，该 hook 会在 claude-mem worker 未运行的情况下把它拉起来。这个 hook 只负责预热 worker，其 stdout 不会追加到 Kimi 的上下文里。
+  </Step>
+  <Step title="提交用户提示词（UserPromptSubmit）">
+    单一的组合式 `session-init-context` hook 把用户提示词发给 `POST /api/sessions/init`，让 worker 创建或续接会话。会话的第一条提示词时，它还会把注入的观察时间线经 stdout 追加到 Kimi 的上下文；同一会话中的后续提示词跳过时间线拉取（由 `~/.claude-mem/state/kimi-context-injected/` 下的一个标记跟踪）。这是 Kimi 的可拦截事件；claude-mem 始终以退出码 0 结束，因此提示词永远不会被拦下。
+  </Step>
+  <Step title="工具即将读取文件（PreToolUse Read）">
+    在 Kimi 执行 `Read` 工具前，该 hook 会针对目标路径查询 `GET /api/observations/by-file`，把返回的时间线作为附加上下文注入。这与 Claude Code 的 `PreToolUse` matcher 一致。
+  </Step>
+  <Step title="记录工具调用（PostToolUse）">
+    工具调用成功后，该 hook 把工具名、输入和响应发给 `POST /api/sessions/observations`。这是即发即弃的——不会阻塞智能体继续干活。
+  </Step>
+  <Step title="会话停止（Stop）">
+    会话停止时，该 hook 抽取最后一条助手消息，发给 `POST /api/sessions/summarize`。
+  </Step>
+  <Step title="上下文被压缩（PreCompact manual|auto）">
+    在 Kimi 手动或自动压缩上下文之前，该 hook 会再触发一次 summarize 调用，让会话状态在压缩前得到保存，并清除注入标记，让压缩后的第一条提示词重新注入一份新鲜的时间线。
+  </Step>
+</Steps>
+
+### 事件映射
+
+| Kimi hook 事件 | matcher | claude-mem 内部事件 | 备注 |
+| --- | --- | --- | --- |
+| `SessionStart` | `startup\|resume` | worker start | 只预热 worker |
+| `UserPromptSubmit` | (all) | `session-init-context` | 组合式 hook；可拦截事件；我们始终以退出码 0 结束；仅在会话的第一条提示词时把时间线 stdout 追加到 Kimi 上下文 |
+| `PostToolUse` | (all) | `observation` | 载荷携带 `tool_output` |
+| `PostToolUseFailure` | (all) | `observation` | 失败的工具调用；载荷携带 `error` |
+| `PreToolUse` | `Read` | `file-context` | 与 Claude 的 matcher 一致 |
+| `Stop` | (all) | `summarize` | |
+| `PreCompact` | `manual\|auto` | `summarize` | 同时清除注入标记，让上下文在压缩后重新注入 |
+
+v1 中未使用（Claude 集成同样忽略）的 hook 事件：`SessionEnd`、`SessionHeartbeat`、`SubagentStart/Stop`、`TurnStarted`、`Notification`、`PermissionRequest/Result`、`Interrupt`、`PostCompact`、`UserPromptQueued`。
+
+### 上下文注入
+
+`UserPromptSubmit` hook 把 worker 格式化好的跨会话观察上下文写入 stdout，注入到每个会话的第一条 Kimi 提示词中。内容来自 `GET /api/context/inject?projects=<project>`，它从 SQLite 数据库生成一份 markdown 时间线。组合式 `session-init-context` 事件在同一个进程里完成 `session-init` 和 `context` 两件事，hook 载荷因此只被消费一次。
+
+Kimi 在每条消息上都会触发 `UserPromptSubmit`，且只对该事件把 stdout 追加进上下文（SessionStart 的 stdout 会被丢弃），所以时间线没法在会话开始时直接送达。为避免把完整时间线重复注入每条提示词，注入成功后处理器会写一个按会话区分的标记（`~/.claude-mem/state/kimi-context-injected/<sessionId>`），标记存在期间跳过时间线拉取。`PreCompact` hook 会清除该标记，所以压缩后的第一条提示词会重新注入一份新鲜的时间线。worker 不可达时标记不会写入，因此下一次提示词会重试注入。按提示词开启的语义注入（`CLAUDE_MEM_SEMANTIC_INJECT=true`）不受影响，仍在每条提示词上运行。
+
+这一设计把 `MEMORY.md` 留在你自己手里，用来放置精心维护的长期记忆（决策、偏好、长期有效的事实），而观察时间线则经本就属于它的提示词提交上下文送达。
+
+## 安装
+
+运行交互式安装器，让它自动检测 Kimi Code：
+
+```bash
+npx claude-mem install
+```
+
+安装器通过 `~/.kimi-code/` 目录或 `PATH` 上的 `kimi` 可执行文件检测 Kimi。你也可以直接管理这个 harness：
+
+```bash
+# 只安装 Kimi harness
+npx claude-mem kimi install
+
+# 检查 hook 和 MCP 是否已注册
+npx claude-mem kimi status
+
+# 移除 claude-mem 托管块及其 MCP 条目（保留其他配置）
+npx claude-mem kimi uninstall
+```
+
+### 安装了哪些内容
+
+安装器会向 `$KIMI_CODE_HOME/config.toml`（默认 `~/.kimi-code/config.toml`）写入一个由标记线包裹的托管块，内含 7 条 `[[hooks]]` 规则：
+
+```toml
+# >>> claude-mem kimi hooks (managed by claude-mem; do not edit) >>>
+[[hooks]]
+event = "SessionStart"
+matcher = "startup|resume"
+command = "..."
+timeout = 60
+# ... remaining rules ...
+# <<< claude-mem kimi hooks <<<
+```
+
+只写入 `event`、`matcher`、`command`、`timeout` 这 4 个字段。超时取值在 60-120 秒之间。
+
+若 `mcpServers` 中尚无 `mcp-search` stdio MCP 服务器，安装器还会把它合并进 `$KIMI_CODE_HOME/mcp.json`，并且保留你已配置的其他服务器。
+
+<Info>
+设置了 `KIMI_CODE_HOME` 时以它为准；否则默认根目录为 `~/.kimi-code`。
+</Info>
+
+<Warning>
+安装器第一次修改 `config.toml` 时，会在改动前把备份写到 `config.toml.bak-<YYYYMMDD>`。
+</Warning>
+
+## 命令
+
+### `npx claude-mem kimi install`
+
+安装或升级 Kimi harness。若托管块已存在，则原位替换（升级安全）。
+
+### `npx claude-mem kimi status`
+
+报告 `config.toml` 中是否存在托管 hook 块。
+
+### `npx claude-mem kimi uninstall`
+
+从 `config.toml` 中精确移除 claude-mem 托管块，并移除 claude-mem 写入 `mcp.json` 的 `mcp-search` 条目（同名但指向别处的条目会被原样保留）。Kimi 的其他配置一概不动。`npx claude-mem uninstall` 会执行同样的清理。
+
+## 错误处理
+
+所有 Kimi hook 都按失败放行处理：worker 不可达、命令崩溃或发生任何内部错误时，hook 都以退出码 0 结束，Kimi 因此永远不会阻塞会话。这与 Kimi 自身的 hook 语义一致——退出码 0 表示放行，stdout 可以追加进上下文。
+
+## 环境要求
+
+- 已安装并配置好 Kimi Code CLI
+- claude-mem worker 服务在运行（必要时由 `SessionStart` hook 自动启动）
+- Kimi 进程与 worker 之间能在按用户分配的端口上互通

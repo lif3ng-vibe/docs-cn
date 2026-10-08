@@ -39,6 +39,7 @@ jobs:
             openrig-docs-en/package-lock.json
             agent-skills-docs-cn/package-lock.json
             tester-army-e2e-docs-cn/package-lock.json
+            claude-mem-docs-cn/package-lock.json
 
       # tester-army-e2e 是 Mintlify 站：登录凭据下 npx mint export 出纯静态站
       # （53 页目录式 index.html，全部 RSC payload 内嵌于 HTML），postprocess-export.mjs
@@ -55,6 +56,25 @@ jobs:
           npx mint export --output export.zip
           mkdir -p dist-deploy && cd dist-deploy && unzip -qo ../export.zip && cd ..
           node postprocess-export.mjs dist-deploy /docs-cn/tester-army-e2e
+
+      # claude-mem 是 Mintlify 站：官方 CLI 的 export 是匿名可用的 air-gap 静态导出，
+      # 但产物为根路径站；prefix-dist.mjs 事后加 /docs-cn/claude-mem/ 前缀（含
+      # 水合 assetPrefix 修补）。渲染客户端首跑从 releases.mintlify.com 下载到
+      # ~/.mintlify（CloudFront 直连，约 150MB，无需登录——与 e2e 的登录式
+      # mint export 不同）。注意：export 会把项目根散文件复制进渲染客户端
+      # public，务必先清掉 dist/ 与旧 export.zip；干净导出约 18MB/50 页，
+      # 异常膨胀直接重跑。
+      - name: Build claude-mem-docs-cn
+        working-directory: claude-mem-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/claude-mem
+        run: |
+          npm ci
+          rm -rf dist
+          npx mintlify export --disable-openapi
+          mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
+          rm -f export.zip
+          node scripts/prefix-dist.mjs
 
       - name: Build codegraph-docs-cn
         working-directory: codegraph-docs-cn
@@ -218,6 +238,7 @@ jobs:
           mv openship-docs-cn/apps/web/out _site/openship
           mv agent-skills-docs-cn/dist _site/agent-skills
           mv tester-army-e2e-docs-cn/dist-deploy _site/tester-army-e2e
+          mv claude-mem-docs-cn/dist _site/claude-mem
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
 

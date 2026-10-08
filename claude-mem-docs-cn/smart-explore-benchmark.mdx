@@ -1,0 +1,199 @@
+---
+title: "Smart Explore 基准测试"
+description: "基于 AST 的代码探索与传统探索方式的 token 效率对比"
+---
+
+# Smart Explore 基准测试
+
+Smart Explore（smart-explore）基于 tree-sitter AST 解析，通过三个 MCP 工具提供结构化的代码导航：`smart_search`、`smart_outline` 和 `smart_unfold`。本报告记录了一次严格的 A/B 对比：以标准的 Explore agent（使用 Glob、Grep 和 Read 工具）为基准，量化 token 节省幅度与质量上的取舍。
+
+## 核心结论
+
+| 指标 | Smart Explore | Explore Agent | 优势 |
+|--------|:---:|:---:|---|
+| 跨文件检索（发现阶段） | ~14,200 tokens | ~252,500 tokens | **省 17.8 倍** |
+| 定点读取（特定符号） | ~5,650 tokens | ~109,400 tokens | **省 19.4 倍** |
+| 端到端（检索 + 读取） | ~4,200 tokens | ~45,000 tokens | **省 10-12 倍** |
+| 完整性 | 5/5 返回完整源码 | 4/5（最长的方法被截断） | Smart Explore 更可靠 |
+| 速度 | 每次调用不到 2s | 每次调用 5-66s | **快 10-30 倍** |
+
+## 测量方法
+
+### 测试环境
+
+- **代码库**：claude-mem（`src/` 目录，194 个 TypeScript 文件，1,206 个已解析符号）
+- **模型**：两种方式均使用 Claude Opus 4.6
+- **计量口径**：token 数取自工具响应元数据（Explore agent 用 `total_tokens`，Smart Explore 用自报的 `~N tokens for folded view`）
+
+### 对照措施
+
+Explore agent 被明确要求：*“不要使用 smart_search、smart_outline 或 smart_unfold 工具，只能使用 Glob、Grep 和 Read 工具。”* 这条限制被证实是必要的——首轮测试中 agent 曾擅自使用 Smart Explore 工具，导致对比失效。
+
+### 查询
+
+选取了五个查询，覆盖常见的探索任务：
+
+1. **"session processing"**——横跨多个服务的切面特性
+2. **"shutdown"**——涉及 6 个以上文件的基础设施问题
+3. **"hook registration"**——关于插件系统的架构问题
+4. **"sqlite database"**——数据层内的特定技术检索
+5. **"worker-service.ts outline"**——单个大文件（1,225 行）的结构理解
+
+## 第一轮：发现
+
+*“有什么？在哪里？”*——在整个代码库中找到相关文件与符号。
+
+### 结果
+
+| 查询 | Smart Explore | Explore Agent | 倍率 | Explore 工具调用次数 |
+|-------|:---:|:---:|:---:|:---:|
+| session processing | ~4,391 t | 51,659 t | **11.8x** | 15 |
+| shutdown | ~3,852 t | 51,523 t | **13.4x** | 18 |
+| hook registration | ~1,930 t | 51,688 t | **26.8x** | 37 |
+| sqlite database | ~2,543 t | 58,633 t | **23.1x** | 16 |
+| worker-service outline | ~1,500 t | 38,973 t | **26.0x** | 15 |
+| **合计** | **~14,216 t** | **252,476 t** | **17.8x** | **101** |
+
+### 各自返回了什么
+
+**Smart Explore**（每次 1 次工具调用）：返回 10 个按相关性排序的符号，附带签名、行号和 JSDoc 摘要；同时给出所有匹配文件的折叠结构视图，展示每个函数/类/接口，方法体折叠收起。
+
+**Explore Agent**（每次 15-37 次工具调用）：产出综合性的叙述报告，包含架构示意、设计模式分析、数据流讲解、完整的接口罗列和文件结构图，说明性文字明显更多。
+
+### 分析
+
+范围越窄的查询，token 差距越大（"hook registration" 达 26.8 倍），因为 Explore agent 为了找到相对不多的相关符号，会读取多个完整文件。对范围较宽的查询（"session processing" 为 11.8 倍），文件内容中被用到的部分更多，倍率随之收窄。
+
+Smart Explore 稳定保持每次 1 次工具调用的模式，成本可预测。Explore agent 的开销则随读多少文件、综合多少内容而波动——同等工作量下，工具调用次数在 15 到 37 之间不等。
+
+## 第二轮：定点读取
+
+*“把这个具体函数给我看。”*——发现之后，读取已知符号的实现。
+
+基于第一轮的结果，选取了五个符号作为自然的下钻目标：
+
+| 目标符号 | 文件 | 行数 |
+|---------------|------|:---:|
+| `SessionManager.initializeSession` | services/worker/SessionManager.ts | 135 |
+| `performGracefulShutdown` | services/infrastructure/GracefulShutdown.ts | 48 |
+| `hookCommand` | cli/hook-command.ts | 45 |
+| `DatabaseManager.initialize` | services/sqlite/Database.ts | 27 |
+| `WorkerService.startSessionProcessor` | services/worker-service.ts | 158 |
+
+### 结果
+
+| 符号 | Smart Unfold | Explore Agent | 倍率 | 完整性 |
+|--------|:---:|:---:|:---:|---|
+| initializeSession（135 行） | ~1,800 t | 27,816 t | **15.5x** | 两者均返回完整源码 |
+| performGracefulShutdown（48 行） | ~700 t | 19,621 t | **28.0x** | 两者均返回完整源码 |
+| hookCommand（45 行） | ~650 t | 18,680 t | **28.7x** | 两者均返回完整源码 |
+| DatabaseManager.initialize（27 行） | ~400 t | 22,334 t | **55.8x** | 两者均返回完整源码 |
+| startSessionProcessor（158 行） | ~2,100 t | 20,906 t | **10.0x** | Smart Unfold：完整。Explore：**被截断** |
+| **合计** | **~5,650 t** | **109,357 t** | **19.4x** | |
+
+### 分析
+
+**倍率与符号大小成反比**。最小的函数（`initialize`，27 行）差距最大，达 55.8 倍——因为 Explore agent 为了抽取 27 行内容，仍要读完整个 235 行的文件。最大的方法（`startSessionProcessor`，158 行）倍率收窄到 10 倍，因为文件里"有用"的占比更高。
+
+**Smart Unfold 返回的代码更完整**。对最长的方法（158 行），Explore agent 把错误处理段截断成了 "... error handling continues ..."，而 `smart_unfold` 返回了完整的实现。原因在于 smart_unfold 按 AST 节点边界进行抽取，无论如何都能保证符号的完整。
+
+**定点读取上，Explore agent 不提供任何独有信息**。当你已经知道文件路径和符号名时，agent 的开销纯属浪费——它读文件、定位函数、再把内容原样复述一遍，唯一的增量是一小段解释文字。
+
+## 组合工作流
+
+真实的工作流是先发现，再定点读取。以下是理解单个函数的端到端成本对比：
+
+### Smart Explore：检索并展开
+
+```
+smart_search("shutdown", path="./src")     ~3,852 tokens
+smart_unfold("GracefulShutdown.ts", "performGracefulShutdown")  ~700 tokens
+────────────────────────────────────────────────────────────────
+Total: ~4,552 tokens (2 tool calls, under 3 seconds)
+```
+
+### Explore Agent：单条查询
+
+```
+"Find and explain the shutdown logic"      ~51,523 tokens
+────────────────────────────────────────────────────────────────
+Total: ~51,523 tokens (18 tool calls, ~43 seconds)
+```
+
+**端到端倍率：11.3x**——Smart Explore 工作流给你的是真正的源码，而 Explore Agent 给你的可能是经过改写或截断的文字概括。
+
+## 质量评估
+
+两种方式没有谁全面胜出，它们各自优化的是不同的目标。
+
+### Smart Explore 优势
+
+- **成本可预测**：每次操作 1 次工具调用，token 区间稳定
+- **完整源码**：基于 AST 的抽取保证符号方法体完整
+- **结构上下文**：折叠视图展示匹配文件中的每个符号
+- **速度快**：亚秒级响应支持快速迭代
+- **可组合**：检索、outline、展开可以自然串联
+
+### Explore Agent 优势
+
+- **综合理解**：产出架构叙述、数据流图示和设计模式分析
+- **跨文件解读**：能把单个符号读取无法关联的概念串联起来
+- **入门质量**：输出读起来像文档，而非原始代码
+- **错误处理洞察**：能识别边界情况和设计取舍，这需要连贯阅读多个相关函数
+- **无需先验知识**：不知道文件路径或符号名，也能回答开放性问题
+
+### 按任务类型看质量
+
+| 任务 | 更优工具 | 原因 |
+|------|-------------|-----|
+| "Where is X defined?" | Smart Explore | 一次调用，精确答案 |
+| "What functions are in this file?" | Smart Explore | outline 返回完整的结构图 |
+| "Show me this function" | Smart Explore | 展开返回精确源码，绝不截断 |
+| "How does feature X work end-to-end?" | Explore Agent | 读取多个文件并综合成叙述 |
+| "What design patterns are used here?" | Explore Agent | 需要阅读与解读，而不只是抽取 |
+| "Help me understand this codebase" | Explore Agent | 产出入门级的文档化输出 |
+
+## 何时用哪个
+
+**适合用 Smart Explore 的情况**：
+
+- 你清楚自己在找什么（函数名、概念、文件）
+- 你要的是源码，不是解释
+- 你在快速迭代（读、改、再读）
+- token 预算吃紧（大代码库、长会话）
+- 你需要一眼看清文件结构
+
+**适合用 Explore Agent 的情况**：
+
+- 你需要跨文件的综合性理解
+- 问题本身就是开放式的（“这个系统是怎么运作的？”）
+- 你在写文档或做架构评审
+- 你要理解*为什么*，而不只是*是什么*
+- 你正在初次接触一个陌生的代码库
+
+**两者结合的做法**：
+
+- 先用 Smart Explore 做发现与导航
+- 只有需要跨多文件综合的深入分析时，才升级到 Explore Agent
+- 这种混合方式能拿走大部分 token 节省，同时保留需要时的深度理解
+
+## Token 消耗参考
+
+| 操作 | token 数 | 适用场景 |
+|-----------|:---:|----------|
+| `smart_search` | 2,000-6,000 | 跨文件符号发现 |
+| `smart_outline` | 1,000-2,000 | 单文件结构图 |
+| `smart_unfold` | 400-2,100 | 单个符号的完整源码 |
+| `smart_search` + `smart_unfold` | 3,000-8,000 | 端到端：找到并读取 |
+| Explore Agent（定点） | 18,000-28,000 | 单个函数加解释 |
+| Explore Agent（跨文件） | 39,000-59,000 | 架构级理解 |
+| Read（整个文件） | 8,000-15,000+ | 完整文件内容 |
+
+### 各工作流的节省幅度
+
+| 工作流 | Smart Explore | 传统方式 | 节省 |
+|----------|:---:|:---:|:---:|
+| 理解一个文件 | outline + unfold（~3,100 t） | Read 全文（~12,000 t） | **4x** |
+| 在全库找一个函数 | search（~3,500 t） | Explore agent（~50,000 t） | **14x** |
+| 找到并读取某个函数 | search + unfold（~4,500 t） | Explore agent（~50,000 t） | **11x** |
+| 浏览 1,200 行的文件 | outline（~1,500 t） | Read 全文（~12,000 t） | **8x** |

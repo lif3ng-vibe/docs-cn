@@ -1,0 +1,698 @@
+# 渐进式披露：Claude-Mem 的上下文预热哲学
+
+## 核心原则
+**先亮出「有什么」以及取回它的成本，再由智能体（agent）根据相关性与需求自行决定去取什么**。
+
+---
+
+## 什么是渐进式披露？
+
+渐进式披露（progressive disclosure）是一种信息架构模式：复杂度是逐步揭示的，而不是一次性全盘抛出。放到 AI 智能体的语境里，它意味着：
+
+1. **第 1 层**（索引）：展示轻量元数据（标题、日期、类型、token 数）
+2. **第 2 层**（详情）：仅在需要时才拉取完整内容
+3. **第 3 层**（深读）：必要时再读原始源文件
+
+这与人类的工作方式如出一辙：先扫标题再读正文，先看目录再进章节，先看文件名再打开文件。
+
+---
+
+## 问题：上下文污染
+
+传统 RAG（Retrieval-Augmented Generation，检索增强生成）系统会把所有东西一次性取回来：
+
+```
+❌ Traditional Approach:
+┌─────────────────────────────────────┐
+│ Session Start                        │
+│                                      │
+│ [15,000 tokens of past sessions]    │
+│ [8,000 tokens of observations]      │
+│ [12,000 tokens of file summaries]   │
+│                                      │
+│ Total: 35,000 tokens                │
+│ Relevant: ~2,000 tokens (6%)        │
+└─────────────────────────────────────┘
+```
+
+**问题在于**：
+- 94% 的注意力预算浪费在无关上下文上
+- 用户提示被历史信息的大山淹没
+- 智能体必须先处理全部内容，才能理解任务
+- 不读完就无从判断哪些内容真正有用
+
+---
+
+## Claude-Mem 的方案：渐进式披露
+
+```
+✅ Progressive Disclosure Approach:
+┌─────────────────────────────────────┐
+│ Session Start                        │
+│                                      │
+│ Index of 50 observations: ~800 tokens│
+│ ↓                                    │
+│ Agent sees: "🔴 Hook timeout issue"  │
+│ Agent decides: "Relevant!"           │
+│ ↓                                    │
+│ Fetch observation #2543: ~120 tokens│
+│                                      │
+│ Total: 920 tokens                   │
+│ Relevant: 920 tokens (100%)         │
+└─────────────────────────────────────┘
+```
+
+**好处**：
+- 智能体自主控制上下文消耗
+- 取回的内容与当前任务直接相关
+- 需要时可以再取
+- 不相关就全部跳过
+- 每一次检索决策的成本与收益都一目了然
+
+---
+
+## 在 Claude-Mem 中的工作机制
+
+### 索引格式
+
+每次 SessionStart hook 都会提供一份紧凑的索引：
+
+```markdown
+### Oct 26, 2025
+
+**General**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2586 | 12:58 AM | 🔵 | Context hook file exists but is empty | ~51 |
+| #2587 | ″ | 🔵 | Context hook script file is empty | ~46 |
+| #2589 | ″ | 🟡 | Investigated hook debug output docs | ~105 |
+
+**src/hooks/context-hook.ts**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+| #2592 | 1:16 AM | ⚖️ | Web UI strategy redesigned | ~193 |
+```
+
+**智能体能看到**：
+- **有什么**：观察记录（observation）标题传递语义信息
+- **何时发生**：时间戳提供时间上下文
+- **什么类型**：图标标示观察记录的类别
+- **取回成本**：token 数让决策有据可依
+- **去哪获取**：底部标注了 MCP 检索工具
+
+### 图例系统
+
+```
+🎯 session-request  - User's original goal
+🔴 gotcha          - Critical edge case or pitfall
+🟡 problem-solution - Bug fix or workaround
+🔵 how-it-works    - Technical explanation
+🟢 what-changed    - Code/architecture change
+🟣 discovery       - Learning or insight
+🟠 why-it-exists   - Design rationale
+🟤 decision        - Architecture decision
+⚖️ trade-off       - Deliberate compromise
+```
+
+**作用**：
+- 视觉扫读（人与 AI 双双受益）
+- 语义分类
+- 优先级信号（🔴 gotcha 类更关键）
+- 跨会话的模式识别
+
+### 渐进式披露指引
+
+索引中带有使用指引：
+
+```markdown
+💡 **Progressive Disclosure:** This index shows WHAT exists and retrieval COST.
+- Use MCP search tools to fetch full observation details on-demand
+- Prefer searching observations over re-reading code for past decisions
+- Critical types (🔴 gotcha, 🟤 decision, ⚖️ trade-off) often worth fetching immediately
+```
+
+**效果**：
+- 教会智能体这套模式
+- 提示何时该取（关键类型）
+- 建议优先检索而非重读代码（省 token）
+- 让系统实现自解释
+
+---
+
+## 理念：上下文即货币
+
+### 心智模型：把 token 预算当钱花
+
+不妨把上下文窗口想成一个银行账户：
+
+| 方式 | 比喻 | 结果 |
+|----------|----------|---------|
+| **一股脑全塞进去** | 把整月工资都花在「说不定哪天用得上」的杂物上 | 浪费、拥挤，真正需要的东西反而买不起 |
+| **什么都不取** | 一个子儿也不肯花 | 饿肚子，任务完不成 |
+| **渐进式披露** | 先看看橱柜，列张购物清单，只买需要的 | 高效，还为意外需求留了余量 |
+
+### 注意力预算
+
+大语言模型（LLM）的注意力是有限的：
+- 每个 token 都要与所有其他 token 建立关联（n² 的关系数）
+- 10 万 token 的窗口 ≠ 10 万 token 的有效注意力
+- 窗口越满，上下文越「腐坏」
+- 靠后的 token 拿到的注意力少于靠前的
+
+**Claude-Mem 的做法**：
+- 先用约 1,000 token 展示索引
+- 智能体保有约 99,000 token 留给任务
+- 需要时按约 200 token 的粒度拉取
+- 最终约 98,000 token 花在真正的工作上
+
+### 为自主性而设计
+
+> 「模型越强，就越该放手让它们聪明行事」
+
+渐进式披露把智能体视为**聪明的信息觅食者**（intelligent information forager），而不是被动接收预选上下文的容器。
+
+**传统 RAG**：
+```
+System → [Decides relevance] → Agent
+        ↑
+   Hope this helps!
+```
+
+**渐进式披露**：
+```
+System → [Shows index] → Agent → [Decides relevance] → [Fetches details]
+                          ↑
+                   You know best!
+```
+
+智能体自己知道：
+- 当前任务的上下文
+- 什么信息会有帮助
+- 预算该花多少
+- 什么时候该停止检索
+
+而我们不知道。
+
+---
+
+## 实现原则
+
+### 1. 让成本可见
+
+索引中的每一项都展示 token 数：
+
+```
+| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+                                                        ^^^^
+                                                    Retrieval cost
+```
+
+**为什么**：
+- 智能体能做出有依据的 ROI 决策
+- 小观察记录（约 50 token）取起来「便宜」
+- 大观察记录（约 500 token）则需要更充分的理由
+- 与人类对投入产出的直觉一致
+
+### 2. 使用语义压缩
+
+标题把完整的观察记录压缩到约 10 个词：
+
+**反面标题示例**：
+```
+Observation about a thing
+```
+
+**正面标题示例**：
+```
+🔴 Hook timeout issue: 60s default too short for npm install
+```
+
+**好标题的要素**：
+- 具体：点明确切的问题
+- 可执行：下一步做什么一清二楚
+- 自足：不必读观察记录就能看懂
+- 可检索：包含关键词（hook、timeout、npm）
+- 有分类：图标标示类型
+
+### 3. 按上下文分组
+
+观察记录按以下维度分组：
+- **日期**：时间上下文
+- **文件路径**：空间上下文（针对特定文件的工作）
+- **项目**：逻辑上下文
+
+```markdown
+**src/hooks/context-hook.ts**
+| ID | Time | T | Title | Tokens |
+|----|------|---|-------|--------|
+| #2591 | 1:15 AM | ⚖️ | Stderr messaging abandoned | ~155 |
+| #2594 | 1:17 AM | 🟠 | Removed stderr section from docs | ~93 |
+```
+
+**收益**：当智能体正在处理 `src/hooks/context-hook.ts` 时，相关观察记录早已归拢在一起。
+
+### 4. 提供检索工具
+
+没有检索机制，索引就形同虚设：
+
+```markdown
+*Use claude-mem MCP search to access records with the given ID*
+```
+
+**可用的 MCP 工具**：
+- `search`——检索记忆索引（第 1 层：拿到 ID）
+- `timeline`——获取时间线式上下文（第 2 层：看清叙事脉络）
+- `get_observations`——拉取完整详情（第 3 层：深读）
+- `get_tool_uses`——拉取原始的 `tool_input` / `tool_response`（第 4 层：原始证据）
+
+分层工作流保证的正是渐进式披露：索引 → 上下文 → 详情 → 原始证据。
+
+---
+
+## 实战示例
+
+### 场景：让智能体修复 hooks 里的 bug
+
+**不用渐进式披露**：
+```
+SessionStart injects 25,000 tokens of past context
+Agent reads everything
+Agent finds 1 relevant observation (buried in middle)
+Total tokens consumed: 25,000
+Relevant tokens: ~200
+Efficiency: 0.8%
+```
+
+**使用渐进式披露**：
+```
+SessionStart shows index: ~800 tokens
+Agent sees title: "🔴 Hook timeout issue: 60s too short"
+Agent thinks: "This looks relevant to my bug!"
+Agent fetches observation #2543: ~155 tokens
+Total tokens consumed: 955
+Relevant tokens: 955
+Efficiency: 100%
+```
+
+### 索引条目
+
+```markdown
+| #2543 | 2:14 PM | 🔴 | Hook timeout: 60s too short for npm install | ~155 |
+```
+
+**不拉取详情，智能体就能知道**：
+- 存在一条关于 hook 超时的已知 gotcha（🔴）
+- 它与 npm install 耗时过长有关
+- 完整详情约 155 token（便宜）
+- 发生在下午 2:14（就在不久之前）
+
+**决策树**：
+```
+Is my task related to hooks? → YES
+Is my task related to timeouts? → YES
+Is my task related to npm? → YES
+155 tokens is cheap → FETCH IT
+```
+
+---
+
+## 分层工作流
+
+Claude-Mem 通过分层工作流（layered workflow）模式实现渐进式披露。
+第 1–3 层是日常路径；第 4 层只为少见的情况而设——摘要不足以作为证据时。
+
+### 第 1 层：search（索引）
+
+先用 search 检索，拿到一份带 ID 的紧凑索引：
+
+```typescript
+search({
+  query: "hook timeout",
+  limit: 10
+})
+```
+
+**返回**：
+```
+Found 3 observations matching "hook timeout":
+
+| ID | Date | Type | Title |
+|----|------|------|-------|
+| #2543 | Oct 26 | gotcha | Hook timeout: 60s too short |
+| #2891 | Oct 25 | how-it-works | Hook timeout configuration |
+| #2102 | Oct 20 | problem-solution | Fixed timeout in CI |
+```
+
+**成本**：每条约 50–100 token
+**价值**：智能体扫一眼就能判断哪些观察记录相关
+
+### 第 2 层：timeline（上下文）
+
+围绕感兴趣的观察记录，获取时间线式的上下文：
+
+```typescript
+timeline({
+  anchor: 2543,  // Observation ID from search
+  depth_before: 3,
+  depth_after: 3
+})
+```
+
+**返回**：一份按时间排列的视图，展示观察记录 #2543 之前、期间、之后都发生了什么
+
+**成本**：随 depth 取值浮动
+**价值**：看清叙事脉络与上下文
+
+### 第 3 层：get_observations（详情）
+
+只为相关的观察记录拉取完整详情：
+
+```typescript
+get_observations({
+  ids: [2543, 2102]  // Selected from search results
+})
+```
+
+**返回**：
+```
+#2543 🔴 Hook timeout: 60s too short for npm install
+─────────────────────────────────────────────────
+Date: Oct 26, 2025 2:14 PM
+Type: gotcha
+Project: claude-mem
+
+Narrative:
+Discovered that the default 60-second hook timeout is insufficient
+for npm install operations, especially with large dependency trees
+or slow network conditions. This causes SessionStart hook to fail
+silently, preventing context injection.
+
+Facts:
+- Default timeout: 60 seconds
+- npm install with cold cache: ~90 seconds
+- Configured timeout: 120 seconds in plugin/hooks/hooks.json:25
+
+Files Modified:
+- plugin/hooks/hooks.json
+
+Concepts: hooks, timeout, npm, configuration
+```
+
+**成本**：完整详情约 155 token
+**价值**：完整理解问题本身
+
+### 第 4 层：get_tool_uses（原始证据）
+
+观察记录是对工具行为的压缩*摘要*。有时这份压缩恰恰是你不想要的——你需要的是原始字节：实际应用过的那一段 diff、构建打印出的原始 stderr、API 返回的原始 JSON。
+
+Claude-Mem 把这些原始内容存放在 `tool_uses` 表中，而这一层是唯一能把它们读回来的途径：
+
+```typescript
+get_tool_uses({
+  ids: ["toolu_01ABC..."],   // or numeric tool_uses ids
+  project: "claude-mem"
+})
+```
+
+**返回**：这几条调用所存储的 `tool_input` / `tool_response`，连同工具名、会话 ID，以及该调用被归入的观察记录。
+
+**成本**：每行最高 64 KB——是所有层中最贵的一层
+**价值**：未经摘要浓缩的真相。仅当摘要不够用时才动用，且只在此时
+
+<Warning>
+  永远不要从这一层开始，也永远不要在没有第 1–3 层给出的 ID 的情况下调用 `get_tool_uses`。原始工具内容正是本页其余部分要避免的上下文污染；有意识地披露几条是渐进式披露，默认全量披露只不过是把对话记录变得更大。
+</Warning>
+
+超过 64 KB 的载荷会在写入时截断，并带上 `…[truncated: N bytes]` 标记，因此被截断的正文与本来就恰好在那里结束的正文能够区分开。
+
+---
+
+## 认知负荷理论
+
+渐进式披露的根基是**认知负荷理论**（Cognitive Load Theory）：
+
+### 内在负荷
+任务本身的固有难度。
+
+**示例**：「修复一个认证 bug」
+- 得理解认证系统
+- 得理解这个 bug
+- 得写出修复
+
+这份负荷无法避免。
+
+### 外在负荷
+信息呈现不当带来的认知负担。
+
+**传统 RAG 会增加外在负荷**：
+- 扫读无关的观察记录
+- 过滤噪声
+- 记住哪些该忽略
+- 每读完一段都要重新建立语境
+
+**渐进式披露把外在负荷降到最低**：
+- 扫标题（低投入）
+- 只取相关的（投入精准）
+- 注意力全部留给当前任务
+
+### 相关负荷
+构建心智模型与图式所花的精力。
+
+**渐进式披露为相关负荷助力**：
+- 结构一致（图例、分组）
+- 分类清晰（类型、图标）
+- 语义压缩（好标题）
+- 成本明确（token 数）
+
+---
+
+## 应避免的反模式
+
+### ❌ 冗长的标题
+
+**反面示例**：
+```
+| #2543 | 2:14 PM | 🔴 | Investigation into the issue where hooks time out | ~155 |
+```
+
+**正面示例**：
+```
+| #2543 | 2:14 PM | 🔴 | Hook timeout: 60s too short for npm install | ~155 |
+```
+
+### ❌ 隐藏成本
+
+**反面示例**：
+```
+| #2543 | 2:14 PM | 🔴 | Hook timeout issue |
+```
+
+**正面示例**：
+```
+| #2543 | 2:14 PM | 🔴 | Hook timeout issue | ~155 |
+```
+
+### ❌ 没有检索路径
+
+**反面示例**：
+```
+Here are 10 observations. [No instructions on how to get full details]
+```
+
+**正面示例**：
+```
+Here are 10 observations.
+*Use MCP search tools to fetch full observation details on-demand*
+```
+
+### ❌ 跳过索引层
+
+**反面示例**：
+```typescript
+// Fetching full details immediately
+get_observations({
+  ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  // Guessing which are relevant
+})
+```
+
+**正面示例**：
+```typescript
+// Follow the 3-layer workflow
+// Layer 1: Search for index
+search({
+  query: "hooks",
+  limit: 20
+})
+
+// Layer 2: Review index, identify 2-3 relevant IDs
+
+// Layer 3: Fetch only relevant observations
+get_observations({
+  ids: [2543, 2891]  // Just the most relevant
+})
+```
+
+---
+
+## 关键设计决策
+
+### 为什么用 token 计数？
+
+**决策**：展示近似 token 数（~155、~203），而非精确值。
+
+**理由**：
+- 传达量级（50 对 500）而不制造虚假精度
+- 贴合人类直觉（小/中/大）
+- 让智能体能规划注意力预算
+- 鼓励有成本意识的检索
+
+### 为什么用图标而非文字标签？
+
+**决策**：用 emoji 图标（🔴、🟡、🔵）而非文字（GOTCHA、PROBLEM、HOWTO）。
+
+**理由**：
+- 视觉扫读（模式识别）
+- 省 token（1 个字符对 10 个字符）
+- 与语言无关
+- 视觉上易于区分
+- 人和 AI 都适用
+
+### 为什么索引优先，而非智能预取？
+
+**决策**：永远先展示索引，哪怕我们「自认为」知道什么相关。
+
+**理由**：
+- 对「什么相关」的判断，我们不会比智能体更准
+- 预取的前提是我们已经理解了任务
+- 智能体掌握当前上下文，我们没有
+- 尊重智能体的自主性
+- 失败也无妨（随时可以再取）
+
+### 为什么按文件路径分组？
+
+**决策**：在按日期分组之外，再按文件路径分组。
+
+**理由**：
+- 空间局部性：改文件 X 时，多半需要文件 X 的上下文
+- 减少扫读负担
+- 贴合开发者的思维方式
+- 语义边界清晰
+
+---
+
+## 成效衡量
+
+出现下列迹象，就说明渐进式披露在起作用：
+
+### ✅ 低浪费比
+```
+Relevant Tokens / Total Context Tokens > 80%
+```
+
+消耗掉的上下文，大部分确实有用。
+
+### ✅ 按需选取
+```
+Index Shown: 50 observations
+Details Fetched: 2-3 observations
+```
+
+智能体在挑选，而不是什么都取。
+
+### ✅ 任务完成更快
+```
+Session with index: 30 seconds to find relevant context
+Session without: 90 seconds scanning all context
+```
+
+到达相关信息的耗时更短。
+
+### ✅ 深度适中
+```
+Simple task: Only index needed
+Medium task: 1-2 observations fetched
+Complex task: 5-10 observations + code reads
+```
+
+深度随任务复杂度伸缩。
+
+---
+
+## 未来增强
+
+### 自适应索引大小
+
+```typescript
+// Vary index size based on session type
+SessionStart({ source: "startup" }):
+  → Show last 10 sessions (small index)
+
+SessionStart({ source: "resume" }):
+  → Show only current session (micro index)
+
+SessionStart({ source: "compact" }):
+  → Show last 20 sessions (larger index)
+```
+
+### 相关性评分
+
+```typescript
+// Use embeddings to pre-sort index by relevance
+search({
+  query: "authentication bug",
+  orderBy: "relevance"  // Based on semantic similarity (future enhancement)
+})
+```
+
+### 成本预估
+
+```markdown
+💡 **Budget Estimate:**
+- Fetching all 🔴 gotchas: ~450 tokens
+- Fetching all file-related: ~1,200 tokens
+- Fetching everything: ~8,500 tokens
+```
+
+### 渐进式细节层级
+
+```
+Layer 1: Index (titles only)
+Layer 2: Summaries (2-3 sentences)
+Layer 3: Full details (complete observation)
+Layer 4: Source files (referenced code)
+```
+
+---
+
+## 核心要点
+
+1. **展示而非灌输**：索引揭示「有什么」，但不强迫消费
+2. **成本敏感**：让检索成本可见，决策才有依据
+3. **智能体自主**：什么相关，由智能体说了算
+4. **语义压缩**：好标题成全系统，坏标题拖垮系统
+5. **结构一致**：固定模式减轻认知负荷
+6. **万物两层**：先给索引，详情按需
+7. **上下文即货币**：把钱花在高价值信息上
+
+---
+
+## 谨记
+
+> 「最好的界面，是不需要时消失、恰好需要时出现的界面。」
+
+渐进式披露尊重智能体的智慧与自主性。我们提供地图，路径由智能体自己选。
+
+---
+
+## 延伸阅读
+
+- [面向 AI 智能体的上下文工程](context-engineering)——基础性原理
+- [Claude-Mem 架构](architecture/overview)——整体是如何拼合在一起的
+- 认知负荷理论（Cognitive Load Theory，Sweller，1988）
+- 信息觅食理论（Information Foraging Theory，Pirolli & Card，1999）
+- 渐进式披露（Progressive Disclosure，Nielsen Norman Group）
+
+---
+
+*这套理念来自 Claude-Mem 在数百个编码会话中的真实使用。这一模式之所以有效，是因为它同时顺应了人类认知与 LLM 注意力机制的运转方式。*

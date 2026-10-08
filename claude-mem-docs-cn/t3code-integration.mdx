@@ -1,0 +1,62 @@
+---
+title: "T3 Code 集成"
+description: "为 T3 Code 的 Codex 与 Claude Code 提供商提供 Claude-Mem 原生 Hook 与 MCP 记忆检索。"
+---
+
+T3 Code 在自己的服务端所在机器上运行编码提供商。Claude-Mem 会安装到这些提供商的原生配置目录中，因此它们既有的 hook 会捕获提示词与工具结果、生成摘要，并把项目上下文注入后续会话。同一个插件同时提供 MCP 记忆检索。
+
+## 安装
+
+先打开一次 T3 Code，配置一个 **Codex** 或 **Claude Code** 提供商。然后在运行 T3 服务端的机器上执行：
+
+```bash
+npx claude-mem@latest install --ide t3code
+```
+
+`t3` 和 `t3-code` 是 `t3code` 的别名。记忆观察提供商是另一个独立选项：照常使用主安装器的提供商选择器或显式 `--provider` 参数即可。
+
+重启 T3 Code，并在项目里开一个新会话。如果 Codex 提示信任 Claude-Mem 的 hook，请走该提供商的常规信任流程批准。如果 T3 客户端没有弹出这个提示，就在终端里用相同的 `CODEX_HOME` 打开同一个 Codex 可执行文件，在那里信任这些 hook，然后重启 T3 Code。安装插件并不会绕过 hook 的信任机制。
+
+## 配置了什么
+
+安装器会读取 `~/.t3/userdata/settings.json`，其中可能同时包含 `providerInstances` 和旧版 `providers`。显式实例会覆盖其默认槽位上的旧版条目。已禁用的提供商会直接跳过。
+
+| T3 提供商 | Claude-Mem 安装动作 |
+| --- | --- |
+| Codex | 原生 Codex 插件市场、插件缓存，以及其共享主目录 `config.toml` 里的 `features.hooks` |
+| Claude Code（`claudeAgent`） | 原生 Claude Code 插件，以用户级别注册到它配置的 `CLAUDE_CONFIG_DIR` |
+| 其他 T3 提供商 | 沿用该提供商已有的 Claude-Mem 集成；当前安装器只处理 Codex 与 Claude Code |
+
+已配置的二进制路径和主目录路径会被遵从。T3 托管的 Codex 使用 `T3CODE_HOME/tools/codex` 中的活动安装。Codex 影子主目录（shadow home）与其源主目录共享配置和插件，因此 Claude-Mem 会装进源目录，而不是在影子目录里制造冲突的文件。
+
+连接器沿用 Claude-Mem 既有的插件生命周期、捕获处理器、隐私过滤与项目解析逻辑。它不新增 transcript 监视器，也不改动 T3 的设置或数据库。使用相同原生主目录的提供商，会与对应的独立 CLI 共享这份安装。
+
+## 自定义服务器或开发配置
+
+如果 T3 Code 用的是自定义主目录，请在安装前导出 `T3CODE_HOME`。若要指向特定的 settings 文件（包括开发 profile）：
+
+```bash
+CLAUDE_MEM_T3CODE_SETTINGS_PATH=/path/to/t3/userdata/settings.json \
+  npx claude-mem@latest install --ide t3code
+```
+
+远程 T3 环境请在远程服务器机器上运行安装；WSL 后端的提供商请在 WSL 里运行。装在手机或浏览器所在的机器上，不会配置到远程提供商。
+
+## 状态与卸载
+
+```bash
+npx claude-mem t3code status
+npx claude-mem t3code status --settings /path/to/settings.json
+npx claude-mem t3code uninstall
+```
+
+status 命令检查提供商配置、插件启用状态、插件市场注册以及运行时资源。它不会声明 hook 已获信任或捕获已经生效：请在服务器机器上打开 Claude-Mem 查看器（`http://localhost:37777`），确认新会话确实产出了观察记录。
+
+卸载只在已配置的原生主目录中停用 Claude-Mem，保留其他插件和提供商设置。这也会一并停用共享这些主目录的独立 CLI 里的 Claude-Mem。卸载后请重启 T3 Code。主命令 `npx claude-mem uninstall` 同样会执行这套清理；记忆数据会保留。
+
+## 故障排查
+
+- **找不到 settings 文件**：打开 T3 Code 完成提供商配置，或者让安装器指向服务器上实际的 settings 文件。
+- **托管 Codex 缺失**：先在 T3 Code 内完成 Codex 配置，再重跑安装器。其他可用的提供商仍会正常配置，但安装器会因缺失的提供商返回非零退出码。连接器不会下载或替换 T3 的提供商运行时。
+- **启动参数覆盖导致捕获失效**：移除那些禁用 `features.hooks` 或 Claude-Mem 的 Codex 覆盖项。Claude 的 `--setting-sources` 如果显式设置，必须包含 `user`；`--strict-mcp-config` 与 `--disable-all-hooks` 会阻碍插件的正常运行。安装器会报告这些冲突，而不是擅自改写你的 T3 启动参数。
+- **提供商安装失败**：安装器会报告每个失败的提供商并返回非零退出码。先修好该提供商的二进制或权限，再重跑安装器；已经装好的提供商不受影响、继续可用。

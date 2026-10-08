@@ -1,0 +1,291 @@
+---
+title: "目录上下文文件（folder context files）"
+description: "自动为每个文件夹生成 CLAUDE.md，为 Claude 提供目录级上下文"
+---
+
+## 概述
+
+claude-mem 会在项目的各个文件夹中自动生成 `CLAUDE.md` 文件，为 Claude 提供目录级上下文。这些文件包含每个文件夹近期活动的摘要，帮助 Claude 了解在何处做过哪些工作。
+
+<Info>
+该功能**默认关闭**。如果你需要自动生成目录级上下文，请在设置中开启。
+</Info>
+
+## 工作原理
+
+当你在项目中使用 Claude Code 时，claude-mem 会追踪哪些文件被读取和修改。每条观察记录（observation）保存之后，它会自动：
+
+1. 从被触碰的文件中提取出不同的文件夹路径
+2. 查询与每个文件夹相关的近期观察记录
+3. 生成一份格式化的活动时间线
+4. 写入该文件夹的 `CLAUDE.md`（包裹在 `<claude-mem-context>` 标签内）
+
+### 生成的内容
+
+每个文件夹的 `CLAUDE.md` 都包含一个"Recent Activity"（近期活动）小节，展示：
+
+- 观察记录 ID，便于引用
+- 工作发生的时间戳
+- 类型标记（bug 修复、新功能、发现等）
+- 简要描述这项工作的标题
+- 估算的 token 数
+
+```markdown
+<claude-mem-context>
+# Recent Activity
+
+### Jan 4, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1234 | 4:30 PM | 🔵 | Implemented user authentication | ~250 |
+| #1235 | " | 🔴 | Fixed login redirect bug | ~180 |
+</claude-mem-context>
+```
+
+### 用户内容保护
+
+自动生成的内容包裹在 `<claude-mem-context>` 标签内。**在任何这些标签之外写下的内容，重新生成时都会原样保留**。这意味着你可以：
+
+- 在生成的小节上方或下方添加自己的文档
+- 为 Claude 编写特定于该文件夹的指令
+- 记录架构说明或团队的编码约定
+
+```markdown
+# Authentication Module
+
+This folder contains all authentication-related code.
+Follow the established patterns for new auth providers.
+
+<claude-mem-context>
+... auto-generated content ...
+</claude-mem-context>
+
+## Manual Notes
+
+- OAuth providers go in /providers/
+- Session handling uses Redis
+```
+
+### 项目根目录排除
+
+**项目根目录**（即含有 `.git` 目录的文件夹）**不会被自动生成**。这是有意为之：
+
+- 根目录的 `CLAUDE.md` 通常存放你手动编写、面向整个项目的指令
+- 在根目录自动生成可能覆盖重要的项目文档
+- 子文件夹才是目录级上下文最有价值的地方
+
+<Note>
+Git 子模块（其 `.git` 是一个*文件*而非目录）会被正确识别，**不会**被排除，因此同样会获得自动生成的上下文。
+</Note>
+
+## 配置
+
+### 启用该功能
+
+要开启文件夹 `CLAUDE.md` 生成，请编辑你的设置文件：
+
+**1. 打开 `~/.claude-mem/settings.json`**
+
+**2. 添加或更新以下配置**：
+
+```json
+{
+  "CLAUDE_MEM_FOLDER_CLAUDEMD_ENABLED": "true"
+}
+```
+
+**3. 保存文件**——改动立即生效，无需重启。
+
+| 取值 | 行为 |
+|-------|----------|
+| `"false"`（默认） | 关闭文件夹 `CLAUDE.md` 生成 |
+| `"true"` | 自动生成文件夹 `CLAUDE.md` 文件 |
+
+<Tip>
+如果设置文件尚不存在，新建一个、只写入你想修改的设置即可。缺失的设置项 claude-mem 会使用默认值。
+</Tip>
+
+## 清理模式
+
+重新生成脚本带有一个 `--clean` 模式，用于移除自动生成的内容：
+
+```bash
+# 预览将被清理的内容（试运行）
+bun scripts/regenerate-claude-md.ts --clean --dry-run
+
+# 实际清理文件
+bun scripts/regenerate-claude-md.ts --clean
+```
+
+**清理会做的事：**
+
+1. 递归找出所有 `CLAUDE.md` 文件
+2. 剥离 `<claude-mem-context>...</claude-mem-context>` 小节
+3. **删除**剥离后变为空文件的文件
+4. **保留**在标签之外还有用户内容的文件
+
+适用场景：
+
+- 为 PR 准备干净的分支（移除生成文件）
+- 重置目录上下文、从头开始
+- 分享代码前移除上下文
+
+## Git 集成
+
+### 要不要提交这些文件？
+
+这取决于你的工作流程，**由你自行决定**。下面对比两种方案的利弊：
+
+<Tabs>
+  <Tab title="提交它们">
+    **好处：**
+
+    - 团队成员能看到目录级上下文和近期活动
+    - 新加入的贡献者能了解哪里发生过什么
+    - 代码评审者能获得关于改动的额外背景
+    - 为仓库留下工作模式的历史记录
+
+    **代价：**
+
+    - 会往仓库里添加文件
+    - 开发期间文件变化频繁
+    - 可能在 diff 和提交历史中制造噪音
+    - 不同成员生成的内容可能不一致
+  </Tab>
+  <Tab title="写入 .gitignore">
+    **好处：**
+
+    - 仓库干净，不含生成文件
+    - 自动生成的内容不会产生提交噪音
+    - 每个开发者都有各自的本地上下文
+    - git 历史更简洁
+
+    **代价：**
+
+    - 团队不共享目录上下文
+    - 更换机器时上下文会丢失
+    - 新成员无法受益于已有上下文
+  </Tab>
+</Tabs>
+
+### Gitignore 模式
+
+要让 git 忽略文件夹 `CLAUDE.md` 文件：
+
+```gitignore
+# 忽略自动生成的目录上下文文件
+**/CLAUDE.md
+
+# 但如果想保留根目录的 CLAUDE.md
+!CLAUDE.md
+```
+
+或者忽略所有位置的 `CLAUDE.md` 文件：
+
+```gitignore
+**/CLAUDE.md
+```
+
+### 推荐工作流
+
+**单人开发者：**
+
+- 保持本地（写入 .gitignore），作为个人上下文
+- 或者，如果你会跨多台机器工作，就提交它们
+
+**团队：**
+
+- 与团队商量哪种方式最合适
+- 如果经常需要引导新成员，可考虑提交它们
+- 如果更希望 diff 干净，在 PR 前使用 `--clean`
+
+**合并 PR 之前：**
+
+```bash
+# 合并前清理生成的文件
+bun scripts/regenerate-claude-md.ts --clean
+git add -A
+git commit -m "chore: clean up generated CLAUDE.md files"
+```
+
+## 重新生成上下文
+
+如需从数据库手动重新生成全部文件夹 `CLAUDE.md` 文件：
+
+```bash
+# 预览将被重新生成的内容
+bun scripts/regenerate-claude-md.ts --dry-run
+
+# 重新生成所有文件夹
+bun scripts/regenerate-claude-md.ts
+
+# 只针对某个项目重新生成
+bun scripts/regenerate-claude-md.ts --project=my-project
+```
+
+以下情况之后会用到：
+
+- 从另一台机器导入观察记录之后
+- 数据库恢复之后
+- 想刷新全部目录上下文时
+
+## Worktree 支持
+
+**v9.0 新增**：claude-mem 现已支持 git worktree，并提供统一的上下文。
+
+当你在 git worktree 中工作时，上下文会自动同时来自两处：
+
+- 父仓库（创建 worktree 的地方）
+- worktree 目录本身
+
+这意味着与共享代码相关的观察记录，无论你身处哪个 worktree 都能看到，让你对相关目录的近期活动有一个完整的图景。
+
+### 工作原理
+
+1. 生成上下文时，claude-mem 会检测你的项目是否为 worktree
+2. 自动识别其父仓库
+3. 时间线查询同时覆盖两个位置
+4. 结果按时间顺序交错排列
+
+<Note>
+无需任何配置——worktree 检测是自动的。如果你不使用 worktree，此功能不产生任何影响。
+</Note>
+
+## 技术细节
+
+### 文件格式
+
+生成的内容采用统一的 markdown 表格格式：
+
+| 列 | 说明 |
+|--------|-------------|
+| ID | 观察记录 ID（如 `#1234`）或会话 ID（`#S123`） |
+| Time | 12 小时制（AM/PM），重复时间用 ditto 符号（`"`）表示 |
+| T | 类型 emoji 标记 |
+| Title | 对该观察记录的简要描述 |
+| Read | 估算 token 数（如 `~250`） |
+
+### 类型指示符
+
+| Emoji | 类型 |
+|-------|------|
+| 🔴 | Bug 修复 |
+| 🟣 | 新功能 |
+| 🔄 | 重构 |
+| ✅ | 变更 |
+| 🔵 | 发现 |
+| ⚖️ | 决策 |
+| 🎯 | 会话 |
+| 💬 | 提示（prompt） |
+
+### 原子写入
+
+文件采用临时文件 + 重命名的模式原子写入，即使进程中途被打断也不会产生写入一半的内容。
+
+### 性能
+
+- 更新异步进行（fire-and-forget）
+- 失败只记录日志，不会阻塞主流程
+- 只有确实发生了文件活动的文件夹才会被更新
+- 去重机制避免对同一文件夹的冗余更新

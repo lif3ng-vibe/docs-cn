@@ -1,0 +1,787 @@
+---
+title: "开发"
+description: "从源码构建、运行测试，并为 Claude-Mem 贡献代码"
+---
+
+# 开发指南
+
+## 从源码构建
+
+### 前提条件
+
+- Node.js 20.0.0 或更高版本
+- npm（随 Node.js 附带）
+- Git
+
+### 克隆与构建
+
+```bash
+# 克隆仓库
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+
+# 安装依赖
+npm install
+
+# 构建所有组件
+npm run build
+```
+
+### 构建过程
+
+构建流程使用 esbuild 编译 TypeScript：
+
+1. 将 TypeScript 编译为 JavaScript
+2. 为 `plugin/scripts/` 下的每个 Hook 生成独立可执行文件
+3. 将 MCP 检索服务打包为 `plugin/scripts/mcp-server.cjs`
+4. 将 worker 服务打包为 `plugin/scripts/worker-service.cjs`
+5. 将 Web 查看器 UI 打包为 `plugin/ui/viewer.html`
+
+**构建产物**：
+- Hook 可执行文件：`*-hook.js`（ESM 格式）
+- Setup 版本检查：`version-check.js`（ESM 格式，手写脚本；负责安装缺失的插件依赖，并记录安装标记）
+- worker 服务：`worker-service.cjs`（CJS 格式）
+- MCP 服务：`mcp-server.cjs`（CJS 格式）
+- 查看器 UI：`viewer.html`（自包含 HTML 打包产物）
+
+### 已提交的发布产物（committed release bundles）
+
+Marketplace 安装运行的是 `plugin/scripts/` 中已提交的文件。若修改了发布版本或 worker 生命周期相关代码，需要用 `npm run build` 重新生成并提交受影响的运行时产物。较新的 manifest 配上较旧的 worker 产物，可能触发反复的版本不匹配重启。
+
+CI 会在重新构建**之前**检查已提交产物的版本一致性：
+
+```bash
+bun test tests/infrastructure/version-consistency.test.ts
+```
+
+如果替换后的 worker 仍上报旧版本，Hook 会把失败的 recycle 记录到数据目录，并跳过对该未变更产物的后续 recycle。重新构建或重装产物即可修正版本；产物内容发生变化后，才允许再次尝试 recycle。
+
+### 构建脚本
+
+```bash
+# 构建全部
+npm run build
+
+# 只构建 Hook
+npm run build:hooks
+
+# 构建脚本定义在 scripts/build-hooks.js 中
+```
+
+## 开发流程
+
+### 1. 修改代码
+
+编辑 `src/` 目录下的 TypeScript 源文件：
+
+```
+src/
+├── hooks/           # Hook 实现（入口 + 逻辑）
+├── services/        # worker 服务与数据库
+├── servers/         # MCP 检索服务
+├── sdk/             # Claude Agent SDK 集成
+├── shared/          # 共享工具
+├── ui/
+│   └── viewer/      # React Web 查看器 UI 组件
+└── utils/           # 通用工具
+```
+
+### 2. 构建
+
+```bash
+npm run build
+```
+
+### 3. 测试
+
+```bash
+# 运行全部测试
+npm test
+
+# 只测试指定文件
+node --test tests/session-lifecycle.test.ts
+
+# 测试上下文注入（context injection）
+npm run test:context
+
+# 上下文测试（详细输出）
+npm run test:context:verbose
+```
+
+### 4. 手动测试
+
+```bash
+# 手动启动 worker
+npm run worker:start
+
+# 检查 worker 状态
+npm run worker:status
+
+# 查看日志
+npm run worker:logs
+
+# 手动测试 Hook
+echo '{"session_id":"test-123","cwd":"'$(pwd)'","source":"startup"}' | node plugin/scripts/context-hook.js
+```
+
+### 5. 迭代
+
+重复步骤 1–4，直到改动达到预期效果。
+
+## 查看器 UI 开发
+
+### 使用 React 查看器
+
+Web 查看器 UI 是一个 React 应用，最终构建为自包含的 HTML 打包产物。
+
+**所在位置**：`src/ui/viewer/`
+
+**目录结构**：
+```
+src/ui/viewer/
+├── index.tsx              # 入口
+├── App.tsx                # 主应用组件
+├── components/            # React 组件
+│   ├── Header.tsx         # 顶栏（含 logo 与操作按钮）
+│   ├── Sidebar.tsx        # 项目过滤侧边栏
+│   ├── Feed.tsx           # 主信息流（无限滚动）
+│   ├── cards/             # 卡片组件
+│   │   ├── ObservationCard.tsx
+│   │   ├── PromptCard.tsx
+│   │   ├── SummaryCard.tsx
+│   │   └── SkeletonCard.tsx
+├── hooks/                 # 自定义 React Hook
+│   ├── useSSE.ts          # Server-Sent Events 连接
+│   ├── usePagination.ts   # 无限滚动分页
+│   ├── useSettings.ts     # 设置持久化
+│   └── useStats.ts        # 数据库统计
+├── utils/                 # 工具函数
+│   ├── constants.ts       # 常量（API URL 等）
+│   ├── formatters.ts      # 日期/时间格式化
+│   └── merge.ts           # 数据合并与去重
+└── assets/                # 静态资源（字体、logo）
+```
+
+### 构建查看器 UI
+
+```bash
+# 构建全部（包含查看器）
+npm run build
+
+# 查看器构建到 plugin/ui/viewer.html
+# 是一个内联了 JS 与 CSS 的自包含 HTML 文件
+```
+
+### 测试查看器改动
+
+1. 修改 `src/ui/viewer/` 中的 React 组件
+2. 构建：`npm run build`
+3. 同步到已安装的插件：`npm run sync-marketplace`
+4. 重启 worker：`npm run worker:restart`
+5. 在 `npm run worker:status` 打印的 worker URL 上刷新页面
+
+**热重载**：目前不支持。任何改动都需要完整重新构建 + 重启。
+
+### 新增查看器功能
+
+**示例：新增一种卡片类型**
+
+1. 在 `src/ui/viewer/components/cards/YourCard.tsx` 中创建组件：
+
+```tsx
+import React from 'react';
+
+export interface YourCardProps {
+  // Your data structure
+}
+
+export const YourCard: React.FC<YourCardProps> = ({ ... }) => {
+  return (
+    <div className="card">
+      {/* Your UI */}
+    </div>
+  );
+};
+```
+
+2. 在 `Feed.tsx` 中导入并使用：
+
+```tsx
+import { YourCard } from './cards/YourCard';
+
+// In render logic:
+{item.type === 'your_type' && <YourCard {...item} />}
+```
+
+3. 如有需要，更新 `src/ui/viewer/types.ts` 中的类型定义
+
+4. 重新构建并测试
+
+### 查看器 UI 架构
+
+**数据流**：
+1. worker 服务对外提供 HTTP + SSE 端点
+2. React 应用通过 HTTP 分页拉取初始数据
+3. SSE 连接提供实时更新
+4. 自定义 Hook 负责状态管理与数据合并
+5. 组件根据条目类型渲染卡片
+
+**关键模式**：
+- **无限滚动**：`usePagination` Hook 配合 Intersection Observer
+- **实时更新**：`useSSE` Hook 搭配自动重连
+- **数据去重**：`merge.ts` 工具函数防止条目重复
+- **设置持久化**：`useSettings` Hook 使用 localStorage
+- **主题支持**：基于 CSS 变量，支持浅色/深色/跟随系统三种主题
+
+## 新增功能
+
+### 新增 Hook
+
+1. 在 `src/hooks/your-hook.ts` 中创建 Hook 实现：
+
+```typescript
+#!/usr/bin/env node
+import { readStdin } from '../shared/stdin';
+
+async function main() {
+  const input = await readStdin();
+
+  // Hook implementation
+  const result = {
+    hookSpecificOutput: 'Optional output'
+  };
+
+  console.log(JSON.stringify(result));
+}
+
+main().catch(console.error);
+```
+
+**注意**：自 v4.3.1 起，Hook 都是自包含文件。shebang 会在构建过程中由 esbuild 自动添加。
+
+2. 添加到 `plugin/hooks/hooks.json`：
+
+```json
+{
+  "YourHook": [{
+    "hooks": [{
+      "type": "command",
+      "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/your-hook.js",
+      "timeout": 120
+    }]
+  }]
+}
+```
+
+3. 重新构建：
+
+```bash
+npm run build
+```
+
+### 修改数据库 Schema
+
+1. 在 `src/services/sqlite/migrations.ts` 中添加迁移：
+
+```typescript
+export const migration011: Migration = {
+  version: 11,
+  up: (db: Database) => {
+    db.run(`
+      ALTER TABLE observations ADD COLUMN new_field TEXT;
+    `);
+  },
+  down: (db: Database) => {
+    // Optional: define rollback
+  }
+};
+```
+
+2. 更新 `src/services/sqlite/types.ts` 中的类型：
+
+```typescript
+export interface Observation {
+  // ... existing fields
+  new_field?: string;
+}
+```
+
+3. 更新 `src/services/sqlite/SessionStore.ts` 中的数据库方法：
+
+```typescript
+createObservation(obs: Observation) {
+  // Include new_field in INSERT
+}
+```
+
+4. 测试迁移：
+
+```bash
+# 先备份数据库！
+cp ~/.claude-mem/claude-mem.db ~/.claude-mem/claude-mem.db.backup
+
+# 运行测试
+npm test
+```
+
+### 扩展 SDK 提示词
+
+1. 修改 `src/sdk/prompts.ts` 中的提示词：
+
+```typescript
+export function buildObservationPrompt(observation: Observation): string {
+  return `
+    <observation>
+
+    </observation>
+  `;
+}
+```
+
+2. 更新 `src/sdk/parser.ts` 中的解析器：
+
+```typescript
+export function parseObservation(xml: string): ParsedObservation {
+  // Parse new XML fields
+}
+```
+
+3. 测试：
+
+```bash
+npm test
+```
+
+### 新增 MCP 检索工具
+
+1. 在 `src/servers/mcp-server.ts` 中添加工具定义：
+
+```typescript
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === 'your_new_tool') {
+    // Implement tool logic
+    const results = await search.yourNewSearch(params);
+    return formatResults(results);
+  }
+});
+```
+
+2. 在 `src/services/sqlite/SessionSearch.ts` 中添加检索方法：
+
+```typescript
+yourNewSearch(params: YourParams): SearchResult[] {
+  // Implement FTS5 search
+}
+```
+
+3. 重新构建并测试：
+
+```bash
+npm run build
+npm test
+```
+
+## 测试
+
+### 测试理念
+
+claude-mem 依赖**真实使用与手动测试**，而非传统的单元测试。项目理念看重以下几点：
+
+1. **手动验证**——在实际的 Claude Code 会话中测试功能
+2. **集成测试**——端到端运行完整系统
+3. **数据库检查**——通过 SQLite 查询验证数据正确性
+4. **CLI 工具**——用交互式工具检查系统状态
+5. **可观测性**——完善的日志与 worker 健康检查
+
+之所以采用这套做法，是因为：
+- Hook 行为高度依赖 Claude Code 的运行时环境
+- SDK 交互需要真实的 API 请求与响应
+- SQLite 与 Bun 运行时提供了稳定性保障
+- 手动测试能发现单元测试漏掉的集成问题
+
+### 手动测试流程
+
+开发新功能时：
+
+1. **构建并同步**：
+   ```bash
+   npm run build
+   npm run sync-marketplace
+   npm run worker:restart
+   ```
+
+2. **在真实会话中测试**：
+   - 启动 Claude Code
+   - 触发你正在测试的功能
+   - 验证行为符合预期
+
+3. **检查数据库状态**：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT * FROM your_table;"
+   ```
+
+4. **监控 worker 日志**：
+   ```bash
+   npm run worker:logs
+   ```
+
+5. **验证队列健康**（针对恢复功能）：
+   ```bash
+   bun scripts/check-pending-queue.ts
+   ```
+
+### 测试工具
+
+**健康检查**：
+```bash
+# worker 状态
+npm run worker:status
+
+# 队列检查
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+curl http://127.0.0.1:$WORKER_PORT/api/pending-queue
+
+# 数据库完整性
+sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+```
+
+**Hook 测试**：
+```bash
+# 手动测试 context Hook
+echo '{"session_id":"test-123","cwd":"'$(pwd)'","source":"startup"}' | node plugin/scripts/context-hook.js
+
+# 测试新 Hook
+echo '{"session_id":"test-123","cwd":"'$(pwd)'","prompt":"test"}' | node plugin/scripts/new-hook.js
+```
+
+**数据核验**：
+```bash
+# 检查最近的观察记录
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT id, tool_name, created_at
+  FROM observations
+  ORDER BY created_at_epoch DESC
+  LIMIT 10;
+"
+
+# 检查会话摘要
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT id, request, completed
+  FROM session_summaries
+  ORDER BY created_at_epoch DESC
+  LIMIT 5;
+"
+```
+
+### 恢复功能测试
+
+针对手动恢复（manual recovery）功能：
+
+1. **模拟卡死的消息**：
+   ```bash
+   # 手动制造卡死消息（仅供测试）
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     UPDATE pending_messages
+     SET status = 'processing',
+         started_processing_at_epoch = strftime('%s', 'now', '-10 minutes') * 1000
+     WHERE id = 123;
+   "
+   ```
+
+2. **测试恢复**：
+   ```bash
+   bun scripts/check-pending-queue.ts
+   ```
+
+3. **核验结果**：
+   ```bash
+   WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+   curl http://127.0.0.1:$WORKER_PORT/api/pending-queue | jq '.queue'
+   ```
+
+### 回归测试
+
+发布前：
+
+1. **测试所有 Hook 触发点**：
+   - SessionStart：新建一个 Claude Code 会话
+   - UserPromptSubmit：提交一条提示（prompt）
+   - PostToolUse：使用一个工具（如 Read）
+   - Summary：让会话自然完成
+   - SessionEnd：关闭 Claude Code
+
+2. **测试核心功能**：
+   - 上下文注入（能看到最近的会话）
+   - 观察记录处理（生成了会话摘要）
+   - MCP 检索工具（检索能返回结果）
+   - 查看器 UI（能在 worker URL 正常加载）
+   - 手动恢复（卡死的消息被成功恢复）
+
+3. **测试边界情况**：
+   - worker 崩溃恢复
+   - 数据库锁
+   - 端口冲突
+   - 大体积数据库
+
+4. **跨平台**（如适用）：
+   - macOS
+   - Linux
+   - Windows
+
+## 代码风格
+
+### TypeScript 规范
+
+- 使用 TypeScript 严格模式
+- 为所有数据结构定义 interface
+- 异步代码使用 async/await
+- 显式处理错误
+- 为公开 API 添加 JSDoc 注释
+
+### 格式化
+
+- 遵循现有代码的格式风格
+- 使用 2 空格缩进
+- 字符串一律使用单引号
+- 对象/数组末尾加尾随逗号
+
+### 示例
+
+```typescript
+/**
+ * Create a new observation in the database
+ */
+export async function createObservation(
+  obs: Observation
+): Promise<number> {
+  try {
+    const result = await db.insert('observations', {
+      session_id: obs.session_id,
+      tool_name: obs.tool_name,
+      // ...
+    });
+    return result.id;
+  } catch (error) {
+    logger.error('Failed to create observation', error);
+    throw error;
+  }
+}
+```
+
+## 调试
+
+### 启用调试日志
+
+```bash
+export DEBUG=claude-mem:*
+npm run worker:restart
+npm run worker:logs
+```
+
+### 检查数据库
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db
+
+# 查看 schema
+.schema observations
+
+# 查询数据
+SELECT * FROM observations LIMIT 10;
+```
+
+### 追踪观察记录
+
+使用关联 ID（correlation ID）追踪观察记录（observation）在记忆管线（memory pipeline）中的流转：
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db
+SELECT correlation_id, tool_name, created_at
+FROM observations
+WHERE session_id = 'YOUR_SESSION_ID'
+ORDER BY created_at;
+```
+
+### 调试 Hook
+
+用测试输入手动运行 Hook：
+
+```bash
+# 测试 context Hook
+echo '{"session_id":"test-123","cwd":"'$(pwd)'","source":"startup"}' | node plugin/scripts/context-hook.js
+
+# 测试新 Hook
+echo '{"session_id":"test-123","cwd":"'$(pwd)'","prompt":"test"}' | node plugin/scripts/new-hook.js
+```
+
+## 发布
+
+生产发布只从 `main` 分支进行。`core-dev` 与 `community-edge` 是源代码运行分支；参见 [发布分支](branches)。
+
+### 版本号更新
+
+更新所有携带包版本号的 manifest：
+
+- `package.json`
+- `plugin/package.json`
+- `.claude-plugin/marketplace.json`
+- `.claude-plugin/plugin.json`
+- `plugin/.claude-plugin/plugin.json`
+- `.codex-plugin/plugin.json`
+- `plugin/.codex-plugin/plugin.json`
+- `openclaw/openclaw.plugin.json`
+
+验证旧版本号已彻底消失、新版本号出现在所有预期位置：
+
+```bash
+git grep -n '"version": "NEW_VERSION"'
+git grep -n '"version": "OLD_VERSION"'
+```
+
+### 构建、打标签与发布
+
+```bash
+npm run build-and-sync
+git add -A
+git commit -m "chore: bump version to NEW_VERSION"
+git tag -a vNEW_VERSION -m "Version NEW_VERSION"
+git push origin main
+git push origin vNEW_VERSION
+```
+
+发布到 npm 需要维护者的 npm 凭据与双重验证（2FA）：
+
+```bash
+npm publish
+npm view claude-mem@NEW_VERSION version
+```
+
+只有在 npm 能解析到该版本之后，才创建 GitHub release 并重新生成 changelog：
+
+```bash
+gh release create vNEW_VERSION --title "vNEW_VERSION" --notes "..."
+npm run changelog:generate
+git add CHANGELOG.md
+git commit -m "docs: regenerate changelog for vNEW_VERSION"
+git push origin main
+```
+
+不要手工编辑 `CHANGELOG.md`；它由 GitHub release 自动生成。
+
+## 参与贡献
+
+### 贡献流程
+
+1. Fork 仓库
+2. 创建功能分支（`git checkout -b feature/amazing-feature`）
+3. 完成你的改动
+4. 编写测试
+5. 更新文档
+6. 提交改动（`git commit -m 'Add amazing feature'`）
+7. 推送到该分支（`git push origin feature/amazing-feature`）
+8. 创建 Pull Request
+
+### Pull Request 规范
+
+- **标题清晰**：说明这个 PR 做了什么
+- **描述**：解释为什么需要这个改动
+- **测试**：为新功能附带测试
+- **文档**：按需更新文档
+- **Changelog**：不要手工编辑 `CHANGELOG.md`；它在发布过程中生成
+- **提交信息**：使用清晰、有描述性的提交 message
+
+### 代码评审流程
+
+1. 自动化测试必须全部通过
+2. 由维护者进行代码评审
+3. 根据反馈修改
+4. 最终批准
+5. 合并到 main
+
+## 开发工具
+
+### 推荐的 VSCode 扩展
+
+- TypeScript
+- ESLint
+- Prettier
+- SQLite Viewer
+
+### 常用命令
+
+```bash
+# 检查 TypeScript 类型
+npx tsc --noEmit
+
+# 代码检查（如已配置）
+npm run lint
+
+# 格式化（如已配置）
+npm run format
+
+# 清理构建产物
+rm -rf plugin/scripts/*.js plugin/scripts/*.cjs
+```
+
+## 开发故障排查
+
+### 构建失败
+
+1. 清理 node_modules：
+   ```bash
+   rm -rf node_modules
+   npm install
+   ```
+
+2. 检查 Node.js 版本：
+   ```bash
+   node --version  # 应为 >= 20.0.0
+   ```
+
+3. 检查语法错误：
+   ```bash
+   npx tsc --noEmit
+   ```
+
+### 测试失败
+
+1. 检查数据库：
+   ```bash
+   rm ~/.claude-mem/claude-mem.db
+   npm test
+   ```
+
+2. 检查 worker 状态：
+   ```bash
+   npm run worker:status
+   ```
+
+3. 查看日志：
+   ```bash
+   npm run worker:logs
+   ```
+
+### worker 无法启动
+
+1. 结束现有进程：
+   ```bash
+   npm run worker:stop
+   ```
+
+2. 检查端口：
+   ```bash
+   WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+   lsof -i :$WORKER_PORT
+   ```
+
+3. 尝试自定义端口：
+   ```bash
+   export CLAUDE_MEM_WORKER_PORT=38000
+   npm run worker:start
+   ```
+
+## 后续步骤
+
+- [架构概览](architecture/overview) - 理解系统全貌
+- [配置](configuration) - 自定义 Claude-Mem
+- [故障排查](troubleshooting) - 常见问题

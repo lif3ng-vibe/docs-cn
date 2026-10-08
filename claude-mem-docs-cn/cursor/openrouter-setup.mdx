@@ -1,0 +1,117 @@
+---
+title: "Cursor + OpenRouter 设置"
+description: "在 Cursor 中使用 Claude-Mem，配你自己的 OpenRouter 密钥"
+---
+
+# Cursor + OpenRouter 设置
+
+使用你的 OpenRouter 密钥，让记忆相关的推理以你自己的 OpenRouter 额度结算。你**不需要**克隆仓库。
+
+<Warning>
+**切勿**把个人 `sk-or-` 密钥发往 `https://cmem.ai/api/inference`。使用你自己的 OpenRouter 账号时，base URL 应留空（或填 `https://openrouter.ai/api/v1`）。CMEM Pro 走的是 cmem.ai 推理 URL，配 **CMEM Pro** 自己的密钥，而不是你的 OpenRouter 密钥。
+</Warning>
+
+## 安装
+
+1. 在 [OpenRouter API Keys](https://openrouter.ai/keys) 创建一个密钥。
+2. 运行：
+
+```bash
+npx claude-mem install
+```
+
+选择 **Cursor**，然后选择 **你的 OpenRouter 密钥**（your OpenRouter key）作为记忆提供商（provider）。
+
+<Warning>
+`npm install -g claude-mem` 装的只是库本身。请始终用 `npx claude-mem install` 来安装。
+</Warning>
+
+### 手动写配置（可选）
+
+```bash
+mkdir -p ~/.claude-mem
+cat > ~/.claude-mem/settings.json << 'EOF'
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "YOUR_OPENROUTER_API_KEY"
+}
+EOF
+```
+
+`CLAUDE_MEM_OPENROUTER_BASE_URL` 留空即为 OpenRouter 本体。然后重跑一次 `npx claude-mem install`，让 Cursor hooks 与 worker 就位。健康的 worker 不要重启。
+
+## 重启 Cursor
+
+关闭再重新打开 Cursor，让 hooks 加载。
+
+## 验证
+
+健康检查：`curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/health"`。打开安装时输出的 worker URL 即可查看记忆。
+
+## 模型
+
+如果不想用默认模型，设置 `CLAUDE_MEM_OPENROUTER_MODEL` 即可。OpenRouter 上的免费模型 id 常以 `:free` 结尾——可查看[模型列表](https://openrouter.ai/models?show_free=true)。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "your-key",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "poolside/laguna-xs-2.1:free"
+}
+```
+
+## 其他 OpenAI 兼容的服务端
+
+OpenRouter provider 是一个通用的 OpenAI 兼容客户端。把 `CLAUDE_MEM_OPENROUTER_BASE_URL` 设为 DeepSeek、LM Studio，或任何说 `/chat/completions` 协议的网关。模型 id 会原样发送。
+
+<Info>
+**Base URL 解析**：`CLAUDE_MEM_OPENROUTER_BASE_URL` 为空（默认）时，请求原样发往 OpenRouter；一旦设置，claude-mem 会 POST 到 `<base_url>/chat/completions`——你可以给 base 形式，如 `https://api.deepseek.com/v1`（`/chat/completions` 路径会自动拼接），也可以给完整的 `.../chat/completions` URL（原样保留）。末尾斜杠会被归一化，且 base URL 必须是 `http`/`https` URL（设置 UI 会拒绝其他任何值；手改成的非 `http`/`https` 值会让请求失败，直到修正为止）。base URL 上的查询串和片段会保留，`/chat/completions` 后缀仍留在请求路径上，因此 `https://my-gateway.example.com/v1?key=abc` 会解析为 `https://my-gateway.example.com/v1/chat/completions?key=abc`。环境变量 `OPENROUTER_BASE_URL` 作为回退被认可。而使用 claude-mem observer 时，base URL 由 `npx claude-mem install` 管理，设置 UI 以只读方式展示它。
+</Info>
+
+### DeepSeek
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "https://api.deepseek.com",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "deepseek-chat",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "YOUR_DEEPSEEK_API_KEY"
+}
+```
+
+### LM Studio（本地）
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "http://localhost:1234/v1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "your-local-model-id"
+}
+```
+
+### IO Intelligence（io.net）
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "https://api.intelligence.io.solutions/api/v1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "meta-llama/Llama-3.3-70B-Instruct",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "YOUR_IO_INTELLIGENCE_API_KEY"
+}
+```
+
+模型 id 是 [IO Intelligence 模型列表](https://api.intelligence.io.solutions/api/v1/models)中的 org/name 组合，例如 `deepseek-ai/DeepSeek-R1-0528` 或 `zai-org/GLM-4.6`。
+
+## 故障排查
+
+**未配置密钥**——`cat ~/.claude-mem/settings.json` 应显示 provider 为 `openrouter`，并带有你的密钥。
+
+**模型未找到**——到 [OpenRouter Models](https://openrouter.ai/models) 核对 id。
+
+**worker 无动作**——查看 `~/.claude-mem/logs/worker-YYYY-MM-DD.log`。健康的 worker 不要重启。
+
+## 后续步骤
+
+- [Cursor 集成](/cursor)——默认的 CMEM Pro 安装
+- [Gemini](/cursor/gemini-setup)
+- [配置](/configuration)

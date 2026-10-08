@@ -1,0 +1,178 @@
+---
+title: "Gemini 提供商"
+description: "用 Google 的 Gemini API 替代 Claude，从会话中提取观察记录"
+---
+
+# Gemini 提供商
+
+claude-mem 支持用 Google 的 Gemini API 替代 Claude Agent SDK，从会话中提取观察记录。记忆处理跑在你的 Gemini key 上、完全在 Claude 套餐之外，因此观察记录提取不会占用你的 Claude 套餐用量。
+
+<Warning>
+**未开通计费时受速率限制**：对未开通计费的项目，Gemini 会按模型施加专项限额。可以在 Google Cloud 项目上开通计费以换取更高限额，开通前请先查阅 Google 当前的配额与计费条款。
+</Warning>
+
+## 为什么选用 Gemini？
+
+- **套餐外运行**：观察记录提取走你的 Gemini key，不占 Claude 套餐
+- **质量相当**：Gemini 采用与 Claude 相同的 XML 格式提取观察记录
+- **报错干脆**：429、5xx 与网络故障会直接抛出——相关消息保持待处理状态，以便稍后重试
+- **热切换**：更换提供商无需重启 worker
+
+## 获取 API Key
+
+1. 访问 [Google AI Studio API Key 页面](https://aistudio.google.com/app/apikey)
+2. 用 Google 账号登录
+3. 同意服务条款与隐私政策
+4. 点击 **Create API key** 按钮
+5. 选择一个 Google Cloud 项目，或新建一个
+6. 复制生成的 API key，妥善保存
+
+<Tip>
+**入门无需开通计费**。开通计费可以解锁更高的速率限制；请先查阅 Google 当前的配额与计费条款。
+</Tip>
+
+## 配置
+
+### 设置项
+
+| 设置项 | 取值 | 默认值 | 说明 |
+|---------|--------|---------|-------------|
+| `CLAUDE_MEM_PROVIDER` | `claude`, `codex`, `gemini`, `openrouter`, `openai-compatible` | `claude` | 用于观察记录提取的 AI 提供商 |
+| `CLAUDE_MEM_GEMINI_API_KEY` | string | — | 你的 Gemini API key |
+| `CLAUDE_MEM_GEMINI_API_KEYS` | newline- or comma-separated keys | — | 备用密钥，某把 key 被限速或用尽时轮换使用（[多密钥轮换](/usage/multi-key-rotation)） |
+| `CLAUDE_MEM_GEMINI_MODEL` | `gemini-flash-latest`, `gemini-flash-lite-latest`, `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-3-flash-preview` | `gemini-flash-latest` | 所用的 Gemini 模型 |
+| `CLAUDE_MEM_GEMINI_RATE_LIMITING_ENABLED` | `true`, `false` | `true` | 按模型无计费档的 RPM 控制请求节奏；在 Google Cloud 开通计费后改为 `false` |
+
+### 通过设置界面使用
+
+1. 打开启动时打印出的 worker URL
+2. 点击**齿轮图标**打开设置
+3. 在 **AI Provider** 下选择 **Gemini**
+4. 输入你的 Gemini API key
+5. 可按需选择其他模型
+
+设置即时生效——无需重启。
+
+### 手动配置
+
+编辑 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "gemini",
+  "CLAUDE_MEM_GEMINI_API_KEY": "your-api-key-here",
+  "CLAUDE_MEM_GEMINI_MODEL": "gemini-flash-latest",
+  "CLAUDE_MEM_GEMINI_RATE_LIMITING_ENABLED": "true"
+}
+```
+
+也可以改用环境变量设置 API key：
+
+```bash
+export GEMINI_API_KEY="your-api-key-here"
+```
+
+设置文件的优先级高于环境变量。
+
+## 可用模型
+
+| 模型 | 无计费 RPM | 说明 |
+|-------|---------------------|-------|
+| `gemini-flash-latest` | 10 | **默认**：Google 别名，始终跟随当前的 GA Flash 模型 |
+| `gemini-flash-lite-latest` | 15 | Google 别名，始终跟随当前的 GA Flash-Lite 模型 |
+| `gemini-3.5-flash` | 10 | 固定版本的 GA Flash 模型 |
+| `gemini-3.1-flash-lite` | 15 | 固定版本的 GA Flash-Lite 模型 |
+| `gemini-3-flash-preview` | 5 | 预览版模型，速率限制更低 |
+
+<Note>
+较旧的 `gemini-2.5-*` 和 `gemini-2.0-*` 模型 ID 已被移除：用新创建的 API key 调用时，Google 会返回 `404 NOT_FOUND`（"no longer available to new users"，即"新用户已不可用"）。推荐使用 `-latest` 别名——随着 Google 轮换 GA 模型，它们永远不会过时。
+</Note>
+
+## 提供商切换
+
+你可以随时在 Claude 与 Gemini 之间切换：
+
+- **无需重启**：更改从下一条观察记录起生效
+- **保留对话历史**：会话中途切换时，新提供商能看到完整的对话上下文
+- **无缝过渡**：两个提供商使用相同的观察记录格式
+
+### 通过界面切换
+
+1. 在查看器 UI 中打开设置
+2. 更改 **AI Provider** 下拉框
+3. 下一条观察记录就会改用新提供商
+
+### 通过设置文件切换
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "gemini"
+}
+```
+
+## 错误行为
+
+Gemini 拒绝请求时，排队中的观察记录保持待处理；后续走向取决于拒绝原因：
+
+- **按分钟限速**（配额按分钟计的 429）：claude-mem 按 Google 给出的延迟等待，随后恢复。若限速持续拒绝，Gemini 会被挂起 90 秒。
+- **日（或周、月）配额用尽**（配额按天计的 429）：Gemini 被挂起 30 分钟，随后发一次请求探查配额是否已重置。
+- **地区不受支持**（"User location is not supported"）：捕获暂停、已捕获的工作保留，下次会话启动时提示切换提供商。每 30 分钟会重新探查一次 Gemini。不会尝试备用密钥——每把 key 得到的都是同样的答复。
+- **密钥无效或已吊销**：配置了备用密钥时改试下一把；否则同样暂停，并提示修复密钥。
+- **服务器错误与网络故障**：暂停但保留工作，随后按退避策略自动恢复。
+- **其他畸形请求**（HTTP 400）：该会话待处理的观察记录被丢弃。请求超出模型窗口长度时，则改为结束该对话并保留这些记录。
+
+想在 Gemini 被挂起期间继续捕获，可以配置[配额回退](/usage/quota-fallback)（需主动开启，默认关闭）。备用密钥在 Gemini 内部轮换（[多密钥轮换](/usage/multi-key-rotation)）。要彻底切换提供商，改 `CLAUDE_MEM_PROVIDER` 即可。
+
+## 故障排查
+
+### "Gemini API key not configured"
+
+以下任选其一：
+- 在 `~/.claude-mem/settings.json` 中设置 `CLAUDE_MEM_GEMINI_API_KEY`，或
+- 设置 `GEMINI_API_KEY` 环境变量
+
+### 速率限制
+
+Google 施加的速率限制取决于是否开通了计费：
+
+**未开通计费（仅 API key）**：
+
+| 模型 | RPM | TPM |
+|-------|-----|-----|
+| gemini-flash-latest / gemini-3.5-flash | 10 | 250K |
+| gemini-flash-lite-latest / gemini-3.1-flash-lite | 15 | 250K |
+| gemini-3-flash-preview | 5 | 250K |
+
+claude-mem 会通过内置的请求间隔自动遵守这些限制。处理速度可能变慢，但不会越界。
+
+**开通计费后**：
+
+| 模型 | RPM | TPM |
+|-------|-----|-----|
+| gemini-flash-lite-latest / gemini-3.1-flash-lite | 4,000 | 4M |
+| gemini-flash-latest / gemini-3.5-flash | 1,000 | 1M |
+| gemini-3-flash-preview | 1,000 | 1M |
+
+<Tip>
+**更高吞吐**：开通计费可解锁高得多的速率限制。请先查看你的 Google Cloud 配额与计费设置。此后 claude-mem 会改用更高的配置限额，而不再沿用保守的无计费节流。
+</Tip>
+
+遇到限速时：
+- 待处理的观察记录留在队列中，限额重置后自动继续（见[错误行为](#错误行为)）
+- 或配置[配额回退](/usage/quota-fallback)，或把主提供商切回 Claude
+
+### 观察记录质量
+
+如果 Gemini 产出的观察记录质量偏低：
+- 请注意，Claude 通常能产出质量略高的观察记录
+- 可以让 Gemini 负责把记忆留在套餐外、Claude 负责重要项目
+
+## 后续步骤
+
+- [配置](/configuration)——完整设置参考
+- [入门指南](/usage/getting-started)——基本用法指南
+- [故障排查](/troubleshooting)——常见问题
+
+## 多个 API Key
+
+`CLAUDE_MEM_GEMINI_API_KEYS` 可在 `CLAUDE_MEM_GEMINI_API_KEY` 之外配置额外密钥（换行或逗号分隔）。当某把 key 触发限速、配额用尽或被判定无效时，Gemini 请求会在当前时间窗口内改用下一把 key，而不是直接失败。详见[多密钥轮换](/usage/multi-key-rotation)。

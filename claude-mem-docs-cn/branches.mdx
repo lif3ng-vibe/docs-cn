@@ -1,0 +1,79 @@
+---
+title: "发布分支"
+description: "Claude-Mem 的三条运行时分支，以及如何在本地运行非稳定分支线"
+---
+
+# 发布分支
+
+Claude-Mem 的发布源自三条长期维护的运行时分支。其中只有一条会发布到 npm。
+
+| 分支线 | 分支 | 适合人群 | 是否发布到 npm？ |
+|------|--------|--------------|-------------------|
+| **Stable**（稳定） | `main` | 所有用户。就是 `npx claude-mem` 对应的安装线。 | **是**——唯一对外发布的分支线 |
+| **Core Dev**（核心开发） | `core-dev` | 想尽早获得根因级可靠性修复的维护者和测试者。 | 否——从源码运行 |
+| **Community Edge**（社区前沿） | `community-edge` | 尚未打磨成熟的社区新集成。 | 否——从源码运行 |
+
+## 变更如何晋升
+
+运行时会话相关的工作逐级向上晋升到稳定线；改动发布行为的代码不会直接落进 `main`。
+
+- 新的运行时工作以 PR 形式进入 `core-dev` 或 `community-edge`，而不是 `main`。
+- `community-edge -> core-dev`：把已验证的 edge 工作向上晋升。
+- `core-dev -> main`：稳定线由已经过打磨的 `core-dev` 工作推进。
+
+```text
+community-edge -> core-dev -> main
+```
+
+正式发布只从 `main` 进行。edge 两条线上没有强制的门禁或评审人；是否合并由维护者自行决定。
+
+纯文档类工作可以先暂存在 `updates/docs` 分支，就绪后再合入 `main`。该分支不属于运行时发布线。
+
+## 我该用哪条分支？
+
+- **只想要开箱即用的记忆功能？** 用稳定线。`npx claude-mem@latest` 始终对应 `main`。
+- **想在修复落地之前就验证根因级的 worker/运行时可靠性修复？** 用 `core-dev`。
+- **想要最新的社区集成、且不介意粗糙的边角？** 用 `community-edge`。
+
+## 本地运行非稳定分支
+
+只有 `main` 会发布到 npm，因此 `core-dev` 和 `community-edge` 需要从源码运行：
+
+```bash
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+git checkout core-dev          # 或者：community-edge
+npm install
+npm run build-and-sync         # 构建并同步到本地插件的 marketplace，然后重启 worker
+```
+
+`build-and-sync` 会把检出的分支安装到本地 Claude Code 插件 marketplace 中并重启 worker，正在运行的插件就会反映该分支的内容。
+
+### 切回稳定分支
+
+```bash
+git checkout main
+npm run build-and-sync
+```
+
+或者重新安装已发布的版本：
+
+```bash
+npx claude-mem@latest install
+```
+
+## 已发布的版本
+
+GitHub release 与 npm 发布是两回事：
+
+- GitHub release 或 tag 只是让源码压缩包在 GitHub 上可见。
+- 真正让 `npx claude-mem@<version>` 能解析到位的，是 npm publish。
+- `latest` 指向当前稳定的 npm 发布。
+
+如果以后要添加 npm 通道标签，应当使用 `core-dev`、`community-edge` 这类 npm dist-tags。在此之前，非稳定分支一律从源码运行。
+
+## 发布流程
+
+生产发布只从 `main` 进行。发布流程会依次更新版本清单、构建生成的产物、推送 git tag、发布到 npm、创建 GitHub release，然后重新生成 `CHANGELOG.md`。
+
+edge 两条线仅从源码运行，永远不会发布到 npm。

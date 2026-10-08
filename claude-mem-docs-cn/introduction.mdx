@@ -1,0 +1,104 @@
+---
+title: "简介"
+description: "Claude Code 的持久记忆压缩系统"
+---
+
+# Claude-Mem
+
+**Claude Code 的持久记忆压缩系统**
+
+Claude-Mem 自动捕获工具使用的观察记录（observation）、生成语义摘要（semantic summary），并将其提供给后续会话，从而在会话之间无缝保留上下文。即使会话结束或重新连接，Claude 也能保持对项目认知的连续性。
+
+## 快速开始
+
+一条命令即可完成安装：
+
+```bash
+npx claude-mem install
+```
+
+或者在 Claude Code 内从插件市场安装：
+
+```bash
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+```
+
+重启 Claude Code，先前会话的上下文会自动出现在新会话中。
+
+## 核心特性
+
+- 🧠 **持久记忆**——上下文跨会话保留
+- 📁 **目录上下文文件**——在项目目录自动生成 `CLAUDE.md`，附活动时间线
+- 🌐 **多语言模式**——支持 28 种语言（西班牙语、中文、法语、日语等）
+- 🎭 **模式系统**——在不同工作流之间切换（Code、Email Investigation、Chill）
+- 🔍 **MCP 检索工具**——用自然语言查询项目历史
+- 🧠 **知识智能体**——基于观察记录历史构建可检索的"大脑"
+- 🌐 **Web 查看器 UI**——由本地 worker 服务提供的记忆流实时可视化
+- 🔒 **隐私控制**——用 [`<private>` 标签](/usage/private-tags)手动屏蔽内容，或启用[自动脱敏](/usage/auto-redaction)基于正则检测秘密
+- ⚙️ **上下文配置**——精细控制注入哪些上下文
+- 🤖 **自动运行**——无需手动干预
+- 📊 **FTS5 检索**——跨观察记录的快速全文检索
+- 🔗 **引用**——通过 ID 引用过往观察记录
+
+## 工作原理
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Session Start → Inject context from last 10 sessions       │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ User Prompts → Create session, save user prompts           │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Tool Executions → Capture observations (Read, Write, etc.)  │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Worker Processes → Extract learnings via Claude Agent SDK   │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Session Ends → Generate summary, ready for next session     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**核心组件：**
+1. **5 个生命周期 Hook**——SessionStart、UserPromptSubmit、PostToolUse、Summary（Stop）、SessionEnd
+2. **worker 服务**——由 Bun 管理的 Express HTTP API，按用户独占端口运行（默认 `37700 + (uid % 100)`）
+3. **SQLite 数据库**——存储 sessions、observations、summaries，配合 FTS5 检索
+4. **Chroma 向量索引**——可选的基于嵌入的语义检索
+5. **MCP / Skill 检索工具**——用自然语言查询历史上下文
+6. **Web 查看器 UI**——支持 SSE 与无限滚动的实时可视化
+
+详见[架构总览](architecture/overview)。
+
+## 系统要求
+
+- **Node.js**：20.0.0 或更高版本
+- **Bun** ≥ 1.0（缺失时由 `npx claude-mem install` 自动安装）
+- **uv**（缺失时自动安装——为 Chroma 提供 Python）
+- **Claude Code**（或其他受支持的 IDE：Cursor、Windsurf、OpenCode、Codex CLI、Antigravity CLI、OpenClaw）
+- **SQLite 3**——通过 `bun:sqlite` 内置捆绑
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="安装" icon="download" href="/installation">
+    快速上手与高级安装方式
+  </Card>
+  <Card title="入门指南" icon="rocket" href="/usage/getting-started">
+    了解 Claude-Mem 如何自动工作
+  </Card>
+  <Card title="目录上下文" icon="folder-open" href="/usage/folder-context">
+    自动生成的目录 CLAUDE.md 文件
+  </Card>
+  <Card title="检索工具" icon="magnifying-glass" href="/usage/search-tools">
+    用自然语言查询项目历史
+  </Card>
+  <Card title="知识智能体" icon="brain" href="/usage/knowledge-agents">
+    从历史构建可检索的语料库
+  </Card>
+</CardGroup>

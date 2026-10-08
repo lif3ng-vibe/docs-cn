@@ -1,0 +1,223 @@
+---
+title: "OpenAI 兼容提供商（NVIDIA NIM 与其他）"
+description: "在 NVIDIA NIM、DeepSeek、Groq、Together、Ollama、LM Studio 或任意 OpenAI 兼容端点上运行观察记录提取"
+---
+
+# OpenAI 兼容提供商
+
+Claude-mem 可以对任何讲 OpenAI `/chat/completions` 形状协议的端点运行观察记录提取（observation extraction）。把 `CLAUDE_MEM_PROVIDER` 设为 `openai-compatible`，再选一个预设（preset）或自行填入 base URL，记忆功能就完全脱离你的 Claude 计划运行。
+
+<Note>
+**claude-mem observer**：在 `npx claude-mem install` 安装时选择 claude-mem observer，记忆即可脱离计划用量运行，无需任何配置。本页面向的是自带端点和密钥的场景。
+</Note>
+
+## 为什么与 OpenRouter 提供商分开
+
+`CLAUDE_MEM_OPENROUTER_BASE_URL` 本来就允许 OpenRouter 客户端与任意 OpenAI 兼容端点通信，这条路径仍然有效，什么都没有改动。但其中有三样东西专属于 openrouter.ai：
+
+- **署名请求头**（attribution headers）：`HTTP-Referer` 和 `X-Title` 会发往 base URL 指向的任何主机，因此把它指向 NVIDIA，等于向 NVIDIA 公开 claude-mem 的 OpenRouter 身份。
+- **`usage: { include: true }`**：仅当 URL 含有 `openrouter.ai` 时才会发送。
+- **cmem.ai 网关的密钥绑定规则**：决定何时让已持久化的 base URL 与已持久化的密钥绑定。这些规则是为了确保由账户下发的网关凭据绝不会被发送到别处——这对你自己配置的端点而言并不适用，但你仍要与它们共用同一组三键配置。
+
+这个提供商（provider）有一套自己的配置键，并且刻意只发送最精简的请求体：`model`、`messages`、`temperature`、`max_tokens`，除此之外一概不发。严格的服务器（vLLM 尤其如此）会拒绝未知字段。`max_tokens` 取自 `CLAUDE_MEM_OBSERVER_MAX_OUTPUT_TOKENS`（默认 4096）；只接受 `max_completion_tokens` 的模型会改用该字段重发一次请求。
+
+claude-mem observer 的密钥（`cm_pro_…`）绝不会发往这些端点。请使用端点自己签发的密钥。
+
+## 快速上手：NVIDIA NIM
+
+<Steps>
+<Step title="获取密钥">
+登录 [build.nvidia.com](https://build.nvidia.com) 并创建 API key，密钥以 `nvapi-` 开头。NVIDIA 的托管模型可以免费起用，正适合观察记录提取：量大、结构化，且不需要前沿模型。
+</Step>
+
+<Step title="把 claude-mem 指向它">
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "nvidia-nim",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "nvapi-..."
+}
+```
+
+或者不把密钥放进 `settings.json`，改放到 `~/.claude-mem/.env`：
+
+```
+OPENAI_COMPAT_API_KEY=nvapi-...
+```
+</Step>
+
+<Step title="挑一个模型（可选）">
+预设默认使用一个由 NVIDIA 托管的小而快的模型。build.nvidia.com 上的任何模型 id 都可用，并会原样透传：
+
+```json
+{ "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "nvidia/nemotron-3-super-120b-a12b" }
+```
+</Step>
+
+<Step title="重启 worker">
+```bash
+npx claude-mem restart
+```
+</Step>
+</Steps>
+
+## 预设
+
+预设只提供默认 base URL 和默认模型。它设置的任何值都会被对应的设置项覆盖，因此切换预设不会动到你自己固定的端点或模型。
+
+| 预设 | Base URL | 是否需要密钥 |
+|------|----------|--------------|
+| `nvidia-nim` | `https://integrate.api.nvidia.com/v1` | 是 |
+| `orcarouter` | `https://api.orcarouter.ai/v1` | 是 |
+| `api-route` | `https://global.api-route.com/v1` | 是 |
+| `opper` | `https://api.opper.ai/v3/compat` | 是 |
+| `deepseek` | `https://api.deepseek.com/v1` | 是 |
+| `opencode-go` | `https://opencode.ai/zen/go/v1` | 是 |
+| `opencode-zen` | `https://opencode.ai/zen/v1` | 是 |
+| `groq` | `https://api.groq.com/openai/v1` | 是 |
+| `together` | `https://api.together.xyz/v1` | 是 |
+| `minimax` | `https://api.minimax.io/v1` | 是 |
+| `minimax-cn` | `https://api.minimaxi.com/v1` | 是 |
+| `iflytek` | `https://maas-api.cn-huabei-1.xf-yun.com/v2` | 是 |
+| `ollama` | `http://localhost:11434/v1` | 否 |
+| `lmstudio` | `http://localhost:1234/v1` | 否 |
+| `vllm` | `http://localhost:8000/v1` | 否 |
+| `custom` | ——自己设置 | 否 |
+
+<Note>
+本地预设需要指定模型 id——claude-mem 猜不到你加载了哪个模型。把 `CLAUDE_MEM_OPENAI_COMPAT_MODEL` 设为 `ollama list`（或你的服务器）报告的模型名，否则该提供商会自报未配置，分发便会回退到 Claude。
+</Note>
+
+## OpenCode Go 与 Zen
+
+[OpenCode](https://opencode.ai) 的 Go 订阅或 Zen 密钥在此适用。`opencode-go` 默认模型为 `kimi-k3`；`opencode-zen` 没有默认模型，所以需要一并设置模型。可以从 `https://opencode.ai/zen/go/v1/models` 或 `https://opencode.ai/zen/v1/models` 里挑 id。只有通过 `/chat/completions` 服务的模型才适用。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "opencode-zen",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "<your OpenCode key>",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "deepseek-v4-flash"
+}
+```
+
+## 设置项
+
+| 设置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `CLAUDE_MEM_PROVIDER` | `claude` | 设为 `openai-compatible` 即选择本提供商 |
+| `CLAUDE_MEM_OPENAI_COMPAT_PRESET` | `''`（即 `custom`） | 上表中的具名端点预设 |
+| `CLAUDE_MEM_OPENAI_COMPAT_BASE_URL` | 取预设值 | OpenAI 兼容 base URL；末尾若缺 `/chat/completions` 会自动补上 |
+| `CLAUDE_MEM_OPENAI_COMPAT_MODEL` | 取预设值 | 模型 id，原样透传 |
+| `CLAUDE_MEM_OPENAI_COMPAT_API_KEY` | `''` | API key。也会从 `~/.claude-mem/.env` 中的 `OPENAI_COMPAT_API_KEY` 读取 |
+| `CLAUDE_MEM_OPENAI_COMPAT_API_KEYS` | `''` | 用于多密钥轮换的额外密钥——参见[多密钥轮换](/usage/multi-key-rotation) |
+
+未知预设 id 会降级为 `custom` 而不是报错，因为设置是在状态轮询期间读取的，一次手误不应该让一次轮询崩溃。
+
+查看器的 **Settings → Advanced** 面板可编辑提供商、预设、base URL 与模型。API key 只能设置在 `~/.claude-mem/settings.json` 或 `~/.claude-mem/.env` 中，绝不通过查看器设置。
+
+## MiniMax
+
+`minimax` 是 MiniMax 的全球端点，`minimax-cn` 是中国大陆端点；请使用与账户所在位置匹配的预设。两者的默认模型均为 `MiniMax-M3`。MiniMax 托管的任何模型 id 都会原样透传：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "minimax",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "<key from platform.minimax.io>",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "MiniMax-M2.7"
+}
+```
+
+M2 系列等推理型模型可能在回复开头输出一段 `</think>` 标记块。claude-mem 会在所有预设上剥除这类开头的标记块（对 Ollama 与 vLLM 上的 DeepSeek R1 或 Qwen3 同样有效），因此思考内容既不会被存储，也不会随下一次请求被重新发送。
+
+## iFlytek Spark
+
+`iflytek` 预设指向讯飞的 Astron MaaS 平台，默认模型为 `spark-x2.5`。密钥从 [MaaS 控制台](https://maas.xfyun.cn)获取。预设自带的 base URL 是按量付费端点，而 Token Plan 套餐的密钥只被 Token Plan 端点接受，所以 base URL 也要一并设置：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "iflytek",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "<your MaaS key>",
+  "CLAUDE_MEM_OPENAI_COMPAT_BASE_URL": "https://maas-token-api.cn-huabei-1.xf-yun.com/v2"
+}
+```
+
+密钥被用在另一个端点时会遭到拒绝，返回 403（`11200`）。`spark-x2.5` 会把推理内容放在单独的 `reasoning_content` 字段中返回，claude-mem 会忽略该字段，因此只有答案本身被存储。
+
+## 其他任意端点
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_BASE_URL": "https://my-gateway.example.com/v1",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "my-model-id",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "..."
+}
+```
+
+### 何时需要密钥
+
+设置 `CLAUDE_MEM_OPENAI_COMPAT_BASE_URL` 会覆盖预设自带的端点，因此是否需要密钥，取决于你把请求指向的端点，而不是你最初选的预设名：
+
+| 端点 | 是否需要密钥 |
+|------|--------------|
+| `localhost`、`127.0.0.1`、`[::1]`、`*.local` | 否 |
+| 私网地址（`10.x`、`192.168.x`、`172.16–31.x`） | 否 |
+| 其他任何地址 | 是 |
+
+不做覆盖时由预设决定——托管预设需要密钥，本地预设不需要。
+
+确实无需鉴权的远程端点同样可以工作：把 `CLAUDE_MEM_OPENAI_COMPAT_API_KEY` 设为任意非空值即可。默认之所以保守地要求密钥，是因为另一种选择是提供商自报就绪、随后每条观察记录都以 401 失败。
+
+## OrcaRouter
+
+[OrcaRouter](https://www.orcarouter.ai) 提供带提供商前缀（provider-scoped）的模型 id，例如 `openai/gpt-4o-mini`（预设默认）或 `anthropic/claude-haiku-4.5`，全部共用一把 `sk-orca-` 密钥。其模型列表公开在 `https://api.orcarouter.ai/v1/models`。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "orcarouter",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "sk-orca-...",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "anthropic/claude-haiku-4.5"
+}
+```
+
+## API Route
+
+[API Route](https://api-route.com) 使用 `api-route` 预设，并配置一把 API Route 密钥。它没有默认模型：请把 `CLAUDE_MEM_OPENAI_COMPAT_MODEL` 设为你的账户在 `https://global.api-route.com/v1/models` 上可用的精确模型 id。应选择通过 `/chat/completions` 服务的模型；id 会原样透传。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "api-route",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "<your API Route key>",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "<your chat-completions model id>"
+}
+```
+
+也可以把密钥以 `OPENAI_COMPAT_API_KEY` 的名字存放在 `~/.claude-mem/.env` 中。改动配置后需要重启 worker。既没有模型也没有密钥时，该提供商会自报未配置，分发便回退到 Claude。
+
+## Opper
+
+[Opper](https://opper.ai) 是一家托管在欧盟的网关，提供一套 OpenAI 兼容 API，一把密钥即可访问 700 多个模型。模型 id 使用池化名称（pooled names），例如 `gpt-5.4-mini`（预设默认）或 `claude-haiku-4-5`，Opper 会按请求挑选路由。形如 `provider/model` 的 id（例如 `aws/claude-haiku-4-5-eu`）则会把提供商与区域固定下来。模型目录公开在 `https://api.opper.ai/v3/models`，密钥从 [platform.opper.ai](https://platform.opper.ai) 获取。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openai-compatible",
+  "CLAUDE_MEM_OPENAI_COMPAT_PRESET": "opper",
+  "CLAUDE_MEM_OPENAI_COMPAT_API_KEY": "<your Opper key>",
+  "CLAUDE_MEM_OPENAI_COMPAT_MODEL": "claude-haiku-4-5"
+}
+```
+
+## 故障排查
+
+**记忆悄悄改用 Claude 运行**：当提供商已被选中但配置不完整时，分发会回退到 Claude——可能缺 base URL、缺模型，或在需要密钥的预设上缺了密钥。这种回退是刻意的：半配置的端点不应该让每条观察记录都失败。请用 `npx claude-mem doctor` 检查。
+
+**端点返回 404**：原因几乎总是 base URL 写错，或端点不提供该模型；报错原文会同时点名这两个设置项。注意某些网关对模型 id 的前缀写法与厂商自家文档并不一致。
+
+**反复超时**：请求以流式发送，只有在连续 90 秒没有收到 token 且端点也没有保活（keep-alive）时——或总计满 300 秒时——请求才会被放弃。`CLAUDE_MEM_LLM_TIMEOUT_MS` 不适用于流式请求；它只对拒绝流式的端点生效（返回点名 `stream` 或 `stream_options` 的 400 报错），此时 claude-mem 在 worker 剩余生命周期内改用非流式调用。请求若持续超时，优先选小而快的模型：观察记录提取是一项高吞吐的结构化任务，而不是推理基准测试。
+
+**观察记录为空或被截断**：不遵守输出 schema 的模型做不出可用的结果。在这一环节，小型指令微调模型通常比推理模型表现更好，因为推理模型的思考输出往往会挤占结构化回复。当日志显示回复在输出 token 上限处被截断时，调高 `CLAUDE_MEM_OBSERVER_MAX_OUTPUT_TOKENS`。

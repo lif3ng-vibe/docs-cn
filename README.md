@@ -20,6 +20,7 @@
 | OpenShip | `openship-docs-cn/` | https://openship.io/docs | https://github.com/oblien/openship | 2026-09-30 |
 | Agent Skills | `agent-skills-docs-cn/` | https://skills.addy.ie/ | https://github.com/addyosmani/agent-skills（站点工程：[skills.addy.ie](https://github.com/addyosmani/skills.addy.ie)） | 2026-10-08 |
 | e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
+| Claude-Mem | `claude-mem-docs-cn/` | https://docs.claude-mem.ai/ | https://github.com/thedotmack/claude-mem（快照 `71ddd11`，Mintlify 源在其 docs/public/） | 2026-10-08 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
@@ -69,6 +70,7 @@ docs-cn/
 ├── openship-docs-cn/                   # OpenShip 中文文档（fumadocs + Next.js 16 静态导出，164 篇 + 营销站）
 ├── agent-skills-docs-cn/               # Agent Skills 官方站中文版（原版 Astro 5 营销/教程站，36 页）
 ├── tester-army-e2e-docs-cn/            # e2e 中文文档（Mintlify 原班 + export 导出，52 篇 MDX）
+├── claude-mem-docs-cn/                 # Claude-Mem 中文文档（Mintlify 原班构建，49 篇 + export+prefix 部署链）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -130,6 +132,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Agency Agents：https://lif3ng-vibe.github.io/docs-cn/agency-agents/
 - Agency Agents（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/agency-agents-en/
 - e2e：https://lif3ng-vibe.github.io/docs-cn/tester-army-e2e/
+- Claude-Mem：https://lif3ng-vibe.github.io/docs-cn/claude-mem/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

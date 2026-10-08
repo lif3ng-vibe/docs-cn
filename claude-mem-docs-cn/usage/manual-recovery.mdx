@@ -1,0 +1,460 @@
+---
+title: "手动恢复"
+description: "在 worker 崩溃或重启后，恢复卡住的观察记录"
+---
+
+# 手动恢复指南
+
+## 概述
+
+Claude-mem 的手动恢复（manual recovery）系统，帮助你在 worker 崩溃、系统重启或意外关机后，恢复卡在处理队列中的观察记录。
+
+**v5.x 的关键变化**：worker 启动时的自动恢复现已默认关闭。这样你可以明确控制重新处理的时机，避免意外产生重复的观察记录。
+
+## 什么时候需要手动恢复？
+
+遇到以下情况时，你应该触发手动恢复：
+
+- **worker 崩溃或重启**——观察记录已经入队，但 worker 还没处理就停了
+- **没有新的会话摘要出现**——观察记录在保存，却没有被处理成会话摘要
+- **检测到卡住的消息**——消息显示为「processing」超过 5 分钟
+- **系统崩溃**——意外关机导致消息停留在未完成状态
+
+## 快速开始
+
+### 使用 CLI 工具（推荐）
+
+交互式 CLI 工具是恢复卡住观察记录最安全、最简便的方式：
+
+```bash
+# 检查状态并提示是否恢复
+bun scripts/check-pending-queue.ts
+```
+
+它会依次完成：
+1. 检查 worker 健康状况
+2. 显示队列摘要（pending、processing、failed、stuck 各计数）
+3. 列出有待处理工作的会话
+4. 提示你确认是否恢复
+5. 展示最近处理的消息作为反馈
+
+### 免确认自动处理
+
+用于编写脚本，或当你确信确实需要恢复时：
+
+```bash
+# 免提示自动处理
+bun scripts/check-pending-queue.ts --process
+
+# 限制只处理 5 个会话
+bun scripts/check-pending-queue.ts --process --limit 5
+```
+
+## 理解队列状态
+
+消息依次经历以下生命周期状态：
+
+1. **pending**——已入队，等待处理
+2. **processing**——正在由 SDK 智能体处理
+3. **processed**——处理成功完成
+4. **failed**——重试 3 次后失败
+
+### 卡滞检测
+
+处于 `processing` 状态超过 **5 分钟** 的消息，被视为卡住：
+
+- worker 启动时会自动把它们重置为 `pending`
+- 但不会自动重新处理（需要手动触发）
+- 查询队列状态时，这些消息计入 `stuckCount` 字段
+
+## 恢复方法
+
+### 方法一：交互式 CLI 工具
+
+**适合场景**：普通用户、交互式会话，或想看清发生了什么的时候
+
+```bash
+bun scripts/check-pending-queue.ts
+```
+
+**示例输出**：
+
+```
+Checking worker health...
+Worker is healthy ✓
+
+Queue Summary:
+  Pending: 12 messages
+  Processing: 2 messages (1 stuck)
+  Failed: 0 messages
+  Recently Processed: 5 messages in last 30 minutes
+
+Sessions with pending work: 3
+  Session 44: 5 pending, 1 processing (age: 2m)
+  Session 45: 4 pending, 1 processing (age: 7m - STUCK)
+  Session 46: 2 pending
+
+Would you like to process these pending queues? (y/n)
+```
+
+**特性**：
+
+- ✅ 预检健康检查（验证 worker 正在运行）
+- ✅ 按会话详细拆解队列
+- ✅ 通过消息年龄进行卡滞检测
+- ✅ 确认提示（防止意外重复处理）
+- ✅ 通过 `--process` 标志进入非交互模式
+- ✅ 通过 `--limit N` 控制会话数量
+
+### 方法二：HTTP API
+
+**适合场景**：自动化、编写脚本、与监控系统做集成
+
+#### 查询队列状态
+
+```bash
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+curl http://127.0.0.1:$WORKER_PORT/api/pending-queue
+```
+
+**响应**：
+
+```json
+{
+  "queue": {
+    "messages": [
+      {
+        "id": 123,
+        "session_db_id": 45,
+        "claude_session_id": "abc123",
+        "message_type": "observation",
+        "status": "pending",
+        "retry_count": 0,
+        "created_at_epoch": 1730886600000
+      }
+    ],
+    "totalPending": 12,
+    "totalProcessing": 2,
+    "totalFailed": 0,
+    "stuckCount": 1
+  },
+  "recentlyProcessed": [...],
+  "sessionsWithPendingWork": [44, 45, 46]
+}
+```
+
+**关键字段**：
+
+- `totalPending`——等待处理的消息数
+- `totalProcessing`——正在处理的消息数
+- `stuckCount`——卡住超过 5 分钟的 processing 消息数
+- `sessionsWithPendingWork`——需要恢复的会话 ID
+
+#### 触发恢复
+
+```bash
+curl -X POST http://127.0.0.1:$WORKER_PORT/api/pending-queue/process \
+  -H "Content-Type: application/json" \
+  -d '{"sessionLimit": 10}'
+```
+
+**响应**：
+
+```json
+{
+  "success": true,
+  "totalPendingSessions": 15,
+  "sessionsStarted": 10,
+  "sessionsSkipped": 2,
+  "startedSessionIds": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+}
+```
+
+**响应字段**：
+
+- `totalPendingSessions`——数据库中有待处理消息的会话总数
+- `sessionsStarted`——本次请求实际启动处理的会话数
+- `sessionsSkipped`——已在处理中的会话数（防止产生重复的智能体）
+- `startedSessionIds`——本次启动的会话对应的数据库 ID
+
+## 最佳实践
+
+### 1. 恢复前先检查
+
+```bash
+# 先查看队列状态
+curl http://127.0.0.1:$WORKER_PORT/api/pending-queue
+
+# 或者用 CLI 工具，它会自动检查
+bun scripts/check-pending-queue.ts
+```
+
+### 2. 先用较小的会话上限
+
+```bash
+# 每次只处理 5 个会话
+bun scripts/check-pending-queue.ts --process --limit 5
+```
+
+这样可以避免过多并发的 SDK 智能体把 worker 压垮。
+
+### 3. 恢复期间持续监控
+
+在恢复运行期间，留意 worker 的日志输出：
+
+```bash
+npm run worker:logs
+```
+
+重点关注：
+- SDK 智能体启动：`Starting SDK agent for session...`
+- 处理完成：`Processed observation...`
+- 报错：`ERROR` 或 `Failed to process...`
+
+### 4. 验证恢复是否成功
+
+检查最近处理的消息：
+
+```bash
+curl http://127.0.0.1:$WORKER_PORT/api/pending-queue | jq '.recentlyProcessed'
+```
+
+或者使用 CLI 工具，它会自动展示这些信息。
+
+### 5. 处理失败的消息
+
+失败 3 次的消息会被标记为 `failed`，之后不会自动重试：
+
+```bash
+# 查看失败的消息
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT id, session_db_id, message_type, retry_count
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC;
+"
+```
+
+如有需要，你可以手动重置它们：
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  UPDATE pending_messages
+  SET status = 'pending', retry_count = 0
+  WHERE status = 'failed';
+"
+```
+
+## 故障排查
+
+### 恢复不生效
+
+**症状**：已经触发恢复，但消息仍处于 pending 状态
+
+**解决方法**：
+
+1. **验证 worker 健康状况**：
+   ```bash
+   curl http://127.0.0.1:$WORKER_PORT/health
+   ```
+
+2. **检查 worker 日志中的报错**：
+   ```bash
+   npm run worker:logs | grep -i error
+   ```
+
+3. **重启 worker**：
+   ```bash
+   npm run worker:restart
+   ```
+
+4. **检查数据库完整性**：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+   ```
+
+### 消息永久卡住
+
+**症状**：消息显示为「processing」长达数小时
+
+**解决方法**：强制重置卡住的消息
+
+```bash
+# 把所有卡住的消息重置为 pending
+sqlite3 ~/.claude-mem/claude-mem.db "
+  UPDATE pending_messages
+  SET status = 'pending', started_processing_at_epoch = NULL
+  WHERE status = 'processing';
+"
+
+# 然后触发恢复
+bun scripts/check-pending-queue.ts --process
+```
+
+### 恢复期间 Worker 崩溃
+
+**症状**：worker 在处理恢复中的消息时停止了
+
+**解决方法**：
+
+1. **检查可用内存**：
+   ```bash
+   npm run worker:status
+   ```
+
+2. **减小会话上限**：
+   ```bash
+   bun scripts/check-pending-queue.ts --process --limit 3
+   ```
+
+3. **检查日志中的 SDK 报错**：
+   ```bash
+   npm run worker:logs | grep -i "sdk"
+   ```
+
+4. **增大 worker 内存**（如果使用自定义方式的 runner）：
+   ```bash
+   export NODE_OPTIONS="--max-old-space-size=4096"
+   npm run worker:restart
+   ```
+
+## 进阶用法
+
+### 直接检查数据库
+
+查看所有待处理消息：
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT
+    id,
+    session_db_id,
+    message_type,
+    status,
+    retry_count,
+    datetime(created_at_epoch/1000, 'unixepoch') as created_at,
+    datetime(started_processing_at_epoch/1000, 'unixepoch') as started_at,
+    CAST((strftime('%s', 'now') * 1000 - started_processing_at_epoch) / 60000 AS INTEGER) as age_minutes
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  ORDER BY created_at_epoch;
+"
+```
+
+### 按状态统计消息
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT status, COUNT(*) as count
+  FROM pending_messages
+  GROUP BY status;
+"
+```
+
+### 查找有待处理工作的会话
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT
+    session_db_id,
+    COUNT(*) as pending_count,
+    GROUP_CONCAT(message_type) as message_types
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  GROUP BY session_db_id;
+"
+```
+
+### 查看最近的失败
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT
+    id,
+    session_db_id,
+    message_type,
+    retry_count,
+    datetime(completed_at_epoch/1000, 'unixepoch') as failed_at
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC
+  LIMIT 10;
+"
+```
+
+## 集成示例
+
+### 用定时任务（Cron）自动恢复
+
+```bash
+#!/bin/bash
+# 每小时运行一次，处理卡住的队列
+
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+
+# 检查 worker 是否健康
+if curl -f http://127.0.0.1:$WORKER_PORT/health > /dev/null 2>&1; then
+  # 自动处理，最多 5 个会话
+  bun scripts/check-pending-queue.ts --process --limit 5
+else
+  echo "Worker not healthy, skipping recovery"
+  exit 1
+fi
+```
+
+### 监控脚本
+
+```bash
+#!/bin/bash
+# 卡住数超过阈值时告警
+
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+STUCK_COUNT=$(curl -s http://127.0.0.1:$WORKER_PORT/api/pending-queue | jq '.queue.stuckCount')
+
+if [ "$STUCK_COUNT" -gt 5 ]; then
+  echo "WARNING: $STUCK_COUNT stuck messages detected"
+  # 发送告警（邮件、Slack 等）
+fi
+```
+
+### 关机前恢复
+
+```bash
+#!/bin/bash
+# 系统关机前处理完待处理的队列
+
+echo "Processing pending queues before shutdown..."
+bun scripts/check-pending-queue.ts --process --limit 20
+
+echo "Waiting for processing to complete..."
+sleep 10
+
+echo "Stopping worker..."
+claude-mem stop
+```
+
+## 迁移说明
+
+如果你正在从 v4.x 升级到 v5.x：
+
+**v4.x 行为**（自动恢复）：
+- worker 启动时自动恢复卡住的消息
+- 用户无法控制重新处理的时机
+
+**v5.x 行为**（手动恢复）：
+- 会检测卡住的消息，但不会自动重新处理
+- 用户必须通过 CLI 或 HTTP API 显式触发恢复
+- 避免意外产生重复的观察记录
+- 让你完全掌控处理的时机
+
+**迁移步骤**：
+1. 升级到 v5.x
+2. 检查是否有卡住的消息：`bun scripts/check-pending-queue.ts`
+3. 如有需要则处理：`bun scripts/check-pending-queue.ts --process`
+4. 把恢复步骤纳入你的工作流（定时任务、关机前脚本等）
+
+## 另请参阅
+
+- [Worker 服务架构](../architecture/worker-service) - 队列处理的技术细节
+- [故障排查——手动恢复](/troubleshooting#观察记录卡住时的手动恢复) - 常见问题与解决方法
+- [数据库结构](../architecture/database) - pending_messages 表的结构

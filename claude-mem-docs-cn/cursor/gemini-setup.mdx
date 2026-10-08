@@ -1,0 +1,86 @@
+---
+title: "Cursor + Gemini 配置"
+description: "在 Cursor 中使用你的 Gemini API key 运行 claude-mem"
+---
+
+# Cursor + Gemini 配置
+
+使用你的 Google Gemini key，让记忆笔记在套餐之外运行（不会消耗你的 Claude 订阅额度）。你**不需要**克隆仓库。
+
+## 安装
+
+1. 到 [Google AI Studio](https://aistudio.google.com/apikey) 获取一个 key。
+2. 运行：
+
+```bash
+npx claude-mem install
+```
+
+选择 **Cursor**，然后选择 **Gemini** 作为记忆提供商（provider），粘贴 key。
+
+<Warning>
+`npm install -g claude-mem` 装的只是库本身。请始终用 `npx claude-mem install` 安装。
+</Warning>
+
+### 手动设置（可选）
+
+```bash
+mkdir -p ~/.claude-mem
+cat > ~/.claude-mem/settings.json << 'EOF'
+{
+  "CLAUDE_MEM_PROVIDER": "gemini",
+  "CLAUDE_MEM_GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+}
+EOF
+```
+
+然后重新运行 `npx claude-mem install`，让 Cursor 的 hook 和 worker 就位。不要重启一个运行正常的 worker。
+
+## 重启 Cursor
+
+关闭并重新打开 Cursor，让 hook 生效。
+
+## 验证
+
+健康状况：`curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/health"`（端口也记录在 `~/.claude-mem/.worker.port` 中）。打开安装时给出的 worker URL 即可查看笔记。
+
+## 模型
+
+| 模型 | 说明 |
+|-------|-------|
+| `gemini-flash-latest` | **默认。** 当前的 GA Flash |
+| `gemini-flash-lite-latest` | 当前的 GA Flash-Lite |
+| `gemini-3.5-flash` | 锁定的 GA Flash |
+| `gemini-3.1-flash-lite` | 锁定的 GA Flash-Lite |
+
+锁定模型的方法：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "gemini",
+  "CLAUDE_MEM_GEMINI_API_KEY": "your-key",
+  "CLAUDE_MEM_GEMINI_MODEL": "gemini-3.5-flash"
+}
+```
+
+速率限制取决于所选模型，以及 Google Cloud 中是否开启了计费。未开启计费时，claude-mem 会自行拉开请求间隔。在启用 Google 计费后，若想去掉这层额外限流：
+
+```json
+{
+  "CLAUDE_MEM_GEMINI_BILLING_ENABLED": true
+}
+```
+
+## 故障排查
+
+**key 未配置**——执行 `cat ~/.claude-mem/settings.json`，应能看到 `CLAUDE_MEM_PROVIDER` 为 `gemini`，以及你的 key。
+
+**HTTP 429**——等待片刻、启用 Google 计费，或改用 [OpenRouter](/cursor/openrouter-setup)。
+
+**worker 空闲**——查看 `~/.claude-mem/logs/worker-YYYY-MM-DD.log`。不要重启一个运行正常的 worker（笔记队列存放在内存里，重启即丢）。
+
+## 下一步
+
+- [Cursor 集成](/cursor)——默认的 CMEM Pro 安装
+- [OpenRouter](/cursor/openrouter-setup)
+- [配置](/configuration)

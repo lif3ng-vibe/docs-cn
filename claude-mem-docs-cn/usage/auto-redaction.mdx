@@ -1,0 +1,101 @@
+---
+title: "自动脱敏"
+description: "可选开关的基于正则的检测，在存储前把常见秘密模式替换为 <redacted/> 占位符"
+---
+
+# 自动脱敏
+
+claude-mem 支持在观察记录和会话摘要存入之前，自动检测并脱敏（auto-redaction）常见秘密。与手动的 [`<private>` 标签](/usage/private-tags)不同，这条确定性的正则管线能捕获那些不是你亲手输入的秘密——例如 `curl` 响应打印出来的 API 密钥，或 `Bash` 命令回显的内容。
+
+## 工作机制
+
+启用后，脱敏与 `<private>` 标签剥离在同一个处理点执行，因此一次覆盖所有捕获路径：工具的输入与输出、你的 prompt（包括存储的 prompt 历史），以及用于生成摘要的 assistant 最后一条消息。[托管服务](/hosted-server)在存储事件之前，也会对事件体中的每个文本值先做脱敏；worker 与 hook 的日志在写入工具行（例如一条 `Bash` 命令）时同样先脱敏。内容会按一组精选的高置信度秘密模式扫描，命中处就地替换为自闭合的 `<redacted type='...'/>` 占位符，并保留周边上下文，因此检索质量和观察记录质量都不受影响。
+
+```
+Before:  curl -H "Authorization: Bearer sk-abc123def456..." …
+After:   curl -H "Authorization: Bearer <redacted type='openai_key'/>" …
+```
+
+当 payload 中含有占位标记时，观察者 prompt 会告知模型把它当作占位符对待，不要推断字面值。不含标记的 prompt 保持原样，因此没有命中时，脱敏不会增加任何 token。
+
+## 启用方法
+
+在 `~/.claude-mem/settings.json` 中添加：
+
+```json
+{
+  "CLAUDE_MEM_REDACT_ENABLED": "true"
+}
+```
+
+这样就够了，11 个内置模式随即生效。
+
+## 内置模式
+
+| 名称 | 命中内容 |
+|---|---|
+| `aws_access_key` | `AKIA…`（后接 16 位字母数字） |
+| `aws_secret_key` | 40 位 base64 字符串，锚定于 `AWS_SECRET_ACCESS_KEY=…`（shell / yaml 风格——见[局限](#局限)） |
+| `github_pat` | `ghp_…`、`ghs_…`、`github_pat_…` |
+| `openai_key` | `sk-…`（≥20 个字符） |
+| `anthropic_key` | `sk-ant-…`（≥20 个字符） |
+| `slack_token` | `xoxb-…`、`xoxp-…`、`xoxa-…`、`xoxr-…`、`xoxs-…` |
+| `jwt` | `eyJ…[.]eyJ…[.]…` 三段式 token |
+| `private_key_pem` | `-----BEGIN [RSA|DSA|EC|OPENSSH|PGP|]PRIVATE KEY-----` 块 |
+| `stripe_key` | `sk_live_…`、`pk_live_…`、`rk_test_…` |
+| `google_api_key` | `AIza…`（后接 35 个字符） |
+| `claude_mem_key` | claude-mem 自有的服务器 API 密钥（`cmem_…`）与 cmem.ai Pro 记忆密钥（`cm_pro_…`） |
+
+## 禁用单个内置模式
+
+```json
+{
+  "CLAUDE_MEM_REDACT_ENABLED": "true",
+  "CLAUDE_MEM_REDACT_DISABLED_BUILTINS": "jwt,slack_token"
+}
+```
+
+CSV 格式。其余内置模式保持生效。
+
+## 添加自定义模式
+
+```json
+{
+  "CLAUDE_MEM_REDACT_ENABLED": "true",
+  "CLAUDE_MEM_REDACT_CUSTOM_PATTERNS": "[{\"name\":\"company_internal_token\",\"regex\":\"INTERNAL-[A-Z0-9]{32}\"}]"
+}
+```
+
+`name` 必填，并会出现在 `<redacted type='...'/>` 标记中。自定义模式**先于**内置模式执行，因此可以针对特定的 token 家族覆盖内置检测。
+
+如果正则编译失败或 JSON 格式有误，claude-mem 会记录一条警告并跳过该条目——其余模式照常工作。
+
+## 诊断日志
+
+```json
+{
+  "CLAUDE_MEM_REDACT_LOG_MATCHES": "true"
+}
+```
+
+每次调用都会向 worker 日志写入一行 `pattern,count`。命中的原始字节绝不落日志。
+
+## 局限
+
+- **超大字段按整段失败处理**：单个字段超过约 100 万字符（UTF-16 code unit）时，不会不经扫描就存入，而是整段替换为 `<redacted type='oversize'/>`，并记录一条警告。命中次数没有上限：每一处命中都会被脱敏。
+- **`aws_secret_key` 的形态限制**：lookbehind 只锚定 `KEY=val`（shell）与 `KEY: val`（yaml）两种写法。JSON 风格的 `"AWS_SECRET_ACCESS_KEY": "value"` **不会**被命中，因为 lookbehind 要求键名后面紧跟 `=` 或 `:`。如果你常用 JSON 配置，请为它单独写一个自定义模式。
+- **覆盖缺口**：内置模式不覆盖 Azure / GCP 服务账号 JSON / IBM Cloud / 私有 IDC 的 token——这些请用自定义模式。
+- **settings.json 读取失败**：如果文件解析失败（例如手动改坏之后）而脱敏处于开启状态，claude-mem 仍会继续脱敏——沿用最后成功加载的配置或内置模式，并记录一条警告，不会回退到默认的关闭状态。要修改配置，请修复该文件；或在环境变量中设置 `CLAUDE_MEM_REDACT_ENABLED=false` 来关闭脱敏。
+- **server-beta 范围**：在多租户的 `server-beta` 部署中，脱敏配置目前读取 worker 本地的 `~/.claude-mem/settings.json`，而不是租户级设置。团队部署请在 worker 层级配置脱敏。后续版本将改为读取租户级脱敏配置。
+- **破坏性**：这是破坏性替换，不是加密。被脱敏的字节无法恢复。如果需要可逆的保护，请用 `<private>` 标签，把秘密完全挡在对话之外。
+
+## 与 `<private>` 标签的对比
+
+| | `<private>`（手动） | 自动脱敏 |
+|---|---|---|
+| **触发方式** | 用户手动包裹 `<private>...</private>` | 正则在内容中任意位置命中 |
+| **粒度** | 整块丢弃 | 就地占位符，保留周边内容 |
+| **默认** | 始终开启（无配置项） | 默认关闭，需自行开启 |
+| **适用场景** | 事先知道内容敏感 | 想为意外泄漏的 token 加一道安全网 |
+
+两者可以搭配使用——`<private>` 块先被移除，然后自动脱敏扫描剩余内容，因此被包裹的 `<private>` 块无论内部写了什么，其内容都会被整体移除。

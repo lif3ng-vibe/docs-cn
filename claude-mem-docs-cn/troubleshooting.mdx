@@ -1,0 +1,1090 @@
+---
+title: "故障排查"
+description: "Claude-Mem 常见问题与解决方案"
+---
+
+# 故障排查指南
+
+## 快速诊断工具
+
+把你遇到的问题描述给 Claude，troubleshoot skill 会自动激活，提供诊断与修复。
+
+troubleshoot skill 会做的事：
+- ✅ 检查 worker 状态与健康度
+- ✅ 验证数据库是否存在且完好
+- ✅ 测试 worker 服务连通性
+- ✅ 校验依赖是否安装
+- ✅ 检查端口配置与占用情况
+- ✅ 为常见问题提供自动修复
+
+该 skill 内置全面的诊断流程、自动修复序列，以及覆盖各类常见问题的详细排查工作流。只要自然地描述问题即可触发。
+
+---
+
+## 常见问题
+
+使用下文 worker API 命令前，先设置 `PORT`：
+
+```bash
+PORT=${CLAUDE_MEM_WORKER_PORT:-$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)}
+```
+
+### 查看器 UI 无法加载
+
+**症状**：无法访问 viewer URL、页面加载不出来，或浏览器显示连接错误。
+
+**解决方案**：
+
+1. 找到 worker 端口。默认端口为 `37700 + (uid % 100)`；配置的端口是 `~/.claude-mem/settings.json` 中 `CLAUDE_MEM_WORKER_PORT` 的值，运行中的 worker 也会在 `/api/health` 上报告该端口：
+   ```bash
+   PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+   lsof -i :$PORT
+   npm run worker:status
+   ```
+
+2. 验证 worker 是否健康：
+   ```bash
+   curl http://127.0.0.1:$PORT/health
+   ```
+
+3. 查看 worker 日志中的错误：
+   ```bash
+   npm run worker:logs
+   ```
+
+4. 重启 worker 服务：
+   ```bash
+   npm run worker:restart
+   ```
+
+5. 若自动分配的端口发生冲突，固定一个端口：
+   ```bash
+   export CLAUDE_MEM_WORKER_PORT=38000
+   npm run worker:restart
+   ```
+
+### 提供商超时后 Observer 暂停
+
+一旦 observer 请求超时，Claude-Mem 会保留排队的观察记录，并在延迟之后安排重试。延迟初始值接近配置的 `CLAUDE_MEM_LLM_TIMEOUT_MS`，连续超时会逐步拉长；一旦某条排队的观察记录处理成功，退避就会重置。无需新增任何 Claude Code hook——即使原会话已经结束，重试也会继续。
+
+在 worker 日志中先找 `Transport pause: scheduled buffered-work resume`，随后找 `Generator auto-starting (transport-resume)`。如果提供商持续不可用，worker 会以更慢的频率继续探测，且每次只放行一次无人值守的 transport resume。在 cmem.ai 记忆网关上，背后没有 Claude Code 活动的重试——比如超时之后、速率限制的等待之后，或记忆转入你的 Anthropic 套餐时——连续三次都拿不到结果就会停止重试，以免消耗你的套餐额度；此时排队的观察记录会等待你的下一次 Claude Code 活动（日志会显示 `Unattended resumes stopped on the cmem gateway`）。认证与配额类的暂停仍走各自既有的恢复路径。
+
+这条路径上排队的观察记录保存在 worker 内存中。如果 worker 在这些记录被处理之前重启，它们仍可能被丢弃；相关的持久化改造见 [issue #4068](https://github.com/thedotmack/claude-mem/issues/4068)。
+
+### 主题切换设置无法保存
+
+**症状**：主题偏好（浅色/深色模式）在浏览器刷新后重置。
+
+**解决方案**：
+
+1. 检查浏览器 localStorage 是否已启用：
+   ```javascript
+   // In browser console
+   localStorage.getItem('claude-mem-settings')
+   ```
+
+2. 验证 settings 端点工作正常：
+   ```bash
+   curl http://127.0.0.1:$PORT/api/settings
+   ```
+
+3. 清空 localStorage 后重试：
+   ```javascript
+   // In browser console
+   localStorage.removeItem('claude-mem-settings')
+   ```
+
+4. 检查是否处于浏览器隐私模式（会禁用 localStorage）
+
+### SSE 连接问题
+
+**症状**：查看器显示 "Disconnected" 状态，更新无法实时出现。
+
+**解决方案**：
+
+1. 检查 SSE 端点是否可访问：
+   ```bash
+   curl -N http://127.0.0.1:$PORT/stream
+   ```
+
+2. 查看浏览器控制台中的报错：
+   - 打开 DevTools（F12）
+   - 留意 EventSource 报错
+   - 在 Network 面板查看失败的 /stream 请求
+
+3. 验证 worker 是否在运行：
+   ```bash
+   npm run worker:status
+   ```
+
+4. 检查网络/代理是否拦截了 SSE
+   - 公司防火墙可能拦截 SSE
+   - 可尝试暂时关闭 VPN
+
+5. 重启 worker 并刷新浏览器：
+   ```bash
+   npm run worker:restart
+   ```
+
+### Chroma/Python 依赖问题（v5.0.0+）
+
+**症状**：安装时出现 chromadb 或 Python 相关报错。
+
+**解决方案**：
+
+1. 确认已安装 Python 3.8+ 以及更高版本：
+   ```bash
+   python --version
+   # 或者
+   python3 --version
+   ```
+
+2. 手动安装 chromadb：
+   ```bash
+   cd ~/.claude/plugins/marketplaces/thedotmack
+   npm install chromadb
+   ```
+
+3. 检查 chromadb 健康状况：
+   ```bash
+   npm run chroma:health
+   ```
+
+4. Windows 特有：确保 Python 在 PATH 中：
+   ```bash
+   where python
+   # 应显示 Python 安装路径
+   ```
+
+5. 如果 Chroma 仍持续失败，混合检索（hybrid search）会优雅降级为只用 SQLite FTS5
+
+### 关闭工具 Hook 捕获（PreToolUse / PostToolUse）
+
+**适用场景**：想让 claude-mem 停止捕获工具调用（`PostToolUse` 的 `observation`）或在 `Read` 之前注入文件历史（`PreToolUse` 的 `file-context`），例如每条工具调用的 hook 开销在你的机器上过高时。不要因此改掉 `hooks.json` 里这些 hook 的键名：Claude Code 会拒绝未知的 hook 键，并丢弃整个插件的 hook 集。
+
+**关闭方式**（SessionStart 上下文、UserPromptSubmit 与 Stop 摘要不受影响）：
+
+```json
+{
+  "env": {
+    "CLAUDE_MEM_DISABLE_TOOL_HOOKS": "1"
+  }
+}
+```
+
+把这段加到 `~/.claude/settings.json`（或在 shell 中 export 该变量）。只想关掉两个 hook 之一，可用 `CLAUDE_MEM_DISABLE_OBSERVATION=1` 或 `CLAUDE_MEM_DISABLE_FILE_CONTEXT=1`。参见 [配置](configuration)。
+
+**Windows 控制台窗口**：此开关用于退出捕获，而不是修复那条每次工具调用都可能闪现的控制台窗口。Claude Code 仍会通过 bash 启动 hook，窗口在 claude-mem 运行之前就已出现；该开关只是让每条工具 hook 立即退出。针对窗口本身的修复见 [#3605](https://github.com/thedotmack/claude-mem/issues/3605)。
+
+### 智能安装缓存问题（v5.0.3+）
+
+**症状**：插件更新后依赖没有更新，版本标记过期。
+
+**解决方案**：
+
+1. 清除安装缓存：
+   ```bash
+   rm ~/.claude/plugins/marketplaces/thedotmack/.install-version
+   ```
+
+2. 强制重装：
+   ```bash
+   cd ~/.claude/plugins/marketplaces/thedotmack
+   npm install --force
+   ```
+
+3. 检查版本标记：
+   ```bash
+   cat ~/.claude/plugins/marketplaces/thedotmack/.install-version
+   cat ~/.claude/plugins/marketplaces/thedotmack/package.json | grep version
+   ```
+
+4. 手动安装后重启 Claude Code
+
+## worker 服务问题
+
+### worker 服务无法启动
+
+**症状**：worker 没有启动，或 worker 状态显示未运行。
+
+**解决方案**：
+
+1. 检查 worker 状态：
+   ```bash
+   npm run worker:status
+   ```
+
+2. 尝试手动启动：
+   ```bash
+   npm run worker:start
+   ```
+
+3. 查看 worker 日志中的错误：
+   ```bash
+   npm run worker:logs
+   ```
+
+4. 完全重置：
+   ```bash
+   npm run worker:stop
+   npm run worker:start
+   ```
+
+5. 确认 Bun 已安装：
+   ```bash
+   which bun
+   bun --version
+   ```
+
+### 端口分配失败
+
+**症状**：worker 启动失败，报 "port already in use" 错误。
+
+**解决方案**：
+
+1. 检查配置的端口是否被占用：
+   ```bash
+   lsof -i :$PORT
+   ```
+
+2. 杀掉占用端口的进程：
+   ```bash
+   kill -9 $(lsof -t -i:$PORT)
+   ```
+
+3. 或换用其他端口：
+   ```bash
+   export CLAUDE_MEM_WORKER_PORT=38000
+   npm run worker:restart
+   ```
+
+4. 验证新端口：
+   ```bash
+   curl -s http://127.0.0.1:$CLAUDE_MEM_WORKER_PORT/api/health | jq .port
+   ```
+
+### worker 反复崩溃
+
+**症状**：worker 反复重启，或无法保持运行。
+
+**解决方案**：
+
+1. 查看错误日志：
+   ```bash
+   npm run worker:logs
+   ```
+
+2. 检查 worker 状态：
+   ```bash
+   npm run worker:status
+   ```
+
+3. 检查数据库是否损坏：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+   ```
+
+4. 确认 Bun 安装正常：
+   ```bash
+   bun --version
+   ```
+
+### worker 不再处理观察记录
+
+**症状**：观察记录已保存但未被处理，没有生成任何摘要。
+
+**解决方案**：
+
+1. 检查 worker 是否在运行：
+   ```bash
+   npm run worker:status
+   ```
+
+2. 查看 worker 日志：
+   ```bash
+   npm run worker:logs
+   ```
+
+3. 验证数据库中有观察记录：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM observations;"
+   ```
+
+4. 重启 worker：
+   ```bash
+   npm run worker:restart
+   ```
+
+### 观察记录卡住时的手动恢复
+
+**症状**：worker 崩溃或重启之后，观察记录卡在处理队列里，worker 虽然在运行，却始终没有新摘要出现。
+
+**背景**：从 v5.x 起，worker 启动时的自动队列恢复已禁用。用户需要手动触发手动恢复（manual recovery），以便显式控制重新处理的过程，并避免出现意料之外的重复观察记录。
+
+**解决方案**：
+
+#### 方式 1：使用 CLI 恢复工具（推荐）
+
+交互式 CLI 工具提供最安全、最省心的恢复体验：
+
+```bash
+# 检查队列状态，并提示确认恢复
+bun scripts/check-pending-queue.ts
+
+# 不提示，直接自动处理
+bun scripts/check-pending-queue.ts --process
+
+# 最多处理 5 个会话
+bun scripts/check-pending-queue.ts --process --limit 5
+```
+
+**它做哪些事**：
+- ✅ 在继续之前先检查 worker 健康
+- ✅ 展示详细的队列摘要（pending、processing、failed、stuck）
+- ✅ 按会话分组消息，并附时间与状态明细
+- ✅ 提示用户确认是否处理（使用 `--process` 参数时除外）
+- ✅ 展示最近处理的消息，便于反馈
+
+**交互示例**：
+```
+Worker is healthy ✓
+
+Queue Summary:
+  Pending: 12 messages
+  Processing: 2 messages (1 stuck)
+  Failed: 0 messages
+  Recently Processed: 5 messages in last 30 minutes
+
+Sessions with pending work: 3
+  Session 44: 5 pending, 1 processing (age: 2m)
+  Session 45: 4 pending, 1 processing (age: 7m - STUCK)
+  Session 46: 2 pending
+
+Would you like to process these pending queues? (y/n)
+```
+
+#### 方式 2：直接使用 HTTP API
+
+适用于自动化或脚本场景：
+
+1. **检查队列状态**：
+   ```bash
+   curl http://127.0.0.1:$PORT/api/pending-queue
+   ```
+
+   响应内容包括：
+   - `queue.totalPending`：等待处理的消息数
+   - `queue.totalProcessing`：处理中的消息数
+   - `queue.stuckCount`：处理超过 5 分钟的消息数
+   - `sessionsWithPendingWork`：需要恢复的会话 ID
+
+2. **触发手动恢复**：
+   ```bash
+   curl -X POST http://127.0.0.1:$PORT/api/pending-queue/process \
+     -H "Content-Type: application/json" \
+     -d '{"sessionLimit": 10}'
+   ```
+
+   响应内容包括：
+   - `totalPendingSessions`：有待处理消息的会话总数
+   - `sessionsStarted`：本次已启动处理的会话数
+   - `sessionsSkipped`：已经在处理中的会话数（不会重启）
+   - `startedSessionIds`：已启动会话的数据库 ID
+
+#### 理解队列状态
+
+消息依次经历这些状态：
+
+1. **pending** —— 已入队，等待处理
+2. **processing** —— 正在由 SDK agent 处理
+3. **processed** —— 处理完成
+4. **failed** —— 3 次重试后失败
+
+**卡住检测**：处于 `processing` 状态超过 5 分钟的消息视为卡住，会在 worker 启动时自动重置为 `pending`（但不会自动重新处理）。
+
+#### 恢复策略
+
+**何时使用手动恢复**：
+- worker 崩溃或意外重启之后
+- 观察记录看着已保存，却没有生成摘要时
+- 队列状态显示有卡住的消息（processing 超过 5 分钟）时
+- 系统崩溃或强制关机之后
+
+**最佳实践**：
+1. 触发恢复之前，务必先查看队列状态
+2. 交互式场景用 CLI 工具（有实时反馈）
+3. 自动化/脚本场景用 HTTP API
+4. 会话上限先从低值（5-10）起步，避免压垮 worker
+5. 恢复期间盯住 worker 日志：`npm run worker:logs`
+6. 查看最近处理的消息，确认恢复确实生效
+
+#### 恢复问题排查
+
+如果恢复失败，或消息仍然卡住：
+
+1. **确认 worker 健康**：
+   ```bash
+   curl http://127.0.0.1:$PORT/health
+   # 应返回：{"status":"ok","uptime":12345,"port":...}
+   ```
+
+2. **检查数据库是否损坏**：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+   ```
+
+3. **直接查看卡住的消息**：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     SELECT id, session_db_id, status, retry_count,
+            (strftime('%s', 'now') * 1000 - started_processing_at_epoch) / 60000 as age_minutes
+     FROM pending_messages
+     WHERE status = 'processing'
+     ORDER BY started_processing_at_epoch;
+   "
+   ```
+
+4. **强制重置卡住的消息**（最后手段）：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     UPDATE pending_messages
+     SET status = 'pending', started_processing_at_epoch = NULL
+     WHERE status = 'processing';
+   "
+   ```
+
+   然后触发恢复：
+   ```bash
+   bun scripts/check-pending-queue.ts --process
+   ```
+
+5. **在 worker 日志中查 SDK 错误**：
+   ```bash
+   npm run worker:logs | grep -i error
+   ```
+
+#### 理解队列表
+
+`pending_messages` 表追踪所有消息的关键字段如下：
+
+```sql
+CREATE TABLE pending_messages (
+  id INTEGER PRIMARY KEY,
+  session_db_id INTEGER,          -- Foreign key to sdk_sessions
+  claude_session_id TEXT,          -- Claude session ID
+  message_type TEXT,               -- 'observation' | 'summarize'
+  status TEXT,                     -- 'pending' | 'processing' | 'processed' | 'failed'
+  retry_count INTEGER,             -- Current retry attempt (max: 3)
+  created_at_epoch INTEGER,        -- When message was queued
+  started_processing_at_epoch INTEGER,  -- When marked 'processing'
+  completed_at_epoch INTEGER       -- When completed/failed
+)
+```
+
+**查询示例**：
+
+```bash
+# 按状态统计消息数
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT status, COUNT(*)
+  FROM pending_messages
+  GROUP BY status;
+"
+
+# 找出有待处理工作的会话
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT session_db_id, COUNT(*) as pending_count
+  FROM pending_messages
+  WHERE status IN ('pending', 'processing')
+  GROUP BY session_db_id;
+"
+
+# 查看最近的失败记录
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT id, session_db_id, message_type, retry_count,
+         datetime(completed_at_epoch/1000, 'unixepoch') as failed_at
+  FROM pending_messages
+  WHERE status = 'failed'
+  ORDER BY completed_at_epoch DESC
+  LIMIT 10;
+"
+```
+
+## Hook 问题
+
+### Hook 不触发
+
+**症状**：没有任何上下文出现，观察记录没有保存。
+
+**解决方案**：
+
+1. 确认 hook 已配置：
+   ```bash
+   cat plugin/hooks/hooks.json
+   ```
+
+2. 手动测试 hook：
+   ```bash
+   # 测试 context hook
+   echo '{"session_id":"test-123","cwd":"'$(pwd)'","source":"startup"}' | node plugin/scripts/context-hook.js
+   ```
+
+3. 检查 hook 权限：
+   ```bash
+   ls -la plugin/scripts/*.js
+   ```
+
+4. 验证 hooks.json 是合法的 JSON：
+   ```bash
+   cat plugin/hooks/hooks.json | jq .
+   ```
+
+### 上下文未出现
+
+**症状**：Claude 启动时没有任何会话上下文。
+
+**解决方案**：
+
+1. 检查是否存在摘要：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM session_summaries;"
+   ```
+
+2. 查看最近的会话：
+   ```bash
+   npm run test:context:verbose
+   ```
+
+3. 检查数据库完整性：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+   ```
+
+4. 手动测试 context hook：
+   ```bash
+   npm run test:context
+   ```
+
+### Hook 超时
+
+**症状**：hook 执行超时，Claude Code 中出现报错。
+
+**解决方案**：
+
+1. 调大 `plugin/hooks/hooks.json` 中的超时值：
+   ```json
+   {
+     "timeout": 180  // Increase from 120
+   }
+   ```
+
+2. 检查 worker 是否在运行（避免 hook 因等待 worker 而超时）：
+   ```bash
+   npm run worker:status
+   ```
+
+3. 检查数据库体积（数据库越大，查询越慢）：
+   ```bash
+   ls -lh ~/.claude-mem/claude-mem.db
+   ```
+
+4. 优化数据库：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "VACUUM;"
+   ```
+
+### Windows：`"bun" is not recognized` Hook 报错
+
+**症状**：Windows 上每个 hook 都失败，报错为：
+
+```
+SessionStart:startup hook error
+Failed with non-blocking status code: ""bun"" is not recognized as an internal or external command
+```
+
+（或其本地化等价文案）——尽管 `bun --version` 在任何终端里都能正常执行，`where bun` 也能正确解析。
+
+**原因**：cmd.exe 会静默丢弃超过约 8,191 字符的环境变量。hook 会把登录 shell 的 PATH 前置到继承的 PATH 上，可能使 PATH 翻倍并超出该上限——此时 cmd.exe 里的 PATH 为空，裸的 `bun` 命令无法解析，而 `where.exe`（走 Win32 API、没有这一限制）却能找到它。只有在合并后的 PATH 超出上限时才会复现，这也解释了为什么同样的配置在 PATH 较短的机器上一切正常。
+
+**解决方案**：
+
+1. 更新 claude-mem——启动器现在会解析 `bun.exe` 的绝对路径并直接拉起进程，不再经过 cmd.exe。
+
+2. 检查你的 PATH 长度；若接近或超过约 4,000 字符，翻倍后就会超出 cmd.exe 的上限：
+   ```powershell
+   $env:Path.Length
+   ```
+
+3. 清理重复或失效的 PATH 条目（Windows 会合并机器级与用户级 PATH，而许多安装程序两边都各加一份）。
+
+### 依赖安装失败
+
+**症状**：SessionStart hook 失败，报 "module not found" 错误。
+
+**解决方案**：
+
+1. 手动安装依赖：
+   ```bash
+   cd ~/.claude/plugins/marketplaces/thedotmack
+   npm install
+   ```
+
+2. 确认 npm 可用：
+   ```bash
+   which npm
+   npm --version
+   ```
+
+3. 确认 package.json 存在：
+   ```bash
+   ls -la ~/.claude/plugins/marketplaces/thedotmack/package.json
+   ```
+
+## 数据库问题
+
+### 数据库被锁定
+
+**症状**：日志中出现 "database is locked" 错误。
+
+**解决方案**：
+
+1. 关闭所有连接：
+   ```bash
+   npm run worker:stop
+   ```
+
+2. 检查是否有残留锁：
+   ```bash
+   lsof ~/.claude-mem/claude-mem.db
+   ```
+
+3. 杀掉持有锁的进程：
+   ```bash
+   kill -9 <PID>
+   ```
+
+4. 重启 worker：
+   ```bash
+   npm run worker:start
+   ```
+
+### 数据库损坏
+
+**症状**：完整性检查不通过，出现各种奇怪错误。
+
+**解决方案**：
+
+1. 检查数据库完整性：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "PRAGMA integrity_check;"
+   ```
+
+2. 备份数据库：
+   ```bash
+   cp ~/.claude-mem/claude-mem.db ~/.claude-mem/claude-mem.db.backup
+   ```
+
+3. 尝试修复：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "VACUUM;"
+   ```
+
+4. 最后手段——重建数据库：
+   ```bash
+   rm ~/.claude-mem/claude-mem.db
+   npm run worker:start  # 会自动重建表结构
+   ```
+
+### FTS5 检索无法使用
+
+**症状**：检索不出结果，或出现 FTS5 报错。
+
+**解决方案**：
+
+1. 确认 FTS5 表存在：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%_fts';"
+   ```
+
+2. 重建 FTS5 表：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     INSERT INTO observations_fts(observations_fts) VALUES('rebuild');
+     INSERT INTO session_summaries_fts(session_summaries_fts) VALUES('rebuild');
+   "
+   ```
+
+3. 确认触发器存在：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT name FROM sqlite_master WHERE type='trigger';"
+   ```
+
+### 数据库过大
+
+**症状**：性能变慢，数据库文件很大。
+
+**解决方案**：
+
+1. 检查数据库大小：
+   ```bash
+   ls -lh ~/.claude-mem/claude-mem.db
+   ```
+
+2. 压缩数据库：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "VACUUM;"
+   ```
+
+3. 删除旧会话：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     DELETE FROM observations WHERE created_at_epoch < $(date -v-30d +%s);
+     DELETE FROM session_summaries WHERE created_at_epoch < $(date -v-30d +%s);
+     DELETE FROM sdk_sessions WHERE created_at_epoch < $(date -v-30d +%s);
+   "
+   ```
+
+4. 删除之后重建 FTS5：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     INSERT INTO observations_fts(observations_fts) VALUES('rebuild');
+     INSERT INTO session_summaries_fts(session_summaries_fts) VALUES('rebuild');
+   "
+   ```
+
+## MCP 检索问题
+
+### 检索工具不可用
+
+**症状**：在 Claude Code 中看不到 MCP 检索工具。
+
+**解决方案**：
+
+1. 检查 MCP 配置：
+   ```bash
+   cat plugin/.mcp.json
+   ```
+
+2. 确认检索服务器已构建：
+   ```bash
+   ls -l plugin/scripts/mcp-server.cjs
+   ```
+
+3. 需要时重新构建：
+   ```bash
+   npm run build
+   ```
+
+4. 重启 Claude Code
+
+### 检索无结果
+
+**症状**：合法的查询返回空结果。
+
+**解决方案**：
+
+1. 确认数据库中有数据：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM observations;"
+   ```
+
+2. 确认 FTS5 表已填充数据：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM observations_fts;"
+   ```
+
+3. 测试一个简单查询：
+   ```bash
+   # 测试 MCP search 工具
+   search(query="test", limit=5)
+   ```
+
+4. 检查查询语法：
+   ```bash
+   # 不当做法：特殊字符可能引发问题
+   search(query="[test]")
+
+   # 正确做法：使用简单词语
+   search(query="test")
+   ```
+
+### token 限额错误
+
+**症状**：MCP 报 "exceeded token limit" 错误。
+
+**解决方案**：
+
+1. 遵循三层工作流（不要直接跳到 get_observations）：
+   ```bash
+   # 先用 search 拿到索引
+   search(query="...", limit=10)
+
+   # 看 ID，只拉取相关的那几条
+   get_observations(ids=[<2-3 relevant IDs>])
+   ```
+
+2. 调小 search 的 limit：
+   ```bash
+   search(query="...", limit=3)
+   ```
+
+3. 用过滤器收窄结果范围：
+   ```bash
+   search(query="...", type="decision", limit=5)
+   ```
+
+4. 结果分页：
+   ```bash
+   # 第一页
+   search(query="...", limit=5, offset=0)
+
+   # 第二页
+   search(query="...", limit=5, offset=5)
+   ```
+
+5. 在 get_observations 中批量传 ID：
+   ```bash
+   # 多个 ID 永远合并到一次调用
+   get_observations(ids=[123, 456, 789])
+
+   # 不要每个 ID 单独调一次
+   ```
+
+## 性能问题
+
+### 上下文注入缓慢
+
+**症状**：SessionStart hook 耗时太长。
+
+**解决方案**：
+
+1. 减少注入上下文的会话数：
+   ```typescript
+   // In src/hooks/context.ts
+   const CONTEXT_SESSIONS = 5;  // Reduce from 10
+   ```
+
+2. 优化数据库：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     ANALYZE;
+     VACUUM;
+   "
+   ```
+
+3. 补建索引（如果缺失）：
+   ```bash
+   sqlite3 ~/.claude-mem/claude-mem.db "
+     CREATE INDEX IF NOT EXISTS idx_sessions_project_created ON sdk_sessions(project, created_at_epoch DESC);
+   "
+   ```
+
+### 检索查询缓慢
+
+**症状**：MCP 检索工具响应太慢。
+
+**解决方案**：
+
+1. 使用更具体的查询
+2. 加上日期范围过滤
+3. 加上 type/concept 过滤
+4. 调小结果条数上限
+5. 用索引格式代替完整格式
+
+### 内存占用过高
+
+**症状**：worker 占用内存过多。
+
+**解决方案**：
+
+1. 查看当前占用：
+   ```bash
+   npm run worker:status
+   ```
+
+2. 重启 worker：
+   ```bash
+   npm run worker:restart
+   ```
+
+3. 清理旧数据（见上文“数据库过大”）
+
+## 安装问题
+
+### 找不到插件
+
+**症状**：`/plugin install claude-mem` 失败。
+
+**解决方案**：
+
+1. 先添加 marketplace：
+   ```bash
+   /plugin marketplace add thedotmack/claude-mem
+   ```
+
+2. 再安装：
+   ```bash
+   /plugin install claude-mem
+   ```
+
+3. 验证安装结果：
+   ```bash
+   ls -la ~/.claude/plugins/marketplaces/thedotmack/
+   ```
+
+### 构建失败
+
+**症状**：`npm run build` 失败。
+
+**解决方案**：
+
+1. 清理后重装：
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+2. 检查 Node.js 版本：
+   ```bash
+   node --version  # 应满足 >= 20.0.0
+   ```
+
+3. 检查 TypeScript 编译错误：
+   ```bash
+   npx tsc --noEmit
+   ```
+
+### 缺少依赖
+
+**症状**：报 "Cannot find module" 错误。
+
+**解决方案**：
+
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+
+2. 检查 package.json：
+   ```bash
+   cat package.json
+   ```
+
+3. 确认 node_modules 目录存在：
+   ```bash
+   ls -la node_modules/
+   ```
+
+## 调试
+
+### 开启详细日志
+
+```bash
+export DEBUG=claude-mem:*
+npm run worker:restart
+npm run worker:logs
+```
+
+### 检查关联 ID
+
+沿整条记忆管线追踪观察记录：
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db "
+  SELECT correlation_id, tool_name, created_at
+  FROM observations
+  WHERE session_id = 'YOUR_SESSION_ID'
+  ORDER BY created_at;
+"
+```
+
+### 检查 worker 状态
+
+```bash
+# 检查 worker 是否在运行
+npm run worker:status
+
+# 查看日志
+npm run worker:logs
+
+# 查看配置的端口（每用户默认 = 37700 + uid % 100）
+jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json
+
+# 测试 worker 健康（PORT 替换为上面查到的值）
+curl "http://127.0.0.1:$PORT/health"
+```
+
+### 数据库检查
+
+```bash
+sqlite3 ~/.claude-mem/claude-mem.db
+
+# 查看表结构
+.schema
+
+# 检查各表行数
+SELECT 'sessions', COUNT(*) FROM sdk_sessions
+UNION ALL
+SELECT 'observations', COUNT(*) FROM observations
+UNION ALL
+SELECT 'summaries', COUNT(*) FROM session_summaries
+UNION ALL
+SELECT 'prompts', COUNT(*) FROM user_prompts;
+
+# 查看最近活动
+SELECT created_at, tool_name FROM observations ORDER BY created_at DESC LIMIT 10;
+```
+
+## 常见报错信息
+
+### "Worker service not responding"
+
+**原因**：worker 未运行，或端口不匹配。
+
+**解决方案**：用 `npm run worker:restart` 重启 worker。
+
+### "Database is locked"
+
+**原因**：多个进程同时访问数据库。
+
+**解决方案**：停掉 worker，杀掉残留进程，再重启。
+
+### "FTS5: syntax error"
+
+**原因**：检索查询语法无效。
+
+**解决方案**：换更简单的查询，避免特殊字符。
+
+### "SQLITE_CANTOPEN"
+
+**原因**：数据库文件权限问题或目录缺失。
+
+**解决方案**：确认 `~/.claude-mem/` 目录存在且可写。
+
+### "Module not found"
+
+**原因**：缺少依赖。
+
+**解决方案**：运行 `npm install`。
+
+## 寻求帮助
+
+如果以上方案都无效：
+
+1. **查看日志**：
+   ```bash
+   npm run worker:logs
+   ```
+
+2. **创建 issue**：[GitHub Issues](https://github.com/thedotmack/claude-mem/issues)
+   - 附上报错信息
+   - 附上相关日志
+   - 附上复现步骤
+
+3. **查看已有 issue**：你的问题可能已经有人解决
+
+## 后续步骤
+
+- [配置](configuration) —— 自定义 Claude-Mem
+- [开发](development) —— 从源码构建
+- [架构](architecture/overview) —— 了解系统设计

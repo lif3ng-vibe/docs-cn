@@ -1,0 +1,559 @@
+---
+title: "PM2 到 Bun 迁移"
+description: "v7.1.0 中进程管理与数据库驱动迁移的完整技术文档"
+---
+
+<Note>
+**历史迁移文档**
+
+本文记录的是 v7.1.0（2025 年 12 月）中 PM2 到 Bun 的迁移过程。如果你是首次安装 claude-mem，该迁移早已自动完成，可直接使用主指南中当前的 Bun 体系。
+
+本文保留给从 v7.1.0 之前版本升级的用户参考。
+</Note>
+
+# PM2 到 Bun 迁移：完整技术文档
+
+**版本**：7.1.0
+**日期**：2025 年 12 月
+**迁移类型**：进程管理（PM2 → Bun）+ 数据库驱动（better-sqlite3 → bun:sqlite）
+
+## 执行摘要
+
+claude-mem 7.1.0 引入了两次重大架构迁移：
+
+1. **进程管理**：PM2 → 基于 Bun 的自研 ProcessManager
+2. **数据库驱动**：better-sqlite3 npm 包 → bun:sqlite 运行时模块
+
+这两次迁移对最终用户都是**自动**且**透明**的。升级到 7.1.0 及更高版本后，第一次触发 Hook 时，系统会执行一次性的旧 PM2 进程清理，随即切换到新架构。
+
+### 主要收益
+
+- **依赖更精简**：移除 PM2 与 better-sqlite3 两个 npm 包
+- **跨平台支持更好**：Windows 兼容性显著提升
+- **安装更快**：无需编译原生模块
+- **运行时内建**：直接使用 Bun 内建的进程管理与 SQLite
+- **复杂度降低**：自研 ProcessManager 比 PM2 集成更简单
+
+### 迁移影响
+
+- **数据无损**：用户数据、设置与数据库保持不变
+- **自动清理**：旧 PM2 进程在所有平台上自动终止
+- **无需用户操作**：迁移在第一次 Hook 触发时自动进行
+- **向后兼容**：SQLite 数据库格式不变（仅更换了驱动）
+
+## 架构对比
+
+### 旧系统（基于 PM2）
+
+<AccordionGroup>
+<Accordion title="进程管理（PM2）">
+**组件**：PM2（Process Manager 2）
+- **包**：`pm2` npm 依赖
+- **进程名**：`claude-mem-worker`
+- **管理方式**：由外部 PM2 守护进程管理生命周期
+- **发现方式**：`pm2 list`、`pm2 describe` 命令
+- **自动重启**：崩溃时由 PM2 自动重启
+- **日志**：`~/.pm2/logs/claude-mem-worker-*.log`
+- **PID 文件**：`~/.pm2/pids/claude-mem-worker.pid`
+
+**生命周期命令**：
+```bash
+pm2 start <script>           # 启动 worker
+pm2 stop claude-mem-worker   # 停止 worker
+pm2 restart claude-mem-worker # 重启 worker
+pm2 delete claude-mem-worker  # 从 PM2 中移除
+pm2 logs claude-mem-worker    # 查看日志
+```
+
+**痛点**：
+- 需要额外的 npm 依赖
+- PM2 守护进程必须处于运行状态
+- 可能与其他 PM2 进程冲突
+- Windows 兼容性问题
+- 对简单场景而言配置过于复杂
+</Accordion>
+
+<Accordion title="数据库驱动（better-sqlite3）">
+**组件**：better-sqlite3
+- **包**：`better-sqlite3` npm 包（原生模块）
+- **安装**：需要原生编译（node-gyp）
+- **Windows**：需要 Visual Studio 构建工具 + Python
+- **导入**：`import Database from 'better-sqlite3'`
+
+**安装要求**：
+- Node.js 开发头文件
+- C++ 编译器（Mac/Linux 上为 gcc/clang，Windows 上为 MSVC）
+- Python（供 node-gyp 使用）
+- Windows：Visual Studio Build Tools
+</Accordion>
+</AccordionGroup>
+
+### 新系统（基于 Bun）
+
+<AccordionGroup>
+<Accordion title="进程管理（自研 ProcessManager）">
+**组件**：自研 ProcessManager（`src/services/process/ProcessManager.ts`）
+- **包**：Bun 内建 API（无外部依赖）
+- **进程启动**：`Bun.spawn()`（detached 模式）
+- **管理方式**：通过 PID 文件直接控制进程
+- **发现方式**：PID 文件 + 进程存在性检查 + HTTP 健康检查
+- **自动重启**：检测到故障时由 Hook 触发重启
+- **日志**：`~/.claude-mem/logs/worker-YYYY-MM-DD.log`
+- **PID 文件**：`~/.claude-mem/.worker.pid`
+- **端口文件**：`~/.claude-mem/.worker.port`（新增）
+
+**生命周期命令**：
+```bash
+npm run worker:start    # 启动 worker
+npm run worker:stop     # 停止 worker
+npm run worker:restart  # 重启 worker
+npm run worker:status   # 检查状态
+npm run worker:logs     # 查看日志
+```
+
+**核心机制**：
+
+1. **PID 文件管理**：
+   - 文件：`~/.claude-mem/.worker.pid`
+   - 内容：进程 ID（例如“35557”）
+   - 校验：通过 `kill(pid, 0)` 信号确认进程存在
+
+2. **端口文件管理**：
+   - 文件：`~/.claude-mem/.worker.port`
+   - 内容：两行（端口号、PID）
+   - 用途：跟踪端口绑定并校验 PID 是否匹配
+
+3. **健康检查**：
+   - 第 1 层：PID 文件是否存在？
+   - 第 2 层：进程是否存活？（`kill(pid, 0)`）
+   - 第 3 层：HTTP 健康检查（`GET /health`）
+   - 三层全部通过才算“健康”
+
+**优势**：
+- 无外部依赖
+- 代码更简单（直接控制）
+- 错误处理与校验更完善
+- 平台无关（平台差异由 Bun 屏蔽）
+</Accordion>
+
+<Accordion title="数据库驱动（bun:sqlite）">
+**组件**：bun:sqlite
+- **包**：内置于 Bun 运行时（无 npm 包）
+- **安装**：无需安装（Bun ≥1.0 自带）
+- **平台**：Bun 能跑的地方就能用
+- **导入**：`import { Database } from 'bun:sqlite'`
+- **API**：与 better-sqlite3 相似（同步式）
+
+**安装要求**：
+- Bun ≥1.0（缺失时自动安装）
+- 无需原生编译
+- 不需要任何平台专属构建工具
+
+**兼容性**：
+- SQLite 数据库格式：**不变**
+- 数据库文件：`~/.claude-mem/claude-mem.db`（位置相同）
+- 查询语法：**完全一致**（两者都用 SQLite SQL）
+</Accordion>
+</AccordionGroup>
+
+## 迁移机制
+
+### 一次性 PM2 清理
+
+迁移系统采用标记文件的方式，确保 PM2 清理只执行一次。
+
+**实现位置**：`src/shared/worker-utils.ts:73-86`
+
+```typescript
+// Clean up legacy PM2 (one-time migration)
+const pm2MigratedMarker = join(DATA_DIR, '.pm2-migrated');
+
+if (!existsSync(pm2MigratedMarker)) {
+  try {
+    spawnSync('pm2', ['delete', 'claude-mem-worker'], { stdio: 'ignore' });
+    // Mark migration as complete
+    writeFileSync(pm2MigratedMarker, new Date().toISOString(), 'utf-8');
+    logger.debug('SYSTEM', 'PM2 cleanup completed and marked');
+  } catch {
+    // PM2 not installed or process doesn't exist - still mark as migrated
+    writeFileSync(pm2MigratedMarker, new Date().toISOString(), 'utf-8');
+  }
+}
+```
+
+### 迁移触发点
+
+<Steps>
+<Step title="Hook 执行">
+SessionStart、UserPromptSubmit 或 PostToolUse Hook 以 7.1.0 的新代码执行
+</Step>
+<Step title="Worker 状态检查">
+`ensureWorkerRunning()` 检查 `~/.claude-mem/.worker.pid` 是否存在（升级后首次运行时并不存在）
+</Step>
+<Step title="启动判定">
+worker 未运行 → 调用 `startWorker()`
+</Step>
+<Step title="迁移检查">
+检查 `~/.claude-mem/.pm2-migrated` 是否存在
+</Step>
+<Step title="PM2 清理">
+执行 `pm2 delete claude-mem-worker`（忽略报错），创建标记文件
+</Step>
+<Step title="新 worker 启动">
+拉起由 Bun 管理的新 worker 进程，写入 PID 与端口文件
+</Step>
+</Steps>
+
+### 标记文件
+
+**位置**：`~/.claude-mem/.pm2-migrated`
+
+**内容**：ISO 8601 时间戳
+```
+2025-12-13T00:18:39.673Z
+```
+
+**用途**：
+- 一次性迁移标志
+- 避免每次启动都重复执行 PM2 清理
+- 重启与开机后依然保留
+
+**生命周期**：
+- 创建：升级到 7.1.0+ 后第一次 Hook 触发时（所有平台）
+- 更新：从不
+- 删除：从不（用户可手动删除以强制重新迁移）
+
+## 用户体验时间线
+
+### 更新后的第一个会话
+
+<Note>
+这是关键的迁移时刻。整个过程约需 2-5 秒。
+</Note>
+
+**逐步执行流程**：
+
+1. **Hook 触发**（SessionStart 最常见）
+2. **Worker 状态检查**：无 PID 文件 → worker 未运行
+3. **迁移检查**：无标记文件 → 执行 PM2 清理
+4. **PM2 清理**：`pm2 delete claude-mem-worker`（旧 worker 终止）
+5. **标记创建**：`~/.claude-mem/.pm2-migrated`（带时间戳）
+6. **新 worker 启动**：拉起 Bun 进程，创建 PID/端口文件
+7. **验证**：进程检查 + HTTP 健康检查
+8. **Hook 完成**：Claude Code 会话正常启动
+
+**用户可感知的行为**：
+- 首次启动略有延迟（PM2 清理 + 新 worker 启动）
+- 无任何报错（清理失败已被静默处理）
+- `npm run worker:status` 可看到 worker 正在运行
+- `pm2 list` 中不再出现旧的 PM2 worker
+
+### 后续会话
+
+迁移完成后，每次 Hook 触发都走快速路径：
+
+1. PID 文件存在？**是**
+2. 进程存活？**是**
+3. HTTP 健康检查？**通过**
+4. 结果：worker 已在运行，完成（约 50ms）
+
+后续会话不会再运行迁移逻辑。
+
+## 各平台行为差异
+
+### 平台对比
+
+| 特性 | macOS | Linux | Windows |
+|---------|-------|-------|---------|
+| PM2 清理 | 已尝试 | 已尝试 | 已尝试 |
+| 标记文件 | 已创建 | 已创建 | 已创建 |
+| 进程信号 | POSIX（原生） | POSIX（原生） | Bun 抽象 |
+| Bun 支持 | 完整 | 完整 | 完整 |
+| PID 文件 | 是 | 是 | 是 |
+| 端口文件 | 是 | 是 | 是 |
+| 健康检查 | HTTP | HTTP | HTTP |
+| 迁移耗时 | 首次约 2-5 秒 | 首次约 2-5 秒 | 首次约 2-5 秒 |
+
+### 平台说明
+
+<Tabs>
+<Tab title="macOS">
+- POSIX 信号处理原生可用
+- 完整支持 Bun
+- 无需任何平台特定的变通方案
+</Tab>
+<Tab title="Linux">
+- 行为与 macOS 完全一致
+- POSIX 信号处理
+- 在 Ubuntu、Debian、RHEL、CentOS、Arch 上均可运行
+- Alpine 可能需要 glibc（而非 musl）
+</Tab>
+<Tab title="Windows">
+- PM2 清理现在也会执行（有 try/catch 兜底，安全）
+- 信号处理差异由 Bun 抽象屏蔽
+- path 模块处理 Windows 路径分隔符
+- 文件锁定由 SQLite 处理
+</Tab>
+</Tabs>
+
+## 可观测的变化
+
+### 命令变化
+
+| 旧命令（PM2） | 新命令（Bun） | 说明 |
+|-----------|-----------|-------|
+| `pm2 list` | `npm run worker:status` | 查看 worker 状态 |
+| `pm2 start <script>` | `npm run worker:start` | 启动 worker |
+| `pm2 stop claude-mem-worker` | `npm run worker:stop` | 停止 worker |
+| `pm2 restart claude-mem-worker` | `npm run worker:restart` | 重启 worker |
+| `pm2 delete claude-mem-worker` | `npm run worker:stop` | 移除 worker |
+| `pm2 logs claude-mem-worker` | `npm run worker:logs` | 查看日志 |
+| `pm2 describe claude-mem-worker` | `npm run worker:status` | 查看详细状态 |
+| `pm2 monit` | 无对应命令 | PM2 专属的监控界面 |
+
+### 文件路径变化
+
+**日志**：
+```
+Old: ~/.pm2/logs/claude-mem-worker-out.log
+     ~/.pm2/logs/claude-mem-worker-error.log
+
+New: ~/.claude-mem/logs/worker-YYYY-MM-DD.log
+```
+
+**PID 文件**：
+```
+Old: ~/.pm2/pids/claude-mem-worker.pid
+
+New: ~/.claude-mem/.worker.pid
+```
+
+**进程状态**：
+```
+Old: PM2 daemon memory (pm2 save)
+
+New: ~/.claude-mem/.worker.pid
+     ~/.claude-mem/.worker.port
+     ~/.claude-mem/.pm2-migrated (all platforms)
+```
+
+**数据库**（不变）：
+```
+Same: ~/.claude-mem/claude-mem.db
+```
+
+### 用户可见的变化
+
+**更新前**：
+```bash
+$ pm2 list
+┌────┬────────────────────┬─────────┬─────────┬──────────┐
+│ id │ name               │ status  │ restart │ uptime   │
+├────┼────────────────────┼─────────┼─────────┼──────────┤
+│ 0  │ claude-mem-worker  │ online  │ 0       │ 2d 5h    │
+└────┴────────────────────┴─────────┴─────────┴──────────┘
+```
+
+**更新后**：
+```bash
+$ pm2 list
+# 空——worker 已不再由 PM2 管理
+
+$ npm run worker:status
+Worker is running
+PID: 35557
+Port: 37777
+Uptime: 2h 15m
+```
+
+### 残留文件
+
+迁移完成后，以下 PM2 文件可能残留（可安全删除）：
+
+```
+~/.pm2/                    # 整个 PM2 目录
+~/.pm2/logs/               # 旧日志
+~/.pm2/pids/               # 旧 PID 文件
+~/.pm2/pm2.log             # PM2 守护进程日志
+~/.pm2/dump.pm2            # PM2 进程快照
+```
+
+**清理**（可选）：
+```bash
+# 彻底移除 PM2（如果没有其他进程在用）
+pm2 kill
+rm -rf ~/.pm2
+
+# 或只移除 claude-mem 相关的残留文件
+rm -f ~/.pm2/logs/claude-mem-worker-*.log
+rm -f ~/.pm2/pids/claude-mem-worker.pid
+```
+
+## 文件系统状态
+
+### 状态目录结构
+
+**迁移前**（PM2 体系）：
+```
+~/.claude-mem/
+├── claude-mem.db          # 数据库（不变）
+├── chroma/                # 向量嵌入（不变）
+├── logs/                  # 应用日志（不变）
+└── settings.json          # 用户设置（不变）
+
+~/.pm2/
+├── logs/
+│   ├── claude-mem-worker-out.log
+│   └── claude-mem-worker-error.log
+├── pids/
+│   └── claude-mem-worker.pid
+└── pm2.log
+```
+
+**迁移后**（Bun 体系）：
+```
+~/.claude-mem/
+├── claude-mem.db          # 数据库（同一文件）
+├── chroma/                # 向量嵌入（不变）
+├── logs/
+│   └── worker-2025-12-13.log  # 新日志格式
+├── settings.json          # 用户设置（不变）
+├── .worker.pid            # 新增：进程 ID
+├── .worker.port           # 新增：端口 + PID
+└── .pm2-migrated          # 新增：迁移标记（所有平台）
+
+~/.pm2/                    # 已废弃（可安全删除）
+├── logs/                  # 旧日志（不再写入）
+├── pids/                  # 旧 PID（不再更新）
+└── pm2.log                # PM2 守护进程日志（不再使用）
+```
+
+## 边界情况与故障排查
+
+### 场景 1：迁移失败（PM2 仍在运行）
+
+<Warning>
+这种情况很少见，但如果 PM2 开启了 watch 模式或进程被手动重启，就可能发生。
+</Warning>
+
+**症状**：
+- `pm2 list` 中仍显示 `claude-mem-worker`
+- 日志中出现端口冲突报错
+- worker 启动失败
+
+**解决方法**：
+```bash
+# 手动清理
+pm2 delete claude-mem-worker
+pm2 save  # 持久化该删除
+
+# 强制重新迁移（可选）
+rm ~/.claude-mem/.pm2-migrated
+
+# 重启 worker
+npm run worker:restart
+```
+
+### 场景 2：PID 文件过期（进程已终止）
+
+**症状**：
+- `npm run worker:status` 显示“未运行”
+- `.worker.pid` 文件存在
+- 进程 ID 对应的进程并不存在
+
+**自动恢复**：下一次 Hook 触发会检测到死进程，并启动全新 worker。
+
+**手动处理**：
+```bash
+rm ~/.claude-mem/.worker.pid
+rm ~/.claude-mem/.worker.port
+npm run worker:start
+```
+
+### 场景 3：端口被占用
+
+**报错**：`EADDRINUSE: address already in use`
+
+**解决方法**：
+```bash
+# 查看占用端口的进程
+lsof -i :37777
+
+# 终止该进程
+kill -9 <PID>
+
+# 重启 worker
+npm run worker:restart
+```
+
+### 常见报错
+
+| 报错 | 原因 | 解决方法 |
+|-------|-------|------------|
+| `EADDRINUSE` | 端口被占用 | 先执行 `lsof -i :37777`，再终止冲突进程 |
+| `No such process` | PID 文件过期 | 下一次 Hook 触发时自动清理 |
+| `pm2: command not found` | 未安装 PM2 | 无需处理（报错已被捕获并忽略） |
+| `Invalid port X` | 端口校验失败 | 在设置中更新 `CLAUDE_MEM_WORKER_PORT` |
+
+## 开发者说明
+
+### 测试迁移
+
+```bash
+# 1. 安装旧版本（带 PM2）
+git checkout <pre-7.1.0-tag>
+npm install && npm run build && npm run sync-marketplace
+
+# 2. 启动 PM2 worker
+pm2 start plugin/scripts/worker-cli.js --name claude-mem-worker
+
+# 3. 更新到新版本
+git checkout main
+npm install && npm run build && npm run sync-marketplace
+
+# 4. 触发 Hook
+node plugin/scripts/session-start-hook.js
+
+# 5. 验证迁移
+pm2 list  # 不应再显示 claude-mem-worker
+cat ~/.claude-mem/.pm2-migrated  # 文件应已存在
+npm run worker:status  # 应显示 Bun worker 正在运行
+```
+
+### 架构决策
+
+**为什么用自研 ProcessManager 而不是 PM2？**
+1. **简单**：直接控制，无外部守护进程
+2. **依赖**：移除 npm 依赖
+3. **跨平台**：平台差异由 Bun 处理
+4. **包体**：缩小插件包体积
+5. **掌控**：精细的错误处理与校验
+
+**为什么用一次性标记而不是每次都执行 PM2 delete？**
+1. **性能**：避免不必要的进程拉起
+2. **幂等**：迁移严格只执行一次
+3. **调试**：时间戳能说明迁移发生在何时
+4. **简单**：迁移状态一目了然
+
+**为什么在所有平台上都执行 PM2 清理？**
+1. **迁移质量**：清理孤儿进程
+2. **一致性**：所有平台行为一致
+3. **安全**：错误处理已就位（try/catch）
+4. **无代价**：未安装 PM2 时，报错会被捕获并忽略
+
+## 总结
+
+从 PM2 迁移到基于 Bun 的 ProcessManager 是一次**一次性、自动且透明**的切换：
+
+1. **移除外部依赖**（PM2、better-sqlite3）
+2. **简化架构**（直接控制进程）
+3. **改进跨平台支持**（尤其是 Windows）
+4. **保留用户数据**（数据库、设置、日志全部不变）
+5. **无需用户操作**（第一次 Hook 触发时自动完成）
+
+**关键迁移时刻**：升级到 7.1.0+ 后第一次触发 Hook
+**耗时**：约 2-5 秒（一次性延迟）
+**影响**：无缝切换，用户无感
+**回滚**：不需要（迁移只进不退，安全）
+
+对大多数用户而言，这次迁移将完全无感——看不到报错、没有数据丢失，而且此后能获得更高的可靠性与更简单的故障排查体验。

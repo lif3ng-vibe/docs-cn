@@ -1,0 +1,285 @@
+---
+title: "遥测"
+description: "匿名使用分析——默认开启，实现完全公开，一条命令即可退出"
+---
+
+# 遥测
+
+Claude-mem 内置匿名使用分析（经 PostHog），帮助确定修复与新功能的优先级。
+
+**默认开启，退出制**（opt-out）：事件全部匿名，仅以随机安装 UUID 标识，且每个分析属性都要通过严格白名单——参见下文[收集了什么](#收集了什么)与[永不收集的内容](#永不收集的内容)。关闭遥测只需一条命令：
+
+```bash
+npx claude-mem telemetry disable
+```
+
+标准环境变量 [`DO_NOT_TRACK`](https://consoledonottrack.com) 同样受支持，并且压倒一切。安装器会在 `npx claude-mem install` 结束时询问一次，因此新安装的默认行为绝不会无人知晓——无论你答哪一边，选择都会被记住且不再重复询问；若设置了 `DO_NOT_TRACK`，或处于 CI/非交互式安装环境，则完全跳过询问。
+
+## 埋点如何工作
+
+Claude-mem 只有单一埋点路径（`src/services/telemetry/instrument.ts` 中的 `instrument()`）。每个可观察事件只描述一次，然后分流到两个出口：
+
+- **本地日志——始终记录，全保真**。即使遥测关闭，日志照样工作，且本地日志从不经过清洗器。完整、未脱敏的细节就存放在这里——在你自己的机器上。
+- **遥测——仅在同意通过时上报**。遥测副本会先清洗（结构化属性走[白名单](#收集了什么)，错误文本走先放行后脱敏（allow-then-redact）路径，见[错误追踪](#错误追踪)），且高流量事件在发送前还会汇总为按会话/按时间窗的聚合值。
+
+于是，单一数据源同时产出详尽的本地日志和极简、保隐私的遥测——两者永不漂移，而清洗只发生在遥测分支上。
+
+**关于会话回放**：PostHog 的会话回放（session replay）对 claude-mem **不适用**。回放记录的是浏览器 DOM 会话；claude-mem 是一个 Node 后台 worker，没有浏览器界面，因此无可回放，该功能从未启用。
+
+## 收集了什么
+
+启用时，事件全部匿名，仅以随机安装 UUID（`crypto.randomUUID()`，首次使用时在本地生成）标识。
+
+低流量的生命周期事件（`install_*`、`uninstall_completed`、`worker_started`）会以该随机 UUID 为键构建一份分析档案（profile），以便计算汇总留存与同期群统计——档案内容不超出下方白名单字段（平台、版本、IDE/提供商选择）。它与你的身份无关，也不可能关联到人身：其中没有姓名、邮箱、IP、硬件 ID 或任何其他标识符。所有高流量活动一律附带 `$process_person_profile: false` 发送，完全不建档案。
+
+关于被观察 IDE 会话的身份，claude-mem 只收集其模型 id（`observed_model`）与计费档位（`observed_billing`）——绝不收集账号 id、邮箱或 token。
+
+**高流量事件先汇总，不逐条流式发送**：claude-mem 不为每次压缩或上下文注入各发一个事件，而是在本地聚合，只发送一份汇总：
+
+- **`observer_turn_rollup`：按会话累加器**。会话中的每次压缩都汇入一条持续更新的 rollup，仅在**会话结束时一次性发出**（取代此前每轮一条的 `session_compressed` 事件）。它携带说明清空原因的 `rollup_reason`（`session_end` | `worker_shutdown` | `safety_flush`），以及部分清空计数器 `window_seq`（正常的一次性会话为 `0`；仅当长驻会话触发周期性安全清扫时才出现 `0,1,2,…`）。
+- **`context_injected_rollup`：5 分钟时间窗累加器**，用于上下文注入。
+
+正是这套汇总模型把高流量事件流砍掉了约 99.9%。如今已不存在任何直接发出原始 `session_compressed` 或 `context_injected` 事件的代码路径——这类活动通往 PostHog 的唯一通道就是汇总。
+
+每个事件属性都要经过严格的白名单清洗器——不在下表中的键会在发送前被静默丢弃：
+
+| 字段 | 示例 | 说明 |
+|---|---|---|
+| 事件名 | `observer_turn_rollup` | 发生了下述事件中的哪一种 |
+| `distinct_id` | `7f3c…`（随机 UUID） | 匿名安装 ID——并非由你或你的机器派生 |
+| `version` | `13.4.2` | claude-mem 版本 |
+| `os` | `darwin` | 操作系统平台 |
+| `os_version` | `10.0.22631` | 操作系统内核发行串——例如借此区分 Windows 10 与 11 |
+| `is_wsl` | `false` | 是否运行在 Windows Subsystem for Linux 之下 |
+| `arch` | `arm64` | CPU 架构 |
+| `runtime` | `bun` | `bun` 或 `node` |
+| `runtime_version` | `1.2.0` | 运行时版本串 |
+| `node_version` | `22.14.0` | Node.js 版本串 |
+| `duration_ms` | `1843` | 该次操作耗时多久 |
+| `outcome` | `ok` | 粗粒度结果——闭集枚举：ok / error / partial / invalid_output / aborted |
+| `error_category` | `provider_error` | 粗粒度错误分类——绝不是错误消息 |
+| `locale` | `en-US` | 语言标签 |
+| `is_ci` | `false` | 是否在 CI 中运行 |
+| `endpoint` | `by-file` | 用的是哪条 claude-mem 检索路由——始终是我们的路由名之一，绝非查询内容 |
+| `ide` | `claude-code` | 安装器的 IDE 选择（安装器自身的 id 列表）；或在 `observer_turn_rollup` 上为被观察会话的平台来源（`claude` / `codex` / `cursor` 等） |
+| `provider` | `claude` | LLM 提供商选择：claude / codex / gemini / openrouter / openai-compatible |
+| `runtime_mode` | `worker` | worker 或 server 运行时 |
+| `trigger` | `heartbeat` | `worker_started` 是真实启动还是每日心跳 |
+| `count` | `7` | 整数量值，例如一次压缩中存储的观察记录数 |
+| `has_summary` | `true` | 该次压缩是否同时产生了会话摘要 |
+| `is_update` | `false` | 本次安装是否覆盖已有安装 |
+| `interactive` | `true` | 安装器是否在交互式终端中运行 |
+| `install_method` | `npm` | 启动 CLI 的包管理器：npm / bun / pnpm / yarn |
+| `bun_version` / `uv_version` | `1.3.9` / `0.7.2` | 安装期间检测到的工具链版本 |
+| `claude_code_version` | `2.0.14` | 可检测到时的 Claude Code CLI 版本 |
+| `trial_days` | `30` | 安装器 CMEM Pro 试用要约的期限：30 天（较旧的事件可能报告 7 或 14 天） |
+| `trial_variant` | `test_30` | 试用分组标识：control_7 / test_14 / test_30；当前所有分组均为 30 天 |
+| `offer_surface` / `funnel_source` | `installer` / `installer` | 安装器要约曝光事件上的闭集来源标签 |
+| `stage` | `awaiting_checkout` | 安装器试用轮询阶段：awaiting_login / awaiting_checkout / awaiting_approval |
+| `phase` | `login` | 安装器 OAuth 配对阶段——闭集枚举：login / enrollment / deferred |
+| `provider_source` | `default` | 安装器如何确定提供商——闭集枚举：flag（显式给出 `--provider`）/ default（非交互全新安装回退到 claude）/ persisted（非交互运行复用已配置的提供商）/ prompt（交互式选择） |
+| `mode` | `code` | 当前的 claude-mem 模式 id（我们的模式列表） |
+| `model` | `claude-haiku-4-5` | 用于压缩的模型 id |
+| `observed_model` | `claude-fable-5-1` | 被观察 IDE 会话自身运行的模型 id（读自其 transcript）——区别于压缩用模型的 `model`；无法判定时为 `unknown` |
+| `observed_billing` | `max` | 被观察会话的计费形态——闭集枚举：max / pro / team / enterprise / subscription / api_key / bedrock / vertex / foundry / unknown。绝不是账号 id、邮箱或 token |
+| `hook` | `ingest` | 触发此次压缩的原因：init / ingest / summarize |
+| `observation_type`, `obs_type_*` | `bugfix`, `3` | 观察记录类型分桶（bugfix / discovery / decision / refactor / other）——仅计数 |
+| `compression_ms` | `2140` | 压缩模型调用的延迟 |
+| `tokens_input` / `tokens_output` | `5800` / `420` | 模型 API 报告的单次压缩真实 token 用量 |
+| `compression_ratio` | `13.8` | tokens_input ÷ tokens_output |
+| `cost_usd` | `0.0021` | 单次压缩调用的成本（美元），由 Claude SDK / openrouter.ai 报告——绝不估算，提供商未报告时则缺省 |
+| `endpoint_class` | `openrouter` | OpenRouter 提供商面向 openrouter.ai 还是自定义网关 |
+| `rollup_reason` | `session_end` | 按会话 `observer_turn_rollup` 为何发出——闭集枚举：session_end / worker_shutdown / safety_flush |
+| `window_seq` | `0` | rollup 的部分清空序号——正常一次性会话为 `0`，仅当长驻会话触发安全清扫时递增 |
+| `observation_count`, `session_count` | `50`, `12` | 一次上下文注入涉及多少观察记录/会话 |
+| `timeline_depth_days` | `90` | 被注入的最老观察记录距今多少天 |
+| `has_session_summary` | `true` | 注入中是否包含会话摘要 |
+| `tokens_injected` | `17914` | 注入上下文的估算 token 数 |
+| `tokens_saved_vs_naive` | `144379` | 相比重新摸索这些工作所节省的估算 token 数 |
+| `search_strategy` | `timeline` | 构建该次注入的检索策略（我们的枚举） |
+| `db_observation_count`, `db_session_count`, `db_summary_count`, `db_project_count` | `92501`, `5243`, `9698`, `379` | 本地记忆数据库的行总数——仅计数，绝不涉及名称或文本 |
+| `db_size_mb` | `364.4` | 记忆数据库文件大小（MB） |
+| `install_age_days` | `104` | 距安装首次记录会话的天数 |
+| `obs_count_7d` / `obs_count_30d` | `1887` / `10357` | 最近 7 天 / 30 天存储的观察记录数 |
+| `days_since_last_obs` | `0` | 距最近一次存储观察记录的天数 |
+| `result_count` | `12` | 一次记忆检索返回的结果条数——仅计数，绝不包含结果或查询 |
+| `chroma_available` | `true` | 检索时向量检索后端是否可达——只反映可达性；零结果回退在此也报告 `true`，回退请通过 `fallback_reason` 统计 |
+| `fallback_reason` | `none` | 检索为何从向量检索回退：none / chroma_connection / chroma_error / chroma_not_initialized / chroma_zero_results——闭集枚举，绝非错误消息 |
+| `invalid_output_class` | `idle` | 不可用压缩输出的粗分类：xml / idle / prose（`xml` = 形似预期格式但解析失败）——绝不包含输出本身 |
+| `consecutive_invalid_outputs` | `0` | 旧版不可用输出计数器，保留为已脱敏的数字字段 |
+| `respawn_triggered` | `false` | 旧版针对无效输出重启的恢复标志 |
+| `abort_reason` | `idle` | 压缩会话为何中止：idle / shutdown / overflow / restart_guard / quota / rate_limit / auth / provider_switch / deadline_exceeded（模型请求超出 `CLAUDE_MEM_LLM_TIMEOUT_MS`）/ output_retry（排队批次既未返回观察 XML 也未返回跳过标签，将被再询问一次）/ drift（观察器持续以观察 schema 之外的标签作答，因此重新开始一次生成）/ none——闭集枚举 |
+| `outcomes_aborted_deadline_exceeded` | `1` | 在 `observer_turn_rollup` 上：会话的 `outcomes_aborted` 中有多少是因单请求截止时限而被放弃的模型请求——仅计数 |
+| `previous_shutdown` | `clean` | 启动时检测到的上一次 worker 运行如何结束：crash / clean / unknown |
+| `previous_uptime_seconds` | `86400` | 上一次 worker 运行了多久（整秒） |
+| `uptime_seconds` | `3600` | worker 停止时已运行多久（整秒） |
+| `shutdown_reason` | `restart` | worker 停止原因：stop / restart / signal / idle |
+| `process_rss_mb` | `187` | worker 进程常驻内存（整数 MB） |
+| `heap_used_mb` | `92` | worker JS 堆占用（整数 MB） |
+| `hook_type` | `observation` | 失败的是哪种 hook：context / session-init / observation / summarize / session-end / file-context——我们的处理器名 |
+| `limit_window` | `five_hour` | `usage_limit_hit` 上耗尽的订阅窗口：five_hour / seven_day / seven_day_opus / seven_day_sonnet / overage / unknown——闭集枚举 |
+| `overage_status` | `rejected` | 额外用量额度能否覆盖该请求：allowed / allowed_warning / rejected / unknown——闭集枚举 |
+| `is_using_overage` | `false` | 该请求是否已按额外用量计费 |
+| `resets_in_minutes` | `112` | 耗尽窗口重置前的整分钟数，向下为 0——绝不包含提供商的消息文本 |
+| `error_mode` | `worker_unavailable` | 粗粒度 hook 失败模式：worker_unavailable / blocking_error——绝非错误消息 |
+| `consecutive_failures` | `3` | 连续发生的 hook 失败次数（fail-loud（失败即告警）计数器） |
+| `threshold_tripped` | `true` | 连续失败次数是否抵达 fail-loud 阈值 |
+| `skill_id` | `mem-search` | 调用了哪个内置 skill——`plugin/skills/` 目录名的闭集枚举，或 `other`。第三方 skill 名称绝不发送 |
+| `skill_source` | `first_party` | `first_party`（随包发布的 `plugin/skills/` skill）或 `third_party`（合并为 `skill_id: other`） |
+| `skill_trigger` | `tool` | skill 如何被调用：`tool`（宿主 Skill 工具）或 `prompt`（session-init 时键入 `/skill`）。绝不包含提示词正文 |
+
+有一个值由服务端派生，而非客户端发送：PostHog 在数据摄取时先把请求发送方的 IP 解析为**粗粒度位置**（国家 / 地区 / 城市），然后才丢弃该 IP。客户端从不把 IP 附在任何事件上，原始 IP 也从不存储——参见[永不收集的内容](#永不收集的内容)。
+
+### 事件
+
+| 事件 | 触发时点 | 额外属性 |
+|---|---|---|
+| `install_completed` | `npx claude-mem install` 完成 | `ide`、`provider`、`provider_source`、`runtime_mode`、`is_update`、`outcome`、`duration_ms`、`interactive`、`install_method`、`bun_version`、`uv_version`、`claude_code_version` |
+| `installer_oauth_started` | 安装器打开了浏览器登录链接 | `version`——绝不包含链接、配对 id、密钥或设备码 |
+| `installer_oauth_completed` | 浏览器登录完成 | `version` |
+| `installer_oauth_timeout` | 登录轮询到达配对过期时间（服务端 `expires_in`，上限 30 分钟；服务端未给出时为 4 分钟） | `version`、`phase`（login / enrollment）、`duration_ms` |
+| `installer_oauth_start_failed` | `POST /api/installer/oauth/start` 未返回可用配对 | `version`、`outcome`（http_error / network / timeout / bad_body）、`interactive`、`phase`（login / deferred） |
+| `installer_oauth_deferred` | 跳过登录的非交互式安装在末尾打印了可选项的登录链接 | `version`、`interactive`（恒为 `false`） |
+| `install_failed` | 安装器中止 | `error_category`（我们的错误分类 id）、`interactive`、`install_method`、`claude_code_version` |
+| `pro_offer_viewed` | 安装器展示 CMEM Pro 要约 | `trial_days`、`trial_variant`、`offer_surface`（`installer`）、`funnel_source`（`installer`） |
+| `trial_email_submitted` | 用户提交邮箱以启动安装器试用流程 | 仅 `version`——绝不包含邮箱本身 |
+| `trial_link_sent` | 试用启动 API 接受请求并发送登录链接 | `version`、`duration_ms`——绝不包含邮箱、链接、配对密钥或设备码 |
+| `trial_activated` | 浏览器批准后试用凭据被接收并保存 | `version`、`duration_ms` |
+| `trial_poll_timeout` | 浏览器完成轮询被取消、过期、超时或不可达 | `version`、`stage`、`outcome`、`duration_ms` |
+| `uninstall_completed` | `npx claude-mem uninstall` 完成 | — |
+| `worker_started` | 后台 worker 启动，且每 24h 存续期附加一条心跳 | `trigger`（start / heartbeat）、`duration_ms`、`ide`、`provider`、`mode`、`runtime_mode`、进程内存（`process_rss_mb`、`heap_used_mb`）、安装快照：`db_observation_count`、`db_session_count`、`db_summary_count`、`db_project_count`、`db_size_mb`、`install_age_days`、`obs_count_7d`、`obs_count_30d`、`days_since_last_obs`；真实启动时还附带崩溃检测：`previous_shutdown`（crash / clean / unknown），以及干净关闭后的 `previous_uptime_seconds` |
+| `observer_turn_rollup` | **按会话在会话结束时一次性发出**——按会话汇总，聚合该会话内的每一次压缩（已存储的观察记录、无效输出丢弃、失败与中止），取代每轮一条事件的做法 | `rollup_reason`（session_end / worker_shutdown / safety_flush）、`window_seq`、聚合的 `outcomes_*` 计数（含 `outcomes_aborted_deadline_exceeded`）、`total_tokens_input`、`total_tokens_output`、`total_cost_usd`、`avg_duration_ms`、`avg_compression_ms`、`top_model`、`top_abort_reason`（会话内被中止轮次中最常见的 `abort_reason`；仅在确有中止时出现）、`observed_model`、`observed_billing`、`observations_created`（该会话生成的观察记录总数——与 `total_cost_usd` 一同推算每条观察的成本）、`obs_type_*` 分桶求和、`window_start_ts`，外加它所汇总的逐轮字段（`provider`、`ide`） |
+| `context_injected_rollup` | 上下文注入（已存储记忆注入到新会话）的 5 分钟时间窗汇总 | 聚合的 `outcomes_ok` / `outcomes_error` 计数、`count`、`total_tokens`、`avg_tokens`、`total_observations_injected`（从缓存注入到提示词中的观察记录条数之和）、`total_tokens_saved_vs_naive`、`window_start_ts` |
+| `search_performed` | 执行了一次记忆检索（绝不包含查询文本） | `endpoint`、`outcome`、`duration_ms`、`result_count`、`search_strategy`、`chroma_available`、`fallback_reason` |
+| `skill_invoked` | 调用了一个内置 skill——宿主 Skill 工具加载其指令，或用户在 session-init 时键入第一方 `/skill`。**不是**工作完成记录；没有 `duration_ms` / outcome。仅限 worker 路径。未知的 `/foo` 不发任何事件 | `skill_id`（闭集枚举 + `other`）、`skill_source`（`first_party` / `third_party`）、`skill_trigger`（`tool` / `prompt`）、`ide` |
+| `worker_stopped` | 后台 worker 优雅关闭 | `uptime_seconds`、`shutdown_reason`（stop / restart / signal / idle） |
+| `supervisor_registry_degraded` | worker 无法写入它的进程注册表（`supervisor.json`，例如数据目录不可写），改为保存在内存中。每个降级 episode 只发一次，而非每次写失败都发 | `error_category`（文件系统错误码，如 `EACCES` / `EROFS` / `ENOSPC`，或 `unknown`） |
+| `worker_start_failed` | 本启动器启动的 worker 在就绪前死去。由启动它的启动器上报，绝不由只是等待其他启动器的 worker 的那一方上报 | `outcome`（`dead`）、`error_category`（崩溃可复现时为 `boot_crash`，否则为 `unreachable_after_boot`）；绝不包含崩溃文本——它留在本地日志里 |
+| `usage_limit_hit` | 观察者背后的 Claude 订阅把某个窗口报告为 `rejected`——由于观察者与被观察会话共用账户，这就是用户自己的 Claude Code 会话用量耗尽之时。每个耗尽窗口只发一次（以该窗口的重置时间去重；仍在封顶状态下重启 worker 会再发一次）。仅在观察者以订阅登录运行于 Claude 上时才会触发——API-key、Gemini 与 OpenRouter 观察者永远见不到它 | `limit_window`（five_hour / seven_day / seven_day_opus / seven_day_sonnet / overage / unknown）、`overage_status`（allowed / allowed_warning / rejected / unknown）、`is_using_overage`、`resets_in_minutes`、`ide`、`provider`、`observed_model`、`observed_billing` |
+| `hook_failed` | claude-mem hook 硬性失败——worker 超过 fail-loud 阈值仍不可达，或出现阻塞式错误 | `hook_type`、`error_mode`、`consecutive_failures`、`threshold_tripped` |
+| `error_occurred` | worker 返回 HTTP 5xx | `error_category` |
+| `$exception` | 真实错误被捕获，用于[错误追踪](#错误追踪)——受同意门控，且可由独立的紧急开关关闭 | 脱敏后的 `error_type` / `error_message` / `error_stack`、`occurrence_count`，外加白名单上下文。保留与脱敏的精确清单见[错误追踪](#错误追踪) |
+
+## 错误追踪
+
+Claude-mem 会把真实错误捕获为 `$exception` 事件，上报 PostHog Error Tracking。**这是对旧有“严格只走白名单”姿态的有意变更**：错误消息与堆栈跟踪是自由文本，属性白名单（只放行已知闭集键）会把它们整体丢弃。因此错误文本走单独的先放行后脱敏路径（`src/services/telemetry/error-scrub.ts`）：保留诊断文本，同时强力剥除任何可能泄露 PII 或秘密的内容。
+
+**保留的内容**（已脱敏）：
+
+- 错误**类型**（构造器名，如 `TypeError`），截断到 100 字符。
+- 错误**消息**，脱敏并截断到 500 字符。
+- **堆栈跟踪**——仅前 10 帧，每帧脱敏，总体约 2KB 封顶。
+- 一个 `occurrence_count`（该错误指纹在当前窗口内触发的次数）。
+
+**从上述文本中脱敏的内容**（替换为 `[REDACTED]`，按以下顺序）：
+
+- 主目录（`/Users/you` → `~`）——最先处理，让藏在主目录路径里的用户名绝无幸存。
+- 绝对文件系统路径 → 塌缩为文件名（POSIX、Windows 盘符与 UNC 路径）——保留“是哪个文件”，抹去目录树。
+- URL / 连接串中的凭据与查询串——任何 `scheme://…`（http、ws、postgres、redis、mongodb+srv、amqp 等）中的 userinfo（`user:pass@`）与 `?…`/`#…` 一律剥除，数据库连接串凭据和签名 URL token 由此失效。
+- 电子邮箱。
+- API token 与密钥：带提供商前缀的密钥（`sk-`、`phc_`、`ghp_`、`xoxb-` 等）、Bearer token、**AWS 访问密钥 ID**（`AKIA…`）、JWT、UUID、长十六进制块（24+ 字符）以及通用高熵 token。
+- **IPv4 地址**（网络错误里漏出的内网 IP/主机名）。
+
+脱敏管线是**纯函数且绝不抛错**——恶意输入（null、循环引用、带抛错 getter 的对象、200KB 大块）也能安全、有界地产出结果，因为遥测绝不能弄坏或阻塞 worker。在任何正则运行之前，原始输入被硬性截断到 8KB（ReDoS 防御）。
+
+**速率限制**：每个错误指纹每 60 秒最多 **一条 `$exception`**。错误按类型 + 归一化消息模板 + 顶层栈帧做指纹化，因此同一种“错误”换着 id/数字刷屏时，会去重为一次发送并附带出现计数。该限制同样适用于我们的手动捕获和任何 SDK 自动捕获。（自动捕获在发送前还会再过一遍清洗——posthog-node 从磁盘读取的原始 source-context 行会被删除，文件名被脱敏为仅保留文件名。）
+
+**受同意门控，另有独立紧急开关**（kill-switch）：错误捕获既受常规遥测同意链门控（退出遥测会一并关闭错误上报），**又**受单独的 `CLAUDE_MEM_TELEMETRY_ERRORS` 开关门控——见[如何退出（四种方式）](#如何退出（四种方式）)。`$exception` 事件不建个人档案（`$process_person_profile: false`）。
+
+<Warning>
+**单向门**：与白名单分析事件——其中每个字段都是数字、布尔或闭集取值——不同，`$exception` 事件携带的是真实（脱敏后）的消息文本。错误消息一旦被 PostHog 摄取，事后**无法选择性删除**。这是为获得可操作的崩溃诊断而有意做出的取舍，并以强力脱敏、速率限制、同意门控和 `CLAUDE_MEM_TELEMETRY_ERRORS=0` 紧急开关加以缓解。如果你宁可完全不发送自由文本，请设置该变量。
+</Warning>
+
+## 历史回填
+
+遥测的发布晚于 claude-mem 本身，因此早于遥测的安装存在实时事件从未见过的活动。升级后的第一次 worker 启动时，claude-mem 会对这段无遥测历史执行一次**一次性**回填（backfill）——只含匿名化计数，同样通过与所有其他事件一致的白名单清洗器：
+
+| 事件 | 时间（时间戳） | 携带内容 |
+|---|---|---|
+| `historical_activity` | 安装活跃的每一天发一条，时间戳盖在该历史日期上 | 仅每日活动计数：观察记录、会话、摘要、提示词、不同项目的**数量**、观察类型分桶（`obs_type_*`）、会话结局（`session_completed_count` / `session_failed_count`）、按平台的会话计数（`sessions_claude_count` 等）、`subagent_obs_count`、`discovery_tokens`，外加 `backfilled: true`。与其他高流量事件一样不建档案（`$process_person_profile: false`） |
+| `install_inferred` | 只发一次，时间戳盖在该安装首次记录活动的那天 | `first_active_date`（日期字符串，如 `2025-10-19`）与 `backfilled: true` |
+
+与其他一切一样，这些也只是计数和闭集取值——**绝不是标题、提示词、文件内容或项目名称**。标识它们的仍是同一个匿名安装 UUID，每个属性同样通过白名单清洗器。
+
+几点须知：
+
+- **它只运行一次**：发送成功后写入完成标记（claude-mem 数据目录中的 `backfill.json`），杜绝回填再次运行。成功之前不写任何标记，因此失败的尝试会在下一次 worker 启动时重试。
+- **它遵守与实时遥测完全相同的同意门**——`DO_NOT_TRACK`、`CLAUDE_MEM_TELEMETRY=0` 与 `telemetry.json` 中的 `enabled: false` 都会阻断它，且[调试模式](#调试模式)会打印本拟发送的载荷而不发送。
+- **在升级后、首次 worker 启动之前退出遥测，即可完全阻止它**：退出期间什么都不发送、也不写标记——不过如果之后重新加入，该回填届时仍会运行。
+- **位置是上传时点的，而非历史时点的**：PostHog 在摄取时派生的粗粒度位置（见上文）反映的是事件从哪里上传，而不是它们所描述的历史日期里你在哪里。
+
+## 永不收集的内容
+
+| 永不收集 | 说明 |
+|---|---|
+| 提示词或会话内容 | 连截断版或哈希版都不留 |
+| 文件路径或目录名 | 从分析中整体脱敏，错误文本里同样脱敏（主目录 → `~`，绝对路径 → 文件名）——见[错误追踪](#错误追踪) |
+| 源代码 | 任何形式——包括 posthog-node 否则会附到自动捕获异常上的 source-context 行（发送前删除） |
+| 项目或仓库名称 | 包括 git remote 与分支名 |
+| 检索查询 | 只记录“发生过一次检索”这一事实 |
+| IP 地址 | 客户端从不把 IP 附到事件上；发送方 IP 仅在摄取时被临时用于派生粗粒度位置（国家 / 地区 / 城市），随后丢弃——分析项目被配置为从不存储发送方 IP |
+| 硬件或机器标识符 | 连哈希过的 MAC 地址或主机名都不留 |
+| 环境变量取值 | 任何时候都不 |
+| 邮箱、用户名或任何 PII | 任何时候都不——邮箱、token、密钥与凭据同样会从错误文本中脱敏 |
+| Skill 参数、skill markdown 或提示词正文 | `skill_invoked` 只发送闭集的 `skill_id` / `skill_source` / `skill_trigger`。`tool_input.args` 与斜杠提示词的其余内容绝不离机 |
+| 第三方 skill 名称 | 合并为 `skill_id: other` + `skill_source: third_party`。未知的 `/foo` 斜杠命令根本不产生事件 |
+
+**唯一如实交代的例外：错误消息**。自[错误追踪](#错误追踪)加入以来，脱敏后的错误**消息与堆栈跟踪**确实会被收集（作为 `$exception` 事件）——这是对旧有“只有粗分类”姿态的有意变更，且受同意门控，并配有专用的[紧急开关](#如何退出（四种方式）)。原始路径、提示词、项目名称、源代码与模型输出仍然**绝不**收集——它们在错误文本离开你的机器之前就被剥掉了。
+
+分析属性有代码强制保障：它们走白名单（只有[收集了什么](#收集了什么)表中的字段才能幸存），而非黑名单。每个白名单字段要么是数字、布尔，要么是我们定义的闭集取值——不存在任何可能携带自由文本用户内容的分析字段。错误文本是唯一的自由文本通道，它走单独的先放行后脱敏清洗器。
+
+## 如何退出（四种方式）
+
+以下任意一种都可以让遥测保持关闭——按此顺序检查，首个命中者生效：
+
+1. **`DO_NOT_TRACK`** —— [通用退出标准](https://consoledonottrack.com)。设置 `DO_NOT_TRACK=1` 后遥测被强制关闭，压倒其他一切。
+2. **`CLAUDE_MEM_TELEMETRY=0`**（也接受 `false` / `off`）——环境变量覆盖。（`CLAUDE_MEM_TELEMETRY=1` 反之则强制开启。）
+3. **遥测配置文件**——`telemetry.json` 中的 `enabled: false`（见下）。
+4. **CLI 命令**：
+
+   ```bash
+   npx claude-mem telemetry disable
+   ```
+
+### 错误追踪的独立退出
+
+[错误追踪](#错误追踪)（携带脱敏后消息/堆栈的 `$exception` 事件）可以**单独**关闭，而不必关闭匿名分析：
+
+```bash
+CLAUDE_MEM_TELEMETRY_ERRORS=0   # 同时接受 'false' / 'off'
+```
+
+这是唯一携带自由文本（已脱敏）的遥测路径，一旦摄取就是[单向门](#错误追踪)，因此它有专属的紧急开关——面向愿意接受匿名计数、但不接受错误文本的运维者。只要遥测同意开启，它就默认开启；上述四种退出方式的任意一种也会隐式关闭它（无同意即无错误上报）。
+
+随时可查看当前状态——以及四层中哪一层最终拍板：
+
+```bash
+npx claude-mem telemetry status
+```
+
+## 调试模式
+
+想看到将被发送的精确内容吗？设置：
+
+```bash
+CLAUDE_MEM_TELEMETRY_DEBUG=1
+```
+
+调试模式开启后（且遥测已启用），每个本拟发送的事件载荷都会打印到 stderr，并且**绝不通过网络发送**。
+
+## 配置文件在哪
+
+同意状态与匿名安装 ID 存储在 claude-mem 数据目录内的 `telemetry.json` 中：
+
+- 默认：`~/.claude-mem/telemetry.json`
+- 或 `$CLAUDE_MEM_DATA_DIR/telemetry.json`（如果你覆盖了数据目录）
+
+```json
+{
+  "enabled": false,
+  "installId": "<random UUID>",
+  "decidedAt": "2026-06-09T21:00:00.000Z"
+}
+```
+
+`enabled` 字段只在你做出明确选择（安装器询问、`telemetry enable` 或 `telemetry disable`）之后才会出现。仅含 `installId` 的文件意味着尚未记录任何决定，默认值（开启）生效。删除该文件即彻底复位——下次使用时会生成全新的安装 ID。

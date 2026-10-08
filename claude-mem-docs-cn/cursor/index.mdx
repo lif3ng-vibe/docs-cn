@@ -1,0 +1,79 @@
+---
+title: "Cursor 集成"
+description: "为 Cursor 提供持久记忆——npx 一条命令安装，无需 git clone"
+---
+
+# Cursor 集成
+
+让 Cursor 拥有跨对话持久的记忆。安装器会为 Cursor 接好 hook（Cursor 在会话开始、读取文件或工具运行时执行的小脚本），启动本地 worker（负责存储笔记的程序），并默认使用 **CMEM Pro**（托管记忆服务），除非你另行选择提供商。
+
+<CardGroup cols={2}>
+  <Card title="一条命令" icon="terminal">
+    `npx claude-mem install` —— 安装无需 clone 仓库。
+  </Card>
+  <Card title="CMEM Pro 默认" icon="cloud">
+    除非你选择 Gemini、OpenRouter 或自己的 Anthropic 套餐，否则记忆笔记将通过托管服务在套餐外完成写入。
+  </Card>
+  <Card title="Cursor hooks" icon="bolt">
+    Cursor 有 hook 机制。Grok Bot 没有 —— 那种宿主请看[另一篇指南](/grok-bot)。
+  </Card>
+  <Card title="记忆查看器" icon="eye">
+    打开安装时打印的 worker URL，即可浏览已保存的笔记。
+  </Card>
+</CardGroup>
+
+## 安装
+
+```bash
+npx claude-mem install
+```
+
+当安装器列出你的应用时，选择 **Cursor**。流程分三步：安装运行时、登录（设备码，CLI 中无需邮箱），然后选择记忆提供商。**CMEM Pro 已默认选中。**
+
+其他提供商选项：你自己的 Gemini 密钥、你的 OpenRouter 密钥，或你的 Anthropic 套餐（`--provider claude`，会跳过登录步骤；本地安装仅在注册时联网一次 cmem.ai，用于生成登录链接，并上传一份只有数字的用量摘要（观察记录条数与 token 总量，不含 prompt、路径或项目名），此外不会向 cmem.ai 发送任何内容）。详见[安装](/installation)。
+
+<Warning>
+`npm install -g claude-mem` 只安装程序库。它**不会**注册 Cursor hook，也不会启动 worker。请始终使用 `npx claude-mem install`。
+</Warning>
+
+不要通过 clone 本仓库来安装。clone 是给要修改代码的人用的。
+
+## 工作原理
+
+1. **Hook** 记录 agent 在 Cursor 中做了什么。
+2. **worker** 把这些笔记存到你本机（默认 `127.0.0.1`，端口见 `~/.claude-mem/.worker.port`）。
+3. **下一次对话**会自动获得相关的历史笔记。
+4. **查看器**位于该 worker URL，展示整个知识库。
+
+worker 工作正常时，绝不要重启它。笔记队列在内存中，一重启就丢。
+
+## 用 Gemini 或 OpenRouter 替代 CMEM Pro
+
+- [Gemini](/cursor/gemini-setup) —— 用你自己的 Google 密钥，记忆走套餐外
+- [OpenRouter](/cursor/openrouter-setup) —— 用你自己的 OpenRouter 密钥。**绝不**要把个人 `sk-or-` 密钥发到 `https://cmem.ai/api/inference`
+
+## 验证是否生效
+
+1. 安装后重启 Cursor，让 hook 加载。
+2. 健康检查：`curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/health"`（或使用 `~/.claude-mem/.worker.port` 中的端口）。
+3. 做一小段工作，然后打开 worker URL。应当能看到新笔记出现。
+
+## 故障排查
+
+### 没有内容被存储
+
+- 确认 worker 在运行。如果它本来就正常，**不要**重启。
+- 确认你用的是 `npx claude-mem install`，而不是全局 `npm install`。
+- 安装后重启一次 Cursor。
+- 日志：`~/.claude-mem/logs/worker-YYYY-MM-DD.log`
+
+### Hook 未触发
+
+重启 Cursor。安装后，hook 位于项目下的 `.cursor/` 目录，或你的 Cursor 用户配置中。
+
+## 后续步骤
+
+- [安装](/installation) —— 安装器的三步流程与 CMEM Pro
+- [CMEM Pro（手动 / 无头模式）](/cmem-pro-headless) —— 安装器写入的各项设置
+- [Gemini](/cursor/gemini-setup) / [OpenRouter](/cursor/openrouter-setup)
+- [检索工具](/usage/search-tools) —— 查询项目历史

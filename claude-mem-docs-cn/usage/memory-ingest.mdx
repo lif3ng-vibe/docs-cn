@@ -1,0 +1,98 @@
+---
+title: "记忆摄取"
+description: "把 Claude Code 的 auto-memory markdown 文件直接导入 claude-mem 作为观察记录——不花费任何模型调用"
+---
+
+# 记忆摄取
+
+Claude Code 会维护自己的 **auto-memory**——它为自己提炼的 markdown 笔记，存放在：
+
+```
+~/.claude/projects/<encoded-cwd>/memory/MEMORY.md   (a link-only index)
+~/.claude/projects/<encoded-cwd>/memory/<topic>.md  (distilled prose, one fact per file)
+```
+
+`<encoded-cwd>` 是仓库的绝对路径，其中除字母和数字外的每个字符都被替换成 `-`（例如 `/home/you/code/my_app` → `-home-you-code-my-app`）。超过 200 字符的名字会被 Claude Code 截到 200，并在末尾加一段短哈希。
+
+`claude-mem memory ingest` 会把这些主题文件**直接**导入你的记忆数据库，成为观察记录。
+
+## 为什么它不花一分钱
+
+auto-memory 是**已经提炼好的**——每个主题文件与观察记录生成器产出的是同一类成品。所以 memory ingest **不会**再跑一遍 Haiku 生成管线，而是直接经由 claude-mem 现有的观察记录存取接口（content-hash 去重 + Chroma 同步）把每个文件的正文存起来。对已提炼好的内容再跑一遍生成，既会损失信息，又是在为负价值买单。
+
+`MEMORY.md` 索引会被跳过——它只是个链接列表，本身不带知识。
+
+## 用法
+
+务必**先试运行**——这是一次零花费、不碰数据库的扫描加统计：
+
+```bash
+# 扫描当前仓库的 memory 目录，报告哪些内容会被存入
+npx claude-mem memory ingest --dry-run
+
+# 扫描 ~/.claude/projects/*/memory/ 下所有项目
+npx claude-mem memory ingest --all --dry-run
+```
+
+然后再执行真正的摄取：
+
+```bash
+# 摄取当前仓库的记忆（默认来源为当前目录）
+npx claude-mem memory ingest
+
+# 从指定目录摄取
+npx claude-mem memory ingest --source ~/.claude/projects/-home-you-code-app/memory
+
+# 摄取全部项目
+npx claude-mem memory ingest --all
+```
+
+### 参数
+
+| 参数 | 效果 |
+|------|--------|
+| *(none)* | 来源 = 你运行命令所在仓库的 memory 目录。 |
+| `--source <dir>` | 从指定的 `memory/` 目录摄取。该目录必须位于 Claude Code 的 projects 目录（`~/.claude/projects`，或 `$CLAUDE_CONFIG_DIR/projects`）之内；除此之外的路径，包括指向其外的符号链接，都会被拒绝。 |
+| `--all` | 扫描 `~/.claude/projects/*/memory/` 下的每一个目录。 |
+| `--dry-run` | 零花费的解析加统计。不启动 worker，不写数据库。请先运行这一步。 |
+| `--require-cwd` | 跳过无法解析出原始 `cwd` 的孤立项目目录（而不是把它们归入一个兜底项目里摄取）。 |
+
+## 运行机制
+
+- **`--dry-run`** 是纯粹的解析加统计——完全在 CLI 进程内运行，不碰 worker 也不碰数据库，不花费任何东西。
+- **真正的摄取**会把数据存进 SQLite 观察记录数据库，它位于 worker 进程中。CLI 会在需要时启动 worker，并随观察记录到达 worker 的节奏，通过 HTTP（`POST /api/memory/ingest`）驱动导入。批量导入没有时间上限。
+- 无法读取的文件会报告为 `failed`，其余导入照常进行。符号链接形式的笔记从不跟随，超过 64 KB 的笔记不会被读取；两者都报告为 `skipped`，并注明原因。扫描途中被换成符号链接的笔记在打开时会被拒绝，报告为 `failed`。来源目录在 projects 目录之外或不存在的，会收到来自 worker 的 `400`。
+- 只有记忆笔记会被导入。同目录的会话记录（transcript）只用来读取其 `cwd`，以便像实时采集那样确定项目归属；其内容永远不会被摄取。
+
+## Frontmatter
+
+主题文件带有一小段 YAML frontmatter，会被保留为观察记录的元数据：
+
+```markdown
+---
+name: recent-work
+description: "What was done in the most recent session"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 74e59070-...
+---
+
+<the distilled prose — stored as the observation body>
+```
+
+`metadata.type`（例如 `project`、`feedback`、`reference`、`user`）和 `metadata.originSessionId` 会被一路携带；没有 frontmatter 的文件按正文原样存储。
+
+## 幂等性
+
+摄取可以放心重复执行。观察记录在插入时按 content-hash 去重，已导入过的文件会报告为 `already-imported` 并跳过——只有新增或有变动的文件才会入库。
+
+汇总行会报告结果：
+
+```
+MEMORY INGEST: 12 stored, 38 already-imported, 0 skipped, 0 failed, of 50 files across 1 dirs
+```
+
+## 相关页面
+
+- [记忆导出/导入](/usage/export-import) —— 在多台安装之间共享记忆集合。

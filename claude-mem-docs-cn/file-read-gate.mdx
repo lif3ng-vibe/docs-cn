@@ -1,0 +1,296 @@
+---
+title: "文件读取门"
+description: "claude-mem 如何拦截文件读取，利用观察记录历史节省 token"
+---
+
+# 文件读取门
+
+## 它是什么
+
+文件读取门（file read gate）会阻止 Claude Code 完整读取一个 claude-mem 已有观察记录（observation）的代码文件。Claude 拿到的是该文件的观察时间线，外加指向更省 token 来源的指引：用 `smart_outline` 看文件结构，用 `smart_unfold` 看单个符号，用 `get_observations` 查过往工作，用带 `offset` 和 `limit` 的 Read 看精确行。
+
+该门**默认开启**。参见[如何关闭](#如何关闭)。
+
+这就是[渐进式披露](/progressive-disclosure)应用于文件读取：先展示已有内容，再让 Claude 只取它真正需要的部分。
+
+### 何时拦截 Read
+
+以下条件必须全部成立：
+
+- **会话是 Claude Code**（而非 Qwen Code），且 Read 出自主会话而非 subagent。
+- **文件是 `smart_outline` 能解析的代码**（见下表）。
+- **文件在项目内**，即解析符号链接之后位于会话的工作目录之下。`smart_outline` 和 `smart_unfold` 执行同样的检查，所以项目内指向项目外的符号链接永远不会被拦截：这些工具会直接拒绝它。
+- **文件至少 32 KB。** 更小的、有历史的文件只会把时间线作为上下文附上，从不拦截。参见[大小阈值](#大小阈值)。
+- **文件有观察记录历史**，且**自其中最新一条之后未被修改过**。
+- **这次 Read 会返回整个文件。** 只读一部分的 Read 永远放行。参见[整文件读取与定点读取](#整文件读取与定点读取)。
+- **支撑 `smart_outline` 和 `smart_unfold` 的 tree-sitter CLI 已安装。** 没有它时，Read 会放行并附带时间线作为上下文，Claude 永远不会被引导去调用一个解析不了该文件的工具。Claude Code 的插件安装不包含这个可执行文件，因此 claude-mem worker 每次启动发现缺失时，会在后台从 tree-sitter 的 GitHub releases 下载。worker 只运行或安装 SHA-256 与 claude-mem 为对应 tree-sitter 版本和平台固化的摘要相符的下载内容。全新安装时，该门会在首个会话开始几秒后启用。如果下载连不上 GitHub，worker 日志会写明这一点；等网络允许后运行一次 `npx claude-mem repair`。
+
+该门覆盖的代码文件：
+
+| 语言 | 扩展名 |
+|----------|------------|
+| JavaScript | `.js` `.mjs` `.cjs` `.jsx` |
+| TypeScript | `.ts` `.mts` `.cts` `.tsx` |
+| Python | `.py` `.pyw` |
+| Go | `.go` |
+| Rust | `.rs` |
+| Ruby | `.rb` |
+| Java | `.java` |
+| Kotlin | `.kt` `.kts` |
+| Scala | `.scala` `.sc` |
+| Swift | `.swift` |
+| C 与 C++ | `.c` `.h` `.cpp` `.cc` `.cxx` `.hpp` `.hh` |
+| PHP | `.php` |
+| Lua | `.lua` |
+| Haskell | `.hs` |
+| Zig | `.zig` |
+| Shell | `.sh` `.bash` `.zsh` |
+| CSS 与 SCSS | `.css` `.scss` |
+| SQL | `.sql` |
+
+Markdown、YAML、TOML、JSON 以及其他一切文件类型都不会被拦截。对它们来说，Read 才是合适的工具。
+
+Qwen Code 运行 Claude Code 的 hook，Codex CLI 和 Kimi 也运行同一个 hook，但这些宿主都不拦截：hook 把该文件的时间线作为上下文附上后放行。其他宿主不运行这个 hook。
+
+---
+
+## 工作原理
+
+```
+Claude calls Read(file_path="/Users/you/code/acme-api/src/billing/invoice-service.ts")
+         ↓
+   PreToolUse hook runs (synchronous: the Read waits for it)
+         ↓
+   Subagent? ────────────────────────────────→ Read proceeds, nothing added
+         ↓ No
+   Project excluded? ────────────────────────→ Read proceeds, nothing added
+         ↓ No
+   File under 1,500 bytes? ──────────────────→ Read proceeds, nothing added
+         ↓ No
+   Query worker: GET /api/observations/by-file (3 s budget)
+         ↓
+   Worker slow or down? ─────────────────────→ Read proceeds, nothing added
+         ↓ No
+   No observations? ─────────────────────────→ Read proceeds, nothing added
+         ↓ Has observations
+   File modified since the newest one? ──────→ Read proceeds, nothing added
+         ↓ No
+   Keep 1 per session, rank by specificity, keep up to 15
+         ↓
+   Claude Code (not Qwen)? ────── No ──┐
+   Gate setting on? ───────────── No ──┤
+   Code file? ─────────────────── No ──┤
+   At least 32 KB? ────────────── No ──┤
+   Inside the project? ────────── No ──┼──→ Read proceeds, timeline added as context
+   Whole-file Read? ───────────── No ──┤    (once per session per file)
+   Tree-sitter CLI installed? ─── No ──┘
+         ↓ Yes to all seven
+   DENY the Read: Claude gets the timeline and where to look instead
+```
+
+一次 Read 未被拦下、但该文件的历史仍然有效时，时间线会作为上下文附在这次 Read 上：每个文件每个会话一次，该文件产生新的观察记录之后才会再次附上。在图中更早分支离开的 Read 不附加任何内容。
+
+对被门控制的文件，每一次整文件 Read 都会被拦下，而不只是第一次。
+
+---
+
+## Claude 看到什么
+
+当门拦截一次 Read 时，Claude Code 会取消这次调用，把下面这条消息交给 Claude 作为替代。在对话记录中它显示为 `PreToolUse:Read hook error`——这是门在起作用，不是失败。
+
+```
+Current: 2026-10-05 3:25pm PDT
+Full-file Read blocked by claude-mem: /Users/you/code/acme-api/src/billing/invoice-service.ts has prior observations (listed below). Get what you need without reading the whole file:
+- Current code: call smart_outline(file_path="/Users/you/code/acme-api/src/billing/invoice-service.ts") for its symbols and line numbers, then smart_unfold(file_path="/Users/you/code/acme-api/src/billing/invoice-service.ts", symbol_name="<name>") for the ones you need (MCP tools mcp__plugin_claude-mem_mcp-search__smart_outline / __smart_unfold; load them with ToolSearch if they are deferred).
+- Past work: call get_observations(ids=[41890, 42298, 42301]) for the observations below that matter (~300 tokens each).
+- Exact lines, e.g. before an Edit: call Read on this file again with offset and limit around the lines smart_outline reported. Partial reads are allowed and satisfy Edit's read requirement.
+The titles below are history from earlier sessions, not the file's current contents.
+### Sep 28, 2026
+41890 4:30p 🟣 Added proration for mid-cycle plan changes
+### Oct 3, 2026
+42298 1:50p 🔄 Split invoice totals into calculateSubtotal and applyTaxes
+42301 2:15p 🔴 Fixed rounding error in multi-currency invoice totals
+```
+
+每行时间线的格式是 `<id> <time> <type> <title>`，按天分组，从旧到新。类型图标：🔴 bugfix、🟣 feature、🔄 refactor、🔵 discovery、⚖️ decision、✅ change。
+
+<Note>
+拦截消息发给 Claude，不是发给你。没有任何需要点击的确认弹窗。要让整文件 Read 放行，请[关闭该门](#如何关闭)。
+</Note>
+
+---
+
+## 整文件读取与定点读取
+
+| Read 调用 | 结果 |
+|-----------|--------|
+| `Read(file_path)`，不带 `offset` 或 `limit` | 拦截 |
+| `offset` 为 0 或 1（或不传），且 `limit` 不小于文件总行数 | 拦截：返回整个文件 |
+| `limit` 小于文件总行数 | 放行 |
+| `offset` 大于 1 | 放行 |
+
+定点读取是 Claude 为一次 Edit 取到精确行的方法。Claude Code 的 Edit 工具拒绝修改本会话中尚未 Read 过的文件，而读取文件的一部分即满足这条规则。一次典型的编辑：
+
+1. `Read(file_path)`：被拦下。Claude 拿到时间线和上述指引。
+2. `smart_outline(file_path)`：得到每个符号及其行号范围。
+3. `Read(file_path, offset=120, limit=40)`：放行。只读到要改的那个函数。
+4. `Edit(...)`：能执行了，因为第 3 步已经 Read 过这个文件。
+
+拦截之后紧接着做定点读取，不会重复附上时间线，因为拦截时已经展示过。
+
+---
+
+## 决策树
+
+被拦截后，Claude 的选项，按开销从小到大排：
+
+| 选项 | token 开销 | 何时使用 |
+|--------|-----------|-------------|
+| **仅用时间线**（语义预热） | 额外 0 | 标题足以让 Claude 接着干 |
+| **get_observations(ids=[...])** | 每条约 300 | 需要过往工作的细节 |
+| **smart_outline** | 约 1-2k | 需要文件当前的结构和行号 |
+| **smart_unfold** | 每个符号约 400-2k | 需要完整看一个函数或一个类 |
+| **带 offset 和 limit 的 Read** | 只算读到的行 | 需要精确行，例如 Edit 之前 |
+| **整文件 Read** | 整个文件 | 门开启时会被拦截：用 `offset` 和 `limit` 只读需要的部分 |
+
+Smart 工具的开销数据来自 [Smart Explore 基准测试](/smart-explore-benchmark)。
+
+---
+
+## 用于时间推理的当前日期/时间
+
+消息以当前日期和时间开头：
+
+```
+Current: 2026-10-05 3:25pm PDT
+```
+
+这让 Claude 能判断每条观察记录有多旧。格式与 SessionStart 上下文头部一致（`YYYY-MM-DD time timezone`），因此 Claude 在整个会话中看到的时间标记前后一致。
+
+门本来就会在文件比其最新观察记录更新时让步，所以被拦下的文件自那条观察记录以来没有变过。但更旧的标题仍可能描述代码更早的版本，这就是消息把它们标注为历史、而非文件当前内容的原因。
+
+---
+
+## token 经济学
+
+完整读一个大源文件要花数千到上万个 token。取代它的 deny 消息成本为：
+
+| 组成部分 | tokens |
+|-----------|--------|
+| 开头与指引 | 约 250（路径出现三次，长路径会略增） |
+| 每条观察记录行 | 约 20 |
+| **15 条观察记录封顶时整条消息** | **约 550-600** |
+
+如果 Claude 需要更多细节，每条观察记录经 `get_observations` 取回约 300 token。
+
+### 实际示例
+
+修改本仓库 `src/services/worker-service.ts`（1,932 行）中的 `WorkerService.shutdown()`。
+
+不开该门时：
+```
+Read (whole file)                           ~22,000 tokens
+```
+
+开启该门时：
+```
+Blocked Read: deny message (5 observations)    ~360 tokens
+smart_outline                                ~1,340 tokens
+Read offset=1006 limit=67 (shutdown only)      ~890 tokens
+Total                                        ~2,600 tokens (about 88% less)
+```
+
+本页的 token 数按每 token 4 字符估算。
+
+---
+
+## 具体性排序
+
+worker 最多返回该文件的 40 条观察记录，从新到旧。门为每个会话保留一条（最新的一条），按每条观察记录与该文件相关的具体程度打分，保留得分最高的 15 条。打平则取较新的一条。
+
+| 信号 | 加分 |
+|--------|------------|
+| 文件被**修改过**（而不只是读过） | +2 |
+| 观察记录总共涉及 **3 个及以下**文件 | +2 |
+| 观察记录总共涉及 **4-8** 个文件 | +1 |
+| 观察记录涉及 **9 个及以上**文件（类似全景扫描） | +0 |
+
+得分决定哪些观察记录入围。留下的条目从旧到新、按天分组列出。一条以该文件为主要改动对象的观察记录，胜过一条只是顺带读了另外 20 个文件的观察记录。
+
+---
+
+## Hook 时序
+
+`Read` 上的 `PreToolUse` hook 是**同步**的。它只能如此，因为只有同步 hook 才能拦下一个工具调用。每次 Read 都得等它。
+
+- 该 hook 给 worker 最多 **3 秒**，供健康检查与观察记录查询合计使用。worker 太慢或没运行时，hook 停止等待，Read 原样放行、不附加内容。门是失败放行（fail-open）的。
+- Claude Code 对该 hook 的超时是 **15 秒**，远高于上述预算，作为兜底。
+- hook 因其他原因失败时返回无操作（no-op）。报错永远不会拦下一次 Read。
+
+---
+
+## 配置
+
+### 大小阈值
+
+- **1,500 字节以下**的文件什么都不加：既无时间线也不拦截。在那种大小下，读文件和附时间线的成本差不多。
+- 从 1,500 字节到 **32 KB** 的文件会把时间线作为上下文附上，但从不拦截。
+- **32 KB 及以上**的代码文件才可能被拦截。
+
+拦截并非没有代价。被拒的 Read 占一个回合，其后的每次 `smart_outline`、`smart_unfold` 或定点读取也各占一个回合，而每个回合都要重读整段对话。拦截省下的，是不让文件进入上下文的那部分。只有文件足够大时，这份节省才能盖过那些回合的开销。read-gate eval（仓库中的 `evals/read-gate`）在开、关门两种状态下问了同样的走查问题：
+
+| 文件 | `claude-sonnet-5-5` | `claude-opus-5-5` |
+| --- | --- | --- |
+| 513 行，19 KB | -6% | +20% |
+| 941 行，49 KB | -35% | -32% |
+
+两个阈值都固化在 `src/cli/handlers/file-context.ts` 中。
+
+### 项目排除
+
+匹配 `CLAUDE_MEM_EXCLUDED_PROJECTS` 中模式的项目会整个跳过该 hook：既不拦截也不附时间线。在 `~/.claude-mem/settings.json` 中配置：
+
+```json
+{
+  "CLAUDE_MEM_EXCLUDED_PROJECTS": "/tmp/*,/scratch/*"
+}
+```
+
+### 如何关闭
+
+以下任意做法都会关闭该门：
+
+- **settings 文件。** 在 `~/.claude-mem/settings.json` 中：
+
+  ```json
+  {
+    "CLAUDE_MEM_FILE_READ_GATE_ENABLED": "false"
+  }
+  ```
+
+- **查看器。** 打开设置（齿轮图标），展开 **Advanced**，关掉 **Block full-file reads**，再点 **Save**。
+- **环境变量。** 在 hook 能看到的地方设置 `CLAUDE_MEM_FILE_READ_GATE_ENABLED=false`：启动 Claude Code 前在 shell 里 export，或在 `~/.claude/settings.json` 的 `env` 下加上它。它优先于 settings 文件。
+
+settings 文件或查看器里的改动从下一次 Read 起生效，无需重启。只有值 `false` 会关闭该门；其他任何值都保持开启。在 `settings.json` 中要写成字符串 `"false"`，如上所示。
+
+门关闭后，每次 Read 都会放行，文件的时间线仍会作为上下文附上，每个文件每个会话一次。
+
+要把整个 hook（连同时间线）一起关闭，在 hook 的环境里设置 `CLAUDE_MEM_DISABLE_FILE_CONTEXT=1`（见[关闭工具 Hook](/configuration#关闭工具-hook)）。Claude Code 仍会为每次 Read 启动这个 hook，但 hook 会立刻退出。
+
+<Note>
+门关闭后，Claude 想读整文件就读整文件。这在大文件上花的 token 更多，但省下了额外的工具调用——对小项目或观察记录稀少的情况，这可能反而是更划算的取舍。
+</Note>
+
+---
+
+## 整体协作关系
+
+文件读取门是 claude-mem 分层上下文策略中的一环：
+
+1. **Session Start**：注入近期观察记录的时间线（第 1 层：元数据）
+2. **文件读取门**：用该文件自己的时间线回应整文件 Read（第 1 层：元数据）
+3. **get_observations**：按需取回特定观察记录的细节（第 2 层：细节）
+4. **smart_outline / smart_unfold**：读当前代码的结构，或单个符号（第 3 层：源代码）
+5. **带 offset 和 limit 的 Read**：精确行，例如 Edit 之前（第 3 层：源代码）
+
+每一层都比前一层开销更高。门让 Claude 从最省的一层起步，只在必要时逐层升级。门让步的地方整文件 Read 照常发生：小文件与非代码文件、自最新观察记录后改过的文件、subagent、其他宿主、没有 tree-sitter CLI 的安装，以及门被关掉时。

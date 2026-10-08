@@ -94,5 +94,12 @@
     "desc": "tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。",
     "orig": "https://e2e.tester.army/docs",
     "repo": "https://github.com/tester-army/e2e"
+  },
+  {
+    "name": "Claude-Mem",
+    "slug": "claude-mem",
+    "desc": "Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。",
+    "orig": "https://docs.claude-mem.ai/",
+    "repo": "https://github.com/thedotmack/claude-mem"
   }
 ]

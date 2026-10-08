@@ -1,0 +1,208 @@
+---
+title: "Grok Bot 集成"
+description: "Grok Bot 的持久记忆——不用宿主 hook，不用 Claude CLI，也不需要 xAI API key"
+---
+
+# Grok Bot 集成
+
+> **让 Grok Bot 拥有记忆。** claude-mem 会捕获智能体的所作所为，压缩之后注入后续会话。
+
+<CardGroup cols={2}>
+  <Card title="无需宿主 hooks" icon="ban">
+    摄取靠的是监听智能体 JSONL 的转录文件观察器，而不是 Cursor 式的 hooks。
+  </Card>
+  <Card title="默认 CMEM Pro" icon="cloud">
+    `npx claude-mem install --ide grok-bot` 默认预选 CMEM Pro，`--provider host` 属于可选。
+  </Card>
+  <Card title="与 Cursor 相互独立" icon="puzzle-piece">
+    可以只装 Grok Bot、只装 Cursor，或两者都装。任一宿主都不依赖另一个。
+  </Card>
+  <Card title="MCP 检索" icon="magnifying-glass">
+    用三层记忆工具检索过去的会话。
+  </Card>
+</CardGroup>
+
+<Info>
+这条安装路径随 **claude-mem 13.24** 发布（[PR #3842](https://github.com/thedotmack/claude-mem/pull/3842)）。npm 13.23.x 尚不接受 `--ide grok-bot`。Grok Bot **不是** Grok Build CLI。插件 id：**`claude-mem-grok-bot`**。
+</Info>
+
+## 工作方式
+
+Grok Bot 没有 session-start、file-read 或 tool-use 类 hooks。claude-mem 用下面几块拼起来：
+
+1. **转录观察器**跟踪 `agent-transcripts/*/*.jsonl`，并打上 `platformSource=grok-bot` 标记。
+2. **本地 worker** 存储会话并提供检索服务（默认端口 `37700 + uid % 100`，绑定 `127.0.0.1`）。
+3. **观察者（默认 CMEM Pro）**——观察记录抽取默认走非宿主通道，通过 `https://cmem.ai/api/inference/v1` 由模型 `cmem-observer` 完成。可用 `--provider host` 改选**宿主观察者（host observer）**（用当前的 Grok 登录态走本地 OpenAI 兼容回环，无需 API key）。
+4. **MCP** 向 bot 暴露检索（`search` → `timeline` → `get_observations`）。
+5. **实时时间线 INDEX**——观察记录落地后，worker 会重写 `agents/<agent_id>/memory/log/zz-claude-mem-inject.md`。宿主本来就把这个文件作为 Memory facts 持续挂载读取。该文件不断滚动增长（最新 ID 滑入顶部，最旧滑出）。座位（seat）专属日记偏薄时，会用所在 worker 上最新的全局观察记录补足，因此一个自己只有寥寥几行记录的 seat 也能得到一份有用的 INDEX。
+6. **感知推送（试点）**——观察记录入库后，针尖类型（needle type）会作为一行带日期的 fact 追加进该 bot 的 Grok 记忆日志（`YYYY-MM.md`）。这不是 INDEX。
+
+不要为这个宿主安装 Claude CLI，也不要传 xAI API key，不存在 `--provider grok` 这个参数。
+
+Grok Bot **不**使用 Claude Code 的 hook stdin，因此 `#2188` 的空 stdin / `CAPTURE_BROKEN` 问题在此不适用。捕获靠的就是转录观察器。现在的每一路监听都会把 `agentId` 带入摄取环节，观察记录始终标注来自哪个 bot。
+
+## 安装
+
+### CLI（仅 Grok Bot）
+
+```bash
+npx claude-mem install --ide grok-bot
+```
+
+这会启动一个**本地 worker**，观察者预选为 **CMEM Pro**。宿主登录观察者属于可选项：
+
+```bash
+npx claude-mem install --ide grok-bot --provider host
+```
+
+`--ide` 只接受**一个**宿主。想同时接入 Cursor，请再跑一次安装（不要在同一条命令里传两次 `--ide`——只有最后一个值生效）：
+
+```bash
+npx claude-mem install --ide cursor
+```
+
+其他选项：
+
+```bash
+# 远程 worker
+npx claude-mem install --ide grok-bot --runtime server --server-url https://YOUR_HOST
+
+# 远程观察者（cmem.ai 或任意 OpenAI 兼容 URL）
+npx claude-mem install --ide grok-bot --provider openrouter
+```
+
+`--provider` 也仍旧接受 `claude` 和 `gemini`。显式传 `--provider` 会跳过登录步骤。
+
+<Warning>
+`npm install -g claude-mem` 只安装 SDK，不会启动 worker、观察器或转录观察器。请始终使用 `npx claude-mem install`。
+</Warning>
+
+### 插件商店
+
+Grok Bot 的插件商店与 Cursor 目录是同一个。等上架生效后（13.24 发布后已提交至 [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish)），在店内安装 **`claude-mem-grok-bot`** 即可。该上架项不会安装 Cursor。
+
+插件装好后，本地 worker 仍要靠上面的 CLI 启动；远程 MCP 则设置 `CLAUDE_MEM_MCP_TOKEN`。
+
+## 观察者与 worker
+
+| 组件 | 默认 | 可选 / 远程 |
+| --- | --- | --- |
+| Worker | `npx claude-mem install --ide grok-bot` | `--runtime server --server-url` |
+| 观察者 | CMEM Pro（`cmem-observer` @ `https://cmem.ai/api/inference/v1`） | `--provider host`（本机回环、已登录的 Grok Bot、无 API key）或 `--provider openrouter` |
+| MCP | `npx -y claude-mem mcp` | `https://cmem.ai/api/mcp`，带 `Authorization: Bearer ${CLAUDE_MEM_MCP_TOKEN}` |
+
+`--provider host` 的实现是一个 OpenRouter 形状的回环：`CLAUDE_MEM_OPENROUTER_BASE_URL=http://127.0.0.1:<shim>/v1`，外加一个非空的占位 API key。这些都不需要你手动配置。
+
+**端口规则：** 观察者 shim **不得**占用 worker 端口。worker 通常是 `37700 + (uid % 100)`。macOS 上常见的是 **37777**——若该端口被占，shim 改用 **37778**（或 `CLAUDE_MEM_HOST_OBSERVER_PORT`）。
+
+健康的 worker 绝不要重启。观察记录队列放在内存里，一重启就没了。
+
+宿主观察者的闲置回复必须是 `skip_summary` XML；一个完整的工作单元对应一条 `observation`。「还在观察中」这类散文回复**会丢弃整批**（[issue #2485](https://github.com/thedotmack/claude-mem/issues/2485)）。
+
+## XML 契约（宿主观察者）
+
+使用 `--provider host` 时，worker 解析器只接受三种根节点。
+
+**闲置 / 初始化 / 还没有工具结果时：**
+
+```xml
+<skip_summary reason="noise" />
+```
+
+**完成一个可检索单元：** 一条 `<observation>` 覆盖整批内容——真实的标题、4–10 条带路径的 fact、一小段叙述。标题永远不要用工具名。不要把 `skip_summary` 和 `<observation>` 混用。遇到超时必须返回 `skip_summary` XML，而不是 HTTP 504。
+
+## 实时时间线 INDEX（Memory 中途挂载）
+
+Grok Bot 没有 SessionStart hook。worker 把 Claude Code 在会话启动时拿到的同一份紧凑 ID INDEX，写进宿主本来就会重读的一个文件：
+
+```
+agents/<uuid>/memory/log/zz-claude-mem-inject.md
+```
+
+谁来写：worker，在存储观察记录之后（防抖）写，并在 worker 启动时各写一次。最新行变化时文件被原地整体覆写。它不是一次性的全量转储。
+
+怎么滚动：最新的观察记录 ID 在顶部，在 `CLAUDE_MEM_GROK_BOT_INJECT_WINDOW`（默认 80）处滑出。每行 fact 都保留观察记录 ID，因此 `get_observations([IDs])` 依旧可用。
+
+薄座位的日记：`/api/context/inject?projects=<cmem_work_seat>` 仍然按项目限定范围（Claude Code / Cursor 的 hooks 不变）。Grok Bot 写入器额外用本 worker 上最新的观察记录（全局 feed）补足剩余槽位，因此一个自己只有五行记录的座位也能得到一份有用的 INDEX。
+
+启用 / 禁用（settings.json 或环境变量；环境变量优先）：
+
+| 设置项 | 默认值 | 作用 |
+| --- | --- | --- |
+| `CLAUDE_MEM_GROK_BOT_INJECT_ENABLED` | `true` | worker 实时写入 INDEX，设为 `false` 即关闭。不存在 Grok Bot seat 时无效果。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_AGENT_IDS` | `*` | 覆盖所有带着 `agents/<uuid>/profile.json` 的活跃 seat，或指定一串 UUID。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_FALLBACK` | `house` | `house` 用 worker 最新的观察记录补足偏薄的日记；`off` = 只用 seat 自己的项目。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_TIER` | `episode` | 宿主 Memory 的层级前缀。保持 `episode`，否则纯层级行的召回会丢掉 4000 字符预算。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_WINDOW` | `80` | 滑出窗口大小（上限钳制到 100）。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_PLATFORM_SOURCE` | 空 | 不设置 = 不丢弃 Cursor / 其他宿主的行。仅在想要 grok 独占 feed 时设置。 |
+
+不要手写 `profile.md`。`YYYY-MM.md` 由宿主负责。CCS 的 `TIMELINE.md` 桶不是事实来源。
+
+在一台 Grok Bot 机上实测验证：
+
+```bash
+# worker 健康且已有新的观察记录落地之后：
+seat=YOUR-SEAT-UUID
+root="${GROK_BOT_AGENT_DATA:-$HOME/.grok-bot}"
+# 若 seat 位于 /home/box 或 Application Support 下，请改用那个根目录。
+wc -l "$root/agents/$seat/memory/log/zz-claude-mem-inject.md"
+grep -n '\[claude-mem\]' "$root/agents/$seat/memory/log/zz-claude-mem-inject.md" | head
+# 再干点活，等约 2s，确认顶部出现了更新的 ID。
+```
+
+可选的 `scripts/grok-bot-session-inject.mjs` 守护进程不是必需的。实时写入者就是 worker。
+
+## 使用记忆
+
+真正开始一个任务时，先为该项目调用 MCP 的 `session_start_context`，`platformSource` 取 `grok-bot`。
+
+然后是三层检索：
+
+1. `search`——带 ID 的紧凑索引
+2. `timeline`——命中周围的上下文
+3. `get_observations`——只为真正要用的 ID 拉**完整**详情
+
+来自这个宿主的写入都会打上 `platformSource=grok-bot`。读取时，除非你明确要求 grok 独占，否则不要丢弃 Cursor（或其他宿主）的记忆。参见 [检索工具](/usage/search-tools)。
+
+## 验证是否生效
+
+1. Worker 健康检查：打开 `http://127.0.0.1:<worker-port>/api/health`（端口在 `~/.claude-mem/.worker.port` 或 settings 里）。
+2. 记忆查看器：打开安装时打印出的 worker URL。
+3. 在 Grok Bot 里完成一小段工作，然后检索。新观察记录应带有 `platformSource=grok-bot`。
+4. 默认观察者：第一条真实的观察记录经由模型 `cmem-observer` 入库。宿主观察者：若队列一直空转，多半是回复成了散文而不是 `skip_summary`。
+5. 实时 INDEX：观察记录入库后（本 worker 上任意项目），`agents/<this-seat-uuid>/memory/log/zz-claude-mem-inject.md` 应在顶部多出一行最新的条目（`- (YYYY-MM-DD) [episode] [claude-mem] <id> …`），全程无需任何人手写该文件。座位项目偏薄时仍会用最新的全局行补足。用 `CLAUDE_MEM_GROK_BOT_INJECT_ENABLED=false` 关闭。
+6. 感知推送试点（LFG + Orifice）：一条针尖观察记录（`decision`、`bugfix`、`security_alert`、`sensitive`）应向 `agents/<agent_id>/memory/log/YYYY-MM.md` 追加 `- YYYY-MM-DD [awareness] …`。不会写入 `profile.md`。用 `CLAUDE_MEM_GROK_BOT_AWARENESS_ENABLED=false` 关闭。
+
+## 故障排查
+
+### 没有任何内容被存储
+
+- 确认 worker 在运行，而且你**没有**重启过一个健康的 worker。
+- CMEM Pro：检查 `/api/health`（provider 显示 openrouter）和 `/api/sync/status`。参见 [CMEM Pro（手动 / 无头模式）](/cmem-pro-headless)。
+- 宿主观察者：确认回复是 XML（`skip_summary` 或 `observation`），且 shim 没有占用 worker 端口（macOS：worker 37777 → shim 37778）。
+
+### `npx claude-mem install --ide grok-bot` 被拒绝
+
+你的 npm 是 **13.23.x 或更早**。该宿主随 **13.24** 落地，见 [PR #3842](https://github.com/thedotmack/claude-mem/pull/3842)。
+
+### 我同时也在用 Cursor
+
+`--ide` 只接受单个字符串。请为 Cursor 单独跑一次安装；不要在同一条命令里叠 `--ide`：
+
+```bash
+npx claude-mem install --ide grok-bot
+npx claude-mem install --ide cursor
+```
+
+Cursor 使用 hooks（`npx claude-mem hook cursor …`）和 `platformSource=cursor`。Grok Bot 依旧没有 hooks。参见 [Cursor 集成](/cursor)。
+
+### 这不是 Grok Build
+
+Grok **Build** CLI 的（`xai-org/plugin-marketplace`）市场是另一套目录。本页只讲 Grok Bot。
+
+## 后续步骤
+
+- [CMEM Pro（手动 / 无头模式）](/cmem-pro-headless)——默认观察者的设置
+- [检索工具](/usage/search-tools)——查询项目历史
+- [配置](/configuration)——设置项与环境变量
+- [Cursor 集成](/cursor)——如果你同时运行 Cursor

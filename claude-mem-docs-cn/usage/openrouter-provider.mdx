@@ -1,0 +1,360 @@
+---
+title: "OpenRouter 提供商"
+description: "通过 OpenRouter 的统一 API 访问 100 多个 AI 模型，并让观察记录的抽取不占用订阅计划"
+---
+
+# OpenRouter 提供商
+
+Claude-Mem 支持 [OpenRouter](https://openrouter.ai) 作为观察记录抽取的替代提供商（provider）。OpenRouter 提供统一 API，可访问来自 Google、Meta、Mistral、DeepSeek 等众多提供商的 100 多个模型。
+
+<Tip>
+**记忆不占计划用量**：使用 OpenRouter（或运行在该提供商上的 claude-mem observer）时，观察记录的抽取不占用你的 Claude 订阅计划——记忆工作从不与计划用量共享额度。
+</Tip>
+
+<Note>
+**claude-mem observer**：在 `npx claude-mem install` 安装过程中登录并选择 claude-mem observer 时，claude-mem 会自动为你配置该提供商，并附带一个预置的密钥——无需任何手动设置。本页其余部分介绍如何使用你自己的 OpenRouter 密钥。
+</Note>
+
+## 为什么选用 OpenRouter？
+
+- **不占计划用量**：观察记录的抽取从不占用你的 Claude 计划用量
+- **可访问 100 多个模型**：通过一个 API 在多家提供商的模型中自由选择
+- **有免费模型可选**：多款高质量模型可以零成本使用
+- **报错清晰直接**：429、5xx 与网络故障会直接抛出异常——消息保持待处理状态，以便稍后重试
+- **热切换**：无需重启 worker 即可更换提供商
+- **多轮对话**：多次 API 调用之间始终保留完整对话历史
+
+## OpenRouter 上的免费模型
+
+OpenRouter 积极推动 AI 普惠，提供了不少免费模型。这些模型已达到生产可用水准，适合用于观察记录的抽取。
+
+### 精选免费模型
+
+| 模型 | ID | 参数规模 | 上下文 | 适用场景 |
+|-------|------|------------|---------|----------|
+| **Cohere North Mini Code** | `cohere/north-mini-code:free` | 30B (3B active, MoE) | 256K | 默认；智能体编码 |
+| **Poolside Laguna XS 2.1** | `poolside/laguna-xs-2.1:free` | 33B (3B active, MoE) | 256K | 编码智能体 |
+| **NVIDIA Nemotron 3 Ultra** | `nvidia/nemotron-3-ultra-550b-a55b:free` | 550B (55B active, MoE) | 1M | 推理、编排 |
+
+<Note>
+**默认模型**：Claude-Mem 默认使用 `cohere/north-mini-code:free`——一个具备 256K 上下文窗口的稀疏混合专家（MoE）编码模型。
+</Note>
+
+### 使用免费模型的注意事项
+
+- **速率限制**：免费模型的速率限制可能比付费模型更严格
+- **可用性**：免费容量取决于提供商合作情况与需求
+- **下架**：OpenRouter 会定期下架免费模型 id。如果默认模型被下架，claude-mem 会自动把已保存的设置迁移到新模型。如果你自己选的模型被下架，observer 会报告 "OpenRouter model unavailable"（参见[故障排查](#故障排查)）
+- **排队时间**：高峰时段请求可能短暂排队
+- **最大 token 数**：多数免费模型支持 65,536 个补全 token
+
+所有免费模型都支持：
+- 工具调用（tool use）与函数调用
+- 温度与采样控制
+- 停止序列（stop sequences）
+- 流式响应
+
+## 获取 API Key
+
+1. 前往 [OpenRouter](https://openrouter.ai)
+2. 使用 Google、GitHub 或邮箱登录
+3. 进入 [API Keys](https://openrouter.ai/keys)
+4. 点击 **Create Key**
+5. 复制并妥善保存你的 API Key
+
+<Tip>
+**零成本起步**：注册账号或使用免费模型都不需要信用卡。只有想调用付费模型时才需要充值。
+</Tip>
+
+## 配置
+
+### 设置项
+
+| 设置项 | 取值 | 默认值 | 说明 |
+|---------|--------|---------|-------------|
+| `CLAUDE_MEM_PROVIDER` | `claude`, `codex`, `gemini`, `openrouter`, `openai-compatible` | `claude` | 用于观察记录抽取的 AI 提供商 |
+| `CLAUDE_MEM_OPENROUTER_API_KEY` | string | — | 你的 OpenRouter API Key |
+| `CLAUDE_MEM_OPENROUTER_MODEL` | string or array | `cohere/north-mini-code:free` | 模型标识符，或一个用于逐级回退的列表（参见[模型回退](#模型回退)） |
+| `CLAUDE_MEM_OPENROUTER_BASE_URL` | string | — | 可选：自定义 OpenAI 兼容 base URL（参见[自定义 OpenAI 兼容网关](#自定义-openai-兼容网关)） |
+| `CLAUDE_MEM_OPENROUTER_SITE_URL` | string | — | 可选：用于分析归因的 URL |
+| `CLAUDE_MEM_OPENROUTER_REASONING_EFFORT` | `none`, `minimal`, `low`, `medium`, `high` | — | 可选：openrouter.ai 模型的推理力度（reasoning effort）。`none` 表示关闭推理，可解决模型把输出预算全花在思考上、最后什么都答不出来的问题；不设置则不发送该字段。此字段永不会发送到自定义 base URL 或 claude-mem observer |
+| `CLAUDE_MEM_OPENROUTER_APP_NAME` | string | `claude-mem` | 可选：用于统计分析的应用名 |
+| `CLAUDE_MEM_OPENROUTER_EXTRA_BODY` | JSON object | — | 可选：额外的请求字段（参见[额外请求字段](#额外请求字段)）。仅支持设置文件或环境变量 |
+
+### 通过设置界面使用
+
+1. 打开启动时打印的 worker URL
+2. 点击 **齿轮图标** 打开设置
+3. 在 **AI Provider** 下选择 **OpenRouter**
+4. 输入你的 OpenRouter API Key
+5. （可选）选择其他模型
+
+设置即刻生效，无需重启。
+
+### 手动配置
+
+编辑 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "sk-or-v1-your-key-here",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "cohere/north-mini-code:free"
+}
+```
+
+### 模型回退
+
+`CLAUDE_MEM_OPENROUTER_MODEL` 也接受一个模型 id 的**列表**。第一个是常规使用的模型，其余则交给 OpenRouter 原生的 `models` 回退数组——当前一个模型报错时，按顺序尝试下一个。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "sk-or-v1-your-key-here",
+  "CLAUDE_MEM_OPENROUTER_MODEL": [
+    "vendor/fast-model:free",
+    "vendor/backup-model:free",
+    "vendor/paid-model"
+  ]
+}
+```
+
+写成逗号或空格分隔的字符串同样有效，例如 `"vendor/a, vendor/b"` 与上面两项数组的含义相同。
+
+回退列表只发送给 `openrouter.ai`。自定义的 `CLAUDE_MEM_OPENROUTER_BASE_URL` 网关说的是纯 OpenAI 协议，没有 `models` 字段，因此只会收到**第一个** id，其余的都会被忽略。
+
+或者，通过环境变量设置 API Key：
+
+```bash
+export OPENROUTER_API_KEY="sk-or-v1-your-key-here"
+```
+
+设置文件的优先级高于环境变量。
+
+### 自定义 OpenAI 兼容网关
+
+OpenRouter 提供商本质上是一个通用的 OpenAI 兼容客户端。把 `CLAUDE_MEM_OPENROUTER_BASE_URL` 设为任何支持 `/chat/completions` 的服务器，例如 DeepSeek（`https://api.deepseek.com`）、LM Studio（`http://localhost:1234/v1`），或者 io.net 的 [IO Intelligence](https://io.net)。模型 id 会原样发送；如果用了回退列表，只有第一个 id 生效（纯 OpenAI 没有 `models` 字段）。请使用目标端点自己签发的密钥：claude-mem observer 的密钥（`cm_pro_…`）只会发送给 claude-mem observer。
+
+<Tip>
+[OpenAI 兼容提供商](/usage/openai-compatible-provider)用自己的一套设置完成同样的事，内置了常见端点的预设，并且不发送 OpenRouter 的归因请求头。如果端点不是 OpenRouter，优先选它。
+</Tip>
+
+以 IO Intelligence 为例：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "https://api.intelligence.io.solutions/api/v1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "meta-llama/Llama-3.3-70B-Instruct",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "YOUR_IO_INTELLIGENCE_API_KEY"
+}
+```
+
+模型 id 是来自 [IO Intelligence 模型列表](https://api.intelligence.io.solutions/api/v1/models)的「组织/名称」对，例如 `deepseek-ai/DeepSeek-R1-0528` 或 `zai-org/GLM-4.6`。base URL 带不带尾部斜杠都可以，`/chat/completions` 会自动补上。
+
+### 额外请求字段
+
+`CLAUDE_MEM_OPENROUTER_EXTRA_BODY` 会把一个 JSON 对象合并进每个请求，用于补充 claude-mem 自身不设置的提供商专用字段。最常见的场景是推理模型把整个输出预算花在思考上、最后什么都答不出来。把它的推理关掉：
+
+```json
+{
+  "CLAUDE_MEM_OPENROUTER_EXTRA_BODY": { "reasoning": { "enabled": false } }
+}
+```
+
+写成环境变量时，就是同一个对象、以字符串形式给出：`CLAUDE_MEM_OPENROUTER_EXTRA_BODY='{"reasoning":{"enabled":false}}'`。自定义网关也可以用其厂商自己的字段，例如 `{"thinking":{"type":"disabled"}}`。
+
+- 值必须是 JSON 对象，其他类型会被忽略，并在 worker 日志中给出警告。
+- 不能替换 `model`、`models`、`messages`、`stream`、`max_tokens` 或 `max_completion_tokens`。这些字段会被丢弃并给出警告。请用 `CLAUDE_MEM_OBSERVER_MAX_OUTPUT_TOKENS` 设置输出上限。
+- 此字段永不会发送给 claude-mem observer。
+- 设置了 `CLAUDE_MEM_OPENROUTER_REASONING_EFFORT` 时，由它决定 `reasoning`，extra body 里的 `reasoning` 字段会被忽略。
+- 在 `~/.claude-mem/settings.json` 或环境变量中设置。设置界面与 API 不会写入它。
+
+## 模型选择指南
+
+### 免费模型
+
+**推荐**：`cohere/north-mini-code:free`（即默认模型）
+- 256K 上下文窗口可容纳较大的观察记录
+- 最大补全 64K token
+- 稀疏混合专家（MoE）架构，激活参数 3B
+
+**备选**：
+- `poolside/laguna-xs-2.1:free`——编码智能体模型，256K 上下文
+- `nvidia/nemotron-3-ultra-550b-a55b:free`——1M 上下文，推理能力强
+
+### 付费模型（更高品质与速度）
+
+| 模型 | 适用场景 |
+|-------|----------|
+| `anthropic/claude-haiku-4.5` | 与 Claude 提供商的默认模型相同 |
+| `google/gemini-2.5-flash` | 响应速度快 |
+| `openai/gpt-4o` | GPT-4 品质 |
+
+付费模型消耗你的 OpenRouter 额度——同样不占计划用量，因此不会动用你的 Claude 计划用量。
+
+## 上下文窗口管理
+
+每次请求都会把完整对话历史发送给模型。claude-mem 在客户端**不做**任何截断，也不限制消息条数——上下文窗口由提供商与模型自己负责。如果需要为某个模型约束上下文，请选择上下文长度合适的模型，或在 OpenRouter/提供商层面管理限制。
+
+### 用量跟踪
+
+日志中包含详细的用量信息：
+
+```
+OpenRouter API usage: {
+  model: "cohere/north-mini-code:free",
+  inputTokens: 2500,
+  outputTokens: 1200,
+  totalTokens: 3700,
+  estimatedCostUSD: "0.00",
+  messagesInContext: 8
+}
+```
+
+## 提供商切换
+
+你随时可以在提供商之间切换：
+
+- **无需重启**：更改在下一条观察记录时生效
+- **保留对话历史**：会话中途切换时，新提供商能看到完整的对话上下文
+- **无缝过渡**：所有提供商使用相同的观察记录格式
+
+### 通过界面切换
+
+1. 在查看器中打开设置
+2. 更改 **AI Provider** 下拉框
+3. 下一条观察记录将使用新的提供商
+
+### 通过设置文件切换
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter"
+}
+```
+
+## 错误行为
+
+如果 OpenRouter 报错，claude-mem 会记录这次失败并重新抛出，使消息保持待处理状态，等待稍后重试。没有 Claude SDK 回退机制——早期文档声称会自动回退到 Claude，但相关逻辑实际上从未在生产中启用（#2087）。要切换提供商，请在设置中修改 `CLAUDE_MEM_PROVIDER`。
+
+**会抛出异常的情况**：
+- 速率限制（HTTP 429）
+- 服务器错误（HTTP 500、502、503）
+- 网络问题（连接被拒绝、超时）
+- 429 以外的 4xx 错误
+- 缺少 API Key
+
+## 多轮对话支持
+
+OpenRouter agent 会在多次 API 调用之间维护完整的对话历史：
+
+```
+Session Created
+  ↓
+Load Pending Messages (observations from queue)
+  ↓
+For each message:
+  → Add to conversation history
+  → Call OpenRouter API with FULL history
+  → Parse XML response
+  → Store observations in database
+  → Sync to Chroma vector DB
+  ↓
+Session complete
+```
+
+这带来：
+- 连贯的多轮交互
+- 跨观察记录保留上下文
+- 会话中途无缝切换提供商
+
+## 故障排查
+
+### "OpenRouter API key not configured"
+
+任选其一：
+- 在 `~/.claude-mem/settings.json` 中设置 `CLAUDE_MEM_OPENROUTER_API_KEY`，或
+- 设置 `OPENROUTER_API_KEY` 环境变量
+
+### 速率限制
+
+免费模型在高峰时段可能触发速率限制。如果遇到速率限制：
+- agent 会抛出异常并让消息保持待处理——稍后会重试
+- 可以考虑换一个免费模型
+- 充值后即可使用付费模型
+
+### 模型不可用
+
+当 OpenRouter 表示所配置的模型已下架（"This model has been deprecated"）、不存在（"is not a valid model ID"）或没有可用端点（"No endpoints found for …"）时，observer 会报告 `OpenRouter model unavailable`。重试解决不了这个问题，所以不会自动重试；worker 日志和会话开始的警告会提示你更换模型：
+- 从 [OpenRouter Models](https://openrouter.ai/models) 选一个模型，并在 `~/.claude-mem/settings.json`（或查看器的设置界面）中将其设为 `CLAUDE_MEM_OPENROUTER_MODEL`。下一条观察记录就会使用它
+- 免费模型加上 `:free` 后缀
+- 模型 id 区分大小写
+
+如果你的设置里装的还是已下架的默认模型 `xiaomi/mimo-v2-flash:free`，claude-mem 在第一次加载设置时就已经帮你迁移到 `cohere/north-mini-code:free`。
+
+### Token 用量过高
+
+如果一次会话积累了很长的对话历史，请求体积可能逐渐变大。要控制单次请求的大小：
+- 选择与你的用量规模匹配的模型
+- 如果碰到提供商侧的限制，可以考虑上下文窗口更大的模型
+
+### 连接错误
+
+如果看到连接错误：
+- 检查你的网络连接
+- 在 [status.openrouter.ai](https://status.openrouter.ai) 查看 OpenRouter 服务状态
+- agent 会抛出异常并让消息保持待处理，以便稍后重试
+
+## API 细节
+
+OpenRouter 使用 OpenAI 兼容的 REST API：
+
+**端点**：`https://openrouter.ai/api/v1/chat/completions`
+
+**请求头**：
+```
+Authorization: Bearer {apiKey}
+HTTP-Referer: https://github.com/thedotmack/claude-mem
+X-Title: claude-mem
+Content-Type: application/json
+```
+
+**请求格式**：
+```json
+{
+  "model": "cohere/north-mini-code:free",
+  "messages": [
+    {"role": "system", "content": "..."},
+    {"role": "user", "content": "..."}
+  ],
+  "temperature": 0.3,
+  "max_tokens": 4096
+}
+```
+
+## 提供商对比
+
+| 特性 | Claude (SDK) | Gemini | OpenRouter |
+|---------|-------------|--------|------------|
+| **计划用量** | 与你的 Claude 计划共享额度 | 不占计划（用你自己的 Gemini 密钥） | 不占计划（用你的 OpenRouter 额度或 claude-mem observer） |
+| **模型** | 仅 Claude | 仅 Gemini | 100 多个模型 |
+| **质量** | 最高 | 高 | 因模型而异 |
+| **速率限制** | 按订阅档位 | 5-4000 RPM | 因模型而异 |
+| **出错时** | 抛出 | 抛出 | 抛出 |
+| **配置** | 自动 | 需要 API Key | 需要 API Key |
+
+<Tip>
+**推荐**：安装时选择 claude-mem observer，是让记忆不占计划用量的最简便方式。想自带密钥？先从免费的 `cohere/north-mini-code:free` 开始。如果需要更高品质或遇到速率限制，再切换到付费模型或 Claude 提供商。
+</Tip>
+
+## 后续步骤
+
+- [配置](/configuration) - 完整设置参考
+- [Gemini 提供商](/usage/gemini-provider) - 另一个免费提供商
+- [入门指南](/usage/getting-started) - 基础用法指南
+- [故障排查](/troubleshooting) - 常见问题
+
+## 多个 API Key
+
+`CLAUDE_MEM_OPENROUTER_API_KEYS` 接受额外的密钥（换行或逗号分隔），与 `CLAUDE_MEM_OPENROUTER_API_KEY` 并用。当某把密钥触发速率限制、额度耗尽或被判为无效时，OpenRouter 请求会轮换到下一把密钥，而不是在余下的时间窗口里一直失败。参见[多密钥轮换](/usage/multi-key-rotation)。

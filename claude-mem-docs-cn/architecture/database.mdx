@@ -1,0 +1,344 @@
+---
+title: "数据库架构"
+description: "SQLite schema、FTS5 全文检索与数据存储"
+---
+
+# 数据库架构
+
+Claude-Mem 使用 SQLite 3（通过 bun:sqlite 原生模块）做持久化存储，并借助 FTS5 实现全文检索。
+
+## 数据库位置
+
+**路径**：`~/.claude-mem/claude-mem.db`
+
+数据库采用 SQLite 的 WAL（Write-Ahead Logging，预写日志）模式，支持并发读写。
+
+## 数据库实现
+
+**主实现**：bun:sqlite（SQLite 原生模块）
+- 使用者：SessionStore 与 SessionSearch
+- 形式：同步 API，性能更好
+- **注意**：Database.ts（使用 bun:sqlite）是遗留代码
+
+## 核心数据表
+
+### 1. sdk_sessions
+
+跟踪进行中与已完成的会话。
+
+```sql
+CREATE TABLE sdk_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sdk_session_id TEXT UNIQUE NOT NULL,
+  claude_session_id TEXT,
+  project TEXT NOT NULL,
+  prompt_counter INTEGER DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+  completed_at TEXT,
+  completed_at_epoch INTEGER,
+  last_activity_at TEXT,
+  last_activity_epoch INTEGER
+);
+```
+
+**索引**：
+- `idx_sdk_sessions_claude_session`，建立在 `claude_session_id` 上
+- `idx_sdk_sessions_project`，建立在 `project` 上
+- `idx_sdk_sessions_status`，建立在 `status` 上
+- `idx_sdk_sessions_created_at`，建立在 `created_at_epoch DESC` 上
+
+### 2. observations
+
+观察记录（observation）——逐条记录的工具执行，具有层次化结构。
+
+```sql
+CREATE TABLE observations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  sdk_session_id TEXT NOT NULL,
+  claude_session_id TEXT,
+  project TEXT NOT NULL,
+  prompt_number INTEGER,
+  tool_name TEXT NOT NULL,
+  correlation_id TEXT,
+
+  -- Hierarchical fields
+  title TEXT,
+  subtitle TEXT,
+  narrative TEXT,
+  text TEXT,
+  facts TEXT,
+  concepts TEXT,
+  type TEXT,
+  files_read TEXT,
+  files_modified TEXT,
+
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+
+  FOREIGN KEY (sdk_session_id) REFERENCES sdk_sessions(sdk_session_id)
+);
+```
+
+**观察记录类型**：
+- `decision`——架构或设计决策
+- `bugfix`——Bug 修复与更正
+- `feature`——新功能或新能力
+- `refactor`——代码重构与清理
+- `discovery`——关于代码库的认知与发现
+- `change`——常规变更与修改
+
+**索引**：
+- `idx_observations_session`，建立在 `session_id` 上
+- `idx_observations_sdk_session`，建立在 `sdk_session_id` 上
+- `idx_observations_project`，建立在 `project` 上
+- `idx_observations_tool_name`，建立在 `tool_name` 上
+- `idx_observations_created_at`，建立在 `created_at_epoch DESC` 上
+- `idx_observations_type`，建立在 `type` 上
+
+### 3. session_summaries
+
+AI 生成的会话摘要（session summary），一个会话可有多条。
+
+```sql
+CREATE TABLE session_summaries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sdk_session_id TEXT NOT NULL,
+  claude_session_id TEXT,
+  project TEXT NOT NULL,
+  prompt_number INTEGER,
+
+  -- Summary fields
+  request TEXT,
+  investigated TEXT,
+  learned TEXT,
+  completed TEXT,
+  next_steps TEXT,
+  notes TEXT,
+
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+
+  FOREIGN KEY (sdk_session_id) REFERENCES sdk_sessions(sdk_session_id)
+);
+```
+
+**索引**：
+- `idx_session_summaries_sdk_session`，建立在 `sdk_session_id` 上
+- `idx_session_summaries_project`，建立在 `project` 上
+- `idx_session_summaries_created_at`，建立在 `created_at_epoch DESC` 上
+
+### 4. user_prompts
+
+以原文保存的用户提问，支持 FTS5 检索（自 v4.2.0 起）。
+
+```sql
+CREATE TABLE user_prompts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sdk_session_id TEXT NOT NULL,
+  claude_session_id TEXT,
+  project TEXT NOT NULL,
+  prompt_number INTEGER,
+  prompt_text TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+
+  FOREIGN KEY (sdk_session_id) REFERENCES sdk_sessions(sdk_session_id)
+);
+```
+
+**索引**：
+- `idx_user_prompts_sdk_session`，建立在 `sdk_session_id` 上
+- `idx_user_prompts_project`，建立在 `project` 上
+- `idx_user_prompts_created_at`，建立在 `created_at_epoch DESC` 上
+
+### 5. tool_uses
+
+原始工具 I/O 的持久备份索引（schema v51）。它与喂给观察记录生成器的记忆摄取（memory ingest）共用同一个咽喉口，捕获的是同一批调用，不会引入第二条采集路径。
+
+```sql
+CREATE TABLE tool_uses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tool_use_id TEXT NOT NULL,
+  content_session_id TEXT NOT NULL,
+  memory_session_id TEXT,
+  session_db_id INTEGER,
+  project TEXT NOT NULL,
+  platform_source TEXT NOT NULL DEFAULT 'claude',
+  tool_name TEXT NOT NULL,
+  tool_input TEXT,
+  tool_response TEXT,
+  cwd TEXT,
+  prompt_number INTEGER,
+  agent_type TEXT,
+  agent_id TEXT,
+  observation_id INTEGER,
+  or_generation_id TEXT,
+  or_session_id TEXT,
+  content_hash TEXT,
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+
+  UNIQUE(content_session_id, tool_use_id)
+);
+```
+
+**为什么需要这张表**：`pending_messages` 只是生成用的*队列*——行会被认领、做摘要、随后删除，因此一旦观察记录生成，原始工具载荷便无从找回。`tool_uses` 是能在队列之外长期留存的旁路索引，`get_tool_uses` MCP 工具（渐进式披露（progressive disclosure）第 4 层）读取的正是这张表。
+
+**不是转录存储（transcript store）**：磁盘上的 JSONL 转录文件与转录监视器仍是会话历史的主干。这张表只是按引用索引工具调用正文，仅此而已。
+
+**幂等性**：`UNIQUE(content_session_id, tool_use_id)` 意味着重放的 PostToolUse（hook 重试、转录重扫描）会更新现有行，而不是再复制一行。`observation_id` 在生成*之后*才会关联，一经设置就绝不覆盖。
+
+**载荷上限**：`tool_input` / `tool_response` 在 64 KB 处截断，并附上 `…[truncated: N bytes]` 标记。`content_hash` 基于截断*前*的原始载荷计算。
+
+**成本列**：没有，这是刻意设计。`or_generation_id` 与 `or_session_id` 是可空的关联键，指向 OpenRouter 的一笔开销记录；金额放在那条记录上，绝不进这张表。
+
+**索引**：`project`、`memory_session_id`、`content_session_id`、`session_db_id`、`tool_name`、`created_at_epoch`、`observation_id`、`or_generation_id`
+
+### 遗留数据表
+
+- **sessions**：遗留的会话跟踪（v3.x）
+- **memories**：遗留的压缩记忆块（v3.x）
+- **overviews**：遗留的会话摘要（v3.x）
+
+## FTS5 全文检索
+
+借助 SQLite FTS5（Full-Text Search）虚拟表，可以对观察记录与会话摘要做快速全文检索。用户提问按子串（`LIKE`）方式检索，不建 FTS 索引。
+
+### FTS5 虚拟表
+
+#### observations_fts
+
+```sql
+CREATE VIRTUAL TABLE observations_fts USING fts5(
+  title,
+  subtitle,
+  narrative,
+  text,
+  facts,
+  concepts,
+  content='observations',
+  content_rowid='id'
+);
+```
+
+#### session_summaries_fts
+
+```sql
+CREATE VIRTUAL TABLE session_summaries_fts USING fts5(
+  request,
+  investigated,
+  learned,
+  completed,
+  next_steps,
+  notes,
+  content='session_summaries',
+  content_rowid='id'
+);
+```
+
+### 自动同步
+
+FTS5 表通过触发器保持同步。UPDATE 触发器只在被索引列被写入时才触发，因此簿记类更新（同步修订号、项目合并、内容哈希）不会触碰索引。每次索引更新都会先追加一条删除标记，再重新插入该行的文本，所以如果不限定作用域，UPDATE 触发器会在每一次这类写入时不断撑大索引：
+
+```sql
+-- Insert trigger example
+CREATE TRIGGER observations_ai AFTER INSERT ON observations BEGIN
+  INSERT INTO observations_fts(rowid, title, subtitle, narrative, text, facts, concepts)
+  VALUES (new.id, new.title, new.subtitle, new.narrative, new.text, new.facts, new.concepts);
+END;
+
+-- Update trigger example (fires only when an indexed column is written)
+CREATE TRIGGER observations_au
+AFTER UPDATE OF title, subtitle, narrative, text, facts, concepts ON observations BEGIN
+  INSERT INTO observations_fts(observations_fts, rowid, title, subtitle, narrative, text, facts, concepts)
+  VALUES('delete', old.id, old.title, old.subtitle, old.narrative, old.text, old.facts, old.concepts);
+  INSERT INTO observations_fts(rowid, title, subtitle, narrative, text, facts, concepts)
+  VALUES (new.id, new.title, new.subtitle, new.narrative, new.text, new.facts, new.concepts);
+END;
+
+-- Delete trigger example
+CREATE TRIGGER observations_ad AFTER DELETE ON observations BEGIN
+  INSERT INTO observations_fts(observations_fts, rowid, title, subtitle, narrative, text, facts, concepts)
+  VALUES('delete', old.id, old.title, old.subtitle, old.narrative, old.text, old.facts, old.concepts);
+END;
+```
+
+### FTS5 查询语法
+
+FTS5 支持丰富的查询语法：
+
+- **简单查询**：`"error handling"`
+- **AND**：`"error" AND "handling"`
+- **OR**：`"bug" OR "fix"`
+- **NOT**：`"bug" NOT "feature"`
+- **短语匹配**：`"'exact phrase'"`
+- **指定列**：`title:"authentication"`
+
+### 安全性
+
+自 v4.2.3 起，所有 FTS5 查询都经过严格转义以防 SQL 注入：
+- 双引号会被转义：`query.replace(/"/g, '""')`
+- 另有覆盖 332 个注入攻击用例的完整测试套件
+
+## 核心类
+
+### SessionStore
+
+对会话、观察记录、会话摘要与用户提问的 CRUD 操作。
+
+**位置**：`src/services/sqlite/SessionStore.ts`
+
+**方法**：
+- `createSession()`
+- `getSession()`
+- `updateSession()`
+- `createObservation()`
+- `getObservations()`
+- `createSummary()`
+- `getSummaries()`
+- `createUserPrompt()`
+
+### SessionSearch
+
+FTS5 全文检索，提供 8 个专用检索方法。
+
+**位置**：`src/services/sqlite/SessionSearch.ts`
+
+**方法**：
+- `searchObservations()`——观察记录全文检索
+- `searchSessions()`——会话摘要全文检索
+- `searchUserPrompts()`——用户提问全文检索
+- `findByConcept()`——按概念标签（concept tags）查找
+- `findByFile()`——按文件引用查找
+- `findByType()`——按观察记录类型查找
+- `getRecentContext()`——获取近期会话上下文
+- `advancedSearch()`——组合多条件筛选
+
+## 迁移
+
+数据库 schema 由 `src/services/sqlite/migrations.ts` 中的迁移机制管理。
+
+**迁移历史**：
+- Migration 001：初始 schema（sessions、memories、overviews、diagnostics、transcript_events）
+- Migration 002：层次化记忆字段（title、subtitle、facts、concepts、files_touched）
+- Migration 003：SDK 会话与观察记录
+- Migration 004：会话摘要
+- Migration 005：多轮提问会话（prompt_counter、prompt_number）
+- Migration 006：FTS5 虚拟表与触发器
+- Migration 007–010：多项改进与 user prompts 表
+- Migration 051：tool_uses——持久化的原始工具 I/O 索引
+
+## 性能考量
+
+- **索引**：所有外键与高频查询列都建有索引
+- **FTS5**：全文检索显著快于 LIKE 查询
+- **触发器**：自动同步的开销极小
+- **连接复用**：bun:sqlite 能高效复用连接
+- **同步 API**：bun:sqlite 采用同步 API 以获得更好的性能
+
+## 故障排查
+
+常见问题与解决方法见[故障排查——数据库问题](/troubleshooting#数据库问题)。

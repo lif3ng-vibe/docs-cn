@@ -1,0 +1,182 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Claude-Mem",
+  "description": "为 Claude Code 构建的持久记忆压缩系统，跨会话保留上下文",
+  "theme": "mint",
+  "favicon": "/claude-mem-logomark.webp",
+  "logo": {
+    "light": "/claude-mem-logo-for-light-mode.webp",
+    "dark": "/claude-mem-logo-for-dark-mode.webp",
+    "href": "https://github.com/thedotmack/claude-mem"
+  },
+  "colors": {
+    "primary": "#3B82F6",
+    "light": "#EFF6FF",
+    "dark": "#1E40AF"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/thedotmack/claude-mem"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "安装",
+      "href": "https://github.com/thedotmack/claude-mem#quick-start"
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "快速上手",
+        "icon": "rocket",
+        "pages": [
+          "introduction",
+          "installation",
+          "t3code-integration",
+          "usage/getting-started",
+          "usage/openrouter-provider",
+          "usage/gemini-provider",
+          "usage/openai-compatible-provider",
+          "usage/multi-key-rotation",
+          "usage/quota-fallback",
+          "usage/search-tools",
+          "usage/knowledge-agents",
+          "usage/claude-desktop",
+          "usage/private-tags",
+          "usage/auto-redaction",
+          "usage/export-import",
+          "usage/memory-ingest",
+          "usage/manual-recovery",
+          "usage/folder-context"
+        ]
+      },
+      {
+        "group": "Cursor 集成",
+        "icon": "wand-magic-sparkles",
+        "pages": [
+          "cursor/index",
+          "cursor/gemini-setup",
+          "cursor/openrouter-setup"
+        ]
+      },
+      {
+        "group": "Grok Bot 集成",
+        "icon": "robot",
+        "pages": [
+          "grok-bot/index"
+        ]
+      },
+      {
+        "group": "Antigravity CLI 集成",
+        "icon": "terminal",
+        "pages": [
+          "antigravity-cli/setup"
+        ]
+      },
+      {
+        "group": "最佳实践",
+        "icon": "lightbulb",
+        "pages": [
+          "context-engineering",
+          "progressive-disclosure",
+          "file-read-gate",
+          "smart-explore-benchmark"
+        ]
+      },
+      {
+        "group": "配置与开发",
+        "icon": "gear",
+        "pages": [
+          "configuration",
+          "configuration/litellm-gateway",
+          "configuration/custom-anthropic-backends",
+          "modes",
+          "telemetry",
+          "development",
+          "branches",
+          "troubleshooting",
+          "platform-integration",
+          "openclaw-integration",
+          "kimi-integration"
+        ]
+      },
+      {
+        "group": "托管服务",
+        "icon": "cloud",
+        "pages": [
+          "hosted-server",
+          "cloud-sync",
+          "cmem-pro-headless"
+        ]
+      },
+      {
+        "group": "架构",
+        "icon": "diagram-project",
+        "pages": [
+          "architecture/overview",
+          "architecture-evolution",
+          "hooks-architecture",
+          "architecture/hooks",
+          "architecture/worker-service",
+          "architecture/database",
+          "architecture/search-architecture",
+          "architecture/pm2-to-bun-migration"
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/thedotmack/claude-mem"
+    },
+    "links": [
+      {
+        "header": "资源",
+        "items": [
+          {
+            "label": "文档",
+            "href": "https://github.com/thedotmack/claude-mem"
+          },
+          {
+            "label": "问题反馈",
+            "href": "https://github.com/thedotmack/claude-mem/issues"
+          }
+        ]
+      },
+      {
+        "header": "法律",
+        "items": [
+          {
+            "label": "许可证（Apache-2.0）",
+            "href": "https://github.com/thedotmack/claude-mem/blob/main/LICENSE"
+          }
+        ]
+      }
+    ]
+  },
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "og:type": "website",
+      "og:site_name": "Claude-Mem 文档",
+      "og:description": "为 Claude Code 构建的持久记忆压缩系统，跨会话保留上下文"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor"
+    ]
+  },
+  "integrations": {
+    "telemetry": {
+      "enabled": false
+    }
+  }
+}

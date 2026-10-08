@@ -1,0 +1,209 @@
+---
+title: "架构总览"
+description: "Claude-Mem 的系统组件与数据流"
+---
+
+# 架构总览
+
+## 系统组件
+
+claude-mem 以 Claude Code 插件的形式运行，由以下核心组件组成：
+
+1. **插件 Hook**——生命周期事件（Setup 版本检查 + 5 个生命周期 Hook：SessionStart、UserPromptSubmit、针对 `Read` 的 PreToolUse、PostToolUse、Stop）
+2. **worker 服务**——按用户端口监听的 Express HTTP API；通过 Claude Agent SDK（或 Gemini / OpenRouter）处理观察记录
+3. **数据库层**——SQLite + FTS5（可选 Chroma 用于语义检索）
+4. **检索工具**——HTTP API + `mem-search` 技能 / MCP 服务器，实现渐进式披露（progressive disclosure）检索
+5. **查看器 UI**——由 worker 服务提供的基于 React 的实时记忆流
+
+## 技术栈
+
+| 层 | 技术 |
+|------------------------|-------------------------------------------|
+| **语言** | TypeScript（ES2022，ESNext modules） |
+| **运行时** | Node.js 20+ 与 Bun ≥ 1.0 |
+| **数据库** | SQLite 3，bun:sqlite 驱动 |
+| **向量库** | Chroma（可选，用于语义检索） |
+| **HTTP 服务器** | Express.js 5 |
+| **实时通信** | Server-Sent Events（SSE） |
+| **UI 框架** | React + TypeScript |
+| **AI SDK** | @anthropic-ai/claude-agent-sdk（或 Gemini / OpenRouter） |
+| **构建工具** | esbuild（打包 TypeScript） |
+| **进程管理器** | Bun |
+| **测试** | `bun test` |
+
+## 数据流
+
+### 记忆管线
+```
+Hook (stdin) → Database → Worker Service → SDK Processor → Database → Next Session Hook
+```
+
+1. **输入**：Claude Code 通过 stdin 将工具执行数据发送给 Hook
+2. **存储**：Hook 将观察记录写入 SQLite 数据库
+3. **处理**：worker 服务读取观察记录，交由 SDK 处理
+4. **输出**：处理后的摘要写回数据库
+5. **检索**：下一个会话的上下文 Hook 从数据库读取摘要
+
+### 检索管线
+```
+User Query → MCP Tools Invoked → HTTP API → SessionSearch Service → FTS5 Database → Search Results → Claude
+```
+
+1. **用户提问**：用户用自然语言提问："我们修了哪些 bug？"
+2. **调用 MCP 工具**：Claude 识别意图并调用 MCP 检索工具
+3. **HTTP API**：MCP 工具调用 HTTP 端点（如 `/api/search/observations`）
+4. **SessionSearch**：worker 服务查询 FTS5 虚拟表
+5. **格式化**：结果完成格式化后经 MCP 返回
+6. **呈现**：Claude 把格式化后的结果展示给用户
+
+采用三层渐进式披露：search → timeline → get_observations
+
+## 会话生命周期
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 0. Setup Hook Fires (version-check.js)                          │
+│    Installs missing plugin dependencies (bun install), records  │
+│    .install-version once complete. Always exits 0.              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Session Starts → Worker-start, then Context Hook             │
+│    Starts Bun worker if needed, injects context from previous   │
+│    sessions (configurable observation count)                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. User Types Prompt → UserPromptSubmit Hook Fires              │
+│    Creates session in database, saves raw user prompt for FTS5  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Claude Uses Tools → PostToolUse Hook Fires (100+ times)      │
+│    Captures tool executions, sends to worker for AI compression │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Worker Processes → Claude Agent SDK Analyzes                 │
+│    Extracts structured learnings via iterative AI processing    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. Claude Stops → Summary Hook Fires                            │
+│    Generates final summary with request, completions, learnings │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. Session Ends → Cleanup Hook Fires                            │
+│    Marks session complete (graceful, not DELETE), ready for     │
+│    next session context. Skips on /clear to preserve ongoing    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 目录结构
+
+```
+claude-mem/
+├── src/
+│   ├── hooks/                  # TypeScript hook implementations (built via esbuild)
+│   ├── sdk/                    # Claude Agent SDK integration
+│   ├── services/
+│   │   ├── worker-service.ts   # Express HTTP + SSE service (worker entry point)
+│   │   ├── sync/ChromaSync.ts  # Optional Chroma vector index
+│   │   └── sqlite/             # SQLite + FTS5 storage layer
+│   ├── ui/viewer/              # React + TypeScript web viewer
+│   ├── shared/                 # Shared utilities (paths, settings defaults)
+│   └── utils/                  # Logging, platform, tag-stripping helpers
+│
+├── scripts/                    # Build + utility scripts
+│
+├── plugin/                     # Plugin distribution (synced to marketplace)
+│   ├── .claude-plugin/plugin.json
+│   ├── hooks/hooks.json        # Hook registration (Setup + 5 lifecycle hooks)
+│   ├── scripts/                # Built executables
+│   │   ├── version-check.js    # Setup phase: dependency check + install marker
+│   │   ├── bun-runner.js       # Resolves Bun and runs worker-service.cjs
+│   │   ├── worker-service.cjs  # Worker daemon + lifecycle hook dispatcher
+│   │   ├── worker-cli.js       # CLI shim
+│   │   ├── worker-wrapper.cjs  # Process wrapper
+│   │   ├── mcp-server.cjs      # MCP search server
+│   │   ├── statusline-counts.js
+│   │   └── context-generator.cjs
+│   ├── skills/                 # Agent skills (mem-search, make-plan, do, etc.)
+│   └── ui/viewer.html          # Self-contained React bundle
+│
+├── tests/                      # Test suite (`bun test`)
+├── docs/                       # Mintlify documentation
+└── openclaw/                   # OpenClaw integration plugin
+```
+
+## 组件详情
+
+### 1. 插件 Hook
+
+插件注册了一个 Setup 阶段的 `version-check.js` 外加五个生命周期 Hook。每个生命周期事件都会调用 `bun-runner.js`，以 `hook claude-code <event>` 参数启动 `worker-service.cjs`；worker 进程是所有 Hook 逻辑的唯一分发器。各事件如下：
+
+- **Setup** → `version-check.js`（安装缺失的插件依赖，然后记录安装标记）
+- **SessionStart** → 启动 worker，随后 `hook claude-code context`（上下文注入）
+- **UserPromptSubmit** → `hook claude-code session-init`
+- **PreToolUse**（matcher 为 `Read`）→ `hook claude-code file-context`
+- **PostToolUse**（matcher 为 `*`）→ `hook claude-code observation`
+- **Stop** → `hook claude-code summarize`（生成摘要）
+
+运行时安装（Bun、uv、`bun install`）由 `npx claude-mem install` / `npx claude-mem repair` 执行，并带有可见的安装进度动画。对于插件市场安装，当插件依赖缺失时，Setup Hook 会自行运行 `bun install`，完成后再写入 `.install-version` 标记。
+
+Hook 的详细文档见[插件 Hook](/architecture/hooks)。
+
+### 2. worker 服务
+
+Express.js HTTP 服务器，监听按用户分配的端口（默认 `37700 + (uid % 100)`，可通过 `CLAUDE_MEM_WORKER_PORT` 覆盖），提供：
+
+- 检索 HTTP API 端点
+- 查看器 UI 的 HTTP/SSE 端点
+- 通过 Claude Agent SDK（或 Gemini / OpenRouter）异步处理观察记录
+- 通过 Server-Sent Events 实时更新
+- 由 Bun 自动管理
+
+HTTP API 与端点详情见 [Worker 服务](/architecture/worker-service)。
+
+### 3. 数据库层
+
+SQLite3 配 bun:sqlite 驱动，特性包括：
+
+- 用于全文检索的 FTS5 虚拟表
+- 提供 CRUD 操作的 SessionStore
+- 用于 FTS5 查询的 SessionSearch
+- 数据库位置：`~/.claude-mem/claude-mem.db`
+
+Schema 与 FTS5 检索详见[数据库架构](/architecture/database)。
+
+### 4. mem-search 技能（v5.4.0+）
+
+基于技能（skill）的检索采用渐进式披露，共提供 10 种检索操作：
+
+- 全文检索（FTS5）观察记录、会话与用户提示
+- 按类型、概念、文件过滤
+- 获取近期上下文、时间线、按查询筛选的时间线
+- API 帮助文档
+
+**省 token**：相比 MCP 方式，每个会话约节省 2,250 个 token
+
+- Skill frontmatter：约 250 token（会话开始时加载）
+- 完整指令：约 2,500 token（被调用时按需加载）
+- 用 HTTP API 端点替代 MCP 工具
+
+**技能增强（v5.5.0）**：从 "search" 更名为 "mem-search"，以更清晰地区分职责范围。配合增强的触发词与更全面的文档，有效性从 67% 提升到 100%。
+
+技术细节与示例见[检索架构](/architecture/search-architecture)。
+
+### 5. 查看器 UI
+
+worker 在其配置的 `CLAUDE_MEM_WORKER_PORT` 上提供的 React + TypeScript 网页界面，特性包括：
+
+- 基于 Server-Sent Events 的实时记忆流
+- 无限滚动分页，自动去重
+- 项目过滤与设置持久化
+- GPU 加速动画
+- 自包含的 HTML 打包文件（viewer.html）
+
+用 esbuild 打包为单文件部署。

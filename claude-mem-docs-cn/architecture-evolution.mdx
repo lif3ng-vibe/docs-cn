@@ -1,0 +1,1216 @@
+---
+title: "架构演进"
+description: "claude-mem 如何从 v3 演进到 v5+"
+---
+
+# 架构演进
+
+## 我们解决的问题
+
+**目标**：打造一个跨会话让 Claude 越来越聪明的记忆系统，而用户甚至察觉不到它的存在。
+
+**挑战**：如何观察 AI 智能体的行为、对其进行智能压缩，并在恰当时机把它送回来——全程不拖慢、不干扰主工作流？
+
+本文讲述 claude-mem 如何从一个简单的想法成长为可用于生产的系统，以及让这一切真正成立的关键架构决策。
+
+---
+
+## v5.x：成熟度与用户体验
+
+在 v4 架构站稳脚跟之后，v5.x 把重心转向用户体验、可视化与细节打磨。
+
+### v5.1.2：主题切换（2025 年 11 月）
+
+**改了什么**：为查看器 UI 增加浅色/深色主题切换
+
+**新特性**：
+- 用户可自选主题偏好（浅色、深色、跟随系统）
+- 主题设置持久化到 localStorage
+- 平滑的主题过渡
+- 自动检测系统主题偏好
+
+**实现**：
+```typescript
+// Theme context with persistence
+const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
+    return localStorage.getItem('claude-mem-theme') || 'system';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('claude-mem-theme', theme);
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+```
+
+**为什么重要**：在不同光线环境下工作的用户，现在可以把查看器调到让自己舒服的样子。
+
+### v5.1.1：worker 启动修复（2025 年 11 月，现已弃用）
+
+**注意**：本节描述的是一个历史上采用的 PM2 方案，后续版本已改用 Bun 取代。
+
+**问题**：在 Windows 上通过 PM2 启动 worker 时，因 ENOENT 错误而失败
+
+**历史解法**：不再依赖 PATH，改用 PM2 二进制文件的完整路径
+
+**当前做法**：项目现在用 Bun 管理进程，跨平台兼容性更好，也彻底消除了这类 PATH 相关问题。
+
+**影响**：跨平台兼容性恢复，Windows 用户可以顺顺当当地使用 claude-mem。
+
+### v5.1.0：网页端查看器 UI（2025 年 10 月）
+
+**突破点**：记忆流（memory stream）的实时可视化
+
+**我们做了什么**：
+- 基于 React 的 Web UI，地址 http://localhost:37777
+- 用 Server-Sent Events（SSE）实现实时更新
+- 无限滚动分页
+- 项目筛选
+- 设置持久化（侧边栏状态、所选项目）
+- 指数退避自动重连
+- GPU 加速动画
+
+**新增 worker 端点**（共 8 个）：
+```
+GET /                    # 提供查看器 HTML 页面
+GET /stream              # SSE 实时更新
+GET /api/prompts         # 分页获取用户提示词
+GET /api/observations    # 分页获取观察记录
+GET /api/summaries       # 分页获取会话摘要
+GET /api/stats           # 数据库统计
+GET /api/settings        # 用户设置
+POST /api/settings       # 保存设置
+```
+
+**数据库增强**：SessionStore 新增了面向最近提示词、观察记录与会话摘要的分页查询（可按项目过滤），并为查看器端点提供数据库统计与项目列表。（这些专为查看器准备的方法，后来被统一的检索层取代。）
+
+**React 架构**：
+```
+src/ui/viewer/
+├── components/
+│   ├── Header.tsx          # 导航 + 统计
+│   ├── Sidebar.tsx         # 项目筛选
+│   ├── Feed.tsx            # 无限滚动
+│   └── cards/
+│       ├── ObservationCard.tsx
+│       ├── PromptCard.tsx
+│       ├── SummaryCard.tsx
+│       └── SkeletonCard.tsx
+├── hooks/
+│   ├── useSSE.ts           # 实时事件
+│   ├── usePagination.ts    # 无限滚动
+│   ├── useSettings.ts      # 持久化
+│   └── useStats.ts         # 统计
+└── utils/
+    ├── merge.ts            # 数据去重
+    └── format.ts           # 展示格式化
+```
+
+**构建过程**：
+```typescript
+// esbuild bundles everything into single HTML file
+esbuild.build({
+  entryPoints: ['src/ui/viewer/index.tsx'],
+  bundle: true,
+  outfile: 'plugin/ui/viewer.html',
+  loader: { '.tsx': 'tsx', '.woff2': 'dataurl' },
+  define: { 'process.env.NODE_ENV': '"production"' },
+});
+```
+
+**为什么重要**：用户现在可以实时看到系统到底在记录什么——记忆系统因此变得透明、可调试。
+
+### v5.0.3：智能安装缓存（2025 年 10 月）
+
+**问题**：每次 SessionStart 都要跑一遍 `npm install`（要花 2–5 秒）
+
+**洞察**：会话之间，依赖很少发生变化
+
+**方案**：基于版本的缓存
+```typescript
+// Check version marker before installing
+const currentVersion = getPackageVersion();
+const installedVersion = readFileSync('.install-version', 'utf-8');
+
+if (currentVersion !== installedVersion) {
+  // Only install if version changed
+  await runNpmInstall();
+  writeFileSync('.install-version', currentVersion);
+}
+```
+
+**缓存判断逻辑**：
+1. `node_modules` 存在吗？
+2. `.install-version` 与 `package.json` 的版本一致吗？
+3. `better-sqlite3` 还在吗？（旧方案：现在改用 bun:sqlite，无需任何安装）
+
+**影响**：
+- SessionStart hook：2–5 秒 → 10 毫秒（快了 99.5%）
+- 仅在以下情况才安装：首次运行、版本变化、依赖缺失
+- Windows 下报错信息更友好，并附带构建工具指引
+
+### v5.0.2：worker 健康检查（2025 年 10 月）
+
+**改了什么**：更健壮的 worker 启动与监控
+
+**新特性**：
+```typescript
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    port: WORKER_PORT,
+    memory: process.memoryUsage(),
+  });
+});
+
+// Smart worker startup
+async function ensureWorkerHealthy() {
+  const healthy = await isWorkerHealthy(1000);
+  if (!healthy) {
+    await startWorker();
+    await waitForWorkerHealth(10000);
+  }
+}
+```
+
+**收益**：
+- worker 挂掉时优雅降级
+- 崩溃后自动恢复
+- 报错信息更利于排查
+
+### v5.0.1：稳定性改进（2025 年 10 月）
+
+**改了什么**：若干错误修复与稳定性增强
+
+**关键修复**：
+- 修复观察记录队列处理中的竞态条件
+- 改进 SDK worker 的错误处理
+- 更干净地清理残留 worker 进程
+- 增强调试日志
+
+### v5.0.0：混合检索架构（2025 年 10 月）
+
+**演进**：SQLite FTS5 + Chroma 向量检索
+
+**我们加了什么**：
+```
+┌─────────────────────────────────────────────────────────┐
+│                     混合检索                              │
+│                                                          │
+│  文本查询 → SQLite FTS5（关键词匹配）        │
+│                      ↓                                   │
+│           Chroma 向量检索（语义）              │
+│                      ↓                                   │
+│             合并结果 + 重排                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**新增依赖**：
+- `chromadb`——用于语义检索的向量数据库
+- Python 3.8+——chromadb 的运行要求
+
+**MCP 工具增强**：
+```typescript
+// Chroma-backed semantic search
+search_observations({
+  query: "authentication bug",
+  useSemanticSearch: true  // Uses Chroma
+});
+
+// Falls back to FTS5 if Chroma unavailable
+```
+
+**为什么选混合**：
+- FTS5：关键词匹配快、零依赖
+- Chroma：语义理解，能找到相关概念
+- 优雅降级：没有 Chroma 也能用（仅 FTS5）
+
+**代价**：
+- 引入 Python 依赖（可选）
+- 安装复杂度上升
+- 换来更好的检索相关性
+
+---
+
+## MCP 架构简化（2025 年 12 月）
+
+### 问题：过于复杂的 MCP 实现
+
+**改造前：**
+```
+会话启动时注册 9 个以上 MCP 工具：
+- search_observations
+- find_by_type
+- find_by_file
+- find_by_concept
+- get_recent_context
+- get_observation
+- get_session
+- get_prompt
+- help
+
+问题：
+- 操作彼此重叠（search_observations 与 find_by_type）
+- 参数 schema 复杂（工具定义约 2,500 token）
+- 没有内置的工作流指引
+- Claude 认知负担重（到底该用哪个工具？）
+- 代码量：mcp-server.ts 约 2,718 行
+```
+
+**核心洞察**：渐进式披露（progressive disclosure）应该内建在工具设计本身，而不是靠 Claude 自己记得住。
+
+### 方案：三层工作流
+
+**改造后：**
+```
+4 个 MCP 工具，遵循三层工作流：
+
+1. important_workflow —— 工作流文档（始终可见）
+   "三层工作流（务必遵循）：
+    1. search(query) → 拿到带 ID 的索引
+    2. timeline(anchor=ID) → 获取上下文
+    3. get_observations([IDs]) → 拉取完整细节
+    未经筛选，绝不要直接拉取完整细节。"
+
+2. search —— 第 1 层：拿到带 ID 的索引（每条约 50–100 token）
+3. timeline —— 第 2 层：获取按时间排列的上下文
+4. get_observations —— 第 3 层：拉取完整细节（每条约 500–1,000 token）
+
+收益：
+- 渐进式披露由工具结构强制保证
+- 没有重叠的操作
+- schema 简单（additionalProperties: true）
+- 工作流模式清晰
+- 代码量：mcp-server.ts 约 312 行（减少 88%）
+- token 节省约 10 倍
+```
+
+### 迁移：移除基于 skill 的搜索
+
+**此前**：使用基于 skill 的搜索
+- 通过自然语言调用 mem-search skill
+- 用 curl 直接调 HTTP API
+- 依靠 skill 加载实现渐进式披露
+- 17 个 skill 文档文件
+
+**现在**：移除基于 skill 的做法
+- 纯 MCP 架构
+- 原生 MCP 协议（与 Claude 集成得更好）
+- 同时兼容 Claude Desktop 与 Claude Code
+- 维护更简单（不用再管 skill 文件）
+- 删除全部 19 个 mem-search skill 文件（约 2,744 行）
+
+### 关键架构变更
+
+**MCP 服务端重构：**
+
+改造前：
+```typescript
+// Complex parameter schemas
+{
+  name: "search_observations",
+  inputSchema: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "..." },
+      type: { type: "array", items: { enum: [...] } },
+      format: { enum: ["index", "full"] },
+      limit: { type: "number", minimum: 1, maximum: 100 },
+      // ... many more parameters
+    }
+  }
+}
+```
+
+改造后：
+```typescript
+// Simple schemas with workflow guidance
+{
+  name: "search",
+  description: "Step 1: Search memory. Returns index with IDs.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    additionalProperties: true  // Accept any parameters
+  }
+}
+```
+
+**工作流强制：**
+
+改造前：Claude 必须自己记住渐进式披露的模式
+
+改造后：工具结构让人不可能跳步
+- 拿不到 search 给出的 ID 就取不到细节
+- 看不到 important_workflow 的提醒就无法搜索
+- timeline 提供了中间层（有上下文，但不带完整细节）
+
+### 影响
+
+**token 效率：**
+```
+传统做法：一次性取回 20 条观察记录
+→ 10,000–20,000 token
+→ 其中只有 2 条相关（90% 是浪费）
+
+三层工作流：
+→ search（20 条结果）：约 1,000–2,000 token
+→ 浏览索引，锁定 3 条相关 ID
+→ get_observations（3 条 ID）：约 1,500–3,000 token
+→ 总计：2,500–5,000 token（节省 50–75%）
+```
+
+**代码精简：**
+- MCP 服务端：2,718 行 → 312 行（减少 88%）
+- 移除：19 个 skill 文件（约 2,744 行）
+- 净减少约 5,150 行代码
+
+**用户体验：**
+- 依旧是自然语言交互
+- token 效率更高
+- 架构更清晰
+- 在 Claude Desktop 与 Claude Code 上的表现完全一致
+
+### 设计哲学
+
+**用结构实现渐进式披露：**
+
+三层工作流在架构层面落实了渐进式披露：
+
+1. **第 1 层（索引）** ——「有哪些东西？」——低成本扫一遍选项
+2. **第 2 层（时间线）** ——「当时在发生什么？」——围绕具体节点的上下文
+3. **第 3 层（细节）** ——「全告诉我」——确有必要时才给完整细节
+
+每一层都是一个决策点，Claude 可以：
+- 不相关，就此打住
+- 拿不准，再多要些上下文
+- 有把握，就深挖
+
+这让浪费 token 在结构上变得困难。
+---
+
+## v1-v2：朴素的做法
+
+### 第一次尝试：全量倾倒
+
+**架构：**
+```
+PostToolUse Hook → 保存原始工具输出 → 启动时全部取回
+```
+
+**我们学到的：**
+- ❌ 上下文污染（context pollution）——数千 token 的无关数据
+- ❌ 不做压缩——原始工具输出非常冗长
+- ❌ 没有检索——只能线性通读全部内容
+- ✅ 证明了概念：跨会话的记忆是有价值的
+
+**翻车的例子：**
+```
+SessionStart 加载：
+- 150 次文件读取
+- 80 次 grep 搜索
+- 45 条 bash 命令
+- 总计约 35,000 token
+- 与当前任务相关的：约 500 token（占 1.4%）
+```
+
+---
+
+## v3：聪明的压缩，错误的架构
+
+### 突破：AI 驱动的压缩
+
+**新想法**：让 Claude 自己来压缩观察记录
+
+**架构：**
+```
+PostToolUse Hook → 观察记录入队 → SDK Worker → AI 压缩 → 存储洞见
+```
+
+**我们新增了：**
+1. **集成 Claude Agent SDK**——用 AI 压缩观察记录
+2. **后台 worker**——不阻塞主会话
+3. **结构化观察记录**——提取事实、决策、洞见
+4. **会话摘要**——生成全面的摘要
+
+**奏效的部分：**
+- ✅ 压缩比从 10:1 到 100:1
+- ✅ 语义理解（而不只是关键词匹配）
+- ✅ 后台处理（hook 保持快速）
+- ✅ 检索变得可用
+
+**不奏效的部分：**
+- ❌ 依然一次性全量加载
+- ❌ 会话 ID 管理是坏的
+- ❌ 激进清理打断了摘要生成
+- ❌ 一个 Claude Code 会话对应多个 SDK 会话
+
+---
+
+## 关键认识
+
+### 认识一：渐进式披露
+
+**问题**：就算压缩过，把观察记录一股脑全加载进来，照样污染上下文。
+
+**洞察**：人类动手之前不会把所有材料读完。AI 为什么要？
+
+**方案**：先给索引，按需取细节。
+
+```
+❌ 旧：一次加载 50 条观察记录（8,500 token）
+✅ 新：先展示 50 条观察记录的索引（800 token）
+        智能体再取其中相关的 2–3 条（300 token）
+        总计：1,100 token，对比 8,500 token
+```
+
+**影响**：
+- 上下文占用减少 87%
+- 100% 相关（只取需要的）
+- 智能体自主（由它决定什么相关）
+
+### 认识二：会话 ID 混乱
+
+**问题**：SDK 会话 ID 每一轮都会变。
+
+**我们以为的：**
+```typescript
+// ❌ 错误假设
+UserPromptSubmit → 捕获一次会话 ID → 一路用到底
+```
+
+**实际情况：**
+```typescript
+// ✅ 真实行为
+第 1 轮：session_abc123
+第 2 轮：session_def456
+第 3 轮：session_ghi789
+```
+
+**为什么这很要紧：**
+- 不追踪 ID 更新，就续接不了会话
+- 会话状态在轮次之间丢失
+- 观察记录变成孤儿
+
+**方案：**
+```typescript
+// Capture from system init message
+for await (const msg of response) {
+  if (msg.type === 'system' && msg.subtype === 'init') {
+    sdkSessionId = msg.session_id;
+    await updateSessionId(sessionId, sdkSessionId);
+  }
+}
+```
+
+### 认识三：优雅清理与激进清理
+
+**v3 的做法：**
+```typescript
+// ❌ 激进：立刻杀掉 worker
+SessionEnd → DELETE /worker/session → worker 停止
+```
+
+**问题所在：**
+- 摘要生成进行到一半被打断
+- 待处理的观察记录丢失
+- 到处都是竞态条件
+
+**v4 的做法：**
+```typescript
+// ✅ 优雅：让 worker 收尾
+SessionEnd → 标记会话完成 → worker 干完活 → 自然退出
+```
+
+**收益**：
+- 摘要得以完整生成
+- 观察记录一条不丢
+- 状态转换干净利落
+
+**代码：**
+```typescript
+// v3: Aggressive
+async function sessionEnd(sessionId: string) {
+  await fetch(`http://localhost:37777/sessions/${sessionId}`, {
+    method: 'DELETE'
+  });
+}
+
+// v4: Graceful
+async function sessionEnd(sessionId: string) {
+  await db.run(
+    'UPDATE sdk_sessions SET completed_at = ? WHERE id = ?',
+    [Date.now(), sessionId]
+  );
+}
+```
+
+### 认识四：一个会话，而非多个
+
+**问题**：我们为一个 Claude Code 会话创建了多个 SDK 会话。
+
+**我们以为的：**
+```
+Claude Code 会话 → 每条观察记录建一个 SDK 会话 → 100 多个 SDK 会话
+```
+
+**应该的样子：**
+```
+Claude Code 会话 → 一个长期运行的 SDK 会话 → 流式输入
+```
+
+**为什么这很要紧：**
+- SDK 自己维护会话状态
+- 上下文自然累积
+- 效率高得多
+
+**实现：**
+```typescript
+// ✅ Streaming Input Mode
+async function* messageGenerator(): AsyncIterable<UserMessage> {
+  // Initial prompt
+  yield {
+    role: "user",
+    content: "You are a memory assistant..."
+  };
+
+  // Then continuously yield observations
+  while (session.status === 'active') {
+    const observations = await pollQueue();
+    for (const obs of observations) {
+      yield {
+        role: "user",
+        content: formatObservation(obs)
+      };
+    }
+    await sleep(1000);
+  }
+}
+
+const response = query({
+  prompt: messageGenerator(),
+  options: { maxTurns: 1000 }
+});
+```
+
+---
+
+## v4：真正跑通的架构
+
+### 核心设计
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              CLAUDE CODE 会话                             │
+│  用户 → Claude → 工具（Read、Edit、Write、Bash）     │
+│                    ↓                                     │
+│              PostToolUse Hook                            │
+│              （观察记录入队）                             │
+└─────────────────────────────────────────────────────────┘
+                     ↓ SQLite 队列
+┌─────────────────────────────────────────────────────────┐
+│              SDK WORKER 进程                              │
+│  每个 Claude Code 会话对应一个流式会话                 │
+│                                                          │
+│  AsyncIterable<UserMessage>                             │
+│    → 从队列取观察记录逐条产出                            │
+│    → SDK 用 AI 压缩                                      │
+│    → 解析 XML 响应                                       │
+│    → 写入数据库                                          │
+└─────────────────────────────────────────────────────────┘
+                     ↓ SQLite 存储
+┌─────────────────────────────────────────────────────────┐
+│              下一个会话                                   │
+│  SessionStart Hook                                       │
+│    → 查询数据库                                          │
+│    → 返回渐进式披露索引                                  │
+│    → 智能体通过 MCP 取细节                              │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 五大 Hook 架构
+
+<Tabs>
+  <Tab title="SessionStart">
+    **目的**：注入既往会话的上下文
+
+    **时机**：Claude Code 启动时
+
+    **它做的事**：
+    - 查询最近 10 条会话摘要
+    - 格式化为渐进式披露索引
+    - 通过 stdout 注入上下文
+
+    **相比 v3 的关键变化：**
+    - ✅ 索引格式（而非完整细节）
+    - ✅ token 数可见
+    - ✅ 附带 MCP 检索指引
+  </Tab>
+
+  <Tab title="UserPromptSubmit">
+    **目的**：初始化会话跟踪
+
+    **时机**：Claude 处理 prompt 之前
+
+    **它做的事**：
+    - 创建会话记录
+    - 保存原始用户 prompt（v4.2.0+）
+    - 按需启动 worker
+
+    **相比 v3 的关键变化：**
+    - ✅ 保存原始 prompt 供检索使用
+    - ✅ 自动启动 worker 服务
+  </Tab>
+
+  <Tab title="PostToolUse">
+    **目的**：捕获工具观察记录
+
+    **时机**：每次工具执行之后
+
+    **它做的事**：
+    - 在数据库中把观察记录入队
+    - 立即返回
+
+    **相比 v3 的关键变化：**
+    - ✅ 只入队（不做处理）
+    - ✅ 所有 AI 调用交给 worker
+  </Tab>
+
+  <Tab title="Summary">
+    **目的**：生成会话摘要
+
+    **时机**：由 worker 触发（会话中途）
+
+    **它做的事**：
+    - 汇集观察记录
+    - 交给 Claude 摘要
+    - 存储结构化摘要
+
+    **相比 v3 的关键变化：**
+    - ✅ 每个会话可有多份摘要
+    - ✅ 摘要是检查点，不是结束语
+  </Tab>
+
+  <Tab title="SessionEnd">
+    **目的**：优雅清理（graceful cleanup）
+
+    **时机**：会话结束时
+
+    **它做的事**：
+    - 标记会话完成
+    - 让 worker 处理完再退出
+
+    **相比 v3 的关键变化：**
+    - ✅ 优雅（而非激进）
+    - ✅ 不再发 DELETE 请求
+    - ✅ worker 自然收尾
+  </Tab>
+</Tabs>
+
+### 数据库 schema 演进
+
+**v3 的 schema：**
+```sql
+-- Simple, flat structure
+CREATE TABLE observations (
+  id INTEGER PRIMARY KEY,
+  session_id TEXT,
+  text TEXT,
+  created_at INTEGER
+);
+```
+
+**v4 的 schema：**
+```sql
+-- Rich, structured schema
+CREATE TABLE observations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  project TEXT NOT NULL,
+
+  -- Progressive disclosure metadata
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  type TEXT NOT NULL,  -- decision, bugfix, feature, etc.
+
+  -- Content
+  narrative TEXT NOT NULL,
+  facts TEXT,  -- JSON array
+
+  -- Searchability
+  concepts TEXT,  -- JSON array of tags
+  files_read TEXT,  -- JSON array
+  files_modified TEXT,  -- JSON array
+
+  -- Timestamps
+  created_at TEXT NOT NULL,
+  created_at_epoch INTEGER NOT NULL,
+
+  FOREIGN KEY(session_id) REFERENCES sdk_sessions(id)
+);
+
+-- FTS5 for full-text search
+CREATE VIRTUAL TABLE observations_fts USING fts5(
+  title, subtitle, narrative, facts, concepts,
+  content=observations
+);
+
+-- Auto-sync triggers
+CREATE TRIGGER observations_ai AFTER INSERT ON observations BEGIN
+  INSERT INTO observations_fts(rowid, title, subtitle, narrative, facts, concepts)
+  VALUES (new.id, new.title, new.subtitle, new.narrative, new.facts, new.concepts);
+END;
+```
+
+**变化点**：
+- ✅ 结构化字段（title、subtitle、type）
+- ✅ FTS5 全文检索
+- ✅ 按项目范围查询
+- ✅ 支撑渐进式披露的丰富元数据
+
+### worker 服务重设计
+
+**v3 的 worker：**
+```typescript
+// Multiple short SDK sessions
+app.post('/process', async (req, res) => {
+  const response = await query({
+    prompt: buildPrompt(req.body),
+    options: { maxTurns: 1 }
+  });
+
+  for await (const msg of response) {
+    // Process single observation
+  }
+
+  res.json({ success: true });
+});
+```
+
+**v4 的 worker：**
+```typescript
+// ONE long-running SDK session
+async function runWorker(sessionId: string) {
+  const response = query({
+    prompt: messageGenerator(),  // AsyncIterable
+    options: { maxTurns: 1000 }
+  });
+
+  for await (const msg of response) {
+    if (msg.type === 'text') {
+      parseObservations(msg.content);
+      parseSummaries(msg.content);
+    }
+  }
+}
+```
+
+**收益**：
+- 保持会话状态
+- SDK 自动处理上下文
+- 效率更高（更少的 API 调用）
+- 自然的多轮对话流
+
+---
+
+## 一路上的关键修复
+
+### 修复 1：上下文注入污染（v4.3.1）
+
+**问题**：SessionStart hook 的输出被 npm install 日志污染
+
+```bash
+# Hook 输出内容：
+npm WARN deprecated ...
+npm WARN deprecated ...
+{"hookSpecificOutput": {"additionalContext": "..."}}
+```
+
+**为什么坏掉：**
+- Claude Code 只接受干净的 JSON 或纯文本
+- npm install 的 stderr/stdout 混进了 hook 输出
+- 上下文注入失败
+
+**方案：**
+```json
+{
+  "command": "npm install --loglevel=silent && node context-hook.js"
+}
+```
+
+**结果**：JSON 输出干净了，上下文注入恢复正常
+
+### 修复 2：重复 shebang 问题（v4.3.1）
+
+**问题**：hook 可执行文件带了重复的 shebang
+
+```javascript
+#!/usr/bin/env node
+#!/usr/bin/env node  // ← Duplicate!
+
+// Rest of code...
+```
+
+**为什么会发生：**
+- 源文件本身带了 shebang
+- esbuild 在构建时又加了一个
+
+**方案：**
+```typescript
+// Remove shebangs from source files
+// Let esbuild add them during build
+```
+
+**结果**：可执行文件干净了，解析报错消失
+
+### 修复 3：FTS5 注入漏洞（v4.2.3）
+
+**问题**：用户输入直接拼进 FTS5 查询
+
+```typescript
+// ❌ Vulnerable
+const results = db.query(
+  `SELECT * FROM observations_fts WHERE observations_fts MATCH '${userQuery}'`
+);
+```
+
+**攻击：**
+```typescript
+userQuery = "'; DROP TABLE observations; --"
+```
+
+**方案：**
+```typescript
+// ✅ Safe: Use parameterized queries
+const results = db.query(
+  'SELECT * FROM observations_fts WHERE observations_fts MATCH ?',
+  [userQuery]
+);
+```
+
+### 修复 4：NOT NULL 约束冲突（v4.2.8）
+
+**问题**：prompt 为空时会话创建失败
+
+```sql
+INSERT INTO sdk_sessions (claude_session_id, user_prompt, ...)
+VALUES ('abc123', NULL, ...)  -- ❌ user_prompt is NOT NULL
+```
+
+**方案：**
+```typescript
+// Allow NULL user_prompts
+user_prompt: input.prompt ?? null
+```
+
+**schema 变更：**
+```sql
+-- Before
+user_prompt TEXT NOT NULL
+
+-- After
+user_prompt TEXT  -- Nullable
+```
+
+---
+
+## 性能优化
+
+### 优化 1：预编译语句
+
+**改造前：**
+```typescript
+for (const obs of observations) {
+  db.run(`INSERT INTO observations (...) VALUES (?, ?, ...)`, [obs.id, obs.text, ...]);
+}
+```
+
+**改造后：**
+```typescript
+const stmt = db.prepare(`INSERT INTO observations (...) VALUES (?, ?, ...)`);
+for (const obs of observations) {
+  stmt.run([obs.id, obs.text, ...]);
+}
+stmt.finalize();
+```
+
+**影响**：批量插入快 5 倍
+
+### 优化 2：FTS5 索引
+
+**改造前：**
+```typescript
+// Manual full-text search
+const results = db.query(
+  `SELECT * FROM observations WHERE text LIKE '%${query}%'`
+);
+```
+
+**改造后：**
+```typescript
+// FTS5 virtual table
+const results = db.query(
+  `SELECT * FROM observations_fts WHERE observations_fts MATCH ?`,
+  [query]
+);
+```
+
+**影响**：大数据集上检索快 100 倍
+
+### 优化 3：默认索引格式
+
+**改造前：**
+```typescript
+// Always return full observations
+search_observations({ query: "hooks" });
+// Returns: 5,000 tokens
+```
+
+**改造后：**
+```typescript
+// Default to index format
+search_observations({ query: "hooks", format: "index" });
+// Returns: 200 tokens
+
+// Fetch full only when needed
+search_observations({ query: "hooks", format: "full", limit: 1 });
+// Returns: 150 tokens
+```
+
+**影响**：检索结果平均大小缩小 25 倍
+
+---
+
+## 我们的收获
+
+### 心得一：上下文很宝贵
+
+**原则**：放进上下文窗口的每一个 token，都在消耗注意力。
+
+**应用**：
+- 渐进式披露减少 87% 的浪费
+- 索引优先，让智能体自己掌控
+- token 计数让成本可见
+
+### 心得二：会话状态很复杂
+
+**原则**：分布式状态很难搞。交给 SDK 处理，比我们自己管理强。
+
+**应用**：
+- 用 SDK 内置的会话续接
+- 不要试图手动重建状态
+- 从 init 消息里跟踪会话 ID
+
+### 心得三：优雅胜过激进
+
+**原则**：终止进程之前，让它把手头的活干完。
+
+**应用**：
+- 优雅清理（graceful cleanup）避免数据丢失
+- worker 能完成重要操作
+- 干净的状态转换减少 bug
+
+### 心得四：AI 就是压缩器
+
+**原则**：不要手动压缩。让 AI 去做语义压缩。
+
+**应用**：
+- 10:1 到 100:1 的压缩比
+- 语义理解，而非关键词抽取
+- 结构化输出（用 XML 解析）
+
+### 心得五：一切渐进式
+
+**原则**：先给元数据，按需取细节。
+
+**应用**：
+- 上下文注入采用渐进式披露
+- 检索结果默认索引格式
+- 第 1 层（标题）→ 第 2 层（摘要）→ 第 3 层（完整细节）
+
+---
+
+## 未来路线
+
+### 规划中：自适应索引大小
+
+```typescript
+SessionStart({ source: "startup" }):
+  → 展示最近 10 个会话（常规）
+
+SessionStart({ source: "resume" }):
+  → 只展示当前会话（极简）
+
+SessionStart({ source: "compact" }):
+  → 展示最近 20 个会话（全面）
+```
+
+### 规划中：相关性评分
+
+```typescript
+// 用语义相关性对索引预排序
+search_observations({
+  query: "authentication bug",
+  sort: "relevance"  // 基于向量
+});
+```
+
+### 规划中：跨项目上下文
+
+```typescript
+// 跨项目的模式识别
+search_observations({
+  query: "API rate limiting",
+  projects: ["api-gateway", "user-service", "billing-service"]
+});
+```
+
+### 规划中：协作记忆
+
+```typescript
+// 团队共享观察记录（可选）
+createObservation({
+  title: "Rate limit: 100 req/min",
+  scope: "team"  // 对比 user
+});
+```
+
+---
+
+## 迁移指南：v3 → v5
+
+### 第 1 步：备份数据库
+
+```bash
+cp ~/.claude-mem/claude-mem.db ~/.claude-mem/claude-mem-v3-backup.db
+```
+
+### 第 2 步：更新插件
+
+```bash
+cd ~/.claude/plugins/marketplaces/thedotmack
+git pull
+```
+
+### 第 3 步：更新插件
+
+```bash
+/plugin update claude-mem
+```
+
+**自动发生的事情：**
+- 依赖更新（包括 v5.0.0+ 新增的 chromadb 等）
+- 数据库 schema 迁移自动执行
+- worker 服务用新代码重启
+- 智能安装缓存生效（v5.0.3+）
+
+### 第 4 步：测试
+
+```bash
+# 启动 Claude Code
+claude
+
+# 检查上下文是否注入
+#（应能看到带 v5 查看器链接的渐进式披露索引）
+
+# 打开查看器 UI（v5.1.0+）
+open http://localhost:37777
+
+# 提交一个 prompt，在查看器里观察实时更新
+```
+
+### 第 5 步：体验新功能
+
+```bash
+# 在浏览器里浏览记忆流（v5.1.0+）
+open http://localhost:37777
+
+# 切换主题（v5.1.2+）
+# 点击查看器顶栏的主题按钮
+
+# 检查 worker 健康状态
+npm run worker:status
+curl http://localhost:37777/health
+```
+
+---
+
+## 关键指标
+
+### v3 性能
+
+| 指标 | 数值 |
+|--------|-------|
+| 每会话上下文占用 | 约 25,000 token |
+| 相关上下文 | 约 2,000 token（8%） |
+| Hook 执行耗时 | 约 200ms |
+| 检索延迟 | 约 500ms（LIKE 查询） |
+
+### v4 性能
+
+| 指标 | 数值 |
+|--------|-------|
+| 每会话上下文占用 | 约 1,100 token |
+| 相关上下文 | 约 1,100 token（100%） |
+| Hook 执行耗时 | 约 45ms |
+| 检索延迟 | 约 15ms（FTS5） |
+
+### v5 性能
+
+| 指标 | 数值 |
+|--------|-------|
+| 每会话上下文占用 | 约 1,100 token |
+| 相关上下文 | 约 1,100 token（100%） |
+| Hook 执行耗时 | 约 10ms（安装已缓存） |
+| 检索延迟 | 约 12ms（FTS5）或约 25ms（混合） |
+| 查看器 UI 加载时间 | 约 50ms（单文件打包 HTML） |
+| SSE 更新延迟 | 约 5ms（实时） |
+
+**v3 → v4 的改进：**
+- 上下文浪费减少 96%
+- 相关性提升 12 倍
+- Hook 快 4 倍
+- 检索快 33 倍
+
+**v4 → v5 的改进：**
+- Hook 快 78%（智能缓存）
+- 实时可视化（查看器 UI）
+- 更好的检索相关性（混合检索）
+- 体验升级（主题切换、设置持久化）
+
+---
+
+## 结语
+
+从 v3 走到 v5，靠的是理解这几条基本事实：
+
+1. **上下文是有限的**——渐进式披露尊重注意力预算
+2. **AI 就是压缩器**——语义理解胜过关键词抽取
+3. **智能体是聪明的**——让它自己决定取什么
+4. **状态很难管**——用 SDK 内置的机制
+5. **优雅者胜**——让进程干干净净地收尾
+
+最终成型的，是一个既强大又隐形的记忆系统。用户从不会察觉它在工作——Claude 只是随着时间推移越来越聪明。
+
+**v5 补上了可见性**：如今用户想看的话，确实能看到记忆系统在工作（通过查看器 UI），但它依然不打扰人。
+
+---
+
+## 延伸阅读
+
+- [渐进式披露](progressive-disclosure) —— v4 背后的设计哲学
+- [Hook 架构](hooks-architecture) —— hook 如何驱动整个系统
+- [上下文工程](context-engineering) —— 基础原则
+- [worker 服务](/architecture/worker-service) —— 实时可视化（v5.1.0+）
+
+---
+
+*这段架构演进史凝结了数百小时的反复试验、数十次钻进死胡同的教训，还有真实使用中积累的宝贵经验。v5 正是看懂了什么真正奏效之后长出来的架构——并且把它呈现给了用户。*

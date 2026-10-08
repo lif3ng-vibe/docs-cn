@@ -1,0 +1,159 @@
+---
+title: "安装"
+description: "安装 Claude-Mem 插件，获得跨会话的持久记忆（persistent memory）"
+---
+
+# 安装指南
+
+**[Grok mem](https://grok-mem.ai)**——Grok Mem 是 Grok Bot 用来记住事情的方式。它在 Grok 自带记忆旁边工作，并不取而代之。npm 包名依然是 [`claude-mem`](https://www.npmjs.com/package/claude-mem)。
+
+## 快速开始
+
+### 方式一：Grok Bot
+
+Grok Bot 没有宿主 hook，可以独立于 Cursor 或 Claude Code 单独安装。默认使用 CMEM Pro 托管记忆：
+
+```bash
+npx claude-mem install --ide grok-bot
+```
+
+本地宿主登录观察器为可选项：`--provider host`。`--ide` 只接受单个字符串——第二个宿主就要再多一条安装命令。安装本插件不会顺带安装 Cursor。参见 [Grok Bot 集成](/grok-bot)。
+
+### 方式二：npx
+
+一条命令完成 Claude-Mem 的安装与配置：
+
+```bash
+npx claude-mem install
+```
+
+交互式安装器分三步走——先装运行时，再登录，最后挑选记忆提供商（provider）：
+
+1. **选择 agent 并安装运行时**。自动预选检测到的 agent，包括 OpenCode、OMP、Cursor 与 Codex CLI。只有当你选了 Claude Code 且未检测到它时，才会提议安装 Claude Code。宿主下载或安装失败时，会回到 agent 选择这一步，方便重试或换一个。随后检查 Bun 与 uv，把插件文件复制进 marketplace 目录，注册插件并安装依赖。
+2. **登录。**`--provider claude` 会跳过此步（记忆运行在你自己的 Anthropic 套餐上）。CLI **不会**索要邮箱，而是发起 OAuth 配对（`POST https://cmem.ai/api/installer/oauth/start`），打印设备码 `XXXX-XXXX`，在浏览器中打开 `authorization_url`，并轮询直到你完成认证。无需绑卡。
+3. **选择记忆提供商**。**CMEM Pro 为预选项**——选中它会打开结账/试用链接，轮询至账号状态变为 `ready`，写入 `~/.claude-mem/settings.json` 并重启 worker。其他选项：你个人的 OpenRouter、Gemini、Anthropic 套餐，或 `--provider host`（本地回环观察器）。
+
+需要无头模式（headless）或已经登录？安装器实际写入的设置见 [CMEM Pro（手动 / 无头）](/cmem-pro-headless)。
+
+### 记忆提供商选项
+
+- **CMEM Pro / claude-mem observer（预选）**——记忆不经你的套餐，走 `https://cmem.ai/api/inference/v1`，模型为 `cmem-observer`。**30 天免费试用**，之后订阅或切换回退。回退（fallback）是**事件驱动**的：当网关停止为账号提供服务（额度用尽、订阅失效或密钥被拒）时才设置 `CLAUDE_MEM_PRO_FALLBACK_AT`，而不是在试用期结束当天；此后记忆改用你的 Anthropic 套餐。参见 [CMEM Pro（手动 / 无头）](/cmem-pro-headless)。
+- **你自己的 OpenRouter 密钥**——记忆不经套餐，花你的 OpenRouter 额度运行。base URL 留空（或填 `https://openrouter.ai/api/v1`）。**切勿**把个人 `sk-or-` 密钥发给 cmem.ai 推理网关。
+- **Gemini API 密钥**——记忆不经套餐，用你的 Gemini 密钥运行。
+- **Anthropic 套餐**（`--provider claude`）——记忆与你的 Claude 套餐共用用量。会跳过登录步骤；本地安装只在注册时联系 cmem.ai 一次，用于生成登录链接，附带的用量摘要只有数字（观察记录数量与 token 总量，不含提示词、路径或项目名），除此之外不向 cmem.ai 发送任何东西。会提示你选择用于压缩观察记录的 Claude 模型（Haiku / Sonnet / Opus）。
+- **宿主观察器（可选）**——`--provider host` 通过本地回环复用已登录的 agent。无需 API 密钥。参见 [Grok Bot 集成](/grok-bot)。
+
+### 跳过登录
+
+交互式运行时，`--provider claude` 会跳过登录步骤。非交互运行（无 TTY，例如由 AI agent 运行安装器）且未指定 `--provider` 时，全新安装默认采用 Anthropic 套餐，已有配置则沿用原提供商。每次跳过登录的非交互安装都会在最后打印一条可选的登录链接；它属于尽力而为（best-effort），绝不阻塞、也不改变退出码，设置了 `CI` 时直接跳过。本地安装只在注册时联系 cmem.ai 一次，用于生成登录链接，附带的用量摘要只有数字（观察记录数量与 token 总量，不含提示词、路径或项目名）；除此之外不向 cmem.ai 发送任何东西。你随时可以重新运行 `npx claude-mem install` 完成 CMEM Pro 配对，或手写设置文件（[手动 / 无头](/cmem-pro-headless)）。
+
+### 方式三：插件市场
+
+直接在 Claude Code 的插件市场里安装 Claude-Mem：
+
+```bash
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+```
+
+两种方式都会自动配置 hooks 并启动 worker 服务。开一个新 Claude Code 会话，就能看到先前会话的上下文自动加载进来。
+
+> **重要**：Claude-Mem 在 npm 上有发布，但 `npm install -g claude-mem` 装的**只是 SDK/库**，**不会**注册插件 hooks，也不会启动 worker 服务。请始终通过 `npx claude-mem install` 或上面的 `/plugin` 命令安装。
+
+## 系统要求
+
+- **Node.js**：20.0.0 或更高
+- **Bun** ≥ 1.0（缺失时由 `npx claude-mem install` 自动安装）
+- **uv**（缺失时自动安装——为 Chroma 的嵌入服务提供 Python）
+- **Claude Code** 或其他受支持的宿主（Cursor、Grok Bot、Windsurf、OpenCode、Codex CLI、Antigravity CLI、OpenClaw）
+- **SQLite 3**：通过 `bun:sqlite` 内置提供
+
+## 高级安装
+
+开发或测试用途，可以从源码克隆并构建：
+
+### 克隆与构建
+
+```bash
+# 克隆仓库
+git clone https://github.com/thedotmack/claude-mem.git
+cd claude-mem
+
+# 安装依赖
+npm install
+
+# 构建 hooks 与 worker 服务
+npm run build
+
+# worker 服务会在首个 Claude Code 会话时自动启动
+# 也可以手动启动：
+npm run worker:start
+
+# 验证 worker 已在运行
+npm run worker:status
+```
+
+### 安装后验证
+
+#### 1. 自动安装依赖
+
+依赖由 `npx claude-mem install` 与 `npx claude-mem repair` 自动安装。重活（安装 Bun + uv、在插件缓存目录里跑 `bun install`）都在可见的安装器进度条背后完成。通过插件市场完成的安装则由 Setup hook（`version-check.js`）补齐：若插件声明的依赖缺失，它会在插件根目录运行 `bun install`，装完自行写入 `.install-version` 标记。只有这一步之后依赖仍缺失时，才会提示 `run: npx claude-mem@latest install`；它总是以退出码 0 结束，绝不阻塞会话。在 Windows、macOS 与 Linux 上均可跨平台工作。
+
+#### 2. 验证插件安装
+
+确认 hooks 已在 Claude Code 中配置：
+
+```bash
+cat plugin/hooks/hooks.json
+```
+
+#### 3. 数据目录位置
+
+数据存放在 `~/.claude-mem/`：
+
+- 数据库：`~/.claude-mem/claude-mem.db`
+- PID 文件：`~/.claude-mem/.worker.pid`
+- 端口文件：`~/.claude-mem/.worker.port`
+- 日志：`~/.claude-mem/logs/worker-YYYY-MM-DD.log`
+- 设置文件：`~/.claude-mem/settings.json`
+
+可用环境变量覆盖：
+
+```bash
+export CLAUDE_MEM_DATA_DIR=/custom/path
+```
+
+#### 4. 查看 worker 日志
+
+```bash
+npm run worker:logs
+```
+
+#### 5. 测试上下文检索
+
+```bash
+npm run test:context
+```
+
+#### 6. CMEM Pro / 同步
+
+```bash
+curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/health"
+curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/sync/status"
+```
+
+参见 [CMEM Pro（手动 / 无头）](/cmem-pro-headless)。
+
+## 升级
+
+通过插件市场更新时，升级是自动的。经外部升级（例如 `claude plugin update`）之后，Setup hook 会补装新版本缺少的运行时依赖，并自行刷新版本标记。只有依赖仍然缺失时，才会让你运行 `npx claude-mem@latest install`。
+
+完整版本历史见 [CHANGELOG](https://github.com/thedotmack/claude-mem/blob/main/CHANGELOG.md)。
+
+## 后续步骤
+
+- [入门指南](usage/getting-started)——了解 Claude-Mem 如何自动工作
+- [CMEM Pro（手动 / 无头）](/cmem-pro-headless)——settings.json 具体键值与无头模式（headless）配置
+- [Grok Bot 集成](/grok-bot)——为 Grok Bot 提供持久记忆（无需 hooks）
+- [MCP 搜索工具](usage/search-tools)——查询你的项目历史
+- [配置](configuration)——定制 Claude-Mem 行为

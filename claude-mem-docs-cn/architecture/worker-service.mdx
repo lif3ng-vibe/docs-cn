@@ -1,0 +1,697 @@
+---
+title: "worker 服务"
+description: "HTTP API 与 Bun 进程管理"
+---
+
+# worker 服务
+
+worker 服务（worker service）是一个由 Bun 原生管理、基于 Express.js 构建的长驻 HTTP API。它通过 Claude Agent SDK 处理观察记录（observation），与 Hook 执行相互分离，以避免超时问题。
+
+## 概览
+
+- **技术栈**：Express.js HTTP 服务器
+- **运行时**：Bun（缺失时自动安装）
+- **进程管理**：Bun 原生进程管理，由 ProcessManager 实现
+- **端口**：按用户计算的默认端口 `37700 + (uid % 100)`（可用 `CLAUDE_MEM_WORKER_PORT` 覆盖）。当前生效端口保存在 `~/.claude-mem/settings.json` 中，并可通过 `GET /api/health` 查询。
+- **源码位置**：`src/services/worker-service.ts`
+- **构建产物**：`plugin/scripts/worker-service.cjs`
+- **模型**：可通过 `CLAUDE_MEM_MODEL` 配置（默认：`claude-haiku-4-5-20251001`）
+
+## REST API 端点
+
+worker 服务对外提供 22 个 HTTP 端点，分为六大类：
+
+### 查看器与健康端点
+
+#### 1. 查看器 UI
+```
+GET /
+```
+
+**用途**：提供基于 Web 的查看器 UI（viewer UI）（v5.1.0+）
+
+**响应**：内嵌 React 应用的 HTML 页面
+
+**功能**：
+- 记忆流（memory stream）的实时可视化
+- 无限滚动分页
+- 按项目筛选
+- 基于 SSE 的实时更新
+- 主题切换（浅色/深色模式），自 v5.1.2 起
+
+#### 2. 健康检查
+```
+GET /health
+```
+
+**用途**：检查 worker 的健康状态
+
+**响应**：
+```json
+{
+  "status": "ok",
+  "uptime": 12345,
+  "port": 37742
+}
+```
+
+`port` 值是当前用户实际使用的 worker 端口——按用户计算的默认值 `37700 + (uid % 100)`，或 `CLAUDE_MEM_WORKER_PORT` 所设置的值。上例仅作演示；实际数值会有所不同。
+
+#### 3. SSE 实时事件流
+```
+GET /stream
+```
+
+**用途**：为查看器 UI 提供实时更新
+
+**响应**：SSE 事件流，包含以下事件：
+- `observation-created`：新增观察记录
+- `session-summary-created`：生成新的会话摘要（session summary）
+- `user-prompt-created`：记录一条新的提示词
+
+**事件格式**：
+```
+event: observation-created
+data: {"id": 123, "title": "...", ...}
+```
+
+### 数据检索端点
+
+#### 4. 获取提示词
+```
+GET /api/prompts?project=my-project&limit=20&offset=0
+```
+
+**用途**：分页获取用户提示词
+
+**查询参数**：
+- `project`（可选）：按项目名称筛选
+- `limit`（默认：20）：返回结果数量
+- `offset`（默认：0）：分页偏移量
+
+**响应**：
+```json
+{
+  "prompts": [{
+    "id": 1,
+    "session_id": "abc123",
+    "prompt": "User's prompt text",
+    "prompt_number": 1,
+    "created_at": "2025-11-06T10:30:00Z"
+  }],
+  "total": 150,
+  "hasMore": true
+}
+```
+
+#### 5. 获取观察记录
+```
+GET /api/observations?project=my-project&limit=20&offset=0
+```
+
+**用途**：分页获取观察记录
+
+**查询参数**：
+- `project`（可选）：按项目名称筛选
+- `limit`（默认：20）：返回结果数量
+- `offset`（默认：0）：分页偏移量
+
+**响应**：
+```json
+{
+  "observations": [{
+    "id": 123,
+    "title": "Fix authentication bug",
+    "type": "bugfix",
+    "narrative": "...",
+    "created_at": "2025-11-06T10:30:00Z"
+  }],
+  "total": 500,
+  "hasMore": true
+}
+```
+
+#### 6. 获取摘要
+```
+GET /api/summaries?project=my-project&limit=20&offset=0
+```
+
+**用途**：分页获取会话摘要
+
+**查询参数**：
+- `project`（可选）：按项目名称筛选
+- `limit`（默认：20）：返回结果数量
+- `offset`（默认：0）：分页偏移量
+
+**响应**：
+```json
+{
+  "summaries": [{
+    "id": 456,
+    "session_id": "abc123",
+    "request": "User's original request",
+    "completed": "Work finished",
+    "created_at": "2025-11-06T10:30:00Z"
+  }],
+  "total": 100,
+  "hasMore": true
+}
+```
+
+#### 7. 按 ID 获取观察记录
+```
+GET /api/observation/:id
+```
+
+**用途**：按 ID 获取单条观察记录
+
+**路径参数**：
+- `id`（必需）：观察记录 ID
+
+**响应**：
+```json
+{
+  "id": 123,
+  "sdk_session_id": "abc123",
+  "project": "my-project",
+  "type": "bugfix",
+  "title": "Fix authentication bug",
+  "narrative": "...",
+  "created_at": "2025-11-06T10:30:00Z",
+  "created_at_epoch": 1730886600000
+}
+```
+
+**错误响应**（404）：
+```json
+{
+  "error": "Observation #123 not found"
+}
+```
+
+#### 8. 批量获取观察记录
+```
+POST /api/observations/batch
+```
+
+**用途**：单次请求按 ID 批量获取多条观察记录
+
+**请求体**：
+```json
+{
+  "ids": [123, 456, 789],
+  "orderBy": "date_desc",
+  "limit": 10,
+  "project": "my-project"
+}
+```
+
+**请求体参数**：
+- `ids`（必需）：观察记录 ID 数组
+- `orderBy`（可选）：排序方式——`date_desc` 或 `date_asc`（默认：`date_desc`）
+- `limit`（可选）：返回结果的最大数量
+- `project`（可选）：按项目名称筛选
+
+**响应**：
+```json
+[
+  {
+    "id": 789,
+    "sdk_session_id": "abc123",
+    "project": "my-project",
+    "type": "feature",
+    "title": "Add new feature",
+    "narrative": "...",
+    "created_at": "2025-11-06T12:00:00Z",
+    "created_at_epoch": 1730891400000
+  },
+  {
+    "id": 456,
+    "sdk_session_id": "abc124",
+    "project": "my-project",
+    "type": "bugfix",
+    "title": "Fix authentication bug",
+    "narrative": "...",
+    "created_at": "2025-11-06T10:30:00Z",
+    "created_at_epoch": 1730886600000
+  }
+]
+```
+
+**错误响应**：
+- `400 Bad Request`：`{"error": "ids must be an array of numbers"}`
+- `400 Bad Request`：`{"error": "All ids must be integers"}`
+
+**使用场景**：`get_observations` MCP 工具会调用这个端点，在单次请求中高效获取多条观察记录，避免多次单独请求带来的开销。
+
+#### 9. 按 ID 获取会话
+```
+GET /api/session/:id
+```
+
+**用途**：按 ID 获取单个会话（session）
+
+**路径参数**：
+- `id`（必需）：会话 ID
+
+**响应**：
+```json
+{
+  "id": 456,
+  "sdk_session_id": "abc123",
+  "project": "my-project",
+  "request": "User's original request",
+  "completed": "Work finished",
+  "created_at": "2025-11-06T10:30:00Z"
+}
+```
+
+**错误响应**（404）：
+```json
+{
+  "error": "Session #456 not found"
+}
+```
+
+#### 10. 按 ID 获取提示词
+```
+GET /api/prompt/:id
+```
+
+**用途**：按 ID 获取单条用户提示词
+
+**路径参数**：
+- `id`（必需）：提示词 ID
+
+**响应**：
+```json
+{
+  "id": 1,
+  "session_id": "abc123",
+  "prompt": "User's prompt text",
+  "prompt_number": 1,
+  "created_at": "2025-11-06T10:30:00Z"
+}
+```
+
+**错误响应**（404）：
+```json
+{
+  "error": "Prompt #1 not found"
+}
+```
+
+#### 12. 获取统计信息
+```
+GET /api/stats
+```
+
+**用途**：按项目获取数据库统计信息
+
+**响应**：
+```json
+{
+  "byProject": {
+    "my-project": {
+      "observations": 245,
+      "summaries": 12,
+      "prompts": 48
+    },
+    "other-project": {
+      "observations": 156,
+      "summaries": 8,
+      "prompts": 32
+    }
+  },
+  "total": {
+    "observations": 401,
+    "summaries": 20,
+    "prompts": 80,
+    "sessions": 20
+  }
+}
+```
+
+#### 13. 获取项目列表
+```
+GET /api/projects
+```
+
+**用途**：从观察记录中提取去重后的项目列表
+
+**响应**：
+```json
+{
+  "projects": ["my-project", "other-project", "test-project"]
+}
+```
+
+### 设置端点
+
+#### 14. 获取设置
+```
+GET /api/settings
+```
+
+**用途**：读取用户设置
+
+**响应**：
+```json
+{
+  "sidebarOpen": true,
+  "selectedProject": "my-project",
+  "theme": "dark"
+}
+```
+
+#### 15. 保存设置
+```
+POST /api/settings
+```
+
+**用途**：持久化保存用户设置
+
+**请求体**：
+```json
+{
+  "sidebarOpen": false,
+  "selectedProject": "other-project",
+  "theme": "light"
+}
+```
+
+**响应**：
+```json
+{
+  "success": true
+}
+```
+
+### 队列管理端点
+
+#### 16. 获取待处理队列状态
+```
+GET /api/pending-queue
+```
+
+**用途**：查看当前处理队列的状态，识别卡住的消息
+
+**响应**：
+```json
+{
+  "queue": {
+    "messages": [
+      {
+        "id": 123,
+        "session_db_id": 45,
+        "claude_session_id": "abc123",
+        "message_type": "observation",
+        "status": "pending",
+        "retry_count": 0,
+        "created_at_epoch": 1730886600000,
+        "started_processing_at_epoch": null,
+        "completed_at_epoch": null
+      }
+    ],
+    "totalPending": 5,
+    "totalProcessing": 2,
+    "totalFailed": 0,
+    "stuckCount": 1
+  },
+  "recentlyProcessed": [
+    {
+      "id": 122,
+      "session_db_id": 44,
+      "status": "processed",
+      "completed_at_epoch": 1730886500000
+    }
+  ],
+  "sessionsWithPendingWork": [44, 45, 46]
+}
+```
+
+**状态定义**：
+- `pending`：消息已入队，尚未处理
+- `processing`：消息正由 SDK 智能体处理
+- `processed`：消息已成功处理
+- `failed`：消息重试次数达到上限后失败（默认 3 次）
+
+**卡住检测**：处于 `processing` 状态超过 5 分钟的消息视为卡住，计入 `stuckCount`
+
+**使用场景**：在 worker 崩溃或重启之后检查队列健康状况，找出未处理的观察记录
+
+#### 17. 触发手动恢复
+```
+POST /api/pending-queue/process
+```
+
+**用途**：手动触发待处理队列的处理（v5.x+ 已用此端点取代自动恢复）
+
+**请求体**：
+```json
+{
+  "sessionLimit": 10
+}
+```
+
+**请求体参数**：
+- `sessionLimit`（可选）：最多处理的会话数（默认：10，上限：100）
+
+**响应**：
+```json
+{
+  "success": true,
+  "totalPendingSessions": 15,
+  "sessionsStarted": 10,
+  "sessionsSkipped": 2,
+  "startedSessionIds": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+}
+```
+
+**响应字段**：
+- `totalPendingSessions`：数据库中含有待处理消息的会话总数
+- `sessionsStarted`：本次请求启动处理的会话数量
+- `sessionsSkipped`：已在活跃处理中被跳过的会话（不会重启）
+- `startedSessionIds`：启动处理的会话在数据库中的 ID
+
+**行为**：
+- 最多处理 `sessionLimit` 个有待处理工作的会话
+- 跳过已在活跃处理中的会话（避免启动重复的智能体）
+- 为每个会话启动非阻塞的 SDK 智能体
+- 立即返回状态（处理在后台继续进行）
+
+**使用场景**：在 worker 崩溃后手动恢复卡住的观察记录，或在已禁用自动恢复时使用
+
+**恢复策略说明**：自 v5.x 起，worker 启动时的自动恢复默认关闭。用户需通过该端点或 CLI 工具（`bun scripts/check-pending-queue.ts`）手动触发恢复，以显式掌控重新处理的行为。
+
+### 会话管理端点
+
+#### 19. 初始化会话
+```
+POST /sessions/:sessionDbId/init
+```
+
+**请求体**：
+```json
+{
+  "sdk_session_id": "abc-123",
+  "project": "my-project"
+}
+```
+
+**响应**：
+```json
+{
+  "success": true,
+  "session_id": "abc-123"
+}
+```
+
+#### 20. 添加观察记录
+```
+POST /sessions/:sessionDbId/observations
+```
+
+**请求体**：
+```json
+{
+  "tool_name": "Read",
+  "tool_input": {...},
+  "tool_result": "...",
+  "correlation_id": "xyz-789"
+}
+```
+
+**响应**：
+```json
+{
+  "success": true,
+  "observation_id": 123
+}
+```
+
+#### 21. 生成摘要
+```
+POST /sessions/:sessionDbId/summarize
+```
+
+**请求体**：
+```json
+{
+  "trigger": "stop"
+}
+```
+
+**响应**：
+```json
+{
+  "success": true,
+  "summary_id": 456
+}
+```
+
+#### 22. 会话状态
+```
+GET /sessions/:sessionDbId/status
+```
+
+**响应**：
+```json
+{
+  "session_id": "abc-123",
+  "status": "active",
+  "observation_count": 42,
+  "summary_count": 1
+}
+```
+
+#### 23. 删除会话
+```
+DELETE /sessions/:sessionDbId
+```
+
+**响应**：
+```json
+{
+  "success": true
+}
+```
+
+**注意**：自 v4.1.0 起，清理 Hook 不再调用该端点。会话会被标记为完成而不是删除，以便 worker 能够优雅关闭（graceful shutdown）。
+
+## Bun 进程管理
+
+### 概览
+
+worker 由原生 `ProcessManager` 类管理，它负责：
+- 使用 Bun 运行时启动进程
+- 在 `~/.claude-mem/worker.pid` 处跟踪 PID 文件
+- 自动重试的健康检查
+- 带 SIGTERM/SIGKILL 兜底的优雅关闭
+
+### 命令
+
+```bash
+# 启动 worker（首个会话开始时自动启动）
+npm run worker:start
+
+# 停止 worker
+npm run worker:stop
+
+# 重启 worker
+npm run worker:restart
+
+# 查看日志
+npm run worker:logs
+
+# 检查状态
+npm run worker:status
+```
+
+### 自动启动行为
+
+SessionStart Hook 触发时，worker 服务会自动启动。手动启动只是可选项。
+
+### Bun 依赖要求
+
+Bun 是运行 worker 服务的必要条件。如果 Bun 未安装，`npx claude-mem install`（以及 `npx claude-mem repair`）会在安装过程中通过一个可见的 clack spinner 将其全局安装：
+
+- **Windows**：`powershell -c "irm bun.sh/install.ps1 | iex"`
+- **macOS/Linux**：`curl -fsSL https://bun.sh/install | bash`
+
+也可以手动安装：
+- `winget install Oven-sh.Bun`（Windows）
+- `brew install oven-sh/bun/bun`（macOS）
+
+## Claude Agent SDK 集成
+
+worker 服务将观察记录交给 Claude Agent SDK 进行 AI 加持的处理：
+
+### 处理流程
+
+1. **观察记录队列**：观察记录在内存中累积
+2. **SDK 处理**：通过 Agent SDK 将观察记录发送给 Claude
+3. **XML 解析**：从响应中解析出结构化数据
+4. **数据库存储**：处理后的观察记录存入 SQLite
+
+### SDK 组件
+
+- **Prompts**（`src/sdk/prompts.ts`）：构建 XML 结构的提示词
+- **Parser**（`src/sdk/parser.ts`）：解析 Claude 的 XML 响应
+- **Worker**（`src/sdk/worker.ts`）：SDK 智能体主循环
+
+### 模型配置
+
+通过环境变量或 `~/.claude-mem/settings.json` 设置用于压缩的 Claude 模型：
+
+```bash
+export CLAUDE_MEM_MODEL=claude-haiku-4-5-20251001
+```
+
+允许的取值：
+- `claude-haiku-4-5-20251001`——默认值，最快（最适合压缩）
+- `claude-sonnet-5`——质量与速度均衡
+- `claude-opus-4-8`——质量最高（最慢）
+
+## 端口分配
+
+worker 使用按用户计算的默认端口，这样同一台机器上的不同操作系统用户之间不会互相冲突：
+
+- **默认**：`37700 + (uid % 100)`（定义于 `src/shared/SettingsDefaultsManager.ts`）
+- **覆盖**：设置 `CLAUDE_MEM_WORKER_PORT`（环境变量或 `~/.claude-mem/settings.json`）
+- **查询**：`GET /api/health` 返回当前生效的端口；`~/.claude-mem/settings.json` 保存配置值
+
+如果所选端口已被占用，worker 将启动失败——改用 `CLAUDE_MEM_WORKER_PORT` 固定另一个端口并重启。
+
+## 数据存储
+
+worker 服务将数据存储在用户数据目录中：
+
+```
+~/.claude-mem/
+├── claude-mem.db           # SQLite 数据库（bun:sqlite）
+├── worker.pid              # 用于进程跟踪的 PID 文件
+├── settings.json           # 用户设置
+└── logs/
+    └── worker-YYYY-MM-DD.log  # 按天轮转的日志
+```
+
+## 错误处理
+
+worker 实现了优雅降级：
+
+- **数据库错误**：记入日志，但不会导致服务崩溃
+- **SDK 错误**：按指数退避重试
+- **网络错误**：记入日志并跳过
+- **无效输入**：经校验后拒绝，并返回错误响应
+
+## 性能
+
+- **异步处理**：观察记录异步处理
+- **内存队列**：快速累积观察记录
+- **批量处理**：多条观察记录一起处理
+- **连接池**：SQLite 连接复用
+
+## 故障排查
+
+常见问题与解决方法见[故障排查 – worker 问题](/troubleshooting#worker-服务问题)。

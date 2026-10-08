@@ -1,0 +1,201 @@
+---
+title: "托管服务（Beta）"
+description: "远程认证 MCP 召回、用量计量与配额、数据删除——claude-mem 云端服务当前的工作方式。"
+---
+
+# 托管服务（Beta）
+
+<Warning>
+**这部分内容很早期，而且迭代很快。** 下文描述的托管服务（hosted server）的捕获、召回、计量与删除链路都是真实存在且经过测试的，但围绕它们的**用户体验与开发者体验仍在搭建中**——目前还没有打磨好的仪表盘、引导（onboarding）流程或自助注册。可以期望*管道本身*是扎实的，而*路面铺装*尚未完工。在我们接好仪表盘的过程中，路由、环境变量名和首密钥引导流程都可能调整。如果你要接入，请锁定版本。
+</Warning>
+
+托管服务是 claude-mem 的云端一侧：一个由 Postgres 支撑的 HTTP 服务（`/v1`），外加一个独立的 BullMQ 生成 worker。本地插件把记忆保存在你机器上的 `~/.claude-mem/claude-mem.db`，而托管服务则把它按**团队**、按**项目**存在 Postgres 里，并通过一条经过认证的链路暴露给任意 MCP 客户端。
+
+三项能力同时落地，本文档一并收录：
+
+<CardGroup cols={3}>
+  <Card title="远程 MCP 召回" icon="plug">
+    把一条经过认证的链接粘贴到 Claude Code 中，即可召回你的云端记忆——只读，且限定于团队/项目范围。
+  </Card>
+  <Card title="付费就绪" icon="gauge">
+    可选的速率限制（rate limiting）、每月请求/token 配额与用量计量——收费档位所需的护栏。
+  </Card>
+  <Card title="数据删除" icon="trash">
+    被遗忘权：遗忘单条记忆，或清除某个项目捕获的全部内容。
+  </Card>
+</CardGroup>
+
+## 系统结构
+
+```
+ Claude Code (or any MCP client)
+        │  Authorization: Bearer cm_...
+        ▼
+ ┌─────────────────────────────┐        ┌──────────────────────────┐
+ │  HTTP server  (/v1)          │  jobs  │  BullMQ generation worker │
+ │  - auth (api-key mode)       ├───────▶│  claude-mem server         │
+ │  - rate limit / quota / meter │        │    worker start            │
+ │  - REST + /v1/mcp recall      │        │  - provider call           │
+ │  - data deletion              │        │  - writes observations     │
+ └──────────────┬───────────────┘        └────────────┬─────────────┘
+                │                                       │
+                ▼                                       ▼
+        ┌───────────────────────────────────────────────────┐
+        │  Postgres  (teams, projects, observations,         │
+        │  agent_events, server_sessions, generation jobs,   │
+        │  api_keys, usage_events, audit_log)                │
+        └───────────────────────────────────────────────────┘
+```
+
+每一行数据都以 `(team_id, project_id)` 限定范围。一个 API 密钥携带一个**团队**（始终必有）和一个可选的**项目**范围；所有读取、写入和删除都被这个范围约束。
+
+### 身份验证
+
+设置 `CLAUDE_MEM_AUTH_MODE=api-key`，并在每个请求上携带 `Authorization: Bearer <key>`。范围（scope）控制访问：
+
+- **读取**端点（search、context、recall、usage）要求 `memories:read`。
+- **写入**端点（ingest、密钥签发、删除）要求 `memories:write`。
+
+密钥以 SHA-256 哈希形式存放在 `api_keys` 表中；`cm_...` 原始值只在签发时刻显示一次。
+
+## 远程认证 MCP 召回
+
+`/v1/mcp` 是一个基于 streamable-HTTP 的 [MCP](https://modelcontextprotocol.io) 服务。它是用户粘贴到 Claude Code 里、用来召回云端记忆的安全链接。它是**只读**的，并且与 REST 路由使用同一个 API 密钥认证（`memories:read`）；密钥所属的团队——以及若密钥带项目范围则还包括项目——约束每一次读取。
+
+```bash
+claude mcp add --transport http claude-mem <server-base>/v1/mcp \
+  --header "Authorization: Bearer cm_..."
+```
+
+对外暴露三个工具，各自对应一条现有 REST 路径：
+
+| 工具      | 参数                               | 返回 |
+|-----------|------------------------------------|---------|
+| `search`  | `{ projectId, query, limit? }`     | 匹配的观察记录（全文检索）。 |
+| `context` | `{ projectId, query, limit? }`     | 观察记录**外加**一段拼接好的 `context` 字符串，可直接用于提示注入。 |
+| `recent`  | `{ projectId, limit? }`            | 某项目最新的观察记录。 |
+
+<Note>
+传输方式是**无状态**的——每个请求对应一个 MCP 服务加一层传输——因此在负载均衡器后面也不需要会话亲和。写类工具被有意省略：一条粘贴过来的召回链接永远不能写入或删除。每次读取都会作为 `observation.read` 事件写入 `audit_log`，与 `POST /v1/search` 相同。
+</Note>
+
+## 连接客户端：密钥签发与连接
+
+两条路由把「我有一台服务器」变成「Claude Code 正在召回我的云端记忆」：
+
+- **`POST /v1/keys`**（要求 `memories:write`）为调用方的团队签发一把**只读** API 密钥，并返回一条可直接粘贴的连接命令。原始密钥只出现**一次**。请求体：`{ "expiresInDays"?: number }`。签发要求写范围，这样一把只读密钥就无法把自己升级出更多密钥。
+
+  ```json
+  {
+    "id": "...",
+    "apiKey": "cm_...",
+    "scopes": ["memories:read"],
+    "expiresAt": null,
+    "mcpUrl": "https://<host>/v1/mcp",
+    "connectCommand": "claude mcp add --transport http claude-mem https://<host>/v1/mcp --header \"Authorization: Bearer cm_...\""
+  }
+  ```
+
+- **`GET /v1/connect`**（要求 `memories:read`）返回同一条命令，但密钥是 `<YOUR_API_KEY>` 占位符——GET 永远不签发。`mcpUrl` 由 `CLAUDE_MEM_PUBLIC_URL` 构建（在代理或负载均衡器后面时推荐设置）；若未设置，则退回使用请求的 host。
+
+<Warning>
+**首密钥引导（bootstrap）是最糙的一处。** 签发一个团队的*第一把*密钥仍需要一条受登录会话保护的路由（即网页仪表盘），因为 `POST /v1/keys` 本身就要求一把带写范围的密钥。better-auth 的 `apiKey()` 插件虽然存在，但它写入的存储与这些路由所认证的 Postgres `api_keys` 表不同——把 better-auth 的组织映射到团队是剩下的最后一块拼图，也是开发者体验工作上最大的一块待办。
+</Warning>
+
+## 付费就绪：速率限制、配额与计量
+
+这些护栏在认证**之后**运行，并且**通过环境变量选择开启**。不设置（默认）就意味着没有速率限制、没有配额、没有计量——行为与不带这些护栏的服务完全一致。每个护栏都**失败即放行（fails open）**：后端存储出错永远不会阻挡合法请求。
+
+| 环境变量 | 作用 | 触发上限时的响应 |
+|---------|--------|------------------------|
+| `CLAUDE_MEM_RATE_LIMIT_PER_MIN` | 每**个 API 密钥**每分钟的最大请求数。 | `429`，带 `Retry-After` 与 `X-RateLimit-*` 头。 |
+| `CLAUDE_MEM_MONTHLY_REQUEST_CAP` | 每**个团队**每个自然月（UTC）的最大请求数。 | `402 quota_exceeded`。 |
+| `CLAUDE_MEM_MONTHLY_TOKEN_CAP` | 每团队每月的最大提供商 **token** 数。只对**写入**设限——读取保持开放，超预算的团队仍能召回。 | 到达上限时返回 `402`。 |
+| `CLAUDE_MEM_USAGE_METERING=1` | 为每次经过认证的调用记录一条 `request` 用量事件（fire-and-forget）。 | — |
+
+token 与观察记录的计量由生成 worker 写入同一张 `usage_events` 表，因此用量反映的是真实的提供商开销，而不只是 HTTP 调用次数。
+
+`GET /v1/usage` 返回调用方团队本月各类型的用量合计：
+
+```json
+{ "since": "2026-06-01T00:00:00.000Z", "usage": { "request": 1280, "observation": 44 } }
+```
+
+<Note>
+「只对写入设限」是有意为之：真正驱动生成、也就是真正消耗 token 的，是记忆摄取。超出 token 预算的团队仍然可以**读取**自己已有的记忆——你永远不会因为账单问题把人锁在自己的数据外面。
+</Note>
+
+## 数据删除（遗忘）
+
+被遗忘权。两条路由都要求 `memories:write`，并且都限定在调用方的团队范围内。两者都会写入一条 `audit_log` 条目。
+
+- **`DELETE /v1/memories/:id`**——删除单条观察记录；其 `observation_sources` 级联删除。若该团队下不存在对应观察记录，则返回 `404`。审计为 `observation.deleted`。
+
+- **`DELETE /v1/projects/:projectId/memory`**——在一个事务中清除某项目捕获的**全部**内容：观察记录、原始智能体事件、服务端会话与生成任务。项目的空壳（配置/成员关系）会保留，团队可以继续使用。返回各表的 `counts`。若项目不属于该团队，返回 `404`。审计为 `project.memory_purged`。
+
+  ```json
+  { "purged": true, "projectId": "...", "counts": { "observations": 42, "agentEvents": 17, "sessions": 3, "jobs": 17 } }
+  ```
+
+<Note>
+删除在 SQL 层就限定于团队，因此一把密钥永远只能抹除自己团队的数据——跨团队或不存在的 `projectId` 会返回 `404`，而不是给出误导性的成功。
+</Note>
+
+## 事件生成语义
+
+记忆摄取（`POST /v1/events`）接受两个控制观察记录生成的查询参数：
+
+- `generate=false`——写入事件，但**不**入队生成任务。
+- `wait=true`——返回 `generationJob` 描述符，调用方可以据此轮询 `GET /v1/jobs/:id` 直到完成。
+
+不带 `wait=true` 时，响应包含新的事件行，外加一个尽力而为的 `generationJob` 字段。带上 `wait=true` 时，该字段一定有值（仅在显式禁用生成时才为 `null`）。实际的提供商调用发生在独立的 BullMQ worker（`claude-mem server worker start`）里——HTTP 路径**从不阻塞**等待提供商响应。
+
+### 生成并发
+
+默认情况下，生成 worker 在其两条通道里各同时只处理一个任务：`event`（逐事件观察记录）和 `summary`（会话摘要）。如果事件到达的速度超过逐个处理的速度，任务最终仍会完成，但积压会不断增长，观察记录会比它们描述的工作晚数小时落地。在生成 worker 上设置 `CLAUDE_MEM_SERVER_GENERATION_CONCURRENCY=N`，即可在**每条通道**内最多并行运行 N 个任务。两条通道都使用该值，因此单个 worker 进程最多可以有 2N 个提供商调用在途。请参照你的提供商的速率限制来取 N。超过 64 的取值会被钳制为 64，无效取值在给出警告后被忽略。
+
+### 自定义生成提供商（高级）
+
+生成 worker 自带 `claude`、`gemini` 与 `openrouter` 提供商，每个都从环境变量中读取一套凭据。如果你的部署需要别的方式，比如按项目区分密钥，可以设置 `CLAUDE_MEM_SERVER_PROVIDER=custom`，并用 `CLAUDE_MEM_CUSTOM_PROVIDER_MODULE` 指向一个 JavaScript 模块。该模块必须导出 `createProvider(helpers)`，返回一个带 `generate(context)` 方法的对象。`helpers` 提供给模块的内容包括：本服务的提示词构建器、其 Anthropic 客户端（`ClaudeObservationProvider`，支持传入 `baseUrl`）、可重试错误类、解析后的 `maxOutputTokens`，以及一个 `apiVersion`（当前为 `1`）——上述契约任一变动时它都会改变。
+
+<Warning>
+该模块运行在生成 worker 进程内部，与该进程持有的一切同处一室：数据库 URL、所有提供商密钥和 Redis 凭据。请像对待你部署的任何其他代码一样对待它。模块路径只从进程环境变量读取，绝不从 `settings.json` 或 API 路由读取。它必须是绝对路径，并且 worker 在加载模块时会记录路径与文件的 sha256。
+</Warning>
+
+## 端点参考
+
+所有端点都挂在 `/v1` 下；遗留的 worker 路由仍在 `/api` 下。
+
+```
+GET    /healthz
+GET    /v1/info
+GET    /v1/projects
+POST   /v1/projects
+GET    /v1/projects/:id
+POST   /v1/sessions/start
+POST   /v1/sessions/:id/end
+GET    /v1/sessions/:id
+POST   /v1/events                 # ?generate= ?wait=
+POST   /v1/events/batch
+GET    /v1/events/:id
+POST   /v1/memories
+GET    /v1/memories/:id
+PATCH  /v1/memories/:id
+DELETE /v1/memories/:id           # 遗忘一条观察记录
+POST   /v1/search
+POST   /v1/context
+ALL    /v1/mcp                    # 远程认证 MCP 召回
+POST   /v1/keys                   # 签发只读密钥（写范围）
+GET    /v1/connect                # 带密钥占位符的连接命令
+GET    /v1/usage                  # 本月用量合计
+DELETE /v1/projects/:projectId/memory   # 清空整个项目
+GET    /v1/audit?projectId=<id>
+```
+
+## 已稳固与进行中
+
+<Note>
+**今天已稳固：** Postgres 支撑的多租户存储、带读/写范围的 API 密钥认证、`/v1/mcp` 召回链接、可选的速率限制 + 配额 + 计量，以及带审计的数据删除。以上全部由受 Postgres 门槛保护的 e2e 测试套件覆盖。
+
+**仍在搭建中（UX / 开发者体验）：** 用于首密钥引导和密钥管理的网页仪表盘、自助引导流程、建立在计量原语之上的计费/套餐 UI，以及一条比「粘贴一条 CLI 命令」更顺滑的「把 Claude Code 连到我的云端记忆」流程。这些是接下来的重点——上文的那些原语正是它们的基石。
+</Note>

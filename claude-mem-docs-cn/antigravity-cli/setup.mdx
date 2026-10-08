@@ -1,0 +1,227 @@
+---
+title: "Antigravity CLI 设置"
+description: "用 claude-mem 为 Antigravity CLI 添加持久记忆"
+---
+
+# Antigravity CLI 设置
+
+> **让 Antigravity CLI 拥有跨会话的持久记忆。**
+
+Antigravity CLI（`agy`）是 Google 推出的 Gemini CLI 独立继任者——它复用 Gemini CLI 的 `~/.gemini/` 配置目录树，而且按 Google 的说法，"保留了 Gemini CLI 最关键的功能：Agent Skills、Hooks、Subagents 和 Extensions。" Claude-Mem 改变了跨会话时发生的事情：捕获观察记录、决策与模式，然后在每个新会话开始时注入相关上下文。
+
+<Info>
+**工作原理**：Claude-Mem 在 Antigravity CLI 的 `~/.gemini/config/hooks.json` 中安装生命周期 Hook，用于捕获工具使用、智能体响应与会话事件。本地 worker 服务会提取语义观察记录（observation），并在会话开始时通过 `GEMINI.md`、MCP 服务器和规则文件注入相关历史。
+</Info>
+
+<Note>
+Antigravity CLI 与 Antigravity **桌面 IDE**（`antigravity` 二进制文件）是两个不同的产品——二者共享同一个 `~/.gemini/antigravity` 命名空间，但 CLI 自身的二进制文件是 `agy`。检测逻辑会检查 `PATH` 中是否存在 `agy`（或本地是否已有 `~/.gemini/antigravity` 目录）。
+</Note>
+
+## 先决条件
+
+- 已安装 [Antigravity CLI](https://github.com/google-antigravity/antigravity-cli)（`agy`）——`curl -fsSL https://antigravity.google/cli/install.sh | bash`
+- [Node.js](https://nodejs.org/) 18+
+- `~/.gemini` 目录必须存在（由 Antigravity CLI / Gemini CLI 首次运行时创建）
+
+## 安装
+
+### 步骤 1：安装 claude-mem
+
+```bash
+npx claude-mem install --ide antigravity
+```
+
+安装器会：
+
+1. 自动检测 Antigravity CLI（检查 `PATH` 中是否有 `agy`，或是否已存在 `~/.gemini/antigravity` 目录）
+2. 将 Antigravity CLI 生命周期 Hook 安装到 `~/.gemini/config/hooks.json`
+3. 将上下文配置注入 `~/.gemini/GEMINI.md`
+4. 在 `~/.gemini/antigravity/mcp_config.json` **以及** `~/.gemini/config/mcp_config.json` 中注册 claude-mem 的 MCP 服务器
+5. 将规则/上下文占位内容写入 `~/.agents/rules/claude-mem-context.md`
+6. 启动 worker 服务
+
+### 步骤 2：配置 AI 提供商
+
+claude-mem 需要 AI 提供商才能从你的会话中提取观察记录。任选其一：
+
+<Tabs>
+  <Tab title="Gemini API">
+    最简单的选择——用 Gemini 自家的 API 来提取观察记录：
+
+    1. 在 [Google AI Studio](https://aistudio.google.com/apikey) 创建一个 API key
+    2. 将其加入设置：
+
+    ```bash
+    mkdir -p ~/.claude-mem
+    cat > ~/.claude-mem/settings.json << 'EOF'
+    {
+      "CLAUDE_MEM_PROVIDER": "gemini",
+      "CLAUDE_MEM_GEMINI_API_KEY": "YOUR_API_KEY"
+    }
+    EOF
+    ```
+
+    <Tip>
+    **无需开通结算**：不启用结算也能创建 Gemini API key。只有在查阅 Google 当前的配额与结算条款之后，才需要为更高的速率限制启用结算。
+    </Tip>
+  </Tab>
+  <Tab title="Claude SDK">
+    如果你手上有 Claude API key：
+
+    ```bash
+    mkdir -p ~/.claude-mem
+    cat > ~/.claude-mem/settings.json << 'EOF'
+    {
+      "CLAUDE_MEM_PROVIDER": "claude"
+    }
+    EOF
+    ```
+
+    通过环境变量设置 API key：
+    ```bash
+    export ANTHROPIC_API_KEY="your-key"
+    ```
+  </Tab>
+  <Tab title="OpenRouter">
+    需要访问 100 多个模型时：
+
+    ```bash
+    mkdir -p ~/.claude-mem
+    cat > ~/.claude-mem/settings.json << 'EOF'
+    {
+      "CLAUDE_MEM_PROVIDER": "openrouter",
+      "CLAUDE_MEM_OPENROUTER_API_KEY": "YOUR_KEY"
+    }
+    EOF
+    ```
+  </Tab>
+</Tabs>
+
+### 步骤 3：验证安装
+
+```bash
+# 检查 worker 是否在运行
+npx claude-mem status
+
+# 检查 Hook 是否已安装——查找 claude-mem 条目
+cat ~/.gemini/config/hooks.json | grep claude-mem
+
+# 在两个候选配置路径中任一处检查 MCP 注册
+cat ~/.gemini/antigravity/mcp_config.json | grep claude-mem
+cat ~/.gemini/config/mcp_config.json | grep claude-mem
+```
+
+打开 worker 启动时打印的 URL，即可访问查看器 UI。
+
+### 步骤 4：开始使用 Antigravity CLI
+
+正常启动 Antigravity CLI 即可。claude-mem 会在后台默默工作：
+
+```bash
+agy
+```
+
+会话开始时，你会看到 claude-mem 注入的上下文，其中包含你最近的观察记录和项目历史。
+
+## 捕获哪些内容
+
+claude-mem 注册的是 Antigravity CLI（`agy` 1.2.1）真正会触发的五个生命周期 Hook：
+
+| Hook | 内部事件 | 用途 |
+|------|----------|------|
+| **PreInvocation** | `context` | 在智能体运行前注入记忆上下文（通过 `injectSteps`） |
+| **PreToolUse** | `observation` | 记录工具调用意图，并返回 `{"decision":"allow"}` 让调用继续 |
+| **PostToolUse** | `observation` | 在工具执行后捕获结果 |
+| **PostInvocation** | `observation` | 记录智能体的响应（取自 transcript 的 `PLANNER_RESPONSE` 节点） |
+| **Stop** | `summarize` | 在回合/会话结束时捕获会话摘要 |
+
+<Note>
+这些都是 `agy` 1.2.1 中的真实事件名。更早的版本曾误把 Gemini CLI 的事件名（`SessionStart`、`BeforeAgent`、`AfterAgent`、`BeforeTool`、`AfterTool`）写入 `~/.gemini/settings.json`——这些名称在 `agy` 二进制文件里一个都不存在，所以 Hook 从未触发，观察记录也一条没记上（issue [#4057](https://github.com/thedotmack/claude-mem/issues/4057)）。
+</Note>
+
+## MCP 注册
+
+Antigravity CLI 原生支持 MCP，但在撰写本文时，它究竟读取哪个配置路径确实没有定论——磁盘上存在两个真实候选路径，也没有权威文档说明 `agy` 到底加载哪一个。claude-mem 会**同时写入两个路径**，既有安全兜底又保持幂等：
+
+- `~/.gemini/antigravity/mcp_config.json`
+- `~/.gemini/config/mcp_config.json`
+
+这样无论 Antigravity CLI 实际读取哪个路径，claude-mem 的检索工具（`search`、`smart_search`、`timeline` 等）都有机会正确注册。
+
+## 未来增强（本版本未实现）
+
+Antigravity CLI 提供了一套一等公民级的插件市场子命令系统：`agy plugin {list,import,install,uninstall,enable,disable,validate,link}`。尤其值得注意 `agy plugin import gemini|claude`——它暗示了原生的跨工具插件迁移能力，结构上与 Codex CLI 的 `.codex-plugin/plugin.json` 市场机制颇为相似。长期来看，这可能是打包注册 claude-mem 的 Hook + MCP + skills 的一种更干净、更符合惯例的做法，优于手工编辑 `hooks.json`。之所以本版本没有实现，是因为若不对真实清单运行 `agy plugin import`/`install`，就无法探明其清单（manifest）schema——而那样做会改动用户本地正在生效的插件状态。已作为候选后续事项记录在案。
+
+## 故障排查
+
+### Hook 未触发
+
+1. 确认 Hook 配置文件中存在 Hook：
+   ```bash
+   cat ~/.gemini/config/hooks.json
+   ```
+   每个顶层键都是一个 **Hook 名称**。claude-mem 写入的是单个
+   `"claude-mem"` 键，包住各事件键，其中 `PreToolUse`/`PostToolUse`
+   采用分组的 `{ "matcher", "hooks" }` 形态，而
+   `PreInvocation`/`PostInvocation`/`Stop` 采用扁平的处理函数数组：
+   ```json
+   {
+     "claude-mem": {
+       "PreInvocation": [ { "type": "command", "command": "...", "timeout": 30 } ],
+       "PreToolUse": [ { "matcher": "*", "hooks": [ { "type": "command", "command": "...", "timeout": 30 } ] } ],
+       "PostToolUse": [ { "matcher": "*", "hooks": [ { "type": "command", "command": "...", "timeout": 30 } ] } ],
+       "PostInvocation": [ { "type": "command", "command": "...", "timeout": 30 } ],
+       "Stop": [ { "type": "command", "command": "...", "timeout": 30 } ]
+     }
+   }
+   ```
+   `timeout` 的单位是**秒**（agy 默认为 30）。如果你看到事件名直接位于顶层、处理函数带有 `"name": "claude-mem"` 标签，或出现 `"timeout": 10000`，说明你装的是修复前版本——请按下方第 3 步重新运行安装器，它会自动迁移旧布局。
+
+2. 安装完成后重启 Antigravity CLI。
+
+3. 重新运行安装器：
+   ```bash
+   npx claude-mem install --ide antigravity
+   ```
+
+### worker 服务未运行
+
+```bash
+# 查看状态
+npx claude-mem status
+
+# 查看日志
+npx claude-mem logs
+
+# 重启 worker
+npx claude-mem restart
+```
+
+### 会话开始时未出现上下文
+
+1. 确认 worker 正在运行（`npm run worker:status`）
+2. 至少要有一个带观察记录的历史会话，上下文才会出现
+3. 检查 `~/.claude-mem/settings.json` 中是否已配置 AI 提供商
+
+### 输出中出现原始转义字符
+
+如果在会话上下文中看到 `[31m` 或 `[0m` 之类的字符，说明你的 claude-mem 版本可能需要更新——Antigravity CLI 适配器会自动剥离 ANSI 颜色码：
+
+```bash
+npx claude-mem install --ide antigravity
+```
+
+## 卸载
+
+```bash
+npx claude-mem uninstall
+```
+
+这条命令会从 `~/.gemini/config/hooks.json` 中移除 claude-mem 的 Hook（以及 `~/.gemini/settings.json` 中的任何旧版条目），清理 `~/.gemini/GEMINI.md` 中的上下文段落，从两个 MCP 配置文件中删掉 claude-mem 的条目，并移除规则上下文段落——同时原样保留这些文件中的其他所有内容。
+
+## 后续步骤
+
+- [Gemini 提供商](/usage/gemini-provider)——配置用于观察记录提取的 Gemini AI 提供商
+- [配置](/configuration)——全部设置选项
+- [检索工具](/usage/search-tools)——在会话内检索你的记忆
+- [故障排查](/troubleshooting)——常见问题与解决方案

@@ -1,0 +1,1490 @@
+---
+title: "平台集成指南"
+description: "将 claude-mem worker 服务集成到 VSCode 扩展、IDE 插件与 CLI 工具的完整参考"
+icon: "plug"
+---
+
+<Note>
+**目标读者**：构建 claude-mem 集成（VSCode 扩展、IDE 插件、CLI 工具）的开发者。
+</Note>
+
+## 快速参考
+
+### worker 服务基础
+
+```typescript
+// Resolve the worker port at runtime. The default is per-user (37700 + uid % 100),
+// or whatever the user set via CLAUDE_MEM_WORKER_PORT / settings.json. Read it from
+// process.env.CLAUDE_MEM_WORKER_PORT, then ~/.claude-mem/settings.json
+// (CLAUDE_MEM_WORKER_PORT key), then fall back to the deterministic default.
+const WORKER_BASE_URL = `http://127.0.0.1:${workerPort}`;
+```
+
+### 最常用操作
+
+```typescript
+// Health check
+GET /api/health
+
+// Create/get session and queue observation
+POST /api/sessions/observations
+Body: "{ claudeSessionId, tool_name, tool_input, tool_response, cwd }"
+
+// Queue summary
+POST /api/sessions/summarize
+Body: "{ claudeSessionId, last_user_message, last_assistant_message }"
+
+// Complete session
+POST /api/sessions/complete
+Body: "{ claudeSessionId }"
+
+// Search observations
+GET /api/search?query=authentication&type=observations&format=index&limit=20
+
+// Get recent context for project
+GET /api/context/recent?project=my-project&limit=3
+```
+
+### 环境变量
+
+```bash
+CLAUDE_MEM_MODEL=claude-haiku-4-5-20251001  # 观察记录/会话摘要默认使用的 Claude 模型
+CLAUDE_MEM_CONTEXT_OBSERVATIONS=50          # 在 SessionStart 注入的观察记录条数
+CLAUDE_MEM_WORKER_PORT=                     # 可选覆盖项；默认 = 37700 + (uid % 100)
+CLAUDE_MEM_DATA_DIR=                        # 可选：覆盖数据目录
+CLAUDE_MEM_PYTHON_VERSION=3.13              # chroma-mcp 使用的 Python 版本
+```
+
+### 构建命令（本地开发）
+
+```bash
+npm run build                 # 编译 TypeScript（hooks + worker）
+npm run sync-marketplace      # 复制到 ~/.claude/plugins
+npm run worker:restart        # 重启 worker
+npm run worker:logs           # 查看 worker 日志
+npm run worker:status         # 检查 worker 状态
+```
+
+## 支持的平台
+
+worker API 与宿主环境（harness）无关。claude-mem 为以下平台提供第一方安装器与适配器：
+
+| 宿主环境 | 平台标识 | Hook/MCP 配置位置 | 安装命令 |
+| --- | --- | --- | --- |
+| Claude Code | `claude` | 原生插件 hooks（`~/.claude/...`） | `/plugin marketplace add thedotmack/claude-mem` |
+| Codex CLI | `codex` | `~/.codex/config.toml` | `npx claude-mem install --ide codex-cli` |
+| Cursor | `cursor` | `~/.cursor/hooks.json`, `~/.cursor/mcp.json` | `npx claude-mem install --ide cursor` |
+| Windsurf | `windsurf` | `~/.codeium/windsurf/hooks.json` | `npx claude-mem install --ide windsurf` |
+| OpenCode | `opencode` | `~/.config/opencode/opencode.json` | `npx claude-mem install --ide opencode` |
+| OpenClaw | `openclaw` | OpenClaw 网关插件配置 | `curl -fsSL https://install.cmem.ai/openclaw.sh \| bash` |
+| Antigravity CLI | `antigravity-cli` | `~/.gemini/settings.json`, `~/.gemini/.../mcp_config.json` | `npx claude-mem install --ide antigravity` |
+| Kimi Code | `kimi` | `~/.kimi-code/config.toml`, `~/.kimi-code/mcp.json` | `npx claude-mem kimi install` |
+
+## worker 架构
+
+### 请求流程
+
+```plaintext
+Platform Hook/Extension
+  → HTTP Request to Worker (`${WORKER_BASE_URL}` — per-user, default 37700+uid%100)
+    → Route Handler (SessionRoutes/DataRoutes/SearchRoutes/etc.)
+      → Domain Service (SessionManager/SearchManager/DatabaseManager)
+        → Database (SQLite3 + Chroma vector DB)
+          → SSE Broadcast (real-time UI updates)
+```
+
+### 领域服务
+
+<CardGroup cols={2}>
+  <Card title="DatabaseManager" icon="database">
+    SQLite 连接管理与初始化
+  </Card>
+  <Card title="SessionManager" icon="timeline">
+    事件驱动的会话生命周期、消息队列
+  </Card>
+  <Card title="SearchManager" icon="magnifying-glass">
+    检索编排（FTS5 + Chroma）
+  </Card>
+  <Card title="SSEBroadcaster" icon="broadcast-tower">
+    以 Server-Sent Events 实时推送更新
+  </Card>
+  <Card title="SDKAgent" icon="robot">
+    用 Claude Agent SDK 生成观察记录/会话摘要
+  </Card>
+  <Card title="PaginationHelper" icon="list">
+    查询分页工具
+  </Card>
+  <Card title="SettingsManager" icon="gear">
+    用户设置的增删改查（CRUD）
+  </Card>
+  <Card title="FormattingService" icon="code">
+    结果格式化（index 与 full）
+  </Card>
+  <Card title="TimelineService" icon="clock">
+    统一时间线生成
+  </Card>
+</CardGroup>
+
+### 路由组织
+
+<AccordionGroup>
+  <Accordion title="ViewerRoutes" icon="eye">
+    - 健康检查端点
+    - 查看器 UI（React 应用）
+    - 用于实时更新的 SSE 流
+  </Accordion>
+  <Accordion title="SessionRoutes" icon="timeline">
+    - 会话生命周期（init、observations、summarize、complete）
+    - 隐私检查与标签剥离
+    - 自动启动 SDK agent 生成器
+  </Accordion>
+  <Accordion title="DataRoutes" icon="database">
+    - 数据读取（observations、summaries、prompts、stats）
+    - 分页支持
+    - 处理状态
+  </Accordion>
+  <Accordion title="SearchRoutes" icon="magnifying-glass">
+    - 全部检索操作
+    - 统一检索 API
+    - 时间线上下文
+    - 语义快捷检索
+  </Accordion>
+  <Accordion title="SettingsRoutes" icon="gear">
+    - 用户设置
+    - MCP 开关
+    - 依赖健康状态
+  </Accordion>
+</AccordionGroup>
+
+## API 参考
+
+### 会话生命周期（SessionRoutes）
+
+#### 创建/获取会话并入队观察记录（新 API）
+
+<CodeGroup>
+```http POST /api/sessions/observations
+POST /api/sessions/observations
+Content-Type: "application/json"
+
+{
+  "claudeSessionId": "abc123",      // Claude session identifier (string)
+  "tool_name": "Bash",
+  "tool_input": { "command": "ls" },
+  "tool_response": { "stdout": "..." },
+  "cwd": "/path/to/project"
+}
+```
+
+```json 响应
+{ "status": "queued" }
+// or
+{ "status": "skipped", "reason": "private" }
+```
+</CodeGroup>
+
+<Info>
+**隐私检查**：用户 prompt 整体被 `<private>` 标签包裹时跳过。
+**标签剥离**：存储前移除 `<private>` 和 `<claude-mem-context>` 标签。
+**自动启动**：确保 SDK agent 生成器已在运行，以处理队列。
+</Info>
+
+#### 入队会话摘要（新 API）
+
+<CodeGroup>
+```http POST /api/sessions/summarize
+POST /api/sessions/summarize
+Content-Type: "application/json"
+
+{
+  "claudeSessionId": "abc123",
+  "last_user_message": "User's message",
+  "last_assistant_message": "Assistant's response"
+}
+```
+
+```json 响应
+{ "status": "queued" }
+// or
+{ "status": "skipped", "reason": "private" }
+// or, for a session the worker has no row for
+{ "status": "skipped", "reason": "unknown_session" }
+// or, when the session's checkout is an excluded project
+{ "status": "skipped", "reason": "project_excluded" }
+```
+</CodeGroup>
+
+与 `CLAUDE_MEM_EXCLUDED_PROJECTS` 比对时使用的检出目录（checkout），优先取可选的 `cwd`；未提供时，则取该会话被记录时所在的检出目录。无法自行做排除判断的宿主，应把自己的检出目录作为 `cwd` 传入。
+
+#### 完成会话（新 API）
+
+<CodeGroup>
+```http POST /api/sessions/complete
+POST /api/sessions/complete
+Content-Type: "application/json"
+
+{
+  "claudeSessionId": "abc123"
+}
+```
+
+```json 响应
+{ "success": true }
+// or
+{ "success": true, "message": "No active session found" }
+```
+</CodeGroup>
+
+<Warning>
+**效果**：停止 SDK agent、将会话标记为完成，并广播状态变更。
+</Warning>
+
+#### 旧版端点（仍受支持）
+
+<Tabs>
+  <Tab title="初始化会话">
+    ```http
+    POST /sessions/:sessionDbId/init
+    Body: { userPrompt, promptNumber }
+    ```
+  </Tab>
+  <Tab title="入队观察记录">
+    ```http
+    POST /sessions/:sessionDbId/observations
+    Body: { tool_name, tool_input, tool_response, prompt_number, cwd }
+    ```
+  </Tab>
+  <Tab title="入队会话摘要">
+    ```http
+    POST /sessions/:sessionDbId/summarize
+    Body: { last_user_message, last_assistant_message }
+    ```
+  </Tab>
+  <Tab title="完成会话">
+    ```http
+    POST /sessions/:sessionDbId/complete
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+新集成应使用带 `claudeSessionId` 的 `/api/sessions/*` 端点。
+</Note>
+
+### 数据检索（DataRoutes）
+
+#### 获取分页数据
+
+<Tabs>
+  <Tab title="观察记录">
+    ```http
+    GET /api/observations?offset=0&limit=20&project=my-project
+    ```
+  </Tab>
+  <Tab title="会话摘要">
+    ```http
+    GET /api/summaries?offset=0&limit=20&project=my-project
+    ```
+  </Tab>
+  <Tab title="用户 prompt">
+    ```http
+    GET /api/prompts?offset=0&limit=20&project=my-project
+    ```
+  </Tab>
+</Tabs>
+
+```json 响应格式
+{
+  "items": [...],
+  "hasMore": boolean,
+  "offset": number,
+  "limit": number
+}
+```
+
+#### 按 ID 获取
+
+<Tabs>
+  <Tab title="观察记录">
+    ```http
+    GET /api/observation/:id
+    ```
+  </Tab>
+  <Tab title="会话">
+    ```http
+    GET /api/session/:id
+    ```
+  </Tab>
+  <Tab title="prompt">
+    ```http
+    GET /api/prompt/:id
+    ```
+  </Tab>
+</Tabs>
+
+#### 获取数据库统计
+
+```http
+GET /api/stats
+```
+
+```json 响应
+{
+  "worker": {
+    "version": "7.0.0",
+    "uptime": 12345,
+    "activeSessions": 2,
+    "sseClients": 1,
+    "port": 37742
+  },
+  "database": {
+    "path": "~/.claude-mem/claude-mem.db",
+    "size": 1048576,
+    "observations": 500,
+    "sessions": 50,
+    "summaries": 25
+  }
+}
+```
+
+#### 获取项目列表
+
+```http
+GET /api/projects
+```
+
+```json 响应
+{
+  "projects": ["claude-mem", "other-project", ...]
+}
+```
+
+#### 获取处理状态
+
+```http
+GET /api/processing-status
+```
+
+```json 响应
+{
+  "isProcessing": boolean,
+  "queueDepth": number,
+  "parkedSessions": number
+}
+```
+
+`parkedSessions` 统计的是当前因等待空闲并发槽位而停驻（parked）的会话（例如被 `CLAUDE_MEM_MAX_CONCURRENT_AGENTS` 挡住）。它与统计缓冲消息数的 `queueDepth` 相互独立——一个会话在停驻时可以有缓冲消息，也可以没有。
+
+### 检索操作（SearchRoutes）
+
+#### 统一检索
+
+```http
+GET /api/search?query=authentication&type=observations&format=index&limit=20
+```
+
+<ParamField query="query" type="string">
+  检索查询文本（可选；仅用过滤器筛选时可省略）
+</ParamField>
+
+<ParamField query="type" type="string" default="all">
+  "observations" | "sessions" | "prompts"
+</ParamField>
+
+<ParamField query="format" type="string" default="index">
+  "index" | "full"
+</ParamField>
+
+<ParamField query="limit" type="number" default={20}>
+  返回结果的数量
+</ParamField>
+
+<ParamField query="project" type="string">
+  按项目名过滤
+</ParamField>
+
+<ParamField query="obs_type" type="string">
+  按观察记录类型过滤（discovery、decision、bugfix、feature、refactor）
+</ParamField>
+
+<ParamField query="concepts" type="string">
+  按概念（concepts）过滤（逗号分隔）
+</ParamField>
+
+<ParamField query="files" type="string">
+  按文件路径过滤（逗号分隔）
+</ParamField>
+
+<ParamField query="dateStart" type="string">
+  ISO 时间戳（过滤起始）
+</ParamField>
+
+<ParamField query="dateEnd" type="string">
+  ISO 时间戳（过滤结束）
+</ParamField>
+
+```json 响应
+{
+  "observations": [...],
+  "sessions": [...],
+  "prompts": [...]
+}
+```
+
+<Info>
+**格式选项：**
+- `index`：列表展示所需的最少字段（id、title、preview）
+- `full`：包含全部字段的完整实体
+</Info>
+
+#### 统一时间线
+
+```http
+GET /api/timeline?anchor=123&depth_before=10&depth_after=10&project=my-project
+```
+
+<ParamField query="anchor" type="string" required>
+  锚点（观察记录 ID、表示会话的 "S123"，或 ISO 时间戳）
+</ParamField>
+
+<ParamField query="depth_before" type="number" default={10}>
+  锚点之前的记录条数
+</ParamField>
+
+<ParamField query="depth_after" type="number" default={10}>
+  锚点之后的记录条数
+</ParamField>
+
+<ParamField query="project" type="string">
+  按项目过滤
+</ParamField>
+
+```json 响应
+[
+  { "type": "observation", "id": 120, "created_at_epoch": ..., ... },
+  { "type": "session", "id": 5, "created_at_epoch": ..., ... },
+  { "type": "observation", "id": 123, "created_at_epoch": ..., ... }
+]
+```
+
+#### 按文件路径检索
+
+```http
+GET /api/search/by-file?filePath=src/services/worker-service.ts&format=index&limit=10
+```
+
+#### 获取最近上下文
+
+```http
+GET /api/context/recent?project=my-project&limit=3
+```
+
+```json 响应
+{
+  "summaries": [...],
+  "observations": [...]
+}
+```
+
+#### 上下文预览（供设置界面使用）
+
+```http
+GET /api/context/preview?project=my-project
+```
+
+<Note>
+返回带 ANSI 颜色的纯文本，供终端显示
+</Note>
+
+#### 上下文注入（供 Hook 使用）
+
+```http
+GET /api/context/inject?project=my-project&colors=true
+```
+
+<Note>
+返回已格式化、可直接展示的上下文字符串
+</Note>
+
+### 设置与配置（SettingsRoutes）
+
+#### 获取/更新用户设置
+
+<CodeGroup>
+```http GET
+GET /api/settings
+```
+
+```json GET 响应
+{
+  "sidebarOpen": boolean,
+  "selectedProject": string | null
+}
+```
+
+```http POST
+POST /api/settings
+Body: "{ \"sidebarOpen\": true, \"selectedProject\": \"my-project\" }"
+```
+
+```json POST 响应
+{ "success": true }
+```
+</CodeGroup>
+
+#### MCP 服务器状态/开关
+
+<CodeGroup>
+```http GET 状态
+GET /api/mcp/status
+```
+
+```json GET 响应
+{ "enabled": boolean }
+```
+
+```http POST 开关
+POST /api/mcp/toggle
+Body: "{ \"enabled\": true }"
+```
+
+```json POST 响应
+{ "success": true, "enabled": boolean }
+```
+</CodeGroup>
+
+### 查看器与实时更新（ViewerRoutes）
+
+#### 健康检查
+
+```http
+GET /api/health
+```
+
+```json 响应
+{ "status": "ok" }
+```
+
+#### 查看器 UI
+
+```http
+GET /
+```
+
+<Note>
+返回 React 应用的 HTML
+</Note>
+
+#### SSE 流
+
+```http
+GET /stream
+```
+
+<Info>
+**Server-Sent Events 流**
+
+事件类型：
+- `processing_status`: { type, isProcessing, queueDepth }
+- `session_started`: { type, sessionDbId, project }
+- `observation_queued`: { type, sessionDbId }
+- `summarize_queued`: { type }
+- `observation_created`: { type, observation }
+- `summary_created`: { type, summary }
+- `new_prompt`: { type, id, claude_session_id, project, prompt_number, prompt_text, created_at_epoch }
+</Info>
+
+## 数据模型
+
+### 活动会话（内存中）
+
+```typescript
+interface ActiveSession {
+  sessionDbId: number;                  // Database ID (numeric)
+  claudeSessionId: string;              // Claude session identifier (string)
+  sdkSessionId: string | null;          // SDK session ID
+  project: string;                      // Project name
+  userPrompt: string;                   // Current user prompt text
+  pendingMessages: PendingMessage[];    // Queue of pending operations
+  abortController: AbortController;     // For cancellation
+  generatorPromise: Promise<void> | null; // SDK agent promise
+  lastPromptNumber: number;             // Last processed prompt number
+  startTime: number;                    // Session start timestamp
+  cumulativeInputTokens: number;        // Total input tokens
+  cumulativeOutputTokens: number;       // Total output tokens
+}
+
+interface PendingMessage {
+  type: 'observation' | 'summarize';
+  tool_name?: string;
+  tool_input?: any;
+  tool_response?: any;
+  prompt_number?: number;
+  cwd?: string;
+  last_user_message?: string;
+  last_assistant_message?: string;
+}
+```
+
+### 数据库实体
+
+<Tabs>
+  <Tab title="观察记录">
+    ```typescript
+    interface ObservationRow {
+      id: number;
+      sdk_session_id: string;
+      title: string;
+      subtitle?: string;
+      summary: string;
+      facts: string;           // JSON array of fact strings
+      concepts: string;        // JSON array of concept strings
+      files_touched: string;   // JSON array of file paths
+      obs_type: string;        // discovery, decision, bugfix, feature, refactor
+      project: string;
+      created_at_epoch: number;
+      prompt_number: number;
+    }
+    ```
+  </Tab>
+  <Tab title="会话摘要">
+    ```typescript
+    interface SessionSummaryRow {
+      id: number;
+      sdk_session_id: string;
+      summary_text: string;
+      facts: string;           // JSON array
+      concepts: string;        // JSON array
+      files_touched: string;   // JSON array
+      project: string;
+      created_at_epoch: number;
+    }
+    ```
+  </Tab>
+  <Tab title="用户 prompt">
+    ```typescript
+    interface UserPromptRow {
+      id: number;
+      claude_session_id: string;
+      sdk_session_id: string;
+      project: string;
+      prompt_number: number;
+      prompt_text: string;
+      created_at_epoch: number;
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### 检索结果
+
+```typescript
+interface ObservationSearchResult {
+  id: number;
+  title: string;
+  subtitle?: string;
+  summary: string;
+  facts: string[];         // Parsed from JSON
+  concepts: string[];      // Parsed from JSON
+  files_touched: string[]; // Parsed from JSON
+  obs_type: string;
+  project: string;
+  created_at_epoch: number;
+  prompt_number: number;
+  rank?: number;           // FTS5 rank score
+}
+
+interface SessionSummarySearchResult {
+  id: number;
+  summary_text: string;
+  facts: string[];
+  concepts: string[];
+  files_touched: string[];
+  project: string;
+  created_at_epoch: number;
+  rank?: number;
+}
+
+interface UserPromptSearchResult {
+  id: number;
+  claude_session_id: string;
+  project: string;
+  prompt_number: number;
+  prompt_text: string;
+  created_at_epoch: number;
+  rank?: number;
+}
+```
+
+### 时间线条目
+
+```typescript
+interface TimelineItem {
+  type: 'observation' | 'session' | 'prompt';
+  id: number;
+  created_at_epoch: number;
+  // Entity-specific fields based on type
+}
+```
+
+## 集成模式
+
+### 将 Claude Code Hook 映射到 worker API
+
+<Steps>
+  <Step title="SessionStart Hook">
+    新 API 无需此步——会话会在第一条观察记录到来时自动创建
+  </Step>
+  <Step title="UserPromptSubmit Hook">
+    无需调用 API——user_prompt 会在该 prompt 的第一条观察记录中被捕获
+  </Step>
+  <Step title="PostToolUse Hook">
+    ```typescript
+    async function onPostToolUse(context: HookContext) {
+      const { session_id, tool_name, tool_input, tool_result, cwd } = context;
+
+      const response = await fetch(`${WORKER_BASE_URL}/api/sessions/observations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claudeSessionId: session_id,
+          tool_name,
+          tool_input,
+          tool_response: tool_result,
+          cwd
+        })
+      });
+
+      const result = await response.json();
+      // result.status === 'queued' | 'skipped'
+    }
+    ```
+  </Step>
+  <Step title="Summary Hook">
+    ```typescript
+    async function onSummary(context: HookContext) {
+      const { session_id, last_user_message, last_assistant_message } = context;
+
+      await fetch(`${WORKER_BASE_URL}/api/sessions/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claudeSessionId: session_id,
+          last_user_message,
+          last_assistant_message
+        })
+      });
+    }
+    ```
+  </Step>
+  <Step title="SessionEnd Hook">
+    ```typescript
+    async function onSessionEnd(context: HookContext) {
+      const { session_id } = context;
+
+      await fetch(`${WORKER_BASE_URL}/api/sessions/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claudeSessionId: session_id
+        })
+      });
+    }
+    ```
+  </Step>
+</Steps>
+
+### VSCode 扩展集成
+
+#### 语言模型工具注册
+
+```typescript
+import * as vscode from 'vscode';
+
+interface SearchTool extends vscode.LanguageModelChatTool {
+  invoke(
+    options: vscode.LanguageModelToolInvocationOptions<{ query: string }>,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.LanguageModelToolResult>;
+}
+
+const searchTool: SearchTool = {
+  invoke: async (options, token) => {
+    const { query } = options.input;
+
+    try {
+      const response = await fetch(
+        `${WORKER_BASE_URL}/api/search?query=${encodeURIComponent(query)}&format=index&limit=10`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+
+      // Format results for language model
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(JSON.stringify(results, null, 2))
+      ]);
+    } catch (error) {
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart(`Error: ${error.message}`)
+      ]);
+    }
+  }
+};
+
+// Register tool
+vscode.lm.registerTool('claude-mem-search', searchTool);
+```
+
+#### Chat Participant 实现
+
+```typescript
+const participant = vscode.chat.createChatParticipant('claude-mem', async (request, context, stream, token) => {
+  const claudeSessionId = context.session.id;
+
+  // First message in conversation - no initialization needed
+  // Session is auto-created on first observation
+
+  // Process user message
+  stream.markdown(`Searching memory for: ${request.prompt}\n\n`);
+
+  const response = await fetch(
+    `${WORKER_BASE_URL}/api/search?query=${encodeURIComponent(request.prompt)}&format=index&limit=5`
+  );
+
+  const results = await response.json();
+
+  if (results.observations?.length > 0) {
+    stream.markdown('**Found observations:**\n');
+    for (const obs of results.observations) {
+      stream.markdown(`- ${obs.title} (${obs.project})\n`);
+    }
+  }
+
+  return { metadata: { command: 'search' } };
+});
+```
+
+## 错误处理与容错
+
+### 连接失败
+
+```typescript
+async function callWorkerWithFallback<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T | null> {
+  try {
+    const response = await fetch(`${WORKER_BASE_URL}${endpoint}`, {
+      ...options,
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Worker unavailable (${endpoint}):`, error);
+    return null; // Graceful degradation
+  }
+}
+```
+
+### 指数退避重试
+
+```typescript
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 100
+): Promise<T> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+```
+
+### worker 健康检查
+
+```typescript
+async function isWorkerHealthy(): Promise<boolean> {
+  try {
+    const response = await fetch(`${WORKER_BASE_URL}/api/health`, {
+      signal: AbortSignal.timeout(2000)
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+```
+
+### 隐私标签处理
+
+<Info>
+worker 在存储前会自动剥离隐私标签：
+- `<private>content</private>`——用户级隐私控制
+- `<claude-mem-context>content</claude-mem-context>`——系统级标签（防止递归存储）
+
+**隐私检查**：若整条用户 prompt 都包裹在 `<private>` 标签内，观察记录/会话摘要将被跳过。
+</Info>
+
+### 自定义错误类
+
+```typescript
+class WorkerUnavailableError extends Error {
+  constructor() {
+    super('Claude-mem worker is not running or unreachable');
+    this.name = 'WorkerUnavailableError';
+  }
+}
+
+class WorkerTimeoutError extends Error {
+  constructor(endpoint: string) {
+    super(`Worker request timed out: ${endpoint}`);
+    this.name = 'WorkerTimeoutError';
+  }
+}
+```
+
+### SSE 流错误处理
+
+```typescript
+function connectToSSE(onEvent: (event: any) => void) {
+  const eventSource = new EventSource(`${WORKER_BASE_URL}/stream`);
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      onEvent(data);
+    } catch (error) {
+      console.error('SSE parse error:', error);
+    }
+  };
+
+  eventSource.onerror = (error) => {
+    console.error('SSE connection error:', error);
+    eventSource.close();
+
+    // Reconnect after 5 seconds
+    setTimeout(() => connectToSSE(onEvent), 5000);
+  };
+
+  return eventSource;
+}
+```
+
+## 开发工作流
+
+### 项目结构（推荐）
+
+```plaintext
+vscode-extension/
+├── src/
+│   ├── extension.ts              # Extension entry point
+│   ├── services/
+│   │   ├── WorkerClient.ts       # HTTP client for worker
+│   │   └── MemoryManager.ts      # High-level memory operations
+│   ├── chat/
+│   │   └── participant.ts        # Chat participant implementation
+│   └── tools/
+│       ├── search.ts             # Search language model tool
+│       └── context.ts            # Context injection tool
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+### 构建配置（esbuild）
+
+```javascript
+// build.js
+const esbuild = require('esbuild');
+
+esbuild.build({
+  entryPoints: ['src/extension.ts'],
+  bundle: true,
+  outfile: 'dist/extension.js',
+  external: ['vscode'],
+  format: 'cjs',
+  platform: 'node',
+  target: 'node18',
+  sourcemap: true
+}).catch(() => process.exit(1));
+```
+
+### package.json（VSCode 扩展）
+
+```json
+{
+  "name": "claude-mem-vscode",
+  "displayName": "Claude-Mem",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "claude-mem",
+        "name": "memory",
+        "description": "Search your persistent memory"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "claude-mem-search",
+        "displayName": "Search Memory",
+        "description": "Search persistent memory for observations, sessions, and prompts"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+### 本地测试循环
+
+<Steps>
+  <Step title="终端 1：监听构建">
+    ```bash
+    npm run watch
+    ```
+  </Step>
+  <Step title="终端 2：检查 worker 状态">
+    ```bash
+    npm run worker:status
+    npm run worker:logs
+    ```
+  </Step>
+  <Step title="终端 3：手动测试 API">
+    ```bash
+    curl http://127.0.0.1:$WORKER_PORT/api/health
+    curl "http://127.0.0.1:$WORKER_PORT/api/search?query=test&limit=5"
+    ```
+  </Step>
+  <Step title="VSCode：启动扩展宿主">
+    按 F5 启动扩展宿主（extension host）
+  </Step>
+</Steps>
+
+### 调试配置（.vscode/launch.json）
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "preLaunchTask": "npm: build"
+    }
+  ]
+}
+```
+
+## 测试策略
+
+### 单元测试（Worker Client）
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { WorkerClient } from '../src/services/WorkerClient';
+
+describe('WorkerClient', () => {
+  it('should check worker health', async () => {
+    const client = new WorkerClient();
+    const healthy = await client.isHealthy();
+    expect(healthy).toBe(true);
+  });
+
+  it('should queue observation', async () => {
+    const client = new WorkerClient();
+    const result = await client.queueObservation({
+      claudeSessionId: 'test-123',
+      tool_name: 'Bash',
+      tool_input: { command: 'ls' },
+      tool_response: { stdout: 'file1.txt' },
+      cwd: '/tmp'
+    });
+    expect(result.status).toBe('queued');
+  });
+
+  it('should search observations', async () => {
+    const client = new WorkerClient();
+    const results = await client.search({ query: 'test', limit: 5 });
+    expect(results).toHaveProperty('observations');
+  });
+});
+```
+
+### 集成测试（拉起 worker 进程）
+
+```typescript
+import { spawn } from 'child_process';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+
+describe('Worker Integration', () => {
+  let workerProcess: ReturnType<typeof spawn>;
+
+  beforeAll(async () => {
+    // Start worker process
+    workerProcess = spawn('node', ['dist/worker-service.js'], {
+      env: { ...process.env, CLAUDE_MEM_WORKER_PORT: '37778' }
+    });
+
+    // Wait for worker to be ready
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  });
+
+  afterAll(() => {
+    workerProcess.kill();
+  });
+
+  it('should respond to health check', async () => {
+    const response = await fetch('http://localhost:37778/api/health');
+    expect(response.ok).toBe(true);
+  });
+});
+```
+
+### 手动测试清单
+
+<AccordionGroup>
+  <Accordion title="阶段 1：连接与健康检查">
+    - [ ] worker 成功启动（`npm run worker:status`）
+    - [ ] 健康端点有响应（`curl http://127.0.0.1:$WORKER_PORT/api/health`）
+    - [ ] SSE 流可连接（`curl http://127.0.0.1:$WORKER_PORT/stream`）
+  </Accordion>
+
+  <Accordion title="阶段 2：会话生命周期">
+    - [ ] 入队观察记录会创建会话
+    - [ ] 观察记录出现在数据库中
+    - [ ] 隐私标签已被剥离
+    - [ ] 私密 prompt 被跳过
+    - [ ] 入队会话摘要会生成摘要
+    - [ ] 完成会话会停止处理
+  </Accordion>
+
+  <Accordion title="阶段 3：检索与读取">
+    - [ ] 按 query 检索观察记录
+    - [ ] 按 query 检索会话
+    - [ ] 按 query 检索 prompt
+    - [ ] 获取项目最近上下文
+    - [ ] 获取观察记录周边的时间线
+    - [ ] 语义快捷检索（decisions、changes、how-it-works）
+  </Accordion>
+
+  <Accordion title="阶段 4：实时更新">
+    - [ ] SSE 广播处理状态
+    - [ ] SSE 广播新观察记录
+    - [ ] SSE 广播新会话摘要
+    - [ ] SSE 广播新 prompt
+  </Accordion>
+
+  <Accordion title="阶段 5：错误处理">
+    - [ ] worker 不可用时优雅降级
+    - [ ] 慢请求的超时处理
+    - [ ] 瞬时失败的重试逻辑
+  </Accordion>
+</AccordionGroup>
+
+## 代码示例
+
+### 完整的 WorkerClient 实现
+
+<CodeGroup>
+```typescript WorkerClient.ts
+export class WorkerClient {
+  private baseUrl: string;
+
+  // Resolve the active worker port via env / settings.json, falling back
+  // to the deterministic per-user default. See parseWorkerPort() for an
+  // example helper; never hardcode a single value.
+  constructor(port: number = resolveWorkerPort()) {
+    this.baseUrl = `http://127.0.0.1:${port}`;
+  }
+
+  async isHealthy(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/health`, {
+        signal: AbortSignal.timeout(2000)
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async queueObservation(data: {
+    claudeSessionId: string;
+    tool_name: string;
+    tool_input: any;
+    tool_response: any;
+    cwd?: string;
+  }): Promise<{ status: string; reason?: string }> {
+    const response = await fetch(`${this.baseUrl}/api/sessions/observations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to queue observation: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async queueSummarize(data: {
+    claudeSessionId: string;
+    last_user_message?: string;
+    last_assistant_message?: string;
+  }): Promise<{ status: string; reason?: string }> {
+    const response = await fetch(`${this.baseUrl}/api/sessions/summarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to queue summary: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async completeSession(claudeSessionId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/sessions/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ claudeSessionId }),
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to complete session: ${response.statusText}`);
+    }
+  }
+
+  async search(params: {
+    query?: string;
+    type?: 'observations' | 'sessions' | 'prompts';
+    format?: 'index' | 'full';
+    limit?: number;
+    project?: string;
+  }): Promise<any> {
+    const queryString = new URLSearchParams(
+      Object.entries(params)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)])
+    ).toString();
+
+    const response = await fetch(
+      `${this.baseUrl}/api/search?${queryString}`,
+      { signal: AbortSignal.timeout(10000) }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  connectSSE(onEvent: (event: any) => void): EventSource {
+    const eventSource = new EventSource(`${this.baseUrl}/stream`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onEvent(data);
+      } catch (error) {
+        console.error('SSE parse error:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+    };
+
+    return eventSource;
+  }
+}
+```
+</CodeGroup>
+
+### 检索语言模型工具
+
+```typescript
+import * as vscode from 'vscode';
+import { WorkerClient } from './WorkerClient';
+
+export function registerSearchTool(context: vscode.ExtensionContext) {
+  const client = new WorkerClient();
+
+  const searchTool = vscode.lm.registerTool('claude-mem-search', {
+    description: 'Search persistent memory for observations, sessions, and prompts',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query text'
+        },
+        type: {
+          type: 'string',
+          enum: ['observations', 'sessions', 'prompts'],
+          description: 'Type of results to return'
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of results',
+          default: 10
+        }
+      },
+      required: ['query']
+    },
+    invoke: async (options, token) => {
+      const { query, type, limit = 10 } = options.input;
+
+      try {
+        const results = await client.search({
+          query,
+          type,
+          format: 'index',
+          limit
+        });
+
+        // Format results for language model
+        let formatted = '';
+
+        if (results.observations?.length > 0) {
+          formatted += '## Observations\n\n';
+          for (const obs of results.observations) {
+            formatted += `- **${obs.title}** (${obs.project})\n`;
+            formatted += `  ${obs.summary}\n`;
+            if (obs.concepts?.length > 0) {
+              formatted += `  Concepts: ${obs.concepts.join(', ')}\n`;
+            }
+            formatted += '\n';
+          }
+        }
+
+        return new vscode.LanguageModelToolResult([
+          new vscode.LanguageModelTextPart(formatted)
+        ]);
+      } catch (error) {
+        return new vscode.LanguageModelToolResult([
+          new vscode.LanguageModelTextPart(`Error: ${error.message}`)
+        ]);
+      }
+    }
+  });
+
+  context.subscriptions.push(searchTool);
+}
+```
+
+## 关键实现注意事项
+
+<Warning>
+### sessionDbId 与 claudeSessionId 的区别
+
+**重要**：新 API 端点请用 `claudeSessionId`（字符串），而不是 `sessionDbId`（数字）。
+
+- `sessionDbId`——数据库数字 ID（仅旧版端点）
+- `claudeSessionId`——来自 Claude 平台的字符串标识符（新端点）
+</Warning>
+
+<Warning>
+### JSON 字符串字段
+
+`facts`、`concepts`、`files_touched` 等字段以 JSON 字符串的形式存储，需要解析后才能使用：
+
+```typescript
+const observation = await client.getObservationById(123);
+const facts = JSON.parse(observation.facts); // string[] array
+const concepts = JSON.parse(observation.concepts); // string[] array
+```
+</Warning>
+
+<Warning>
+### 时间戳
+
+所有 `created_at_epoch` 字段的单位都是 **毫秒**，不是秒：
+
+```typescript
+const date = new Date(observation.created_at_epoch); // ✅ Correct
+const date = new Date(observation.created_at_epoch * 1000); // ❌ Wrong (already in ms)
+```
+</Warning>
+
+<Info>
+### 异步处理
+
+worker 异步处理观察记录/会话摘要。结果在入队 1–2 秒后才会出现在数据库中。实时通知请使用 SSE 事件。
+</Info>
+
+<Info>
+### 隐私标签
+
+敏感内容请始终用 `<private>` 标签包裹，以阻止存储：
+
+```typescript
+const userMessage = '<private>API key: sk-1234567890</private>';
+// This observation will be skipped (entire prompt is private)
+```
+</Info>
+
+## 更多资源
+
+<CardGroup cols={2}>
+  <Card title="文档" icon="book" href="https://claude-mem.ai">
+    claude-mem 完整文档
+  </Card>
+  <Card title="GitHub" icon="github" href="https://github.com/thedotmack/claude-mem">
+    源代码与 issue 追踪
+  </Card>
+  <Card title="worker 服务" icon="server" href="/architecture/worker-service">
+    worker 架构详情
+  </Card>
+  <Card title="数据库 Schema" icon="database" href="/architecture/database">
+    数据库结构与查询
+  </Card>
+</CardGroup>

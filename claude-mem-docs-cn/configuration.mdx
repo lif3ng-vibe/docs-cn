@@ -1,0 +1,734 @@
+---
+title: "配置"
+description: "Claude-Mem 的环境变量与设置"
+---
+
+# 配置
+
+## 设置文件
+
+设置统一存放在 `~/.claude-mem/settings.json` 中。文件在首次运行时按默认值自动创建。
+
+### 核心设置
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_MODEL` | `claude-haiku-4-5-20251001` | 压缩观察记录（observation）时使用的 Claude 模型（使用 Claude 提供商时生效） |
+| `CLAUDE_MEM_PROVIDER` | `claude` | AI 提供商（provider）：`claude`、`codex`、`gemini`、`openrouter` 或 `openai-compatible` |
+| `CLAUDE_MEM_CLAUDE_AUTH_METHOD` | `subscription` | Claude 提供商的认证方式：`subscription`、`api-key` 或 `gateway` |
+| `CLAUDE_MEM_LLM_TIMEOUT_MS` | `180000` | 非流式观察请求的单次请求时限（毫秒，500–300000），适用于 Gemini、Codex 与 cmem.ai 网关（以及所有拒绝流式传输的 OpenAI 兼容端点）。这个时限是为了兜住请求挂死的情况；后端只是慢的话，调大数值即可。OpenRouter 与 OpenAI 兼容请求走流式传输，不受此设置约束：90 秒内既无 token 也无 keep-alive 即结束，整个请求上限 300 秒。`settings.json` 中仍保留旧默认值 `30000` 的会被一次性迁移到新默认值；之后你再设的 `30000` 则按原样保留。同名环境变量优先于 `settings.json`。 |
+| `CLAUDE_MEM_FIELD_OPTIMIZE_TIMEOUT_MS` | `180000` | 在观察记录发出之前压缩单个超长工具字段的时限（毫秒，500–300000）；到期未完成时改为截断该字段。它与观察请求调用同一个后端，因此默认值相同。`settings.json` 中仍保留旧默认值 `30000` 的会被一次性迁移到新默认值；之后你再设的 `30000` 则按原样保留。同名环境变量优先于 `settings.json`。 |
+| `CLAUDE_MEM_MODE` | `code` | 当前启用的模式配置（如 `code--es`、`email-investigation`） |
+| `CLAUDE_MEM_CONTEXT_OBSERVATIONS` | `50` | 注入的观察记录数量 |
+| `CLAUDE_MEM_SESSION_START_INCLUDE_ALL_SOURCES` | `false` | 在 SessionStart 上下文中纳入所有 harness 的观察记录 |
+| `CLAUDE_MEM_CONTEXT_MAIN_AGENT_ONLY` | `true` | 把子代理观察记录排除在 SessionStart 上下文之外，免得它们的步骤日志把持久的主会话记忆挤出窗口。子代理行同时带有 agent id 与 agent type 两个标识；transcript-watch 行（如 Grok Bot 席位）仍会保留。该设置同样作用于 server 运行时：在那里，只要生成某行的 hook 事件同时携带这两个标识，该行就按子代理行处理。检索与查看器仍会显示全部内容。 |
+| `CLAUDE_MEM_REINFORCE_ALPHA` | `0` | 可选开启的 ACT-R 排序，用于 SessionStart 上下文。`0`（默认）保持现状，取最近 N 条观察记录。大于 `0`（可试 `0.5`）时，写入路径在后续日子再次确认过的观察记录可以进入窗口：每条观察记录按其创建日与再次确认日以幂律衰减打分，公式为 `ln(1 + age^-0.5 + ALPHA · Σ age_k^-0.5)`。窗口中最新的四分之一始终按时间新近度保留。 |
+| `CLAUDE_MEM_FILE_READ_GATE_ENABLED` | `true` | 对拥有观察记录历史、大小不低于 32 KB 的代码文件拦截整文件 Read，并引导 Claude 改用 `smart_outline` / `smart_unfold` / `get_observations`（仅 Claude Code）。带 `offset`/`limit` 的定点 Read 不受影响。设为 `false` 则放行所有 Read，同时仍会把该文件的时间线作为上下文附上。参见[文件读取门控](/file-read-gate)。 |
+| `CLAUDE_MEM_WORKER_PORT` | `37700 + (uid % 100)` | worker 服务端口（按用户区分的默认值；需要固定端口时可覆盖） |
+| `CLAUDE_MEM_WORKER_HOST` | `127.0.0.1` | worker 服务监听地址 |
+| `CLAUDE_MEM_WORKER_AUTOSTART` | `true` | 自己运行 worker 时设为 `false`（比如交给进程管理器、容器，或用 `worker-service.cjs --daemon`）。此后 hook、MCP server 与 `start` 只使用已在运行的 worker，绝不启动、终止或回收 worker：没有惰性拉起，没有版本不匹配回收，也没有卡死 worker 的回收或接管。worker 掉线期间，hook 会静默跳过自己的工作，而不是计为失败。 |
+| `CLAUDE_MEM_ALLOWED_ORIGINS` | _（空）_ | 逗号分隔的浏览器来源列表（如 `https://app.example.com`），在 `http://localhost:*` 与 `http://127.0.0.1:*` 之外，允许这些来源跨域调用 worker API。从 worker 自身地址加载的页面（即 `http://<lan-ip>:<port>` 上的查看器）永远放行。其他 `http://localhost:*` 页面可以读取 API 但不能删除：删除操作会同步到所有设备，因此 `DELETE` 请求只接受三种来源——查看器自身页面、此处列出的来源，或不带 `Origin` 头的客户端（hook、CLI、curl）。为了防 DNS 重绑定，worker 还会拒绝 `Host` 是它不信任的域名的请求。受信任的有 IP 地址、`localhost`、`host.docker.internal`、`CLAUDE_MEM_WORKER_HOST`、`CLAUDE_MEM_PUBLIC_URL` 的主机名，以及此处列出的来源。要用机器名打开查看器（例如 `http://mybox.local:37777`），请把该来源列入此处。改动后需重启 worker。 |
+| `CLAUDE_MEM_PUBLIC_URL` | _（空）_ | 浏览器可达的 base URL，供 worker 在端口转发之后的远程沙箱中运行时向查看器打印（实时视图、欢迎提示、重启链接），例如 `https://37700.host.example`。留空 = `http://localhost:<port>`。环境变量优先于设置项。（[托管服务（hosted server）运行时](hosted-server)也读取同一个变量，作为它自己的公开 base URL。） |
+| `CLAUDE_MEM_TV_TOKEN` | — | Observation TV 远程访问的共享密钥。留空 = 关闭。当 `CLAUDE_MEM_WORKER_HOST` 为非回环地址时，只有 `/tv`、`/tv.html`、`/stream` 与 `GET /api/observations` 可达，且必须携带此 token。 |
+| `CLAUDE_MEM_DATA_DIR` | `~/.claude-mem` | 数据根目录——其余所有路径（数据库、chroma、日志、settings.json、worker.pid）都由此派生 |
+| `CLAUDE_MEM_SKIP_TOOLS` | `ListMcpResourcesTool,SlashCommand,Skill,TodoWrite,AskUserQuestion` | 要从观察记录中排除的工具（逗号分隔） |
+| `CLAUDE_MEM_SKIP_BASH_PATTERNS` | — | 与每条 shell 命令逐一匹配的正则（Claude Code 的 `Bash`、Codex 的 `exec_command`）；命中即跳过该观察记录。留空则捕获所有命令。多个模式用交替写法，如 `^(ls\|cat\|pwd\|git status)\b`。正则无效时会被忽略，因此捕获不会因此中断 |
+| `CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS` | `false` | 设为 `true` 时，跳过**所有**子代理观察记录（同时携带 agent id 与 agent type 的工具调用）。参见[子代理与动态工作流过滤](#子代理与动态工作流过滤)。 |
+| `CLAUDE_MEM_CODEX_SUBAGENT_INGESTION` | `false` | 设为 `true` 时，从 `~/.codex/sessions` 下的 rollout 文件中捕获 Codex CLI 拉起的子代理线程——Codex 原生 hook 从不上报这些线程。默认关闭：一个繁忙的 Codex 会话一天能拉起几十个子代理，而它们的每一次工具调用都会给你的提供商多加一个观察请求。`CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS=true` 可将其保持关闭。改动后需重启 worker。 |
+| `CLAUDE_MEM_SKIP_AGENT_TYPES` | _（空）_ | 要跳过的子代理 `agent_type` 值（逗号分隔），如 `workflow-subagent,Explore,Plan`。主会话观察记录不受影响。 |
+| `CLAUDE_MEM_CAPTURE_ADVISOR_CALLS` | `false` | 设为 `true` 时，Stop hook 会把每次 Claude Code `advisor` 工具调用（建议正文、advisor 模型与该轮提示词）记入本地数据库，可通过 `GET /api/advisor-calls` 读取。advisor 从不触发 PostToolUse，因此 hook 会从 transcript 末尾读取它。`<private>` 内容在存储前会被移除。仅 worker 运行时生效；不生成任何内容，因此不消耗 token。 |
+### 子代理与动态工作流过滤
+
+Claude Code 的[动态工作流（Dynamic Workflows）](https://code.claude.com/docs/en/workflows)会把单个 prompt 分发给数十到数百个并行子代理（`agent_type: workflow-subagent`）。每个子代理的每次工具调用都会触发一次 `PostToolUse` hook，于是 claude-mem 为每次调用都生成一条经提供商分析的观察记录——单次运行可能产出**成百上千条**低信号观察记录。这可能耗尽所选提供商的免费额度（HTTP 429），把本次运行剩余的工作也一并丢掉，包括宝贵的主会话工作。
+
+有两个设置项可以在任何 worker 往返或提供商调用**之前**就过滤掉这些内容。两者默认都关闭，现有行为保持不变。
+
+- **丢弃全部子代理噪声（重度工作流用户的推荐做法）**：
+
+  ```json
+  { "CLAUDE_MEM_SKIP_SUBAGENT_OBSERVATIONS": "true" }
+  ```
+
+  这是最稳妥的手段——无论类型如何，它都能拦下每一个子代理工具调用（即同时携带 agent id 与 agent type 的调用）。主会话观察记录会保留，包括 `claude --agent <type>` 主线程，以及只带两者之一的 transcript-watch 主体（如 Grok Bot 席位）。
+
+- **精准剔除特定 agent 类型**（保留部分子代理，剔除其余）：
+
+  ```json
+  { "CLAUDE_MEM_SKIP_AGENT_TYPES": "workflow-subagent" }
+  ```
+
+  添加逗号分隔的 `agent_type` 值列表。两项设置按并集组合：全局开关打开**或**该项 `agent_type` 在列表中，任一成立即跳过该子代理观察记录。
+
+> 子代理**摘要**本来就会自动跳过；这两项设置把同样的控制延伸到**观察记录**上。跨会话的持久知识通常来自主会话，因此丢弃子代理的易逝步骤通常能改善信噪比。SessionStart 默认已经把子代理行排除在注入上下文之外（`CLAUDE_MEM_CONTEXT_MAIN_AGENT_ONLY`）；这两项设置更进一步，直接不做捕获，还能为观察提供商省下 token。
+
+### Gemini 提供商设置
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_GEMINI_API_KEY` | — | Gemini API key（[免费领取](https://aistudio.google.com/app/apikey)） |
+| `CLAUDE_MEM_GEMINI_API_KEYS` | — | 可选：更多备用密钥（换行、逗号或空格分隔），某个密钥被限流、耗尽或拒绝时轮换使用（[多密钥轮换（multi-key rotation）](usage/multi-key-rotation)） |
+| `CLAUDE_MEM_GEMINI_MODEL` | `gemini-flash-latest` | Gemini 模型：`gemini-flash-latest`、`gemini-flash-lite-latest`、`gemini-3.5-flash`、`gemini-3.1-flash-lite`、`gemini-3-flash-preview` |
+
+配置细节与速率限制信息见 [Gemini 提供商](usage/gemini-provider)。
+
+### Codex 订阅提供商设置
+
+以运行 worker 的用户身份执行 `codex login`，然后用 `npx claude-mem install --provider codex` 安装。加 `--model gpt-6-luna` 可指定该模型，或在查看器设置里选择 Codex 并输入模型名。Codex 使用本地 CLI 订阅登录，不需要 OpenAI API key。
+
+不带 `--model` 重装会保留已保存的 Codex 模型。首次安装时该项为空，由 Codex 自选默认值。之后想改回默认，清空查看器里的 Codex Model 字段即可。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_CODEX_MODEL` | 空 | 留空时由 Codex 自选默认模型；否则应填你的订阅可用的某个模型。 |
+| `CLAUDE_MEM_CODEX_REASONING_EFFORT` | `low` | 推理力度（reasoning effort）：`none`、`minimal`、`low`、`medium`、`high`、`xhigh`、`max` 或 `ultra`，以模型支持为准；留空使用 Codex 的默认值。这是 `settings.json` 或环境变量里的进阶覆盖项。Codex 拒绝的力度或模型会让 Codex 记忆停止工作，直到改回来为止，SessionStart 会对此有提示。 |
+| `CLAUDE_MEM_CODEX_PATH` | `codex` | CLI 可执行文件或路径。仅文件/环境变量；查看器设置 API 无权修改。 |
+| `CLAUDE_MEM_CODEX_MAX_CONCURRENT_AGENTS` | `2` | 并行处理请求的 app-server 客户端数量（1–8）。仅文件配置；改动后需重启 worker。 |
+| `CLAUDE_MEM_CODEX_OBSERVATION_BATCH_SIZE` | `8` | Codex 单个请求最多合并的排队观察记录数（1–32）。 |
+| `CLAUDE_MEM_CODEX_OBSERVATION_BATCH_MAX_CHARS` | `32000` | 单个合并观察请求的字符预算（4000–128000）。 |
+
+worker 用一个隔离的 `codex app-server` 会话处理观察记录与会话摘要（session summary）。Codex CLI 的认证必须是落盘的 ChatGPT 登录；不接受 API-key 登录。每个请求共用 `CLAUDE_MEM_LLM_TIMEOUT_MS` 时限。失败如何暂停与恢复，见仓库中的 `docs/codex-provider.md`。
+
+### OpenRouter 提供商设置
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_OPENROUTER_API_KEY` | — | OpenRouter API key（[领取 key](https://openrouter.ai/keys)） |
+| `CLAUDE_MEM_OPENROUTER_API_KEYS` | — | 可选：更多备用密钥，某个密钥被限流、耗尽或拒绝时轮换使用（[多密钥轮换](usage/multi-key-rotation)）。在 cmem.ai 网关上永远不使用 |
+| `CLAUDE_MEM_OPENROUTER_MODEL` | `cohere/north-mini-code:free` | 模型标识符（支持 100+ 种模型） |
+| `CLAUDE_MEM_OPENROUTER_BASE_URL` | — | 可选：自定义 OpenAI 兼容 base URL（DeepSeek、LM Studio、[IO Intelligence](https://io.net)） |
+| `CLAUDE_MEM_OPENROUTER_SITE_URL` | — | 可选：用于统计的 URL |
+| `CLAUDE_MEM_OPENROUTER_REASONING_EFFORT` | — | 可选：`none`、`minimal`、`low`、`medium` 或 `high`，仅 openrouter.ai 支持（[详情](/usage/openrouter-provider#配置)） |
+| `CLAUDE_MEM_OPENROUTER_APP_NAME` | `claude-mem` | 可选：用于统计的应用名 |
+| `CLAUDE_MEM_OPENROUTER_EXTRA_BODY` | — | 可选：附加请求字段的 JSON 对象，如 `{"reasoning":{"enabled":false}}`（[详情](/usage/openrouter-provider#额外请求字段)） |
+
+配置细节、免费模型列表与使用指南见 [OpenRouter 提供商](usage/openrouter-provider)。
+
+### OpenAI 兼容提供商设置
+
+`CLAUDE_MEM_PROVIDER=openai-compatible` 时适用：任何支持 `/chat/completions` 的端点，托管或本地皆可。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_OPENAI_COMPAT_PRESET` | — | 命名的端点预设（[列表](usage/openai-compatible-provider)）。留空 = `custom`：自行填 base URL |
+| `CLAUDE_MEM_OPENAI_COMPAT_BASE_URL` | — | OpenAI 兼容 base URL。会覆盖预设里的值 |
+| `CLAUDE_MEM_OPENAI_COMPAT_MODEL` | — | 模型 id，原样发送。留空 = 预设的默认模型 |
+| `CLAUDE_MEM_OPENAI_COMPAT_API_KEY` | — | 该端点签发的 key。可通过设置文件或环境变量，或 `~/.claude-mem/.env` 中的 `OPENAI_COMPAT_API_KEY` 设置；查看器无法设置它。本地服务器不需要 key |
+| `CLAUDE_MEM_OPENAI_COMPAT_API_KEYS` | — | 可选：更多备用密钥，轮换使用（[多密钥轮换](usage/multi-key-rotation)）。可通过设置文件或环境变量，或 `~/.claude-mem/.env` 中的 `OPENAI_COMPAT_API_KEYS` 设置 |
+
+预设与配置步骤见 [OpenAI 兼容提供商](usage/openai-compatible-provider)。
+
+### 配额回退设置
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_QUOTA_FALLBACK_PROVIDER` | —（关闭） | 所选提供商的配额熔断生效期间（额度耗尽，或限流重试后仍未恢复），观察器工作转去的地方：`claude`、`gemini`、`openrouter` 或 `openai-compatible`。留空 = 关闭 |
+| `CLAUDE_MEM_QUOTA_FALLBACK_MODEL` | — | Claude 回退运行所用的 Claude 模型。留空 = 回到 `CLAUDE_MEM_MODEL` 及其档位路由。其他回退路线忽略此设置 |
+
+配额回退（quota fallback）如何开始与结束，见[配额回退](usage/quota-fallback)。
+
+### 配额守护设置
+
+订阅认证下，一旦某个用量窗口到达阈值，观察器（observer）就会停止工作。提供商已经明确拒绝过的窗口，无论如何都会让观察器停下来，与阈值无关。五小时窗口在距重置不足 15 分钟、用量已达 85% 或以上时也会让其停止，即便未到阈值。API-key 认证从不因此停止。
+
+阈值取 0 到 1 之间的比例值（`0.93` 即 93%）。超出该范围的值（如 `93`）会回退到默认值，并在 worker 日志中给出警告。空白值使用默认值。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_QUOTA_THRESHOLD_FIVE_HOUR` | `0.95` | 五小时窗口 |
+| `CLAUDE_MEM_QUOTA_THRESHOLD_SEVEN_DAY` | `0.93` | 每周窗口 |
+| `CLAUDE_MEM_QUOTA_THRESHOLD_SEVEN_DAY_OPUS` | `0.93` | 每周 Opus 窗口 |
+| `CLAUDE_MEM_QUOTA_THRESHOLD_SEVEN_DAY_SONNET` | `0.92` | 每周 Sonnet 窗口 |
+| `CLAUDE_MEM_QUOTA_THRESHOLD_OVERAGE` | `0.95` | 超额用量窗口（处于超额使用期间） |
+
+### 观察器预算设置
+
+以下设置适用于所有观察器提供商。观察器的对话以"代"（generation）为单位运行。一代的预算用满后，claude-mem 会将其退役，另起一代，并用本会话已有的观察记录向新的一代做简要交代。预算取 `CLAUDE_MEM_OBSERVER_MAX_CONVERSATION_CHARS` 与观察器模型上下文窗口一半这二者中的较小值（每 token 约 4 个字符）。每次工具调用的参数与结果各封顶为窗口的十分之一，最多 16000 字符。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_OBSERVER_MAX_CONVERSATION_CHARS` | `400000` | 一代观察器对话可容纳的字符上限，超出即退役 |
+| `CLAUDE_MEM_OBSERVER_CONTEXT_WINDOW` | — | 观察器模型的上下文窗口（以 token 计）。留空 = 自动解析：Claude 模型取 `200000`（模型 id 带 `[1m]` 时取 `1000000`），Gemini 模型取自内置对照表，OpenRouter 模型取自 OpenRouter 模型目录。其余 OpenAI 兼容端点（本地服务器、自定义网关）回退到 `131072`，因此窗口更小的模型请在此显式设置，如 `16384`。低于 `8192` 的值会被钳制到 `8192` |
+| `CLAUDE_MEM_OBSERVER_MAX_OUTPUT_TOKENS` | `4096` | 每条 OpenRouter、自定义端点与 Gemini 观察请求的输出 token 上限（`max_tokens`，要求该参数的端点用 `max_completion_tokens`；Gemini 为 `maxOutputTokens`）。推理模型在给出答案之前就把上限花光的话，可以调高。`256`–`1000000` |
+| `CLAUDE_MEM_OBSERVE_BARE_PROMPTS` | `false` | `false`：用户 prompt 不单独发给观察器，而是搭在下一个工具调用或摘要的请求里一并送出。`true`：每条 prompt 单独发起一次观察请求，与原先的行为一致 |
+
+如果提供商仍以"超过模型上下文窗口"为由拒绝请求，观察器会把当前一代退役，并在新的一代里重试同样的工作——这与它应对 Claude "Prompt is too long" 报错的方式一致。
+
+对这些 HTTP 提供商，观察器的指令与输出格式作为 system 消息发送，用户的请求作为第一条 user 消息发送。回复在输出 token 上限处被截断时，会记一条指名该上限的警告日志。
+
+### Claude 网关设置
+
+网关凭据存放在 `~/.claude-mem/.env` 中，而不是 `settings.json`。
+
+| 环境变量 | 默认值 | 说明 |
+|---|---|---|
+| `ANTHROPIC_BASE_URL` | 无 | Claude Agent SDK 路径所用的 LiteLLM 或 Anthropic 兼容网关 URL |
+| `ANTHROPIC_AUTH_TOKEN` | 无 | 可选：LiteLLM master key 或虚拟 key |
+| `ANTHROPIC_API_KEY` | 无 | 直连 Anthropic API 的 key；LiteLLM 网关模式下通常应省略 |
+
+要让 `CLAUDE_MEM_PROVIDER=claude` 经过 LiteLLM 路由、同时保留 Claude Agent SDK 的 worker 路径，请使用 [LiteLLM 网关](configuration/litellm-gateway)。
+
+### 系统配置
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_DATA_DIR` | `~/.claude-mem` | 数据目录位置 |
+| `CLAUDE_MEM_LOG_LEVEL` | `INFO` | 日志详细程度（DEBUG、INFO、WARN、ERROR、SILENT） |
+| `CLAUDE_MEM_FETCH_VERBOSE` | _（未设置 / 关闭）_ | 可选开启的 worker IPC `fetch()` 诊断（`1`/`true`/`on`/`yes`）。向 Node/undici 传入 `{ verbose: true }`，并在 socket 层级的 hook 失败时写出错误原因链。默认保持关闭。 |
+| `CLAUDE_MEM_SESSION_INIT_TIMEOUT_MS` | `10000`（Windows 上为 `7000`） | UserPromptSubmit hook 为每条 prompt 触达 worker（启动检查、会话初始化、语义上下文）可花费的总时长。超时后，该轮 prompt 照常放行，只是不带记忆。可填 500–14000；必须低于 Claude Code 对该 hook 的 15 s 超时上限。计时从 hook 进程加载完毕后才起算，而这一步在 Windows 上需要 4–5 s，因此 Windows 默认值为 7000，更高的值也会被截到 7000。Codex 有自己受限的 worker 启动等待，其请求同样保持在这一预算之内。也可从环境变量读取。 |
+| `CLAUDE_MEM_IDLE_EXIT_SEC` | `0`（关闭） | 可选开启的 worker 空闲退出，单位秒。`0`（默认）永不退出，1–59 的值一律提升到 60。持续闲置这么久，且没有会话活动、没有正在运行的观察器、没有排队的工作、没有未决或最近的请求（查看器标签页、记忆检索、语料库构建）、也没有 AI 交互之后，worker 会走与 `claude-mem stop` 相同的优雅停机关闭（遥测 `shutdown_reason: idle`）。之后下一个读取记忆的 hook——比如会话开始或你的下一条 prompt——会再次把它拉起。第一条 prompt 要付一次冷启动成本，如果 worker 启动超出了 hook 的时间预算，该轮就没有记忆可用；期间捕获的观察记录会在 hook 溢出队列中等待 worker 恢复。只在运行 claude-mem hook 的环境开启，例如 Claude Code 与 Codex。OpenCode 插件捕获与 OpenClaw 从不启动 worker，请保持关闭；仅通过 MCP 接入的主机同理——每次空闲退出后的首次记忆调用都得等 worker 启动。`CLAUDE_MEM_WORKER_AUTOSTART=false` 时保持关闭，transcript watch 运行期间也保持关闭，因为那时没有任何东西会再次启动 worker。云同步与 transcript 捕获只在 worker 运行期间进行。也可从环境变量读取。 |
+| `CLAUDE_MEM_PYTHON_VERSION` | `3.13` | chroma-mcp 所用的 Python 版本 |
+| `CLAUDE_CODE_PATH` | _（自动检测）_ | Claude Code CLI 的路径（用于 Windows）。仅文件/环境变量——无法通过查看器 HTTP API 写入。 |
+| `CLAUDE_MEM_PROJECT_NAME_SOURCE` | `path` | git 仓库的项目名如何确定：`path`（取仓库根目录的文件夹名）或 `git-remote`（从 `origin` remote 生成稳定的 `org/repo` 别名，重命名文件夹也不变，且能区分同名仓库；仓库的每个 worktree 共用该别名）。需主动开启。切换前按文件夹名存储的记忆仍可读取。参见[项目命名](#项目命名)。 |
+| `CLAUDE_MEM_PROJECT_ENVIRONMENTS` | `[]` | 命名环境：形如 `{"name", "patterns"}` 的 JSON 数组。命中某个环境 glob 规则的文件夹（规则与 `CLAUDE_MEM_EXCLUDED_PROJECTS` 相同）共用一个以该环境命名的项目。参见[项目命名](#项目命名)。 |
+| `CLAUDE_MEM_CLAUDE_CONFIG_DIR` | _（未设置——回退到 `CLAUDE_CONFIG_DIR`/`~/.claude`）_ | 覆盖读取哪个 `CLAUDE_CONFIG_DIR` 配置的 OAuth 钥匙串条目，以及拉起的 SDK 子进程看到的是哪个 `CLAUDE_CONFIG_DIR`。用于在同一台机器上并排运行多个名字化 Claude Code 配置（如 `~/.claude-profiles/<name>`，各自独立登录）。钥匙串读取仅限 macOS；Windows/Linux 的凭据存储尚不支持配置感知。 |
+
+### Grok Bot Brainbeat Webhook
+
+可选功能。设置 `CLAUDE_MEM_GROK_BOT_WEBHOOK_URL` 后，claude-mem 会把每条命中 Grok Bot 认知触发器的观察记录（触发配置见 `CLAUDE_MEM_GROK_BOT_AWARENESS_TRIGGER_TYPES` / `CLAUDE_MEM_GROK_BOT_AWARENESS_TRIGGER_CONCEPTS`，默认类型为 `decision,bugfix,security_alert,sensitive`）POST 到该 URL。它与所有 Telegram 设置相互独立。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_GROK_BOT_WEBHOOK_URL` | — | brainbeat POST 的接收地址；留空 = 关闭。仅文件/环境变量，`GET /api/settings` 中会掩码显示 |
+| `CLAUDE_MEM_GROK_BOT_WEBHOOK_SECRET` | — | 可选的共享密钥，以 `x-claude-mem-shared-secret` 头发送。仅文件/环境变量，`GET /api/settings` 中会掩码显示 |
+
+每条命中的观察记录以一个 JSON POST 发送：
+
+```json
+{
+  "event": "claude_mem.brainbeat",
+  "observation_id": 1234,
+  "type": "security_alert",
+  "title": "PII exposure in logs",
+  "subtitle": "Raw token printed in retry path",
+  "project": "payments-service",
+  "concepts": ["auth", "logging"],
+  "why_fired": {
+    "matched_type": true,
+    "matched_concepts": ["auth"]
+  },
+  "timestamp": "2026-09-02T02:56:46.087Z"
+}
+```
+
+POST 并发发送，每条 5 秒超时。重定向一律拒绝，因此共享密钥与观察内容只会发到配置里的 URL；请把接收方的最终地址填进设置中。失败时只记录接收方来源和一句简短原因（绝不记录完整 URL），也绝不阻塞观察记录的存储或其他通知。
+
+### 近似重复去重
+
+可选开启（默认关闭）的去重功能，针对那些标题描述的是同一件循环性工作、但措辞略有差异的观察记录——这类记录内容并不逐字节相同，`content_hash`（只做字节级全等）抓不到它们。分两个确定性的层级：
+
+- **Tier 0——标题归一化后全等**（exact-normalized-title）→ 安静而安全的自动合并：新的观察记录在转小写、压紧空白、去标点之后与已有记录标题一致，即折叠进已有行，并把 `occurrence_count` 加一（跨会话，限同一项目、同一宿主平台、同一 agent 范围：主会话的工作绝不会并入子代理行，因为后者被 SessionStart 排除在外）。升级前入库的既有行会由 `POST /api/dedup/scan` 重新建立键。
+- **Tier 1——IDF 加权相似度（IDF-weighted similarity）**→ 只把*待复核*的近似重复**候选**记入 `observation_dedup_candidates`（绝不自动合并），因此仅差一个稀有 token（`rdlp-api` 与 `rdlp-plugin`）的不同工作不会被静默销毁。
+
+| 设置项 | 默认值 | 说明 |
+|---|---|---|
+| `CLAUDE_MEM_DEDUP_ENABLED` | `false` | 总开关。关闭 = 保持历来仅字节级全等的行为 |
+| `CLAUDE_MEM_DEDUP_COSINE_THRESHOLD` | `0.80` | 成为 Tier-1 候选所需的 IDF 加权余弦相似度下限 |
+| `CLAUDE_MEM_DEDUP_IDF_VETO_DF` | `10` | 出现在 ≤ N 个项目行里的标题 token 视为"有辨识力"，会否决合并 |
+| `CLAUDE_MEM_DEDUP_MIN_SHARED_TOKENS` | `2` | 至少共享 N 个 token 才进入打分（过滤稀疏向量噪声） |
+| `CLAUDE_MEM_DEDUP_MIN_PROJECT_DOCS` | `10` | 冷启动门槛：项目文档少于 N 条时跳过 Tier-1（此时 IDF 不可靠） |
+| `CLAUDE_MEM_DEDUP_MAX_SCAN` | `2000` | 每次插入时 Tier-1 候选扫描的上限 |
+| `CLAUDE_MEM_DEDUP_MAX_BACKFILL_ROWS` | `50000` | 超过此行数的项目会被 `dedup-scan` 跳过（出于内存安全） |
+
+在已有数据库上启用后，跑一次扫描来回填 IDF 模型，并把积累下来的近似重复翻出来：`POST /api/dedup/scan`（worker，仅限 localhost）。候选记录通过 `GET /api/dedup/candidates?project=<name>` 复核。
+
+## 模型配置
+
+配置用哪个 Claude 模型压缩你的观察记录（仅在 `CLAUDE_MEM_PROVIDER=claude` 时生效）。
+
+### 可用模型
+
+| 取值 | 说明 |
+|-------|-------|
+| `claude-haiku-4-5-20251001` | 默认——最快，最适合压缩 |
+| `claude-sonnet-5` | 质量与速度兼顾 |
+| `claude-opus-4-8` | 质量最高（最慢） |
+
+### 通过安装器选择
+
+`npx claude-mem install` 会提示你选择 Claude 模型（选中 Claude 提供商时出现），并把选择持久化到 `~/.claude-mem/settings.json`。
+
+### 手动配置
+
+编辑 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+## 模式配置
+
+配置当前生效的工作流模式与语言。
+
+### 设置
+
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| `CLAUDE_MEM_MODE` | `code` | 同时决定行为与语言。参见[模式与语言](modes)。 |
+
+### 示例
+
+**西班牙语代码模式**：
+```json
+{
+  "CLAUDE_MEM_MODE": "code--es"
+}
+```
+
+**邮件调查模式**：
+```json
+{
+  "CLAUDE_MEM_MODE": "email-investigation"
+}
+```
+
+## 项目命名
+
+claude-mem 把每条观察记录归档在某个项目名下，SessionStart 则注入当前项目所存的记忆。
+
+- **Git 仓库内**：项目名取仓库根目录的文件夹名，因此每个子文件夹共用它。git worktree 存储为 `<repo>/<worktree>`（如果 worktree 文件夹与仓库本身同名，比如 Codex 的 `~/.codex/worktrees/<id>/<repo>`，就存储为 `<repo>`）；git 子模块存储为 `<superproject>/<path>`；两者也会读取父仓库的记忆。子模块在按这种方式归组之前以其自身文件夹名存储的记忆，仍可从该子模块读取。worktree 或子模块检出被删除时，worker 会在下次启动时把它的记忆并入父仓库（无论它在 git 里 merge 与否），因此不会有记忆搁浅丢失。
+- **设置 `CLAUDE_MEM_PROJECT_NAME_SOURCE=git-remote` 时**：带 `origin` remote 的仓库改用 `org/repo` 别名命名（如 `thedotmack/claude-mem`），这样重命名或重新克隆文件夹都不会丢记忆，两个文件夹同名的仓库也能分开，且仓库的全部 worktree 共用同一个别名（子模块自身就是仓库，按它自己的 `origin` 命名）。之前按文件夹名存储的记忆仍可读取，切换前删除的 worktree 的记忆依然会并入仓库。没有可用 `origin`（或只有本地 origin）的仓库继续用文件夹名。
+- **Git 之外**：项目名取当前文件夹名。要让非 git 项目在所有子文件夹下共用一个名字，可在其根目录放一个空的 `.claude-mem-project` 文件（或一个 `.claude-mem.json`）：之下的所有文件夹都会使用根目录的名字。加入这个文件之前，子文件夹按自己名字存储的记忆仍可从该子文件夹读取。位于你的主目录、系统临时目录或 Claude 配置目录里的标记文件会被忽略，因此它们永远不会把无关的文件夹归到一起。
+- **命名环境**（`CLAUDE_MEM_PROJECT_ENVIRONMENTS`）把多个文件夹——无论是否 git——归入一个项目，并压过上述所有规则。例如 `[{"name": "acme", "patterns": ["~/work/acme/**"]}]` 会把 `~/work/acme` 下的一切都归入 `acme`，SessionStart 也会把它标注为一个环境。这些文件夹之前按自己名字存储的记忆仍可读取；要永久把它们并入环境，运行 `npx claude-mem project merge <old-name> acme`（worker 运行期间，该命令会直接在 claude-mem 的 worker 内执行）。合并不重写任何数据（只是把行标记为 merged，与 worktree 并入仓库的方式相同），并会带上此前已并入旧名称的记忆，比如某个已合并 worktree 的记忆。变更会通过云同步（cloud sync）到达你的其他设备，同时更新语义检索；最后一步失败时，命令会如实相告，再次运行即可重试。
+
+## 文件与目录
+
+### 数据目录结构
+
+数据目录的位置因环境而异：
+- **生产环境（已安装的插件）**：`~/.claude-mem/`（永远是它，与 CLAUDE_PLUGIN_ROOT 无关）
+- **开发环境**：可用 `CLAUDE_MEM_DATA_DIR` 覆盖
+
+```
+~/.claude-mem/
+├── claude-mem.db           # SQLite 数据库
+├── .install-version        # `npx claude-mem install`/`repair` 写入的版本标记
+├── settings.json           # worker 端口 + 提供商/模型设置
+└── logs/
+    ├── worker-out.log      # worker stdout 日志
+    └── worker-error.log    # worker stderr 日志
+```
+
+### 插件目录结构
+
+```
+${CLAUDE_PLUGIN_ROOT}/
+├── .claude-plugin/
+│   └── plugin.json         # 插件元数据
+├── .mcp.json               # MCP server 配置
+├── hooks/
+│   └── hooks.json          # Hook 配置
+├── scripts/                # 编译好的可执行文件
+│   ├── version-check.js    # Setup hook：补齐缺失依赖，写入安装标记
+│   ├── context-hook.js     # 上下文注入 hook
+│   ├── new-hook.js         # 会话创建 hook
+│   ├── save-hook.js        # 观察记录捕获 hook
+│   ├── summary-hook.js     # 摘要生成 hook
+│   ├── worker-service.cjs  # worker 服务（CJS）
+│   └── mcp-server.cjs      # MCP 检索 server（CJS）
+└── ui/
+    └── viewer.html         # Web 查看器 UI 包
+```
+
+## 插件配置
+
+### Hook 配置
+
+Hook 注册在 `plugin/hooks/hooks.json` 中。现在的形态是经由 `bun-runner.js` 启动的单一分发器（`worker-service.cjs hook claude-code <event>`），外加一个快速 Setup 阶段的 `version-check.js`。接线的事件有：
+
+- `Setup` → `version-check.js`（安装缺失的插件依赖，写入 `.install-version`）
+- `SessionStart` → 先启动 worker，随后 `hook claude-code context`（上下文注入）
+- `UserPromptSubmit` → `hook claude-code session-init`
+- `PreToolUse`（matcher `Read`）→ `hook claude-code file-context`（同步执行：把该文件的观察记录时间线加进上下文，并可拦截整文件 Read；见[文件读取门控](/file-read-gate)）
+- `PostToolUse`（matcher `*`）→ `hook claude-code observation`
+- `Stop` → `hook claude-code summarize`
+
+`hooks.json` 的具体条目由安装器写入；除非你清楚自己在做什么，否则不要手改 marketplace 版本里的这些条目。
+
+#### 关闭工具 hook
+
+这些开关只从 hook 的环境变量读取，而非 `~/.claude-mem/settings.json`。在 `~/.claude/settings.json` 的 `env` 块中设置（Claude Code 会把这块传给每个 hook），或在你的 shell 里 export：
+
+| 开关 | 设为 `1` 时的效果 |
+|----------|------------------------|
+| `CLAUDE_MEM_DISABLE_TOOL_HOOKS` | PreToolUse（`file-context`）与 PostToolUse（`observation`）立即返回 no-op。SessionStart、UserPromptSubmit 与 Stop 照常工作。 |
+| `CLAUDE_MEM_DISABLE_OBSERVATION` | 只有 PostToolUse 的 `observation` 返回 no-op（不再捕获工具调用）。 |
+| `CLAUDE_MEM_DISABLE_FILE_CONTEXT` | 只有 PreToolUse 的 `file-context` 返回 no-op：`Read` 之前不注入文件历史，[文件读取门控](/file-read-gate)也永远不会拦截 Read。 |
+
+Claude Code 还是会启动每个 hook 进程——这些开关关掉的是 claude-mem 针对每个工具做的工作，而不是 hook 进程本身。
+
+### 搜索配置
+
+Claude-Mem 提供 MCP 检索工具，用于查询项目历史。
+
+**无需任何配置**——MCP 工具在 Claude Code 会话中自动可用。
+
+检索操作通过以下途径提供：
+- **MCP Server**：3 个工具（search、timeline、get_observations），采用渐进式披露（progressive disclosure）
+- **HTTP API**：worker 服务端口上的 10 个端点（按用户区分，默认 `37700 + (uid % 100)`；见 `~/.claude-mem/settings.json`）
+- **自动调用**：Claude 能识别关于过往工作的自然语言提问
+
+## worker 服务管理
+
+worker 服务由 Bun 以后台进程的方式管理。worker 在首个会话时自动启动，并在后台持续运行。
+
+### Observation TV 远程访问
+
+worker 默认绑定 `127.0.0.1`，且**没有任何请求认证**——回环绑定就是它唯一的防线。`CLAUDE_MEM_TV_TOKEN` 增加一个只读的广播面，让局域网上的第二台设备（手机、iPad、闲置显示器）可以观看 Observation TV，此外什么都做不了。
+
+铸造一个 token：
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+主机设置与 token 成对工作：
+
+| `CLAUDE_MEM_WORKER_HOST` | `CLAUDE_MEM_TV_TOKEN` | 结果 |
+|---|---|---|
+| `127.0.0.1`（默认） | 空 | 现状。本机之外什么都够不着。**不远程观看 TV 的用户都推荐这样。** |
+| `127.0.0.1` | 已设置 | 无效果——反正端口对外不可达。无害。 |
+| `0.0.0.0` | **空** | **危险，且与现状一样**：完整 API——含设置（包括提供商 API key）、删除、导入、better-auth——全部暴露在局域网上。Docker 部署文档本来就让人们这么配，所以 worker 会发出警告而非拒绝绑定。 |
+| `0.0.0.0` | 已设置 | 本功能的意义所在。局域网设备凭密钥可达 `/tv`、`/tv.html`、`/stream`、`GET /api/observations`，对其他一切返回 404/403/401。 |
+
+以非回环主机启动且不带 token 时，会记录一条 `SECURITY` 警告；worker 照常绑定。
+
+**本地端口转发会把整个 API 重新打开**。这道防线按 socket 对端识别回环，因此凡是以回环身份到达的流量完全绕过它——包括从另一台设备执行 `ssh -L <port>:127.0.0.1:<port> <box>`，或任何本地转发代理。对 worker 而言，这些流量与操作者自己的浏览器无从区分，因此会拿到完整 API，包括 `GET /api/settings` 和其中的提供商 API key。"这台设备做不了别的"正是在这一个具体场景下不再成立：只把端口转发给你愿意把整台机器一并交出去的设备。
+
+**Docker 与 bridge 网络**。bridge 网络容器内设 `CLAUDE_MEM_WORKER_HOST=0.0.0.0` 时，来自宿主机自身浏览器的请求到达时的来源是 bridge 网关地址，而不是 `127.0.0.1`。一旦设置了 token，该浏览器就与其他任何远程设备一视同仁，必须带 `?token=` 才能打开 TV——而 `/` 上的 React 查看器会被直接拒绝，与其他远程设备完全相同。
+
+在第二台设备上打开 `http://<lan-ip>:<port>/tv.html?token=<secret>` 观看 TV。
+
+**设置了 token 后，`/` 上的 React 查看器在远程不可用**。这是有意的——查看器需要的是门控拒绝的那些写入与设置路由。回环永远不受门控，所以在运行 worker 的机器上，查看器照常可用。
+
+**把 URL 当作密钥看待**。`/stream` 的 token 随查询串传递，因为浏览器的 `EventSource` API 无法设置请求头。它*不会*写进 worker 日志（请求日志记录的是 `req.path`，不含查询串），但**会**留在你打开它的那台设备的浏览器历史里。凡是能设置请求头的客户端，`Authorization: Bearer <token>` 与 `X-Api-Key: <token>` 也可用。
+
+**这是明文 HTTP**。token 挡的是无凭证设备读取流；它并不加密。能嗅探你局域网的人都能看到观察记录标题。家用网络可以接受这种取舍；其他场景请在 worker 前面终结 TLS（此处不展开）——并且仍然绝不要架隧道直通未经改造的 worker，那会把 `GET /api/settings` 和其中的提供商 API key 公开到整个互联网上。
+
+**必须用完全一致的路径**。白名单是精确匹配且区分大小写的：`/tv.html`、`/tv`、`/stream`、`/api/observations`，仅此而已。带尾部斜杠或大小写不同——`/tv/`、`/API/observations`、`/api/observations/by-file`——即使 token 有效也返回 404。这是刻意的 fail-closed 行为，不是 bug。
+
+TV 的 `?project=` 与 `?source=` 过滤器**只作用于客户端**。它们是显示过滤器，不是访问控制——token 持有者仍会收到每一个项目的观察记录。
+
+接受的风险，明说如下：
+
+1. **`GET /api/observations` 返回完整的观察记录正文**——`narrative`、`facts`、`text`、`files_read`、`files_modified`——而且覆盖**这台机器上的每个项目**，不只是 TV 渲染的那四个字段。token 持有者可以用 `offset` 把整个记忆数据库翻个底朝天。
+2. **`/stream` 不做过滤**。它承载这台机器上每个项目的每一条观察记录，外加项目目录与处理状态。没有任何按客户端的过滤。
+3. **没有速率限制**。token 持有者可以随意高频访问 `GET /api/observations`。
+4. **token 在回环上可读**，通过 `GET /api/settings` 即可取到，与如今你的提供商 API key 一样可读。它被刻意设计为*不能*通过 `POST /api/settings` 写入（该路由无认证），因此只能由拥有文件系统或环境访问权限的人设置。
+5. **`/stream` 并非没有副作用**。每个新连接都会向*所有*连接中的客户端触发一次 `initial_load` 广播，客户端列表也没有上限。因此，token 持有者循环重连就可以扰乱操作者自己的本地查看器。这一直是 worker 的既有行为；token 的作用只是让它首次变得可以从局域网触达。
+
+### 手动配置
+
+编辑 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_WORKER_HOST": "0.0.0.0",
+  "CLAUDE_MEM_TV_TOKEN": "your-minted-token"
+}
+```
+
+然后重启 worker：
+```bash
+npm run worker:restart
+```
+
+### 局域网之外观看（cmem.ai Pro）
+
+以上说的都是局域网路径。从*网络之外*观看——用蜂窝网络、在咖啡馆、从别处住所——是 **cmem.ai Pro** 功能：登录你的账号，在任意浏览器打开 `https://cmem.ai/tv` 即可。它要求先启用[云同步](/cloud-sync)，因为托管页面读取的是你的 worker 已经推送到同步中枢的标题。
+
+**无需 token，无需开放端口，无需入站连接**。这条路径既不需要 `CLAUDE_MEM_TV_TOKEN`，也不需要非回环的 `CLAUDE_MEM_WORKER_HOST`——两者都属于局域网路径，对它没有影响，保持默认即可。为了托管 TV，这台机器永远不会接受入站连接；worker 只会向外拨号。不需要任何隧道（cloudflared、ngrok 或类似的东西），也不推荐任何隧道。
+
+**托管 TV 界面只显示观察记录标题，别无其他**。它从不渲染叙述、事实、文件列表、代码片段或 prompt 文本。
+
+**这与"只有标题离开你的机器"不是一回事**。托管 TV 是云同步*所带*的功能，而云同步会把你的观察叙述和完整 prompt 文本上传到你 cmem.ai 账户下的同步中枢。托管页面只有标题；支撑它的上传却不止标题。如果这些内容必须留在你的机器上，就不要启用云同步。
+
+**一处渲染差异**。没有标题的观察记录仍会出现在局域网 TV 上，因为它会回退显示副标题。它不会出现在托管的手机 TV 上——那个界面只接收标题，没有副标题可回退。
+
+## 目录上下文文件
+
+Claude-mem 可以在项目文件夹中自动生成带活动时间线的 `CLAUDE.md` 文件。该功能默认关闭。
+
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| `CLAUDE_MEM_FOLDER_CLAUDEMD_ENABLED` | `false` | 启用自动生成目录 CLAUDE.md 文件 |
+
+## Grok Bot 实时 INDEX
+
+worker 会持续把一条不断增长的观察记录 INDEX 写入每个 Grok Bot 席位的 Memory mid-attach 文件（`agents/<uuid>/memory/log/zz-claude-mem-inject.md`）。参见 [Grok Bot 集成](/grok-bot)。
+
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| `CLAUDE_MEM_GROK_BOT_INJECT_ENABLED` | `true` | 实时写入 INDEX。`false` 关闭。不存在 Grok Bot 席位时无副作用。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_AGENT_IDS` | `*` | `*` / `all` / 留空 = 所有活跃席位；或逗号分隔的 UUID 列表。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_FALLBACK` | `house` | `house`：席位记录过薄时，用 worker 最新的观察记录补充。`off` = 只用席位自身的项目。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_TIER` | `episode` | 记忆层级前缀（`episode`、`plain`、`note`）。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_WINDOW` | `80` | 保留最新的 INDEX 条数（最多 100）。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_PLATFORM_SOURCE` | — | 可选的宿主过滤器。除非只要 grok 来源的行，否则留空。 |
+| `CLAUDE_MEM_GROK_BOT_INJECT_PROJECTS_BY_AGENT` | — | 可选的 transcript-watch 项目覆盖，格式 `uuid=projA,projB;uuid2=projC`。 |
+
+本功能的工作方式、配置选项与 git 集成建议的完整文档，参见[目录上下文文件](usage/folder-context)。
+
+## 上下文注入配置
+
+Claude-Mem 把过往观察记录注入每个新会话，让 Claude 了解最近的工作。注入什么内容，你可以在**上下文设置弹窗**（Context Settings Modal）里精确指定。
+
+### 上下文设置弹窗
+
+设置弹窗从 Web 查看器进入。worker 启动时会打印自己的 URL；端口取决于 `CLAUDE_MEM_WORKER_PORT`。
+
+1. 点击页眉的**齿轮图标**
+2. 在右侧面板调整设置
+3. 改动实时反映在左侧 **Terminal Preview** 中
+4. 点击 **Save** 保存修改
+
+Terminal Preview 显示当前选中的项目与来源。选择 **All sources** 可预览合并后的 SessionStart 上下文。
+
+### 加载设置
+
+控制注入多少观察记录：
+
+| 设置项 | 默认值 | 范围 | 说明 |
+|---------|---------|-------|-------------|
+| **观察记录** | 50 | 1-200 | 纳入的近期观察记录总数 |
+| **会话开始时纳入全部来源** | 关 | 开/关 | 启动上下文中纳入来自 Claude、Codex 及其他 harness 的观察记录 |
+| **会话数** | 10 | 1-50 | 从多少个近期会话拉取观察记录 |
+
+**权衡参考**：
+- **调高取值** = 上下文更多，但 SessionStart 更慢，token 消耗更多
+- **调低取值** = SessionStart 更快，但历史感知更少
+- 默认从 10 个会话取 50 条观察记录，在上下文丰富度与性能之间取得平衡
+
+### 过滤设置
+
+控制纳入哪些观察类型与概念：
+
+**类型**（任选组合）：
+- `bugfix` - Bug 修复与错误解决
+- `feature` - 新功能添加
+- `refactor` - 代码重构
+- `discovery` - 对代码工作原理的发现
+- `decision` - 架构或设计决策
+- `change` - 一般代码改动
+
+**概念**（任选组合）：
+- `how-it-works` - 系统行为说明
+- `why-it-exists` - 代码/设计背后的理由
+- `what-changed` - 改动摘要
+- `problem-solution` - 问题/方案对
+- `gotcha` - 边界情况与坑
+- `pattern` - 反复出现的模式
+- `trade-off` - 设计取舍
+
+用 "All" 和 "None" 按钮可快速全选或全部取消。
+
+### 显示设置
+
+控制观察记录在上下文中的呈现方式：
+
+**完整观察记录展示**：
+| 设置项 | 默认值 | 选项 | 说明 |
+|---------|---------|---------|-------------|
+| **条数** | 5 | 0-20 | 有多少条观察记录展开展示完整细节 |
+| **字段** | narrative | narrative、facts | 展开哪个字段 |
+
+最近的 N 条观察记录（由条数决定）展示完整的叙述或事实。其余观察记录只显示标题、类型与 token 数，以紧凑表格形式呈现。
+
+**token 经济指标**（开关）：
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| **读取成本** | true | 显示读取每条观察记录花费的 token |
+| **投入成本** | true | 显示生成该条观察记录花费的 token |
+| **节省额** | true | 显示复用上下文总共节省的 token |
+
+token 经济指标帮你权衡"复用已缓存的观察记录"与"重新读文件"之间的价值。
+
+### 高级设置
+
+| 设置项 | 默认值 | 说明 |
+|---------|---------|-------------|
+| **模型** | sonnet | 生成观察记录所用的 AI 模型 |
+| **worker 端口** | `37700 + (uid % 100)` | 后台 worker 服务的端口（可用 `CLAUDE_MEM_WORKER_PORT` 覆盖） |
+| **MCP 检索 server** | true | 启用 Model Context Protocol 检索工具 |
+| **包含上次摘要** | false | 把上一个会话的摘要加入上下文 |
+| **包含最后一条消息** | false | 加入上一个会话的最后一条消息 |
+| **整文件读取拦截** | true | 对拥有观察记录历史、大小不低于 32 KB 的代码文件拦截整文件 Read（[文件读取门控](/file-read-gate)） |
+
+### 手动配置
+
+设置存放在 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_CONTEXT_OBSERVATIONS": "100",
+  "CLAUDE_MEM_SESSION_START_INCLUDE_ALL_SOURCES": "true",
+  "CLAUDE_MEM_CONTEXT_SESSION_COUNT": "20",
+  "CLAUDE_MEM_CONTEXT_OBSERVATION_TYPES": "bugfix,decision,discovery",
+  "CLAUDE_MEM_CONTEXT_OBSERVATION_CONCEPTS": "how-it-works,gotcha",
+  "CLAUDE_MEM_CONTEXT_FULL_COUNT": "10",
+  "CLAUDE_MEM_CONTEXT_FULL_FIELD": "narrative",
+  "CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS": "true",
+  "CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS": "true",
+  "CLAUDE_MEM_CONTEXT_SHOW_SAVINGS_AMOUNT": "true",
+  "CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY": "false",
+  "CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE": "false"
+}
+```
+
+**注意**：配置这些设置推荐使用（Web 查看器中的）上下文设置弹窗，因为它能实时预览改动效果。
+
+## 自定义
+
+各项设置都可以在 `~/.claude-mem/settings.json` 里自定义。
+
+### 自定义数据目录
+
+编辑 `~/.claude-mem/settings.json`：
+```json
+{
+  "CLAUDE_MEM_DATA_DIR": "/custom/path"
+}
+```
+
+### 自定义 worker 端口
+
+编辑 `~/.claude-mem/settings.json`：
+```json
+{
+  "CLAUDE_MEM_WORKER_PORT": "38000"
+}
+```
+
+然后重启 worker：
+```bash
+npm run worker:restart
+```
+
+### 自定义模型
+
+编辑 `~/.claude-mem/settings.json`：
+```json
+{
+  "CLAUDE_MEM_MODEL": "opus"
+}
+```
+
+然后重启 worker：
+```bash
+export CLAUDE_MEM_MODEL=opus
+npm run worker:restart
+```
+
+### 自定义跳过的工具
+
+控制从观察记录中排除哪些工具。编辑 `~/.claude-mem/settings.json`：
+```json
+{
+  "CLAUDE_MEM_SKIP_TOOLS": "ListMcpResourcesTool,SlashCommand,Skill"
+}
+```
+
+**默认排除的工具：**
+- `ListMcpResourcesTool`
+- `SlashCommand`
+- `Skill`
+- `TodoWrite`
+- `AskUserQuestion`
+
+**常见改法：**
+- 要包含 TodoWrite：把它从跳过列表移除，从而追踪任务规划
+- 要包含 AskUserQuestion：移除该项，以便捕获决策性对话
+- 略过更多工具：往列表里添加工具名，减少观察记录噪声
+
+改动在下次工具执行时生效（无需重启 worker）。
+
+## 进阶配置
+
+### Hook 超时
+
+Hook 超时由安装器写入 `plugin/hooks/hooks.json`。当前的默认值对应各生命周期阶段的负载形态：
+
+- Setup（`version-check.js`）：上限 300 s；插件依赖完整时很快，必须运行 `bun install` 时最长 120 s
+- SessionStart（worker 启动 + 上下文注入）：60 s
+- UserPromptSubmit：15 s
+- PreToolUse（file-context，Read matcher）：15 s，同步执行，以便[文件读取门控](/file-read-gate)拦截 Read；它对 worker 的查询在 3 s 后放弃
+- PostToolUse（observation）：120 s
+- Stop（summary）：120 s
+
+`npx claude-mem install` / `npx claude-mem repair` 在会话生命周期之外安装运行时（Bun、uv、`bun install`）。Setup hook 只在已加载插件的依赖缺失时才运行 `bun install`——典型情形是插件市场安装或 `claude plugin update`——依赖装完后写入 `.install-version` 标记。
+
+### worker 内存上限
+
+worker 服务由 Bun 管理，遇到问题会自动重启。内存占用通常很低（约 100–200 MB）。
+
+### 日志详细程度
+
+开启调试日志：
+
+```bash
+export DEBUG=claude-mem:*
+npm run worker:restart
+npm run worker:logs
+```
+
+## 配置最佳实践
+
+1. **用默认值**：默认配置适用于大多数场景
+2. **按需覆盖**：只改确实需要的
+3. **记录改动**：跟踪你的自定义配置
+4. **改后测试**：确认 worker 重启成功
+5. **盯日志**：配置改动后查看 worker 日志
+
+## 配置故障排查
+
+### 配置未生效
+
+1. 改动后重启 worker：
+   ```bash
+   npm run worker:restart
+   ```
+
+2. 确认环境变量：
+   ```bash
+   echo $CLAUDE_MEM_MODEL
+   echo $CLAUDE_MEM_WORKER_PORT
+   ```
+
+3. 查看 worker 日志：
+   ```bash
+   npm run worker:logs
+   ```
+
+### 无效的模型名称
+
+模型名写错时，worker 会记一条警告并改用默认值。`CLAUDE_MEM_MODEL` 的有效取值：
+
+- `claude-haiku-4-5-20251001`（默认）
+- `claude-sonnet-5`
+- `claude-opus-4-8`
+
+### 端口被占用
+
+默认端口为 `37700 + (uid % 100)`，因此同一机器上的不同系统用户会自动拿到不同端口。如果仍然撞上（例如同一个 UID 跑多套配置），就固定一个端口：
+
+1. 设置自定义端口：
+   ```bash
+   export CLAUDE_MEM_WORKER_PORT=38000
+   ```
+
+2. 重启 worker：
+   ```bash
+   npm run worker:restart
+   ```
+
+3. 验证新端口：
+   ```bash
+   curl -s http://127.0.0.1:$CLAUDE_MEM_WORKER_PORT/api/health | jq .port
+   ```
+
+## 后续步骤
+
+- [架构总览](architecture/overview) - 了解系统原理
+- [故障排查](troubleshooting) - 常见问题
+- [开发](development) - 从源码构建

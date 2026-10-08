@@ -1,0 +1,313 @@
+---
+title: "记忆导出/导入"
+description: "在多套 claude-mem 安装之间分享知识，并自动防止重复"
+---
+
+# 记忆导出/导入脚本
+
+把你整理的 claude-mem 知识分享给其他人！这些脚本支持记忆导出/导入（memory export/import）：先按需导出特定记忆（observation 观察记录、session 会话、session summary 会话摘要与 user prompt 用户提示），再导入到另一套 claude-mem 安装中。
+
+## 适用场景
+
+- **共享 Windows 兼容性知识**：帮到其他 Windows 用户
+- **共享 Bug 修复模式**：回馈贡献者
+- **共享项目专属经验**：跨团队流通
+- **备份特定记忆集**：以防万一
+
+## 工作原理
+
+### 导出脚本
+
+使用**混合检索**（hybrid search，将 ChromaDB 向量嵌入与 FTS5 全文检索结合）搜索数据库，并导出所有匹配的：
+
+- **观察记录**：一条条独立的发现与心得
+- **会话**：会话元数据
+- **会话摘要**：每个会话的摘要
+- **用户提示**：引出这些工作的用户输入
+
+输出是一个可分享的便携（portable）JSON 文件。
+
+> **隐私提示**：导出文件以明文保存全部匹配的记忆数据。分享之前请先检查导出内容，确保其中没有 API 密钥、密码、私有路径等敏感信息。
+
+### 导入脚本
+
+以**去重机制**（duplicate prevention）导入记忆：
+
+- 插入前先检查每条记录是否已存在
+- 自动跳过重复项
+- 以事务方式导入，保证数据完整性
+- 分别报告导入与跳过的数量
+
+**去重判定策略**：
+
+- **会话**：按 `claude_session_id`（唯一）
+- **会话摘要**：按 `sdk_session_id`（唯一）
+- **观察记录**：按 `sdk_session_id` + `title` + `created_at_epoch`（组合）
+- **用户提示**：按 `claude_session_id` + `prompt_number`（组合）
+
+## 用法
+
+### 导出记忆
+
+```bash
+# 导出所有 Windows 相关记忆
+npx tsx scripts/export-memories.ts "windows" windows-memories.json
+
+# 导出 Bug 修复记录
+npx tsx scripts/export-memories.ts "bugfix" bugfixes.json
+
+# 导出特定功能的工作记录
+npx tsx scripts/export-memories.ts "progressive disclosure" progressive-disclosure.json
+```
+
+**参数**：
+
+1. `<query>` —— 检索查询（采用语义 + 全文结合的混合检索）
+2. `<output-file>` —— 输出 JSON 文件路径
+3. `--project=name` —— 可选：将结果限定在指定项目
+
+**输出示例**：
+
+```
+🔍 Searching for: "windows"
+✅ Found 54 observations
+✅ Found 12 sessions
+✅ Found 12 summaries
+✅ Found 7 prompts
+
+📦 Export complete!
+📄 Output: windows-memories.json
+📊 Stats:
+   • 54 observations
+   • 12 sessions
+   • 12 summaries
+   • 7 prompts
+```
+
+### 导入记忆
+
+```bash
+# 从导出文件导入
+npx tsx scripts/import-memories.ts windows-memories.json
+```
+
+**参数**：
+
+1. `<input-file>` —— 输入 JSON 文件（由导出脚本生成）
+
+**输出示例**：
+
+```
+📦 Import file: windows-memories.json
+📅 Exported: 2025-12-10T23:45:00.000Z
+🔍 Query: "windows"
+📊 Contains:
+   • 54 observations
+   • 12 sessions
+   • 12 summaries
+   • 7 prompts
+
+🔄 Importing sessions...
+   ✅ Imported: 12, Skipped: 0
+🔄 Importing summaries...
+   ✅ Imported: 12, Skipped: 0
+🔄 Importing observations...
+   ✅ Imported: 54, Skipped: 0
+🔄 Importing prompts...
+   ✅ Imported: 7, Skipped: 0
+
+✅ Import complete!
+📊 Summary:
+   Sessions:     12 imported, 0 skipped
+   Summaries:    12 imported, 0 skipped
+   Observations: 54 imported, 0 skipped
+   Prompts:      7 imported, 0 skipped
+```
+
+### 重复导入（自动去重）
+
+对同一文件再次执行导入时，重复记录会被自动跳过：
+
+```
+🔄 Importing sessions...
+   ✅ Imported: 0, Skipped: 12  ← All skipped (already exist)
+🔄 Importing summaries...
+   ✅ Imported: 0, Skipped: 12
+🔄 Importing observations...
+   ✅ Imported: 0, Skipped: 54
+🔄 Importing prompts...
+   ✅ Imported: 0, Skipped: 7
+```
+
+## 分享记忆
+
+### 导出方
+
+1. **导出你的记忆**：
+
+   ```bash
+   npx tsx scripts/export-memories.ts "windows" windows-memories.json
+   ```
+
+2. **分享 JSON 文件**，渠道可以是：
+
+   - GitHub gist
+   - 项目仓库（`shared-memories/` 目录）
+   - 直接传文件
+   - 随 release 打包分发
+
+3. **附上说明**：
+
+   - 用的是哪条查询
+   - 包含哪些知识
+   - 什么人可能用得上
+
+### 导入方
+
+1. **把导出文件下载到本地**
+
+2. **查看导出内容**（可选）：
+
+   ```bash
+   cat windows-memories.json | jq '.totalObservations, .totalSessions'
+   ```
+
+3. **导入你的数据库**：
+
+   ```bash
+   npx tsx scripts/import-memories.ts windows-memories.json
+   ```
+
+4. **搜索验证导入结果**：
+
+   ```bash
+   WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+   curl "http://127.0.0.1:$WORKER_PORT/api/search?query=windows&format=index&limit=10"
+   ```
+
+## JSON 导出格式
+
+```json
+{
+  "exportedAt": "2025-12-10T23:45:00.000Z",
+  "exportedAtEpoch": 1733876700000,
+  "query": "windows",
+  "totalObservations": 54,
+  "totalSessions": 12,
+  "totalSummaries": 12,
+  "totalPrompts": 7,
+  "observations": [ /* array of observation objects */ ],
+  "sessions": [ /* array of session objects */ ],
+  "summaries": [ /* array of summary objects */ ],
+  "prompts": [ /* array of prompt objects */ ]
+}
+```
+
+## 安全特性
+
+✅ **去重**：不会重复导入已有记录
+✅ **事务性**：导入要么全部成功、要么整体回滚（数据库始终保持一致）
+✅ **只读导出**：导出脚本以只读模式打开数据库
+✅ **依赖顺序**：先导会话，后导观察记录/会话摘要
+✅ **校验**：开始前先确认数据库存在
+
+## 高级用法
+
+### 按项目导出
+
+```bash
+# 只导出 claude-mem 项目自身的记忆
+npx tsx scripts/export-memories.ts "bugfix" bugfixes.json --project=claude-mem
+
+# 导出指定项目的全部记忆
+npx tsx scripts/export-memories.ts "" all-project.json --project=my-app
+```
+
+### 按类型导出
+
+```bash
+# 只导出发现类记录
+npx tsx scripts/export-memories.ts "type:discovery" discoveries.json
+
+# 只导出 Bug 修复类记录
+npx tsx scripts/export-memories.ts "type:bugfix" bugfixes.json
+```
+
+### 按时间范围导出
+
+导出之后还可以再筛选：
+
+```bash
+# 先导出全部记忆，再用 jq 手动筛选
+npx tsx scripts/export-memories.ts "" all-memories.json
+cat all-memories.json | jq '.observations |= map(select(.created_at_epoch > 1700000000000))' > recent-memories.json
+```
+
+### 合并多次导出
+
+```bash
+# 导出不同主题
+npx tsx scripts/export-memories.ts "windows" windows.json
+npx tsx scripts/export-memories.ts "linux" linux.json
+
+# 两个都导入
+npx tsx scripts/import-memories.ts windows.json
+npx tsx scripts/import-memories.ts linux.json
+```
+
+## 故障排查
+
+### 找不到数据库
+
+```
+❌ Database not found at: /Users/you/.claude-mem/claude-mem.db
+```
+
+**解决方法**：确认 claude-mem 已安装，并且至少运行过一次。
+
+### 找不到导入文件
+
+```
+❌ Input file not found: windows-memories.json
+```
+
+**解决方法**：核对文件路径；必要时改用绝对路径。
+
+### 部分导入
+
+导入中途失败时，事务会整体回滚——数据库保持原状。修好问题后重试即可。
+
+## 贡献记忆集
+
+如果你导出的知识可能帮到别人：
+
+1. 向 `shared-memories/` 目录发起 PR
+2. 附一份 README，说明导出内容
+3. 打上相关关键词标签（windows、linux、bugfix 等）
+4. 之后社区成员就能导入你的知识！
+
+## 实用导出示例
+
+**Windows 兼容性知识**：
+
+```bash
+npx tsx scripts/export-memories.ts "windows compatibility installation" windows-fixes.json
+```
+
+**渐进式披露（progressive disclosure）架构**：
+
+```bash
+npx tsx scripts/export-memories.ts "progressive disclosure architecture token" pd-patterns.json
+```
+
+**Bug 修复模式**：
+
+```bash
+npx tsx scripts/export-memories.ts "bugfix error handling" bugfix-patterns.json
+```
+
+**性能优化**：
+
+```bash
+npx tsx scripts/export-memories.ts "performance optimization caching" perf-tips.json
+```

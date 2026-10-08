@@ -1,0 +1,208 @@
+---
+title: "知识智能体"
+description: "把你的观察记录历史编译成可问答的 AI 大脑"
+---
+
+# 知识智能体
+
+知识智能体（knowledge agent）能把 claude-mem 观察记录历史中的一段切片，编译成一个**可问答的"大脑"**，以对话方式回答问题。你得到的不是原始检索结果，而是取材自真实项目历史的综合答案——决策、发现、bugfix 与功能开发，一应俱全。
+
+## 快速上手
+
+三种用法，从最简单到最强大。
+
+### 1. 创建知识智能体
+
+通过 `/knowledge-agent` 技能，或直接调用 MCP 工具：
+
+```
+build_corpus name="hooks-expertise" query="hooks architecture" project="claude-mem" limit=200
+```
+
+它会检索你的观察记录历史，汇集所有匹配的记录，保存为一个语料库（corpus）文件。然后执行预热（prime）——把语料库载入某个 Claude 会话的上下文窗口：
+
+```
+prime_corpus name="hooks-expertise"
+```
+
+知识智能体就绪了。返回的 `session_id` **就是**这个智能体——一个内嵌了你项目历史的 Claude 会话。
+
+### 2. 单次提问
+
+预热完成后，随口提问即可得到有据可依的回答：
+
+```
+query_corpus name="hooks-expertise" question="What are the 5 lifecycle hooks and when does each fire?"
+```
+
+回答以语料库为依据——内容取自你的真实项目历史，能减少幻觉与瞎猜。每次追问都会自然接续之前的对话：
+
+```
+query_corpus name="hooks-expertise" question="Which hook handles context injection?"
+```
+
+### 3. 开启全新会话
+
+如果对话已经跑偏，或者想针对同一语料库问一个不相关的问题，重新预热（reprime）即可从头开始：
+
+```
+reprime_corpus name="hooks-expertise"
+```
+
+这会创建一个**全新会话**，并重新载入完整语料库——好比和同一个"大脑"重开一个干净的新聊天。此前的问答上下文全部清空，但语料库知识原封不动。适合这些场景：
+
+- 对话已经跑偏，想推倒重来
+- 在同一语料库内切换话题
+- 想提问，又不想让先前的回答影响新答案
+
+### 保持语料库最新
+
+项目新增了观察记录时，重建语料库以纳入最新数据，然后重新预热：
+
+```
+rebuild_corpus name="hooks-expertise"
+reprime_corpus name="hooks-expertise"
+```
+
+`rebuild` 会重跑当初设定的检索过滤条件；`reprime` 把刷新后的数据载入新会话。
+
+---
+
+## 工作流：构建、预热、提问
+
+```
+BUILD  ──>  PRIME  ──>  QUERY
+```
+
+### 1. 构建语料库
+
+语料库是一份按条件筛选的观察记录集合，保存为 JSON 文件。用检索过滤条件，精确选定你想要的那段历史切片。
+
+```bash
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+curl -X POST http://127.0.0.1:$WORKER_PORT/api/corpus \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "hooks-expertise",
+    "query": "hooks architecture",
+    "project": "claude-mem",
+    "types": ["decision", "discovery"],
+    "limit": 200
+  }'
+```
+
+底层实现中，`CorpusBuilder` 会检索你的观察记录，补全每条记录的完整内容，解析结构化字段（facts、concepts、files），算出统计信息，最后把全部内容写入 `~/.claude-mem/corpora/hooks-expertise.corpus.json`。
+
+### 2. 预热知识智能体
+
+预热（priming）会把整个语料库载入一个 Claude 会话的上下文窗口。
+
+```bash
+curl -X POST http://127.0.0.1:$WORKER_PORT/api/corpus/hooks-expertise/prime
+```
+
+智能体把所有观察记录渲染成完整细节的文本，交给 Claude Agent SDK。Claude 通读语料库并确认已掌握其中的主题。返回的 `session_id` **就是**这个知识智能体——一个内嵌了你项目历史的 Claude 会话。
+
+### 3. 提问
+
+恢复已预热的会话，然后提出问题。
+
+```bash
+curl -X POST http://127.0.0.1:$WORKER_PORT/api/corpus/hooks-expertise/query \
+  -H "Content-Type: application/json" \
+  -d '{ "question": "What are the 5 lifecycle hooks?" }'
+```
+
+追问会自然地在对话上层层叠加。如果会话过期，智能体会从语料库文件自动重新预热并重试。
+
+---
+
+## 筛选参数
+
+构建语料库时可用以下参数，控制纳入哪些观察记录：
+
+| 参数 | 类型 | 说明 |
+|-----------|------|-------------|
+| `name` | 字符串 | 语料库名称（后续所有 API 调用都以它引用） |
+| `project` | 字符串 | 按项目名筛选 |
+| `types` | 字符串数组 | 按观察记录类型筛选（bugfix、feature、decision、discovery、refactor、change） |
+| `concepts` | 字符串数组 | 按标记的概念标签筛选 |
+| `files` | 字符串数组 | 按读取或修改过的文件筛选 |
+| `query` | 字符串 | 全文检索查询词 |
+| `dateStart` | 字符串 | 起始日期（YYYY-MM-DD） |
+| `dateEnd` | 字符串 | 结束日期（YYYY-MM-DD） |
+| `limit` | 数字 | 最多纳入的观察记录条数 |
+
+---
+
+## 架构
+
+```
+                MCP Tools                    HTTP API
+            (mcp-server.ts)            (worker on :$WORKER_PORT)
+                  |                          |
+   build_corpus ──┤                          |
+   list_corpora ──┤                          |
+   prime_corpus ──┤──── callWorker() ───────>|
+   query_corpus ──┤                          |
+rebuild_corpus ──┤                          |
+reprime_corpus ──┘                          |
+                                             v
+                                       CorpusRoutes
+                                       (8 endpoints)
+                                        /    |    \
+                              CorpusBuilder  |  KnowledgeAgent
+                                  |          |       |
+                        SearchOrchestrator   |   Agent SDK V1
+                        SessionStore         |   query() + resume
+                                             |
+                                        CorpusStore
+                                    (~/.claude-mem/corpora/)
+```
+
+**核心思路**：Agent SDK 的 `resume` 选项让你只需为会话预热一次（上传语料库），保存返回的 `session_id`，之后每个问题都恢复同一会话。语料库从此常驻上下文——无须重复上传，也无须依赖 prompt 缓存之类的技巧。1M token 的上下文窗口让这成为可能：2,000 条观察记录、每条约 300 token，轻松装下。
+
+---
+
+## `/knowledge-agent` 与 `/mem-search` 怎么选
+
+| | `/mem-search` | `/knowledge-agent` |
+|---|---|---|
+| **返回内容** | 原始观察记录数据 | 综合生成的对话式回答 |
+| **最适用** | 定位具体的观察记录、ID、时间线 | 就模式、决策、架构等主题提问 |
+| **token 开销** | 每次检索都付费（三层渐进式披露） | 预热时付一次，之后追问很便宜 |
+| **交互方式** | 检索、过滤、取回 | 自然语言提问 |
+| **数据新鲜度** | 始终最新（实时查询数据库） | 构建时的快照（rebuild 可刷新） |
+| **上手成本** | 无——开箱即用 | 首次提问前需先构建 + 预热 |
+
+**经验法则**：要找某个具体的东西，用 `/mem-search`；要整体理解某件事，用 `/knowledge-agent`。
+
+---
+
+## API 参考
+
+| Method | Path | 说明 |
+|--------|------|-------------|
+| POST | `/api/corpus` | 按过滤条件构建新语料库 |
+| GET | `/api/corpus` | 列出所有语料库及其统计信息 |
+| GET | `/api/corpus/:name` | 获取语料库元数据 |
+| DELETE | `/api/corpus/:name` | 删除语料库 |
+| POST | `/api/corpus/:name/rebuild` | 用保存的过滤条件重建 |
+| POST | `/api/corpus/:name/prime` | 创建载入语料库的 AI 会话 |
+| POST | `/api/corpus/:name/query` | 向知识智能体提问 |
+| POST | `/api/corpus/:name/reprime` | 全新会话（清空此前的问答） |
+
+---
+
+## 边界情况
+
+- **会话过期**：`resume` 失败时，智能体会从语料库文件自动重新预热并重试
+- **SDK 进程退出**：Claude 进程在吐完全部消息后退出时，只要 `session_id` 或回答已被捕获，智能体就视为成功
+- **空语料库**：0 条观察记录的语料库也是合法的（只是为空）
+- **模型取自配置**：从用户设置读取 `CLAUDE_MEM_MODEL`——不硬编码任何模型 ID
+
+## 延伸阅读
+
+- [Memory Search](/usage/search-tools)——查找特定观察记录的三层检索工作流
+- [渐进式披露](/progressive-disclosure)——省 token 检索背后的设计哲学
+- [架构总览](/architecture/overview)——系统组成与数据流

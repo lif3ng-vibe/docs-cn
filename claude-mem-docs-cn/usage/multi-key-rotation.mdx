@@ -1,0 +1,76 @@
+---
+title: "多密钥轮换"
+description: "为每个提供商配置多把 API 密钥，被限速或额度耗尽的密钥自动轮换到下一把，而不是中断记忆功能"
+---
+
+# 多密钥轮换（Multi-Key Rotation）
+
+为提供商配置不止一把 API 密钥，claude-mem 就会在它们之间轮换：某把密钥触发速率限制、额度耗尽或被判定失效时，会被搁置进入冷却期，下一个请求改用下一把密钥。
+
+<Tip>
+这个功能面向你本就持有的多把密钥——比如个人密钥搭配工作/团队密钥，或来自不同计费账号的密钥。当一把触达限额时，抓取（capture）流程会换到下一把继续，而不是在配额窗口剩余的时间内彻底停摆。请先查阅提供商的条款：有些提供商不允许使用专门用来绕开其速率限制的额外密钥或账号。
+</Tip>
+
+## 它解决什么问题
+
+没有密钥池时，一把密钥耗尽会让记忆功能在配额窗口剩余时间内停摆：
+
+- `rate_limit` 会针对**同一把**密钥再重试两次，并遵循 `Retry-After`（默认 60 秒）——于是每条观察记录都要卡满一分钟，最后照样失败。
+- `quota_exhausted` 与 `auth_invalid` 完全不可重试。生成器直接退出，提供商配额熔断器会把整个提供商熔断 30 分钟。
+
+## 配置
+
+在现有单密钥设置项旁边加上复数形式的设置项。密钥可用换行、逗号或空格分隔。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "gemini",
+  "CLAUDE_MEM_GEMINI_API_KEY": "AIza...primary",
+  "CLAUDE_MEM_GEMINI_API_KEYS": "AIza...second\nAIza...third"
+}
+```
+
+| 提供商 | 单密钥 | 轮换密钥池 |
+|----------|-----------|---------------|
+| Gemini | `CLAUDE_MEM_GEMINI_API_KEY` | `CLAUDE_MEM_GEMINI_API_KEYS` |
+| OpenRouter | `CLAUDE_MEM_OPENROUTER_API_KEY` | `CLAUDE_MEM_OPENROUTER_API_KEYS` |
+| OpenAI 兼容 | `CLAUDE_MEM_OPENAI_COMPAT_API_KEY` | `CLAUDE_MEM_OPENAI_COMPAT_API_KEYS` |
+
+每项复数设置同样可以从 `~/.claude-mem/.env` 读取，对应变量名为 `GEMINI_API_KEYS`、`OPENROUTER_API_KEYS` 或 `OPENAI_COMPAT_API_KEYS`，这样密钥就不用写进 `settings.json`。
+
+单密钥仍排在密钥池首位。你也可以把它留空、所有密钥都通过列表提供——列表里的第一把会被提升为首位，可用性检查和报错信息照常工作。
+
+## 轮换行为
+
+**会触发轮换**：`rate_limit`、`quota_exhausted`、`auth_invalid`——这三种分类都指向「问题出在*这把密钥*本身」。
+
+**不触发轮换**：`transient`（网络抖动、5xx）与 `unrecoverable`（请求格式错误、模型 ID 写错）。前者本就由重试机制处理；后者在任何一把密钥上都会同样失败——轮换只会白白消耗密钥池。
+
+**冷却窗口**
+
+| 类型 | 窗口 |
+|------|--------|
+| `rate_limit` | 端点返回的 `Retry-After`，钳制在 1 秒–15 分钟；未返回时取 60 秒 |
+| `quota_exhausted` | 30 分钟 |
+| `auth_invalid` | 6 小时 |
+
+一次成功会立即清除该密钥的冷却，因此恢复过程从不需要干等整个窗口。修好一把输错的密钥同样立即生效。
+
+**所有密钥都在冷却时**，claude-mem 仍会尝试离到期最近的那一把，而不是不发任何请求就直接失败——分类失误，或端点比它宣称的时刻更早恢复时，不应演变成硬性中断。如果这次尝试同样失败，最后一次分类出的错误会原样向上传递，所以现有的暂停与熔断行为与过去完全一致。
+
+冷却状态写入 `~/.claude-mem/api-key-cooldown.json`，因此 worker 重启后依然生效。**密钥绝不会写入该文件或任何日志行**——两处都只用加了盐（salted）的指纹来表示，在你的安装环境之外毫无意义。
+
+## 不变的部分
+
+- **单密钥时的行为与之前完全一样**。只有一把密钥的池子等价于直通：相同的请求路径、相同的报错，没有冷却簿记。
+- **提供商选择不受影响**。轮换只发生在你所选提供商*内部*。密钥池全部耗尽时，claude-mem 不会悄悄切换到别的提供商。
+- **无论指向哪个提供商，cmem.ai 网关都不启用密钥池**。它的密钥由账号下发，因此网关端点只使用唯一一把 `cm_pro_` 密钥，从不在多把密钥间轮换。你的个人密钥永远不会发送给它。
+- **`cm_pro_` 密钥绝不发往其他主机**。同样的规则覆盖 Gemini、OpenRouter 与 OpenAI 兼容池：无论作为单密钥设置还是放入列表，`cm_pro_` 密钥都会在对 cmem.ai 网关以外的任何端点发起请求之前被丢弃。只持有 `cm_pro_` 密钥的 Gemini 配置会被视为没有配置密钥。
+
+## 验证
+
+轮换事件会以 `warn` 级别记入 worker 日志（`~/.claude-mem/logs/worker-YYYY-MM-DD.log`），附有密钥池位置和密钥指纹——但绝不包含密钥本身：
+
+```
+OpenRouter key 1/3 hit quota_exhausted; rotating to the next key
+```

@@ -1,0 +1,48 @@
+---
+title: "配额回退"
+description: "第一个提供商配额用尽期间，用第二个提供商继续捕获记忆"
+---
+
+# 配额回退
+
+当观察记录（observation）所用提供商报告额度已用尽时，claude-mem 会启动一个 30 分钟的配额冷却期，并停止向它派发工作，避免额度见底还不断撞回同一次拒绝。默认情况下，工作只是等待：观察记录先排队，冷却期满再说。
+
+配额回退（quota fallback）则把这些工作转交给第二个提供商，直到第一个提供商的冷却期结束。冷却期一过，会有一个生成器去探测原提供商；它只要恢复应答，所有工作就会自动迁回。
+
+## 配置项
+
+把以下配置加到 `~/.claude-mem/settings.json`，或在查看器 UI 的 **Settings → Advanced** 中设置：
+
+| 配置项 | 取值 | 含义 |
+|---|---|---|
+| `CLAUDE_MEM_QUOTA_FALLBACK_PROVIDER` | `""`（关闭，默认）、`claude`、`gemini`、`openrouter`、`openai-compatible` | 所选提供商处于配额冷却期时，观察记录工作改发往哪里。 |
+| `CLAUDE_MEM_QUOTA_FALLBACK_MODEL` | `""`，或某个 Claude 模型 id 或别名 | **Claude** 回退运行所用的模型。留空则沿用 `CLAUDE_MEM_MODEL` 和分层路由（tier routing）。其余任何回退都忽略该配置。 |
+
+例如，以 Gemini 为主提供商、Claude Haiku 作回退：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "gemini",
+  "CLAUDE_MEM_QUOTA_FALLBACK_PROVIDER": "claude",
+  "CLAUDE_MEM_QUOTA_FALLBACK_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+回退需要自己的凭据：Gemini、OpenRouter 或 OpenAI 兼容的 API key，或者一个可用的 Claude Code 登录态。没有 API key 的回退会跳过；自身也被扣住的回退（处于配额冷却期，或 key 被拒收）同样跳过，工作照旧等待，一如没有配置回退。Claude 回退不做事先检查：如果 Claude Code 缺失或未登录，回退运行就会失败，与 Claude 作主提供商时的失败方式相同。当 cmem.ai 网关拒绝你的账号入站（套餐过期、额度用尽）时，它会作为回退被跳过 15 分钟，之后由一条单独请求重新探测；下次会话启动时会以网关自己的措辞告知你一次。无论网关是主提供商还是回退，它对无人值守重试的上限都一视同仁。
+
+## 什么会触发切换，什么不会
+
+- **会切换**：额度用尽（30 分钟冷却期），以及提供商自身完成重试后仍被拒绝的速率限制（rate limiting）（90 秒冷却期）。冷却期一结束、原提供商应答了探测，工作立刻迁回。
+- **不切换**：认证错误——key 无效、过期或被吊销（401/403）。这类错误仍照旧暂停捕获，因为换个提供商也修不好这把 key。
+- **回退 key 被拒收后即跳过该回退**：只有 key *缺失*能事先检出；失效或被吊销的回退 key 会在第一次运行时失败，随后的认证冷却期会让它退出轮换。请修复或清空该回退 key。
+- **暂停的工作会自行恢复**：因配额错误而停止的生成器会保留其排队的观察记录。worker 服务的周期性恢复（每分钟一次）会让它们在能承接工作的提供商上重启——可能是回退，也可能是届时已复原的原提供商；会话的下一次工具调用能更早办成同样的事。两个都承接不了，就照旧等待。
+- **两边都耗尽**：如果回退也处于配额冷却期，那就什么都不变——工作一直等到其中一方冷却结束。
+
+## 注意事项
+
+- **会消耗回退方的额度**：以 Claude 作回退时，观察记录运行计入你的 Claude 套餐。把 `CLAUDE_MEM_QUOTA_FALLBACK_MODEL` 设为 Haiku 模型，可让这开销一直很低。
+- **Claude 运行受 `CLAUDE_MEM_MAX_CONCURRENT_AGENTS` 限制**（默认 2）。Claude 回退下若有 3 个及以上的繁忙会话，多出的会话要排队等空位。
+- **Telegram 收尾（wrap-up）不受 `CLAUDE_MEM_QUOTA_FALLBACK_MODEL` 管辖**：它们用的是该会话最后一次运行所用的模型，或摘要分层（summary tier）模型。
+- **会话启动通知**：当另一个提供商在承接时，通知会说捕获继续在该处进行，而不是说记忆已暂停。通知在任一冷却期开始或结束时刷新，所以刚改完设置时，它可能滞后一步。
+
+worker 日志里，切换表现为 `Primary in quota cooldown; dispatching to fallback`，稍后是 `Primary quota cooldown elapsed; probing primary` 和 `Primary recovered from quota cooldown`。若没有提供商能承接，日志只提示一次：`Primary and fallback both in quota cooldown; …` 或 `Primary in quota cooldown and the quota fallback cannot serve; …`。

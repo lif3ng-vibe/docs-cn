@@ -1,0 +1,114 @@
+---
+title: "云同步（cmem.ai Pro）"
+description: "通过按用户的同步枢纽，对记忆数据库做双通道的多设备同步——持久的 HTTP 推拉之外，可选叠一层 Realtime 实时更新作为提速层。"
+---
+
+# 云同步（cmem.ai Pro）
+
+云同步（cloud sync）通过一个**按用户的同步枢纽（per-user sync hub）**——一份有序日志，记录你的设备写入的一切——把你的本地记忆数据库复制到各个设备。它内置于 worker 服务：**没有守护进程，worker 在写入时同步**。记录每条观察记录的同一个进程，同时也负责上传，并把其他设备的写入拉回本地。
+
+<Note>
+**双通道，同一份数据源头**。一切持久数据都走普通 HTTP：推送把内容追加到枢纽的有序日志，拉取凭游标逐页翻过这份日志。可选的 Realtime 通道伴随其旁，只是一个纯粹的*提速层*——它只会让下一次拉取来得更早。这条通道即使被丢弃、被禁用或出了错，也**零数据损失**；HTTP 游标永远是真相所在。
+</Note>
+
+## 哪些内容会同步
+
+三类行会在你的设备之间复制：
+
+- **观察记录**——claude-mem 从你的会话生成的压缩记忆。
+- **会话摘要**——每个会话的概览记录。
+- **用户提示**——你输入的提示词。超过 200 KB 的提示词只上传前 200 KB 加一段截断说明；完整内容留在捕获它的那台设备上。
+
+除了行数据，三类**变异操作（mutation）**也走同一条日志，让后续编辑在所有设备上收敛：会话**标题**变更、**提示→会话修复**（在会话注册之前捕获的提示会在每台设备上重新建立关联），以及**项目重映射**（worktree 收编和基于 cwd 的移动会让受影响的行在每台设备上重新归属）。
+
+<Warning>
+**隐私**：云同步会把你的观察记录叙述内容和完整的提示词文本，经由你的 cmem.ai 账号上传到同步枢纽。如果这些内容必须留在你的机器上，请不要启用它。
+</Warning>
+
+## 推送通道如何工作
+
+**数据库即队列**。每张参与同步的表都带一个 `synced_at` 列（`NULL` 表示尚未入日志）。每次写入之后，worker 会叫醒一个防抖冲刷器（flusher），由它排空 `WHERE synced_at IS NULL` 的行，成功后打上时间戳。这一个机制同时覆盖实时同步、离线补传和重试。SyncHub 启动边界之后写入的行，初始状态就是 `NULL`；上传失败的行会一直是 `NULL`，等之后的某次冲刷接手。启动边界之前的本地历史行，不会被当成云端迁移的语料。
+
+- **防抖**：写入的爆发会合并；冲刷器在最后一次写入约 1.5 s 后运行（提速层已连接时为 250 ms），且同一时刻只跑一次冲刷。
+- **分批**：操作以请求为单位排空，每个请求最多 500 个操作 / 4,000,000 编码字节；单个规范请求体（canonical body）上限 256,000 编码字节。
+- **限时**：每个请求都有 30 s 超时——断网永远拖不垮 worker。
+- **重试**：上传失败会让行保持 `NULL`，在下一次写入时连同有上限的指数退避（30 s → 10 min）一起重试。写入路径永远不会被阻塞——同步失败只是造成延迟，别无代价。
+- **幂等**：枢纽按来源身份去重，重试的推送绝不会制造重复。
+
+## 拉取通道如何工作
+
+每台设备都在枢纽的日志里保存一个**游标（cursor）**，只拉取它之后的内容——一次一页，因此离线了一周的设备（或从零开始的新设备）补进度的方式，与活跃设备保持最新完全一致：
+
+- **会话开始时**：worker 在注入上下文之前立即拉取（上限 1.5 s，断网不会拖慢会话），于是另一台机器上写入的记忆，在你开始工作那一刻已经就位。
+- **稳定状态**：会话活跃期间每 30 s 短轮询一次，空闲时每 5 min 一次，无活动一小时后完全暂停。每次推送的响应还会顺带报告日志头，因此活跃设备不必干等计时器，就能得知远端有新写入。
+- **按原生写入生效**：拉下来的行保留原始时间戳、携带来源设备，经与原生写入相同的路径进入全文检索与向量检索，并且被打上标记，永远不会回声上传。
+
+## 实时更新（可选）
+
+启用时（默认启用），worker 还会为你的账号订阅一条私有 Realtime 通道。当另一台设备推送时，服务器就广播一个简短的"日志前进了"信号，本机随即拉取——多设备在约一秒内收敛，而不是等一个轮询周期。这条通道严格只是**建议性**的：它不携带你的数据，任何异常（连接掉线、心跳丢失、信号格式错误）都只是把它关闭，然后回退到 HTTP 拉取——后者永远正确。把 `CLAUDE_MEM_CLOUD_SYNC_WS` 设为 `false` 即可关闭实时更新——同步依然完全正确，只是退到轮询延迟。如果同步服务器不提供实时更新，worker 就留在轮询模式，并每小时重新探测一次。
+
+## 配置要求与安装
+
+token、用户 id 与枢纽 URL 三者**全部**非空时，云同步才处于激活状态——没有单独的启用开关；把其中任意一个置空即关闭同步。
+
+1. 一份 **cmem.ai Pro 同步 token 与用户 id**（来自 **cmem.ai → Connect**）。
+2. `CLAUDE_MEM_CLOUD_SYNC_HUB_URL` 中的**同步枢纽 URL**：`https://sync.cmem.ai`，安装器会替你写入（源码在 `services/sync-api/`）。被钉在旧版 Cloudflare Workers 枢纽上的 URL 会被自动迁移过来。
+
+要连接，请在终端运行 `npx claude-mem install` 并选择 **CMEM Pro**。安装器会通过浏览器完成登入，把这三个值写进 `~/.claude-mem/settings.json`（权限 `0600`），并重启 worker。Claude Code 里的 `/cloud-sync` skill 会检查状态、引导你使用安装器完成设置，并验证已安装的客户端能连通 SyncHub。它绝不会请你把 token 粘贴到对话里——因为粘进去的内容会落入会话记录。CI 或远程机器请参考[无头模式配置](/cmem-pro-headless)。
+
+## 配置项
+
+| 键 | 默认值 | 说明 |
+|-----|---------|---------|
+| `CLAUDE_MEM_CLOUD_SYNC_TOKEN` | `''` | 你的 cmem.ai 同步 token（来自 **cmem.ai → Connect**）。以 `Authorization: Bearer` 发送。 |
+| `CLAUDE_MEM_CLOUD_SYNC_USER_ID` | `''` | 你的 cmem.ai 用户 id（来自 **cmem.ai → Connect**）。所有设备共用——它命名了你的枢纽日志。 |
+| `CLAUDE_MEM_CLOUD_SYNC_HUB_URL` | `''` | 同步枢纽的 base URL。**为空即关闭同步**。 |
+| `CLAUDE_MEM_CLOUD_SYNC_WS` | `'true'` | 经 Realtime 提供实时更新。`'false'` 禁用实时更新（仅走 HTTP 轮询）；同步依然完全正确，只是退到轮询延迟。 |
+| `CLAUDE_MEM_CLOUD_SYNC_DEVICE_ID` | `''` | 本机的稳定身份标识。首次启动时会生成并持久化一个新 UUID。不要手动更改：每一行都归属其来源设备。 |
+| `CLAUDE_MEM_CLOUD_SYNC_DEVICE_NAME` | 机器主机名 | 本机的人类可读标签。 |
+| `CLAUDE_MEM_CLOUD_SYNC_CONTENT_BATCH_SIZE` | `'40'` | 每次内容冲刷页的操作数。枢纽 `projection_busy` 时，200 操作的页曾在 30 s 处超时。上限 500。 |
+| `CLAUDE_MEM_CLOUD_SYNC_REQUEST_TIMEOUT_MS` | `'90000'` | 内容推送的 `AbortSignal` 超时。必须大于枢纽 45 s 的 projection 取数；默认值与 90 s 的 projection 租约一致。 |
+
+一个枢纽每个账号最多接受 64 个不同的设备 id。达到上限时，已有设备照常同步；新设备则会收到 `409 device_limit_exceeded`。状态/元数据读取和对未知设备的重命名，不会制造幽灵设备。
+
+## 状态接口
+
+worker 会暴露 `GET /api/sync/status`（与其他 worker HTTP API 同一端口）。它是无条件注册的，因此未配置的安装也会回答 `200` 而非 `404`——调用方由此能区分"未配置"与"worker 已宕机"。
+
+```bash
+curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/sync/status"
+```
+
+已配置：
+
+```json
+{
+  "configured": true,
+  "deviceId": "2f6b1c9e-7d41-4c1a-9b0e-3d5f8a2c6e10",
+  "pending": { "observations": 0, "summaries": 0, "prompts": 2, "mutations": 0, "tombstones": 0 },
+  "quarantine": { "count": 0, "latestReason": null },
+  "lastFlushAt": 1783981042731,
+  "lastError": null,
+  "hub": {
+    "checkedAt": 1783981042800,
+    "reachable": true,
+    "epoch": "1783981042000",
+    "headSeq": "42",
+    "projectedSeq": "42",
+    "error": null
+  }
+}
+```
+
+每个已配置状态的请求，都会直接向 SyncHub 发起一次带鉴权、只读的 `GET /v1/sync/status`，即便所有待处理计数为零也照发。该探测既不追加操作，也不推进拉取游标。因此，`hub.reachable: false` 与 `hub.error` 能暴露出的坏 token、错误的枢纽 URL、格式错误的响应、超时或网络故障——这些在队列为空时本来会被掩盖。
+
+- `pending`——仍在等待上传的行（以及排队中的 mutation 操作）。计数接近 0，说明枢纽的日志已收齐本机写入的一切。
+- `lastFlushAt`——上次成功冲刷的 epoch 毫秒数；首次成功之前为 `null`。
+- `lastError`——最近一次失败冲刷的信息；健康时为 `null`。它绝不会包含 token。
+- `hub`——最近一次对 SyncHub 的带鉴权探测结果。把 `hub.reachable: true` 当作连通性判据；仅凭 `lastError: null` 不够。序列与 epoch 字段保持十进制字符串形式。
+
+未配置：
+
+```json
+{ "configured": false }
+```

@@ -1,0 +1,146 @@
+---
+title: "模式与语言"
+description: "通过模式系统（Mode System）配置 Claude-Mem 的行为与输出语言"
+---
+
+# 模式与语言
+
+Claude-Mem 用灵活的**模式系统**（Mode System）来调整自身行为、观察类型和输出语言。这样你无需重装插件，就能在不同工作流（比如写代码 vs 邮件调查）或不同语言之间切换。
+
+## 什么是模式？
+
+“模式”（mode）是一份定义以下内容的配置档案：
+1.  **观察者角色**：Claude 该以什么视角分析你的工作（例如“软件工程师”还是“取证分析师”）。
+2.  **观察类型**：记忆可用的合法类别（例如“Bug Fix”“Feature”，对比“Person”“Organization”）。
+3.  **概念**（concept）：用于索引的语义标签（例如“Pattern”“Trade-off”）。
+4.  **语言**：生成观察记录和摘要所用的语言。
+
+## 配置
+
+在 `~/.claude-mem/settings.json` 里通过 `CLAUDE_MEM_MODE` 设置项指定当前激活的模式：
+
+```json
+{
+  "CLAUDE_MEM_MODE": "code--es"
+}
+```
+
+或通过环境变量：
+
+```bash
+export CLAUDE_MEM_MODE="code--fr"
+```
+
+当前激活的模式会显示在注入每个新会话的启动上下文里，例如：
+
+```text
+Mode: Code Development (code)
+```
+
+## 创建自定义模式
+
+运行 `/mode-creator`，通过交互式问答设计一个面向特定领域的记忆体系。它会帮你挑选观察类型和概念标签，编写并校验模式，安装到 `~/.claude-mem/modes/` 下并激活，可顺便配置 Telegram 警报，然后重启 worker，并在启动上下文中验证当前激活的模式。
+
+数据目录里的自定义模式在插件升级后依然保留。worker 会先查找用户模式，再查找内置模式；继承型自定义模式也仍然可以使用 `code` 这样的内置父模式：
+
+```text
+~/.claude-mem/modes/code--architecture-practice.json
+```
+
+不要编辑插件缓存里的文件——插件更新时它们可能被整体替换。
+
+## Telegram 警报与会话收尾
+
+Telegram 有两条相互独立的发送路径。会话收尾（wrap-up）在 Claude Code 会话结束后，发送最近一条已存储的会话摘要。单条观察警报则是针对命中观察类型或概念的实时通知；它们现在默认关闭，即使 Telegram 本身已启用。
+
+在 `~/.claude-mem/settings.json` 中把这些新配置项设为字符串：
+
+- `CLAUDE_MEM_TELEGRAM_WRAPUPS_ENABLED` 默认为 `"true"`，但在配置好路由之前不会发送任何收尾消息。
+- `CLAUDE_MEM_TELEGRAM_OBSERVATION_ALERTS_ENABLED` 默认为 `"false"`；只有想恢复原有的 `CLAUDE_MEM_TELEGRAM_TRIGGER_TYPES` 或 `CLAUDE_MEM_TELEGRAM_TRIGGER_CONCEPTS` 警报时，才把它设为 `"true"`。
+- `CLAUDE_MEM_TELEGRAM_WRAPUP_ROUTES` 默认为 `"{}"`，内容是以项目名为键的 JSON 对象。
+
+例如，把下面这个路由对象作为 `CLAUDE_MEM_TELEGRAM_WRAPUP_ROUTES` 的值：
+
+```json
+{
+  "claude-mem": {
+    "chat_id": "-1001234567890",
+    "bot_token": "optional override",
+    "key": "optional route label"
+  }
+}
+```
+
+路由必须提供 `chat_id`；`bot_token` 可用来覆盖 `CLAUDE_MEM_TELEGRAM_BOT_TOKEN`，`key` 是可选的路由标签。`CLAUDE_MEM_TELEGRAM_ENABLED` 仍是两条路径的总开关。路由查找先精确匹配项目名，对 worktree 再退而匹配第一个 `/` 之前的父目录名。如果两条路由都不存在，claude-mem 会记录日志 `No wrap-up route for project` 且什么都不发送——收尾消息永远不会回退到 `CLAUDE_MEM_TELEGRAM_CHAT_ID`。
+
+## 可用模式
+
+### 代码模式（默认）
+软件开发的标准模式。记录 Bug 修复、新功能、重构和架构决策。
+
+**ID**：`code`
+
+### 代码模式变体
+
+改变代码模式行为方式的变体：
+
+| 变体 | Mode ID | 说明 |
+|---------|---------|-------------|
+| **Chill** | `code--chill` | 产出的观察记录更少。只记录“重新发现会很痛苦”的内容——已上线的功能、架构决策和不明显的坑。跳过例行工作和显而易见的改动。 |
+
+### 多语言代码模式
+继承代码模式的全部行为，但指示 Claude 用目标语言生成**全部**记忆产物（标题、叙述、事实、摘要）。
+
+| 语言 | Mode ID | 本地名称 |
+|----------|---------|-------------|
+| **阿拉伯语** | `code--ar` | العربية |
+| **孟加拉语** | `code--bn` | বাংলা |
+| **中文** | `code--zh` | 中文 |
+| **捷克语** | `code--cs` | Čeština |
+| **丹麦语** | `code--da` | Dansk |
+| **荷兰语** | `code--nl` | Nederlands |
+| **芬兰语** | `code--fi` | Suomi |
+| **法语** | `code--fr` | Français |
+| **德语** | `code--de` | Deutsch |
+| **希腊语** | `code--el` | Ελληνικά |
+| **希伯来语** | `code--he` | עברית |
+| **印地语** | `code--hi` | हिन्दी |
+| **匈牙利语** | `code--hu` | Magyar |
+| **印尼语** | `code--id` | Bahasa Indonesia |
+| **乌尔都语** | `code--ur` | اردو |
+| **意大利语** | `code--it` | Italiano |
+| **日语** | `code--ja` | 日本語 |
+| **韩语** | `code--ko` | 한국어 |
+| **挪威语** | `code--no` | Norsk |
+| **波兰语** | `code--pl` | Polski |
+| **葡萄牙语（巴西）** | `code--pt-br` | Português Brasileiro |
+| **罗马尼亚语** | `code--ro` | Română |
+| **俄语** | `code--ru` | Русский |
+| **西班牙语** | `code--es` | Español |
+| **瑞典语** | `code--sv` | Svenska |
+| **泰语** | `code--th` | ภาษาไทย |
+| **土耳其语** | `code--tr` | Türkçe |
+| **乌克兰语** | `code--uk` | Українська |
+| **越南语** | `code--vi` | Tiếng Việt |
+
+### 邮件调查模式
+专门用于分析成批邮件（例如 FOIA（信息自由法）公开文件、企业档案）的模式。重点是识别实体、关系、时间线事件和关键话题。
+
+**ID**：`email-investigation`
+
+**观察类型**：
+- `entity`：人物、组织或电子邮箱地址
+- `relationship`：实体之间的关联
+- `timeline-event`：通信序列中带时间戳的事件
+- `evidence`：佐证材料或证据
+- `anomaly`：可疑模式或异常之处
+- `conclusion`：调查结论或判定
+
+## 模式继承
+
+系统支持用 `--` 分隔符实现继承。例如，`code--es` 的含义是：
+1.  加载 `code`（父）配置。
+2.  加载 `code--es`（子）配置。
+3.  把子配置合并进父配置（子项覆盖父项）。
+
+这样可以做出轻量的“remix”模式——只改动特定方面（比如语言提示），核心定义保持原样。

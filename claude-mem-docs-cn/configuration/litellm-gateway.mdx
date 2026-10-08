@@ -1,0 +1,307 @@
+---
+title: "LiteLLM 网关"
+description: "让 claude-mem 的 Claude Agent SDK worker（worker 服务）经由 LiteLLM 路由，同时保持单一的智能体执行路径"
+---
+
+# LiteLLM 网关
+
+claude-mem 可以让它的后台记忆智能体（memory agent）经由 LiteLLM 代理路由。这样团队既能保留 claude-mem 的 Claude Agent SDK 工作流，又能借助 LiteLLM 实现模型路由、集中式凭据管理、用量跟踪、预算控制、审计日志与提供商故障转移。
+
+关键细节是：claude-mem **不会**用 OpenAI 客户端直接调用 LiteLLM。claude-mem 仍然走 Claude Agent SDK，由 SDK 向 LiteLLM 发送 Anthropic 格式的请求，LiteLLM 再把这些请求转换为你所配置的上游模型提供商。
+
+```text
+Claude Code session
+  -> claude-mem hooks
+  -> claude-mem worker
+  -> Claude Agent SDK subprocess
+  -> ANTHROPIC_BASE_URL=http://localhost:4000
+  -> LiteLLM proxy
+  -> OpenAI / Azure / Vertex / Bedrock / OpenRouter / local model
+```
+
+这样，记忆智能体就始终走在同一条实现路径上。无论上游模型是 Anthropic 还是经 LiteLLM 路由，Claude 提供商、知识智能体（knowledge agent）、会话恢复行为、XML 观察记录（observation）提示词以及队列重试逻辑，都沿用同一套 SDK 代码路径。
+
+## 何时使用
+
+适合在以下场景使用 LiteLLM 网关模式：
+
+- 为 claude-mem 流量提供组织级的统一 LLM 网关
+- 不修改 claude-mem 源码即可实现提供商路由
+- 集中管理 API 密钥，而不必把提供商密钥分散存放在每个开发者的 claude-mem 设置里
+- 使用 LiteLLM 的预算、速率限制（rate limiting）、日志、回退路由或虚拟密钥
+- 在保留 claude-mem 所依赖的 Claude Agent SDK 执行路径的同时，使用非 Anthropic 的上游模型
+
+如果你想直接使用 claude-mem 的 REST 提供商、且不需要 Claude Agent SDK 路径，请改用原生的 [OpenRouter 提供商](../usage/openrouter-provider)或 [Gemini 提供商](../usage/gemini-provider)。
+
+## 架构
+
+### 单一智能体路径
+
+LiteLLM 集成刻意保持得很小：没有自定义的 LiteLLM 提供商实现，没有 Python handler，claude-mem 里也没有内嵌任何 OpenAI 兼容服务器。
+
+运行流程如下：
+
+1. 安装器或用户把网关设置写入 `~/.claude-mem/.env`。
+2. `~/.claude-mem/settings.json` 中 `CLAUDE_MEM_PROVIDER` 保持为 `claude`。
+3. worker 以隔离环境启动 Claude Agent SDK。
+4. SDK 读取 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN`。
+5. LiteLLM 收到 SDK 发来的 Anthropic 格式请求。
+6. LiteLLM 把请求映射到 LiteLLM 中配置的上游提供商与模型。
+7. SDK 的响应由 claude-mem 常规的观察记录管线解析。
+
+涉及的代码路径如下：
+
+| 代码路径 | 职责 |
+| --- | --- |
+| `src/npx-cli/commands/install.ts` | 提示选择「LiteLLM 或自定义网关」，保存网关 URL/token，并允许自定义网关模型名 |
+| `src/shared/EnvManager.ts` | 把凭据存入 `~/.claude-mem/.env`，拦截 shell 泄漏的认证变量，只注入显式的 claude-mem 凭据 |
+| `src/services/worker/ClaudeProvider.ts` | 以隔离环境启动 Claude Agent SDK 进行观察记录抽取 |
+| `src/services/worker/knowledge/KnowledgeAgent.ts` | 知识语料库问答复用同一条隔离的 SDK 路径 |
+
+### 为什么 `CLAUDE_MEM_PROVIDER` 保持 `claude`
+
+LiteLLM 是 Claude Agent SDK 路径的网关，不是 claude-mem 的第四种提供商。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "claude",
+  "CLAUDE_MEM_CLAUDE_AUTH_METHOD": "gateway",
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+把提供商保持为 `claude` 很重要，因为 worker 应继续使用 `ClaudeProvider`，而不是原生的 Gemini 或 OpenRouter REST 提供商。网关 URL 改变的只是 SDK 发送模型流量的目的地，并不会改变 claude-mem 管理记忆会话的方式。
+
+## 配置 LiteLLM
+
+LiteLLM 必须为 Claude Code / Claude Agent SDK 流量暴露一个 Anthropic 兼容端点。Anthropic 的网关指南建议将统一的 LiteLLM 端点作为常规配置：
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:4000
+```
+
+对 claude-mem 来说，这个值应写入 `~/.claude-mem/.env`，而不是放进你的 shell 环境变量，这样后台 worker 在多次重启之间都能一致地使用它。
+
+### 最小 LiteLLM 示例
+
+创建一个 LiteLLM 配置，定义 claude-mem 将请求的模型名：
+
+```yaml
+# litellm-config.yaml
+model_list:
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  master_key: sk-litellm-local
+```
+
+启动 LiteLLM：
+
+```bash
+OPENAI_API_KEY=sk-your-openai-key \
+litellm --config litellm-config.yaml --host 127.0.0.1 --port 4000
+```
+
+在这个例子中，claude-mem 通过 SDK 请求 `claude-haiku-4-5-20251001`，LiteLLM 接受该模型别名，并将请求转发给 `openai/gpt-4o-mini`。
+
+<Note>
+`model_name` 中的别名必须与 `CLAUDE_MEM_MODEL` 一致，否则就要把 `CLAUDE_MEM_MODEL` 改成与你的 LiteLLM 别名一致。claude-mem 不会转换模型名。
+</Note>
+
+## 配置 claude-mem
+
+### 方式一：安装器
+
+运行安装器：
+
+```bash
+npx claude-mem install
+```
+
+依次选择：
+
+1. `Claude Agent SDK`
+2. `API key or gateway`
+3. `LiteLLM or custom gateway`
+4. 你的 LiteLLM URL，例如 `http://127.0.0.1:4000`
+5. 如果代理要求认证，提供你的 LiteLLM 密钥/token
+6. LiteLLM 应接收的模型别名
+
+安装器会把提供商设置存入 `~/.claude-mem/settings.json`，把网关凭据存入 `~/.claude-mem/.env`。
+
+### 方式二：手动编辑文件
+
+编辑 `~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "claude",
+  "CLAUDE_MEM_CLAUDE_AUTH_METHOD": "gateway",
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+编辑 `~/.claude-mem/.env`：
+
+```bash
+# ~/.claude-mem/.env
+ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+ANTHROPIC_AUTH_TOKEN=sk-litellm-local
+```
+
+如果你的 LiteLLM 代理不需要认证，可省略 `ANTHROPIC_AUTH_TOKEN`。
+
+手动编辑后请重启 worker：
+
+```bash
+npm run worker:restart
+```
+
+## 环境隔离
+
+claude-mem 有意不去信任 shell 或项目 `.env` 文件里恰好导出的那些 Anthropic 凭据。
+
+worker 会屏蔽继承而来的 `ANTHROPIC_API_KEY`、`ANTHROPIC_AUTH_TOKEN` 以及过期的 `CLAUDE_CODE_OAUTH_TOKEN` 值，然后只重新注入 `~/.claude-mem/.env` 中保存的凭据。
+
+这样可以避免两种常见故障：
+
+- 项目级 `ANTHROPIC_API_KEY` 悄悄绕过 LiteLLM，直接向 Anthropic 公共 API 计费。
+- 过期的 Claude Code OAuth token 覆盖已配置的网关 token，导致令人困惑的认证失败。
+
+如果 `~/.claude-mem/.env` 中存在 `ANTHROPIC_BASE_URL`、`ANTHROPIC_AUTH_TOKEN` 或 `ANTHROPIC_API_KEY`，worker 会将其视为显式的网关/API 配置并跳过 Claude OAuth 查找。这能防止已配置的网关回退到 `api.anthropic.com`。
+
+## 模型名称
+
+`CLAUDE_MEM_MODEL` 会原样传递给 Claude Agent SDK。在网关模式下，claude-mem 允许任意非空的模型字符串，因为有效模型列表由 LiteLLM 掌管。
+
+推荐模式：
+
+```yaml
+model_list:
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+```
+
+然后保持：
+
+```json
+{
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+也可以改用一个有描述性的自定义别名：
+
+```yaml
+model_list:
+  - model_name: memory-compressor
+    litellm_params:
+      model: azure/gpt-4o-mini-memory
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2024-10-21"
+```
+
+```json
+{
+  "CLAUDE_MEM_MODEL": "memory-compressor"
+}
+```
+
+## 请求流程
+
+当 Claude Code 会话产生转录事件时，claude-mem 的 worker 会将其排队等待观察记录抽取。在网关模式下，抽取流程为：
+
+1. worker 为某个记忆会话加载待处理消息。
+2. `ClaudeProvider` 构建观察记录提示词并选定模型。
+3. `buildIsolatedEnvWithFreshOAuth()` 加载 `~/.claude-mem/.env`。
+4. SDK 子进程以指向 LiteLLM 的 `ANTHROPIC_BASE_URL` 启动。
+5. LiteLLM 收到 Anthropic 格式请求。
+6. LiteLLM 路由到所配置的上游模型。
+7. SDK 把 assistant 响应流式传回 worker。
+8. claude-mem 解析观察记录，存入 SQLite，并同步可供检索的向量嵌入。
+
+知识智能体的各个 API 使用同一网关环境，因此语料库预热（corpus priming）和语料库问答也会经由 LiteLLM 路由。
+
+## LiteLLM 替代与不替代的内容
+
+LiteLLM 替代了：
+
+- 上游模型选择
+- 提供商凭据
+- 网关层的预算与速率限制
+- 网关层的日志与审计
+- LiteLLM 内部的可选路由/回退策略
+
+LiteLLM 不替代：
+
+- claude-mem 的 worker 进程
+- Claude Agent SDK 子进程
+- claude-mem 的观察记录 XML 格式
+- SQLite 存储
+- Chroma/向量同步
+- Hook 安装
+- claude-mem 内部的会话恢复处理
+
+## 验证
+
+查看 claude-mem 的 worker 日志：
+
+```bash
+npm run worker:logs
+```
+
+你应该能看到报告网关认证的 SDK 启动日志，随后是正常的观察记录处理流程。
+
+再检查 LiteLLM 的日志里是否有对所配置模型别名的对应请求。如果 LiteLLM 从未收到流量，请确认：
+
+- `CLAUDE_MEM_PROVIDER` 为 `claude`
+- `CLAUDE_MEM_CLAUDE_AUTH_METHOD` 为 `gateway`
+- `ANTHROPIC_BASE_URL` 位于 `~/.claude-mem/.env` 中
+- 手动编辑后重启过 worker
+- LiteLLM URL 没有为统一 Anthropic 端点多加 `/v1` 后缀
+
+## 故障排查
+
+### LiteLLM 返回 "model not found"
+
+claude-mem 发送的模型名与 LiteLLM 的某个 `model_name` 不匹配。请让 `CLAUDE_MEM_MODEL` 与 LiteLLM 别名完全一致。
+
+### claude-mem 仍然直连 Anthropic
+
+检查 `~/.claude-mem/.env`。网关设置必须存放在这里。shell 导出的变量对 worker 而言不是可靠的配置来源。
+
+同时确保 `ANTHROPIC_BASE_URL` 存在。仅有 token 只能向网关做认证，而真正把流量重定向到默认 Anthropic 端点之外的，是 base URL。
+
+### 认证失败
+
+如果 LiteLLM 使用 master key 或虚拟密钥，请把它作为 `ANTHROPIC_AUTH_TOKEN` 存入 `~/.claude-mem/.env`。Claude Agent SDK 会把该值作为网关授权发送。
+
+如果你之前配置过直连 Anthropic 的 API 密钥，在网关模式下请从 `~/.claude-mem/.env` 移除 `ANTHROPIC_API_KEY`，除非你的网关明确要求使用该变量。
+
+### 修改文件后请求失败
+
+重启 worker：
+
+```bash
+npm run worker:restart
+```
+
+SDK 环境是在 SDK 子进程启动时构建的。重启一下，就能保证下一个记忆智能体进程读到新的网关配置。
+
+### 工具调用行为与完整 Claude Code 不同
+
+claude-mem 的记忆 worker 在观察记录抽取时禁用了文件与 shell 工具。LiteLLM 网关只负责处理用于压缩和汇总结记忆的那一次模型调用，并不能替代你交互式 Claude Code 的工具循环。
+
+## 相关链接
+
+- [自定义 Anthropic 兼容后端](custom-anthropic-backends)
+- [配置](../configuration)
+- [Worker 服务架构](../architecture/worker-service)
+- [Anthropic LLM 网关配置](https://docs.anthropic.com/en/docs/claude-code/llm-gateway)
+- [LiteLLM 官方文档](https://docs.litellm.ai/)

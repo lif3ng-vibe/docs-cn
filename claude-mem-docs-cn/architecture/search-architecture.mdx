@@ -1,0 +1,540 @@
+---
+title: "检索架构"
+description: "MCP 工具配合三层工作流，实现省 token 的记忆检索"
+---
+
+# 检索架构
+
+claude-mem 采用**基于 MCP 的检索架构**，通过 4 个精简的 MCP 工具、遵循三层工作流模式，提供智能的记忆检索。
+
+## 概览
+
+**架构**：MCP 工具 → MCP 协议 → HTTP API → worker 服务
+
+**核心组件**：
+
+1. **MCP 工具**（4 个）——`search`、`timeline`、`get_observations`、`important_workflow`
+2. **MCP 服务器**（`plugin/scripts/mcp-server.cjs`）——HTTP API 之上的薄封装
+3. **HTTP API 端点**——在配置的 worker 服务端口上执行快速检索
+4. **worker 服务**——带 FTS5 全文检索（full-text search）的 Express.js 服务器
+5. **SQLite 数据库**——持久化存储，含 FTS5 虚拟表
+6. **Chroma 向量数据库**——语义检索，支持混合检索（hybrid search）
+
+**Token 效率**：借助三层工作流模式，token 节省约 10 倍
+
+## 工作原理
+
+### 1. 用户查询
+
+Claude 可使用 4 个 MCP 工具。检索记忆时，按三层工作流执行：
+
+```
+Step 1: search(query="authentication bug", type="bugfix", limit=10)
+Step 2: timeline(anchor=<observation_id>, depth_before=3, depth_after=3)
+Step 3: get_observations(ids=[123, 456, 789])
+```
+
+### 2. MCP 协议
+
+MCP 服务器通过基于 stdio 的 JSON-RPC 接收工具调用：
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "search",
+    "arguments": {
+      "query": "authentication bug",
+      "type": "bugfix",
+      "limit": 10
+    }
+  }
+}
+```
+
+### 3. HTTP API 调用
+
+MCP 服务器将其转换为 HTTP 请求：
+
+```typescript
+const workerPort = process.env.CLAUDE_MEM_WORKER_PORT ?? "<worker-port>";
+const workerBaseUrl = `http://127.0.0.1:${workerPort}`;
+const url = `${workerBaseUrl}/api/search?query=authentication%20bug&type=bugfix&limit=10`;
+const response = await fetch(url);
+```
+
+### 4. worker 处理
+
+worker 服务执行 FTS5 查询：
+
+```sql
+SELECT * FROM observations_fts
+WHERE observations_fts MATCH ?
+AND type = 'bugfix'
+ORDER BY rank
+LIMIT 10
+```
+
+### 5. 返回结果
+
+worker 返回结构化数据 → MCP 服务器 → Claude：
+
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "| ID | Time | Title | Type |\n|---|---|---|---|\n| #123 | 2:15 PM | Fixed auth token expiry | bugfix |"
+  }]
+}
+```
+
+### 6. Claude 处理结果
+
+Claude 查看索引，判断哪些观察记录（observation）相关，然后可以：
+
+- 使用 `timeline` 获取上下文
+- 使用 `get_observations` 获取所选 ID 的完整详情
+
+## 4 个 MCP 工具
+
+### `important_workflow`——工作流说明
+
+始终对 Claude 可见，用于说明三层工作流模式。
+
+**描述**：
+
+```
+3-LAYER WORKFLOW (ALWAYS FOLLOW):
+1. search(query) → Get index with IDs (~50-100 tokens/result)
+2. timeline(anchor=ID) → Get context around interesting results
+3. get_observations([IDs]) → Fetch full details ONLY for filtered IDs
+NEVER fetch full details without filtering first. 10x token savings.
+```
+
+**目的**：确保 Claude 遵循省 token 的检索模式
+
+### `search`——检索记忆索引
+
+**工具定义**：
+
+```typescript
+{
+  name: 'search',
+  description: 'Step 1: Search memory. Returns index with IDs. Params: query, limit, project, type, obs_type, dateStart, dateEnd, offset, orderBy',
+  inputSchema: {
+    type: 'object',
+    properties: {},
+    additionalProperties: true  // Accepts any parameters
+  }
+}
+```
+
+**HTTP 端点**：`GET /api/search`
+
+**参数**：
+
+- `query`——全文检索查询语句
+- `limit`——最大返回条数（默认 20）
+- `type`——按观察记录类型过滤
+- `project`——按项目名过滤
+- `dateStart`、`dateEnd`——日期范围过滤
+- `offset`——分页偏移量
+- `orderBy`——排序方式
+
+**返回**：紧凑索引，含 ID、标题、日期、类型（每条约 50–100 token），按日期标题（`### <date>`）分组，每条返回结果都自带时间信息。日期分组按相关性排序，而非时间先后——即使相关性较低的结果更新一些，排名第一的匹配仍会排在最前。
+
+### `timeline`——获取时序上下文
+
+**工具定义**：
+
+```typescript
+{
+  name: 'timeline',
+  description: 'Step 2: Get context around results. Params: anchor (observation ID) OR query (finds anchor automatically), depth_before, depth_after, project',
+  inputSchema: {
+    type: 'object',
+    properties: {},
+    additionalProperties: true
+  }
+}
+```
+
+**HTTP 端点**：`GET /api/timeline`
+
+**参数**：
+
+- `anchor`——作为时间线中心的观察记录 ID（提供 `query` 时可省略）
+- `query`——自动查找锚点的检索语句（提供 `anchor` 时可省略）
+- `depth_before`——锚点之前的观察记录条数（默认 3）
+- `depth_after`——锚点之后的观察记录条数（默认 3）
+- `project`——按项目名过滤
+
+**返回**：按时间顺序展示锚点之前、期间、之后发生了什么
+
+### `get_observations`——获取完整详情
+
+**工具定义**：
+
+```typescript
+{
+  name: 'get_observations',
+  description: 'Step 3: Fetch full details for filtered IDs. Params: ids (array of observation IDs, required), orderBy, limit, project',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      ids: {
+        type: 'array',
+        items: { type: 'number' },
+        description: 'Array of observation IDs to fetch (required)'
+      }
+    },
+    required: ['ids'],
+    additionalProperties: true
+  }
+}
+```
+
+**HTTP 端点**：`POST /api/observations/batch`
+
+**请求体**：
+
+```json
+{
+  "ids": [123, 456, 789],
+  "orderBy": "date_desc",
+  "project": "my-app"
+}
+```
+
+**返回**：完整的观察记录详情（每条约 500–1,000 token）
+
+## MCP 服务端实现
+
+**位置**：`/Users/YOUR_USERNAME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs`
+
+**职责**：薄封装层，把 MCP 协议调用转换为 HTTP API 调用
+
+**关键特性**：
+
+- 约 312 行代码（旧实现约 2,718 行，已大幅精简）
+- 不含业务逻辑——只做协议转换
+- 唯一事实来源：worker HTTP API
+- schema 简单，统一使用 `additionalProperties: true`
+
+**处理函数示例**：
+
+```typescript
+{
+  name: 'search',
+  handler: async (args: any) => {
+    const endpoint = '/api/search';
+    const searchParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(args)) {
+      searchParams.append(key, String(value));
+    }
+
+    const workerPort = process.env.CLAUDE_MEM_WORKER_PORT ?? "<worker-port>";
+    const workerBaseUrl = `http://127.0.0.1:${workerPort}`;
+    const url = `${workerBaseUrl}${endpoint}?${searchParams}`;
+    const response = await fetch(url);
+    return await response.json();
+  }
+}
+```
+
+## worker HTTP API
+
+**位置**：`src/services/worker-service.ts`
+
+**端口**：使用配置的 worker 端口。默认值按用户计算（`37700 + (uid % 100)`），可通过 `CLAUDE_MEM_WORKER_PORT` 覆盖。
+
+**检索端点**：
+
+```typescript
+GET  /api/search           # 主检索（MCP search 工具使用）
+GET  /api/timeline         # 时间线上下文（MCP timeline 工具使用）
+POST /api/observations/batch  # 按 ID 批量获取（MCP get_observations 工具使用）
+GET  /api/health           # 健康检查
+```
+
+**数据库访问**：
+
+- 使用 `SessionSearch` 服务执行 FTS5 查询
+- 使用 `SessionStore` 执行结构化查询
+- 与 ChromaDB 协同，做语义相似度的混合检索
+
+**FTS5 全文检索**：
+
+```typescript
+// search tool → HTTP GET → FTS5 query
+SELECT * FROM observations_fts
+WHERE observations_fts MATCH ?
+AND type = ?
+AND date >= ? AND date <= ?
+ORDER BY rank
+LIMIT ? OFFSET ?
+```
+
+## 三层工作流模式
+
+### 设计理念
+
+三层工作流体现了**渐进式披露（progressive disclosure）**——这是 claude-mem 架构的核心原则。
+
+**第一层**：索引（search）
+
+- **内容**：紧凑表格，含 ID、标题、日期、类型
+- **开销**：每条约 50–100 token
+- **目的**：先摸清有哪些内容，再决定投入 token
+- **决策点**："哪些观察记录相关？"
+
+**第二层**：上下文（timeline）
+
+- **内容**：围绕某个节点的观察记录时序视图
+- **开销**：随深度变化
+- **目的**：理解叙事脉络，看清一个节点的前因后果
+- **决策点**："是否需要完整详情？"
+
+**第三层**：详情（get_observations）
+
+- **内容**：完整的观察记录数据（叙事、事实、文件、概念）
+- **开销**：每条约 500–1,000 token
+- **目的**：对已确认相关的观察记录深入研读
+- **决策点**："把知识应用到当前任务"
+
+### Token 效率
+
+**传统 RAG 方式**：
+
+```
+Fetch 20 observations upfront: 10,000-20,000 tokens
+Relevance: ~10% (only 2 observations actually useful)
+Waste: 18,000 tokens on irrelevant context
+```
+
+**三层工作流**：
+
+```
+Step 1: search (20 results)        ~1,000-2,000 tokens
+Step 2: Review index, filter to 3 relevant IDs
+Step 3: get_observations (3 IDs)   ~1,500-3,000 tokens
+Total: 2,500-5,000 tokens (50-75% savings)
+```
+
+**10 倍节省**：在索引层先过滤，再获取完整详情
+
+## 架构演进
+
+### 此前：复杂的 MCP 实现
+
+**方案**：9 个 MCP 工具，配详尽的参数 schema
+
+**Token 成本**：每个会话的工具定义约 2,500 token
+
+- `search_observations`——全文检索
+- `find_by_type`——按类型过滤
+- `find_by_file`——按文件过滤
+- `find_by_concept`——按概念过滤
+- `get_recent_context`——最近会话
+- `get_observation`——获取单个观察记录
+- `get_session`——获取会话
+- `get_prompt`——获取 prompt
+- `help`——API 文档
+
+**问题**：
+
+- 操作重叠（`search_observations` 与 `find_by_type`）
+- 参数 schema 复杂
+- 没有内置的工作流引导
+- 会话开始时 token 成本偏高
+
+**代码量**：mcp-server.ts 约 2,718 行
+
+### 此后：精简的 MCP 实现
+
+**方案**：4 个 MCP 工具，遵循三层工作流
+
+**Token 成本**：约 312 行代码，工具定义更精简
+
+**工具**：
+
+1. `important_workflow`——工作流引导（始终可见）
+2. `search`——第一层（索引）
+3. `timeline`——第二层（上下文）
+4. `get_observations`——第三层（详情）
+
+**收益**：
+
+- 渐进式披露内建于工具设计
+- 无重叠操作
+- schema 简单（`additionalProperties: true`）
+- 工作流模式清晰
+- token 节省约 10 倍
+
+**代码量**：mcp-server.ts 约 312 行（缩减 88%）
+
+### 关键洞察
+
+**此前**：渐进式披露要靠 Claude 自己记住
+
+**此后**：渐进式披露由工具设计本身强制执行
+
+三层工作流模式从结构上让浪费 token 变得困难：
+
+- 不先通过 search 拿到 ID，就无法获取详情
+- 只要调用检索，就能看到工作流提醒（`important_workflow`）
+- timeline 在索引与完整详情之间提供了中间层
+
+## 配置
+
+### Claude Desktop
+
+在 `claude_desktop_config.json` 中添加：
+
+```json
+{
+  "mcpServers": {
+    "mcp-search": {
+      "command": "node",
+      "args": [
+        "/Users/YOUR_USERNAME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
+      ]
+    }
+  }
+}
+```
+
+### Claude Code
+
+MCP 服务器随插件安装自动配置，无需手动设置。
+
+**两种客户端使用同一套 MCP 工具**——这套架构在 Claude Desktop 和 Claude Code 上的表现完全一致。
+
+## 安全
+
+### FTS5 注入防护
+
+所有检索语句在进入 FTS5 处理前都会先转义：
+
+```typescript
+function escapeFTS5Query(query: string): string {
+  return query.replace(/"/g, '""');
+}
+```
+
+**测试**：332 个注入攻击测试用例，覆盖特殊字符、SQL 关键字、引号转义和布尔运算符。
+
+### MCP 协议安全性
+
+- stdio 传输（不暴露网络端口）
+- HTTP API 仅监听本地，使用配置的 worker 端口
+- 无需身份验证（仅限本地开发使用）
+
+## 性能
+
+**FTS5 全文检索**：典型查询 10ms 以内
+
+**MCP 开销**：极小——只是简单的协议转换
+
+**缓存**：HTTP 层支持响应缓存（未来增强项）
+
+**分页**：借助 offset/limit 高效分页
+
+**批量**：`get_observations` 单次调用可传多个 ID
+
+## 相较于其他方案的优势
+
+### 对比传统 RAG
+
+**传统 RAG**：
+
+- 一次全量抓取
+- token 成本高
+- 相关性占比低
+
+**三层 MCP**：
+
+- 只抓取真正需要的内容
+- token 节省约 10 倍
+- 100% 相关（由 Claude 决定抓什么）
+
+### 对比此前的 MCP 实现（v5.x）
+
+**此前（9 个工具）**：
+
+- schema 复杂
+- 操作重叠
+- 无工作流引导
+- 工具定义占约 2,500 token
+
+**现有（4 个工具）**：
+
+- schema 简单
+- 工作流清晰
+- 内置引导
+- 约 312 行代码
+
+### 对比此前的 Skill 方案
+
+**Skill 方案**：
+
+- 需要单独的 skill 文件
+- 直接通过 curl 调用 HTTP API
+- 通过 skill 加载实现渐进式披露
+
+**MCP 方案**：
+
+- 原生 MCP 协议（与 Claude 集成更好）
+- 架构更干净（协议转换层）
+- Claude Desktop 与 Claude Code 均可使用
+- 维护更简单（无需 skill 文件）
+
+**迁移**：基于 skill 的检索方案已被移除，由精简的 MCP 架构取代。
+
+## 故障排查
+
+如需直接检查 API，先设置 worker 端口：
+
+```bash
+WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+```
+
+### MCP 服务端未连接
+
+**症状**：工具没有出现在 Claude 中
+
+**解决办法**：
+
+1. 检查配置中的 MCP 服务器路径
+2. 确认 worker 服务正在运行：`curl http://127.0.0.1:$WORKER_PORT/api/health`
+3. 重启 Claude Desktop / Claude Code
+
+### worker 服务未运行
+
+**症状**：MCP 工具报连接错误
+
+**解决办法**：
+
+```bash
+npm run worker:status       # 查看状态
+npm run worker:restart      # 重启 worker
+npm run worker:logs         # 查看日志
+```
+
+### 搜索结果为空
+
+**症状**：`search()` 没有返回任何结果
+
+**排查步骤**：
+
+1. 直接测试 API：`curl "http://127.0.0.1:$WORKER_PORT/api/search?query=test"`
+2. 检查数据库：`ls ~/.claude-mem/claude-mem.db`
+3. 确认观察记录存在：`curl "http://127.0.0.1:$WORKER_PORT/api/health"`
+
+## 延伸阅读
+
+- [记忆检索用法](/usage/search-tools)——带示例的用户指南
+- [渐进式披露](/progressive-disclosure)——三层工作流背后的设计理念
+- [worker 服务架构](/architecture/worker-service)——HTTP API 细节
+- [数据库 Schema](/architecture/database)——FTS5 表与索引

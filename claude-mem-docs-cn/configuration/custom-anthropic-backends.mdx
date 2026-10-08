@@ -1,0 +1,113 @@
+---
+title: "自定义 Anthropic 兼容后端"
+description: "通过 ANTHROPIC_BASE_URL 让 claude-mem 指向桥接或自托管的 Anthropic 兼容 API 端点"
+---
+
+# 自定义 Anthropic 兼容后端
+
+使用 `claude` 提供商时，claude-mem 会通过 Claude Agent SDK 与 Anthropic API 通信。SDK 默认指向官方 Anthropic 端点，但也会遵循标准的 `ANTHROPIC_BASE_URL` 环境变量。这意味着你可以把 claude-mem 导向任何按 Anthropic 协议运行的后端——例如企业网关、区域性桥接服务，或是对外提供 Anthropic 形态 API 的第三方提供商——全程无需改动 claude-mem 的任何源代码。
+
+<Note>
+本页说明如何**持久设置自定义 base URL**，让 claude-mem 的 worker 稳定一致地使用它。如果你的上游是 OpenAI 兼容提供商，请使用 LiteLLM 这类网关，并参考[LiteLLM 网关](litellm-gateway)指南。
+</Note>
+
+## 适用场景
+
+在以下情形中，需要用 `ANTHROPIC_BASE_URL` 让 claude-mem 的观察记录 worker 对接：
+
+- **企业 Anthropic 网关**——`api.anthropic.com` 前面的代理
+- **区域性 Anthropic 部署**——例如经由 Anthropic 兼容垫片接入的 AWS Bedrock 或 GCP Vertex
+- 自家 API 桥接到了 Anthropic 协议的**第三方提供商**
+
+如果你的提供商只讲 OpenAI chat-completions 协议，就在它前面加一层 LiteLLM 这类网关，并把 claude-mem 的 Claude Agent SDK 路径指向该网关。完整路由模型见[LiteLLM 网关](litellm-gateway)。
+
+## 底层如何衔接
+
+整条链路刻意保持简单：
+
+1. **你把凭据写入** `~/.claude-mem/.env`。
+2. **`EnvManager.loadClaudeMemEnv()`** 读取该文件（`src/shared/EnvManager.ts:67`）。
+3. **`buildIsolatedEnv()`** 把 `ANTHROPIC_BASE_URL` 连同显式配置的网关或 API 凭据一起，复制进 worker 的 spawn 环境（`src/shared/EnvManager.ts:164`）。
+4. **`ClaudeProvider.startSession()`** 用这份隔离环境启动 Claude Agent SDK（`src/services/worker/ClaudeProvider.ts:115`）。SDK 原生就会读取 `ANTHROPIC_BASE_URL`——claude-mem 既不解析也不改写它。
+
+由于该变量被隔离在 worker 进程之内，你的交互式 Claude Code 会话不受影响；应用这个覆盖值的只有后台的记忆智能体（memory agent）。
+
+## 配置
+
+### 第 1 步：编辑 `~/.claude-mem/.env`
+
+凭据文件是位于 `~/.claude-mem/.env` 的普通 `KEY=VALUE` 环境变量文件（权限 `0600`）。添加或更新 `ANTHROPIC_BASE_URL` 这一行：
+
+```bash
+# ~/.claude-mem/.env
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_BASE_URL=https://your-gateway.example.com/v1
+```
+
+文件尚不存在就创建一个。下一次 worker 写入时会自动把目录权限强制为 `0700`、文件权限强制为 `0600`。
+
+### 第 2 步：选择兼容的模型
+
+`CLAUDE_MEM_MODEL`（写在 `~/.claude-mem/settings.json` 里）会原样传给 SDK。模型名**必须是你的桥接能够接受的**——claude-mem 不做名称转译。
+
+```json
+{
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+如果你的桥接期望的是非 Anthropic 模型名（例如某个 Bedrock inference profile），就在这里改填那个字符串。
+
+### 第 3 步：重启 worker
+
+凭据是在 worker 启动 SDK 时才加载的，因此编辑 `.env` 之后必须重启：
+
+```bash
+npm run worker:restart
+```
+
+## 实战示例：企业网关
+
+假设你的团队为了审计与速率限制，在 `api.anthropic.com` 前面部署了 `https://anthropic-proxy.internal.example.com`。该代理接受同样的协议与同样的模型名。
+
+`~/.claude-mem/.env`：
+
+```bash
+ANTHROPIC_API_KEY=sk-corp-...
+ANTHROPIC_BASE_URL=https://anthropic-proxy.internal.example.com
+```
+
+`~/.claude-mem/settings.json`：
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "claude",
+  "CLAUDE_MEM_MODEL": "claude-haiku-4-5-20251001"
+}
+```
+
+重启后，下一条观察记录就会经由你的网关转发。
+
+## 验证
+
+重启之后，盯着 worker 日志等待下一次观察记录刷入：
+
+```bash
+npm run worker:logs
+```
+
+请求经你的网关成功放行时，会先出现标准的 `SDK Starting SDK query` 行，随后是 `Response received`。若网关拒绝请求，SDK 报错会原样出现在 `worker-error.log` 中——绝不会静默回退到公共 Anthropic 端点。
+
+## 限制与注意事项
+
+- **不转译模型名**：如果桥接期望的是 `glm-4.7`，而 `CLAUDE_MEM_MODEL` 仍是 `claude-haiku-4-5-20251001`，请求会失败。请把 `CLAUDE_MEM_MODEL` 钉死在桥接认识的名称上。
+- **网关鉴权通常用 `ANTHROPIC_AUTH_TOKEN`**：LiteLLM 网关模式下，把网关密钥或虚拟密钥存作 `ANTHROPIC_AUTH_TOKEN`。直连 Anthropic 的 API-key 模式，或明确要求该变量的网关，才用 `ANTHROPIC_API_KEY`。
+- **Shell 里的 `ANTHROPIC_BASE_URL` 不会被继承**：`ANTHROPIC_API_KEY` 被列入 BLOCKED_ENV_VARS 清单（`src/shared/EnvManager.ts:10`），以防 shell 里泄漏的密钥意外产生计费——`ANTHROPIC_BASE_URL` 并不在封禁之列，但要跨重启稳定生效，仍须写入 `~/.claude-mem/.env`。不要依赖 shell 的导出。
+- **不做自动检测**：如果你已经为 Claude Code 本身配置了 `ANTHROPIC_BASE_URL`、`ANTHROPIC_DEFAULT_HAIKU_MODEL` 等变量，claude-mem 目前**不会**读取它们。请把相关值镜像到 `~/.claude-mem/.env` 与 `~/.claude-mem/settings.json`。
+
+## 延伸阅读
+
+- [配置](../configuration)——claude-mem 的全部设置项
+- [LiteLLM 网关](litellm-gateway)：让 Claude Agent SDK 路径经由 LiteLLM 转发
+- [OpenRouter 提供商](../usage/openrouter-provider)——面向非 Anthropic 协议的 OpenAI 兼容桥接
+- [Gemini 提供商](../usage/gemini-provider)——原生 Gemini API 替代方案

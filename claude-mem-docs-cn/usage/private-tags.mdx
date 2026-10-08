@@ -1,0 +1,202 @@
+---
+title: "私密标签"
+description: "用 `<private>` 标签控制哪些内容被存入记忆"
+---
+
+# 私密标签
+
+## 概述
+
+使用 `<private>` 标签（私密标签）标记你不想持久化到 claude-mem 观察记录数据库的内容，从而精细掌控跨会话要记住什么。
+
+## 工作原理
+
+把任意内容包进 `<private>` 标签：
+
+```
+<private>
+This content will not be stored in memory
+</private>
+```
+
+Claude 在当前会话中仍能看到并使用这些内容，但不会把它保存为观察记录（observation）。
+
+## 使用场景
+
+### 1. 敏感信息
+
+```
+Please analyze this error:
+
+<private>
+Error: Database connection failed
+Host: internal-db-prod.company.com
+Port: 5432
+User: admin_user
+</private>
+
+What might be causing this?
+```
+
+Claude 能看到完整报错，但只有提问本身会被存储。
+
+### 2. 临时上下文
+
+```
+<private>
+Here's some background context just for this session:
+- Project deadline is tomorrow
+- This is a hotfix for production
+- Manager asked for this specifically
+</private>
+
+Help me fix this bug quickly.
+```
+
+### 3. 调试信息
+
+```
+<private>
+Debug output from previous run:
+[... 500 lines of logs ...]
+</private>
+
+Based on these logs, what's the root cause?
+```
+
+### 4. 探索性提问
+
+```
+<private>
+I'm just brainstorming here, not making a final decision
+</private>
+
+What are some wild approaches to solving this?
+```
+
+## 技术细节
+
+### 标签行为
+
+- **支持多行**：标签可以包裹多行内容
+- **可多次使用**：一条消息中可以出现多个 `<private>` 片段
+- **支持嵌套**：内层标签会随外层标签一并移除
+- **始终生效**：无需任何配置，自动起作用
+
+### 会被过滤的内容
+
+`<private>` 标签会从存储与记忆中过滤以下内容：
+
+- **用户提示词存储**：存入 user_prompts 表之前，标签会被剥离
+- **工具输入**：传给工具的参数在创建观察记录之前会被过滤
+- **工具响应**：工具输出在创建观察记录之前会被过滤
+- **所有可检索内容**：私密内容永远不会进入数据库或检索索引
+
+**重要**：标签是在存储环节剥离的，而不是从实时对话中移除。会话期间 Claude 看到的内容完整无缺（包括 `<private>` 标签本身），只有当内容持久化到数据库时标签才会消失。
+
+### 不会被过滤的内容
+
+- 会话摘要（session summary）（仅基于非私密的观察记录生成）
+- Claude 的回复（claude-mem 不捕获这类内容）
+
+## 示例
+
+### 示例 1：API 密钥
+
+```
+<private>
+API_KEY=sk-proj-abc123xyz789
+</private>
+
+Test this API connection for me
+```
+
+API 密钥不会被存入，但 Claude 在会话中可以使用它。
+
+### 示例 2：个人备注
+
+```
+<private>
+Note to self: This is for the Smith project - the one we discussed
+last Tuesday. Don't confuse with the Jones project.
+</private>
+
+Review the authentication implementation and suggest improvements.
+```
+
+这段私人上下文帮助 Claude 理解你的请求，同时不会污染你的观察记录历史。
+
+## 最佳实践
+
+1. **不要过度打标**：只对确实不想存入的内容使用 `<private>`
+2. **上下文很重要**：Claude 对项目的理解来自观察记录——过度的私密标记会降低未来上下文的质量
+3. **秘密该放别处**：`<private>` 能阻止存储，但敏感数据仍应走正规的密钥管理
+4. **验证它确实生效**：不确定标签是否被剥离时，查看 `~/.claude-mem/silent.log`
+
+## 验证方法
+
+要验证标签确实生效：
+
+1. 提交一条带 `<private>` 标签的提示词
+2. 查询数据库，确认私密内容没有被存入：
+   ```bash
+   # 查看用户提示词
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT prompt_text FROM user_prompts ORDER BY created_at_epoch DESC LIMIT 1;"
+
+   # 查看观察记录
+   sqlite3 ~/.claude-mem/claude-mem.db "SELECT narrative FROM observations ORDER BY created_at_epoch DESC LIMIT 1;"
+   ```
+3. 私密内容不应出现在 user_prompts 或 observations 两张表的任何一张中
+4. `<private>` 标签本身也应被剥离
+
+## 架构设计
+
+`<private>` 标签采用**边缘处理模式**（edge processing pattern）：
+
+- 内容在 Hook 层、进入任何存储之前就被过滤
+  - **UserPromptSubmit hook**：在用户提示词存入 user_prompts 表之前剥离标签（你输入的提示词在入库前已被清理）
+  - **PostToolUse hook**：在创建观察记录之前，从序列化后的 tool_input 与 tool_response JSON 中剥离标签
+- 过滤发生在数据抵达 worker 服务或数据库之前
+- 因此 worker 可以保持简单，数据流保持单向
+- 标签在实时对话中保持可见，但会从所有持久化存储中剥离
+
+**标签剥离范围**：实现上剥离的是工具输入与工具响应的*序列化 JSON 表示*中的标签，而不是对话界面中的原始提示词文本。你输入的提示词文本存储在另一张表（user_prompts）里，入库前同样会剥离其中的标签。
+
+这种设计确保私密内容永远不会进入数据库、检索索引或记忆智能体，让临时数据与持久数据之间保持清晰的分离。
+
+## 相关功能
+
+- [搜索工具](/usage/search-tools)——如何检索历史观察记录
+- [快速上手](/usage/getting-started)——基本用法指南
+- [配置](/configuration)——系统设置与环境变量
+
+## 故障排查
+
+### 标签未被剥离
+
+1. 确认语法正确：`<private>content</private>`
+2. 查看 `~/.claude-mem/silent.log` 是否有报错
+3. 确认 worker 正在运行：`npm run worker:status`
+4. 重启 worker：`npm run worker:restart`
+
+### 内容被部分存储
+
+如果观察记录中只出现了一部分内容：
+
+- 确认标签正确闭合
+- 检查标签名有没有拼写错误
+- 确认内容位于工具执行内（而不只出现在你的提示词文本中）
+
+### silent.log 出现报错
+
+如果你在 `~/.claude-mem/silent.log` 中看到如下报错：
+
+```
+[save-hook] stripMemoryTags received non-string: { type: 'object' }
+```
+
+这通常无害——说明防御性类型检查在正常工作。但如果频繁出现，可能意味着存在 bug，欢迎到 https://github.com/thedotmack/claude-mem/issues 反馈。
+
+## 另请参阅
+
+- [自动脱敏](/usage/auto-redaction)——可选开启、基于正则的检测，用于拦截意外泄露的 token。它与 `<private>` 标签互补，能捕获你自己都没打算标记的秘密。

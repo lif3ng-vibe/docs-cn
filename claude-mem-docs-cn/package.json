@@ -1,0 +1,17 @@
+{
+  "name": "claude-mem-docs-cn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "claude-mem 文档中文镜像（非官方），源：https://docs.claude-mem.ai/ 上游快照 thedotmack/claude-mem@71ddd11",
+  "scripts": {
+    "dev": "mintlify dev",
+    "export": "mintlify export --disable-openapi",
+    "validate": "mintlify validate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mintlify": "^4.2.992"
+  }
+}

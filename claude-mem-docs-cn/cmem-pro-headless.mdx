@@ -1,0 +1,132 @@
+---
+title: "CMEM Pro（手动与无头模式）"
+description: "npx claude-mem install 为 CMEM Pro 写入哪些内容——OAuth 配对、settings.json 设置键，以及不借助交互式安装器时如何验证"
+---
+
+# CMEM Pro（手动与无头模式）
+
+当你已有 [cmem.ai](https://cmem.ai) 账户，并且需要在不借助交互式安装器的前提下完成 CMEM Pro 配置时（CI 环境、第二台机器，或通过 SSH 登录的无头模式（headless）环境），使用本页。常规路径仍然是 [`npx claude-mem install`](/installation)。
+
+<Warning>
+切勿把真实的 `cm_pro_…` 密钥、setup token 或 OpenRouter `sk-or-` 密钥粘贴到聊天、工单或文档里。下面的示例都只是占位符。请保持 `~/.claude-mem/settings.json` 的权限为 `0600`。
+</Warning>
+
+## 安装器做了什么
+
+共三个阶段：
+
+1. **运行时**——按需安装 Bun/uv、IDE 插件文件与 worker 依赖。
+2. **登录**——`--provider claude` 时跳过；不带 `--provider` 的非交互式运行同样跳过（全新安装默认 claude，已有配置则沿用其原提供商）。跳过登录的非交互式安装会在最后一行输出一个可选的登录链接；智能体应把这条链接展示给用户，而不是替用户打开。本地安装只会在注册（signup）环节联系 cmem.ai 一次，以生成登录链接，附带一份仅含数字的用量摘要（观察记录条数与 token 总量，不含提示词、路径或项目名）；除此之外不会向 cmem.ai 发送任何其他内容。此外 CLI **不会**索要电子邮件：
+   - `POST https://cmem.ai/api/installer/oauth/start` 携带 `{ source: "npx-installer", device_name: <hostname>, install_state: "fresh" | "update", usage_summary?: { window_days: 28, active_days, observations, memory_tokens, days: [{ d: "YYYY-MM-DD", obs, tokens }] } }`（无法读取本地数据时省略 `usage_summary`）
+   - 打印设备码 `XXXX-XXXX`，并打开 `authorization_url`
+   - 轮询 `https://cmem.ai/api/pro/trial/poll`，直至完成认证
+3. **提供商**——**已预选 CMEM Pro**：选择它会打开 `checkout_url`（试用或认领），轮询直至 `status: "ready"`，然后写入设置并重启 worker。
+
+`--provider openrouter` 配**个人**密钥是一条不同的路径：`CLAUDE_MEM_OPENROUTER_BASE_URL` 为空（或 `https://openrouter.ai/api/v1`）。绝不要把个人 `sk-or-` 密钥发送到 `https://cmem.ai/api/inference`。
+
+## 安装器写入的设置项
+
+凭据先被**暂存**（staged），再被**激活**（activated）。写入文件：`~/.claude-mem/settings.json`。
+
+### 暂存（同步与试用元数据）
+
+| 键 | 来自 ready 轮询 |
+| --- | --- |
+| `CLAUDE_MEM_CLOUD_SYNC_TOKEN` | `setup_token` |
+| `CLAUDE_MEM_CLOUD_SYNC_USER_ID` | `user_id` |
+| `CLAUDE_MEM_CLOUD_SYNC_HUB_URL` | `hub_url` |
+| `CLAUDE_MEM_CLOUD_SYNC_DEVICE_ID` | `""`（首次启动时由 worker 生成） |
+| `CLAUDE_MEM_CLOUD_SYNC_DEVICE_NAME` | 主机名 |
+| `CLAUDE_MEM_PRO_TRIAL_STATE` | `active` |
+| `CLAUDE_MEM_PRO_TRIAL_ENDS_AT` | `trial.ends_at` 或 `""` |
+| `CLAUDE_MEM_PRO_PLAN` | `trial` / `pro` / `none` |
+| `CLAUDE_MEM_PRO_MEMORY_KEY` | `memory_key`，缺省时取 `setup_token` |
+| `CLAUDE_MEM_PRO_MEMORY_BASE_URL` | `memory_base_url`，缺省时取 `https://cmem.ai/api/inference/v1` |
+| `CLAUDE_MEM_PRO_MEMORY_MODEL` | `memory_model`，缺省时取 `cmem-observer` |
+| `CLAUDE_MEM_PRO_FALLBACK_AT` | `""` |
+| `CLAUDE_MEM_PRO_FALLBACK_MESSAGE` | `""`（回退开始时，worker 会把网关给出的消息存到这里） |
+| `CLAUDE_MEM_PRO_FALLBACK_ACTION` | `""`（网关针对该回退给出的"该怎么办"） |
+| `CLAUDE_MEM_PRO_FALLBACK_URL` | `""`（网关针对该回退给出的链接；通知里只会展示 `https://cmem.ai` 的链接） |
+
+只有当 token、user id **与** hub URL 三者都非空时，云同步（cloud sync）才会开启。参见[云同步](/cloud-sync)。
+
+### 激活（使观察记录得以运行）
+
+worker 通过通用的 OpenRouter 客户端与 cmem.ai 通信，并不存在单独的 CMEM 提供商实现。
+
+```json
+{
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "https://cmem.ai/api/inference/v1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "cmem-observer",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "cm_pro_YOUR_MEMORY_KEY",
+  "CLAUDE_MEM_PRO_MEMORY_KEY": "",
+  "CLAUDE_MEM_PRO_MEMORY_BASE_URL": "",
+  "CLAUDE_MEM_PRO_MEMORY_MODEL": ""
+}
+```
+
+保留暂存阶段的云同步三件套。`memory_key` 与 `setup_token` 往往是同一个（`cm_pro_…`）。如果 ready 轮询返回了一个不同的 `memory_key`，就把 `CLAUDE_MEM_OPENROUTER_API_KEY` 设为它，而 `setup_token` 只保留在 `CLAUDE_MEM_CLOUD_SYNC_TOKEN` 上。
+
+## 手动配置方法（已持有 token）
+
+1. 从 **cmem.ai → Connect**（或一次安装器配对）复制 `setup_token`、`user_id`、`hub_url` 与 `memory_key`（若有缺失，用 `setup_token` 顶替）。
+2. 把暂存键与激活键合并写入 `~/.claude-mem/settings.json`。只放占位符：
+
+```json
+{
+  "CLAUDE_MEM_CLOUD_SYNC_TOKEN": "cm_pro_YOUR_SETUP_TOKEN",
+  "CLAUDE_MEM_CLOUD_SYNC_USER_ID": "YOUR_USER_ID",
+  "CLAUDE_MEM_CLOUD_SYNC_HUB_URL": "https://YOUR_HUB_URL",
+  "CLAUDE_MEM_CLOUD_SYNC_DEVICE_ID": "",
+  "CLAUDE_MEM_CLOUD_SYNC_DEVICE_NAME": "my-machine",
+  "CLAUDE_MEM_PRO_TRIAL_STATE": "active",
+  "CLAUDE_MEM_PRO_TRIAL_ENDS_AT": "",
+  "CLAUDE_MEM_PRO_PLAN": "trial",
+  "CLAUDE_MEM_PRO_FALLBACK_AT": "",
+  "CLAUDE_MEM_PROVIDER": "openrouter",
+  "CLAUDE_MEM_OPENROUTER_BASE_URL": "https://cmem.ai/api/inference/v1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "cmem-observer",
+  "CLAUDE_MEM_OPENROUTER_API_KEY": "cm_pro_YOUR_MEMORY_KEY"
+}
+```
+
+3. `chmod 600 ~/.claude-mem/settings.json`
+4. 重启 worker，以免它仍持有内存中旧的提供商/同步状态：
+
+```bash
+npx claude-mem restart
+```
+
+交互式安装器在持久化提供商配置之后停止 worker，也是出于同样的原因。
+
+5. 验证（端口取自 `CLAUDE_MEM_WORKER_PORT` 或 `~/.claude-mem/.worker.port`）：
+
+```bash
+curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/health"
+curl -s "http://127.0.0.1:${CLAUDE_MEM_WORKER_PORT}/api/sync/status"
+```
+
+应看到 health 输出的提供商为 `openrouter`，且 sync 输出 `configured: true`、`hub.reachable: true`。
+
+6. 第一条真正的观察记录应经由模型 `cmem-observer` 存储。网关调用成功会**清空** `CLAUDE_MEM_PRO_FALLBACK_AT`。若网关做出终局性拒绝（使用额度耗尽、订阅失效或密钥被拒），则会**写入**该时间戳，记忆回退到 Anthropic 计划，并且下一次会话开始时会转述网关自己给出的消息与链接。
+
+<Info>
+回退（fallback）是**事件驱动**的，不由日历日期触发。不要把 `CLAUDE_MEM_PRO_TRIAL_ENDS_AT` 当作切换开关；真正的开关是 `CLAUDE_MEM_PRO_FALLBACK_AT`。
+</Info>
+
+## 不要混用的组合
+
+| 场景 | OpenRouter base URL | 密钥 |
+| --- | --- | --- |
+| CMEM Pro（本页） | `https://cmem.ai/api/inference/v1` | `cm_pro_…` memory key |
+| 个人 OpenRouter | 为空，或 `https://openrouter.ai/api/v1` | 你自己的 `sk-or-…` |
+| Anthropic 计划 | 不适用 | `--provider claude`——本地 Max；云同步与 CMEM 密钥会被清空 |
+
+绝不要把个人 OpenRouter 密钥发送给 cmem 网关。
+
+## 后续步骤
+
+- [安装](/installation)——交互式三阶段安装器
+- [云同步](/cloud-sync)——同步三件套复制的各是什么
+- [OpenRouter 提供商](/usage/openrouter-provider)——个人 OpenRouter 密钥（不是 cmem.ai）

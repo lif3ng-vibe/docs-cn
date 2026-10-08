@@ -1,0 +1,444 @@
+---
+title: "记忆检索"
+description: "用 MCP 工具检索你的项目历史"
+---
+
+# 使用 MCP 工具检索记忆
+
+claude-mem 通过 **4 个 MCP 工具** 提供跨会话的持久记忆，并遵循一套省 token 的 **三层工作流模式**。
+
+## 概览
+
+claude-mem 不把历史数据一次性全部拉出来（那样开销很大），而是采用渐进式披露：
+
+1. **检索（Search）** → 先拿到带 ID 的精简索引（每条约 50-100 token）
+2. **时间线（Timeline）** → 查看感兴趣的结果前后的上下文
+3. **获取观察记录（Get Observations）** → 只对筛选出的 ID 拉取完整详情
+
+相比传统 RAG 方案，这样可**节省约 10 倍 token**。
+
+## 三层工作流
+
+### 第 1 层：检索（索引）
+
+先用检索拿到一份轻量索引：
+
+```
+search(query="authentication bug", type="bugfix", limit=10)
+```
+
+**返回**：带 ID、标题、日期、类型的精简表格
+**成本**：每条约 50-100 token
+**用途**：拉详情之前，先摸清有哪些内容
+
+### 第 2 层：时间线（上下文）
+
+围绕特定观察记录获取按时间排列的上下文：
+
+```
+timeline(anchor=<observation_id>, depth_before=3, depth_after=3)
+```
+
+也可以一步完成"检索 + 时间线"：
+
+```
+timeline(query="authentication", depth_before=2, depth_after=2)
+```
+
+**返回**：时间顺序视图，展示之前/之后发生了什么
+**成本**：不定，取决于深度
+**用途**：理解叙事脉络与上下文
+
+### 第 3 层：get_observations（详情）
+
+只对相关的观察记录拉取完整详情：
+
+```
+get_observations(ids=[123, 456, 789])
+```
+
+**返回**：完整的观察记录详情（narrative、facts、文件、概念）
+**成本**：每条约 500-1000 token
+**用途**：对筛选确认过的条目深入研究
+
+### 为什么有效
+
+**传统做法：**
+- 一次性拉取全部：20,000 token
+- 相关率：约 10%（真正有用的只有 2,000 token）
+- 浪费：18,000 token 花在不相关上下文上
+
+**三层做法：**
+- 检索索引：1,000 token（10 条结果）
+- 时间线上下文：500 token（围绕 2 个关键结果）
+- 拉取详情：1,500 token（3 条观察记录）
+- **总计：3,000 token，100% 相关**
+
+## 可用工具
+
+### `important_workflow`：工作流文档
+
+始终可见的 3 层工作流模式提醒，帮助 Claude 高效使用这些检索工具。
+
+**用法**：自动展示，无需调用
+
+### `search`：检索记忆索引
+
+检索记忆，拿到一份带 ID 的精简索引。
+
+**参数：**
+- `query` - 用大白话描述要找什么：先按语义匹配，再按关键词匹配（见[查询如何匹配](#查询如何匹配)）
+- `limit` - 最大结果数（默认 20）
+- `offset` - 跳过前 N 条结果，用于分页
+- `type` - 记录类别：`observations`、`sessions` 或 `prompts`（默认全部）。其他取值会被当作观察类型处理，例如 `obs_type`
+- `obs_type` - 按类型筛选观察记录（bugfix、feature、decision、discovery、refactor、change）；多种类型用逗号分隔
+- `project` - 按项目名筛选
+- `dateStart` - 按起始日期筛选（YYYY-MM-DD）
+- `dateEnd` - 按结束日期筛选（YYYY-MM-DD）
+- `orderBy` - 排序方式（date_desc、date_asc、relevance）
+
+**返回**：带 ID、标题、日期、类型的精简索引表
+
+**示例：**
+```
+search(query="database migration", type="bugfix", limit=5, orderBy="date_desc")
+```
+
+### `timeline`：获取时间上下文
+
+围绕某个观察记录或查询，查看观察记录按时间排列的视图。
+
+**参数：**
+- `anchor` - 时间线的中心观察记录 ID（提供 query 时可省略）
+- `query` - 搜索查询，用于自动定位锚点（提供 anchor 时可省略）
+- `depth_before` - 锚点之前的观察记录条数（默认 3）
+- `depth_after` - 锚点之后的观察记录条数（默认 3）
+- `project` - 按项目名筛选
+
+**返回**：按时间排列的列表，展示之前/期间/之后发生了什么
+
+**示例：**
+```
+timeline(anchor=12345, depth_before=5, depth_after=5)
+```
+
+或基于检索的一步式调用：
+```
+timeline(query="implemented JWT auth", depth_before=3, depth_after=3)
+```
+
+### `get_observations`：获取完整详情
+
+按 ID 拉取观察记录的完整详情。**务必在单次调用中批量传入多个 ID，以提高效率。**
+
+**参数：**
+- `ids` - 观察记录 ID 数组（必需）
+- `orderBy` - 排序方式（date_desc、date_asc）
+- `limit` - 最多返回的观察记录数
+- `project` - 按项目名筛选
+
+**返回**：完整的观察记录详情，包括 narrative、facts、文件、概念
+
+**示例：**
+```
+get_observations(ids=[123, 456, 789, 1011])
+```
+
+**要点**：请批量传入 ID，不要对每条观察记录单独发起调用。
+
+## 常见场景
+
+### 排查故障
+
+**场景**：查找数据库连接出了什么问题
+
+```
+第 1 步：search(query="error database connection", type="bugfix", limit=10)
+  → 浏览索引，找出观察记录 #245、#312、#489
+
+第 2 步：timeline(anchor=312, depth_before=3, depth_after=3)
+  → 查看修复前后发生了什么
+
+第 3 步：get_observations(ids=[312, 489])
+  → 获取相关修复的完整详情
+```
+
+### 理解决策
+
+**场景**：复盘关于认证（authentication）的架构选择
+
+```
+第 1 步：search(query="authentication", type="decision", limit=5)
+  → 找出决策类观察记录
+
+第 2 步：get_observations(ids=[<relevant_ids>])
+  → 拿到完整的决策理由、权衡与事实
+```
+
+### 代码考古
+
+**场景**：查找某个文件是何时被修改的
+
+```
+第 1 步：search(query="worker-service.ts", limit=20)
+  → 拿到提到该文件的所有观察记录
+
+第 2 步：timeline(query="worker-service.ts refactor", depth_before=2, depth_after=2)
+  → 查看重构的来龙去脉
+
+第 3 步：get_observations(ids=[<specific_observation_ids>])
+  → 获取实现细节
+```
+
+### 功能演进史
+
+**场景**：追踪某个功能是如何一步步演进的
+
+```
+第 1 步：search(query="dark mode", type="feature", orderBy="date_asc")
+  → 功能开发工作的按时间排序视图
+
+第 2 步：timeline(anchor=<first_observation_id>, depth_after=10)
+  → 查看完整的开发时间线
+
+第 3 步：get_observations(ids=[<key_milestones>])
+  → 深读关键实现节点
+```
+
+### 从往期工作中学习
+
+**场景**：复盘重构的套路
+
+```
+第 1 步：search(type="refactor", limit=10, orderBy="date_desc")
+  → 近期的重构工作
+
+第 2 步：get_observations(ids=[<interesting_ids>])
+  → 研读其中用到的模式与方法
+```
+
+### 上下文恢复
+
+**场景**：离开项目一段时间后，重新找回上下文
+
+```
+第 1 步：search(query="project-name", limit=10, orderBy="date_desc")
+  → 查看近期工作
+
+第 2 步：timeline(anchor=<most_recent_id>, depth_before=10)
+  → 理解当前状态从何而来
+
+第 3 步：get_observations(ids=[<critical_observations>])
+  → 温习关键决策
+```
+
+## 查询如何匹配
+
+当向量索引（Chroma）在运行时，`search` 会先**按语义**匹配你的查询，所以请用大白话描述你想找什么，例如 `query="why the worker failed to start after the upgrade"`。关键词匹配负责补齐语义匹配没有覆盖到的记录类别；而当向量索引关闭或不可用时，就完全由关键词匹配来作答。
+
+对观察记录与会话摘要而言，关键词匹配把查询当作普通词语处理，没有任何运算符：
+
+- **每个词都必须出现**：出现位置不限、先后顺序不限、字段不限。`query="security deprecated"` 会找出同时提到这两个词的记录。
+- **`AND`、`OR`、`NOT`、引号、括号和 `field:` 前缀都只是普通词。** `query="security NOT deprecated"` 同样会要求出现 "not" 和 "deprecated"；`query='"database migration"'` 也不是短语搜索——这两个词出现在任何位置都算命中。想缩小结果范围，请改用 `obs_type`、`project`、`dateStart`、`dateEnd` 这些参数。
+- **大小写无所谓。词内出现的标点会把词拆成必须连排出现（顺序不可打乱）的若干部分**，因此 `query="worker-service.ts"` 能找到那个文件名，但找不到只分别提到 "worker"、"service"、"ts" 的记录。
+- **当整词全都匹配不上时，词可以作为更长词的一部分。** 如果没有任何记录包含所有整词，每个词依然必须出现，但可以只是某个更长词的一部分，所以 `query="migrat"` 能找到 "migration"。对不用空格分词的文字（中文、日文、韩文、泰文等），始终按这种方式匹配。
+
+```
+query="database migration"       # 同时提到两个词的记录，位置不限
+query="worker-service.ts"        # 一个文件名
+query="security NOT deprecated"  # 三个词全部出现，包括 "not"：没有运算符这回事
+```
+
+你自己输入的提示词（prompt）则按另一种方式匹配——作为一整段文本：整个查询必须原样出现在提示词里，所以 `query="database migration"` 会错过一条写作 "migration of the database" 的提示词。检索提示词时请用短查询。
+
+[托管服务运行时（hosted server runtime）](/hosted-server)用 PostgreSQL 全文检索来搜索观察记录，规则自成一套：英文词按词干匹配，`OR` 连接多个候选，引号要求短语，前导 `-` 用来排除某个词，而且不做词内匹配。
+
+## Token 用量管理
+
+### Token 用量最佳实践
+
+1. **先检索** - 先拿索引（每条约 50-100 token）
+2. **limit 取小值** - 从 3-5 条起步，不够再增加
+3. **先过滤再拉取** - 用 type、date、project 过滤
+4. **批量调用 get_observations** - 多个 ID 永远合并为一次调用
+5. **策略性使用 timeline** - 只在需要叙事脉络时才取上下文
+
+### Token 成本估算
+
+| 操作 | 每条结果的 token 数 |
+|-----------|-------------------|
+| search（索引） | 50-100 |
+| timeline（每条观察记录） | 100-200 |
+| get_observations（完整详情） | 500-1,000 |
+
+**对比示例：**
+
+**低效做法：**
+```
+# 一次性拉取 20 条完整观察记录：10,000-20,000 token
+get_observations(ids=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+```
+
+**高效做法：**
+```
+# 检索索引：约 1,000 token
+search(query="bug fix", limit=20)
+
+# 浏览 ID，挑出 3 条相关的观察记录
+
+# 只拉取相关条目：约 1,500-3,000 token
+get_observations(ids=[5, 12, 18])
+
+# 总计：2,500-4,000 token（对比 10,000-20,000）
+```
+
+## 进阶筛选
+
+### 日期范围
+
+```
+search(
+  query="performance optimization",
+  dateStart="2025-10-01",
+  dateEnd="2025-10-31"
+)
+```
+
+### 多类型
+
+要查多种类型的观察记录时，多检索几次，或者放宽查询：
+
+```
+search(query="database", type="bugfix", limit=10)
+search(query="database", type="feature", limit=10)
+```
+
+### 指定项目
+
+```
+search(query="API", project="my-app", limit=15)
+```
+
+### 分页
+
+```
+# 第一页
+search(query="refactor", limit=10, offset=0)
+
+# 第二页
+search(query="refactor", limit=10, offset=10)
+
+# 第三页
+search(query="refactor", limit=10, offset=20)
+```
+
+## 结果元数据
+
+每条观察记录都带有丰富的元数据：
+
+- **ID** - 观察记录的唯一标识
+- **Type**（类型）- bugfix、feature、decision、discovery、refactor、change
+- **Date**（日期）- 工作发生的日期
+- **Title**（标题）- 简明描述
+- **Concepts**（概念标签）- 打了标签的主题（如 security、performance、architecture）
+- **Files Read**（读取的文件）- 工作期间查看过的文件
+- **Files Modified**（修改的文件）- 工作期间改动过的文件
+- **Narrative**（叙述）- 事情的经过与缘由
+- **Facts**（事实要点）- 关键事实要点（做出的决策、用到的模式、相关指标）
+
+## 故障排查
+
+### 找不到结果
+
+1. **放宽检索：**
+   ```
+   # 过于具体
+   search(query="JWT authentication implementation with RS256")
+
+   # 更好的写法
+   search(query="authentication")
+   ```
+
+2. **确认数据库里有数据：**
+   ```bash
+   WORKER_PORT=$(jq -r .CLAUDE_MEM_WORKER_PORT ~/.claude-mem/settings.json)
+   curl "http://127.0.0.1:$WORKER_PORT/api/search?query=test"
+   ```
+
+3. **去掉筛选条件试试：**
+   ```
+   # 去掉 type/日期筛选，看数据是否存在
+   search(query="your-search-term")
+   ```
+
+### get_observations 找不到 ID
+
+**报错**："Observation IDs not found: [123, 456]"
+
+**原因：**
+- ID 来自另一个项目（请用 `project` 参数）
+- ID 已被删除
+- ID 数字抄错了
+
+**解决：**
+```
+# 确认这些 ID 存在
+search(query="<related-search>")
+
+# 使用正确的项目筛选
+get_observations(ids=[123, 456], project="correct-project-name")
+```
+
+### Token 超限错误
+
+**报错**：响应超出 token 上限
+
+**解决**：用三层工作流来降低前置成本：
+
+```
+# 不要一次拉取 50 条完整观察记录：
+# get_observations(ids=[1,2,3,...,50])  # 25,000-50,000 token！
+
+# 改成这样做：
+search(query="<your-query>", limit=50)  # 约 2,500-5,000 token
+# 浏览索引，挑出 5 条相关的观察记录
+get_observations(ids=[<5-most-relevant>])  # 约 2,500-5,000 token
+# 总计：5,000-10,000 token（节省 50-80%）
+```
+
+### 检索性能
+
+如果检索显得很慢：
+1. 查询写得再具体些（有助于 FTS5 索引）
+2. 用日期范围筛选缩小范围
+3. 尽量指定 project（项目）筛选
+4. 用更小的 limit
+
+## 最佳实践
+
+1. **先索引，后详情** - 始终先用 search 摸清有哪些内容
+2. **先过滤再拉取** - 用搜索参数收窄结果范围
+3. **批量取 ID** - 多个 ID 合并进一次 get_observations 调用
+4. **用 timeline 补上下文** - 需要叙事脉络时，timeline 能讲出完整故事
+5. **查询要具体** - 查询越具体，相关性越好
+6. **limit 先取小值** - 从 3-5 条起步，需要时再扩大
+7. **深读前先浏览** - 拉取完整详情前，先看看索引
+
+## 技术细节
+
+**架构**：MCP 工具是本地 worker HTTP API 的薄封装。MCP server 把工具调用翻译成发给 worker 服务的 HTTP 请求；业务逻辑、数据库查询和 Chroma 向量检索全部由 worker 服务承担。
+
+**MCP server**：位于 `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs`
+
+**worker 服务**：运行在配置的 worker 端口上的 Express API，由 Bun 管理
+
+**数据库**：`~/.claude-mem/claude-mem.db` 上的 SQLite FTS5 全文检索
+
+**向量检索**：基于 Chroma 嵌入的语义搜索（底层实现）
+
+## 后续步骤
+
+- [渐进式披露（Progressive Disclosure）](/progressive-disclosure) - 三层工作流背后的设计理念
+- [架构总览](/architecture/overview) - 系统组成一览
+- [数据库表结构](/architecture/database) - 搞懂数据是怎么存的
+- [Claude Desktop 配置](/usage/claude-desktop) - 安装与配置
