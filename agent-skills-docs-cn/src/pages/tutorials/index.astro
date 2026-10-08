@@ -1,0 +1,286 @@
+---
+import Base from '../../layouts/Base.astro';
+import CopyCommand from '../../components/CopyCommand.astro';
+import { tutorials, RUN_MODES } from '../../data/tutorials';
+import { INSTALL_CMD } from '../../data/skills';
+---
+
+<Base
+  title="Tutorials - agent-skills"
+  description="Run these end-to-end with your agent: build a new app, add a feature to an existing codebase, or wrap the skills in a loop. Reproducible in Claude Code or Codex, grounded in the real pack."
+>
+  <section class="tut-hero">
+    <div class="grid-bg"></div>
+    <div class="tut-hero-glow" aria-hidden="true"></div>
+    <div class="container tut-hero-inner">
+      <span class="eyebrow">Tutorials</span>
+      <h1 class="tut-h1">Learn the pack by shipping something</h1>
+      <p class="tut-lede">
+        Three walkthroughs you run with your own agent, start to finish. Each maps every step
+        to a real command and skill, tells you what it buys you, and works the same in Claude
+        Code or Codex. Copy a prompt, watch the agent work, understand why the step matters.
+      </p>
+      <div class="tut-hero-cmd">
+        <CopyCommand command={INSTALL_CMD} label="First, install the pack" />
+      </div>
+    </div>
+  </section>
+
+  <section class="container tut-run">
+    <div class="run-card">
+      <h2 class="run-title">How to run each step</h2>
+      <p class="run-sub">
+        Every step below has a copyable prompt that works in any agent. If your tool has native
+        commands, the shorthand is faster.
+      </p>
+      <div class="run-grid">
+        {RUN_MODES.map((m) => (
+          <div class="run-mode">
+            <span class="run-tool mono">{m.tool}</span>
+            <p class="run-how">{m.how}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="container tut-list">
+    {tutorials.map((t) => (
+      <a href={`/tutorials/${t.slug}/`} class="tut-card card" style={`--h:${t.hue}`}>
+        <div class="tut-card-main">
+          <div class="tut-card-top">
+            <span class="tut-scenario"><span class="tut-dot"></span>{t.scenario}</span>
+            <span class="tut-meta mono">{t.steps.length} steps · {t.time} · {t.difficulty}</span>
+          </div>
+          <h3 class="tut-card-title">{t.title}</h3>
+          <p class="tut-card-sum">{t.summary}</p>
+          <span class="tut-start">
+            Start tutorial
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4 8h8M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="tut-card-num mono" aria-hidden="true">{String(t.order).padStart(2, '0')}</div>
+      </a>
+    ))}
+  </section>
+
+  <section class="container tut-foot">
+    <div class="tut-foot-inner">
+      <p>
+        These teach the workflow, not a stack. The apps are vehicles. Once the loop feels natural,
+        the same sequence works on anything you build.
+      </p>
+      <div class="tut-foot-links">
+        <a href="/lifecycle/" class="btn btn-secondary">See the lifecycle</a>
+        <a href="/loops/" class="btn btn-secondary">Loop engineering</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .tut-hero {
+    position: relative;
+    padding-block: clamp(52px, 9vw, 92px) 44px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .tut-hero-glow {
+    position: absolute;
+    top: -200px;
+    left: 30%;
+    width: 720px;
+    height: 480px;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(82, 168, 255, 0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .tut-hero-inner {
+    position: relative;
+    max-width: 760px;
+  }
+  .tut-h1 {
+    margin-top: 16px;
+    font-size: clamp(2.1rem, 5.4vw, 3.3rem);
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+  }
+  .tut-lede {
+    margin-top: 20px;
+    color: var(--fg-muted);
+    font-size: clamp(1.02rem, 1.7vw, 1.2rem);
+    line-height: 1.62;
+    max-width: 680px;
+  }
+  .tut-hero-cmd {
+    margin-top: 28px;
+    max-width: 460px;
+  }
+
+  .tut-run {
+    padding-block: 40px 8px;
+  }
+  .run-card {
+    padding: 26px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+  }
+  .run-title {
+    font-size: 1.1rem;
+  }
+  .run-sub {
+    margin-top: 8px;
+    color: var(--fg-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-width: 640px;
+  }
+  .run-grid {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .run-mode {
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .run-tool {
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+  .run-how {
+    margin-top: 8px;
+    color: var(--fg-muted);
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .tut-list {
+    padding-block: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .tut-card {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px;
+    overflow: hidden;
+  }
+  .tut-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg, hsl(var(--h) 70% 60%), transparent);
+  }
+  .tut-card-main {
+    min-width: 0;
+  }
+  .tut-card-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .tut-scenario {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    color: hsl(var(--h) 55% 74%);
+    font-family: var(--font-mono);
+  }
+  .tut-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: hsl(var(--h) 70% 60%);
+    box-shadow: 0 0 8px hsl(var(--h) 80% 60% / 0.6);
+  }
+  .tut-meta {
+    font-size: 0.76rem;
+    color: var(--fg-faint);
+  }
+  .tut-card-title {
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+    letter-spacing: -0.02em;
+  }
+  .tut-card-sum {
+    margin-top: 10px;
+    color: var(--fg-muted);
+    font-size: 0.96rem;
+    line-height: 1.6;
+    max-width: 640px;
+  }
+  .tut-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 18px;
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: gap 0.2s var(--ease), color 0.2s;
+  }
+  .tut-start svg {
+    width: 15px;
+    height: 15px;
+  }
+  .tut-card:hover .tut-start {
+    color: hsl(var(--h) 65% 74%);
+    gap: 11px;
+  }
+  .tut-card-num {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--surface-3);
+    align-self: flex-start;
+    letter-spacing: -0.04em;
+  }
+
+  .tut-foot {
+    padding-block: 24px 96px;
+  }
+  .tut-foot-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 26px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--bg-subtle);
+  }
+  .tut-foot-inner p {
+    color: var(--fg-muted);
+    font-size: 0.94rem;
+    line-height: 1.6;
+    max-width: 560px;
+  }
+  .tut-foot-links {
+    display: flex;
+    gap: 10px;
+    flex: none;
+  }
+
+  @media (max-width: 760px) {
+    .run-grid {
+      grid-template-columns: 1fr;
+    }
+    .tut-card-num {
+      display: none;
+    }
+    .tut-foot-inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

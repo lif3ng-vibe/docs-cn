@@ -1,0 +1,18 @@
+{
+  "name": "agent-skills-docs-cn",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "简体中文镜像：agent-skills 官方站（skills.addy.ie）。非官方翻译快照。",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.2.1",
+    "astro": "^5.13.0"
+  }
+}
