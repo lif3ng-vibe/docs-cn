@@ -1,47 +1,46 @@
 ---
-title: 'Qwen Code Integration'
+title: 'Qwen Code 集成'
 ---
 
-# Qwen Code Integration
+# Qwen Code 集成
 
-Qwen Code uses project-scoped `.md` SubAgent files in `.qwen/agents/`.
+Qwen Code 使用 `.qwen/agents/` 下的项目级 `.md` 子智能体文件。
 
-The generated files come from `scripts/convert.sh --tool qwen`, which writes one
-SubAgent Markdown file per agency agent into `integrations/qwen/agents/`.
+生成的文件来自 `scripts/convert.sh --tool qwen`，它为每个智能体
+向 `integrations/qwen/agents/` 写一个 SubAgent Markdown 文件。
 
-## Generate
+## 生成
 
-From the repository root:
+从仓库根目录：
 
 ```bash
 ./scripts/convert.sh --tool qwen
 ```
 
-## Install
+## 安装
 
-Run the installer from your target project root:
+从你的目标项目根目录运行安装器：
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool qwen
 ```
 
-This copies the generated SubAgent files into:
+这会把生成的 SubAgent 文件复制到：
 
 ```text
 .qwen/agents/
 ```
 
-## Refresh in Qwen Code
+## 在 Qwen Code 中刷新
 
-After installation:
+安装后：
 
-- run `/agents manage` in Qwen Code to refresh the agent list, or
-- restart the current Qwen Code session
+- 在 Qwen Code 中运行 `/agents manage` 刷新智能体列表，或
+- 重启当前 Qwen Code 会话
 
-## Notes
+## 注意事项
 
-- Qwen Code is project-scoped, not home-scoped
-- The generated Qwen files use minimal frontmatter: `name`, `description`, and
-  optional `tools`
-- If you update agents in this repo, regenerate the Qwen output before
-  reinstalling
+- Qwen Code 是项目级作用域，不是用户主目录级
+- 生成的 Qwen 文件使用极简 frontmatter：`name`、`description` 和
+  可选的 `tools`
+- 如果你在本仓库里更新了智能体，重装前请先重新生成 Qwen 产物

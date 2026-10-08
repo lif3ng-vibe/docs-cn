@@ -1,44 +1,43 @@
 ---
-title: 'OpenCode Integration'
+title: 'OpenCode 集成'
 ---
 
-# OpenCode Integration
+# OpenCode 集成
 
-> **❌ Don't do this:**
+> **❌ 不要这样做：**
 >
 > ```bash
-> # WRONG — will fail with schema validation errors
+> # 错误——会因 schema 校验报错
 > cp agency-agents/engineering/*.md .opencode/agents/
 > ```
 >
-> **✅ Do this instead:**
+> **✅ 改为这样做：**
 >
 > ```bash
 > /path/to/agency-agents/scripts/install.sh --tool opencode
 > ```
 >
-> The source files use named colors and a `tools` field that OpenCode rejects.
-> The installer converts them to `#RRGGBB` hex and strips incompatible fields
-> automatically.
+> 源文件使用命名颜色和一个 OpenCode 会拒绝的 `tools` 字段。
+> 安装器会自动把颜色转换成 `#RRGGBB` 十六进制，并剥掉不兼容的字段。
 
-OpenCode agents are `.md` files with YAML frontmatter stored in
-`.opencode/agents/`. The converter maps named colors to hex codes and adds
-`mode: subagent` so agents are invoked on-demand via `@agent-name` rather
-than cluttering the primary agent picker.
+OpenCode 智能体是存储在 `.opencode/agents/` 中的带 YAML frontmatter
+的 `.md` 文件。转换器把命名颜色映射为十六进制色值，并加上
+`mode: subagent`，让智能体通过 `@agent-name` 按需调用，
+而不是挤占主智能体选择器。
 
-## Install
+## 安装
 
 ```bash
-# Run from your project root
+# 从你的项目根目录运行
 cd /your/project
 /path/to/agency-agents/scripts/install.sh --tool opencode
 ```
 
-This creates `.opencode/agents/<slug>.md` files in your project directory.
+这会在你的项目目录里创建 `.opencode/agents/<slug>.md` 文件。
 
-## Activate an Agent
+## 激活一个智能体
 
-In OpenCode, invoke a subagent with the `@` prefix:
+在 OpenCode 中，用 `@` 前缀调用一个子智能体：
 
 ```
 @frontend-developer help build this component.
@@ -48,11 +47,11 @@ In OpenCode, invoke a subagent with the `@` prefix:
 @reality-checker review this PR.
 ```
 
-You can also select agents from the OpenCode UI's agent picker.
+你也可以在 OpenCode 界面的智能体选择器里选择智能体。
 
-## Agent Format
+## 智能体格式
 
-Each generated agent file contains:
+每个生成的智能体文件包含：
 
 ```yaml
 ---
@@ -63,21 +62,20 @@ color: "#00FFFF"
 ---
 ```
 
-- **mode: subagent** — agent is available on-demand, not shown in the primary Tab-cycle list
-- **color** — hex code (named colors from source files are converted automatically)
+- **mode: subagent**——智能体按需可用，不在主 Tab 循环列表里显示
+- **color**——十六进制色值（源文件的命名颜色会被自动转换）
 
-## Project vs Global
+## 项目级还是全局
 
-Agents in `.opencode/agents/` are **project-scoped**. To make them available
-globally across all projects, first generate the agent files, then install
-with `--path`:
+`.opencode/agents/` 中的智能体是**项目级**的。要让它们在所有项目
+全局可用，先生成智能体文件，再用 `--path` 安装：
 
 ```bash
 ./scripts/convert.sh --tool opencode
 ./scripts/install.sh --tool opencode --path ~/.config/opencode/agents
 ```
 
-## Regenerate
+## 重新生成
 
 ```bash
 ./scripts/convert.sh --tool opencode

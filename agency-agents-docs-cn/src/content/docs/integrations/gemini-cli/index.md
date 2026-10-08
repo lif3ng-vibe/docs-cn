@@ -1,37 +1,37 @@
 ---
-title: 'Gemini CLI Integration'
+title: 'Gemini CLI 集成'
 ---
 
-# Gemini CLI Integration
+# Gemini CLI 集成
 
-Packages all Agency agents as Gemini CLI subagents. These agents
-install to `~/.gemini/agents/`.
+把代理公司（The Agency）的所有智能体打包为 Gemini CLI 子智能体。
+这些智能体安装到 `~/.gemini/agents/`。
 
-## Install
+## 安装
 
 ```bash
-# Generate the Gemini CLI agent files first
+# 先生成 Gemini CLI 智能体文件
 ./scripts/convert.sh --tool gemini-cli
 
-# Then install them to ~/.gemini/agents/
+# 然后安装到 ~/.gemini/agents/
 ./scripts/install.sh --tool gemini-cli
 ```
 
-## Use an Agent
+## 使用一个智能体
 
-In Gemini CLI, reference an agent by name in your prompt:
+在 Gemini CLI 中，在提示词里按名字引用一个智能体：
 
 ```
 Use the frontend-developer agent to help me build this UI.
 ```
 
-Or invoke the agent directly if your version of Gemini CLI supports it:
+或者，如果你使用的 Gemini CLI 版本支持，直接调用智能体：
 
 ```bash
 gemini --agent frontend-developer "How should I structure this React component?"
 ```
 
-## Structure
+## 目录结构
 
 ```
 ~/.gemini/agents/
@@ -41,7 +41,7 @@ gemini --agent frontend-developer "How should I structure this React component?"
   ...
 ```
 
-## Regenerate
+## 重新生成
 
 ```bash
 ./scripts/convert.sh --tool gemini-cli

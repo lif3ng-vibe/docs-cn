@@ -16,7 +16,7 @@ hero:
       link: /strategy/QUICKSTART/
       icon: right-arrow
     - text: 部门总览
-      link: /catalog/#-departments
+      link: /catalog/#-代理公司名册
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';

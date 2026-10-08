@@ -1,33 +1,33 @@
 ---
-title: 'ZCode Integration'
+title: 'ZCode 集成'
 ---
 
-# ZCode Integration
+# ZCode 集成
 
-[ZCode](https://z.ai) is Z.ai's GLM-based coding agent harness. Each agency
-agent is rendered as a standalone Markdown agent file with `name` and
-`description` frontmatter, which ZCode discovers from its agents directory.
+[ZCode](https://z.ai) 是 Z.ai 基于 GLM 的编码智能体 harness。
+每个智能体被渲染为一个带 `name` 和 `description` frontmatter 的
+独立 Markdown 智能体文件，ZCode 会从其智能体目录中发现它们。
 
-The generated files come from `scripts/convert.sh --tool zcode`, which writes
-one Markdown file per agency agent into `integrations/zcode/agents/`. Those
-generated files are not committed (see `.gitignore`); regenerate them locally.
+生成的文件来自 `scripts/convert.sh --tool zcode`，它为每个智能体
+向 `integrations/zcode/agents/` 写一个 Markdown 文件。这些生成文件
+不入库（见 `.gitignore`）；请在本地重新生成。
 
-## Generate
+## 生成
 
-From the repository root:
+从仓库根目录：
 
 ```bash
 ./scripts/convert.sh --tool zcode
 ```
 
-## Install
+## 安装
 
-Run the installer from your target directory:
+从你的目标目录运行安装器：
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool zcode
 ```
 
-Agents install to `~/.zcode/agents/<slug>.md` (user scope) — the directory
-ZCode reads subagents from. Use `--division` / `--agent` to install a subset,
-or set `ZCODE_AGENTS_DIR` to override the destination.
+智能体安装到 `~/.zcode/agents/<slug>.md`（用户级）——也就是 ZCode
+读取子智能体的那个目录。用 `--division` / `--agent` 只安装一部分，
+或设置 `ZCODE_AGENTS_DIR` 覆盖安装目的地。

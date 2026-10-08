@@ -1,61 +1,62 @@
 ---
-title: 'DeepSeek Harness Integration'
+title: 'DeepSeek Harness 集成'
 ---
 
-# DeepSeek Harness Integration
+# DeepSeek Harness 集成
 
-Installs the full Agency roster as DeepSeek Harness (DSH) skills. Each agent
-is prefixed with `agency-` to avoid conflicts with built-in skills.
+把代理公司（The Agency）的完整名册安装为 DeepSeek Harness（DSH）技能。
+每个智能体都加 `agency-` 前缀，以避免与内置技能冲突。
 
-## Install
+## 安装
 
 ```bash
 ./scripts/install.sh --tool dsh
 ```
 
-This copies files from `integrations/dsh/` to `${DSH_HOME:-$HOME/.dsh}/skills/`
-(user-wide). Set `DSH_HOME` if your Harness config lives elsewhere. For
-project-scoped skills, run the installer with `DSH_SKILLS_DIR=.dsh/skills`
-from your project root — this specific override takes precedence over
-`DSH_HOME`, and DSH reads `<project>/.dsh/skills/` automatically.
+这会把文件从 `integrations/dsh/` 复制到 `${DSH_HOME:-$HOME/.dsh}/skills/`
+（用户级）。如果你的 Harness 配置在别处，请设置 `DSH_HOME`。要项目级
+技能，则从你的项目根目录、以 `DSH_SKILLS_DIR=.dsh/skills` 运行安装器——
+这一特定覆盖优先于 `DSH_HOME`，而且 DSH 会自动读取
+`<project>/.dsh/skills/`。
 
-> DSH discovers skills live (watched roots): new, renamed, or deleted skills
-> reach the next catalog without a restart. No config file to edit.
+> DSH 实时发现技能（被监视的根目录）：新增、改名或删除的技能
+> 无需重启就会进入下一份技能目录清单（catalog）。不需要编辑任何
+> 配置文件。
 
-## Activate a Skill
+## 激活一个技能
 
-In DSH, skills are user- and model-invocable by default. Activate an agent
-by its slash command or by name in conversation:
+在 DSH 中，技能默认用户和模型都可调用。通过斜杠命令、或在对话中
+点名来激活一个智能体：
 
 ```
 /agency-frontend-developer review this React component
 ```
 
-or:
+或：
 
 ```
 Use the agency-frontend-developer skill to review this component.
 ```
 
-Available slugs follow the pattern `agency-<agent-name>`, e.g.:
+可用的 slug 遵循 `agency-<agent-name>` 模式，例如：
 - `agency-frontend-developer`
 - `agency-backend-architect`
 - `agency-reality-checker`
 - `agency-growth-hacker`
 
-## Regenerate
+## 重新生成
 
-After modifying agents, regenerate the skill files:
+修改智能体后，重新生成技能文件：
 
 ```bash
 ./scripts/convert.sh --tool dsh
 ```
 
-## File Format
+## 文件格式
 
-Each skill is a `SKILL.md` file with the standard Agent-Skills frontmatter
-(required `name` and `description`, strict kebab-case name) and the agent
-persona as the body:
+每个技能是一个 `SKILL.md` 文件，带标准 Agent-Skills frontmatter
+（必填 `name` 和 `description`，name 须为严格 kebab-case），
+智能体人格作为正文：
 
 ```markdown
 ---
@@ -65,12 +66,12 @@ description: 'Expert frontend developer specializing in modern web technologies,
 ...agent body...
 ```
 
-This is byte-identical to the Antigravity and Osaurus skill output
-(`skill-md` format), so the Agency Agents app renders it natively.
+这与 Antigravity 和 Osaurus 的技能输出（`skill-md` 格式）逐字节相同，
+因此 Agency Agents 应用可以原生渲染它。
 
-## Skill Roots Scanned by DSH
+## DSH 扫描的技能根目录
 
-| Priority | Source | Path |
+| 优先级 | 来源 | 路径 |
 |---|---|---|
 | 100 | project | `<project>/.dsh/skills` |
 | 200 | project | `<project>/.agents/skills` |
@@ -78,5 +79,5 @@ This is byte-identical to the Antigravity and Osaurus skill output
 | 400 | user | `${DSH_HOME:-$HOME/.dsh}/skills` (default install) |
 | 500 | user | `~/.agents/skills` |
 
-Project skills (rank 100/200) shadow user skills (rank 400/500) of the same
-name, so a project install overrides the user-wide one for that project.
+项目技能（优先级 100/200）会遮蔽同名的用户技能（优先级 400/500），
+所以对某个项目而言，项目级安装会覆盖用户级安装。

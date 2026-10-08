@@ -1,42 +1,42 @@
 ---
-title: 'Kimi Code CLI Integration'
+title: 'Kimi Code CLI 集成'
 ---
 
-# Kimi Code CLI Integration
+# Kimi Code CLI 集成
 
-Converts all Agency agents into Kimi Code CLI agent specifications. Each agent
-becomes a directory containing `agent.yaml` (agent spec) and `system.md` (system
-prompt).
+把代理公司（The Agency）的所有智能体转换为 Kimi Code CLI 智能体规格。
+每个智能体变成一个目录，内含 `agent.yaml`（智能体规格）和 `system.md`
+（系统提示词）。
 
-## Installation
+## 安装
 
-### Prerequisites
+### 前置条件
 
-- [Kimi Code CLI](https://github.com/MoonshotAI/kimi-cli) installed
+- 已安装 [Kimi Code CLI](https://github.com/MoonshotAI/kimi-cli)
 
-### Install
+### 安装
 
 ```bash
-# Generate integration files (required on fresh clone)
+# 生成集成文件（全新 clone 后必做）
 ./scripts/convert.sh --tool kimi
 
-# Install agents
+# 安装智能体
 ./scripts/install.sh --tool kimi
 ```
 
-This copies agents to `~/.config/kimi/agents/`.
+这会把智能体复制到 `~/.config/kimi/agents/`。
 
-## Usage
+## 用法
 
-### Activate an Agent
+### 激活一个智能体
 
-Use the `--agent-file` flag to load a specific agent:
+使用 `--agent-file` 标志加载特定智能体：
 
 ```bash
 kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml
 ```
 
-### In a Project
+### 在项目中
 
 ```bash
 cd /your/project
@@ -45,15 +45,15 @@ kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml \
      "Review this React component for performance issues"
 ```
 
-### List Installed Agents
+### 列出已安装的智能体
 
 ```bash
 ls ~/.config/kimi/agents/
 ```
 
-## Agent Structure
+## 智能体结构
 
-Each agent directory contains:
+每个智能体目录包含：
 
 ```
 ~/.config/kimi/agents/frontend-developer/
@@ -61,7 +61,7 @@ Each agent directory contains:
 └── system.md     # System prompt with personality and instructions
 ```
 
-### agent.yaml format
+### agent.yaml 格式
 
 ```yaml
 version: 1
@@ -75,37 +75,37 @@ agent:
     # ... all default tools
 ```
 
-## Regenerate
+## 重新生成
 
-After modifying source agents:
+修改源智能体后：
 
 ```bash
 ./scripts/convert.sh --tool kimi
 ./scripts/install.sh --tool kimi
 ```
 
-## Troubleshooting
+## 故障排查
 
-### Agent file not found
+### 找不到智能体文件
 
-Ensure you've run `convert.sh` before `install.sh`:
+确保你在 `install.sh` 之前跑过 `convert.sh`：
 
 ```bash
 ./scripts/convert.sh --tool kimi
 ```
 
-### Kimi CLI not detected
+### 未检测到 Kimi CLI
 
-Make sure `kimi` is in your PATH:
+确保 `kimi` 在你的 PATH 里：
 
 ```bash
 which kimi
 kimi --version
 ```
 
-### Invalid YAML
+### YAML 不合法
 
-Validate the generated files:
+校验生成的文件：
 
 ```bash
 python3 -c "import yaml; yaml.safe_load(open('integrations/kimi/frontend-developer/agent.yaml'))"

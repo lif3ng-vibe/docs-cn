@@ -46,7 +46,8 @@ for (const [page, ids] of idsByPage) {
     }
     const target = idsByPage.get(targetPage);
     if (!target) { broken.push(`link page does not exist: ${href} (on ${page})`); continue; }
-    if (!target.has(anchor)) broken.push(`${page} -> #${anchor} (target page ${targetPage} has no such id)`);
+    const dec = (() => { try { return decodeURIComponent(anchor); } catch { return anchor; } })();
+    if (!target.has(anchor) && !target.has(dec)) broken.push(`${page} -> #${anchor} (target page ${targetPage} has no such id)`);
   }
 }
 

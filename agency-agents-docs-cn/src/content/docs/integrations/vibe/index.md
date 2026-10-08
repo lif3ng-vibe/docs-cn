@@ -1,119 +1,119 @@
 ---
-title: 'Mistral Vibe Integration'
+title: 'Mistral Vibe 集成'
 ---
 
-# Mistral Vibe Integration
+# Mistral Vibe 集成
 
-Mistral Vibe uses two files per agent:
-- A TOML configuration file (`~/.vibe/agents/<slug>.toml`)
-- A Markdown prompt file (`~/.vibe/prompts/<slug>.md`)
+Mistral Vibe 为每个智能体使用两个文件：
+- 一个 TOML 配置文件（`~/.vibe/agents/<slug>.toml`）
+- 一个 Markdown 提示词文件（`~/.vibe/prompts/<slug>.md`）
 
-The generated files come from `scripts/convert.sh --tool vibe`, which writes
-one TOML agent configuration and one Markdown prompt file per agency agent
-into `integrations/vibe/agents/` and `integrations/vibe/prompts/` respectively.
+生成的文件来自 `scripts/convert.sh --tool vibe`，它为每个智能体
+分别向 `integrations/vibe/agents/` 和 `integrations/vibe/prompts/`
+写入一个 TOML 智能体配置和一个 Markdown 提示词文件。
 
-## Generate
+## 生成
 
-From the repository root:
+从仓库根目录：
 
 ```bash
 ./scripts/convert.sh --tool vibe
 ```
 
-## Install
+## 安装
 
-Run the installer from your target directory:
+从你的目标目录运行安装器：
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool vibe
 ```
 
-This copies the generated files into:
+这会把生成的文件复制到：
 
 ```text
 ~/.vibe/agents/<slug>.toml
 ~/.vibe/prompts/<slug>.md
 ```
 
-You can override the destination using the `VIBE_HOME` environment variable:
+你可以用 `VIBE_HOME` 环境变量覆盖安装目的地：
 
 ```bash
 VIBE_HOME=~/.config/vibe ./scripts/install.sh --tool vibe
 ```
 
-## Generated Format
+## 生成格式
 
-Each generated agent pair lives in:
+每个生成的智能体文件对位于：
 
 ```text
 integrations/vibe/agents/<slug>.toml
 integrations/vibe/prompts/<slug>.md
 ```
 
-### Agent TOML File
+### 智能体 TOML 文件
 
-The minimal Vibe agent configuration:
+最简的 Vibe 智能体配置：
 
 ```toml
 agent_type = "agent"
 system_prompt_id = "<slug>"
 ```
 
-Users can specify `active_model` in their agent TOML files or rely on their
-Vibe configuration default model.
+用户可以在自己的智能体 TOML 文件里指定 `active_model`，或依赖
+Vibe 配置的默认模型。
 
-### Prompt Markdown File
+### 提示词 Markdown 文件
 
-The prompt file contains:
-- A title header with the agent name
-- The agent description
-- The full Markdown body from the source agent
+提示词文件包含：
+- 一个带智能体名的标题头
+- 智能体描述
+- 源智能体的完整 Markdown 正文
 
-## Usage
+## 用法
 
-After installation, reference agents in Mistral Vibe by their system prompt ID
-(which matches the filename slug).
+安装后，在 Mistral Vibe 中按系统提示词 ID（与文件名 slug 一致）
+引用智能体。
 
-Example:
+示例：
 ```text
 Use the Code Reviewer agent to analyze this pull request.
 ```
 
-## Filtering
+## 过滤
 
-Install only specific divisions or agents:
+只安装特定部门或特定智能体：
 
 ```bash
-# Install only agents from Division 1
+# 只安装 Division 1 的智能体
 ./scripts/install.sh --tool vibe --division 1
 
-# Install only the code-reviewer agent
+# 只安装 code-reviewer 这一个智能体
 ./scripts/install.sh --tool vibe --agent code-reviewer
 ```
 
-## Regenerate
+## 重新生成
 
-After modifying source agents:
+修改源智能体后：
 
 ```bash
 ./scripts/convert.sh --tool vibe
 ./scripts/install.sh --tool vibe
 ```
 
-## Troubleshooting
+## 故障排查
 
-### Mistral Vibe not detected
+### 未检测到 Mistral Vibe
 
-Make sure `vibe` is in your PATH, or that `~/.vibe/` already exists:
+确保 `vibe` 在你的 PATH 里，或 `~/.vibe/` 已存在：
 
 ```bash
 which vibe
 vibe --version
 ```
 
-### Integration files not generated
+### 集成文件未生成
 
-Generate the Vibe artifacts before installing:
+安装前请先生成 Vibe 产物：
 
 ```bash
 ./scripts/convert.sh --tool vibe

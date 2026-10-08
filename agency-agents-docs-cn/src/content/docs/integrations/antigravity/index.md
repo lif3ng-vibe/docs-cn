@@ -1,47 +1,47 @@
 ---
-title: 'Antigravity Integration'
+title: 'Antigravity 集成'
 ---
 
-# Antigravity Integration
+# Antigravity 集成
 
-Installs the full Agency roster as Antigravity skills. Each agent is prefixed
-with `agency-` to avoid conflicts with existing skills.
+把代理公司（The Agency）的完整名册安装为 Antigravity 技能。每个智能体
+都加 `agency-` 前缀，以避免与现有技能冲突。
 
-## Install
+## 安装
 
 ```bash
 ./scripts/install.sh --tool antigravity
 ```
 
-This copies files from `integrations/antigravity/` to
-`~/.gemini/config/skills/` (global). For project-scoped skills, Antigravity
-also reads `<project>/.agents/skills/`.
+这会把文件从 `integrations/antigravity/` 复制到
+`~/.gemini/config/skills/`（全局）。项目级技能方面，Antigravity
+还会读取 `<project>/.agents/skills/`。
 
-## Activate a Skill
+## 激活一个技能
 
-In Antigravity, activate an agent by its slug:
+在 Antigravity 中，通过 slug 激活一个智能体：
 
 ```
 Use the agency-frontend-developer skill to review this component.
 ```
 
-Available slugs follow the pattern `agency-<agent-name>`, e.g.:
+可用的 slug 遵循 `agency-<agent-name>` 模式，例如：
 - `agency-frontend-developer`
 - `agency-backend-architect`
 - `agency-reality-checker`
 - `agency-growth-hacker`
 
-## Regenerate
+## 重新生成
 
-After modifying agents, regenerate the skill files:
+修改智能体后，重新生成技能文件：
 
 ```bash
 ./scripts/convert.sh --tool antigravity
 ```
 
-## File Format
+## 文件格式
 
-Each skill is a `SKILL.md` file with Antigravity-compatible frontmatter:
+每个技能是一个带 Antigravity 兼容 frontmatter 的 `SKILL.md` 文件：
 
 ```yaml
 ---

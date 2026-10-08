@@ -1,37 +1,35 @@
 ---
-title: '🔌 Integrations'
+title: '🔌 集成'
 ---
 
-# 🔌 Integrations
+# 🔌 集成
 
-This directory contains The Agency integrations and converted formats for
-supported agentic coding tools.
+本目录包含代理公司（The Agency）在各支持的智能体编码工具下的集成与转换格式。
 
-## Supported Tools
+## 支持的工具
 
-- **[Claude Code](#claude-code)** — `.md` agents, use the repo directly
-- **[GitHub Copilot](#github-copilot)** — `.md` agents, use the repo directly
-- **[Antigravity](#antigravity)** — `SKILL.md` per agent in `antigravity/`
-- **[Gemini CLI](#gemini-cli)** — `.md` agent files in `gemini-cli/agents/`
-- **[OpenCode](#opencode)** — `.md` agent files in `opencode/`
-- **[OpenClaw](#openclaw)** — `SOUL.md` + `AGENTS.md` + `IDENTITY.md` workspaces
-- **[Cursor](#cursor)** — `.mdc` rule files in `cursor/`
-- **[Aider](#aider)** — `CONVENTIONS.md` roster index in `aider/`
-- **[Windsurf](#windsurf)** — `.windsurfrules` in `windsurf/`
-- **[Kimi Code](#kimi-code)** — YAML agent specs in `kimi/`
-- **[Qwen Code](#qwen-code)** — project-scoped `.md` SubAgents in `.qwen/agents/`
-- **[Codex](#codex)** — `.toml` custom agents in `codex/`
-- **[Mistral Vibe](vibe/README.md)** — `.toml` agents + prompt files generated in `vibe/`
-- **Osaurus** -- `SKILL.md` skills generated in `osaurus/`
-- **[Hermes](hermes/README.md)** -- lazy-router plugin generated in `hermes/`
+- **[Claude Code](#claude-code)**——`.md` 智能体，直接使用本仓库
+- **[GitHub Copilot](#github-copilot)**——`.md` 智能体，直接使用本仓库
+- **[Antigravity](#antigravity)**——每个智能体一个 `SKILL.md`，在 `antigravity/`
+- **[Gemini CLI](#gemini-cli)**——`.md` 智能体文件在 `gemini-cli/agents/`
+- **[OpenCode](#opencode)**——`.md` 智能体文件在 `opencode/`
+- **[OpenClaw](#openclaw)**——`SOUL.md` + `AGENTS.md` + `IDENTITY.md` 工作区
+- **[Cursor](#cursor)**——`.mdc` 规则文件在 `cursor/`
+- **[Aider](#aider)**——`CONVENTIONS.md` 名册索引在 `aider/`
+- **[Windsurf](#windsurf)**——`.windsurfrules` 在 `windsurf/`
+- **[Kimi Code](#kimi-code)**——YAML 智能体规格在 `kimi/`
+- **[Qwen Code](#qwen-code)**——项目级 `.md` 子智能体在 `.qwen/agents/`
+- **[Mistral Vibe](vibe/README.md)**——`.toml` 智能体 + 提示词文件生成在 `vibe/`
+- **Osaurus**——`SKILL.md` 技能生成在 `osaurus/`
+- **[Hermes](hermes/README.md)**——lazy-router 插件生成在 `hermes/`
 
-## Quick Install
+## 快速安装
 
 ```bash
-# Install for all detected tools automatically
+# 自动为检测到的所有工具安装
 ./scripts/install.sh
 
-# Install a specific home-scoped tool
+# 安装某个用户主目录级工具
 ./scripts/install.sh --tool antigravity
 ./scripts/install.sh --tool copilot
 ./scripts/install.sh --tool openclaw
@@ -40,29 +38,27 @@ supported agentic coding tools.
 ./scripts/install.sh --tool osaurus
 ./scripts/install.sh --tool hermes
 
-# Gemini CLI needs generated integration files on a fresh clone
+# Gemini CLI 在全新 clone 后需要先生成集成文件
 ./scripts/convert.sh --tool gemini-cli
 ./scripts/install.sh --tool gemini-cli
 
-# Qwen Code also needs generated SubAgent files on a fresh clone
+# Qwen Code 在全新 clone 后同样需要先生成 SubAgent 文件
 ./scripts/convert.sh --tool qwen
 ./scripts/install.sh --tool qwen
 ```
 
-If you install OpenClaw and the gateway is already running, restart it after installation:
+如果安装了 OpenClaw 且网关已在运行，安装后请重启它：
 
 ```bash
 openclaw gateway restart
 ```
 
-For project-scoped tools such as OpenCode, Cursor, Aider, Windsurf, and Qwen
-Code, run
-the installer from your target project root as shown in the tool-specific
-sections below.
+对于 OpenCode、Cursor、Aider、Windsurf、Qwen Code 这类项目级工具，
+请按下面各工具章节的说明，从你的目标项目根目录运行安装器。
 
-## Regenerating Integration Files
+## 重新生成集成文件
 
-If you add or modify agents, regenerate all integration files:
+如果你新增或修改了智能体，请重新生成所有集成文件：
 
 ```bash
 ./scripts/convert.sh
@@ -72,157 +68,156 @@ If you add or modify agents, regenerate all integration files:
 
 ## Claude Code
 
-The Agency was originally designed for Claude Code. Agents work natively
-without conversion.
+代理公司最初就是为 Claude Code 设计的。智能体无需转换即可原生工作。
 
 ```bash
 cp -r <category>/*.md ~/.claude/agents/
-# or install everything at once:
+# 或一次安装全部：
 ./scripts/install.sh --tool claude-code
 ```
 
-See [claude-code/README.md](claude-code/README.md) for details.
+详见 [claude-code/README.md](claude-code/README.md)。
 
 ---
 
 ## GitHub Copilot
 
-The Agency also works natively with GitHub Copilot. Agents can be copied
-directly into `~/.github/agents/` and `~/.copilot/agents/` without conversion.
+代理公司同样原生支持 GitHub Copilot。智能体无需转换，可直接复制进
+`~/.github/agents/` 和 `~/.copilot/agents/`。
 
 ```bash
 ./scripts/install.sh --tool copilot
 ```
 
-See [github-copilot/README.md](github-copilot/README.md) for details.
+详见 [github-copilot/README.md](github-copilot/README.md)。
 
 ---
 
 ## Antigravity
 
-Skills are installed to `~/.gemini/config/skills/`. Each agent becomes
-a separate skill prefixed with `agency-` to avoid naming conflicts.
+技能安装到 `~/.gemini/config/skills/`。每个智能体变成一个以
+`agency-` 为前缀的独立技能，以避免命名冲突。
 
 ```bash
 ./scripts/install.sh --tool antigravity
 ```
 
-See [antigravity/README.md](antigravity/README.md) for details.
+详见 [antigravity/README.md](antigravity/README.md)。
 
 ---
 
 ## Gemini CLI
 
-Agents are packaged as Gemini CLI subagents.
-Subagents are installed to `~/.gemini/agents/`.
-Because the agent files are generated artifacts, run
-`./scripts/convert.sh --tool gemini-cli` before installing from a fresh clone.
+智能体被打包为 Gemini CLI 子智能体。
+子智能体安装到 `~/.gemini/agents/`。
+由于智能体文件是生成产物，在全新 clone 上安装前，
+请先运行 `./scripts/convert.sh --tool gemini-cli`。
 
 ```bash
 ./scripts/convert.sh --tool gemini-cli
 ./scripts/install.sh --tool gemini-cli
 ```
 
-See [gemini-cli/README.md](gemini-cli/README.md) for details.
+详见 [gemini-cli/README.md](gemini-cli/README.md)。
 
 ---
 
 ## OpenCode
 
-Each agent becomes a project-scoped `.md` file in `.opencode/agents/`.
+每个智能体变成 `.opencode/agents/` 下的一个项目级 `.md` 文件。
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool opencode
 ```
 
-See [opencode/README.md](opencode/README.md) for details.
+详见 [opencode/README.md](opencode/README.md)。
 
 ---
 
 ## OpenClaw
 
-Each agent becomes an OpenClaw workspace containing `SOUL.md`, `AGENTS.md`,
-and `IDENTITY.md`.
+每个智能体变成一个包含 `SOUL.md`、`AGENTS.md`
+和 `IDENTITY.md` 的 OpenClaw 工作区。
 
-Before installing, generate the OpenClaw workspaces:
+安装前，先生成 OpenClaw 工作区：
 
 ```bash
 ./scripts/convert.sh --tool openclaw
 ```
 
-Then install them:
+然后安装：
 
 ```bash
 ./scripts/install.sh --tool openclaw
 ```
 
-See [openclaw/README.md](openclaw/README.md) for details.
+详见 [openclaw/README.md](openclaw/README.md)。
 
 ---
 
 ## Cursor
 
-Each agent becomes a `.mdc` rule file. Rules are project-scoped — run the
-installer from your project root.
+每个智能体变成一个 `.mdc` 规则文件。规则是项目级的——请从你的
+项目根目录运行安装器。
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool cursor
 ```
 
-See [cursor/README.md](cursor/README.md) for details.
+详见 [cursor/README.md](cursor/README.md)。
 
 ---
 
 ## Aider
 
-`CONVENTIONS.md` is the roster index — name, description, and the path to each
-agent's full instructions. Aider keeps a conventions file in context for the
-whole session, so the file lists the agents instead of inlining a million
-tokens of them.
+`CONVENTIONS.md` 是名册（roster）索引——每个智能体的名字、用途、
+所属部门，以及指向其完整说明的路径。Aider 会在整个会话期间把约定
+文件保持在上下文里，所以这个文件只列出各智能体，而不是把上百万
+token 的正文全部内联进来。
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool aider
 ```
 
-See [aider/README.md](aider/README.md) for details.
+详见 [aider/README.md](aider/README.md)。
 
 ---
 
 ## Windsurf
 
-All agents are consolidated into a single `.windsurfrules` file for your
-project root.
+所有智能体被合并成单个 `.windsurfrules` 文件，放到你的
+项目根目录。
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool windsurf
 ```
 
-See [windsurf/README.md](windsurf/README.md) for details.
+详见 [windsurf/README.md](windsurf/README.md)。
 
 ---
 
 ## Kimi Code
 
-Each agent is converted to a Kimi Code CLI agent specification (YAML format with
-separate system prompt files). Agents are installed to `~/.config/kimi/agents/`.
+每个智能体被转换为 Kimi Code CLI 智能体规格（YAML 格式，
+系统提示词为独立文件）。智能体安装到 `~/.config/kimi/agents/`。
 
-Because the Kimi agent files are generated from the source Markdown, run
-`./scripts/convert.sh --tool kimi` before installing from a fresh clone.
+由于 Kimi 智能体文件由源 Markdown 生成，在全新 clone 上安装前，
+请先运行 `./scripts/convert.sh --tool kimi`。
 
 ```bash
 ./scripts/convert.sh --tool kimi
 ./scripts/install.sh --tool kimi
 ```
 
-### Usage
+### 用法
 
-After installation, use an agent with the `--agent-file` flag:
+安装后，使用 `--agent-file` 标志来使用某个智能体：
 
 ```bash
 kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml
 ```
 
-Or in a specific project:
+或在特定项目中：
 
 ```bash
 cd /your/project
@@ -230,41 +225,41 @@ kimi --agent-file ~/.config/kimi/agents/frontend-developer/agent.yaml \
      --work-dir /your/project
 ```
 
-See [kimi/README.md](kimi/README.md) for details.
+详见 [kimi/README.md](kimi/README.md)。
 
 ---
 
 ## Qwen Code
 
-Each agent becomes a project-scoped `.md` SubAgent file in `.qwen/agents/`.
+每个智能体变成 `.qwen/agents/` 下的一个项目级 `.md` 子智能体文件。
 
-From a fresh clone, generate the Qwen files first:
+在全新 clone 上，请先生成 Qwen 文件：
 
 ```bash
 ./scripts/convert.sh --tool qwen
 ```
 
-Then install them from your project root:
+然后从你的项目根目录安装：
 
 ```bash
 cd /your/project && /path/to/agency-agents/scripts/install.sh --tool qwen
 ```
 
-See [qwen/README.md](qwen/README.md) for details.
+详见 [qwen/README.md](qwen/README.md)。
 
 ---
 
 ## Codex
 
-Each agent is converted into a standalone Codex custom agent TOML file and
-installed to `~/.codex/agents/`.
+每个智能体被转换为独立的 Codex 自定义智能体 TOML 文件，
+安装到 `~/.codex/agents/`。
 
-Because Codex uses generated TOML files rather than the source Markdown
-directly, run the converter before installing from a fresh clone:
+由于 Codex 使用生成的 TOML 文件而不是直接用源 Markdown，
+在全新 clone 上安装前请先运行转换器：
 
 ```bash
 ./scripts/convert.sh --tool codex
 ./scripts/install.sh --tool codex
 ```
 
-See [codex/README.md](codex/README.md) for details.
+详见 [codex/README.md](codex/README.md)。
