@@ -5,7 +5,33 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>docs-cn — 开源文档中文翻译</title>
 		<meta name="description" content="开源项目文档的中文翻译集合。" />
+		<script>
+			// 预读 localStorage 偏好，CSS 渲染前落到 data-* 属性，防主题闪烁。
+			// 主脚本在 body 末尾，负责交互与保存。
+			(function () {
+				try {
+					var p = JSON.parse(localStorage.getItem('docs-cn-prefs') || '{}');
+					var r = document.documentElement;
+					if (p.theme) r.dataset.theme = p.theme;
+					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
+					['desc', 'tags', 'btns'].forEach(function (k) {
+						if (k in p) {
+							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
+						}
+					});
+				} catch (e) {}
+			})();
+		</script>
 		<style>
+			:root {
+				--accent: #0969da;
+			}
+				[data-theme="blue"] { --accent: #0969da; }
+				[data-theme="green"] { --accent: #1a7f37; }
+				[data-theme="purple"] { --accent: #8250df; }
+				[data-theme="orange"] { --accent: #bc4c00; }
+				[data-theme="red"] { --accent: #cf222e; }
+				[data-theme="teal"] { --accent: #1b7c83; }
 			body {
 				margin: 0;
 				background: #f6f8fa;
@@ -20,16 +46,70 @@
 				margin: 0 auto;
 				padding: 4rem 1.5rem 3rem;
 			}
+			.header {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				gap: 1rem;
+			}
 			h1 {
 				font-size: 1.6rem;
 				font-weight: 700;
 				margin: 0 0 0.4rem;
 				letter-spacing: -0.01em;
 			}
+			.settings-btn {
+				font-size: 0.85rem;
+				color: #636c76;
+				border: 1px solid #d0d7de;
+				border-radius: 6px;
+				padding: 0.32rem 0.7rem;
+				background: #fff;
+				cursor: pointer;
+				white-space: nowrap;
+				transition: color 0.15s ease, border-color 0.15s ease;
+			}
+			.settings-btn:hover {
+				color: var(--accent);
+				border-color: var(--accent);
+			}
 			.sub {
 				color: #636c76;
 				font-size: 0.95rem;
 				margin: 0 0 2rem;
+			}
+			.filterbar {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+				margin: 0 0 1.5rem;
+			}
+			.chip {
+				font-size: 0.8rem;
+				color: #636c76;
+				border: 1px solid #d0d7de;
+				border-radius: 999px;
+				padding: 0.25rem 0.75rem;
+				background: #fff;
+				cursor: pointer;
+				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+			}
+			.chip:hover {
+				color: var(--accent);
+				border-color: var(--accent);
+			}
+			.chip.active {
+				color: #fff;
+				border-color: var(--accent);
+				background: var(--accent);
+			}
+			.chip:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
+			}
+			.chip:disabled:hover {
+				color: #636c76;
+				border-color: #d0d7de;
 			}
 			.list {
 				display: flex;
@@ -45,8 +125,8 @@
 				transition: border-color 0.15s ease, box-shadow 0.15s ease;
 			}
 			.item:hover {
-				border-color: #0969da;
-				box-shadow: 0 1px 4px rgba(9, 105, 218, 0.12);
+				border-color: var(--accent);
+				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 			}
 			.row {
 				display: block;
@@ -67,31 +147,6 @@
 				color: #636c76;
 				font-size: 0.9rem;
 				margin: 0;
-			}
-			.filterbar {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.4rem;
-				margin: 0 0 1.5rem;
-			}
-			.chip {
-				font-size: 0.8rem;
-				color: #636c76;
-				border: 1px solid #d0d7de;
-				border-radius: 999px;
-				padding: 0.25rem 0.75rem;
-				background: #fff;
-				cursor: pointer;
-				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-			}
-			.chip:hover {
-				color: #0969da;
-				border-color: #0969da;
-			}
-			.chip.active {
-				color: #fff;
-				border-color: #0969da;
-				background: #0969da;
 			}
 			.tags {
 				display: flex;
@@ -128,8 +183,8 @@
 				white-space: nowrap;
 			}
 			.btn:hover {
-				color: #0969da;
-				border-color: #0969da;
+				color: var(--accent);
+				border-color: var(--accent);
 				background: #fff;
 			}
 			footer {
@@ -138,11 +193,150 @@
 				color: #636c76;
 			}
 			footer a {
-				color: #0969da;
+				color: var(--accent);
 				text-decoration: none;
 			}
 			footer a:hover {
 				text-decoration: underline;
+			}
+			/* —— 卡片风格：紧凑 —— */
+			[data-card-style='compact'] .list {
+				gap: 0.4rem;
+			}
+			[data-card-style='compact'] .row {
+				padding: 0.6rem 1rem;
+			}
+			[data-card-style='compact'] .name {
+				font-size: 1rem;
+				margin: 0;
+			}
+			[data-card-style='compact'] .desc {
+				font-size: 0.8rem;
+				margin: 0;
+			}
+			[data-card-style='compact'] .tags {
+				margin: 0.35rem 0 0;
+			}
+			[data-card-style='compact'] .item {
+				border-radius: 8px;
+			}
+			/* —— 卡片风格：网格 —— */
+			[data-card-style='grid'] .list {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			}
+			[data-card-style='grid'] .btns {
+				position: static;
+				transform: none;
+				padding: 0 1.25rem 1rem;
+			}
+			[data-card-style='grid'] .row {
+				padding-bottom: 0.6rem;
+			}
+			/* —— 卡片各部分显隐 —— */
+			[data-show-desc='0'] .desc {
+				display: none;
+			}
+			[data-show-tags='0'] .tags {
+				display: none;
+			}
+			[data-show-btns='0'] .btns {
+				display: none;
+			}
+			/* —— 设置弹窗 —— */
+			.settings {
+				border: 1px solid #d0d7de;
+				border-radius: 12px;
+				padding: 1.25rem 1.5rem;
+				min-width: 300px;
+				max-width: 92vw;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+			}
+			.settings::backdrop {
+				background: rgba(31, 35, 40, 0.4);
+			}
+			.settings-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin: 0 0 0.75rem;
+			}
+			.settings-close {
+				border: none;
+				background: none;
+				font-size: 1rem;
+				color: #636c76;
+				cursor: pointer;
+				padding: 0.2rem 0.4rem;
+				border-radius: 6px;
+			}
+			.settings-close:hover {
+				color: #1f2328;
+				background: #f0f4f8;
+			}
+			.settings fieldset {
+				border: none;
+				margin: 0 0 1rem;
+				padding: 0;
+			}
+			.settings fieldset:last-child {
+				margin-bottom: 0;
+			}
+			.settings legend {
+				font-size: 0.85rem;
+				font-weight: 600;
+				color: #57606a;
+				padding: 0;
+				margin-bottom: 0.5rem;
+			}
+			.swatches {
+				display: flex;
+				gap: 0.5rem;
+			}
+			.swatch {
+				width: 1.5rem;
+				height: 1.5rem;
+				border-radius: 6px;
+				border: 1px solid rgba(0, 0, 0, 0.15);
+				cursor: pointer;
+				padding: 0;
+				transition: transform 0.15s ease, box-shadow 0.15s ease;
+			}
+			.swatch:hover {
+				transform: scale(1.1);
+			}
+			.swatch.active {
+				box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1f2328;
+			}
+			.seg {
+				display: flex;
+				gap: 0.4rem;
+				flex-wrap: wrap;
+			}
+			.seg-item,
+			.check-item {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				font-size: 0.9rem;
+				border: 1px solid #d0d7de;
+				border-radius: 8px;
+				padding: 0.3rem 0.75rem;
+				cursor: pointer;
+				background: #fff;
+			}
+			.seg-item:has(input:checked) {
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+			.settings input {
+				accent-color: var(--accent);
+				margin: 0;
+			}
+			.checks {
+				display: flex;
+				gap: 0.75rem;
+				flex-wrap: wrap;
 			}
 			@media (max-width: 560px) {
 				.btns {
@@ -155,162 +349,296 @@
 	</head>
 	<body>
 		<div class="wrap">
-			<h1>docs-cn</h1>
+			<div class="header">
+				<h1>docs-cn</h1>
+				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
 			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent">智能体</button><button class="chip" data-filter="multi-agent">多智能体协作</button><button class="chip" data-filter="skills">技能与提示词</button><button class="chip" data-filter="memory">记忆系统</button><button class="chip" data-filter="testing">测试</button><button class="chip" data-filter="deployment">部署运维</button><button class="chip" data-filter="docs-engineering">文档工程</button><button class="chip" data-filter="ai-app-dev">AI 应用开发</button><button class="chip" data-filter="code-intelligence">代码智能</button><button class="chip" data-filter="learning">概念与入门</button><button class="chip" data-filter="cli-tool">命令行工具</button><button class="chip" data-filter="sdk-api">SDK 与 API</button><button class="chip" data-filter="unofficial-en">非官方英文文档</button></div>
 			<div class="list">
-			<div class="item" data-tags="code-intelligence,cli-tool">
-				<a class="row" href="codegraph/" target="_blank" rel="noopener">
-					<p class="name">codegraph</p>
-					<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
-					<div class="tags"><span class="tag">代码智能</span><span class="tag">命令行工具</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,multi-agent">
-				<a class="row" href="orca/" target="_blank" rel="noopener">
-					<p class="name">Orca</p>
-					<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="skills,learning">
-				<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
-					<p class="name">Matt Pocock Skills</p>
-					<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
-					<div class="tags"><span class="tag">技能与提示词</span><span class="tag">概念与入门</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,multi-agent,skills">
-				<a class="row" href="agency-agents/" target="_blank" rel="noopener">
-					<p class="name">Agency Agents</p>
-					<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="agency-agents-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,multi-agent,skills,unofficial-en">
-				<a class="row" href="agency-agents-en/" target="_blank" rel="noopener">
-					<p class="name">Agency Agents (EN)</p>
-					<p class="desc">Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span><span class="tag">非官方英文文档</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="learning">
-				<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
-					<p class="name">AI 编码词典</p>
-					<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
-					<div class="tags"><span class="tag">概念与入门</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="memory,cli-tool">
-				<a class="row" href="ai-memory/" target="_blank" rel="noopener">
-					<p class="name">ai-memory</p>
-					<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
-					<div class="tags"><span class="tag">记忆系统</span><span class="tag">命令行工具</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="docs-engineering">
-				<a class="row" href="nimbus/" target="_blank" rel="noopener">
-					<p class="name">Nimbus</p>
-					<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
-					<div class="tags"><span class="tag">文档工程</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://nimbus-docs.com" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,multi-agent">
-				<a class="row" href="openrig/" target="_blank" rel="noopener">
-					<p class="name">OpenRig</p>
-					<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="openrig-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://openrig.dev/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,multi-agent,unofficial-en">
-				<a class="row" href="openrig-en/" target="_blank" rel="noopener">
-					<p class="name">OpenRig (EN)</p>
-					<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">非官方英文文档</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="deployment,sdk-api">
-				<a class="row" href="openship/" target="_blank" rel="noopener">
-					<p class="name">OpenShip</p>
-					<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
-					<div class="tags"><span class="tag">部署运维</span><span class="tag">SDK 与 API</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://openship.io/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/oblien/openship" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="skills,ai-agent">
-				<a class="row" href="agent-skills/" target="_blank" rel="noopener">
-					<p class="name">Agent Skills</p>
-					<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
-					<div class="tags"><span class="tag">技能与提示词</span><span class="tag">智能体</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://skills.addy.ie/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="testing,ai-agent">
-				<a class="row" href="tester-army-e2e/" target="_blank" rel="noopener">
-					<p class="name">e2e</p>
-					<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
-					<div class="tags"><span class="tag">测试</span><span class="tag">智能体</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://e2e.tester.army/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tester-army/e2e" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="memory,ai-agent">
-				<a class="row" href="claude-mem/" target="_blank" rel="noopener">
-					<p class="name">Claude-Mem</p>
-					<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
-					<div class="tags"><span class="tag">记忆系统</span><span class="tag">智能体</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://docs.claude-mem.ai/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-app-dev,sdk-api">
-				<a class="row" href="ai-sdk/" target="_blank" rel="noopener">
-					<p class="name">AI SDK</p>
-					<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
-					<div class="tags"><span class="tag">AI 应用开发</span><span class="tag">SDK 与 API</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://ai-sdk.dev" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/vercel/ai" target="_blank" rel="noopener">仓库</a></div>
-			</div>
-			<div class="item" data-tags="ai-agent,cli-tool,sdk-api">
-				<a class="row" href="pi/" target="_blank" rel="noopener">
-					<p class="name">Pi</p>
-					<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
-					<div class="tags"><span class="tag">智能体</span><span class="tag">命令行工具</span><span class="tag">SDK 与 API</span></div>
-				</a>
-				<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
-			</div>
+				<div class="item" data-tags="code-intelligence,cli-tool">
+					<a class="row" href="codegraph/" target="_blank" rel="noopener">
+						<p class="name">codegraph</p>
+						<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
+						<div class="tags"><span class="tag">代码智能</span><span class="tag">命令行工具</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,multi-agent">
+					<a class="row" href="orca/" target="_blank" rel="noopener">
+						<p class="name">Orca</p>
+						<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="skills,learning">
+					<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
+						<p class="name">Matt Pocock Skills</p>
+						<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
+						<div class="tags"><span class="tag">技能与提示词</span><span class="tag">概念与入门</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,multi-agent,skills">
+					<a class="row" href="agency-agents/" target="_blank" rel="noopener">
+						<p class="name">Agency Agents</p>
+						<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="agency-agents-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,multi-agent,skills,unofficial-en">
+					<a class="row" href="agency-agents-en/" target="_blank" rel="noopener">
+						<p class="name">Agency Agents (EN)</p>
+						<p class="desc">Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span><span class="tag">非官方英文文档</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="learning">
+					<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
+						<p class="name">AI 编码词典</p>
+						<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
+						<div class="tags"><span class="tag">概念与入门</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="memory,cli-tool">
+					<a class="row" href="ai-memory/" target="_blank" rel="noopener">
+						<p class="name">ai-memory</p>
+						<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
+						<div class="tags"><span class="tag">记忆系统</span><span class="tag">命令行工具</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="docs-engineering">
+					<a class="row" href="nimbus/" target="_blank" rel="noopener">
+						<p class="name">Nimbus</p>
+						<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
+						<div class="tags"><span class="tag">文档工程</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://nimbus-docs.com" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,multi-agent">
+					<a class="row" href="openrig/" target="_blank" rel="noopener">
+						<p class="name">OpenRig</p>
+						<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="openrig-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://openrig.dev/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,multi-agent,unofficial-en">
+					<a class="row" href="openrig-en/" target="_blank" rel="noopener">
+						<p class="name">OpenRig (EN)</p>
+						<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">非官方英文文档</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="deployment,sdk-api">
+					<a class="row" href="openship/" target="_blank" rel="noopener">
+						<p class="name">OpenShip</p>
+						<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
+						<div class="tags"><span class="tag">部署运维</span><span class="tag">SDK 与 API</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://openship.io/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/oblien/openship" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="skills,ai-agent">
+					<a class="row" href="agent-skills/" target="_blank" rel="noopener">
+						<p class="name">Agent Skills</p>
+						<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
+						<div class="tags"><span class="tag">技能与提示词</span><span class="tag">智能体</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://skills.addy.ie/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="testing,ai-agent">
+					<a class="row" href="tester-army-e2e/" target="_blank" rel="noopener">
+						<p class="name">e2e</p>
+						<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
+						<div class="tags"><span class="tag">测试</span><span class="tag">智能体</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://e2e.tester.army/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tester-army/e2e" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="memory,ai-agent">
+					<a class="row" href="claude-mem/" target="_blank" rel="noopener">
+						<p class="name">Claude-Mem</p>
+						<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
+						<div class="tags"><span class="tag">记忆系统</span><span class="tag">智能体</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://docs.claude-mem.ai/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-app-dev,sdk-api">
+					<a class="row" href="ai-sdk/" target="_blank" rel="noopener">
+						<p class="name">AI SDK</p>
+						<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
+						<div class="tags"><span class="tag">AI 应用开发</span><span class="tag">SDK 与 API</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://ai-sdk.dev" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/vercel/ai" target="_blank" rel="noopener">仓库</a></div>
+				</div>
+				<div class="item" data-tags="ai-agent,cli-tool,sdk-api">
+					<a class="row" href="pi/" target="_blank" rel="noopener">
+						<p class="name">Pi</p>
+						<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
+						<div class="tags"><span class="tag">智能体</span><span class="tag">命令行工具</span><span class="tag">SDK 与 API</span></div>
+					</a>
+					<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
+				</div>
 			</div>
 			<footer>
 				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
 			</footer>
 		</div>
+		<dialog id="settings" class="settings" aria-label="显示设置">
+			<div class="settings-head">
+				<strong>显示设置</strong>
+				<button class="settings-close" id="settings-close" type="button" aria-label="关闭">✕</button>
+			</div>
+			<fieldset>
+				<legend>主题色</legend>
+				<div class="swatches"><button type="button" class="swatch" data-theme="blue" style="background:#0969da" title="蓝" aria-label="蓝色主题"></button><button type="button" class="swatch" data-theme="green" style="background:#1a7f37" title="绿" aria-label="绿色主题"></button><button type="button" class="swatch" data-theme="purple" style="background:#8250df" title="紫" aria-label="紫色主题"></button><button type="button" class="swatch" data-theme="orange" style="background:#bc4c00" title="橙" aria-label="橙色主题"></button><button type="button" class="swatch" data-theme="red" style="background:#cf222e" title="红" aria-label="红色主题"></button><button type="button" class="swatch" data-theme="teal" style="background:#1b7c83" title="青" aria-label="青色主题"></button></div>
+			</fieldset>
+			<fieldset>
+				<legend>卡片风格</legend>
+				<div class="seg"><label class="seg-item"><input type="radio" name="card-style" value="standard">标准</label><label class="seg-item"><input type="radio" name="card-style" value="compact">紧凑</label><label class="seg-item"><input type="radio" name="card-style" value="grid">网格</label></div>
+			</fieldset>
+			<fieldset>
+				<legend>卡片显示</legend>
+				<div class="checks"><label class="check-item"><input type="checkbox" data-show="desc">描述</label><label class="check-item"><input type="checkbox" data-show="tags">标签</label><label class="check-item"><input type="checkbox" data-show="btns">操作按钮</label></div>
+			</fieldset>
+		</dialog>
+		<script>
+			const e=new Set,t=new WeakMap,n=new WeakMap,o=new WeakMap,i=new WeakMap,r=new WeakMap,l=new WeakMap,a=new WeakMap,s=new WeakMap,c=new WeakSet;let d,u=0,f=0;const h="__aa_tgt",p="__aa_del",g="__aa_new",m=e=>{const i=function(e){const t=e.reduce((e,t)=>[...e,...Array.from(t.addedNodes),...Array.from(t.removedNodes)],[]);return!t.every(e=>"#comment"===e.nodeName)&&e.reduce((e,t)=>{if(!1===e)return!1;if(t.target instanceof Element){if(_(t.target),!e.has(t.target)){e.add(t.target);for(let n=0;n<t.target.children.length;n++){const o=t.target.children.item(n);if(o){if(p in o)return!1;_(t.target,o),e.add(o)}}}if(t.removedNodes.length)for(let o=0;o<t.removedNodes.length;o++){const i=t.removedNodes[o];if(p in i)return!1;i instanceof Element&&(e.add(i),_(t.target,i),n.set(i,[t.previousSibling,t.nextSibling]))}}return e},new Set)}(e);i&&i.forEach(e=>function(e){var i,r;const l=e.isConnected,a=t.has(e);l&&n.has(e)&&n.delete(e);"finished"!==(null===(i=o.get(e))||void 0===i?void 0:i.playState)&&(null===(r=o.get(e))||void 0===r||r.cancel());g in e?$(e):a&&l?function(e){const n=t.get(e),i=O(e);if(!N(e))return t.set(e,i);if(v(e))return t.set(e,i),void y(e);let r;if(!n)return;const l=C(e);if("function"!=typeof l){let t=n.left-i.left,o=n.top-i.top;const a=n.left+n.width-(i.left+i.width);0==n.top+n.height-(i.top+i.height)&&(o=0),0==a&&(t=0);const[s,c,d,u]=S(e,n,i),f={transform:`translate(${t}px, ${o}px)`},h={transform:"translate(0, 0)"};s!==c&&(f.width=`${s}px`,h.width=`${c}px`),d!==u&&(f.height=`${d}px`,h.height=`${u}px`),r=e.animate([f,h],{duration:l.duration,easing:l.easing})}else{const[t]=j(l(e,"remain",n,i));r=new Animation(t),r.play()}o.set(e,r),t.set(e,i),r.addEventListener("finish",b.bind(null,e,!1),{once:!0})}(e):a&&!l?function(e){var i;if(!n.has(e)||!t.has(e))return;const[r,l]=n.get(e);Object.defineProperty(e,p,{value:!0,configurable:!0});const a=window.scrollX,s=window.scrollY;l&&l.parentNode&&l.parentNode instanceof Element?l.parentNode.insertBefore(e,l):r&&r.parentNode?r.parentNode.appendChild(e):null===(i=L(e))||void 0===i||i.appendChild(e);if(!N(e))return A(e);const[c,h,g,m]=function(e){var n;const i=t.get(e),[r,,l]=S(e,i,O(e));let a=e.parentElement;for(;a&&("static"===getComputedStyle(a).position||a instanceof HTMLBodyElement);)a=a.parentElement;a||(a=document.body);const s=getComputedStyle(a),c=o.has(e)&&"finished"!==(null===(n=o.get(e))||void 0===n?void 0:n.playState)?t.get(a):O(a),d=Math.round(i.top-c.top)-T(s.borderTopWidth),u=Math.round(i.left-c.left)-T(s.borderLeftWidth);return[d,u,r,l]}(e),w=C(e),v=t.get(e);a===u&&s===f||function(e,t,n,o){const i=u-t,r=f-n,l=document.documentElement.style.scrollBehavior;"smooth"===getComputedStyle(d).scrollBehavior&&(document.documentElement.style.scrollBehavior="auto");if(window.scrollTo(window.scrollX+i,window.scrollY+r),!e.parentElement)return;const a=e.parentElement;let s=a.clientHeight,c=a.clientWidth;const h=performance.now();function p(){requestAnimationFrame(()=>{if(!B(o)){const e=s-a.clientHeight,t=c-a.clientWidth;h+o.duration>performance.now()?(window.scrollTo({left:window.scrollX-t,top:window.scrollY-e}),s=a.clientHeight,c=a.clientWidth,p()):document.documentElement.style.scrollBehavior=l}})}p()}(e,a,s,w);let y,b={position:"absolute",top:`${c}px`,left:`${h}px`,width:`${g}px`,height:`${m}px`,margin:"0",pointerEvents:"none",transformOrigin:"center",zIndex:"100"};if(B(w)){const[t,n]=j(w(e,"remove",v));!1!==(null==n?void 0:n.styleReset)&&(b=(null==n?void 0:n.styleReset)||b,Object.assign(e.style,b)),y=new Animation(t),y.play()}else Object.assign(e.style,b),y=e.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.98)",opacity:0}],{duration:w.duration,easing:"ease-out"});o.set(e,y),y.addEventListener("finish",()=>A(e,b),{once:!0})}(e):$(e)}(e))},w=n=>{n.forEach(n=>{n.target===d&&(clearTimeout(s.get(d)),s.set(d,setTimeout(()=>{e.forEach(e=>k(e,e=>M(()=>b(e))))},100))),t.has(n.target)&&b(n.target)})};function v(e){const t=e.getBoundingClientRect(),n=(null==d?void 0:d.clientWidth)||0,o=(null==d?void 0:d.clientHeight)||0;return t.bottom<0||t.top>o||t.right<0||t.left>n}function y(e){const n=i.get(e);null==n||n.disconnect();let o=t.get(e),r=0;o||(o=O(e),t.set(e,o));const{offsetWidth:l,offsetHeight:a}=d,s=[o.top-5,l-(o.left+5+o.width),a-(o.top+5+o.height),o.left-5].map(e=>-1*Math.floor(e)+"px").join(" "),c=new IntersectionObserver(()=>{++r>1&&b(e)},{root:d,threshold:1,rootMargin:s});c.observe(e),i.set(e,c)}function b(e,n=!0){clearTimeout(s.get(e));const i=C(e),r=n?B(i)?500:i.duration:0;s.set(e,setTimeout(async()=>{const n=o.get(e);try{await(null==n?void 0:n.finished),t.set(e,O(e)),y(e)}catch{}},r))}function E(e){setTimeout(()=>{l.set(e,setInterval(()=>M(b.bind(null,e)),2e3))},Math.round(2e3*Math.random()))}function M(e){"function"==typeof requestIdleCallback?requestIdleCallback(()=>e()):requestAnimationFrame(()=>e())}let W;const x="undefined"!=typeof window&&"ResizeObserver"in window;function _(e,t){t||h in e?t&&!(h in t)&&Object.defineProperty(t,h,{value:e}):Object.defineProperty(e,h,{value:e})}function T(e){return Number(e.replace(/[^0-9.\-]/g,""))}function O(e){const t=e.getBoundingClientRect(),{x:n,y:o}=function(e){let t=e.parentElement;for(;t;){if(t.scrollLeft||t.scrollTop)return{x:t.scrollLeft,y:t.scrollTop};t=t.parentElement}return{x:0,y:0}}(e);return{top:t.top+o,left:t.left+n,width:t.width,height:t.height}}function S(e,t,n){let o=t.width,i=t.height,r=n.width,l=n.height;const a=getComputedStyle(e);if("content-box"===a.getPropertyValue("box-sizing")){const e=T(a.paddingTop)+T(a.paddingBottom)+T(a.borderTopWidth)+T(a.borderBottomWidth),t=T(a.paddingLeft)+T(a.paddingRight)+T(a.borderRightWidth)+T(a.borderLeftWidth);o-=t,r-=t,i-=e,l-=e}return[o,r,i,l].map(Math.round)}function C(e){return h in e&&a.has(e[h])?a.get(e[h]):{duration:250,easing:"ease-in-out"}}function L(e){if(h in e)return e[h]}function N(e){const t=L(e);return!!t&&c.has(t)}function k(e,...t){t.forEach(t=>t(e,a.has(e)));for(let n=0;n<e.children.length;n++){const o=e.children.item(n);o&&t.forEach(e=>e(o,a.has(o)))}}function j(e){return Array.isArray(e)?e:[e]}function B(e){return"function"==typeof e}function $(e){g in e&&delete e[g];const n=O(e);t.set(e,n);const i=C(e);if(!N(e))return;if(v(e))return void y(e);let r;if("function"!=typeof i)r=e.animate([{transform:"scale(.98)",opacity:0},{transform:"scale(0.98)",opacity:0,offset:.5},{transform:"scale(1)",opacity:1}],{duration:1.5*i.duration,easing:"ease-in"});else{const[t]=j(i(e,"add",n));r=new Animation(t),r.play()}o.set(e,r),r.addEventListener("finish",b.bind(null,e,!1),{once:!0})}function A(e,r){var l;e.remove(),t.delete(e),n.delete(e),o.delete(e),null===(l=i.get(e))||void 0===l||l.disconnect(),setTimeout(()=>{if(p in e&&delete e[p],Object.defineProperty(e,g,{value:!0,configurable:!0}),r&&e instanceof HTMLElement)for(const t in r)e.style[t]=""},0)}function R(d,u={}){if(x&&W){if(!(window.matchMedia("(prefers-reduced-motion: reduce)").matches&&!B(u)&&!u.disrespectUserMotionPreference)){c.add(d),"static"===getComputedStyle(d).position&&Object.assign(d.style,{position:"relative"}),k(d,b,E,e=>null==W?void 0:W.observe(e)),B(u)?a.set(d,u):a.set(d,{duration:250,easing:"ease-in-out",...u});const t=new MutationObserver(m);t.observe(d,{childList:!0}),r.set(d,t),e.add(d)}}return Object.freeze({parent:d,enable:()=>{c.add(d)},disable:()=>{c.delete(d),k(d,e=>{const t=o.get(e);try{null==t||t.cancel()}catch{}o.delete(e);const n=s.get(e);n&&clearTimeout(n),s.delete(e);const i=l.get(e);i&&clearInterval(i),l.delete(e)})},isEnabled:()=>c.has(d),destroy:()=>{c.delete(d),e.delete(d),a.delete(d);const u=r.get(d);null==u||u.disconnect(),r.delete(d),k(d,e=>{null==W||W.unobserve(e);const r=o.get(e);try{null==r||r.cancel()}catch{}o.delete(e);const a=i.get(e);null==a||a.disconnect(),i.delete(e);const c=l.get(e);c&&clearInterval(c),l.delete(e);const d=s.get(e);d&&clearTimeout(d),s.delete(e),t.delete(e),n.delete(e)})}})}x&&(d=document.documentElement,new MutationObserver(m),W=new ResizeObserver(w),window.addEventListener("scroll",()=>{f=window.scrollY,u=window.scrollX}),W.observe(d));const P={mounted:(e,t)=>{const n=R(e,t.value||{});Object.defineProperty(e,"__aa_ctl",{value:n,configurable:!0})},unmounted:e=>{var t;const n=e.__aa_ctl;null===(t=null==n?void 0:n.destroy)||void 0===t||t.call(n);try{delete e.__aa_ctl}catch{}},getSSRProps:()=>({})};globalThis.autoAnimate=R;
+		</script>
 		<script>
 			(function () {
-				var chips = document.querySelectorAll('.chip');
-				var items = document.querySelectorAll('.item');
+				var STORAGE_KEY = 'docs-cn-prefs';
+				var DEFAULTS = { theme: 'blue', cardStyle: 'standard', showDesc: true, showTags: true, showBtns: true };
+				var root = document.documentElement;
+
+				function loadPrefs() {
+					try {
+						var p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+						var out = {};
+						Object.keys(DEFAULTS).forEach(function (k) {
+							out[k] = k in p ? p[k] : DEFAULTS[k];
+						});
+						// 注册表之外的主题/风格回落默认（防手改 localStorage 出脏值）
+						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
+						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
+						return out;
+					} catch (e) {
+						return Object.assign({}, DEFAULTS);
+					}
+				}
+				var THEME_IDS = ["blue","green","purple","orange","red","teal"];
+				var CARD_STYLE_IDS = ["standard","compact","grid"];
+				var prefs = loadPrefs();
+
+				function savePrefs() {
+					try {
+						localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+					} catch (e) {}
+				}
+				function applyPrefs() {
+					if (prefs.theme === 'blue') delete root.dataset.theme;
+					else root.dataset.theme = prefs.theme;
+					root.dataset.cardStyle = prefs.cardStyle;
+					root.dataset.showDesc = prefs.showDesc ? '1' : '0';
+					root.dataset.showTags = prefs.showTags ? '1' : '0';
+					root.dataset.showBtns = prefs.showBtns ? '1' : '0';
+				}
+
+				// —— 设置弹窗 ——
+				var dialog = document.getElementById('settings');
+				var btn = document.getElementById('settings-btn');
+				var closeBtn = document.getElementById('settings-close');
+
+				function syncSettingsUi() {
+					root.querySelectorAll('.swatch').forEach(function (sw) {
+						sw.classList.toggle('active', sw.dataset.theme === prefs.theme);
+					});
+					var radio = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
+					if (radio) radio.checked = true;
+					root.querySelectorAll('input[data-show]').forEach(function (cb) {
+						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
+					});
+				}
+				btn.addEventListener('click', function () {
+					syncSettingsUi();
+					dialog.showModal();
+				});
+				closeBtn.addEventListener('click', function () {
+					dialog.close();
+				});
+				// 点遮罩关闭
+				dialog.addEventListener('click', function (e) {
+					if (e.target === dialog) dialog.close();
+				});
+
+				root.querySelectorAll('.swatch').forEach(function (sw) {
+					sw.addEventListener('click', function () {
+						prefs.theme = sw.dataset.theme;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+					});
+				});
+				root.querySelectorAll('input[name="card-style"]').forEach(function (r) {
+					r.addEventListener('change', function () {
+						prefs.cardStyle = r.value;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+					});
+				});
+				root.querySelectorAll('input[data-show]').forEach(function (cb) {
+					cb.addEventListener('change', function () {
+						var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
+						prefs[key] = cb.checked;
+						applyPrefs();
+						savePrefs();
+					});
+				});
+
+				// —— 标签筛选（交集 + 不可用置灰 + auto-animate 动画）——
+				var list = document.querySelector('.list');
+				autoAnimate(list);
+				var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
+					return { el: el, tags: el.dataset.tags ? el.dataset.tags.split(',') : [] };
+				});
+				var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
 				var active = new Set();
 				function apply() {
-					var all = active.size === 0;
+					var sel = Array.from(active);
+					// 交集：卡片须命中全部选中标签
+					var desired = items.filter(function (it) {
+						return sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
+					});
+					// 先移出不再命中的卡片，再按原顺序补回命中的（auto-animate 负责动画）
+					items.forEach(function (it) {
+						if (desired.indexOf(it) === -1 && it.el.parentNode) it.el.remove();
+					});
+					desired.forEach(function (it, i) {
+						if (list.children[i] !== it.el) list.appendChild(it.el);
+					});
+					// 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
 					chips.forEach(function (c) {
 						var f = c.dataset.filter;
-						c.classList.toggle('active', f === 'all' ? all : active.has(f));
-					});
-					items.forEach(function (it) {
-						var tags = it.dataset.tags ? it.dataset.tags.split(',') : [];
-						var show = all || tags.some(function (t) { return active.has(t); });
-						it.style.display = show ? '' : 'none';
+						if (f === 'all') {
+							c.classList.toggle('active', active.size === 0);
+							c.disabled = false;
+							return;
+						}
+						c.classList.toggle('active', active.has(f));
+						c.disabled =
+							!active.has(f) &&
+							!desired.some(function (it) { return it.tags.indexOf(f) !== -1; });
 					});
 				}
 				chips.forEach(function (c) {
 					c.addEventListener('click', function () {
+						if (c.disabled) return;
 						var f = c.dataset.filter;
 						if (f === 'all') active.clear();
 						else if (active.has(f)) active.delete(f);
@@ -318,6 +646,8 @@
 						apply();
 					});
 				});
+
+				applyPrefs();
 				apply();
 			})();
 		</script>
