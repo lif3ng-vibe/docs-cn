@@ -3,6 +3,7 @@
     "name": "codegraph",
     "slug": "codegraph",
     "desc": "把代码库解析成可供 AI 智能体查询的知识图谱。",
+    "tags": ["code-intelligence", "cli-tool"],
     "orig": "https://colbymchenry.github.io/codegraph/",
     "repo": "https://github.com/colbymchenry/codegraph"
   },
@@ -10,6 +11,7 @@
     "name": "Orca",
     "slug": "orca",
     "desc": "跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。",
+    "tags": ["ai-agent", "multi-agent"],
     "orig": "https://www.onorca.dev/docs",
     "repo": "https://github.com/stablyai/orca"
   },
@@ -17,6 +19,7 @@
     "name": "Matt Pocock Skills",
     "slug": "mattpocock-skills",
     "desc": "Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。",
+    "tags": ["skills", "learning"],
     "orig": "https://www.aihero.dev/skills",
     "repo": "https://github.com/mattpocock/skills"
   },
@@ -24,6 +27,7 @@
     "name": "Agency Agents",
     "slug": "agency-agents",
     "desc": "300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。",
+    "tags": ["ai-agent", "multi-agent", "skills"],
     "orig": "https://github.com/msitarzewski/agency-agents",
     "repo": "https://github.com/msitarzewski/agency-agents",
     "en": "agency-agents-en"
@@ -40,6 +44,7 @@
     "name": "AI 编码词典",
     "slug": "ai-coding-dictionary",
     "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
+    "tags": ["learning"],
     "orig": "https://www.aihero.dev/ai-coding-dictionary",
     "repo": "https://github.com/mattpocock/dictionary-of-ai-coding"
   },
@@ -47,6 +52,7 @@
     "name": "ai-memory",
     "slug": "ai-memory",
     "desc": "给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。",
+    "tags": ["memory", "cli-tool"],
     "orig": "https://github.com/akitaonrails/ai-memory",
     "repo": "https://github.com/akitaonrails/ai-memory",
     "en": "ai-memory-en"
@@ -55,6 +61,7 @@
     "name": "Nimbus",
     "slug": "nimbus",
     "desc": "Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。",
+    "tags": ["docs-engineering"],
     "orig": "https://nimbus-docs.com",
     "repo": "https://github.com/cloudflare/nimbus"
   },
@@ -62,6 +69,7 @@
     "name": "OpenRig",
     "slug": "openrig",
     "desc": "多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。",
+    "tags": ["ai-agent", "multi-agent"],
     "orig": "https://openrig.dev/",
     "repo": "https://github.com/mvschwarz/openrig",
     "en": "openrig-en"
@@ -78,6 +86,7 @@
     "name": "OpenShip",
     "slug": "openship",
     "desc": "开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。",
+    "tags": ["deployment", "sdk-api"],
     "orig": "https://openship.io/docs",
     "repo": "https://github.com/oblien/openship"
   },
@@ -85,6 +94,7 @@
     "name": "Agent Skills",
     "slug": "agent-skills",
     "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
+    "tags": ["skills", "ai-agent"],
     "orig": "https://skills.addy.ie/",
     "repo": "https://github.com/addyosmani/agent-skills"
   },
@@ -92,6 +102,7 @@
     "name": "e2e",
     "slug": "tester-army-e2e",
     "desc": "tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。",
+    "tags": ["testing", "ai-agent"],
     "orig": "https://e2e.tester.army/docs",
     "repo": "https://github.com/tester-army/e2e"
   },
@@ -99,6 +110,7 @@
     "name": "Claude-Mem",
     "slug": "claude-mem",
     "desc": "Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。",
+    "tags": ["memory", "ai-agent"],
     "orig": "https://docs.claude-mem.ai/",
     "repo": "https://github.com/thedotmack/claude-mem"
   },
@@ -106,6 +118,7 @@
     "name": "AI SDK",
     "slug": "ai-sdk",
     "desc": "Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。",
+    "tags": ["ai-app-dev", "sdk-api"],
     "orig": "https://ai-sdk.dev",
     "repo": "https://github.com/vercel/ai"
   },
@@ -113,6 +126,7 @@
     "name": "Pi",
     "slug": "pi",
     "desc": "Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。",
+    "tags": ["ai-agent", "cli-tool", "sdk-api"],
     "orig": "https://pi.dev/docs/latest",
     "repo": "https://github.com/earendil-works/pi"
   }

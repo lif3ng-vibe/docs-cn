@@ -68,6 +68,46 @@
 				font-size: 0.9rem;
 				margin: 0;
 			}
+			.filterbar {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+				margin: 0 0 1.5rem;
+			}
+			.chip {
+				font-size: 0.8rem;
+				color: #636c76;
+				border: 1px solid #d0d7de;
+				border-radius: 999px;
+				padding: 0.25rem 0.75rem;
+				background: #fff;
+				cursor: pointer;
+				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+			}
+			.chip:hover {
+				color: #0969da;
+				border-color: #0969da;
+			}
+			.chip.active {
+				color: #fff;
+				border-color: #0969da;
+				background: #0969da;
+			}
+			.tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.3rem;
+				margin: 0.5rem 0 0;
+			}
+			.tag {
+				font-size: 0.72rem;
+				color: #57606a;
+				border: 1px solid #d8dee4;
+				border-radius: 999px;
+				padding: 0.1rem 0.55rem;
+				background: #f6f8fa;
+				white-space: nowrap;
+			}
 			.btns {
 				position: absolute;
 				right: 1rem;
@@ -117,116 +157,133 @@
 		<div class="wrap">
 			<h1>docs-cn</h1>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
+			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent">智能体</button><button class="chip" data-filter="multi-agent">多智能体协作</button><button class="chip" data-filter="skills">技能与提示词</button><button class="chip" data-filter="memory">记忆系统</button><button class="chip" data-filter="testing">测试</button><button class="chip" data-filter="deployment">部署运维</button><button class="chip" data-filter="docs-engineering">文档工程</button><button class="chip" data-filter="ai-app-dev">AI 应用开发</button><button class="chip" data-filter="code-intelligence">代码智能</button><button class="chip" data-filter="learning">概念与入门</button><button class="chip" data-filter="cli-tool">命令行工具</button><button class="chip" data-filter="sdk-api">SDK 与 API</button><button class="chip" data-filter="unofficial-en">非官方英文文档</button></div>
 			<div class="list">
-			<div class="item">
+			<div class="item" data-tags="code-intelligence,cli-tool">
 				<a class="row" href="codegraph/" target="_blank" rel="noopener">
 					<p class="name">codegraph</p>
 					<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
+					<div class="tags"><span class="tag">代码智能</span><span class="tag">命令行工具</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,multi-agent">
 				<a class="row" href="orca/" target="_blank" rel="noopener">
 					<p class="name">Orca</p>
 					<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="skills,learning">
 				<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
 					<p class="name">Matt Pocock Skills</p>
 					<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
+					<div class="tags"><span class="tag">技能与提示词</span><span class="tag">概念与入门</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,multi-agent,skills">
 				<a class="row" href="agency-agents/" target="_blank" rel="noopener">
 					<p class="name">Agency Agents</p>
 					<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="agency-agents-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,multi-agent,skills,unofficial-en">
 				<a class="row" href="agency-agents-en/" target="_blank" rel="noopener">
 					<p class="name">Agency Agents (EN)</p>
 					<p class="desc">Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span><span class="tag">非官方英文文档</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="learning">
 				<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
 					<p class="name">AI 编码词典</p>
 					<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
+					<div class="tags"><span class="tag">概念与入门</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="memory,cli-tool">
 				<a class="row" href="ai-memory/" target="_blank" rel="noopener">
 					<p class="name">ai-memory</p>
 					<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
+					<div class="tags"><span class="tag">记忆系统</span><span class="tag">命令行工具</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="docs-engineering">
 				<a class="row" href="nimbus/" target="_blank" rel="noopener">
 					<p class="name">Nimbus</p>
 					<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
+					<div class="tags"><span class="tag">文档工程</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://nimbus-docs.com" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,multi-agent">
 				<a class="row" href="openrig/" target="_blank" rel="noopener">
 					<p class="name">OpenRig</p>
 					<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="openrig-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://openrig.dev/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,multi-agent,unofficial-en">
 				<a class="row" href="openrig-en/" target="_blank" rel="noopener">
 					<p class="name">OpenRig (EN)</p>
 					<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">非官方英文文档</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="deployment,sdk-api">
 				<a class="row" href="openship/" target="_blank" rel="noopener">
 					<p class="name">OpenShip</p>
 					<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
+					<div class="tags"><span class="tag">部署运维</span><span class="tag">SDK 与 API</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://openship.io/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/oblien/openship" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="skills,ai-agent">
 				<a class="row" href="agent-skills/" target="_blank" rel="noopener">
 					<p class="name">Agent Skills</p>
 					<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
+					<div class="tags"><span class="tag">技能与提示词</span><span class="tag">智能体</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://skills.addy.ie/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="testing,ai-agent">
 				<a class="row" href="tester-army-e2e/" target="_blank" rel="noopener">
 					<p class="name">e2e</p>
 					<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
+					<div class="tags"><span class="tag">测试</span><span class="tag">智能体</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://e2e.tester.army/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tester-army/e2e" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="memory,ai-agent">
 				<a class="row" href="claude-mem/" target="_blank" rel="noopener">
 					<p class="name">Claude-Mem</p>
 					<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
+					<div class="tags"><span class="tag">记忆系统</span><span class="tag">智能体</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://docs.claude-mem.ai/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-app-dev,sdk-api">
 				<a class="row" href="ai-sdk/" target="_blank" rel="noopener">
 					<p class="name">AI SDK</p>
 					<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
+					<div class="tags"><span class="tag">AI 应用开发</span><span class="tag">SDK 与 API</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://ai-sdk.dev" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/vercel/ai" target="_blank" rel="noopener">仓库</a></div>
 			</div>
-			<div class="item">
+			<div class="item" data-tags="ai-agent,cli-tool,sdk-api">
 				<a class="row" href="pi/" target="_blank" rel="noopener">
 					<p class="name">Pi</p>
 					<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
+					<div class="tags"><span class="tag">智能体</span><span class="tag">命令行工具</span><span class="tag">SDK 与 API</span></div>
 				</a>
 				<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
 			</div>
@@ -235,5 +292,34 @@
 				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
 			</footer>
 		</div>
+		<script>
+			(function () {
+				var chips = document.querySelectorAll('.chip');
+				var items = document.querySelectorAll('.item');
+				var active = new Set();
+				function apply() {
+					var all = active.size === 0;
+					chips.forEach(function (c) {
+						var f = c.dataset.filter;
+						c.classList.toggle('active', f === 'all' ? all : active.has(f));
+					});
+					items.forEach(function (it) {
+						var tags = it.dataset.tags ? it.dataset.tags.split(',') : [];
+						var show = all || tags.some(function (t) { return active.has(t); });
+						it.style.display = show ? '' : 'none';
+					});
+				}
+				chips.forEach(function (c) {
+					c.addEventListener('click', function () {
+						var f = c.dataset.filter;
+						if (f === 'all') active.clear();
+						else if (active.has(f)) active.delete(f);
+						else active.add(f);
+						apply();
+					});
+				});
+				apply();
+			})();
+		</script>
 	</body>
 </html>
