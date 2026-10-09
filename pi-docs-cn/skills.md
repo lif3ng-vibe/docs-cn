@@ -60,7 +60,7 @@ Read `references/formats.md` before converting a document. Run scripts relative 
 
 Pi 也支持 Agent Skills 的 `~/.agents/skills/` 与 `.agents/skills/` 位置。项目级 `.agents/skills/` 目录会从工作目录沿祖先目录向上发现，遇到仓库根目录（如存在）即停止。
 
-Pi 也接受部分独立的 Markdown 技能，但包含 `SKILL.md` 的目录才是可移植形式，应优先采用。其他可用位置参见[设置](settings.md#resources)与 [Pi 包](packages.md)。
+Pi 也接受部分独立的 Markdown 技能，但包含 `SKILL.md` 的目录才是可移植形式，应优先采用。其他可用位置参见[设置](settings.md#%E8%B5%84%E6%BA%90)与 [Pi 包](packages.md)。
 
 项目技能可能指示模型运行脚本或修改文件。授予项目信任之前，请先审查不熟悉的技能及其配套文件。
 

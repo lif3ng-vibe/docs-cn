@@ -185,7 +185,7 @@ Windows Terminal 使用 Pi 在 Windows 和 WSL 上的默认快捷键。完整列
 
 Windows Terminal 默认将 `Alt+Enter` 绑定为全屏。因此在 Windows 和 WSL 上，Pi 使用 `Ctrl+Q` 发送追问。
 
-要改用 `Alt+Enter`，请配置 Windows Terminal 转发该按键，并在 Pi 的 `keybindings.json` 中将 `app.message.followUp` 绑定到 `alt+enter`。参见[按键绑定](keybindings.md#assign-keybindings)。
+要改用 `Alt+Enter`，请配置 Windows Terminal 转发该按键，并在 Pi 的 `keybindings.json` 中将 `app.message.followUp` 绑定到 `alt+enter`。参见[按键绑定](keybindings.md#%E5%88%86%E9%85%8D%E6%8C%89%E9%94%AE%E7%BB%91%E5%AE%9A)。
 
 ## xfce4-terminal 与 Terminator
 
@@ -216,7 +216,7 @@ Pi 会自动检测 OSC 8 超链接、内联图片协议和真彩色（truecolor�
 
 设置项优先于环境变量。未设置或取值为 `auto` 时保留自动检测。
 
-只在整个终端链路都支持某个能力时才强制启用。不支持的转义序列可能破坏渲染。权威取值定义参见[环境变量](environment-variables.md#pi-process-configuration)与[设置](settings.md)。
+只在整个终端链路都支持某个能力时才强制启用。不支持的转义序列可能破坏渲染。权威取值定义参见[环境变量](environment-variables.md#pi-%E8%BF%9B%E7%A8%8B%E9%85%8D%E7%BD%AE)与[设置](settings.md)。
 
 ## 程序状态
 

@@ -46,7 +46,7 @@ Pi 按以下顺序查找 Bash：
 
 重启 Pi，然后让它运行一条无害的 PowerShell 命令。`!` 和 `!!` 编辑器命令继续使用 Bash。`powershell` 工具仅在 Pi 作为原生 Windows 进程运行时可用。
 
-其他工具组合参见[设置](settings.md#tools)。
+其他工具组合参见[设置](settings.md#%E5%B7%A5%E5%85%B7)。
 
 ## 使用自定义 Bash 可执行文件
 

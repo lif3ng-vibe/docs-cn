@@ -8,7 +8,7 @@
 
 | 需求 | 方案 |
 |---|---|
-| 在受支持的 API 之后添加模型 | [`models.json`](models.md#configure-a-compatible-endpoint) |
+| 在受支持的 API 之后添加模型 | [`models.json`](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9) |
 | 更改现有提供商的端点或请求头 | `models.json` 或一个小型提供商扩展 |
 | 动态发现模型 | 带 `refreshModels` 的提供商 |
 | 添加 `/login` 流程 | 带原生或旧式 OAuth 配置的提供商 |

@@ -183,7 +183,7 @@
 }
 ```
 
-`model` 字段是完整的 [Model](#model-object) 对象；未选择模型时省略。`sessionName` 字段是通过 `set_session_name` 设置的显示名称；未设置时省略。
+`model` 字段是完整的 [Model](#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E8%B1%A1) 对象；未选择模型时省略。`sessionName` 字段是通过 `set_session_name` 设置的显示名称；未设置时省略。
 
 ### get_messages
 
@@ -215,7 +215,7 @@
 {"type": "set_model", "provider": "anthropic", "modelId": "claude-sonnet-4-20250514"}
 ```
 
-响应包含完整的 [Model](#model-object) 对象：
+响应包含完整的 [Model](#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E8%B1%A1) 对象：
 ```json
 {
   "type": "response",
@@ -247,7 +247,7 @@
 }
 ```
 
-`model` 字段是完整的 [Model](#model-object) 对象。
+`model` 字段是完整的 [Model](#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E8%B1%A1) 对象。
 
 ### get_available_models
 
@@ -257,7 +257,7 @@
 {"type": "get_available_models"}
 ```
 
-响应包含完整的 [Model](#model-object) 对象数组：
+响应包含完整的 [Model](#%E6%A8%A1%E5%9E%8B%E5%AF%B9%E8%B1%A1) 对象数组：
 ```json
 {
   "type": "response",
@@ -857,4 +857,4 @@ drwxr-xr-x ...
 }
 ```
 
-模型配置参见[配置兼容端点](models.md#configure-a-compatible-endpoint)。TypeScript 方面，请使用 `@earendil-works/pi-ai` 导出的 `Model` 类型。
+模型配置参见[配置兼容端点](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。TypeScript 方面，请使用 `@earendil-works/pi-ai` 导出的 `Model` 类型。

@@ -29,7 +29,7 @@ pi mcp add -l tools --env API_KEY='${TOOLS_KEY}' -- uvx tools-mcp
 
 ## 配置服务器
 
-Pi 从 `~/.pi/agent/mcp.json` 读取用户级服务器，从 `.pi/mcp.json` 读取项目级服务器。项目配置只在授予[项目信任](security.md#understand-project-trust)后才会读取。同名时，项目条目会替换用户级条目。
+Pi 从 `~/.pi/agent/mcp.json` 读取用户级服务器，从 `.pi/mcp.json` 读取项目级服务器。项目配置只在授予[项目信任](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后才会读取。同名时，项目条目会替换用户级条目。
 
 不含 `command`、`url` 或 `type` 的项目条目只覆盖同名用户级服务器的 `enabled`、`exposure` 和 `toolExposure`，其余字段（包括 `env`、`headers` 和 `auth`）保持不变。例如，下面这条配置可在某个项目中关闭一个用户级服务器：
 
@@ -61,14 +61,14 @@ Pi 从 `~/.pi/agent/mcp.json` 读取用户级服务器，从 `.pi/mcp.json` 读�
 
 stdio 服务器使用 `command`、`args`、`env` 和 `cwd`。相对的 `cwd` 值以会话目录为基准解析。`command`、参数或 `cwd` 中以 `~/` 开头时表示主目录。
 
-HTTP 服务器使用 `url`、`headers` 和 `oauth`（参见[使用 OAuth 认证](#authenticate-with-oauth)）。不支持旧式的 SSE 传输。
+HTTP 服务器使用 `url`、`headers` 和 `oauth`（参见[使用 OAuth 认证](#%E4%BD%BF%E7%94%A8-oauth-%E8%AE%A4%E8%AF%81)）。不支持旧式的 SSE 传输。
 
 两类服务器都支持：
 
 - `timeout`：每请求超时（秒），默认 60。进度通知会重置它。
 - `enabled: false`：保留该条目但不连接。
-- `exposure` 与 `toolExposure`：控制工具以何种方式到达模型（参见[控制工具暴露方式](#control-tool-exposure)）。
-- `description`：一句话说明服务器提供什么。它会让该服务器出现在系统提示词（system prompt）中（参见[控制工具暴露方式](#control-tool-exposure)），工具搜索会依据它为服务器的工具排序，codemode 的 `describeNamespace()` 也会返回它。若省略，服务器连接后会使用服务器指令的第一行。
+- `exposure` 与 `toolExposure`：控制工具以何种方式到达模型（参见[控制工具暴露方式](#%E6%8E%A7%E5%88%B6%E5%B7%A5%E5%85%B7%E6%9A%B4%E9%9C%B2%E6%96%B9%E5%BC%8F)）。
+- `description`：一句话说明服务器提供什么。它会让该服务器出现在系统提示词（system prompt）中（参见[控制工具暴露方式](#%E6%8E%A7%E5%88%B6%E5%B7%A5%E5%85%B7%E6%9A%B4%E9%9C%B2%E6%96%B9%E5%BC%8F)），工具搜索会依据它为服务器的工具排序，codemode 的 `describeNamespace()` 也会返回它。若省略，服务器连接后会使用服务器指令的第一行。
 
 个人服务器和带凭据的服务器请放在用户级文件中。项目文件只用于项目所需的服务器，且只应在受信任的项目中使用。
 
@@ -81,7 +81,7 @@ HTTP 服务器使用 `url`、`headers` 和 `oauth`（参见[使用 OAuth 认证]
 - `env` 和 `headers` 的值可以使用 `${GITHUB_TOKEN}` 这类环境变量。也可以用 `!command` 运行一条命令，但该命令必须构成整个值，例如 `"Authorization": "!echo Bearer $(gh auth token)"`。
 - 无效条目会被报告并跳过，不会妨碍其他服务器连接。
 
-`pi mcp add` 和 `pi mcp remove` 覆盖了 shell 中的常见修改。其选项参见 [MCP 命令](cli.md#mcp-commands)。
+`pi mcp add` 和 `pi mcp remove` 覆盖了 shell 中的常见修改。其选项参见 [MCP 命令](cli.md#mcp-%E5%91%BD%E4%BB%A4)。
 
 ### 查看或修改服务器
 
@@ -192,8 +192,8 @@ Pi 会使用该文档代替自动发现，并按配置信任它，所以只应�
 
 | 暴露方式 | 行为 | 典型用途 |
 |---|---|---|
-| `codemode`（默认） | 可从 [`codemode`](cli.md#tools) 脚本中调用，但既不向模型声明，也不列入 codemode 描述。脚本通过 `searchTools()`、`describeTool()` 或 `ALL_TOOLS` 查找工具。 | 通用 MCP 服务器，尤其适合需要脚本组合或筛选调用的场景。 |
-| `deferred` | 在 [`tool_search`](cli.md#tools) 为下一次模型调用加载到匹配项之前不声明。 | 大型服务器，其工具应在发现后直接调用。 |
+| `codemode`（默认） | 可从 [`codemode`](cli.md#%E5%B7%A5%E5%85%B7) 脚本中调用，但既不向模型声明，也不列入 codemode 描述。脚本通过 `searchTools()`、`describeTool()` 或 `ALL_TOOLS` 查找工具。 | 通用 MCP 服务器，尤其适合需要脚本组合或筛选调用的场景。 |
+| `deferred` | 在 [`tool_search`](cli.md#%E5%B7%A5%E5%85%B7) 为下一次模型调用加载到匹配项之前不声明。 | 大型服务器，其工具应在发现后直接调用。 |
 | `direct` | 像内置工具一样向模型声明，也可从 codemode 调用。 | 小型、常用的工具集。 |
 | `hidden` | 已注册但不可达。 | 应保持不可用的服务器或工具。 |
 
@@ -227,7 +227,7 @@ Pi 会使用该文档代替自动发现，并按配置信任它，所以只应�
 
 `--tools` 不会移除 MCP 工具，除非其条目中有以 `mcp__` 开头的；`pi --tools read,codemode,'mcp__radius__*'` 只保留 `radius` 的工具。`--exclude-tools` 接受相同的模式，`--no-mcp` 会在单次运行中禁用 MCP（参见[工具](cli.md#mcp-tools)）。
 
-要在没有 MCP 服务器的情况下保持 `codemode` 激活，请在[设置](settings.md#tools)中添加 `"defaultTools": ["+codemode"]`。要阻止 codemode 自动激活，请在 `mcpServers` 旁设置 `"autoEnableCodemode": false`。项目级值会覆盖用户级值。当 `codemode` 与 `tool_search` 都未激活、非 direct 工具无法调用时，Pi 会警告一次。
+要在没有 MCP 服务器的情况下保持 `codemode` 激活，请在[设置](settings.md#%E5%B7%A5%E5%85%B7)中添加 `"defaultTools": ["+codemode"]`。要阻止 codemode 自动激活，请在 `mcpServers` 旁设置 `"autoEnableCodemode": false`。项目级值会覆盖用户级值。当 `codemode` 与 `tool_search` 都未激活、非 direct 工具无法调用时，Pi 会警告一次。
 
 超过 20 KB 的文本结果送达模型时会移除中段，代之以 `…N chars truncated…` 标记。完整文本会保存到结果中注明的临时文件。Codemode 脚本收到的是完整结果，可以在把输出返回给模型之前先行缩减。
 
@@ -251,19 +251,19 @@ MCP Apps 的资源（以 `ui://` URI 或 `text/html;profile=mcp-app` 标识）�
 
 每个 MCP 调用都会经过 Pi 的工具管线。因此扩展的 `tool_call` 与 `tool_result` 处理器（包括权限门控）同样适用于 MCP 工具。从 codemode 脚本发起的调用会携带 codemode 调用 ID 作为 `parentToolCallId`。
 
-`pi.getAllTools()` 会报告每个服务器声明的注解：`readOnlyHint`、`destructiveHint`、`idempotentHint` 和 `openWorldHint`。权限扩展可以利用这些提示决定哪些调用需要确认（参见[工具暴露](extensions.md#tool-exposure)）。资源工具被标记为只读（read-only）。
+`pi.getAllTools()` 会报告每个服务器声明的注解：`readOnlyHint`、`destructiveHint`、`idempotentHint` 和 `openWorldHint`。权限扩展可以利用这些提示决定哪些调用需要确认（参见[工具暴露](extensions.md#%E5%B7%A5%E5%85%B7%E6%9A%B4%E9%9C%B2)）。资源工具被标记为只读（read-only）。
 
 ## 扩展与 SDK
 
 ### 从扩展添加服务器
 
-扩展可以用 `pi.registerMcpServer(name, config)` 为当前会话添加服务器，其结构与 `mcpServers` 条目相同（参见[扩展中的 MCP 服务器](extensions.md#mcp-servers)）。已注册的服务器与配置文件中的服务器一样连接，并出现在 `/mcp` 中，来源显示为对应扩展。
+扩展可以用 `pi.registerMcpServer(name, config)` 为当前会话添加服务器，其结构与 `mcpServers` 条目相同（参见[扩展中的 MCP 服务器](extensions.md#mcp-%E6%9C%8D%E5%8A%A1%E5%99%A8)）。已注册的服务器与配置文件中的服务器一样连接，并出现在 `/mcp` 中，来源显示为对应扩展。
 
 对启用状态或暴露方式的更改只作用于当前会话。同名文件配置的服务器优先，`/mcp` 列出的是被覆盖后的注册项。`pi mcp` shell 命令不加载扩展，只能看到文件配置的服务器。
 
 ### 替换内置的 MCP 支持
 
-已安装的扩展若注册了 `/mcp`（例如 `pi-mcp-adapter`），会在会话中取代内置的 MCP 支持。此后 Pi 在会话中不再读取 `mcp.json` 或连接其中的服务器，`/mcp` 也归该扩展所有。移除该扩展即可恢复内置行为。若想在没有替代品的情况下禁用内置 MCP 支持，可在 `pi config` 的 Built-in 下禁用 `mcp`，或在[设置](settings.md#resources)中设置 `"extensions": ["-builtin:mcp"]`。`--no-mcp` 会在单次运行中禁用它。
+已安装的扩展若注册了 `/mcp`（例如 `pi-mcp-adapter`），会在会话中取代内置的 MCP 支持。此后 Pi 在会话中不再读取 `mcp.json` 或连接其中的服务器，`/mcp` 也归该扩展所有。移除该扩展即可恢复内置行为。若想在没有替代品的情况下禁用内置 MCP 支持，可在 `pi config` 的 Built-in 下禁用 `mcp`，或在[设置](settings.md#%E8%B5%84%E6%BA%90)中设置 `"extensions": ["-builtin:mcp"]`。`--no-mcp` 会在单次运行中禁用它。
 
 注册 `codemode` 或 `tool_search` 的扩展同样会以同名取代内置工具。shell 层面的 `pi mcp` 命令始终使用内置实现。
 

@@ -1,12 +1,12 @@
 # 按键绑定参考
 
-Pi 暴露可分配按键绑定的命名动作，例如 `app.session.new`。你可以在 Pi 的[用户配置](configuration.md#agent-directory)中修改默认绑定，或为未绑定的动作指定按键。
+Pi 暴露可分配按键绑定的命名动作，例如 `app.session.new`。你可以在 Pi 的[用户配置](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95)中修改默认绑定，或为未绑定的动作指定按键。
 
 运行 `/hotkeys` 查看主编辑器和应用当前生效的快捷键。
 
 ## 分配按键绑定
 
-创建 `<agent-dir>/keybindings.json`。agent 目录默认为 `~/.pi/agent`，详见[agent 目录](configuration.md#agent-directory)。
+创建 `<agent-dir>/keybindings.json`。agent 目录默认为 `~/.pi/agent`，详见[agent 目录](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95)。
 
 把每个动作标识符映射到一个按键或按键列表：
 

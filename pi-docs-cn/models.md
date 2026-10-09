@@ -16,7 +16,7 @@
 
 ## 身份认证
 
-运行 `/login` 并选择一个提供商。Pi 将凭据保存在 [`auth.json`](configuration.md#agent-directory) 中。运行 `/logout` 可移除某提供商已保存的凭据。
+运行 `/login` 并选择一个提供商。Pi 将凭据保存在 [`auth.json`](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95) 中。运行 `/logout` 可移除某提供商已保存的凭据。
 
 你也可以改为通过提供商的环境变量提供 API 密钥。这在 CI 等不希望 Pi 写入凭据的环境中很有用。[提供商](providers.md)列出了这些变量及各提供商的专属设置。
 
@@ -40,11 +40,11 @@ Pi 与 llama.cpp 路由器直接集成。该路由器会发现 GGUF 文件并按
 
 服务器启动、模型存放位置、下载与连接故障排查，参见[使用 llama.cpp 的本地模型](llama-cpp.md)。
 
-对于 Ollama、LM Studio、vLLM、SGLang 及其他兼容服务器，可在 `models.json` 中[配置兼容端点](#configure-a-compatible-endpoint)。
+对于 Ollama、LM Studio、vLLM、SGLang 及其他兼容服务器，可在 `models.json` 中[配置兼容端点](#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。
 
 ## 配置兼容端点
 
-当端点使用 Pi 已支持的 API 时，使用 [`models.json`](configuration.md#agent-directory)。这涵盖了大多数 Ollama、LM Studio、vLLM、SGLang 与代理部署。
+当端点使用 Pi 已支持的 API 时，使用 [`models.json`](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95)。这涵盖了大多数 Ollama、LM Studio、vLLM、SGLang 与代理部署。
 
 ```json
 {
@@ -96,7 +96,7 @@ Pi 与 llama.cpp 路由器直接集成。该路由器会发现 GGUF 文件并按
 { "id": "claude-sonnet-5", "promptCache": { "short": 300, "long": 3600 } }
 ```
 
-若官方公布了取值区间，请取其中保守的一端。当前层级没有缓存存活时间的模型不参与缓存预热。`modelOverrides` 条目可为内置或扩展模型设置 `inputLimits` 或 `promptCache`，包括通过已验证代理访问的模型。参见 [`cacheWarming`](settings.md#model-and-thinking)。
+若官方公布了取值区间，请取其中保守的一端。当前层级没有缓存存活时间的模型不参与缓存预热。`modelOverrides` 条目可为内置或扩展模型设置 `inputLimits` 或 `promptCache`，包括通过已验证代理访问的模型。参见 [`cacheWarming`](settings.md#%E6%A8%A1%E5%9E%8B%E4%B8%8E%E6%80%9D%E8%80%83)。
 
 ### 按思考级别配置采样参数
 
@@ -139,11 +139,11 @@ Pi 会先收敛不受支持的思考级别，然后按顺序合并模型级 `sam
 | `opencode` | `jev-1.13`, `jev-1.13-free` | `OPENCODE_API_KEY` |
 | `openai` | `gpt-6-luna` | `OPENAI_API_KEY` |
 
-[llama.cpp 路由器](llama-cpp.md#classification)上的对话模型也会被列为分类模型。
+[llama.cpp 路由器](llama-cpp.md#%E5%88%86%E7%B1%BB)上的对话模型也会被列为分类模型。
 
-OpenAI 的 Decisions API 需要 API 密钥。ChatGPT 凭据登录对它无效，因此当 `openai` 已通过 `/login` 登录时，即使设置了 `OPENAI_API_KEY`，`gpt-6-luna` 也不会被列为可用；此时请退出 `openai` 登录以使用密钥。GPT-6 Luna 还能评判通过 `images` 传入的图片（参见 [Codemode](codemode.md#classify)）；其他分类模型遇到图片会返回错误。该 API 会拒绝超过 922K token 的输入，而运行超过约五秒的请求（目前约相当于 600K 输入 token 以上）会以网关超时失败。
+OpenAI 的 Decisions API 需要 API 密钥。ChatGPT 凭据登录对它无效，因此当 `openai` 已通过 `/login` 登录时，即使设置了 `OPENAI_API_KEY`，`gpt-6-luna` 也不会被列为可用；此时请退出 `openai` 登录以使用密钥。GPT-6 Luna 还能评判通过 `images` 传入的图片（参见 [Codemode](codemode.md#%E5%88%86%E7%B1%BB)）；其他分类模型遇到图片会返回错误。该 API 会拒绝超过 922K token 的输入，而运行超过约五秒的请求（目前约相当于 600K 输入 token 以上）会以网关超时失败。
 
-分类模型不会出现在 `/model` 中。模型通过 [`codemode`](cli.md#enable-codemode) 工具访问它们；该工具默认关闭，除非某个 MCP 服务器开启了它。可在[设置](settings.md#tools)中用 `"defaultTools": ["+codemode"]` 启用。之后脚本即可用 `models.getAvailableOfType("classifier")` 列出分类模型，并调用 `models.classify(model, { state, questions })`：
+分类模型不会出现在 `/model` 中。模型通过 [`codemode`](cli.md#%E5%90%AF%E7%94%A8-codemode) 工具访问它们；该工具默认关闭，除非某个 MCP 服务器开启了它。可在[设置](settings.md#%E5%B7%A5%E5%85%B7)中用 `"defaultTools": ["+codemode"]` 启用。之后脚本即可用 `models.getAvailableOfType("classifier")` 列出分类模型，并调用 `models.classify(model, { state, questions })`：
 
 ```js
 const jev = await models.getModelOfType("classifier", "typesafe", "jev-latest");
@@ -160,17 +160,17 @@ const result = await models.classify(jev, {
 return result.answers;
 ```
 
-问题与答案的类型说明见 [Codemode](codemode.md#classify)。
+问题与答案的类型说明见 [Codemode](codemode.md#%E5%88%86%E7%B1%BB)。
 
 当服务上报 token 计数时（所有 System One 服务都会），`result.usage` 会连同费用一起携带这些计数。Pi 会把脚本中分类调用的用量计入 `codemode` 工具结果，因此会累计到底部状态栏与 `/session` 显示的会话费用中。费用按模型在目录中的定价计算；没有目录定价的模型（如 TypeSafe 直连的 `jev-latest`）会上报 token 但不计费。
 
-扩展可不经 codemode，直接通过 `ctx.modelRegistry.classify()` 调用分类器。[虚拟模型](virtual-models.md#route-requests)可以利用它们路由请求；参见 `jev-router.ts` 示例。
+扩展可不经 codemode，直接通过 `ctx.modelRegistry.classify()` 调用分类器。[虚拟模型](virtual-models.md#%E8%B7%AF%E7%94%B1%E8%AF%B7%E6%B1%82)可以利用它们路由请求；参见 `jev-router.ts` 示例。
 
 ## 使用图像模型
 
 图像模型根据提示词与可选的输入图片生成图像。Pi 将 OpenRouter 的图像模型（如 `google/gemini-2.5-flash-image` 与 `black-forest-labs/flux.2-pro`）列在 `openrouter` 提供商下；它们与其对话模型使用相同的 `OPENROUTER_API_KEY` 或 `/login` 凭据。
 
-与分类模型一样，图像模型也不出现在 `/model` 中；模型通过 [`codemode`](cli.md#enable-codemode) 工具访问它们。脚本用 `models.getAvailableOfType("image")` 列出它们，并调用 `models.generateImages(model, { input })`。结果的 `output` 保存 base64 图片块，`image()` 会把它们附加到 `codemode` 结果上，使模型能看到：
+与分类模型一样，图像模型也不出现在 `/model` 中；模型通过 [`codemode`](cli.md#%E5%90%AF%E7%94%A8-codemode) 工具访问它们。脚本用 `models.getAvailableOfType("image")` 列出它们，并调用 `models.generateImages(model, { input })`。结果的 `output` 保存 base64 图片块，`image()` 会把它们附加到 `codemode` 结果上，使模型能看到：
 
 ```js
 const painter = await models.getModelOfType("image", "openrouter", "google/gemini-2.5-flash-image");
@@ -181,7 +181,7 @@ if (result.stopReason !== "stop") return result.errorMessage;
 for (const block of result.output) if (block.type === "image") image(block);
 ```
 
-`input` 也可以包含 `{ type: "image", data, mimeType }` 块，用于编辑或作为参考图。与分类调用一样，Pi 会把脚本中图像调用的用量计入 `codemode` 工具结果。生成的图片不会写入磁盘。完整 API 见 [Codemode](codemode.md#generate-images)。
+`input` 也可以包含 `{ type: "image", data, mimeType }` 块，用于编辑或作为参考图。与分类调用一样，Pi 会把脚本中图像调用的用量计入 `codemode` 工具结果。生成的图片不会写入磁盘。完整 API 见 [Codemode](codemode.md#%E7%94%9F%E6%88%90%E5%9B%BE%E7%89%87)。
 
 扩展可不经 codemode，直接通过 `ctx.modelRegistry.generateImages()` 生成图像。
 
@@ -201,7 +201,7 @@ for (const block of result.output) if (block.type === "image") image(block);
 
 ### 在远程机器上登录时打开了浏览器
 
-在提供商支持时，改用其无头（headless）认证流程完成登录。部分提供商允许你把最终的重定向 URL 或授权码粘贴回 Pi。参见[交互式认证](providers.md#authenticate-interactively)。
+在提供商支持时，改用其无头（headless）认证流程完成登录。部分提供商允许你把最终的重定向 URL 或授权码粘贴回 Pi。参见[交互式认证](providers.md#%E4%BA%A4%E4%BA%92%E5%BC%8F%E8%AE%A4%E8%AF%81)。
 
 ### 兼容端点拒绝请求
 

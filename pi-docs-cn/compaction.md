@@ -1,6 +1,6 @@
 # 压缩参考
 
-本参考描述自动压缩、分支摘要、持久化条目和扩展钩子。用户工作流请参阅[会话与上下文](sessions.md#manage-conversation-context)。
+本参考描述自动压缩、分支摘要、持久化条目和扩展钩子。用户工作流请参阅[会话与上下文](sessions.md#%E7%AE%A1%E7%90%86%E5%AF%B9%E8%AF%9D%E4%B8%8A%E4%B8%8B%E6%96%87)。
 
 **源码文件**（[pi](https://github.com/earendil-works/pi)）：
 - [`packages/coding-agent/src/core/compaction/compaction.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/compaction/compaction.ts) - 自动压缩逻辑

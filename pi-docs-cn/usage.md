@@ -2,7 +2,7 @@
 
 在你想要工作的目录中运行 `pi`。Pi 会以该目录为基准来发现文件、指令与配置，并对已保存的会话进行分组。如果你尚未安装 Pi 或还未选择模型，请先阅读[快速开始](quickstart.md)。
 
-在加载项目资源之前，Pi 可能会询问你是否信任该工作目录。参见[项目信任](security.md#understand-project-trust)。
+在加载项目资源之前，Pi 可能会询问你是否信任该工作目录。参见[项目信任](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)。
 
 <p align="center"><img src="images/interactive-mode.png" alt="Pi 交互模式，展示对话、编辑器与状态信息" width="750" /></p>
 
@@ -89,6 +89,6 @@ Windows Terminal 会占用部分 Alt 快捷键。Windows 下的替代按键参�
 
 ## 收集诊断信息
 
-排查终端渲染或会话状态问题时，运行 `/debug`。Pi 会把渲染后的终端行与当前会话消息写入你[智能体目录](configuration.md#agent-directory)下的 `pi-debug.log`。
+排查终端渲染或会话状态问题时，运行 `/debug`。Pi 会把渲染后的终端行与当前会话消息写入你[智能体目录](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95)下的 `pi-debug.log`。
 
 分享该文件前请先审查，其中可能包含提示词、模型回复、工具输出、文件内容与终端数据。

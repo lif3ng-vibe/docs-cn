@@ -14,7 +14,7 @@ pi install git:github.com/example/pi-tools@v1
 pi install ./local-package
 ```
 
-`pi list` 显示已配置的包。用 `pi remove <source>` 移除一个包，用 `pi update --extensions` 校准包的安装状态。所有包相关命令与选项参见[命令行](cli.md#package-commands)。
+`pi list` 显示已配置的包。用 `pi remove <source>` 移除一个包，用 `pi update --extensions` 校准包的安装状态。所有包相关命令与选项参见[命令行](cli.md#%E5%8C%85%E5%91%BD%E4%BB%A4)。
 
 个人级安装会写入 `~/.pi/agent/settings.json`。加上 `--local` 或 `-l` 可把包声明写入 `.pi/settings.json`。Pi 只在授予项目信任后才读取该文件中的声明。
 

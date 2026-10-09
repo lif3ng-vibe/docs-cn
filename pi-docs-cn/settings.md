@@ -55,7 +55,7 @@
 
 `/reload` 会启用新加入 `defaultTools` 的工具。它不会禁用从中移除的工具，也不会重新启用你关掉且未变更的工具。带普通名称的 `--tools`、`--no-tools` 和 `--no-builtin-tools` 会覆盖 `defaultTools`，重新加载时也是如此。
 
-CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` 条目的 `--tools` 则修改解析后的 `defaultTools` 选择，例如 `pi --tools +codemode`。`/reload` 时，这些条目同样作用于重新加载后的设置，因此用 `-name` 移除的工具会保持移除。参见[命令行](cli.md#tools)。
+CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` 条目的 `--tools` 则修改解析后的 `defaultTools` 选择，例如 `pi --tools +codemode`。`/reload` 时，这些条目同样作用于重新加载后的设置，因此用 `-name` 移除的工具会保持移除。参见[命令行](cli.md#%E5%B7%A5%E5%85%B7)。
 
 ## 会话与上下文
 

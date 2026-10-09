@@ -41,7 +41,7 @@ Pi 通过 [Termux](https://termux.dev/)（一款终端模拟器和 Linux 环境�
    pi
    ```
 
-继续阅读主[快速开始](quickstart.md#3-choose-a-model)，连接模型并运行你的第一个任务。
+继续阅读主[快速开始](quickstart.md#3-%E9%80%89%E6%8B%A9%E6%A8%A1%E5%9E%8B)，连接模型并运行你的第一个任务。
 
 ## 访问 Android 共享存储
 

@@ -123,7 +123,7 @@ RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_st
 | `session_info_changed` | `name` | 会话显示名称发生变化。`name` 缺失表示已被清除。 |
 | `thinking_level_changed` | `level` | 生效的思考级别发生变化。 |
 
-`entry` 值使用已持久化的[会话条目类型](session-format.md#entry-types)。
+`entry` 值使用已持久化的[会话条目类型](session-format.md#%E6%9D%A1%E7%9B%AE%E7%B1%BB%E5%9E%8B)。
 
 ## 压缩事件
 

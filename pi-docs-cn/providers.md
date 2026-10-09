@@ -9,7 +9,7 @@
 
 ## 交互式认证
 
-运行 `/login` 并选择一个提供商。Pi 会引导你完成其 OAuth 或 API 密钥流程，并把得到的凭据保存在 [`auth.json`](configuration.md#agent-directory) 中。
+运行 `/login` 并选择一个提供商。Pi 会引导你完成其 OAuth 或 API 密钥流程，并把得到的凭据保存在 [`auth.json`](configuration.md#%E6%99%BA%E8%83%BD%E4%BD%93%E7%9B%AE%E5%BD%95) 中。
 
 在远程或无头（headless）机器上，OAuth 回调可能无法到达本地进程。出现提示时，把最终的重定向 URL 或授权码粘贴回 Pi。
 
@@ -26,7 +26,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 pi
 ```
 
-下表列出只有一个主要 API 密钥变量的提供商。需要额外配置或支持隐式凭据的提供商见[提供商专属配置](#provider-specific-config)。
+下表列出只有一个主要 API 密钥变量的提供商。需要额外配置或支持隐式凭据的提供商见[提供商专属配置](#%E6%8F%90%E4%BE%9B%E5%95%86%E4%B8%93%E5%B1%9E%E9%85%8D%E7%BD%AE)。
 
 | 提供商 | 环境变量 |
 |---|---|
@@ -47,7 +47,7 @@ pi
 | ZAI Coding Plan（中国版） | `ZAI_CODING_CN_API_KEY` |
 | OpenCode Zen 与 Go | `OPENCODE_API_KEY` |
 | Radius | `RADIUS_API_KEY` |
-| TypeSafe（[分类模型](models.md#use-classifier-models)） | `TYPESAFE_API_KEY` |
+| TypeSafe（[分类模型](models.md#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)） | `TYPESAFE_API_KEY` |
 | Hugging Face | `HF_TOKEN` |
 | Fireworks | `FIREWORKS_API_KEY` |
 | Together AI | `TOGETHER_API_KEY` |
@@ -138,7 +138,7 @@ export AZURE_OPENAI_DEPLOYMENT_NAME_MAP=gpt-5.4=my-gpt-deployment,deepseek-v4-pr
 
 `AZURE_OPENAI_API_VERSION` 覆盖 OpenAI 模型的 API 版本（默认 `v1`）。
 
-要使用 Pi 未内置的 Foundry 模型，在[`models.json`](models.md#configure-a-compatible-endpoint)的 `azure` 下添加它并带 `api: "openai-completions"`。自定义模型需要 `baseUrl`；设置 `AZURE_OPENAI_BASE_URL` 和 `AZURE_OPENAI_RESOURCE_NAME` 时它们优先于该值：
+要使用 Pi 未内置的 Foundry 模型，在[`models.json`](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)的 `azure` 下添加它并带 `api: "openai-completions"`。自定义模型需要 `baseUrl`；设置 `AZURE_OPENAI_BASE_URL` 和 `AZURE_OPENAI_RESOURCE_NAME` 时它们优先于该值：
 
 ```json
 {

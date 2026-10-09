@@ -2,7 +2,7 @@
 
 Pi 在 SDK 状态、生命周期事件、RPC 响应和持久化的会话消息条目中使用 `AgentMessage` 值。本页定义这些共享消息及其内容块。
 
-消息时间戳是以毫秒为单位的 Unix 时间戳。它们与[会话条目](session-format.md#entry-base)上的 ISO 8601 时间戳不同。
+消息时间戳是以毫秒为单位的 Unix 时间戳。它们与[会话条目](session-format.md#%E6%9D%A1%E7%9B%AE%E5%9F%BA%E7%B1%BB)上的 ISO 8601 时间戳不同。
 
 源码定义：
 

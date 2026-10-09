@@ -19,11 +19,11 @@ Pi 是一个可扩展的 AI 智能体（agent），运行在你的终端中。�
 ## 定制 Pi
 
 Pi 可以复用提示词、加载专项指令、添加可执行的集成、更换终端界面、连接模型服务，并将这些资源作为包（package）分发。
-使用[快速入门的定制方式选择器](quickstart.md#choose-how-to-customize-pi)选出能满足需求的最小机制。
+使用[快速入门的定制方式选择器](quickstart.md#%E9%80%89%E6%8B%A9%E5%A6%82%E4%BD%95%E5%AE%9A%E5%88%B6-pi)选出能满足需求的最小机制。
 
 ## 自动化或嵌入 Pi
 
-- 使用[打印模式](cli.md#invocation-and-output)处理一次性任务和脚本化任务。
+- 使用[打印模式](cli.md#%E8%B0%83%E7%94%A8%E4%B8%8E%E8%BE%93%E5%87%BA)处理一次性任务和脚本化任务。
 - 使用 [JSON 事件流模式](json.md)消费单次运行产生的结构化事件。
 - 使用 [RPC 模式](rpc.md)控制一个独立的 Pi 进程。
 - 使用 [TypeScript SDK](sdk.md) 在应用内运行 Pi。

@@ -96,7 +96,7 @@ pi --continue
 ## 后续步骤
 
 - [以交互模式使用 Pi](usage.md)，了解输入、命令、快捷键和排队消息。
-- [添加指令](configuration.md#context-files)，让 Pi 在某个目录中工作时始终遵循。
+- [添加指令](configuration.md#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6)，让 Pi 在某个目录中工作时始终遵循。
 - [选择模型与提供商](models.md)。
 
 ### 选择如何定制 Pi
@@ -105,7 +105,7 @@ pi --continue
 
 | 需求 | 起步方式 |
 |---|---|
-| 让 Pi 为某个目录保留持久指令 | [`AGENTS.md`](configuration.md#context-files) |
+| 让 Pi 为某个目录保留持久指令 | [`AGENTS.md`](configuration.md#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6) |
 | 从 `/` 菜单复用一条提示词 | [提示词模板](prompt-templates.md) |
 | 添加任务专项指令和配套文件 | [技能](skills.md) |
 | 添加可执行的工具、命令或事件处理器 | [扩展](extensions.md) |
