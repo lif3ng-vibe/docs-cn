@@ -1,23 +1,23 @@
-# Configure shell commands
+# 配置 shell 命令
 
-Pi starts a separate non-interactive shell process for each Bash command. Non-interactive Bash does not expand aliases by default and usually does not load the same startup files as an interactive terminal.
+Pi 会为每条 Bash 命令启动一个独立的非交互 shell 进程。非交互 Bash 默认不展开别名（alias），而且通常不会像交互终端那样加载相同的启动文件。
 
-Use `shellPath` to choose the Bash executable and `shellCommandPrefix` to run setup before each command.
+使用 `shellPath` 选择 Bash 可执行文件，用 `shellCommandPrefix` 在每条命令前运行初始化设置。
 
-## Understand which shell Pi uses
+## 了解 Pi 使用哪个 shell
 
-| Command source | Shell |
+| 命令来源 | shell |
 |---|---|
-| Model calls the built-in `bash` tool | Pi's resolved Bash executable |
-| You enter `!command` or `!!command` | The same resolved Bash executable |
-| Model calls the optional `powershell` tool | PowerShell 7 (`pwsh.exe`) or Windows PowerShell |
-| An extension provides or replaces a shell tool | The operations implemented by that extension |
+| 模型调用内置的 `bash` 工具 | Pi 解析得到的 Bash 可执行文件 |
+| 你输入 `!command` 或 `!!command` | 同一个解析得到的 Bash 可执行文件 |
+| 模型调用可选的 `powershell` 工具 | PowerShell 7（`pwsh.exe`）或 Windows PowerShell |
+| 扩展提供或替换了 shell 工具 | 该扩展自己实现的操作 |
 
-Pi normally invokes Bash with `bash -c`. On Unix systems, it uses `/bin/bash`, then `bash` on `PATH`, and finally `sh` when Bash is unavailable. Native Windows first checks the configured path, then Git Bash, then `bash.exe` on `PATH`.
+Pi 通常以 `bash -c` 的方式调用 Bash。在 Unix 系统上，它依次尝试 `/bin/bash`、`PATH` 上的 `bash`，Bash 不可用时最终退回 `sh`。原生 Windows 上则先检查配置的路径，然后是 Git Bash，最后是 `PATH` 上的 `bash.exe`。
 
-## Choose a Bash executable
+## 选择 Bash 可执行文件
 
-Set `shellPath` in `~/.pi/agent/settings.json` when Pi should use a specific executable:
+如果 Pi 需要使用特定的可执行文件，请在 `~/.pi/agent/settings.json` 中设置 `shellPath`：
 
 ```json
 {
@@ -25,7 +25,7 @@ Set `shellPath` in `~/.pi/agent/settings.json` when Pi should use a specific exe
 }
 ```
 
-On Windows, use forward slashes or escape backslashes:
+在 Windows 上，请使用正斜杠或对反斜杠进行转义：
 
 ```json
 {
@@ -33,11 +33,11 @@ On Windows, use forward slashes or escape backslashes:
 }
 ```
 
-Run `/reload` after changing the setting. See [Run Pi on Windows](windows.md) for the native Windows defaults.
+更改该设置后请运行 `/reload`。原生 Windows 的默认值参见[在 Windows 上运行 Pi](windows.md)。
 
-## Run setup before every Bash command
+## 在每条 Bash 命令前运行初始化
 
-Set `shellCommandPrefix` to prepend shell setup to both the built-in `bash` tool and user-entered `!` or `!!` commands:
+设置 `shellCommandPrefix`，把 shell 初始化设置前置到内置 `bash` 工具调用以及用户输入的 `!` 或 `!!` 命令之前：
 
 ```json
 {
@@ -45,20 +45,20 @@ Set `shellCommandPrefix` to prepend shell setup to both the built-in `bash` tool
 }
 ```
 
-Pi joins the prefix and requested command with a newline. The prefix runs again for every command, so keep it fast and free of interactive prompts.
+Pi 会用换行符把前缀和所请求的命令拼接在一起。前缀会在每条命令前重复运行，因此要保持简短，避免交互式提示。
 
-## Enable Bash aliases
+## 启用 Bash 别名
 
-Store aliases needed by Pi in a Bash-compatible file instead of parsing an entire interactive shell configuration.
+把 Pi 需要的别名存放在一个 Bash 兼容的文件里，而不是解析整个交互式 shell 配置。
 
-Create `~/.bash_aliases`:
+创建 `~/.bash_aliases`：
 
 ```bash
 alias ll='ls -la'
 alias gs='git status --short'
 ```
 
-Then configure Pi to enable alias expansion and load the file:
+然后配置 Pi 启用别名展开并加载该文件：
 
 ```json
 {
@@ -66,28 +66,28 @@ Then configure Pi to enable alias expansion and load the file:
 }
 ```
 
-Run `/reload`, then verify the alias through Pi:
+运行 `/reload`，然后通过 Pi 验证该别名：
 
 ```text
 !ll
 ```
 
-The command should produce the same listing as `ls -la`.
+该命令应产生与 `ls -la` 相同的列表。
 
-Aliases must use Bash-compatible syntax. Do not source an arbitrary `.zshrc` into Bash because zsh options, functions, and plugins may not parse or behave correctly there.
+别名必须使用 Bash 兼容的语法。不要把任意的 `.zshrc` source 进 Bash，因为 zsh 的选项、函数和插件在 Bash 中可能无法解析或行为不正确。
 
-## Troubleshooting
+## 故障排查
 
-### The prefix works for `!` but not for an extension tool
+### 前缀对 `!` 生效但对扩展工具不生效
 
-`shellCommandPrefix` configures Pi's built-in Bash execution. An extension that replaces the `bash` tool or provides its own shell operations controls its own setup. Check that extension's documentation.
+`shellCommandPrefix` 只配置 Pi 内置的 Bash 执行。替换 `bash` 工具或提供自有 shell 操作的扩展会控制自己的初始化设置。请查阅该扩展的文档。
 
-### `shopt` is not found
+### 找不到 `shopt` 命令
 
-Pi has fallen back to `sh` or `shellPath` points to a non-Bash shell. Install Bash or set `shellPath` to a Bash executable before using Bash-specific setup such as `shopt`.
+Pi 已回退到 `sh`，或 `shellPath` 指向的不是 Bash。在使用 `shopt` 这类 Bash 特有的初始化设置之前，请先安装 Bash，或将 `shellPath` 指向一个 Bash 可执行文件。
 
-### A setup command waits for input
+### 初始化命令等待输入
 
-Remove interactive commands from `shellCommandPrefix`. The prefix runs in a non-interactive process before every Bash command.
+请从 `shellCommandPrefix` 中移除交互式命令。前缀在每条 Bash 命令之前的非交互进程中运行。
 
-For the complete setting definitions, see [Shell settings](settings.md#shell).
+完整的设置定义参见[Shell 设置](settings.md#shell)。

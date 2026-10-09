@@ -1,55 +1,55 @@
-# Run Pi in tmux
+# 在 tmux 中运行 Pi
 
-Pi works inside tmux, but tmux can report `Shift+Enter`, `Ctrl+Enter`, and plain `Enter` as the same key. Enable extended keys so Pi can distinguish them.
+Pi 可以在 tmux 内运行，但 tmux 可能把 `Shift+Enter`、`Ctrl+Enter` 和普通 `Enter` 上报成同一个按键。请启用扩展按键，让 Pi 能够区分它们。
 
-## Check your tmux version
+## 检查 tmux 版本
 
 ```bash
 tmux -V
 ```
 
-For tmux 3.5 or newer, use the recommended CSI-u configuration below. For tmux 3.2 through 3.4, use the older-version configuration.
+tmux 3.5 及更新版本请使用下方推荐的 CSI-u 配置。tmux 3.2 到 3.4 请使用旧版本配置。
 
-## Enable extended keys in tmux 3.5 or newer
+## 在 tmux 3.5 及更新版本中启用扩展按键
 
-Add these lines to `~/.tmux.conf`:
+将以下行加入 `~/.tmux.conf`：
 
 ```tmux
 set -g extended-keys on
 set -g extended-keys-format csi-u
 ```
 
-Pi requests extended-key reporting when the terminal does not provide the Kitty keyboard protocol directly. CSI-u is the most reliable format for forwarding modified keys through tmux.
+当终端不能直接提供 Kitty 键盘协议时，Pi 会请求扩展按键上报。对于在 tmux 中转发修饰键组合，CSI-u 是最可靠的格式。
 
-## Restart tmux
+## 重启 tmux
 
-The configuration applies to the tmux server. To guarantee that it is active, close your tmux sessions and start a new server.
+该配置作用于 tmux 服务器。要确保配置生效，请关闭你的 tmux 会话并启动新的服务器。
 
-If you choose to stop the server from the command line, save your work first. This command terminates every session managed by that server:
+如果你选择从命令行停止服务器，请先保存工作。以下命令会终止该服务器管理的所有会话：
 
 ```bash
 tmux kill-server
 tmux
 ```
 
-## Verify modified keys
+## 验证修饰键
 
-Start Pi inside the new tmux session and check that:
+在新的 tmux 会话中启动 Pi，并检查：
 
-1. `Shift+Enter` inserts a new line in the editor.
-2. `Enter` submits the prompt.
-3. `Alt+Enter` queues a follow-up on macOS and Linux. Windows and WSL use `Ctrl+Q` by default.
+1. `Shift+Enter` 在编辑器中插入新的一行。
+2. `Enter` 提交提示词。
+3. 在 macOS 和 Linux 上 `Alt+Enter` 会将追问排入队列。Windows 和 WSL 默认使用 `Ctrl+Q`。
 
-If these keys still behave like plain `Enter`, verify that the terminal outside tmux can report modified keys. See [Configure your terminal](terminal-setup.md).
+如果这些按键仍然表现得像普通 `Enter`，请确认 tmux 外层的终端能上报修饰键组合。参见[配置你的终端](terminal-setup.md)。
 
-## Use tmux 3.2 through 3.4
+## 使用 tmux 3.2 至 3.4
 
-These versions support extended keys but not `extended-keys-format csi-u`. Add only:
+这些版本支持扩展按键，但不支持 `extended-keys-format csi-u`。只需添加：
 
 ```tmux
 set -g extended-keys on
 ```
 
-Pi supports the xterm `modifyOtherKeys` format used by these versions. Restart tmux and repeat the verification steps.
+Pi 支持这些版本所使用的 xterm `modifyOtherKeys` 格式。重启 tmux 并重复上述验证步骤。
 
-For older versions, upgrade tmux or use Pi outside tmux rather than relying on modified Enter shortcuts.
+对于更旧的版本，请升级 tmux 或在 tmux 之外使用 Pi，不要依赖修饰键 Enter 快捷键。
