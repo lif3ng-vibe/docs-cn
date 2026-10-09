@@ -1,8 +1,8 @@
 <a id="cli-and-modes-reference"></a>
 
-# Command Line
+# 命令行
 
-This page documents Pi's built-in command-line commands and options. Run `pi --help` or append `--help` to a command for the exact interface in your installed version. The top-level help also includes options registered by loaded extensions.
+本页记录 Pi 内置的命令行命令与选项。运行 `pi --help` 或在命令后附加 `--help`，可查看你所安装版本的确切接口。顶层帮助还会包含已加载扩展注册的选项。
 
 ```sh
 pi [options] [--] [@files...] [messages...]
@@ -18,7 +18,7 @@ pi mcp <list|login|logout> [options]
 
 <a id="modes"></a>
 
-## Invocation and output
+## 调用与输出
 
 ```sh
 pi
@@ -27,137 +27,137 @@ git diff | pi --print "Review this change"
 pi --mode json "Inspect this repository" > events.jsonl
 ```
 
-With terminal stdin and stdout, Pi opens the terminal UI unless `--print`, `--mode json`, or `--mode rpc` selects another interface. When either stream is redirected and neither JSON nor RPC mode is selected, Pi uses print mode. See [CLI Integration](cli-integration.md) for choosing between interactive, print, JSON, RPC, and SDK integration.
+当 stdin 和 stdout 都是终端时，除非 `--print`、`--mode json` 或 `--mode rpc` 选择了其他界面，Pi 会打开终端 UI。当任一流被重定向、且既未选择 JSON 也未选择 RPC 模式时，Pi 使用打印模式（print mode）。如何在交互模式、打印模式、JSON、RPC 与 SDK 集成之间选择，参见[CLI 集成](cli-integration.md)。
 
-| Input | Behavior |
+| 输入 | 行为 |
 |---|---|
-| `message` | Provide an initial prompt |
-| `@path` | Include a text file or image in the first prompt |
-| Piped stdin | Prepend its contents to the first prompt |
-| `--` | Stop option parsing so a prompt can begin with `-` |
+| `message` | 提供初始提示词 |
+| `@path` | 在首个提示词中包含一个文本文件或图片 |
+| 管道传入的 stdin | 将其内容前置到首个提示词 |
+| `--` | 停止选项解析，使提示词可以以 `-` 开头 |
 
-Pi resolves `@path` from the current working directory. The working directory also controls project configuration, resource discovery, and session grouping.
+Pi 从当前工作目录解析 `@path`。工作目录还决定项目配置、资源发现和会话分组。
 
-`--print` controls whether Pi runs once and exits. `--mode` selects the output interface. `--mode text` does not force one-shot execution when stdin and stdout are terminals; use `--print` for that behavior.
+`--print` 控制 Pi 是否运行一次后退出。`--mode` 选择输出界面。当 stdin 和 stdout 都是终端时，`--mode text` 不会强制一次性执行；需要该行为请使用 `--print`。
 
-| Option | Behavior |
+| 选项 | 行为 |
 |---|---|
-| `-p`, `--print` | Run the supplied prompts, write the final assistant text to stdout, then exit |
-| `--mode text` | Select text output; still open the terminal UI when stdin and stdout are terminals |
-| `--mode json` | Run the supplied prompts, write JSONL events to stdout, then exit |
-| `--mode rpc` | Read JSONL commands from stdin and write responses and events to stdout until shutdown |
-| `--export <input> [output]` | Export a session file to HTML and exit; derive the destination when `output` is omitted |
+| `-p`, `--print` | 运行给定的提示词，把最终的助手文本写入 stdout，然后退出 |
+| `--mode text` | 选择文本输出；当 stdin 和 stdout 都是终端时仍会打开终端 UI |
+| `--mode json` | 运行给定的提示词，把 JSONL 事件写入 stdout，然后退出 |
+| `--mode rpc` | 从 stdin 读取 JSONL 命令，把响应与事件写入 stdout，直至关闭 |
+| `--export <input> [output]` | 把会话文件导出为 HTML 后退出；省略 `output` 时自动推导目标路径 |
 
-RPC mode rejects `@file` arguments. JSON and RPC modes reserve stdout for protocol records. See [JSON Event Stream](json.md) and [RPC Protocol](rpc.md).
+RPC 模式拒绝 `@file` 参数。JSON 与 RPC 模式将 stdout 保留给协议记录。参见[JSON 事件流](json.md)与[RPC 协议](rpc.md)。
 
 <a id="model-options"></a>
 
-## Models
+## 模型
 
 ```sh
 pi --model sonnet:high
 ```
 
-See [Choose a Model](models.md) for model selection and [Providers](providers.md) for credentials.
+模型选择参见[选择模型](models.md)，凭据参见[提供商](providers.md)。
 
 - `--provider <name>`<br />
-  Restricts `--model` lookup to one provider. It requires `--model`.
+  将 `--model` 的查找限制到单一提供商。必须与 `--model` 同用。
 - `--model <pattern>`<br />
-  Selects by exact ID or fuzzy ID/name match. It accepts `provider/id` and an optional `:<thinking>` suffix.
+  按精确 ID 或 ID/名称模糊匹配选择模型。接受 `provider/id` 以及可选的 `:<thinking>` 后缀。
 - `--api-key <key>`<br />
-  Uses a non-persistent API-key override. It requires a model selected through `--model` or `--models`.
+  使用非持久化的 API 密钥覆盖。要求模型通过 `--model` 或 `--models` 选择。
 - `--thinking <level>`<br />
-  Sets `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max`. It overrides a `--model` suffix and is clamped to the model's capabilities.
+  设置为 `off`、`minimal`、`low`、`medium`、`high`、`xhigh` 或 `max`。它会覆盖 `--model` 后缀，并被限制在模型能力范围内。
 - `--models <patterns>`<br />
-  Sets a comma-separated scope for startup and cycling. It accepts exact IDs, fuzzy matches, case-insensitive globs, and optional `:<thinking>` suffixes.
+  为启动与循环切换设置以逗号分隔的范围。接受精确 ID、模糊匹配、大小写不敏感的 glob 以及可选的 `:<thinking>` 后缀。
 - `--list-models [search]`<br />
-  Lists available models, optionally filtered by a fuzzy search, then exits.
+  列出可用模型，可选用模糊搜索过滤，然后退出。
 
 <a id="session-options"></a>
 
-## Sessions
+## 会话
 
 ```sh
 pi --continue
 ```
 
-See [Sessions and Context](sessions.md) for resuming, forking, naming, and storing sessions.
+会话的恢复、分叉、命名与存储参见[会话与上下文](sessions.md)。
 
 - `-c`, `--continue`<br />
-  Continues the most recent session for the current project.
+  继续当前项目最近的会话。
 - `-r`, `--resume`<br />
-  Opens the session selector.
+  打开会话选择器。
 - `--session <path|id>`<br />
-  Opens by file path, exact ID, or partial ID. Pi searches the current project first and offers to fork a cross-project match.
+  按文件路径、精确 ID 或部分 ID 打开。Pi 优先搜索当前项目，遇到跨项目匹配时会提供分叉选项。
 - `--session-id <id>`<br />
-  Opens the exact project session ID or creates it if absent. IDs accept letters, numbers, `.`, `_`, and `-`.
+  打开精确的项目会话 ID，不存在则创建。ID 可包含字母、数字、`.`、`_` 和 `-`。
 - `--fork <path|id>`<br />
-  Forks an existing session into a new session for the current project.
+  将现有会话分叉为当前项目的一个新会话。
 - `--session-dir <dir>`<br />
-  Overrides storage and lookup. It takes precedence over `PI_CODING_AGENT_SESSION_DIR` and the `sessionDir` setting.
+  覆盖存储与查找位置。优先级高于 `PI_CODING_AGENT_SESSION_DIR` 和 `sessionDir` 设置。
 - `--no-session`<br />
-  Uses an in-memory session that is not persisted.
+  使用不持久化的内存会话。
 - `-n`, `--name <name>`<br />
-  Sets the session display name.
+  设置会话显示名称。
 
-Constraints:
+约束：
 
-- Session IDs must start and end with a letter or number.
-- `--fork` cannot be combined with `--session`, `--continue`, `--resume`, or `--no-session`.
-- `--session-id` cannot be combined with `--session`, `--continue`, or `--resume`. Combine it with `--fork` to choose the new ID.
+- 会话 ID 必须以字母或数字开头和结尾。
+- `--fork` 不能与 `--session`、`--continue`、`--resume` 或 `--no-session` 同用。
+- `--session-id` 不能与 `--session`、`--continue` 或 `--resume` 同用。与 `--fork` 同用可指定新 ID。
 
 <a id="tool-options"></a>
 
-## Tools
+## 工具
 
 ```sh
 pi --tools read,grep,find,ls --print "Review this project"
 ```
 
-See [Settings](settings.md#tools) for configuring the default tool selection.
+默认工具选择的配置参见[设置](settings.md#tools)。
 
 - `-t`, `--tools <list>`<br />
-  Replaces the default selection with a comma-separated allowlist of built-in, extension, or custom tools. Entries are tool names or patterns where `*` matches any characters. MCP tools are kept unless an entry starts with `mcp__` (see [MCP tools](#mcp-tools)). A list of only `+name` and `-name` entries is not an allowlist; it changes the default selection instead.
+  用逗号分隔的内置、扩展或自定义工具允许列表替换默认选择。条目是工具名称或模式，其中 `*` 匹配任意字符。MCP 工具会保留，除非某个条目以 `mcp__` 开头（参见[MCP 工具](#mcp-tools)）。仅由 `+name` 和 `-name` 条目组成的列表不是允许列表，而是修改默认选择。
 - `-xt`, `--exclude-tools <list>`<br />
-  Disables comma-separated tool names or patterns after all other selection options, MCP tools included.
+  在所有其他选择选项生效之后，禁用以逗号分隔的工具名称或模式，MCP 工具也包括在内。
 - `-nbt`, `--no-builtin-tools`<br />
-  Disables default built-in tools while retaining extension and custom tools.
+  禁用默认的内置工具，同时保留扩展与自定义工具。
 - `-nt`, `--no-tools`<br />
-  Starts with all built-in, extension, custom, and MCP tools disabled.
+  启动时禁用所有内置、扩展、自定义与 MCP 工具。
 
-Default enabled tools are `read`, `bash`, `edit`, and `write`, unless `defaultTools` changes them. `--tools` with plain names replaces the whole selection, so name every tool you want. Like `defaultTools`, it also accepts a list of only `+name` and `-name` entries, which adds tools to or removes them from the default selection: `pi --tools +codemode,-write` keeps the other default tools, enables `codemode`, and disables `write`. These entries take exact tool names, not `*` patterns; use `--exclude-tools` to disable tools by pattern. Plain names and `+name`/`-name` entries cannot be mixed. `/reload` enables tools newly added to `defaultTools`, but a tool removed with `-name` stays removed.
+默认启用的工具是 `read`、`bash`、`edit` 和 `write`，除非 `defaultTools` 改变了它们。`--tools` 使用普通名称时会替换整个选择，因此要列出你想要的每一个工具。与 `defaultTools` 一样，它也接受仅由 `+name` 和 `-name` 条目组成的列表，从而向默认选择添加或移除工具：`pi --tools +codemode,-write` 保留其他默认工具、启用 `codemode` 并禁用 `write`。这些条目只接受精确的工具名称，不支持 `*` 模式；要按模式禁用工具，请使用 `--exclude-tools`。普通名称与 `+name`/`-name` 条目不能混用。`/reload` 会启用新加入 `defaultTools` 的工具，但用 `-name` 移除的工具会保持移除状态。
 
 <a id="mcp-tools"></a>
 
-`--tools` selects the tools declared to the model. It does not remove MCP tools, whose reach is set by their [exposure](mcp.md#control-tool-exposure): `pi --tools read,codemode` keeps every MCP tool callable from codemode scripts. An MCP tool that no entry names or matches is never declared directly, whatever its exposure; only `tool_search`, if listed, can load it. Once an entry starts with `mcp__`, `--tools` filters MCP tools too, so this keeps only the tools of the `radius` server:
+`--tools` 选择向模型声明的工具。它不会移除 MCP 工具，MCP 工具的可见范围由其暴露方式（exposure）决定（见[exposure](mcp.md#control-tool-exposure)）：`pi --tools read,codemode` 仍会让每个 MCP 工具都能从 codemode 脚本调用。没有被任何条目指名或匹配的 MCP 工具永远不会被直接声明，无论其暴露方式如何；只有列出的 `tool_search` 能加载它。一旦某个条目以 `mcp__` 开头，`--tools` 也会过滤 MCP 工具，因此下面这条只保留 `radius` 服务器的工具：
 
 ```sh
 pi --tools read,bash,codemode,'mcp__radius__*'
 ```
 
-The MCP resource tools (`list_mcp_resources`, `list_mcp_resource_templates`, `read_mcp_resource`) count as MCP tools. To remove MCP tools, use `--exclude-tools 'mcp__*'` or [`--no-mcp`](#resource-options).
+MCP 资源工具（`list_mcp_resources`、`list_mcp_resource_templates`、`read_mcp_resource`）也算作 MCP 工具。要移除 MCP 工具，请使用 `--exclude-tools 'mcp__*'` 或[`--no-mcp`](#resource-options)。
 
-| Built-in | Purpose |
+| 内置工具 | 用途 |
 |---|---|
-| `read` | Read text files and supported images |
-| `bash` | Run shell commands |
-| `powershell` | Run PowerShell commands on Windows |
-| `edit` | Apply exact text replacements to an existing file |
-| `write` | Create or overwrite a file |
-| `grep` | Search file contents |
-| `find` | Find paths using glob patterns |
-| `ls` | List directory contents |
+| `read` | 读取文本文件和受支持的图片 |
+| `bash` | 运行 shell 命令 |
+| `powershell` | 在 Windows 上运行 PowerShell 命令 |
+| `edit` | 对现有文件应用精确的文本替换 |
+| `write` | 创建或覆盖文件 |
+| `grep` | 搜索文件内容 |
+| `find` | 用 glob 模式查找路径 |
+| `ls` | 列出目录内容 |
 
-Built-in extensions add two more tools. They are off by default; the MCP extension turns them on when an MCP server needs them (see [MCP](mcp.md#exposure)). To enable them yourself, name them in `--tools` or `defaultTools`.
+内置扩展还提供两个工具。它们默认关闭；当 MCP 服务器需要时，MCP 扩展会开启它们（参见[MCP](mcp.md#exposure)）。要自行启用，在 `--tools` 或 `defaultTools` 中指名即可。
 
-| Built-in extension | Purpose |
+| 内置扩展 | 用途 |
 |---|---|
-| `codemode` | Run JavaScript that calls the other tools, for example in parallel with `Promise.allSettled`; only the script's output reaches the model |
-| `tool_search` | Search tools that are not declared to the model (`codemode` and `deferred` exposure, such as MCP tools) and declare the matches for the next call |
+| `codemode` | 运行调用其他工具的 JavaScript，例如用 `Promise.allSettled` 并行调用；只有脚本的输出会到达模型 |
+| `tool_search` | 搜索未向模型声明的工具（`codemode` 和 `deferred` 暴露方式，例如 MCP 工具），并为下一次调用声明匹配结果 |
 
-### Enable codemode
+### 启用 codemode
 
-To turn on `codemode` for every session, add it to the default tools in `~/.pi/agent/settings.json` or a project's `.pi/settings.json`:
+要在所有会话中开启 `codemode`，把它加入 `~/.pi/agent/settings.json` 或项目 `.pi/settings.json` 的默认工具：
 
 ```json
 {
@@ -165,169 +165,169 @@ To turn on `codemode` for every session, add it to the default tools in `~/.pi/a
 }
 ```
 
-This keeps `read`, `bash`, `edit`, and `write` and adds `codemode`. For one invocation, add it with `--tools`:
+这样会保留 `read`、`bash`、`edit` 和 `write`，并加入 `codemode`。只针对一次调用，用 `--tools` 添加：
 
 ```sh
 pi --tools +codemode
 ```
 
-Codemode is useful without MCP: scripts can run several tool calls in parallel, filter large output before it reaches the model, call classifier models such as TypeSafe's Jev through `models.classify()` (see [Classifier models](models.md#use-classifier-models)), and generate images through `models.generateImages()` (see [Image models](models.md#use-image-models)).
+没有 MCP 时 Codemode 也很有用：脚本可以并行运行多个工具调用，在大量输出到达模型前先行过滤，通过 `models.classify()` 调用分类模型（例如 TypeSafe 的 Jev，参见[分类模型](models.md#use-classifier-models)），并通过 `models.generateImages()` 生成图片（参见[图像模型](models.md#use-image-models)）。
 
-### How codemode works
+### codemode 的工作原理
 
-Scripts run in a QuickJS sandbox and reach the other tools through `tools.<name>(args)`. [Codemode](codemode.md) describes the script API, how tools are listed and found, the `store()` and `models` globals, and the limits.
+脚本运行在 QuickJS 沙箱中，通过 `tools.<name>(args)` 访问其他工具。[Codemode](codemode.md) 描述了脚本 API、工具的列举与查找方式、`store()` 与 `models` 全局对象以及相关限制。
 
-### Tool search
+### 工具搜索
 
-`tool_search` is off by default; enable it with `"defaultTools": ["+tool_search"]` or `--tools`. It uses the same ranking as `searchTools()` over tools that are not declared yet and declares the matches for the next model call. Loaded tools are recorded in the session like other tool changes, so they stay declared on that branch.
+`tool_search` 默认关闭；用 `"defaultTools": ["+tool_search"]` 或 `--tools` 启用。它对尚未声明的工具使用与 `searchTools()` 相同的排序，并为下一次模型调用声明匹配结果。已加载的工具会像其他工具变更一样记录在会话中，因此在该分支上保持已声明状态。
 
 <a id="resource-options"></a>
 
-## Resources
+## 资源
 
 ```sh
 pi --extension ./review.ts
 ```
 
-See [Configuration](configuration.md) for conventional directories and project trust, [Settings](settings.md#resources) for configured paths, and [Pi Packages](packages.md) for package sources.
+常规目录与项目信任参见[配置](configuration.md)，已配置的路径参见[设置](settings.md#resources)，包来源参见[Pi 包](packages.md)。
 
 - `-e`, `--extension <path>`<br />
-  Loads an extension file or directory, or a built-in extension such as `builtin:mcp`, and is repeatable.
+  加载扩展文件或目录，或 `builtin:mcp` 之类的内置扩展，可重复使用。
 - `-ne`, `--no-extensions`<br />
-  Disables discovered, configured, and built-in extensions. Explicit `-e` paths still load, so `pi -ne -e builtin:mcp` keeps only the built-in MCP support.
+  禁用发现的、已配置的和内置的扩展。显式指定的 `-e` 路径仍会加载，因此 `pi -ne -e builtin:mcp` 只保留内置 MCP 支持。
 - `--no-mcp`<br />
-  Disables the built-in MCP support for this run: no servers connect, and there are no MCP tools or `/mcp`. It does not affect an extension that replaces the built-in MCP support.
+  本次运行禁用内置 MCP 支持：不连接任何服务器，也没有 MCP 工具和 `/mcp`。它不影响替换了内置 MCP 支持的扩展。
 - `--skill <path>`<br />
-  Loads a skill file or directory and is repeatable.
+  加载技能文件或目录，可重复使用。
 - `-ns`, `--no-skills`<br />
-  Disables discovered and configured skills. Explicit `--skill` paths still load.
+  禁用发现的和已配置的技能。显式指定的 `--skill` 路径仍会加载。
 - `--prompt-template <path>`<br />
-  Loads a prompt-template file or directory and is repeatable.
+  加载提示词模板文件或目录，可重复使用。
 - `-np`, `--no-prompt-templates`<br />
-  Disables discovered and configured templates. Explicit `--prompt-template` paths still load.
+  禁用发现的和已配置的模板。显式指定的 `--prompt-template` 路径仍会加载。
 - `--theme <path>`<br />
-  Loads a theme file or directory and is repeatable.
+  加载主题文件或目录，可重复使用。
 - `--use-theme <name[/name]>`<br />
-  Selects the initial interactive theme for this run.
+  为本次运行选择初始交互主题。
 - `--no-themes`<br />
-  Disables discovered and configured themes. Explicit `--theme` paths still load.
+  禁用发现的和已配置的主题。显式指定的 `--theme` 路径仍会加载。
 - `-nc`, `--no-context-files`<br />
-  Disables `AGENTS.md` and `CLAUDE.md` discovery.
+  禁用 `AGENTS.md` 和 `CLAUDE.md` 的发现。
 
-Resource paths apply only to the current process. Relative paths resolve from the current working directory.
+资源路径只作用于当前进程。相对路径从当前工作目录解析。
 
 <a id="prompt-and-display-options"></a>
 
-## Prompts and process
+## 提示词与进程
 
 ```sh
 pi --append-system-prompt ./instructions.md
 ```
 
-See [Configuration](configuration.md) for saved configuration, [Security](security.md#understand-project-trust) for project trust, and [Environment Variables](environment-variables.md) for process controls.
+已保存的配置参见[配置](configuration.md)，项目信任参见[安全](security.md#understand-project-trust)，进程控制参见[环境变量](environment-variables.md)。
 
 - `--system-prompt <text|path>`<br />
-  Replaces the default system prompt with text or the contents of an existing file.
+  用文本或现有文件的内容替换默认系统提示词。
 - `--append-system-prompt <text|path>`<br />
-  Appends text or an existing file to the system prompt and is repeatable.
+  把文本或现有文件追加到系统提示词，可重复使用。
 - `--tui-mode <mode>`<br />
-  Uses `fullscreen` (default) or `regular` terminal mode.
+  使用 `fullscreen`（默认）或 `regular` 终端模式。
 - `--verbose`<br />
-  Shows verbose interactive startup information, overriding `quietStartup`.
+  显示详细的交互启动信息，覆盖 `quietStartup`。
 - `-a`, `--approve`<br />
-  Trusts project-local configuration and resources for this process.
+  对该进程信任项目本地配置与资源。
 - `-na`, `--no-approve`<br />
-  Ignores trust-gated project-local configuration and resources for this process.
+  对该进程忽略受信任门槛限制的项目本地配置与资源。
 - `--offline`<br />
-  Disables automatic network activity, including model catalog refreshes. Equivalent to `PI_OFFLINE=1`.
+  禁用自动网络活动，包括模型目录刷新。等价于 `PI_OFFLINE=1`。
 - `-h`, `--help`<br />
-  Shows help, including flags registered by loaded extensions, then exits.
+  显示帮助（包括已加载扩展注册的旗标），然后退出。
 - `-v`, `--version`<br />
-  Shows the Pi version, then exits.
+  显示 Pi 版本，然后退出。
 
-Extensions may register additional long-form options. Unknown short options are rejected.
+扩展可以注册额外的长选项。未知的短选项会被拒绝。
 
-## Package commands
+## 包命令
 
 ```sh
 pi install npm:@scope/package
 ```
 
-See [Pi Packages](packages.md) for source formats, filtering, installation, and project scope.
+包来源格式、过滤、安装与项目范围参见[Pi 包](packages.md)。
 
-### Common tasks
+### 常见任务
 
-| Task | Command |
+| 任务 | 命令 |
 |---|---|
-| Install a package | `pi install <source>` |
-| List configured packages | `pi list` |
-| Remove a package and its settings entry | `pi remove <source>` |
-| Configure which package resources load | `pi config` |
+| 安装包 | `pi install <source>` |
+| 列出已配置的包 | `pi list` |
+| 移除包及其设置条目 | `pi remove <source>` |
+| 配置加载哪些包资源 | `pi config` |
 
-Add `--local` or `-l` to `install`, `remove`, `uninstall`, or `config` to use project settings instead of global settings.
+在 `install`、`remove`、`uninstall` 或 `config` 后加 `--local` 或 `-l`，即可使用项目设置而非全局设置。
 
-### Update Pi or packages
+### 更新 Pi 或包
 
-Running `pi update` without a target updates Pi itself.
+不带目标运行 `pi update` 会更新 Pi 本身。
 
-| Task | Command |
+| 任务 | 命令 |
 |---|---|
-| Update Pi | `pi update` |
-| Update all installed packages | `pi update --extensions` |
-| Update one installed package | `pi update <source>` |
-| Refresh model catalogs | `pi update --models` |
-| Update Pi and all installed packages | `pi update --all` |
+| 更新 Pi | `pi update` |
+| 更新所有已安装的包 | `pi update --extensions` |
+| 更新一个已安装的包 | `pi update <source>` |
+| 刷新模型目录 | `pi update --models` |
+| 更新 Pi 和所有已安装的包 | `pi update --all` |
 
-Add `--force` to reinstall Pi when the selected update includes Pi.
+当所选更新包含 Pi 时，加 `--force` 可重新安装 Pi。
 
-`pi update` cannot update Pi when another package manager provides it, such as Nix. Update Pi with that package manager, for example `nix profile upgrade pi`. Package and model catalog updates still work.
+当 Pi 由其他包管理器（例如 Nix）提供时，`pi update` 无法更新 Pi。请用该包管理器更新 Pi，例如 `nix profile upgrade pi`。包与模型目录的更新仍然可用。
 
-### Aliases and command options
+### 别名与命令选项
 
-- `pi uninstall <source>` is an alias for `pi remove <source>`.
-- `pi update --self`, `pi update self`, and `pi update pi` are aliases for `pi update`.
-- `pi update --extension <source>` is an alias for `pi update <source>`.
-- `-a`, `--approve` trusts project-local files for one command. `-na`, `--no-approve` ignores trust-gated project-local files.
-- Append `-h` or `--help` to a command for its exact usage and option constraints.
+- `pi uninstall <source>` 是 `pi remove <source>` 的别名。
+- `pi update --self`、`pi update self` 和 `pi update pi` 是 `pi update` 的别名。
+- `pi update --extension <source>` 是 `pi update <source>` 的别名。
+- `-a`、`--approve` 对单条命令信任项目本地文件。`-na`、`--no-approve` 忽略受信任门槛限制的项目本地文件。
+- 在命令后附加 `-h` 或 `--help`，可查看其确切用法与选项约束。
 
-## Credential commands
+## 凭据命令
 
 ```sh
 pi auth check --provider openai --json
 ```
 
-Authentication commands require `--provider <provider>` or `--model <model>`. See [Providers](providers.md) for supported methods.
+认证命令需要 `--provider <provider>` 或 `--model <model>`。支持的认证方式参见[提供商](providers.md)。
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `pi auth check` | Print `ready`, `not_ready`, or `invalid`; exit with status `0`, `1`, or `2`, respectively |
-| `pi auth print-api-key` | Print the resolved API key |
-| `pi auth print-bearer-token` | Print a resolved OAuth bearer token |
+| `pi auth check` | 输出 `ready`、`not_ready` 或 `invalid`；分别以状态码 `0`、`1` 或 `2` 退出 |
+| `pi auth print-api-key` | 输出解析后的 API 密钥 |
+| `pi auth print-bearer-token` | 输出解析后的 OAuth bearer token |
 
-| Option | Applies to | Description |
+| 选项 | 适用范围 | 说明 |
 |---|---|---|
-| `--provider <provider>` | All | Resolve credentials for a provider |
-| `--model <model>` | All | Resolve credentials from a model; may be combined with `--provider` |
-| `--json` | `auth check` | Write the structured result as JSON |
-| `--credentials` | `auth check` | Emit the resolved credential when ready |
-| `--no-refresh` | `auth check` | Do not refresh expired OAuth credentials; refresh is the default |
-| `--min-expiry <duration>` | `print-bearer-token` | Require remaining token lifetime using `ms`, `s`, `m`, or `h`, such as `30m` |
+| `--provider <provider>` | 全部 | 解析某提供商的凭据 |
+| `--model <model>` | 全部 | 从某模型解析凭据；可与 `--provider` 同用 |
+| `--json` | `auth check` | 以 JSON 写出结构化结果 |
+| `--credentials` | `auth check` | 就绪时输出解析后的凭据 |
+| `--no-refresh` | `auth check` | 不刷新过期的 OAuth 凭据；默认会刷新 |
+| `--min-expiry <duration>` | `print-bearer-token` | 要求剩余令牌有效期，单位可用 `ms`、`s`、`m` 或 `h`，例如 `30m` |
 
-Credential-printing commands write secrets to stdout.
+输出凭据的命令会把密钥写入 stdout。
 
-## MCP commands
+## MCP 命令
 
-These commands work outside a session, so agents can run them through `bash`. See [MCP Servers](mcp.md).
+这些命令可在会话之外运行，因此智能体可以通过 `bash` 执行它们。参见[MCP 服务器](mcp.md)。
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `pi mcp add <server> [options] -- <command> [args...]` | Add or replace a stdio server in `mcp.json`; `--env KEY=VALUE` (repeatable) and `--cwd <dir>` set its environment and working directory. Arguments after the command are passed to it |
-| `pi mcp add <server> [options] --url <url>` | Add or replace a streamable HTTP server; `--header KEY=VALUE` (repeatable), `--bearer-token-env-var <NAME>` (sends `Authorization: Bearer ${NAME}`), `--oauth-client-id`, `--oauth-client-secret`, `--oauth-callback-port`, and `--oauth-client-name` configure authentication |
-| `pi mcp remove <server>` | Remove a server from `mcp.json`; stored OAuth credentials are kept |
-| `pi mcp list [--json]` | Connect to every enabled server and print its state, tools, and errors; exit with `1` when a config entry is invalid or an enabled server is not connected |
-| `pi mcp login <server> [--timeout <seconds>]` | Sign in to an OAuth server: open the authorization page and wait for the browser (default 300 seconds); a terminal also accepts the pasted redirect URL |
-| `pi mcp logout <server>` | Delete the stored OAuth credentials of a server |
+| `pi mcp add <server> [options] -- <command> [args...]` | 在 `mcp.json` 中添加或替换 stdio 服务器；`--env KEY=VALUE`（可重复）和 `--cwd <dir>` 设置其环境变量与工作目录。命令之后的参数会传给它 |
+| `pi mcp add <server> [options] --url <url>` | 添加或替换 streamable HTTP 服务器；`--header KEY=VALUE`（可重复）、`--bearer-token-env-var <NAME>`（发送 `Authorization: Bearer ${NAME}`）、`--oauth-client-id`、`--oauth-client-secret`、`--oauth-callback-port` 和 `--oauth-client-name` 用于配置认证 |
+| `pi mcp remove <server>` | 从 `mcp.json` 移除服务器；已存储的 OAuth 凭据会保留 |
+| `pi mcp list [--json]` | 连接每个已启用的服务器并打印其状态、工具与错误；当配置条目无效或某已启用服务器未连接时以 `1` 退出 |
+| `pi mcp login <server> [--timeout <seconds>]` | 登录 OAuth 服务器：打开授权页面并等待浏览器（默认 300 秒）；在终端中也可以粘贴重定向 URL |
+| `pi mcp logout <server>` | 删除某服务器已存储的 OAuth 凭据 |
 
-`add` and `remove` change `~/.pi/agent/mcp.json`, or `.pi/mcp.json` in the current directory with `--local` (`-l`). `add` also takes `--exposure <mode>` (see [Exposure](mcp.md#exposure)) and `--description <text>` and does not connect; run `pi mcp list` to check the server.
+`add` 和 `remove` 修改 `~/.pi/agent/mcp.json`；加 `--local`（`-l`）时修改当前目录的 `.pi/mcp.json`。`add` 还接受 `--exposure <mode>`（参见[暴露方式](mcp.md#exposure)）和 `--description <text>`，且不会立即连接；请运行 `pi mcp list` 检查服务器。
 
-Project `.pi/mcp.json` files are only read for projects that are already trusted.
+项目 `.pi/mcp.json` 文件只对已受信任的项目读取。

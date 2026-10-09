@@ -1,34 +1,34 @@
-# Providers
+# 提供商
 
-Most hosted providers support one or both of these authentication methods:
+大多数托管提供商支持以下一种或两种认证方式：
 
-- Sign in through a browser or device flow backed by OAuth.
-- Provide an API key.
+- 通过浏览器或基于 OAuth 的设备流程登录。
+- 提供 API 密钥。
 
-Use `/login [provider]` to see the methods supported by a provider. Amazon Bedrock and Google Vertex AI can also use ambient cloud credentials.
+用 `/login [provider]` 查看某提供商支持的方式。Amazon Bedrock 和 Google Vertex AI 还可以使用隐式云凭据（ambient cloud credentials）。
 
-## Authenticate interactively
+## 交互式认证
 
-Run `/login` and select a provider. Pi guides you through its OAuth or API-key flow and saves the resulting credential in [`auth.json`](configuration.md#agent-directory).
+运行 `/login` 并选择一个提供商。Pi 会引导你完成其 OAuth 或 API 密钥流程，并把得到的凭据保存在 [`auth.json`](configuration.md#agent-directory) 中。
 
-On a remote or headless machine, an OAuth callback may not reach the local process. When prompted, paste the final redirect URL or authorization code back into Pi.
+在远程或无头（headless）机器上，OAuth 回调可能无法到达本地进程。出现提示时，把最终的重定向 URL 或授权码粘贴回 Pi。
 
-Run `/logout` and select a provider to remove its stored credential. This does not unset environment variables, remove authentication from `models.json`, or revoke the credential at the provider.
+运行 `/logout` 并选择一个提供商，即可移除其存储的凭据。这不会取消环境变量的设置，不会移除 `models.json` 中的认证信息，也不会在提供商处吊销该凭据。
 
-`auth.json` can contain API keys and OAuth tokens. Keep it private and do not commit it.
+`auth.json` 可能包含 API 密钥和 OAuth 令牌。请妥善保密，不要提交到版本库。
 
-## Use an API key from the environment
+## 从环境变量使用 API 密钥
 
-Environment variables are useful in CI and anywhere Pi should not store the key. Set the variable before starting Pi:
+环境变量适用于 CI，以及任何不应让 Pi 存储密钥的场景。启动 Pi 之前设置变量：
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 pi
 ```
 
-This table covers providers with a single primary API-key variable. Providers that need additional configuration or support ambient credentials are covered under [Provider Specific Config](#provider-specific-config).
+下表列出只有一个主要 API 密钥变量的提供商。需要额外配置或支持隐式凭据的提供商见[提供商专属配置](#provider-specific-config)。
 
-| Provider | Environment variable |
+| 提供商 | 环境变量 |
 |---|---|
 | Anthropic | `ANTHROPIC_API_KEY` |
 | Ant Ling | `ANT_LING_API_KEY` |
@@ -43,11 +43,11 @@ This table covers providers with a single primary API-key variable. Providers th
 | xAI | `XAI_API_KEY` |
 | OpenRouter | `OPENROUTER_API_KEY` |
 | Vercel AI Gateway | `AI_GATEWAY_API_KEY` |
-| ZAI Coding Plan (Global) | `ZAI_API_KEY` |
-| ZAI Coding Plan (China) | `ZAI_CODING_CN_API_KEY` |
-| OpenCode Zen and Go | `OPENCODE_API_KEY` |
+| ZAI Coding Plan（国际版） | `ZAI_API_KEY` |
+| ZAI Coding Plan（中国版） | `ZAI_CODING_CN_API_KEY` |
+| OpenCode Zen 与 Go | `OPENCODE_API_KEY` |
 | Radius | `RADIUS_API_KEY` |
-| TypeSafe ([classifier models](models.md#use-classifier-models)) | `TYPESAFE_API_KEY` |
+| TypeSafe（[分类模型](models.md#use-classifier-models)） | `TYPESAFE_API_KEY` |
 | Hugging Face | `HF_TOKEN` |
 | Fireworks | `FIREWORKS_API_KEY` |
 | Together AI | `TOGETHER_API_KEY` |
@@ -55,22 +55,22 @@ This table covers providers with a single primary API-key variable. Providers th
 | Kimi For Coding | `KIMI_API_KEY` |
 | Meta | `META_API_KEY` |
 | MiniMax | `MINIMAX_API_KEY` |
-| MiniMax (China) | `MINIMAX_CN_API_KEY` |
-| Moonshot AI (Global and China) | `MOONSHOT_API_KEY` |
-| Qwen Token Plan and Individual | `QWEN_TOKEN_PLAN_API_KEY` |
-| Qwen Token Plan (China) | `QWEN_TOKEN_PLAN_CN_API_KEY` |
+| MiniMax（中国版） | `MINIMAX_CN_API_KEY` |
+| Moonshot AI（国际与中国） | `MOONSHOT_API_KEY` |
+| Qwen Token Plan 与个人版 | `QWEN_TOKEN_PLAN_API_KEY` |
+| Qwen Token Plan（中国版） | `QWEN_TOKEN_PLAN_CN_API_KEY` |
 | Xiaomi MiMo | `XIAOMI_API_KEY` |
-| Xiaomi MiMo Token Plan (China) | `XIAOMI_TOKEN_PLAN_CN_API_KEY` |
-| Xiaomi MiMo Token Plan (Amsterdam) | `XIAOMI_TOKEN_PLAN_AMS_API_KEY` |
-| Xiaomi MiMo Token Plan (Singapore) | `XIAOMI_TOKEN_PLAN_SGP_API_KEY` |
+| Xiaomi MiMo Token Plan（中国版） | `XIAOMI_TOKEN_PLAN_CN_API_KEY` |
+| Xiaomi MiMo Token Plan（阿姆斯特丹） | `XIAOMI_TOKEN_PLAN_AMS_API_KEY` |
+| Xiaomi MiMo Token Plan（新加坡） | `XIAOMI_TOKEN_PLAN_SGP_API_KEY` |
 
-Anthropic also recognizes `ANTHROPIC_OAUTH_TOKEN` as an API credential and `ANTHROPIC_AUTH_TOKEN` as bearer authentication.
+Anthropic 还把 `ANTHROPIC_OAUTH_TOKEN` 识别为 API 凭据，把 `ANTHROPIC_AUTH_TOKEN` 识别为 bearer 认证。
 
-With no key or token set, Anthropic uses workload identity federation when `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID` and `ANTHROPIC_IDENTITY_TOKEN_FILE` are set: the Anthropic SDK exchanges the identity token for a short-lived access token and refreshes it itself (re-reading the identity token file, so keep that file fresh for long sessions). `ANTHROPIC_SERVICE_ACCOUNT_ID` and `ANTHROPIC_WORKSPACE_ID` are passed through when set.
+未设置任何密钥或令牌时，若 `ANTHROPIC_FEDERATION_RULE_ID`、`ANTHROPIC_ORGANIZATION_ID` 和 `ANTHROPIC_IDENTITY_TOKEN_FILE` 均已设置，Anthropic 会使用工作负载身份联合（workload identity federation）：Anthropic SDK 用身份令牌换取短期访问令牌并自行刷新（会重新读取身份令牌文件，因此长时间会话请保持该文件有效）。`ANTHROPIC_SERVICE_ACCOUNT_ID` 和 `ANTHROPIC_WORKSPACE_ID` 在设置时原样传递。
 
-## Load an API key from a command
+## 从命令加载 API 密钥
 
-To use a secret manager without writing the resolved key to disk, set a provider's `key` in `auth.json` to a command prefixed with `!`:
+要使用密钥管理器而不把解析出的密钥写盘，可以把 `auth.json` 中提供商的 `key` 设为以 `!` 前缀的命令：
 
 ```json
 {
@@ -81,13 +81,13 @@ To use a secret manager without writing the resolved key to disk, set a provider
 }
 ```
 
-Pi runs the command when the key is first needed and caches its standard output for the process lifetime. Empty output, a timeout, or a nonzero exit leaves the key unresolved until Pi restarts.
+Pi 在首次需要该密钥时运行命令，并为其标准输出缓存整个进程生命周期。输出为空、超时或非零退出都会让密钥保持未解析状态，直到 Pi 重启。
 
-## Provider Specific Config
+## 提供商专属配置
 
-The providers below have additional setup, need additional settings, or can use credentials supplied by their platform.
+下列提供商需要额外的设置步骤、额外配置，或可以使用其平台提供的凭据。
 
-A stored API-key credential can include an `env` object. Its values take priority over the process environment for that provider:
+存储的 API 密钥凭据可以包含一个 `env` 对象。对相应提供商而言，其值优先于进程环境：
 
 ```json
 {
@@ -103,42 +103,42 @@ A stored API-key credential can include an `env` object. Its values take priorit
 
 ### Radius
 
-Radius is a service crafted for Pi by the builders of Pi, Earendil Works. It provides a customizable AI gateway with organization-level controls and analytics built in, and artifacts for sharing what you create with Pi.
+Radius 是 Pi 的打造者 Earendil Works 为 Pi 精心打造的服务。它提供可定制的 AI 网关，内置组织级管控与分析功能，还提供用于分享你用 Pi 创作成果的 artifacts。
 
-To get started, run `/login radius` in Pi. This adds Radius as a provider, and its models appear in `/model` like any other provider's.
+开始使用：在 Pi 中运行 `/login radius`。这会把 Radius 添加为提供商，其模型会像其他提供商的模型一样出现在 `/model` 中。
 
-Radius also has an MCP server, so Pi can manage Radius for you.
+Radius 还提供 MCP 服务器，Pi 可以为你管理 Radius。
 
-Radius is currently in early alpha and evolving quickly. See [radius.earendil.com](https://radius.earendil.com) for more.
+Radius 目前处于早期 alpha 阶段，迭代迅速。详情参见[radius.earendil.com](https://radius.earendil.com)。
 
-Radius authentication uses its gateway catalog and caches refreshed model metadata for later offline startup. A custom Radius gateway configured in `models.json` uses its own catalog rather than inheriting the public `radius.pi.dev` catalog.
+Radius 认证使用其网关目录，并缓存刷新后的模型元数据以供日后离线启动。在 `models.json` 中配置的自定义 Radius 网关使用自己的目录，而不是继承公开的 `radius.pi.dev` 目录。
 
 ### Azure OpenAI
 
-The provider ID is `azure` (formerly `azure-openai-responses`). Use it as the key in `auth.json`, `models.json`, and `settings.json`, and in model references such as `--model azure/gpt-5.4`.
+提供商 ID 是 `azure`（曾用名 `azure-openai-responses`）。把它用作 `auth.json`、`models.json` 和 `settings.json` 中的键，以及模型引用（例如 `--model azure/gpt-5.4`）。
 
-The `azure` provider serves OpenAI models through the Responses API and Microsoft Foundry models through Chat Completions, such as `azure/deepseek-v4-pro`.
+`azure` 提供商通过 Responses API 提供 OpenAI 模型，通过 Chat Completions 提供 Microsoft Foundry 模型，例如 `azure/deepseek-v4-pro`。
 
-Set an API key plus either a base URL or resource name:
+设置一个 API 密钥，外加基 URL 或资源名：
 
 ```bash
 export AZURE_OPENAI_API_KEY=...
 export AZURE_OPENAI_BASE_URL=https://your-resource.ai.azure.com
-# Or:
+# 或者：
 export AZURE_OPENAI_RESOURCE_NAME=your-resource
 ```
 
-Resource root URLs under `ai.azure.com`, `cognitiveservices.azure.com`, and `openai.azure.com` are normalized to the OpenAI API path.
+`ai.azure.com`、`cognitiveservices.azure.com` 和 `openai.azure.com` 下的资源根 URL 会被归一化为 OpenAI API 路径。
 
-Pi sends the model ID as the deployment name. If a deployment has a different name, map it with `AZURE_OPENAI_DEPLOYMENT_NAME_MAP`:
+Pi 把模型 ID 作为部署名发送。如果部署名不同，用 `AZURE_OPENAI_DEPLOYMENT_NAME_MAP` 做映射：
 
 ```bash
 export AZURE_OPENAI_DEPLOYMENT_NAME_MAP=gpt-5.4=my-gpt-deployment,deepseek-v4-pro=my-deepseek
 ```
 
-`AZURE_OPENAI_API_VERSION` overrides the API version for OpenAI models (default `v1`).
+`AZURE_OPENAI_API_VERSION` 覆盖 OpenAI 模型的 API 版本（默认 `v1`）。
 
-To use a Foundry model that Pi does not include, add it under `azure` in [`models.json`](models.md#configure-a-compatible-endpoint) with `api: "openai-completions"`. Custom models require a `baseUrl`; `AZURE_OPENAI_BASE_URL` and `AZURE_OPENAI_RESOURCE_NAME` take priority over it when set:
+要使用 Pi 未内置的 Foundry 模型，在[`models.json`](models.md#configure-a-compatible-endpoint)的 `azure` 下添加它并带 `api: "openai-completions"`。自定义模型需要 `baseUrl`；设置 `AZURE_OPENAI_BASE_URL` 和 `AZURE_OPENAI_RESOURCE_NAME` 时它们优先于该值：
 
 ```json
 {
@@ -155,31 +155,31 @@ To use a Foundry model that Pi does not include, add it under `azure` in [`model
 
 ### Amazon Bedrock
 
-Bedrock can use a bearer token or an ambient AWS credential source:
+Bedrock 可以使用 bearer 令牌或所处 AWS 环境的隐式凭据来源：
 
 ```bash
-# Named profile
+# 命名 profile
 export AWS_PROFILE=your-profile
 
-# IAM keys
+# IAM 密钥
 export AWS_ACCESS_KEY_ID=AKIA...
 export AWS_SECRET_ACCESS_KEY=...
-# Required for temporary credentials
+# 临时凭据必需
 export AWS_SESSION_TOKEN=...
 
-# Bedrock bearer token
+# Bedrock bearer 令牌
 export AWS_BEARER_TOKEN_BEDROCK=...
 
-# Region, when not supplied by the profile or AWS SDK configuration
+# 区域，profile 或 AWS SDK 配置未提供时需要
 export AWS_REGION=us-west-2
-# AWS_DEFAULT_REGION is also supported
+# 也支持 AWS_DEFAULT_REGION
 ```
 
-Pi also supports ECS task credentials and IRSA through the standard `AWS_CONTAINER_CREDENTIALS_*` and `AWS_WEB_IDENTITY_TOKEN_FILE` variables.
+Pi 还通过标准的 `AWS_CONTAINER_CREDENTIALS_*` 和 `AWS_WEB_IDENTITY_TOKEN_FILE` 变量支持 ECS 任务凭据与 IRSA。
 
 ### Cloudflare AI Gateway
 
-The gateway requires a token, account ID, and gateway ID:
+该网关需要令牌、账户 ID 和网关 ID：
 
 ```bash
 export CLOUDFLARE_API_KEY=...
@@ -187,41 +187,41 @@ export CLOUDFLARE_ACCOUNT_ID=...
 export CLOUDFLARE_GATEWAY_ID=...
 ```
 
-The account and gateway IDs can come from the process environment or the credential's `env` object in `auth.json`.
+账户 ID 和网关 ID 可以来自进程环境，也可以来自 `auth.json` 中凭据的 `env` 对象。
 
-`CLOUDFLARE_API_KEY` authenticates Pi to the gateway. Upstream access can use Cloudflare unified billing, credentials stored in the gateway, or an `Authorization` header configured for the provider in `models.json`.
+`CLOUDFLARE_API_KEY` 用于向网关认证 Pi。上游访问可以使用 Cloudflare 统一计费、存储在网关中的凭据，或在 `models.json` 中为该提供商配置的 `Authorization` 头。
 
 ### Cloudflare Workers AI
 
-Workers AI requires a token and account ID:
+Workers AI 需要令牌和账户 ID：
 
 ```bash
 export CLOUDFLARE_API_KEY=...
 export CLOUDFLARE_ACCOUNT_ID=...
 ```
 
-The account ID can also be stored in the credential's `env` object.
+账户 ID 也可以存储在凭据的 `env` 对象中。
 
 ### Google Vertex AI
 
-Use a Google Cloud API key:
+使用 Google Cloud API 密钥：
 
 ```bash
 export GOOGLE_CLOUD_API_KEY=...
 ```
 
-To use Application Default Credentials, configure a project and location:
+要使用应用默认凭据（Application Default Credentials），配置项目和位置：
 
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project
-# GCLOUD_PROJECT is also supported
+# 也支持 GCLOUD_PROJECT
 export GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
-Then authenticate:
+然后完成认证：
 
 ```bash
 gcloud auth application-default login
 ```
 
-To use a service-account key file instead, set `GOOGLE_APPLICATION_CREDENTIALS` along with the project and location.
+改用服务账号密钥文件时，设置 `GOOGLE_APPLICATION_CREDENTIALS` 并同时给出项目与位置。

@@ -1,60 +1,60 @@
-# Slash commands
+# 斜杠命令
 
-Type `/` in Pi's terminal editor to search the commands available in the current session. This page lists the built-in commands in the current Pi release.
+在 Pi 的终端编辑器中输入 `/`，即可搜索当前会话可用的命令。本页列出当前 Pi 版本内置的命令。
 
-Extensions, prompt templates, and skills can add commands. The command menu in Pi is therefore the exact reference for the resources loaded in your session.
+扩展、提示词模板和技能都可以添加命令。因此，Pi 中的命令菜单才是你会话所加载资源的准确参考。
 
-## Models and settings
+## 模型与设置
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `/settings` | Open settings |
-| `/model [provider/model]` | Select a model |
-| `/thinking [level]` | Set the thinking level |
-| `/scoped-models` | Configure the models used by interactive cycling |
-| `/login [provider]` | Add provider authentication |
-| `/logout` | Remove provider authentication |
-| `/llama` | Manage models on the configured llama.cpp router |
+| `/settings` | 打开设置 |
+| `/model [provider/model]` | 选择模型 |
+| `/thinking [level]` | 设置思考级别 |
+| `/scoped-models` | 配置交互模式下循环切换所用的模型 |
+| `/login [provider]` | 添加提供商认证 |
+| `/logout` | 移除提供商认证 |
+| `/llama` | 管理已配置的 llama.cpp 路由上的模型 |
 
-## Sessions and context
+## 会话与上下文
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `/new` | Start a new session |
-| `/resume` | Switch to another saved session |
-| `/name [name]` | Set the session display name, or show the current name when omitted |
-| `/session` | Show current session information and statistics |
-| `/tree` | Navigate the session tree |
-| `/fork` | Create a new session from an earlier user message |
-| `/clone` | Duplicate the current session at its current position |
-| `/compact [instructions]` | Compact the current context, optionally with custom instructions |
-| `/import <path>` | Import and resume a JSONL session |
+| `/new` | 开始新会话 |
+| `/resume` | 切换到另一个已保存的会话 |
+| `/name [name]` | 设置会话显示名称；省略时显示当前名称 |
+| `/session` | 显示当前会话的信息与统计 |
+| `/tree` | 浏览会话树 |
+| `/fork` | 从更早的用户消息创建新会话 |
+| `/clone` | 在当前位置复制当前会话 |
+| `/compact [instructions]` | 压缩当前上下文，可选附加自定义指令 |
+| `/import <path>` | 导入并恢复一个 JSONL 会话 |
 
-## Export and share
+## 导出与分享
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `/copy` | Copy the last assistant message |
-| `/export [path]` | Export the session as HTML or JSONL |
-| `/share` | Upload the session and return a viewer link |
-| `/bug [description]` | Prepare a private bug report for the Pi developers |
+| `/copy` | 复制最后一条助手消息 |
+| `/export [path]` | 将会话导出为 HTML 或 JSONL |
+| `/share` | 上传会话并返回查看链接 |
+| `/bug [description]` | 为 Pi 开发者准备一份私密的问题报告 |
 
-Review a session before exporting or sharing it. Sessions can contain prompts, tool arguments, command output, file contents, and credentials exposed during the conversation.
+导出或分享会话前请先检查其内容。会话可能包含提示词、工具参数、命令输出、文件内容以及对话过程中暴露的凭据。
 
-## Runtime and project
+## 运行时与项目
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `/trust` | Save a project trust decision for future Pi processes |
-| `/reload` | Reload keybindings, extensions, skills, templates, themes, and context files |
-| `/hotkeys` | Show active keyboard shortcuts |
-| `/changelog` | Show changelog entries |
-| `/quit` | Quit Pi |
+| `/trust` | 保存项目信任决定，供后续 Pi 进程使用 |
+| `/reload` | 重新加载按键绑定、扩展、技能、模板、主题和上下文文件 |
+| `/hotkeys` | 显示当前生效的键盘快捷键 |
+| `/changelog` | 显示更新日志条目 |
+| `/quit` | 退出 Pi |
 
-## Commands added by resources
+## 资源添加的命令
 
-- Extensions can register commands with their own arguments and completion behavior.
-- Each prompt template is available under its template name.
-- Skills are available as `/skill:name` when skill commands are enabled.
+- 扩展可以注册带有自己的参数与补全行为的命令。
+- 每个提示词模板都以其模板名可用。
+- 启用技能命令后，技能以 `/skill:name` 的形式可用。
 
-Use `/reload` after adding or changing a discovered command resource. See [Extensions](extensions.md), [Prompt Templates](prompt-templates.md), and [Skills](skills.md) for their loading and naming rules.
+添加或更改被发现的命令资源后，请使用 `/reload`。它们的加载与命名规则参见[扩展](extensions.md)、[提示词模板](prompt-templates.md)和[技能](skills.md)。
