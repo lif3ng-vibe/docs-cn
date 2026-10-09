@@ -97,3 +97,18 @@
 - ai-memory-en 补独立卡片（维持既有行为；日后若补 `lang: "en"` 条目将自动获得标签）。
 - 筛选增强：AND 模式切换、标签计数徽标、按标签排序。
 - 各子站内部（Starlight/Mintlify）的导航或侧边栏改动。
+
+## 修订一（2026-10-09 同日，筛选行为）
+
+- 筛选语义由并集改为**交集**：卡片须命中全部选中标签。
+- **不可用置灰**：未选中标签在当前命中卡片中一个都找不到时置灰禁用（`disabled` + 半透明），交集因此永不为空，无需空态 UI。
+- **动画**：列表接入 formkit/auto-animate——vendor `scripts/vendor/auto-animate.min.js`（@formkit/auto-animate@0.10.0，包仅发 ESM 构建，gen-index 构建时剥末尾 `export` 转 `globalThis.autoAnimate` 后内联进页面，保持单文件零外部请求）。筛选时先移出未命中卡片再按原序补回命中卡片，动画由库的 MutationObserver 驱动。
+
+## 修订二（2026-10-09 同日，设置弹窗）
+
+右上角「⚙ 设置」打开 `<dialog>` 弹窗，偏好存 localStorage（key `docs-cn-prefs`），`<head>` 内联脚本预读并落到 `data-*` 属性防主题闪烁，刷新后仍生效：
+
+- **主题色**：`THEMES` 注册表 6 色（蓝[默认]/绿/紫/橙/红/青，GitHub 系深色保证白字对比度），swatch 小方块与 `[data-theme]` CSS 覆盖块同源生成，驱动 `--accent` 变量。
+- **卡片风格**：`CARD_STYLES` 三种——标准（列表）/紧凑（小间距小字号）/网格（auto-fill 两列，按钮改静态布局），经 `data-card-style` 分支 CSS。
+- **卡片显隐**：描述/标签/操作按钮三个开关，经 `data-show-*` 分支 CSS。
+- 实现坑：白名单校验数组必须用 `indexOf`，不能对象式下标取值（`THEME_IDS["green"]` 恒 undefined，会把合法主题误回落默认）。
