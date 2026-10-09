@@ -10,7 +10,7 @@ title: "pi-docs-cn — Pi 文档中文镜像（非官方）"
 
 ## 说明
 
-- 上游 pi.dev 使用自研渲染器（未开源），但内容按 Mintlify 格式撰写（`docs.json` navigation）。本镜像用 **Mintlify 原班工具链**（CLI 4.2.992）渲染同一份 Markdown，主题为 Mintlify 默认 `mint` 主题，与 pi.dev 视觉不完全一致。
+- 上游 pi.dev 使用自研渲染器（未开源），但内容按 Mintlify 格式撰写（`docs.json` navigation）。本镜像用 **Mintlify 原班工具链**（CLI 4.2.992）渲染同一份 Markdown，并经 `scripts/inject-theme.mjs` 注入 pi.dev 风格皮肤：OFL 开源字体（Source Serif 4 替代官方商业字体 Plantin MT Pro，Commit Mono / Departure Mono 代码字）+ 官方实测配色 token（暖纸 `#ebe7e4` / 深板岩 `#161d27`、正文重 440）。布局骨架仍是 Mintlify 的，视觉接近而非像素级复刻。
 - 纯中文单语，无双语切换。产品名、命令、配置键、代码保持英文原文；术语首次出现附英文原词（见 `GLOSSARY.md`）。
 - 锚点（标题链接）按 Mintlify slug 规则随中文标题重新生成，页内/跨页锚点链接已按产物实测回修。
 - 图片沿用上游原图（含英文截图），未重绘。
