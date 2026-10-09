@@ -10,9 +10,9 @@
  *   多选取交集；当前筛选下命中不了任何卡片的标签置灰禁用；列表动画用
  *   formkit/auto-animate（vendor ESM 产物构建时转全局变量内联，页面零外部请求）。
  *   lang:"en" 镜像条目自动继承中文站标签并附加 unofficial-en。
- * 设置：右上角「⚙ 设置」弹窗——主题色小方块（CSS 变量驱动）、卡片风格、
- *   卡片各部分显隐；偏好存 localStorage（key: docs-cn-prefs），head 内联脚本
- *   预读应用防主题闪烁，刷新后仍生效。
+ * 设置：右上角「⚙ 设置」弹窗——主题色小方块（页面背景/卡片底色随主题联动）、
+ *   卡片风格、卡片各部分显隐、标签语言（中文[默认]/English）；偏好存 localStorage
+ *   （key: docs-cn-prefs），head 内联脚本预读应用防主题闪烁，刷新后仍生效。
  */
 'use strict';
 const fs = require('fs');
@@ -39,15 +39,16 @@ const TAGS = {
 };
 
 // 主题色注册表：入口页设置弹窗的小方块与 CSS 变量同源于此。
-// 首个为主题认默认色（:root），其余生成 [data-theme] 覆盖块。取 GitHub 系深色，
-// 保证其上白字对比度达标。
+// 首个为主题认默认色（:root），其余生成 [data-theme] 覆盖块。accent 取 GitHub 系
+// 深色保证其上白字对比度；bg/surface 是随主题联动的页面背景与卡片底色（同色相
+// 极浅着色，surface 比 bg 更接近白，保持卡片浮起感）。
 const THEMES = {
-	blue:   { zh: '蓝', color: '#0969da' },
-	green:  { zh: '绿', color: '#1a7f37' },
-	purple: { zh: '紫', color: '#8250df' },
-	orange: { zh: '橙', color: '#bc4c00' },
-	red:    { zh: '红', color: '#cf222e' },
-	teal:   { zh: '青', color: '#1b7c83' },
+	blue:   { zh: '蓝', color: '#0969da', bg: '#edf3fa', surface: '#fbfcfe' },
+	green:  { zh: '绿', color: '#1a7f37', bg: '#eef6ef', surface: '#fbfdfb' },
+	purple: { zh: '紫', color: '#8250df', bg: '#f3f0fa', surface: '#fcfbfe' },
+	orange: { zh: '橙', color: '#bc4c00', bg: '#faf2ec', surface: '#fefbf9' },
+	red:    { zh: '红', color: '#cf222e', bg: '#faf0f0', surface: '#fefbfb' },
+	teal:   { zh: '青', color: '#1b7c83', bg: '#edf5f5', surface: '#fafcfc' },
 };
 
 // 卡片渲染风格（设置弹窗单选；CSS 按 data-card-style 分支）。
@@ -55,6 +56,12 @@ const CARD_STYLES = {
 	standard: '标准',
 	compact:  '紧凑',
 	grid:     '网格',
+};
+
+// 标签语言（设置弹窗单选）：筛选按钮与卡片标签的中英文显示切换，默认中文。
+const TAG_LANGS = {
+	zh: '中文',
+	en: 'English',
 };
 
 // 卡片各部分显隐（设置弹窗勾选；CSS 按 data-show-* 分支）。
@@ -110,7 +117,10 @@ function cardButtons(s) {
 
 function cardTags(s) {
 	return (s.tags || [])
-		.map((t) => `<span class="tag">${TAGS[t].zh}</span>`)
+		.map(
+			(t) =>
+				`<span class="tag"><span class="tag-zh">${TAGS[t].zh}</span><span class="tag-en">${TAGS[t].en}</span></span>`
+		)
 		.join('');
 }
 
@@ -131,7 +141,8 @@ const cards = sites
 const filterChips = [
 	'<button class="chip active" data-filter="all">全部</button>',
 	...Object.entries(TAGS).map(
-		([slug, t]) => `<button class="chip" data-filter="${slug}">${t.zh}</button>`
+		([slug, t]) =>
+			`<button class="chip" data-filter="${slug}"><span class="chip-zh">${t.zh}</span><span class="chip-en">${t.en}</span></button>`
 	),
 ].join('');
 
@@ -149,6 +160,13 @@ const cardStyleRadios = Object.entries(CARD_STYLES)
 	)
 	.join('');
 
+const tagLangRadios = Object.entries(TAG_LANGS)
+	.map(
+		([id, zh]) =>
+			`<label class="seg-item"><input type="radio" name="tag-lang" value="${id}">${zh}</label>`
+	)
+	.join('');
+
 const showChecks = Object.entries(SHOW_PARTS)
 	.map(
 		([key, zh]) =>
@@ -158,7 +176,10 @@ const showChecks = Object.entries(SHOW_PARTS)
 
 // 主题 CSS：:root 为默认蓝，其余主题生成 data-theme 覆盖块（与 THEMES 同源）。
 const themeCss = Object.entries(THEMES)
-	.map(([id, t]) => `\t\t\t\t[data-theme="${id}"] { --accent: ${t.color}; }`)
+	.map(
+		([id, t]) =>
+			`\t\t\t\t[data-theme="${id}"] { --accent: ${t.color}; --bg: ${t.bg}; --surface: ${t.surface}; }`
+	)
 	.join('\n');
 
 const html = `<!doctype html>
@@ -177,6 +198,7 @@ const html = `<!doctype html>
 					var r = document.documentElement;
 					if (p.theme) r.dataset.theme = p.theme;
 					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
+					if (p.tagLang) r.dataset.tagLang = p.tagLang;
 					['desc', 'tags', 'btns'].forEach(function (k) {
 						if (k in p) {
 							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
@@ -188,11 +210,13 @@ const html = `<!doctype html>
 		<style>
 			:root {
 				--accent: ${THEMES.blue.color};
+				--bg: ${THEMES.blue.bg};
+				--surface: ${THEMES.blue.surface};
 			}
 ${themeCss}
 			body {
 				margin: 0;
-				background: #f6f8fa;
+				background: var(--bg);
 				color: #1f2328;
 				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
 					'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -222,7 +246,7 @@ ${themeCss}
 				border: 1px solid #d0d7de;
 				border-radius: 6px;
 				padding: 0.32rem 0.7rem;
-				background: #fff;
+				background: var(--surface);
 				cursor: pointer;
 				white-space: nowrap;
 				transition: color 0.15s ease, border-color 0.15s ease;
@@ -248,7 +272,7 @@ ${themeCss}
 				border: 1px solid #d0d7de;
 				border-radius: 999px;
 				padding: 0.25rem 0.75rem;
-				background: #fff;
+				background: var(--surface);
 				cursor: pointer;
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 			}
@@ -275,8 +299,11 @@ ${themeCss}
 				gap: 0.75rem;
 			}
 			.item {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
 				position: relative;
-				background: #fff;
+				background: var(--surface);
 				border: 1px solid #d0d7de;
 				border-radius: 10px;
 				overflow: hidden;
@@ -287,14 +314,16 @@ ${themeCss}
 				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 			}
 			.row {
+				flex: 1;
+				min-width: 0;
 				display: block;
 				text-decoration: none;
 				color: inherit;
-				padding: 1.1rem 1.25rem;
+				padding: 1.1rem 0 1.1rem 1.25rem;
 				transition: background 0.15s ease;
 			}
 			.row:hover {
-				background: #f0f4f8;
+				background: color-mix(in srgb, var(--accent) 5%, var(--surface));
 			}
 			.name {
 				font-size: 1.1rem;
@@ -318,16 +347,28 @@ ${themeCss}
 				border: 1px solid #d8dee4;
 				border-radius: 999px;
 				padding: 0.1rem 0.55rem;
-				background: #f6f8fa;
+				background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 				white-space: nowrap;
 			}
+			/* 标签语言切换：默认中文，[data-tag-lang='en'] 时显示英文 */
+			.chip-en,
+			.tag-en {
+				display: none;
+			}
+			[data-tag-lang='en'] .chip-zh,
+			[data-tag-lang='en'] .tag-zh {
+				display: none;
+			}
+			[data-tag-lang='en'] .chip-en,
+			[data-tag-lang='en'] .tag-en {
+				display: inline;
+			}
+			/* 操作按钮改常规流内布局（flex 行右端），彻底避免遮挡文字 */
 			.btns {
-				position: absolute;
-				right: 1rem;
-				top: 50%;
-				transform: translateY(-50%);
 				display: flex;
 				gap: 0.4rem;
+				flex-shrink: 0;
+				padding-right: 1.25rem;
 			}
 			.btn {
 				font-size: 0.85rem;
@@ -336,14 +377,14 @@ ${themeCss}
 				border: 1px solid #d0d7de;
 				border-radius: 6px;
 				padding: 0.32rem 0.7rem;
-				background: #fff;
+				background: var(--surface);
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 				white-space: nowrap;
 			}
 			.btn:hover {
 				color: var(--accent);
 				border-color: var(--accent);
-				background: #fff;
+				background: var(--surface);
 			}
 			footer {
 				margin-top: 2.5rem;
@@ -362,7 +403,10 @@ ${themeCss}
 				gap: 0.4rem;
 			}
 			[data-card-style='compact'] .row {
-				padding: 0.6rem 1rem;
+				padding: 0.6rem 0 0.6rem 1rem;
+			}
+			[data-card-style='compact'] .btns {
+				padding-right: 1rem;
 			}
 			[data-card-style='compact'] .name {
 				font-size: 1rem;
@@ -378,18 +422,19 @@ ${themeCss}
 			[data-card-style='compact'] .item {
 				border-radius: 8px;
 			}
-			/* —— 卡片风格：网格 —— */
+			/* —— 卡片风格：网格（保持按钮堆叠在文字下方） —— */
 			[data-card-style='grid'] .list {
 				display: grid;
 				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 			}
-			[data-card-style='grid'] .btns {
-				position: static;
-				transform: none;
-				padding: 0 1.25rem 1rem;
+			[data-card-style='grid'] .item {
+				display: block;
 			}
 			[data-card-style='grid'] .row {
-				padding-bottom: 0.6rem;
+				padding: 1.1rem 1.25rem 0.6rem;
+			}
+			[data-card-style='grid'] .btns {
+				padding: 0 1.25rem 1rem;
 			}
 			/* —— 卡片各部分显隐 —— */
 			[data-show-desc='0'] .desc {
@@ -403,6 +448,8 @@ ${themeCss}
 			}
 			/* —— 设置弹窗 —— */
 			.settings {
+				background: var(--surface);
+				user-select: none;
 				border: 1px solid #d0d7de;
 				border-radius: 12px;
 				padding: 1.25rem 1.5rem;
@@ -481,7 +528,7 @@ ${themeCss}
 				border-radius: 8px;
 				padding: 0.3rem 0.75rem;
 				cursor: pointer;
-				background: #fff;
+				background: var(--surface);
 			}
 			.seg-item:has(input:checked) {
 				border-color: var(--accent);
@@ -497,9 +544,13 @@ ${themeCss}
 				flex-wrap: wrap;
 			}
 			@media (max-width: 560px) {
+				.item {
+					display: block;
+				}
+				.row {
+					padding: 1.1rem 1.25rem;
+				}
 				.btns {
-					position: static;
-					transform: none;
 					padding: 0 1.25rem 1.1rem;
 				}
 			}
@@ -533,6 +584,10 @@ ${themeCss}
 				<div class="seg">${cardStyleRadios}</div>
 			</fieldset>
 			<fieldset>
+				<legend>标签语言</legend>
+				<div class="seg">${tagLangRadios}</div>
+			</fieldset>
+			<fieldset>
 				<legend>卡片显示</legend>
 				<div class="checks">${showChecks}</div>
 			</fieldset>
@@ -543,7 +598,14 @@ ${themeCss}
 		<script>
 			(function () {
 				var STORAGE_KEY = 'docs-cn-prefs';
-				var DEFAULTS = { theme: 'blue', cardStyle: 'standard', showDesc: true, showTags: true, showBtns: true };
+				var DEFAULTS = {
+					theme: 'blue',
+					cardStyle: 'standard',
+					tagLang: 'zh',
+					showDesc: true,
+					showTags: true,
+					showBtns: true,
+				};
 				var root = document.documentElement;
 
 				function loadPrefs() {
@@ -553,9 +615,10 @@ ${themeCss}
 						Object.keys(DEFAULTS).forEach(function (k) {
 							out[k] = k in p ? p[k] : DEFAULTS[k];
 						});
-						// 注册表之外的主题/风格回落默认（防手改 localStorage 出脏值）
+						// 注册表之外的主题/风格/语言回落默认（防手改 localStorage 出脏值）
 						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
 						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
+						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
 						return out;
 					} catch (e) {
 						return Object.assign({}, DEFAULTS);
@@ -563,6 +626,7 @@ ${themeCss}
 				}
 				var THEME_IDS = ${JSON.stringify(Object.keys(THEMES))};
 				var CARD_STYLE_IDS = ${JSON.stringify(Object.keys(CARD_STYLES))};
+				var TAG_LANG_IDS = ${JSON.stringify(Object.keys(TAG_LANGS))};
 				var prefs = loadPrefs();
 
 				function savePrefs() {
@@ -574,6 +638,8 @@ ${themeCss}
 					if (prefs.theme === 'blue') delete root.dataset.theme;
 					else root.dataset.theme = prefs.theme;
 					root.dataset.cardStyle = prefs.cardStyle;
+					if (prefs.tagLang === 'zh') delete root.dataset.tagLang;
+					else root.dataset.tagLang = prefs.tagLang;
 					root.dataset.showDesc = prefs.showDesc ? '1' : '0';
 					root.dataset.showTags = prefs.showTags ? '1' : '0';
 					root.dataset.showBtns = prefs.showBtns ? '1' : '0';
@@ -590,6 +656,8 @@ ${themeCss}
 					});
 					var radio = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
 					if (radio) radio.checked = true;
+					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
+					if (langRadio) langRadio.checked = true;
 					root.querySelectorAll('input[data-show]').forEach(function (cb) {
 						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
 					});
@@ -617,6 +685,14 @@ ${themeCss}
 				root.querySelectorAll('input[name="card-style"]').forEach(function (r) {
 					r.addEventListener('change', function () {
 						prefs.cardStyle = r.value;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+					});
+				});
+				root.querySelectorAll('input[name="tag-lang"]').forEach(function (r) {
+					r.addEventListener('change', function () {
+						prefs.tagLang = r.value;
 						applyPrefs();
 						savePrefs();
 						syncSettingsUi();

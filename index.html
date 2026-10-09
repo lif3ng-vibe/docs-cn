@@ -14,6 +14,7 @@
 					var r = document.documentElement;
 					if (p.theme) r.dataset.theme = p.theme;
 					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
+					if (p.tagLang) r.dataset.tagLang = p.tagLang;
 					['desc', 'tags', 'btns'].forEach(function (k) {
 						if (k in p) {
 							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
@@ -25,16 +26,18 @@
 		<style>
 			:root {
 				--accent: #0969da;
+				--bg: #edf3fa;
+				--surface: #fbfcfe;
 			}
-				[data-theme="blue"] { --accent: #0969da; }
-				[data-theme="green"] { --accent: #1a7f37; }
-				[data-theme="purple"] { --accent: #8250df; }
-				[data-theme="orange"] { --accent: #bc4c00; }
-				[data-theme="red"] { --accent: #cf222e; }
-				[data-theme="teal"] { --accent: #1b7c83; }
+				[data-theme="blue"] { --accent: #0969da; --bg: #edf3fa; --surface: #fbfcfe; }
+				[data-theme="green"] { --accent: #1a7f37; --bg: #eef6ef; --surface: #fbfdfb; }
+				[data-theme="purple"] { --accent: #8250df; --bg: #f3f0fa; --surface: #fcfbfe; }
+				[data-theme="orange"] { --accent: #bc4c00; --bg: #faf2ec; --surface: #fefbf9; }
+				[data-theme="red"] { --accent: #cf222e; --bg: #faf0f0; --surface: #fefbfb; }
+				[data-theme="teal"] { --accent: #1b7c83; --bg: #edf5f5; --surface: #fafcfc; }
 			body {
 				margin: 0;
-				background: #f6f8fa;
+				background: var(--bg);
 				color: #1f2328;
 				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
 					'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -64,7 +67,7 @@
 				border: 1px solid #d0d7de;
 				border-radius: 6px;
 				padding: 0.32rem 0.7rem;
-				background: #fff;
+				background: var(--surface);
 				cursor: pointer;
 				white-space: nowrap;
 				transition: color 0.15s ease, border-color 0.15s ease;
@@ -90,7 +93,7 @@
 				border: 1px solid #d0d7de;
 				border-radius: 999px;
 				padding: 0.25rem 0.75rem;
-				background: #fff;
+				background: var(--surface);
 				cursor: pointer;
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 			}
@@ -117,8 +120,11 @@
 				gap: 0.75rem;
 			}
 			.item {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
 				position: relative;
-				background: #fff;
+				background: var(--surface);
 				border: 1px solid #d0d7de;
 				border-radius: 10px;
 				overflow: hidden;
@@ -129,14 +135,16 @@
 				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 			}
 			.row {
+				flex: 1;
+				min-width: 0;
 				display: block;
 				text-decoration: none;
 				color: inherit;
-				padding: 1.1rem 1.25rem;
+				padding: 1.1rem 0 1.1rem 1.25rem;
 				transition: background 0.15s ease;
 			}
 			.row:hover {
-				background: #f0f4f8;
+				background: color-mix(in srgb, var(--accent) 5%, var(--surface));
 			}
 			.name {
 				font-size: 1.1rem;
@@ -160,16 +168,28 @@
 				border: 1px solid #d8dee4;
 				border-radius: 999px;
 				padding: 0.1rem 0.55rem;
-				background: #f6f8fa;
+				background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 				white-space: nowrap;
 			}
+			/* 标签语言切换：默认中文，[data-tag-lang='en'] 时显示英文 */
+			.chip-en,
+			.tag-en {
+				display: none;
+			}
+			[data-tag-lang='en'] .chip-zh,
+			[data-tag-lang='en'] .tag-zh {
+				display: none;
+			}
+			[data-tag-lang='en'] .chip-en,
+			[data-tag-lang='en'] .tag-en {
+				display: inline;
+			}
+			/* 操作按钮改常规流内布局（flex 行右端），彻底避免遮挡文字 */
 			.btns {
-				position: absolute;
-				right: 1rem;
-				top: 50%;
-				transform: translateY(-50%);
 				display: flex;
 				gap: 0.4rem;
+				flex-shrink: 0;
+				padding-right: 1.25rem;
 			}
 			.btn {
 				font-size: 0.85rem;
@@ -178,14 +198,14 @@
 				border: 1px solid #d0d7de;
 				border-radius: 6px;
 				padding: 0.32rem 0.7rem;
-				background: #fff;
+				background: var(--surface);
 				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 				white-space: nowrap;
 			}
 			.btn:hover {
 				color: var(--accent);
 				border-color: var(--accent);
-				background: #fff;
+				background: var(--surface);
 			}
 			footer {
 				margin-top: 2.5rem;
@@ -204,7 +224,10 @@
 				gap: 0.4rem;
 			}
 			[data-card-style='compact'] .row {
-				padding: 0.6rem 1rem;
+				padding: 0.6rem 0 0.6rem 1rem;
+			}
+			[data-card-style='compact'] .btns {
+				padding-right: 1rem;
 			}
 			[data-card-style='compact'] .name {
 				font-size: 1rem;
@@ -220,18 +243,19 @@
 			[data-card-style='compact'] .item {
 				border-radius: 8px;
 			}
-			/* —— 卡片风格：网格 —— */
+			/* —— 卡片风格：网格（保持按钮堆叠在文字下方） —— */
 			[data-card-style='grid'] .list {
 				display: grid;
 				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 			}
-			[data-card-style='grid'] .btns {
-				position: static;
-				transform: none;
-				padding: 0 1.25rem 1rem;
+			[data-card-style='grid'] .item {
+				display: block;
 			}
 			[data-card-style='grid'] .row {
-				padding-bottom: 0.6rem;
+				padding: 1.1rem 1.25rem 0.6rem;
+			}
+			[data-card-style='grid'] .btns {
+				padding: 0 1.25rem 1rem;
 			}
 			/* —— 卡片各部分显隐 —— */
 			[data-show-desc='0'] .desc {
@@ -245,6 +269,8 @@
 			}
 			/* —— 设置弹窗 —— */
 			.settings {
+				background: var(--surface);
+				user-select: none;
 				border: 1px solid #d0d7de;
 				border-radius: 12px;
 				padding: 1.25rem 1.5rem;
@@ -323,7 +349,7 @@
 				border-radius: 8px;
 				padding: 0.3rem 0.75rem;
 				cursor: pointer;
-				background: #fff;
+				background: var(--surface);
 			}
 			.seg-item:has(input:checked) {
 				border-color: var(--accent);
@@ -339,9 +365,13 @@
 				flex-wrap: wrap;
 			}
 			@media (max-width: 560px) {
+				.item {
+					display: block;
+				}
+				.row {
+					padding: 1.1rem 1.25rem;
+				}
 				.btns {
-					position: static;
-					transform: none;
 					padding: 0 1.25rem 1.1rem;
 				}
 			}
@@ -354,13 +384,13 @@
 				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
 			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent">智能体</button><button class="chip" data-filter="multi-agent">多智能体协作</button><button class="chip" data-filter="skills">技能与提示词</button><button class="chip" data-filter="memory">记忆系统</button><button class="chip" data-filter="testing">测试</button><button class="chip" data-filter="deployment">部署运维</button><button class="chip" data-filter="docs-engineering">文档工程</button><button class="chip" data-filter="ai-app-dev">AI 应用开发</button><button class="chip" data-filter="code-intelligence">代码智能</button><button class="chip" data-filter="learning">概念与入门</button><button class="chip" data-filter="cli-tool">命令行工具</button><button class="chip" data-filter="sdk-api">SDK 与 API</button><button class="chip" data-filter="unofficial-en">非官方英文文档</button></div>
+			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent"><span class="chip-zh">智能体</span><span class="chip-en">AI Agent</span></button><button class="chip" data-filter="multi-agent"><span class="chip-zh">多智能体协作</span><span class="chip-en">Multi-Agent</span></button><button class="chip" data-filter="skills"><span class="chip-zh">技能与提示词</span><span class="chip-en">Skills & Prompts</span></button><button class="chip" data-filter="memory"><span class="chip-zh">记忆系统</span><span class="chip-en">Memory</span></button><button class="chip" data-filter="testing"><span class="chip-zh">测试</span><span class="chip-en">Testing</span></button><button class="chip" data-filter="deployment"><span class="chip-zh">部署运维</span><span class="chip-en">Deployment</span></button><button class="chip" data-filter="docs-engineering"><span class="chip-zh">文档工程</span><span class="chip-en">Docs Engineering</span></button><button class="chip" data-filter="ai-app-dev"><span class="chip-zh">AI 应用开发</span><span class="chip-en">AI App Dev</span></button><button class="chip" data-filter="code-intelligence"><span class="chip-zh">代码智能</span><span class="chip-en">Code Intelligence</span></button><button class="chip" data-filter="learning"><span class="chip-zh">概念与入门</span><span class="chip-en">Learning</span></button><button class="chip" data-filter="cli-tool"><span class="chip-zh">命令行工具</span><span class="chip-en">CLI Tool</span></button><button class="chip" data-filter="sdk-api"><span class="chip-zh">SDK 与 API</span><span class="chip-en">SDK & API</span></button><button class="chip" data-filter="unofficial-en"><span class="chip-zh">非官方英文文档</span><span class="chip-en">Unofficial EN</span></button></div>
 			<div class="list">
 				<div class="item" data-tags="code-intelligence,cli-tool">
 					<a class="row" href="codegraph/" target="_blank" rel="noopener">
 						<p class="name">codegraph</p>
 						<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
-						<div class="tags"><span class="tag">代码智能</span><span class="tag">命令行工具</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">代码智能</span><span class="tag-en">Code Intelligence</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -368,7 +398,7 @@
 					<a class="row" href="orca/" target="_blank" rel="noopener">
 						<p class="name">Orca</p>
 						<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -376,7 +406,7 @@
 					<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
 						<p class="name">Matt Pocock Skills</p>
 						<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
-						<div class="tags"><span class="tag">技能与提示词</span><span class="tag">概念与入门</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -384,7 +414,7 @@
 					<a class="row" href="agency-agents/" target="_blank" rel="noopener">
 						<p class="name">Agency Agents</p>
 						<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="agency-agents-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -392,7 +422,7 @@
 					<a class="row" href="agency-agents-en/" target="_blank" rel="noopener">
 						<p class="name">Agency Agents (EN)</p>
 						<p class="desc">Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">技能与提示词</span><span class="tag">非官方英文文档</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -400,7 +430,7 @@
 					<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
 						<p class="name">AI 编码词典</p>
 						<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
-						<div class="tags"><span class="tag">概念与入门</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -408,7 +438,7 @@
 					<a class="row" href="ai-memory/" target="_blank" rel="noopener">
 						<p class="name">ai-memory</p>
 						<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
-						<div class="tags"><span class="tag">记忆系统</span><span class="tag">命令行工具</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -416,7 +446,7 @@
 					<a class="row" href="nimbus/" target="_blank" rel="noopener">
 						<p class="name">Nimbus</p>
 						<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
-						<div class="tags"><span class="tag">文档工程</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">文档工程</span><span class="tag-en">Docs Engineering</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://nimbus-docs.com" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -424,7 +454,7 @@
 					<a class="row" href="openrig/" target="_blank" rel="noopener">
 						<p class="name">OpenRig</p>
 						<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="openrig-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://openrig.dev/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -432,7 +462,7 @@
 					<a class="row" href="openrig-en/" target="_blank" rel="noopener">
 						<p class="name">OpenRig (EN)</p>
 						<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">多智能体协作</span><span class="tag">非官方英文文档</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -440,7 +470,7 @@
 					<a class="row" href="openship/" target="_blank" rel="noopener">
 						<p class="name">OpenShip</p>
 						<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
-						<div class="tags"><span class="tag">部署运维</span><span class="tag">SDK 与 API</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">部署运维</span><span class="tag-en">Deployment</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://openship.io/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/oblien/openship" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -448,7 +478,7 @@
 					<a class="row" href="agent-skills/" target="_blank" rel="noopener">
 						<p class="name">Agent Skills</p>
 						<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
-						<div class="tags"><span class="tag">技能与提示词</span><span class="tag">智能体</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://skills.addy.ie/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -456,7 +486,7 @@
 					<a class="row" href="tester-army-e2e/" target="_blank" rel="noopener">
 						<p class="name">e2e</p>
 						<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
-						<div class="tags"><span class="tag">测试</span><span class="tag">智能体</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">测试</span><span class="tag-en">Testing</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://e2e.tester.army/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tester-army/e2e" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -464,7 +494,7 @@
 					<a class="row" href="claude-mem/" target="_blank" rel="noopener">
 						<p class="name">Claude-Mem</p>
 						<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
-						<div class="tags"><span class="tag">记忆系统</span><span class="tag">智能体</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://docs.claude-mem.ai/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -472,7 +502,7 @@
 					<a class="row" href="ai-sdk/" target="_blank" rel="noopener">
 						<p class="name">AI SDK</p>
 						<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
-						<div class="tags"><span class="tag">AI 应用开发</span><span class="tag">SDK 与 API</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">AI 应用开发</span><span class="tag-en">AI App Dev</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://ai-sdk.dev" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/vercel/ai" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -480,7 +510,7 @@
 					<a class="row" href="pi/" target="_blank" rel="noopener">
 						<p class="name">Pi</p>
 						<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
-						<div class="tags"><span class="tag">智能体</span><span class="tag">命令行工具</span><span class="tag">SDK 与 API</span></div>
+						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
 					</a>
 					<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
 				</div>
@@ -503,6 +533,10 @@
 				<div class="seg"><label class="seg-item"><input type="radio" name="card-style" value="standard">标准</label><label class="seg-item"><input type="radio" name="card-style" value="compact">紧凑</label><label class="seg-item"><input type="radio" name="card-style" value="grid">网格</label></div>
 			</fieldset>
 			<fieldset>
+				<legend>标签语言</legend>
+				<div class="seg"><label class="seg-item"><input type="radio" name="tag-lang" value="zh">中文</label><label class="seg-item"><input type="radio" name="tag-lang" value="en">English</label></div>
+			</fieldset>
+			<fieldset>
 				<legend>卡片显示</legend>
 				<div class="checks"><label class="check-item"><input type="checkbox" data-show="desc">描述</label><label class="check-item"><input type="checkbox" data-show="tags">标签</label><label class="check-item"><input type="checkbox" data-show="btns">操作按钮</label></div>
 			</fieldset>
@@ -513,7 +547,14 @@
 		<script>
 			(function () {
 				var STORAGE_KEY = 'docs-cn-prefs';
-				var DEFAULTS = { theme: 'blue', cardStyle: 'standard', showDesc: true, showTags: true, showBtns: true };
+				var DEFAULTS = {
+					theme: 'blue',
+					cardStyle: 'standard',
+					tagLang: 'zh',
+					showDesc: true,
+					showTags: true,
+					showBtns: true,
+				};
 				var root = document.documentElement;
 
 				function loadPrefs() {
@@ -523,9 +564,10 @@
 						Object.keys(DEFAULTS).forEach(function (k) {
 							out[k] = k in p ? p[k] : DEFAULTS[k];
 						});
-						// 注册表之外的主题/风格回落默认（防手改 localStorage 出脏值）
+						// 注册表之外的主题/风格/语言回落默认（防手改 localStorage 出脏值）
 						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
 						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
+						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
 						return out;
 					} catch (e) {
 						return Object.assign({}, DEFAULTS);
@@ -533,6 +575,7 @@
 				}
 				var THEME_IDS = ["blue","green","purple","orange","red","teal"];
 				var CARD_STYLE_IDS = ["standard","compact","grid"];
+				var TAG_LANG_IDS = ["zh","en"];
 				var prefs = loadPrefs();
 
 				function savePrefs() {
@@ -544,6 +587,8 @@
 					if (prefs.theme === 'blue') delete root.dataset.theme;
 					else root.dataset.theme = prefs.theme;
 					root.dataset.cardStyle = prefs.cardStyle;
+					if (prefs.tagLang === 'zh') delete root.dataset.tagLang;
+					else root.dataset.tagLang = prefs.tagLang;
 					root.dataset.showDesc = prefs.showDesc ? '1' : '0';
 					root.dataset.showTags = prefs.showTags ? '1' : '0';
 					root.dataset.showBtns = prefs.showBtns ? '1' : '0';
@@ -560,6 +605,8 @@
 					});
 					var radio = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
 					if (radio) radio.checked = true;
+					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
+					if (langRadio) langRadio.checked = true;
 					root.querySelectorAll('input[data-show]').forEach(function (cb) {
 						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
 					});
@@ -587,6 +634,14 @@
 				root.querySelectorAll('input[name="card-style"]').forEach(function (r) {
 					r.addEventListener('change', function () {
 						prefs.cardStyle = r.value;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+					});
+				});
+				root.querySelectorAll('input[name="tag-lang"]').forEach(function (r) {
+					r.addEventListener('change', function () {
+						prefs.tagLang = r.value;
 						applyPrefs();
 						savePrefs();
 						syncSettingsUi();
