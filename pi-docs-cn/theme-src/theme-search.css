@@ -1,0 +1,65 @@
+/*
+ * theme-search.css —— Pagefind 搜索弹层（拦截 Mintlify 死搜索后的替代 UI）
+ * 墨蓝/暖纸两套，与 theme.css 的 token 同源。
+ */
+
+#pf-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+}
+#pf-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(24 30 39 / 0.45);
+}
+#pf-panel {
+  position: absolute;
+  top: 9vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(660px, 92vw);
+  max-height: 78vh;
+  overflow: auto;
+  background: #f7f4f1;
+  border: 1px solid rgb(139 132 125 / 0.45);
+  border-radius: 0.5rem;
+  box-shadow: 0 18px 60px rgb(24 30 39 / 0.28);
+}
+html.dark #pf-panel {
+  background: #1a2330;
+  border-color: rgb(73 80 89 / 0.6);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 0.5);
+}
+
+/* PagefindUI 品牌变量对齐主题 */
+#pf-search {
+  --pagefind-ui-scale: 0.92;
+  --pagefind-ui-primary: #40658a;
+  --pagefind-ui-text: #252f3d;
+  --pagefind-ui-background: transparent;
+  --pagefind-ui-border: rgb(139 132 125 / 0.45);
+  --pagefind-ui-tag: #e3ddd5;
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 0.375rem;
+  --pagefind-ui-font: 'Source Serif 4', Georgia, 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+  padding: 1rem 1.1rem 1.2rem;
+}
+html.dark #pf-search {
+  --pagefind-ui-primary: #8fb3d0;
+  --pagefind-ui-text: #ebe7e4;
+  --pagefind-ui-border: rgb(73 80 89 / 0.6);
+  --pagefind-ui-tag: #243144;
+}
+
+/* 结果条目：标题墨蓝加粗、摘要在下、链接不带下划线 */
+#pf-search .pagefind-ui__result {
+  padding-block: 0.55rem;
+}
+#pf-search .pagefind-ui__result-link {
+  font-weight: 600;
+}
+#pf-search .pagefind-ui__result-excerpt {
+  font-size: 0.88em;
+  opacity: 0.85;
+}

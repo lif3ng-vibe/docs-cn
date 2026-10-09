@@ -13,5 +13,8 @@
   },
   "dependencies": {
     "mintlify": "^4.2.992"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2"
   }
 }
