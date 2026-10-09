@@ -371,7 +371,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --filter @cloudflare/nimbus-docs build
           pnpm --filter @nimbus/www build
-          mv apps/www/dist ../../_site/nimbus
+          mv apps/www/dist ../_site/nimbus
 
       # openship 是 pnpm monorepo（fumadocs + Next.js 16）。
       # 与其他站不同，无需 sed：Next 按 NEXT_BASE_PATH 自动给资源与内链加前缀，
@@ -394,7 +394,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm --filter @repo/web build
-          mv apps/web/out ../../_site/openship
+          mv apps/web/out ../_site/openship
 
       # agent-skills 是普通 Astro 营销/教程站（非 Starlight、无正文 markdown）：
       # 站内 authored 链接已在源码一次性带 /docs-cn/agent-skills/ 前缀
