@@ -1,12 +1,12 @@
-# Prompt Templates
+# 提示词模板
 
-Prompt templates turn Markdown files into reusable `/` commands. Use one when you want to reuse the same prompt without adding executable behavior or a larger set of supporting instructions.
+提示词模板（prompt template）能把 Markdown 文件变成可复用的 `/` 命令。当你想复用同一段提示词，又不需要添加可执行行为或更庞大的配套指令集时，就适合使用它。
 
-A template can accept arguments and appear in command completion. Pi can load templates from personal configuration, project configuration, an explicit path, or a Pi package. Project configuration loads only after project trust is granted.
+模板可以接受参数，并会出现在命令补全中。Pi 可以从个人配置、项目配置、显式路径或 Pi 包中加载模板。项目配置只在授予项目信任后才会加载。
 
-## Create a template
+## 创建模板
 
-Create `~/.pi/agent/prompts/review.md`:
+创建 `~/.pi/agent/prompts/review.md`：
 
 ```markdown
 ---
@@ -16,44 +16,44 @@ argument-hint: "[focus]"
 Review the staged changes. Focus on ${1:-correctness, security, and error handling}.
 ```
 
-The filename becomes the command name, so this template is available as `/review`. The `description` appears in command completion. If it is omitted, Pi uses the first non-empty line.
+文件名即命令名，因此该模板可通过 `/review` 使用。`description` 会显示在命令补全中；若省略，Pi 会使用第一个非空行。
 
-`argument-hint` is optional. Use `<angle brackets>` for required arguments and `[square brackets]` for optional arguments.
+`argument-hint` 是可选的。必填参数用 `<angle brackets>`（尖括号），可选参数用 `[square brackets]`（方括号）。
 
-Run `/reload` after adding or changing a template in an active session.
+在活跃会话中新增或修改模板后，请运行 `/reload`。
 
 <a id="invoke-a-template"></a>
 
-## Use a template
+## 使用模板
 
-Type the template command in the editor:
+在编辑器（editor）中输入模板命令：
 
 ```text
 /review
 /review concurrency
 ```
 
-Pi expands the template before the resulting text enters the agent. Extensions receive the raw input first through the `input` event unless an extension command with the same name handles it.
+Pi 会在最终文本进入智能体（agent）之前先展开模板。除非有同名扩展命令处理输入，否则扩展会先通过 `input` 事件收到原始输入。
 
-Templates support these substitutions:
+模板支持以下替换：
 
-| Syntax | Result |
+| 语法 | 结果 |
 |---|---|
-| `$1`, `$2`, … | One positional argument |
-| `$@` or `$ARGUMENTS` | All arguments joined with spaces |
-| `${1:-default}` | First argument, or a default value |
-| `${@:-default}` | All arguments, or a default value |
-| `${@:N}` | Arguments starting at position `N` |
-| `${@:N:L}` | `L` arguments starting at position `N` |
+| `$1`、`$2`…… | 单个位置参数 |
+| `$@` 或 `$ARGUMENTS` | 所有参数以空格连接 |
+| `${1:-default}` | 第一个参数，或默认值 |
+| `${@:-default}` | 所有参数，或默认值 |
+| `${@:N}` | 从位置 `N` 开始的参数 |
+| `${@:N:L}` | 从位置 `N` 开始的 `L` 个参数 |
 
-Arguments follow shell-like quoting, so `/review "API compatibility"` supplies one argument containing a space.
+参数遵循类似 shell 的引号规则，因此 `/review "API compatibility"` 会提供一个包含空格的参数。
 
 <a id="choose-where-it-loads"></a>
 
-## Add it to Pi
+## 把模板加入 Pi
 
-Place the template in your user or project prompt directory. Conventional prompt directories load direct `.md` children only.
+将模板放在用户级或项目级提示词目录中。约定位置的提示词目录只加载直接位于其下的 `.md` 文件。
 
-Settings and packages can select nested Markdown files; a package manifest can narrow discovery with explicit paths and globs. See [Settings](settings.md#resources) and [Pi Packages](packages.md) for these options.
+设置与包可以选中嵌套的 Markdown 文件；包清单（package manifest）可通过显式路径与 glob 收窄发现范围。相关选项参见[设置](settings.md#resources)与 [Pi 包](packages.md)。
 
-Project templates become commands in the editor after trust is granted. Review their content before trusting an unfamiliar project. See [Security](security.md#understand-project-trust).
+项目模板会在授予信任后成为编辑器中的命令。信任不熟悉的项目之前，请先审查其内容。参见[安全](security.md#understand-project-trust)。

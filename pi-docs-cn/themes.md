@@ -1,33 +1,33 @@
-# Customize Pi with themes
+# 用主题自定义 Pi
 
-Themes control the colors Pi uses in interactive mode and HTML exports. Pi includes the `system`, `dark`, and `light` themes. You can select one theme, follow your terminal's light or dark appearance, or create your own palette.
+主题（theme）控制 Pi 在交互模式（interactive mode）与 HTML 导出中使用的颜色。Pi 内置 `system`、`dark` 和 `light` 三个主题。你可以选定一个主题、跟随终端的浅色或深色外观，或创建自己的配色。
 
-## Use your terminal's colors
+## 使用终端的颜色
 
-The `system` theme is the default. It builds Pi's colors from your terminal's theme, so Pi matches the terminal instead of bringing its own palette:
+`system` 主题是默认主题。它从终端的主题推导 Pi 的颜色，让 Pi 融入终端，而不是自带一套配色：
 
-- Pi queries the terminal's default foreground and background colors and its 16 ANSI colors.
-- Each Pi color takes its hue from one ANSI color, for example errors from red and links from blue.
-- Pi sets each color's lightness so that it stands out from the background by a minimum contrast. Body text keeps at least a 4.5:1 WCAG contrast ratio on the background and every panel.
-- When the terminal switches between light and dark, Pi queries the colors again and rebuilds the theme.
+- Pi 会查询终端的默认前景色、背景色以及 16 种 ANSI 颜色。
+- Pi 的每种颜色都从某个 ANSI 颜色取得色相，例如错误取自红色、链接取自蓝色。
+- Pi 会为每种颜色设定明度，使其与背景保持最低对比度。正文文本在背景和每个面板上都保持至少 4.5:1 的 WCAG 对比度。
+- 当终端在浅色与深色之间切换时，Pi 会重新查询颜色并重建主题。
 
-The theme adapts to what the terminal reports:
+主题会根据终端上报的信息自适应：
 
-| Terminal reports | Result |
+| 终端上报内容 | 结果 |
 |---|---|
-| Background and ANSI colors | Colors from the terminal palette, placed for the actual background. |
-| Background only | Pi's own hues, placed for the actual background. |
-| Nothing | ANSI color indices and the terminal's default colors, which the terminal renders itself. Secondary text is faint, and panels have no background color. |
+| 背景色与 ANSI 颜色 | 来自终端调色板的颜色，并针对实际背景进行排布。 |
+| 仅背景色 | Pi 自有的色相，并针对实际背景进行排布。 |
+| 什么都没有 | 使用 ANSI 颜色索引和终端默认颜色，由终端自行渲染。次要文字较淡，面板没有背景色。 |
 
-Pi asks the terminal for its colors when it starts. Terminals usually answer within a few milliseconds, and Pi waits at most 100 ms before showing the startup header. If the terminal does not answer in time, Pi uses the ANSI color fallback, and it still applies the colors if they arrive later, for example over a slow SSH connection. `system` is a reserved name: a custom theme with that name is ignored.
+Pi 在启动时会向终端询问颜色。终端通常会在几毫秒内应答，Pi 在显示启动标题前最多等待 100 毫秒。如果终端未及时应答，Pi 会退回使用 ANSI 颜色；若颜色稍后到达（例如通过较慢的 SSH 连接），Pi 仍会应用它们。`system` 是保留名称：名为 `system` 的自定义主题会被忽略。
 
 <a id="selecting-a-theme"></a>
 
-## Choose a theme
+## 选择主题
 
-Open `/settings` and select **Theme**. You can use one theme for every terminal appearance or choose separate themes for light and dark terminals.
+打开 `/settings` 并选择 **Theme**。你可以让所有终端外观使用同一个主题，也可以为浅色和深色终端分别指定主题。
 
-The selection is saved as the `theme` [setting](settings.md#terminal-and-display):
+该选择会保存为 `theme` [设置](settings.md#terminal-and-display)：
 
 ```json
 {
@@ -35,9 +35,9 @@ The selection is saved as the `theme` [setting](settings.md#terminal-and-display
 }
 ```
 
-Without a `theme` setting, Pi uses `system`.
+没有设置 `theme` 时，Pi 使用 `system`。
 
-Automatic mode stores the light theme first and the dark theme second:
+自动模式先存浅色主题，再存深色主题：
 
 ```json
 {
@@ -45,81 +45,81 @@ Automatic mode stores the light theme first and the dark theme second:
 }
 ```
 
-Pi decides whether the terminal is light or dark from its reported background and foreground colors. If the terminal does not report its background, Pi uses the terminal's light/dark notification, then the `COLORFGBG` environment variable, then dark. The same decision picks the theme of a light/dark pair and the appearance of `system`. When automatic mode is active, Pi changes themes when the terminal reports an appearance change. Theme names cannot contain `/` because Pi reserves it for this setting format.
+Pi 根据终端上报的背景色与前景色判断终端是浅色还是深色。如果终端没有上报背景色，Pi 会依次尝试终端的浅色/深色通知、`COLORFGBG` 环境变量，最后默认按深色处理。同一判断逻辑既用于挑选浅色/深色主题对中的主题，也用于确定 `system` 的外观。自动模式生效时，终端上报外观变化后 Pi 会随之切换主题。主题名称不能包含 `/`，因为 Pi 将其保留用于该设置的格式。
 
-Use `--use-theme` to choose the initial theme for one invocation without changing the saved setting:
+使用 `--use-theme` 可为单次运行指定初始主题，而不改变已保存的设置：
 
 ```bash
 pi --use-theme light
 pi --use-theme light/dark
 ```
 
-See [CLI resources](cli.md#resources) for the command-line option.
+命令行选项参见 [CLI 资源](cli.md#resources)。
 
-## Create a custom theme
+## 创建自定义主题
 
-Copy one of the [built-in themes](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/src/modes/interactive/theme) or create a new JSON file conforming to the [schema](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/schemas/theme.schema.json). The built-in themes use OKHSL colors, with variables for colors that several roles share, so you can adjust a hue, saturation, or lightness directly.
+复制某个[内置主题](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/src/modes/interactive/theme)，或者新建一个符合该 [schema](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/schemas/theme.schema.json) 的 JSON 文件。内置主题使用 OKHSL 颜色，并为多个角色共用的颜色定义了变量，因此你可以直接调整色相、饱和度或明度。
 
-1. Save the file as `<agent-dir>/themes/my-theme.json`. The agent directory defaults to `~/.pi/agent`.
-2. Set its `name` to `my-theme`.
-3. Change values in `vars` and `colors`.
-4. Select `my-theme` through `/settings`.
+1. 将文件保存为 `<agent-dir>/themes/my-theme.json`。智能体目录默认为 `~/.pi/agent`。
+2. 将其 `name` 设为 `my-theme`。
+3. 修改 `vars` 和 `colors` 中的值。
+4. 通过 `/settings` 选择 `my-theme`。
 
-Use the theme name as the filename. Pi hot-reloads the active user theme only from `<agent-dir>/themes/<name>.json`. Run `/reload` after adding or changing a theme from any other source.
+用主题名作为文件名。Pi 只会从 `<agent-dir>/themes/<name>.json` 热重载当前生效的用户主题。从其他来源新增或修改主题后，请运行 `/reload`。
 
-## Understand the theme file
+## 了解主题文件
 
-| Property | Required | Responsibility |
+| 属性 | 必填 | 职责 |
 |---|---|---|
-| `$schema` | No | Enables editor validation and completion against Pi's published schema. |
-| `name` | Yes | Identifies the theme in selectors and settings. It must be unique, cannot contain `/`, and cannot be `system`. |
-| `appearance` | No | `"dark"` or `"light"`: the background the theme is designed for. Pi detects it from the theme colors when omitted. |
-| `vars` | No | Defines reusable color values. Variables can reference other variables. |
-| `colors` | Yes | Assigns colors to terminal UI roles. The schema identifies required and optional roles. |
-| `export` | No | Overrides page and panel backgrounds in HTML exports. |
+| `$schema` | 否 | 让编辑器能依据 Pi 发布的 schema 进行校验和补全。 |
+| `name` | 是 | 在选择器和设置中标识主题。必须唯一，不能包含 `/`，也不能是 `system`。 |
+| `appearance` | 否 | `"dark"` 或 `"light"`：主题所针对的背景。省略时 Pi 会从主题颜色推断。 |
+| `vars` | 否 | 定义可复用的颜色值。变量可以引用其他变量。 |
+| `colors` | 是 | 为终端 UI 角色分配颜色。schema 中标明了必填与可选角色。 |
+| `export` | 否 | 覆盖 HTML 导出中的页面与面板背景。 |
 
-Theme objects are strict: only documented top-level fields and color tokens are accepted. Define reusable custom colors under `vars`; custom keys under `colors` or `export` and additional top-level metadata are rejected.
+主题对象是严格的：只接受文档中列出的顶层字段和颜色 token。可复用的自定义颜色请定义在 `vars` 下；`colors` 或 `export` 下的自定义键以及额外的顶层元数据都会被拒绝。
 
-A color can be written in six forms:
+颜色可用六种形式书写：
 
-| Form | Example | Meaning |
+| 形式 | 示例 | 含义 |
 |---|---|---|
-| RGB hexadecimal | `"#0af"` or `"#00aaff"` | A three- or six-digit sRGB color. |
-| OKLCH | `"oklch(62% 0.1 200)"` | Perceptual lightness, chroma, and hue. |
-| OKHSL | `"okhsl(250 60% 55%)"` | Hue, saturation, and lightness. Saturation is relative to the most the sRGB gamut allows at that hue and lightness, so every value is in gamut and equal saturation looks equally colorful. |
-| 256-color index | `39` | An ANSI palette index from `0` through `255`. |
-| Variable reference | `"primary"` | The value of an entry in `vars`. |
-| Terminal default | `""` | The terminal's default foreground or background color. |
+| RGB 十六进制 | `"#0af"` 或 `"#00aaff"` | 三位或六位数字的 sRGB 颜色。 |
+| OKLCH | `"oklch(62% 0.1 200)"` | 感知明度、彩度与色相。 |
+| OKHSL | `"okhsl(250 60% 55%)"` | 色相、饱和度与明度。饱和度相对于 sRGB 色域在该色相与明度下允许的上限，因此所有值都在色域内，相同的饱和度看起来鲜艳程度一致。 |
+| 256 色索引 | `39` | `0` 到 `255` 的 ANSI 调色板索引。 |
+| 变量引用 | `"primary"` | `vars` 中某个条目的值。 |
+| 终端默认色 | `""` | 终端的默认前景色或背景色。 |
 
-Terminal default colors render as the terminal's own colors. Where Pi needs a concrete value, such as HTML export or extension color math, it uses the default colors the terminal reports, or a black or white guess based on the theme's appearance.
+终端默认色会按终端自身的颜色渲染。在 Pi 需要具体值的场合（例如 HTML 导出或扩展的颜色计算），它会使用终端上报的默认颜色，或根据主题外观猜测的黑色或白色。
 
-Pi resolves chained variable references. A missing variable or circular reference makes the theme invalid. Pi uses truecolor when available, gamut-maps OKLCH to sRGB, and approximates colors for 256-color terminals. HTML exports convert OKHSL values to hexadecimal because CSS does not support them. If colors differ from their source values, check your terminal's truecolor detection and contrast settings. See [Configure Your Terminal](terminal-setup.md#override-detected-capabilities).
+Pi 会解析链式变量引用。变量缺失或循环引用会使主题无效。Pi 在可用时使用真彩色（truecolor），将 OKLCH 映射到 sRGB 色域，并为 256 色终端近似颜色。HTML 导出会将 OKHSL 值转换为十六进制，因为 CSS 不支持它们。如果颜色与源值不一致，请检查终端的真彩色检测与对比度设置。参见[配置你的终端](terminal-setup.md#override-detected-capabilities)。
 
-Use the [theme JSON schema](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/schemas/theme.schema.json) for the exact properties, required colors, and accepted value types.
+确切的属性、必填颜色和可接受的值类型，请参考[主题 JSON schema](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/schemas/theme.schema.json)。
 
-Pi reports invalid theme files during startup and `/reload`.
+Pi 会在启动时和 `/reload` 时报告无效的主题文件。
 
-## Find the color to change
+## 找到要修改的颜色
 
-Theme colors describe interface roles rather than individual components. Use these groups to find the relevant part of the schema:
+主题颜色描述的是界面角色，而不是单个组件。借助下面这些分组可以找到 schema 中相关的部分：
 
-| Area | Color names |
+| 区域 | 颜色名 |
 |---|---|
-| General interface | `accent`, `border*`, `text`, `muted`, `dim`, `success`, `error`, `warning` |
-| Selection and fullscreen | `selectedBg`, `searchMatch*`, `scrollbar*` |
-| Messages | `userMessage*`, `customMessage*`, `thinkingText` |
-| Tool execution | `toolPendingBg`, `toolSuccessBg`, `toolErrorBg`, `toolTitle`, `toolOutput` |
+| 通用界面 | `accent`、`border*`、`text`、`muted`、`dim`、`success`、`error`、`warning` |
+| 选中与全屏 | `selectedBg`、`searchMatch*`、`scrollbar*` |
+| 消息 | `userMessage*`、`customMessage*`、`thinkingText` |
+| 工具执行 | `toolPendingBg`、`toolSuccessBg`、`toolErrorBg`、`toolTitle`、`toolOutput` |
 | Markdown | `md*` |
-| Tool diffs | `toolDiff*` |
-| Syntax highlighting | `syntax*` |
-| Editor modes | `thinking*`, `bashMode` |
-| HTML export | `export.pageBg`, `export.cardBg`, `export.infoBg` |
+| 工具 diff | `toolDiff*` |
+| 语法高亮 | `syntax*` |
+| 编辑器模式 | `thinking*`、`bashMode` |
+| HTML 导出 | `export.pageBg`、`export.cardBg`、`export.infoBg` |
 
-The schema is the format reference. The built-in themes provide complete values that you can copy and adjust.
+schema 是格式参考。内置主题提供了完整的取值，可以复制后调整。
 
-Five colors are optional and inherit another color when omitted:
+有五个颜色是可选的，省略时会继承另一个颜色：
 
-| Optional color | Fallback |
+| 可选颜色 | 回退值 |
 |---|---|
 | `scrollbarTrack` | `muted` |
 | `scrollbarThumb` | `text` |
@@ -127,12 +127,12 @@ Five colors are optional and inherit another color when omitted:
 | `searchMatchText` | `text` |
 | `thinkingMax` | `thinkingXhigh` |
 
-If `export` colors are omitted, Pi derives HTML page and panel backgrounds from `userMessageBg`.
+如果省略 `export` 颜色，Pi 会从 `userMessageBg` 推导 HTML 页面与面板背景。
 
-## Load a theme from a project or package
+## 从项目或包加载主题
 
-Place a project theme in `.pi/themes/`. Project themes load only after [project trust](security.md#understand-project-trust) is granted.
+项目主题放在 `.pi/themes/` 中。项目主题只在授予[项目信任](security.md#understand-project-trust)后才会加载。
 
-You can also load theme files and directories through the `themes` setting or distribute them in a Pi package. See [Configuration](configuration.md), [Settings](settings.md#resources), and [Pi Packages](packages.md).
+也可以通过 `themes` 设置加载主题文件和目录，或在 Pi 包中分发主题。参见[配置](configuration.md)、[设置](settings.md#resources)与 [Pi 包](packages.md)。
 
-Each loaded theme must have a unique name. Pi reports duplicate names as resource collisions.
+每个已加载的主题都必须有唯一的名称。名称重复时，Pi 会将其作为资源冲突上报。

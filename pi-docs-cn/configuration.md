@@ -1,47 +1,47 @@
-# Configuration
+# 配置
 
-Pi supports user-level and project configuration. User-level configuration lives in the agent directory, which defaults to `~/.pi/agent`. Project configuration lives in `.pi` under the working directory and loads after [project trust](security.md#understand-project-trust) is granted. The only exception is `sessionDir`, which Pi reads before resolving trust so it can locate sessions.
+Pi 支持用户级与项目级配置。用户级配置存放于智能体目录（agent directory），默认为 `~/.pi/agent`。项目配置存放于工作目录下的 `.pi`，并在授予[项目信任](security.md#understand-project-trust)后加载。唯一的例外是 `sessionDir`，Pi 会在判定信任之前读取它，以便定位会话。
 
-In interactive mode, use `/settings` to change common preferences. For other options, ask Pi to update the configuration or edit the relevant files directly. Run `/reload` after manually changing settings, keybindings, instructions, or resources.
+在交互模式下，可用 `/settings` 修改常用偏好设置。其他选项可以让 Pi 更新配置，或直接编辑相关文件。手动更改设置、按键绑定（keybinding）、指令或资源后，请运行 `/reload`。
 
-## Agent directory
+## 智能体目录
 
-The agent directory is shown as `<agent-dir>` below. Set its location with the `PI_CODING_AGENT_DIR` environment variable or the SDK's [`agentDir`](sdk.md) option.
+下文以 `<agent-dir>` 表示智能体目录。可通过 `PI_CODING_AGENT_DIR` 环境变量或 SDK 的 [`agentDir`](sdk.md) 选项设置其位置。
 
-| Path | Responsibility |
+| 路径 | 职责 |
 |---|---|
-| `<agent-dir>/settings.json` | User-level [settings](settings.md), including preferences, defaults, resource paths, and Pi package declarations. |
-| `<agent-dir>/keybindings.json` | Custom terminal UI and application [keybindings](keybindings.md). |
-| `<agent-dir>/mcp.json` | [MCP servers](mcp.md) available in every project. |
-| `<agent-dir>/models.json` | [Compatible endpoints, models, and model overrides](models.md#configure-a-compatible-endpoint). |
-| `<agent-dir>/auth.json` | Saved API keys and OAuth credentials. |
-| `<agent-dir>/AGENTS.override.md`, `AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, or `CLAUDE.MD` | User instructions applied across working directories. |
-| `<agent-dir>/SYSTEM.md` | Replaces Pi’s default system prompt. |
-| `<agent-dir>/APPEND_SYSTEM.md` | Adds instructions to Pi’s system prompt. |
-| `<agent-dir>/extensions/` | User [extensions](extensions.md). |
-| `<agent-dir>/skills/` | User [skills](skills.md) and supporting files. |
-| `<agent-dir>/prompts/` | User [prompt templates](prompt-templates.md) exposed as slash commands. |
-| `<agent-dir>/themes/` | User [theme](themes.md) files. |
+| `<agent-dir>/settings.json` | 用户级[设置](settings.md)，包括偏好设置、默认值、资源路径与 Pi 包声明。 |
+| `<agent-dir>/keybindings.json` | 自定义终端 UI 与应用级[按键绑定](keybindings.md)。 |
+| `<agent-dir>/mcp.json` | 所有项目均可用的 [MCP 服务器](mcp.md)。 |
+| `<agent-dir>/models.json` | [兼容端点、模型与模型覆盖项](models.md#configure-a-compatible-endpoint)。 |
+| `<agent-dir>/auth.json` | 已保存的 API 密钥与 OAuth 凭据。 |
+| `<agent-dir>/AGENTS.override.md`、`AGENTS.md`、`AGENTS.MD`、`CLAUDE.md` 或 `CLAUDE.MD` | 跨工作目录生效的用户指令。 |
+| `<agent-dir>/SYSTEM.md` | 替换 Pi 的默认系统提示词（system prompt）。 |
+| `<agent-dir>/APPEND_SYSTEM.md` | 向 Pi 的系统提示词追加指令。 |
+| `<agent-dir>/extensions/` | 用户级[扩展（extension）](extensions.md)。 |
+| `<agent-dir>/skills/` | 用户级[技能（skill）](skills.md)及配套文件。 |
+| `<agent-dir>/prompts/` | 用户级[提示词模板（prompt template）](prompt-templates.md)，以斜杠命令（slash command）形式提供。 |
+| `<agent-dir>/themes/` | 用户级[主题（theme）](themes.md)文件。 |
 
-## Project `.pi` directory
+## 项目 `.pi` 目录
 
-| Path | Responsibility |
+| 路径 | 职责 |
 |---|---|
-| `.pi/settings.json` | Project-level [settings](settings.md), resource paths, and Pi package declarations. |
-| `.pi/mcp.json` | Project [MCP servers](mcp.md). |
-| `.pi/SYSTEM.md` | Replaces the system prompt for the project. |
-| `.pi/APPEND_SYSTEM.md` | Adds project-specific instructions to the system prompt. |
-| `.pi/extensions/` | Project extensions. |
-| `.pi/skills/` | Project skills and supporting files. |
-| `.pi/prompts/` | Project prompt templates exposed as slash commands. |
-| `.pi/themes/` | Project theme files. |
+| `.pi/settings.json` | 项目级[设置](settings.md)、资源路径与 Pi 包声明。 |
+| `.pi/mcp.json` | 项目级 [MCP 服务器](mcp.md)。 |
+| `.pi/SYSTEM.md` | 替换该项目的系统提示词。 |
+| `.pi/APPEND_SYSTEM.md` | 向系统提示词追加项目专属指令。 |
+| `.pi/extensions/` | 项目扩展。 |
+| `.pi/skills/` | 项目技能及配套文件。 |
+| `.pi/prompts/` | 项目提示词模板，以斜杠命令形式提供。 |
+| `.pi/themes/` | 项目主题文件。 |
 
-For `SYSTEM.md` and `APPEND_SYSTEM.md`, the trusted project file takes precedence over the corresponding agent-directory file. Files with the same name are not combined.
+对于 `SYSTEM.md` 与 `APPEND_SYSTEM.md`，受信任的项目文件优先于智能体目录中对应的文件。同名文件不会被合并。
 
-## Context files
+## 上下文文件
 
-Context files are separate from project `.pi` configuration. Pi loads them from the agent directory, the working directory, and its parent directories. A context file applies whenever Pi runs in its directory or anywhere below it.
+上下文文件（context file）独立于项目 `.pi` 配置。Pi 会从智能体目录、工作目录及其父目录中加载它们。只要 Pi 在某上下文文件所在目录或其下任意位置运行，该文件即会生效。
 
-An `AGENTS.override.md` replaces `AGENTS.md` or `CLAUDE.md` only in the same directory. It does not suppress context files from the agent directory or other directories.
+`AGENTS.override.md` 只会在同一目录下替换 `AGENTS.md` 或 `CLAUDE.md`，不会屏蔽来自智能体目录或其他目录的上下文文件。
 
-Context-file discovery does not require project trust.
+上下文文件的发现不依赖项目信任。
