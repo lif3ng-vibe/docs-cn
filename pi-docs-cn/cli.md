@@ -114,7 +114,7 @@ pi --continue
 pi --tools read,grep,find,ls --print "Review this project"
 ```
 
-默认工具选择的配置参见[设置](settings.md#tools)。
+默认工具选择的配置参见[设置](settings.md#%E5%B7%A5%E5%85%B7)。
 
 - `-t`, `--tools <list>`<br />
   用逗号分隔的内置、扩展或自定义工具允许列表替换默认选择。条目是工具名称或模式，其中 `*` 匹配任意字符。MCP 工具会保留，除非某个条目以 `mcp__` 开头（参见[MCP 工具](#mcp-tools)）。仅由 `+name` 和 `-name` 条目组成的列表不是允许列表，而是修改默认选择。
@@ -129,7 +129,7 @@ pi --tools read,grep,find,ls --print "Review this project"
 
 <a id="mcp-tools"></a>
 
-`--tools` 选择向模型声明的工具。它不会移除 MCP 工具，MCP 工具的可见范围由其暴露方式（exposure）决定（见[exposure](mcp.md#control-tool-exposure)）：`pi --tools read,codemode` 仍会让每个 MCP 工具都能从 codemode 脚本调用。没有被任何条目指名或匹配的 MCP 工具永远不会被直接声明，无论其暴露方式如何；只有列出的 `tool_search` 能加载它。一旦某个条目以 `mcp__` 开头，`--tools` 也会过滤 MCP 工具，因此下面这条只保留 `radius` 服务器的工具：
+`--tools` 选择向模型声明的工具。它不会移除 MCP 工具，MCP 工具的可见范围由其暴露方式（exposure）决定（见[exposure](mcp.md#%E6%8E%A7%E5%88%B6%E5%B7%A5%E5%85%B7%E6%9A%B4%E9%9C%B2%E6%96%B9%E5%BC%8F)）：`pi --tools read,codemode` 仍会让每个 MCP 工具都能从 codemode 脚本调用。没有被任何条目指名或匹配的 MCP 工具永远不会被直接声明，无论其暴露方式如何；只有列出的 `tool_search` 能加载它。一旦某个条目以 `mcp__` 开头，`--tools` 也会过滤 MCP 工具，因此下面这条只保留 `radius` 服务器的工具：
 
 ```sh
 pi --tools read,bash,codemode,'mcp__radius__*'
@@ -148,7 +148,7 @@ MCP 资源工具（`list_mcp_resources`、`list_mcp_resource_templates`、`read_
 | `find` | 用 glob 模式查找路径 |
 | `ls` | 列出目录内容 |
 
-内置扩展还提供两个工具。它们默认关闭；当 MCP 服务器需要时，MCP 扩展会开启它们（参见[MCP](mcp.md#exposure)）。要自行启用，在 `--tools` 或 `defaultTools` 中指名即可。
+内置扩展还提供两个工具。它们默认关闭；当 MCP 服务器需要时，MCP 扩展会开启它们（参见[MCP](mcp.md#控制工具暴露方式)）。要自行启用，在 `--tools` 或 `defaultTools` 中指名即可。
 
 | 内置扩展 | 用途 |
 |---|---|
@@ -171,7 +171,7 @@ MCP 资源工具（`list_mcp_resources`、`list_mcp_resource_templates`、`read_
 pi --tools +codemode
 ```
 
-没有 MCP 时 Codemode 也很有用：脚本可以并行运行多个工具调用，在大量输出到达模型前先行过滤，通过 `models.classify()` 调用分类模型（例如 TypeSafe 的 Jev，参见[分类模型](models.md#use-classifier-models)），并通过 `models.generateImages()` 生成图片（参见[图像模型](models.md#use-image-models)）。
+没有 MCP 时 Codemode 也很有用：脚本可以并行运行多个工具调用，在大量输出到达模型前先行过滤，通过 `models.classify()` 调用分类模型（例如 TypeSafe 的 Jev，参见[分类模型](models.md#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)），并通过 `models.generateImages()` 生成图片（参见[图像模型](models.md#%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%83%8F%E6%A8%A1%E5%9E%8B)）。
 
 ### codemode 的工作原理
 
@@ -189,7 +189,7 @@ pi --tools +codemode
 pi --extension ./review.ts
 ```
 
-常规目录与项目信任参见[配置](configuration.md)，已配置的路径参见[设置](settings.md#resources)，包来源参见[Pi 包](packages.md)。
+常规目录与项目信任参见[配置](configuration.md)，已配置的路径参见[设置](settings.md#%E8%B5%84%E6%BA%90)，包来源参见[Pi 包](packages.md)。
 
 - `-e`, `--extension <path>`<br />
   加载扩展文件或目录，或 `builtin:mcp` 之类的内置扩展，可重复使用。
@@ -224,7 +224,7 @@ pi --extension ./review.ts
 pi --append-system-prompt ./instructions.md
 ```
 
-已保存的配置参见[配置](configuration.md)，项目信任参见[安全](security.md#understand-project-trust)，进程控制参见[环境变量](environment-variables.md)。
+已保存的配置参见[配置](configuration.md)，项目信任参见[安全](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)，进程控制参见[环境变量](environment-variables.md)。
 
 - `--system-prompt <text|path>`<br />
   用文本或现有文件的内容替换默认系统提示词。
@@ -328,6 +328,6 @@ pi auth check --provider openai --json
 | `pi mcp login <server> [--timeout <seconds>]` | 登录 OAuth 服务器：打开授权页面并等待浏览器（默认 300 秒）；在终端中也可以粘贴重定向 URL |
 | `pi mcp logout <server>` | 删除某服务器已存储的 OAuth 凭据 |
 
-`add` 和 `remove` 修改 `~/.pi/agent/mcp.json`；加 `--local`（`-l`）时修改当前目录的 `.pi/mcp.json`。`add` 还接受 `--exposure <mode>`（参见[暴露方式](mcp.md#exposure)）和 `--description <text>`，且不会立即连接；请运行 `pi mcp list` 检查服务器。
+`add` 和 `remove` 修改 `~/.pi/agent/mcp.json`；加 `--local`（`-l`）时修改当前目录的 `.pi/mcp.json`。`add` 还接受 `--exposure <mode>`（参见[暴露方式](mcp.md#控制工具暴露方式)）和 `--description <text>`，且不会立即连接；请运行 `pi mcp list` 检查服务器。
 
 项目 `.pi/mcp.json` 文件只对已受信任的项目读取。

@@ -45,7 +45,7 @@ Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。�
 
 把扩展放到你的用户级或项目级扩展目录中。Pi 会加载直接的 TypeScript 或 JavaScript 文件，以及包含 `index.ts` 或 `index.js` 入口的子目录。
 
-小型扩展用单个文件，多文件实现用目录。npm 依赖放在附近的 `package.json` 中。约定位置见[配置](configuration.md)，附加路径见[设置](settings.md#resources)。
+小型扩展用单个文件，多文件实现用目录。npm 依赖放在附近的 `package.json` 中。约定位置见[配置](configuration.md)，附加路径见[设置](settings.md#%E8%B5%84%E6%BA%90)。
 
 重新加载会替换扩展运行时，因此 `await ctx.reload()` 之后的代码不得复用旧运行时的状态。只有个人扩展和命令行显式指定的扩展能参与 `project_trust` 事件（它在项目扩展加载之前触发）。
 
@@ -200,7 +200,7 @@ pi.unregisterMcpServer("jira");
 
 扩展加载期间注册的服务器会在会话启动时随 `mcp.json` 服务器一起连接；之后注册的服务器立即连接，`pi.unregisterMcpServer()` 会关闭连接并使该服务器的工具不可触达。注册不会被保存：每次加载都要重新注册，例如根据扩展自身的设置来决定。`mcp.json` 中同名服务器优先，且 `/mcp` 会显示这一覆盖。再次注册同名会替换本扩展先前的注册；注册其他扩展已占用的名称、无效名称或无效配置都会抛错。
 
-内置的 MCP 支持负责连接已注册的服务器。若没有任何组件去连接——因为内置支持被另一个扩展替换了（见 [MCP](mcp.md#other-mcp-extensions)）——每次注册都会作为扩展错误上报。其他 MCP 扩展也可以连接已注册的服务器：在 `session_start` 时用 `pi.getMcpServers()` 读取它们，并处理 `mcp_servers_change` 事件以响应后续变更。
+内置的 MCP 支持负责连接已注册的服务器。若没有任何组件去连接——因为内置支持被另一个扩展替换了（见 [MCP](mcp.md#替换内置的-mcp-支持)）——每次注册都会作为扩展错误上报。其他 MCP 扩展也可以连接已注册的服务器：在 `session_start` 时用 `pi.getMcpServers()` 读取它们，并处理 `mcp_servers_change` 事件以响应后续变更。
 
 <a id="extensioncontext"></a>
 <a id="extensioncommandcontext"></a>
