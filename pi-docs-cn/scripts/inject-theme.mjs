@@ -93,6 +93,8 @@ let pages = 0, injected = 0;
       if (html.includes(MARK)) continue;
       if (!html.includes('</head>')) throw new Error(`</head> 未找到: ${p}`);
       let out = html.replace('</head>', `${MARK}</head>`);
+      // Mintlify 的 markdown 视图 alternate 声明指向 <page>.md——导出产物无此文件，剥掉防 404
+      out = out.replace(/<link rel="alternate" type="text\/markdown"[^>]*\/?>/g, '');
       if (!out.includes('id="pf-overlay"')) {
         if (!out.includes('</body>')) throw new Error(`</body> 未找到: ${p}`);
         out = out.replace('</body>', `${SEARCH_SNIPPET}</body>`);
