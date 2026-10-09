@@ -108,5 +108,12 @@
     "desc": "Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。",
     "orig": "https://ai-sdk.dev",
     "repo": "https://github.com/vercel/ai"
+  },
+  {
+    "name": "Pi",
+    "slug": "pi",
+    "desc": "Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。",
+    "orig": "https://pi.dev/docs/latest",
+    "repo": "https://github.com/earendil-works/pi"
   }
 ]

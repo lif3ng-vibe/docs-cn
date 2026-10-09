@@ -22,6 +22,7 @@
 | e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
 | Claude-Mem | `claude-mem-docs-cn/` | https://docs.claude-mem.ai/ | https://github.com/thedotmack/claude-mem（快照 `71ddd11`，Mintlify 源在其 docs/public/） | 2026-10-08 |
 | AI SDK | `ai-sdk-docs-cn/` | https://ai-sdk.dev | https://github.com/vercel/ai（快照 `main@5028fa4`，上游快照副本在 `ai-sdk-main/`） | 2026-10-09 |
+| Pi | `pi-docs-cn/` | https://pi.dev/docs/latest | https://github.com/earendil-works/pi（快照 `main@6fb2e78`，Mintlify 源在其 packages/coding-agent/docs/） | 2026-10-09 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
@@ -74,6 +75,7 @@ docs-cn/
 ├── claude-mem-docs-cn/                 # Claude-Mem 中文文档（Mintlify 原班构建，49 篇 + export+prefix 部署链）
 ├── ai-sdk-docs-cn/                     # AI SDK 中文文档（geistdocs/fumadocs + Next.js 16 静态导出，540 页 v7 全集）
 ├── ai-sdk-main/                        # vercel/ai 上游英文快照（main@5028fa4，供后续同步 diff）
+├── pi-docs-cn/                         # Pi 中文文档（Mintlify 原班构建，40 篇 + export+prefix 部署链）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -137,6 +139,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - e2e：https://lif3ng-vibe.github.io/docs-cn/tester-army-e2e/
 - Claude-Mem：https://lif3ng-vibe.github.io/docs-cn/claude-mem/
 - AI SDK：https://lif3ng-vibe.github.io/docs-cn/ai-sdk/
+- Pi：https://lif3ng-vibe.github.io/docs-cn/pi/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

@@ -1,49 +1,49 @@
-# How Pi Works
+# Pi 的工作原理
 
-Pi coordinates model requests, tool execution, context assembly, and session storage. A session is Pi's record of a conversation, including messages, tool calls and results, model changes, compactions, and other events.
+Pi 负责协调模型请求、工具执行、上下文组装与会话存储。会话（session）是 Pi 对一次对话的记录，包括消息、工具调用及其结果、模型切换、压缩（compaction）以及其他事件。
 
-Messages and events in a session form a tree. Each path through that tree is a branch. The branch ending at the current entry is the active branch and supplies the history for the next model request.
+会话中的消息和事件构成一棵树。穿过这棵树的每条路径都是一个分支（branch）。终止于当前条目的分支即活动分支，它为下一次模型请求提供历史。
 
-## Agent loop
+## 智能体循环
 
-A submitted message is added to the active branch. Pi builds a model request from the system prompt, active branch, available tools, and model settings, then sends it through the selected provider.
+提交的消息会被加入活动分支。Pi 根据系统提示词、活动分支、可用工具和模型设置构建模型请求，然后通过所选提供商发送。
 
-The provider streams an assistant response, which can contain text and tool calls. Pi records the response, executes each tool call, and records the results. That completes one turn. If tool results or queued messages require another model request, Pi starts another turn. Otherwise, the run ends.
+提供商以流式返回助手响应，其中可以包含文本和工具调用。Pi 记录该响应，执行每个工具调用并记录结果。这就完成了一轮（turn）。如果工具结果或排队消息需要再次请求模型，Pi 就开启新的一轮；否则，本次运行结束。
 
-Steering messages enter after the current assistant turn. Follow-up messages enter after the agent has finished its pending work. Aborting stops the current run and returns queued messages to the editor.
+引导（steering）消息在当前助手轮次之后进入。追问（follow-up）消息在智能体完成其待办工作之后进入。中止会停止当前运行，并把排队中的消息退回编辑器。
 
-## Context
+## 上下文
 
-The active branch supplies conversation history. Pi converts its session entries into model-compatible user, assistant, and tool-result messages.
+活动分支提供对话历史。Pi 把会话条目转换为模型兼容的用户、助手和工具结果消息。
 
-Pi builds the system prompt from its base instructions and discovered context files. The request also carries tool definitions and skill descriptions.
+Pi 由其基础指令和发现的上下文文件（context file）构建系统提示词。请求还会携带工具定义和技能描述。
 
-Full skill instructions are loaded on demand. Extensions can add instructions or transform context.
+完整的技能指令按需加载。扩展可以添加指令或转换上下文。
 
-Prompt templates expand editor input before it becomes a user message. Selected files, images, pasted text, and shell output can become message content.
+提示词模板会在编辑器输入变成用户消息之前展开它。选中的文件、图片、粘贴的文本和 shell 输出都可以成为消息内容。
 
-## Sessions
+## 会话
 
-Persistent sessions are JSONL files. Each tree entry has an ID and refers to its parent. The current entry identifies the active branch.
+持久化会话是 JSONL 文件。树中的每个条目都有一个 ID，并引用其父条目。当前条目标识活动分支。
 
-Continuing from an earlier entry creates another branch in the same file. Forking and cloning copy selected history into a new session file.
+从较早的条目继续会在同一文件中创建另一个分支。分叉（fork）和克隆会把选定的历史复制到新的会话文件（session file）中。
 
-Model context is reconstructed from the active branch. Compaction inserts a summary entry that replaces older messages in subsequent model requests. The original entries remain in the session tree.
+模型上下文从活动分支重建。压缩会插入一个摘要条目，在后续的模型请求中替代较旧的消息。原始条目仍保留在会话树中。
 
-## Interfaces
+## 接口
 
-Interactive mode renders session and agent events in the terminal. Print mode runs a prompt and writes the final response. JSON mode writes agent events as JSONL.
+交互模式在终端中渲染会话和智能体事件。打印模式运行一条提示词并写出最终响应。JSON 模式把智能体事件写成 JSONL。
 
-RPC mode accepts JSONL commands on stdin and writes responses and events to stdout. The TypeScript SDK creates and controls agent sessions in process.
+RPC 模式在 stdin 上接收 JSONL 命令，并把响应和事件写到 stdout。TypeScript SDK 在进程内创建并控制智能体会话。
 
-All interfaces use the same agent and session mechanisms.
+所有接口都使用相同的智能体与会话机制。
 
-## Extensions and resources
+## 扩展与资源
 
-Extensions are TypeScript modules loaded into the Pi process. Their factory functions register tools, commands, shortcuts, providers, event handlers, renderers, and terminal UI.
+扩展是加载进 Pi 进程的 TypeScript 模块。它们的工厂函数会注册工具、命令、快捷键、提供商、事件处理器、渲染器（renderer）和终端 UI。
 
-Skills provide on-demand instructions and supporting files. Prompt templates provide reusable message text. Themes provide terminal colors. Pi packages distribute these resources through npm or git.
+技能提供按需的指令和配套文件。提示词模板提供可复用的消息文本。主题（theme）提供终端配色。Pi 包通过 npm 或 git 分发这些资源。
 
-## Trust and permissions
+## 信任与权限
 
-Pi resolves project trust before loading project settings and resources. After the trust decision and project-resource loading, Pi loads context files. Enabled tools use the operating-system permissions of the Pi process. Extensions execute inside that process.
+Pi 在加载项目设置和资源之前先确定项目信任。在做出信任决定并加载项目资源之后，Pi 再加载上下文文件。启用的工具使用 Pi 进程的操作系统权限。扩展在该进程内执行。

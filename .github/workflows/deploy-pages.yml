@@ -40,6 +40,7 @@ jobs:
             agent-skills-docs-cn/package-lock.json
             tester-army-e2e-docs-cn/package-lock.json
             claude-mem-docs-cn/package-lock.json
+            pi-docs-cn/package-lock.json
 
       # tester-army-e2e 是 Mintlify 站：登录凭据下 npx mint export 出纯静态站
       # （53 页目录式 index.html，全部 RSC payload 内嵌于 HTML），postprocess-export.mjs
@@ -68,6 +69,23 @@ jobs:
         working-directory: claude-mem-docs-cn
         env:
           DOCS_BASE: /docs-cn/claude-mem
+        run: |
+          npm ci
+          rm -rf dist
+          npx mintlify export --disable-openapi
+          mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
+          rm -f export.zip
+          node scripts/prefix-dist.mjs
+
+      # pi 是 Mintlify 格式文档（earendil-works/pi monorepo 的 packages/coding-agent/docs，
+      # 上游 pi.dev 自研渲染器不开源，镜像用 Mintlify 原班工具链渲染同源 Markdown）。
+      # 匿名 npx mintlify export 出静态站，prefix-dist.mjs 加 /docs-cn/pi 前缀（含水合
+      # assetPrefix 修补）。export 会把项目根散文件复制进渲染客户端 public，先清
+      # dist/ 与旧 export.zip。
+      - name: Build pi-docs-cn
+        working-directory: pi-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/pi
         run: |
           npm ci
           rm -rf dist
@@ -253,6 +271,7 @@ jobs:
           mv agent-skills-docs-cn/dist _site/agent-skills
           mv tester-army-e2e-docs-cn/dist-deploy _site/tester-army-e2e
           mv claude-mem-docs-cn/dist _site/claude-mem
+          mv pi-docs-cn/dist _site/pi
           mv ai-sdk-docs-cn/apps/docs/out _site/ai-sdk
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll

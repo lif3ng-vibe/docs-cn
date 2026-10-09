@@ -1,99 +1,99 @@
-# Run Pi safely
+# 安全地运行 Pi
 
-Treat model-generated commands and code as untrusted. Pi can read, change, and execute files with the permissions of the account that started it, and it does not ask for approval before every tool call. Extensions, package installers, language servers, and other child processes run with those same permissions unless an operating-system or virtualization boundary restricts them.
+将模型生成的命令与代码视为不受信任的内容。Pi 能以启动它的账户的权限读取、修改和执行文件，并且不会在每次工具调用前请求批准。扩展、包安装器、语言服务器及其他子进程都以同样的权限运行，除非有操作系统或虚拟化边界加以限制。
 
-Files, comments, instructions, command output, and model responses can steer the model through prompt injection. Project trust controls which project resources load at startup, but it does not make that content or the resulting actions safe.
+文件、注释、指令、命令输出与模型回复都可能通过提示词注入来引导模型。项目信任控制启动时加载哪些项目资源，但并不能让这些内容或由此产生的操作变得安全。
 
-Safety comes from limiting the files, credentials, processes, and network services Pi can access and affect if a generated action is wrong or hostile. Watching the transcript, using project trust, and reviewing changes do not create a security boundary.
+真正的安全来自限制 Pi 在某个生成操作出错或带有恶意时所能访问和影响的文件、凭据、进程与网络服务。盯着对话记录、使用项目信任、审查变更，这些都不能构成安全边界。
 
-## Choose how to run Pi
+## 选择 Pi 的运行方式
 
-Different ways of running Pi place different limits on what generated commands can access:
+不同的运行方式对生成命令能访问的内容有不同的限制：
 
-| How Pi runs | What remains protected |
+| Pi 的运行方式 | 仍受保护的内容 |
 |---|---|
-| Directly, with the permissions of its operating-system user | Anything that user cannot access. A dedicated user account can narrow those permissions, but Pi still shares the operating system and network with other users. |
-| Entirely inside a container, virtual machine, or sandbox | Host files and processes that you do not expose to the environment. Credentials and network services remain accessible if you make them available inside it. This is usually the strongest practical option. |
-| Outside the isolated environment, with only its built-in tools running inside | Host resources are protected from actions performed through those tools. Pi itself and other extensions remain outside the boundary, so this is a narrower form of isolation. |
+| 直接运行，拥有其操作系统用户的权限 | 该用户无法访问的一切。使用专用用户账户可以收窄这些权限，但 Pi 仍与其他用户共享操作系统和网络。 |
+| 完全在容器、虚拟机或沙箱内运行 | 你未暴露给该环境的主机文件与进程。如果你把凭据和网络服务放进了该环境内部，它们仍然可被访问。这通常是实践中最强的隔离方案。 |
+| 在隔离环境之外运行，只有内置工具在其内部执行 | 主机资源受到保护，免受通过这些工具执行的操作影响。Pi 本身与其他扩展仍在边界之外，因此这是一种较窄的隔离形式。 |
 
-The working folder controls resource discovery and the default location for tools, but it does not prevent commands from accessing other paths available to the Pi process.
+工作目录控制资源发现和工具的默认位置，但不能阻止命令访问 Pi 进程可访问的其他路径。
 
-Whichever option you choose, only provide the files and services required for the task. Keep credentials outside the environment where possible, or use narrowly scoped, short-lived credentials. Restrict network access when commands do not need it.
+无论选择哪种方式，都只提供任务所需的文件与服务。尽可能把凭据放在该环境之外，或使用范围狭窄、时效短暂的凭据。命令不需要网络时，限制其网络访问。
 
-For setup instructions and the limitations of each isolation method, see [Run Pi in an isolated environment](containerization.md).
+各隔离方法的设置步骤与局限性参见[在隔离环境中运行 Pi](containerization.md)。
 
 <a id="project-trust"></a>
 
-## Understand project trust
+## 了解项目信任
 
-Project trust controls whether Pi loads most settings and resources supplied by a working folder. It prevents a folder from silently loading executable extensions before you approve it.
+项目信任控制 Pi 是否加载工作目录提供的大多数设置与资源。它防止某个目录在你批准之前静默加载可执行的扩展。
 
-Project trust is not a complete startup boundary. Pi reads the project `sessionDir` setting while selecting or creating a session, before it resolves project trust. Declining trust prevents the remaining project settings and protected resources from loading, but it cannot undo that initial session-directory lookup.
+项目信任并不是完整的启动边界。Pi 在选择或创建会话时会读取项目 `sessionDir` 设置，而这发生在解析项目信任之前。拒绝信任可以阻止其余项目设置和受保护资源加载，但无法撤销最初那次会话目录查找。
 
-Project trust does not limit what tool calls can access or affect. After Pi starts, enabled tools still use the operating-system permissions of the Pi process. Instructions and other content in the folder can also influence the model.
+项目信任不限制工具调用能访问或影响什么。Pi 启动后，已启用的工具仍然使用 Pi 进程的操作系统权限。目录中的指令和其他内容也会影响模型。
 
-### Resources protected by project trust
+### 项目信任保护的资源
 
-Pi requires a project-trust decision when it finds any of these resources from the current working directory:
+当 Pi 从当前工作目录发现以下任一资源时，会要求你做出项目信任决定：
 
 - `.pi/settings.json`
 - `.pi/mcp.json`
-- `.pi/extensions`, `.pi/skills`, `.pi/prompts`, or `.pi/themes`
-- `.pi/SYSTEM.md` or `.pi/APPEND_SYSTEM.md`
-- project `.agents/skills` in the current directory or an ancestor directory
+- `.pi/extensions`、`.pi/skills`、`.pi/prompts` 或 `.pi/themes`
+- `.pi/SYSTEM.md` 或 `.pi/APPEND_SYSTEM.md`
+- 当前目录或祖先目录中项目级的 `.agents/skills`
 
-A bare `.pi` directory does not require project trust.
+一个不含上述内容的 `.pi` 目录不需要项目信任。
 
-Granting project trust allows Pi to load:
+授予项目信任后，Pi 可以加载：
 
-- project settings
-- project MCP servers from `.pi/mcp.json`
-- extensions, skills, prompt templates, themes, and system-prompt files under `.pi`
-- missing packages configured through project settings
-- project-local and project-package extensions
+- 项目设置
+- 来自 `.pi/mcp.json` 的项目 MCP 服务器
+- `.pi` 下的扩展、技能、提示词模板、主题与系统提示词文件
+- 项目设置中配置的缺失包
+- 项目本地扩展与项目包扩展
 
-Declining project trust skips those protected resources, except for the initial `sessionDir` lookup described above.
+拒绝项目信任会跳过这些受保护资源，上文提到的最初 `sessionDir` 查找除外。
 
-Context files such as `AGENTS.override.md`, `AGENTS.md`, and `CLAUDE.md` load regardless of project trust unless you disable context loading. Treat instructions in a folder as untrusted input even when you decline project trust.
+`AGENTS.override.md`、`AGENTS.md`、`CLAUDE.md` 等上下文文件无论是否授予项目信任都会加载，除非你禁用了上下文加载。即使你拒绝了项目信任，也要把目录中的指令视为不受信任的输入。
 
-### How Pi chooses a trust decision
+### Pi 如何做出信任决定
 
-A command-line `--approve` or `--no-approve` override applies first. When protected resources exist and there is no command-line override:
+命令行的 `--approve` 或 `--no-approve` 覆盖优先适用。当存在受保护资源且没有命令行覆盖时：
 
-1. User-level and command-line extensions can handle the `project_trust` event. The first extension that returns yes or no owns the decision.
-2. If no extension decides, Pi looks for a saved decision for the current directory or one of its parents. The closest decision applies.
-3. If no saved decision applies, Pi follows the global `defaultProjectTrust` setting, whose default is `"ask"`.
+1. 用户级和命令行扩展可以处理 `project_trust` 事件。第一个返回是或否的扩展拥有该决定权。
+2. 如果没有扩展做出决定，Pi 会查找针对当前目录或其某个父目录保存的决定，采用其中最接近的那个。
+3. 如果没有适用的已保存决定，Pi 遵循全局 `defaultProjectTrust` 设置，其默认值为 `"ask"`。
 
-Saved decisions use canonical directory paths and live in:
+已保存的决定使用规范化的目录路径，存放在：
 
 ```text
 ~/.pi/agent/trust.json
 ```
 
-Use `/trust` to save a decision for future Pi processes.
+使用 `/trust` 可保存决定，供以后的 Pi 进程使用。
 
-### Project trust without an interactive prompt
+### 无交互提示时的项目信任
 
-Print, JSON, and RPC modes cannot show the built-in trust prompt. If no command-line override, extension, or saved decision applies:
+打印模式、JSON 模式和 RPC 模式无法显示内置的信任提示。当没有命令行覆盖、扩展或已保存的决定适用时：
 
-- `defaultProjectTrust: "always"` loads protected project resources.
-- `defaultProjectTrust: "ask"` or `"never"` skips them.
+- `defaultProjectTrust: "always"` 会加载受保护的项目资源。
+- `defaultProjectTrust: "ask"` 或 `"never"` 会跳过它们。
 
-Use `--approve` or `--no-approve` when an automated run needs an explicit one-time decision.
+当自动化运行需要明确的单次决定时，使用 `--approve` 或 `--no-approve`。
 
-## Reduce impact and improve recovery
+## 降低影响并改善恢复
 
-These practices do not replace isolation, but they reduce exposure or make recovery easier:
+以下做法不能替代隔离，但可以减少暴露面或让恢复更容易：
 
-- Give Pi access only to files and services required for the task.
-- Use snapshots, backups, or version control before substantial changes.
-- Review extensions and packages before loading them. Extensions execute inside the Pi process.
-- Prefer narrowly scoped, short-lived credentials.
-- Review diffs and generated output before applying results to another system.
-- Review sessions before exporting or sharing them. They can contain prompts, tool arguments, command output, file contents, and credentials exposed during the conversation.
+- 只向 Pi 开放任务所需的文件与服务。
+- 在大规模修改之前使用快照、备份或版本控制。
+- 加载扩展和包之前先审查。扩展在 Pi 进程内执行。
+- 优先使用范围狭窄、时效短暂的凭据。
+- 把结果应用到其他系统之前，先审查 diff 和生成输出。
+- 导出或分享会话之前先审查。其中可能包含提示词、工具参数、命令输出、文件内容以及对话过程中暴露的凭据。
 
-## Report a security issue
+## 报告安全问题
 
-Follow the repository [Security Policy](https://github.com/earendil-works/pi/blob/main/SECURITY.md). Do not open a public issue for a security-sensitive report.
+请遵循仓库的[安全策略](https://github.com/earendil-works/pi/blob/main/SECURITY.md)。涉及安全敏感的报告不要公开发 issue。
 
-Expected local-agent behavior, prompt injection from untrusted content, lack of a built-in sandbox, and behavior from user-installed extensions or skills are generally outside the security boundary unless the report demonstrates a privilege-boundary bypass or access that the local user did not already have.
+本地智能体的预期行为、来自不受信任内容的提示词注入、缺少内置沙箱，以及用户自装扩展或技能引发的行为，一般都在安全边界之外——除非报告能证明存在权限边界绕过，或获得了本地用户本不具备的访问能力。

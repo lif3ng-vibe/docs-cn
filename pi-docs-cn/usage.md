@@ -1,94 +1,94 @@
-# Use Pi in the terminal
+# 在终端中使用 Pi
 
-Run `pi` from the folder you want to work in. Pi uses that folder to discover files, instructions, and configuration, and to group saved sessions. If you have not installed Pi or chosen a model yet, follow the [Quickstart](quickstart.md).
+在你想要工作的目录中运行 `pi`。Pi 会以该目录为基准来发现文件、指令与配置，并对已保存的会话进行分组。如果你尚未安装 Pi 或还未选择模型，请先阅读[快速开始](quickstart.md)。
 
-Pi may ask whether you trust the working folder before loading its project resources. See [Project trust](security.md#understand-project-trust).
+在加载项目资源之前，Pi 可能会询问你是否信任该工作目录。参见[项目信任](security.md#understand-project-trust)。
 
-<p align="center"><img src="images/interactive-mode.png" alt="Pi interactive mode showing a conversation, editor, and status information" width="750" /></p>
+<p align="center"><img src="images/interactive-mode.png" alt="Pi 交互模式，展示对话、编辑器与状态信息" width="750" /></p>
 
-The transcript shows your prompts, Pi's responses, tool calls, results, and errors. You write prompts and commands in the editor. The footer shows the current folder, session, model, context usage, and accumulated usage and cost.
+对话记录会显示你的提示词、Pi 的回复、工具调用、结果与报错。你在编辑器中编写提示词和命令。底部状态栏显示当前目录、会话、模型、上下文用量，以及累计用量与费用。
 
-## Enter a prompt
+## 输入提示词
 
-Type a request and press `Enter` to send it. Use `Shift+Enter` to add a line, or press `Ctrl+G` to work on a longer prompt in your configured external editor.
+输入请求后按 `Enter` 发送。用 `Shift+Enter` 追加一行，或按 `Ctrl+G` 在你配置的外部编辑器中撰写更长的提示词。
 
-To include files or images:
+如需附带文件或图片：
 
-- Type `@` to search for a file and add it to your prompt.
-- Press `Tab` to complete a path.
-- Paste an image or drag it into a compatible terminal.
+- 输入 `@` 搜索文件并将其加入提示词。
+- 按 `Tab` 补全路径。
+- 粘贴图片，或将其拖入受支持的终端。
 
-## Follow Pi's work
+## 跟踪 Pi 的工作
 
-Pi shows each tool call and result while it works. Press `Ctrl+O` to expand or collapse tool output. Press `Ctrl+T` to show or hide thinking blocks.
+Pi 工作时会展示每次工具调用及其结果。按 `Ctrl+O` 可展开或折叠工具输出。按 `Ctrl+T` 可显示或隐藏思考块。
 
-The startup header lists the instructions and resources Pi loaded. The editor border indicates the current thinking level. The footer updates as the model uses context and reports usage.
+启动时的页眉列出了 Pi 加载的指令与资源。编辑器边框指示当前思考级别。底部状态栏随模型的上下文占用与用量上报而更新。
 
-Pi does not ask before every tool call. Review commands and changed files, and use a sandbox for untrusted or unattended work. See [Security](security.md).
+Pi 不会在每次工具调用前都征求批准。请审查命令与被修改的文件，并对不受信任或无人值守的工作使用沙箱。参见[安全](security.md)。
 
-## Change direction
+## 调整方向
 
-You can send more input while Pi is working:
+Pi 工作期间你仍可继续发送输入：
 
-| What you want | Action |
+| 你想做的事 | 操作 |
 |---|---|
-| Adjust the current task | Type a message and press `Enter` |
-| Add work after the current task | Type a message and press `Alt+Enter` |
-| Return queued messages to the editor | Press `Alt+Up` |
-| Stop the current task | Press `Escape` |
+| 调整当前任务 | 输入消息并按 `Enter` |
+| 在当前任务之后追加工作 | 输入消息并按 `Alt+Enter` |
+| 将排队中的消息退回编辑器 | 按 `Alt+Up` |
+| 停止当前任务 | 按 `Escape` |
 
-A message sent with `Enter` waits until the current response and its tool calls finish, then guides the next response. A follow-up sent with `Alt+Enter` waits until Pi finishes the current task. Aborting returns queued messages to the editor.
+用 `Enter` 发送的消息会等待当前响应及其工具调用完成后，再影响下一次响应；用 `Alt+Enter` 发送的追问会等 Pi 完成当前任务后生效。中止操作会把排队中的消息退回编辑器。
 
-Windows Terminal reserves some Alt shortcuts. See [Terminal Setup](terminal-setup.md) for the Windows alternatives.
+Windows Terminal 会占用部分 Alt 快捷键。Windows 下的替代按键参见[终端设置](terminal-setup.md)。
 
-## Change the model or settings
+## 更换模型或调整设置
 
-Type `/` to search the available commands. The commands you will use most often are:
+输入 `/` 可搜索可用命令。你最常用到的命令有：
 
-- `/model` selects a model. Press `Ctrl+L` to open the same selector.
-- `/thinking` selects how much reasoning the current model uses. Press `Shift+Tab` to cycle through supported levels.
-- `/login` and `/logout` manage provider access.
-- `/settings` changes common preferences.
+- `/model` 用于选择模型。按 `Ctrl+L` 可打开同一选择器。
+- `/thinking` 用于选择当前模型的推理量。按 `Shift+Tab` 可在支持的级别间循环切换。
+- `/login` 与 `/logout` 管理提供商访问。
+- `/settings` 修改常用偏好设置。
 
-Prompt templates, skills, and extensions can add more commands to the same menu. See [Choose a Model](models.md), [Configuration](configuration.md), or the complete [Slash Commands reference](slash-commands.md).
+提示词模板、技能和扩展可以向同一菜单添加更多命令。参见[选择模型](models.md)、[配置](configuration.md)或完整的[斜杠命令参考](slash-commands.md)。
 
-## Continue or start over
+## 继续或重新开始
 
-Pi saves sessions automatically unless session persistence is disabled.
+除非禁用了会话持久化，否则 Pi 会自动保存会话。
 
-- `/new` starts a new session.
-- `/resume` opens another saved session.
-- `/name` gives the current session a recognizable name.
-- `/session` shows its file, ID, message count, token usage, and cost.
+- `/new` 开启新会话。
+- `/resume` 打开另一个已保存的会话。
+- `/name` 为当前会话取一个便于识别的名字。
+- `/session` 显示该会话的文件、ID、消息数、token 用量与费用。
 
-Use `/tree`, `/fork`, or `/clone` when you want to explore another approach without losing existing work. Use `/compact` to reduce the conversation history sent to the model. See [Sessions and Context](sessions.md) for these workflows.
+当你想在不丢失现有工作的前提下探索另一种思路时，可使用 `/tree`、`/fork` 或 `/clone`。使用 `/compact` 可减少发送给模型的对话历史。这些工作流参见[会话与上下文](sessions.md)。
 
-After leaving Pi, run `pi --continue` from the same folder to resume its most recent session.
+离开 Pi 之后，在同一目录运行 `pi --continue` 即可恢复其最近一次会话。
 
-## Run a terminal command
+## 运行终端命令
 
-Prefix a command with `!` to run it and include its output in the conversation:
+在命令前加 `!` 即可运行它，并把其输出纳入对话：
 
 ```text
 !git status
 ```
 
-Use `!!` when you want to run a command without sending its output to the model.
+如果你想运行命令但不把输出发给模型，使用 `!!`。
 
-## Copy, export, or share results
+## 复制、导出或分享结果
 
-Press `Ctrl+X` or run `/copy` to copy the last assistant response. Use `/export` to save the session as HTML or JSONL.
+按 `Ctrl+X` 或运行 `/copy` 可复制最近一条助手回复。使用 `/export` 可将会话保存为 HTML 或 JSONL。
 
-Use `/share` to upload the session and get a viewer link. With Radius authentication, the artifact is visible to your Radius organization. Otherwise, Pi creates a private GitHub gist through the GitHub CLI. Review the session first because it can contain prompts, tool output, file contents, and credentials exposed during the conversation.
+使用 `/share` 可上传会话并获取查看链接。通过 Radius 认证时，该产物对你所在的 Radius 组织可见；否则 Pi 会通过 GitHub CLI 创建私有 GitHub gist。上传前请先审查会话内容，因为其中可能包含对话过程中暴露的提示词、工具输出、文件内容与凭据。
 
-## Adjust the terminal
+## 调整终端
 
-Fullscreen mode, the default, keeps the editor and status area fixed while the transcript scrolls within the terminal window. Regular mode uses the terminal's normal scrollback. Choose a mode through `/settings` or `--tui-mode`.
+全屏模式（默认）会让编辑器与状态区保持固定，对话记录在终端窗口内滚动；常规模式则使用终端自身的回滚缓冲。可通过 `/settings` 或 `--tui-mode` 选择模式。
 
-Terminal support for mouse input, keyboard shortcuts, and inline images varies. See [Terminal Setup](terminal-setup.md) for platform-specific configuration and [Keybindings](keybindings.md) for every configurable shortcut. Run `/hotkeys` to inspect the shortcuts active in your current session.
+不同终端对鼠标输入、键盘快捷键和内联图片的支持程度不一。各平台的针对性配置参见[终端设置](terminal-setup.md)，全部可配置快捷键参见[按键绑定](keybindings.md)。运行 `/hotkeys` 可查看当前会话中生效的快捷键。
 
-## Collect diagnostic information
+## 收集诊断信息
 
-When troubleshooting terminal rendering or conversation state, run `/debug`. Pi writes the rendered terminal lines and current session messages to `pi-debug.log` in your [agent directory](configuration.md#agent-directory).
+排查终端渲染或会话状态问题时，运行 `/debug`。Pi 会把渲染后的终端行与当前会话消息写入你[智能体目录](configuration.md#agent-directory)下的 `pi-debug.log`。
 
-Review this file before sharing it. It can contain prompts, model responses, tool output, file contents, and terminal data.
+分享该文件前请先审查，其中可能包含提示词、模型回复、工具输出、文件内容与终端数据。
