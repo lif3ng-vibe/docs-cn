@@ -50,6 +50,22 @@ npm run preview      # 预览构建产物
 - 代码块、命令、配置键、产品名保留英文；按钮/菜单名保留英文加粗并首次出现括注中文。
 - 每页 frontmatter 的 `source` 字段记录原站 URL，便于后续手动同步。
 
+## 站点标签
+
+`sites.json` 每个中文站条目带 `tags` 字段（英文 slug，可多选，2-4 个），入口页 index.html 顶部可按标签筛选。注册表在 `scripts/gen-index.cjs` 的 `TAGS`，未注册 slug 会报错；`lang: "en"` 镜像条目自动继承中文站标签并附加 `unofficial-en`。改完跑 `node scripts/gen-index.cjs` 刷新入口页。
+
+| slug | 中文 | slug | 中文 |
+|---|---|---|---|
+| `ai-agent` | 智能体 | `learning` | 概念与入门 |
+| `multi-agent` | 多智能体协作 | `cli-tool` | 命令行工具 |
+| `skills` | 技能与提示词 | `sdk-api` | SDK 与 API |
+| `memory` | 记忆系统 | `unofficial-en` | 非官方英文文档（自动附加） |
+| `testing` | 测试 | | |
+| `deployment` | 部署运维 | | |
+| `docs-engineering` | 文档工程 | | |
+| `ai-app-dev` | AI 应用开发 | | |
+| `code-intelligence` | 代码智能 | | |
+
 ## 目录结构
 
 ```
@@ -82,7 +98,7 @@ docs-cn/
 ## 新增一个翻译站点
 
 1. 新建子目录（如 `foo-docs-cn/`），完成翻译站点。
-2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL", "repo": "https://上游仓库" }`；若同仓库还构建了英文镜像，再加 `"en": "<英文站 slug>"`（入口页整卡点击进中文站，按钮显示「官方文档」「仓库」「英文文档」；上游无站点即 orig 与 repo 相同时不显示「官方文档」）。
+2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL", "repo": "https://上游仓库" }`；若同仓库还构建了英文镜像，再加 `"en": "<英文站 slug>"`（入口页整卡点击进中文站，按钮显示「官方文档」「仓库」「英文文档」；上游无站点即 orig 与 repo 相同时不显示「官方文档」）。打标签：从 `scripts/gen-index.cjs` 的 `TAGS` 选 2-4 个现有标签写入 `tags`；现有标签覆盖不了新站主题时，先确认新增标签（补进 `TAGS` 并更新上表）再动手。
 3. 在 `.github/workflows/deploy-pages.yml` 加一段构建步骤（以 `DOCS_BASE=/docs-cn/foo/` 构建，构建前 `sed` 给正文内链加前缀），并在 Assemble 步骤里 `mv foo-docs-cn/dist _site/foo`。
 4. 本地跑 `node scripts/gen-index.cjs` 刷新 `index.html`，提交。
 
