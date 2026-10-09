@@ -1,4 +1,6 @@
-# 使用 llama.cpp 的本地模型
+---
+title: "使用 llama.cpp 的本地模型"
+---
 
 Pi 支持 [llama.cpp](https://github.com/ggml-org/llama.cpp) 路由器服务器。该路由器会发现多个 GGUF 模型，并按需加载或卸载。
 

@@ -1,4 +1,6 @@
-# RPC 命令
+---
+title: "RPC 命令"
+---
 
 本参考列出 [RPC 模式](rpc.md)下可在 stdin 上接受的命令。每条命令和响应都是一个 JSON 对象。各命令共享的消息取值沿用[消息类型](message-types.md)。
 

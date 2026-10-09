@@ -1,4 +1,6 @@
-# 在 Windows 上运行 Pi
+---
+title: "在 Windows 上运行 Pi"
+---
 
 Pi 可以作为原生 Windows 进程运行，也可以在适用于 Linux 的 Windows 子系统（WSL）中运行。原生 Windows 默认用 Git Bash 执行 Bash 命令，还可以选择向模型暴露 PowerShell。WSL 中的 Pi 则使用 Linux 环境及其 Bash 安装。
 

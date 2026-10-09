@@ -1,4 +1,6 @@
-# 用主题自定义 Pi
+---
+title: "用主题自定义 Pi"
+---
 
 主题（theme）控制 Pi 在交互模式（interactive mode）与 HTML 导出中使用的颜色。Pi 内置 `system`、`dark` 和 `light` 三个主题。你可以选定一个主题、跟随终端的浅色或深色外观，或创建自己的配色。
 

@@ -1,4 +1,6 @@
-# SDK
+---
+title: "SDK"
+---
 
 `@earendil-works/pi-coding-agent` 把 Pi 嵌入 Node.js 或 Bun 进程。它提供对命令行应用所用的智能体（agent）、会话（session）、工具、模型和资源的直接 TypeScript 访问。
 

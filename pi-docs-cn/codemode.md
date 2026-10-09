@@ -1,4 +1,6 @@
-# Codemode
+---
+title: "Codemode"
+---
 
 `codemode` 工具让模型编写一段 JavaScript 脚本，用于调用 pi 的其他工具并运行非 LLM 模型，例如分类模型和图像模型。只有脚本的输出会到达模型，因此脚本可以并行执行调用，并在模型看到结果之前过滤大量数据。开启方法参见[启用 codemode](cli.md#%E5%90%AF%E7%94%A8-codemode)。
 

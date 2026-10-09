@@ -1,4 +1,6 @@
-# pi-docs-cn — Pi 文档中文镜像（非官方）
+---
+title: "pi-docs-cn — Pi 文档中文镜像（非官方）"
+---
 
 [Earendil](https://earendil.com) 的终端 AI 编码智能体 [Pi](https://pi.dev) 官方文档（<https://pi.dev/docs/latest>）的全站中文翻译，非官方镜像。
 

@@ -1,4 +1,6 @@
-# MCP 服务器
+---
+title: "MCP 服务器"
+---
 
 Pi 通过 stdio 或 streamable HTTP 连接到 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，并把它们的工具和资源提供给模型。
 

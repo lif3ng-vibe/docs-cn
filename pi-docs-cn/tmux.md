@@ -1,4 +1,6 @@
-# 在 tmux 中运行 Pi
+---
+title: "在 tmux 中运行 Pi"
+---
 
 Pi 可以在 tmux 内运行，但 tmux 可能把 `Shift+Enter`、`Ctrl+Enter` 和普通 `Enter` 上报成同一个按键。请启用扩展按键，让 Pi 能够区分它们。
 

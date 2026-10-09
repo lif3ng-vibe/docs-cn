@@ -1,4 +1,6 @@
-# RPC 扩展 UI
+---
+title: "RPC 扩展 UI"
+---
 
 扩展可以通过 `ctx.ui` 请求用户交互。在 RPC 模式下，受支持的调用成为一个请求/响应子协议，与常规的 [RPC 命令](rpc-commands.md)和[会话事件](json.md)并存。
 

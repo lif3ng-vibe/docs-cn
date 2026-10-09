@@ -1,4 +1,6 @@
-# 在 Android 上用 Termux 运行 Pi
+---
+title: "在 Android 上用 Termux 运行 Pi"
+---
 
 Pi 通过 [Termux](https://termux.dev/)（一款终端模拟器和 Linux 环境）在 Android 上运行。支持文本输入、文件工具和 shell 命令。Pi 可以通过 Termux:API 使用 Android 剪贴板复制和粘贴文本。不支持粘贴剪贴板图片。
 

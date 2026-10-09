@@ -1,4 +1,6 @@
-# 配置
+---
+title: "配置"
+---
 
 Pi 支持用户级与项目级配置。用户级配置存放于智能体目录（agent directory），默认为 `~/.pi/agent`。项目配置存放于工作目录下的 `.pi`，并在授予[项目信任](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后加载。唯一的例外是 `sessionDir`，Pi 会在判定信任之前读取它，以便定位会话。
 
