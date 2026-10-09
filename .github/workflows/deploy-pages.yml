@@ -130,6 +130,7 @@ jobs:
           npx mintlify export --disable-openapi
           mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
           rm -f export.zip
+          node scripts/inject-theme.mjs
           node scripts/prefix-dist.mjs
           mv dist ../_site/pi
 

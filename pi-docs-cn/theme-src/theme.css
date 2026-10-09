@@ -1,0 +1,116 @@
+/*
+ * theme.css —— pi.dev 风格皮肤层（注入式，非构建定制）
+ *
+ * 对齐目标（pi.dev style.css 实测 token）：
+ *   浅色：暖纸底 #ebe7e4 + 墨蓝文字 #252f3d + 暖灰线 #8b847d
+ *   深色：深板岩 #161d27 + 米白文字 #ebe7e4 + 冷灰线 #495059
+ *   字体：衬线正文/标题（官方 Plantin MT Pro 为商业字体，以 Source Serif 4 替代）
+ *         代码 Commit Mono（OFL）+ 装饰 Departure Mono（OFL）
+ *   正文字重：440（官方 --body-copy-font-weight）
+ *
+ * 机制：Mintlify 导出页把 token 内联在 <style>（来自 docs.json colors），
+ * 本文件由 inject-theme.mjs 以 </head> 前的 <link> 注入，加载顺序在后、
+ * 同特异性覆盖生效。灰阶为 RGB 三元组（Mintlify 以 rgb(var(--gray-500)) 消费）。
+ * 中文字符回落系统字体：衬线栈落宋体系（Noto Serif SC/思源宋体/SimSun），
+ * 若嫌宋体屏幕观感太细，把两个 font-family 里的衬线 CJK 段换成
+ * 'Microsoft YaHei' 即回无衬线。
+ */
+
+/* ---------- 字体（全部 OFL 许可，见 theme-src/fonts/OFL-*.txt） ---------- */
+
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url(fonts/SourceSerif4-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url(fonts/SourceSerif4-italic-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/CommitMono-400.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/CommitMono-700.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Departure Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/DepartureMono-Regular.woff2) format('woff2');
+}
+
+/* ---------- 字体钩子（Mintlify 官方定制点） ---------- */
+
+:root {
+  --font-family-body-custom: 'Source Serif 4', Georgia, 'Times New Roman',
+    'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', SimSun, serif;
+  --font-family-headings-custom: 'Source Serif 4', Georgia, 'Times New Roman',
+    'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', SimSun, serif;
+  --font-family-mono-custom: 'Commit Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  --font-weight-body-custom: 440;
+}
+
+/* ---------- 配色 token（覆盖 docs.json 烘焙的内联值） ---------- */
+
+:root {
+  --primary: 37 47 61;            /* #252f3d 墨蓝 */
+  --primary-light: 235 231 228;
+  --primary-dark: 235 231 228;    /* 深色模式下的主色（米白） */
+  --background-light: 235 231 228; /* #ebe7e4 暖纸 */
+  --background-dark: 22 29 39;     /* #161d27 深板岩 */
+
+  /* 浅色灰阶：暖纸中性 + 墨蓝端 */
+  --gray-50: 247 245 242;
+  --gray-100: 238 234 230;
+  --gray-200: 221 214 207;
+  --gray-300: 199 190 181;
+  --gray-400: 160 151 141;
+  --gray-500: 122 113 104;
+  --gray-600: 92 84 77;
+  --gray-700: 66 60 55;
+  --gray-800: 48 43 40;
+  --gray-900: 37 47 61;
+  --gray-950: 24 30 39;
+}
+
+.dark {
+  /* 深色灰阶：板岩纸面，端点亮至米白 */
+  --gray-50: 30 39 50;
+  --gray-100: 36 46 59;
+  --gray-200: 46 58 73;
+  --gray-300: 64 78 95;
+  --gray-400: 98 111 127;
+  --gray-500: 134 146 160;
+  --gray-600: 173 183 194;
+  --gray-700: 207 214 221;
+  --gray-800: 226 231 236;
+  --gray-900: 235 231 228;
+  --gray-950: 240 238 234;
+}
+
+/* ---------- 页面底色（容器均继承 body，无独立白底类） ---------- */
+
+html,
+body {
+  background-color: rgb(var(--background-light));
+}
+html.dark,
+html.dark body {
+  background-color: rgb(var(--background-dark));
+}
