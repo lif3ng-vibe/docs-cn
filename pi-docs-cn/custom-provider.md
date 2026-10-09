@@ -10,13 +10,13 @@ title: "自定义提供商"
 
 | 需求 | 方案 |
 |---|---|
-| 在受支持的 API 之后添加模型 | [`models.json`](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9) |
+| 在受支持的 API 之后添加模型 | [`models.json`](models#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9) |
 | 更改现有提供商的端点或请求头 | `models.json` 或一个小型提供商扩展 |
 | 动态发现模型 | 带 `refreshModels` 的提供商 |
 | 添加 `/login` 流程 | 带原生或旧式 OAuth 配置的提供商 |
 | 实现不受支持的线上协议 | 带 `stream` 或 `streamSimple` 的提供商 |
 
-提供商扩展是一种[扩展](extensions.md)，因此遵循相同的加载、信任、重新加载和错误行为。
+提供商扩展是一种[扩展](extensions)，因此遵循相同的加载、信任、重新加载和错误行为。
 
 ## 注册提供商
 
@@ -172,4 +172,4 @@ OAuth 回调与 UI 无关。它们可以打开授权 URL、显示设备码、报
 
 [`packages/ai/test`](https://github.com/earendil-works/pi/tree/main/packages/ai/test) 下的提供商测试定义了内置提供商应有的行为。请改编相关测试套件，不要只依赖手动提示词验证。
 
-开发期间直接运行该扩展，之后移入可被发现的扩展目录，或通过 [Pi 包](packages.md)分发。在活动会话中修改了可发现的提供商扩展后，使用 `/reload`。
+开发期间直接运行该扩展，之后移入可被发现的扩展目录，或通过 [Pi 包](packages)分发。在活动会话中修改了可发现的提供商扩展后，使用 `/reload`。

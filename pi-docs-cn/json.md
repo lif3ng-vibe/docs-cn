@@ -8,9 +8,9 @@ JSON 模式为单次调用输出结构化进度：
 pi --mode json "Review this repository"
 ```
 
-Pi 先写入一条会话头部，随后是会话事件，在提供的提示词完成后退出。RPC 模式输出相同的会话事件形态，但没有会话头部，因为它是双向的长连接协议。参见 [RPC 模式](rpc.md)。
+Pi 先写入一条会话头部，随后是会话事件，在提供的提示词完成后退出。RPC 模式输出相同的会话事件形态，但没有会话头部，因为它是双向的长连接协议。参见 [RPC 模式](rpc)。
 
-本页面是 JSON 模式与 RPC 模式共享事件的权威参考。消息值使用[共享消息类型](message-types.md)。
+本页面是 JSON 模式与 RPC 模式共享事件的权威参考。消息值使用[共享消息类型](message-types)。
 
 ## 分帧与进程 I/O
 
@@ -22,13 +22,13 @@ Node.js 的 `readline` 不适用于这个流，因为它也会识别那些 Unico
 
 ## 会话头部
 
-JSON 模式的第一条记录是当前的[会话头部](session-format.md#sessionheader)：
+JSON 模式的第一条记录是当前的[会话头部](session-format#sessionheader)：
 
 ```json
 {"type":"session","version":3,"id":"uuid","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path"}
 ```
 
-RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_state) 获取其当前会话 ID 与文件。
+RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands#get_state) 获取其当前会话 ID 与文件。
 
 ## 事件序列
 
@@ -125,7 +125,7 @@ RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_st
 | `session_info_changed` | `name` | 会话显示名称发生变化。`name` 缺失表示已被清除。 |
 | `thinking_level_changed` | `level` | 生效的思考级别发生变化。 |
 
-`entry` 值使用已持久化的[会话条目类型](session-format.md#%E6%9D%A1%E7%9B%AE%E7%B1%BB%E5%9E%8B)。
+`entry` 值使用已持久化的[会话条目类型](session-format#%E6%9D%A1%E7%9B%AE%E7%B1%BB%E5%9E%8B)。
 
 ## 压缩事件
 
@@ -158,7 +158,7 @@ RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_st
 
 如果压缩被中止，则没有 `result`，且 `aborted` 为 true。如果压缩失败，则没有 `result`，`aborted` 为 false，`errorMessage` 描述失败原因。溢出恢复成功时，会在 Pi 重试提示词之前把 `willRetry` 设为 true。
 
-结果语义参见[压缩与分支摘要](compaction.md)。
+结果语义参见[压缩与分支摘要](compaction)。
 
 ## 重试事件
 
@@ -183,7 +183,7 @@ RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_st
 
 ## RPC 独有事件
 
-直接的 RPC [`bash`](rpc-commands.md#bash) 命令会为每块输出输出一条 `bash_execution_update`。其可选的 `id` 与命令 ID 匹配。最终命令响应中可能包含被截断的输出，但这些事件会流式传输全部输出：
+直接的 RPC [`bash`](rpc-commands#bash) 命令会为每块输出输出一条 `bash_execution_update`。其可选的 `id` 与命令 ID 匹配。最终命令响应中可能包含被截断的输出，但这些事件会流式传输全部输出：
 
 ```json
 {"type":"bash_execution_update","id":"req-1","delta":"total 48\n"}
@@ -195,7 +195,7 @@ RPC 模式不输出这条记录。请使用 [`get_state`](rpc-commands.md#get_st
 {"type":"extension_error","extensionPath":"/path/to/extension.ts","event":"tool_call","error":"Error message"}
 ```
 
-扩展 UI 记录是一个独立的 RPC 子协议，不是 `AgentSessionEvent` 值。参见 [RPC 扩展 UI](rpc-extension-ui.md)。
+扩展 UI 记录是一个独立的 RPC 子协议，不是 `AgentSessionEvent` 值。参见 [RPC 扩展 UI](rpc-extension-ui)。
 
 ## TypeScript 类型
 

@@ -56,6 +56,6 @@ Pi 会在最终文本进入智能体（agent）之前先展开模板。除非有
 
 将模板放在用户级或项目级提示词目录中。约定位置的提示词目录只加载直接位于其下的 `.md` 文件。
 
-设置与包可以选中嵌套的 Markdown 文件；包清单（package manifest）可通过显式路径与 glob 收窄发现范围。相关选项参见[设置](settings.md#%E8%B5%84%E6%BA%90)与 [Pi 包](packages.md)。
+设置与包可以选中嵌套的 Markdown 文件；包清单（package manifest）可通过显式路径与 glob 收窄发现范围。相关选项参见[设置](settings#%E8%B5%84%E6%BA%90)与 [Pi 包](packages)。
 
-项目模板会在授予信任后成为编辑器中的命令。信任不熟悉的项目之前，请先审查其内容。参见[安全](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)。
+项目模板会在授予信任后成为编辑器中的命令。信任不熟悉的项目之前，请先审查其内容。参见[安全](security#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)。

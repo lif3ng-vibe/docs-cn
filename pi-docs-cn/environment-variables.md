@@ -8,7 +8,7 @@ Pi 以三种方式使用环境变量：
 - Pi 设置进程标记，让子进程能识别 Pi 是启动该进程的智能体。
 - 可供 LLM 调用的 shell 工具所运行的命令会收到描述当前会话的 `PI_*` 变量。
 
-提供商 API 密钥变量另见[提供商](providers.md#%E4%BB%8E%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E4%BD%BF%E7%94%A8-api-%E5%AF%86%E9%92%A5)。
+提供商 API 密钥变量另见[提供商](providers#%E4%BB%8E%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E4%BD%BF%E7%94%A8-api-%E5%AF%86%E9%92%A5)。
 
 ## 进程标记
 
@@ -89,13 +89,13 @@ const powershellTool = createPowerShellTool(cwd, {
 | `PI_CACHE_RETENTION` | 在受支持时设为 `long` 以启用扩展的提供商提示词缓存 |
 | `PI_SHARE_VIEWER_URL` | 覆盖 `/share` 使用的基 URL |
 | `PI_RADIUS_GATEWAY` | 覆盖 `/bug` 上传与 Radius 中继连接使用的 Radius 网关源（origin） |
-| `PI_HARDWARE_CURSOR` | 设为 `1` 显示硬件光标；参见[终端设置](terminal-setup.md) |
+| `PI_HARDWARE_CURSOR` | 设为 `1` 显示硬件光标；参见[终端设置](terminal-setup) |
 | `PI_HYPERLINKS` | 用 `1`、`0` 或 `auto` 覆盖 OSC 8 超链接检测 |
-| `PI_PROGRAM_STATUS` | 覆盖 OSC 7501 程序状态检测：`1` 总是上报，`0` 从不上报；其他情况下 Pi 只在终端确认支持后才上报。参见[终端设置](terminal-setup.md#%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81) |
+| `PI_PROGRAM_STATUS` | 覆盖 OSC 7501 程序状态检测：`1` 总是上报，`0` 从不上报；其他情况下 Pi 只在终端确认支持后才上报。参见[终端设置](terminal-setup#%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81) |
 | `PI_IMAGE_PROTOCOL` | 用 `kitty`、`iterm2`、`none` 或 `auto` 覆盖内联图片检测 |
 | `PI_TRUE_COLOR` | 用 `1`、`0` 或 `auto` 覆盖真彩检测 |
 | `PI_TUI_ESC_TIMEOUT` | 单独一个 ESC 之后等待多久才当作 Escape 键，单位毫秒；经 SSH 时默认 `100`，其他情况默认 `10`。若 Alt 键输入被误读为 Escape，可调大 |
 | `VISUAL`, `EDITOR` | `externalEditor` 未设置时的外部编辑器回退 |
 | `HTTP_PROXY`, `HTTPS_PROXY` | 为出站 HTTP 请求设置代理 |
 
-`ANTHROPIC_API_KEY`、`OPENAI_API_KEY` 等提供商凭据与提供商专属配置见[提供商](providers.md#%E4%BB%8E%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E4%BD%BF%E7%94%A8-api-%E5%AF%86%E9%92%A5)。
+`ANTHROPIC_API_KEY`、`OPENAI_API_KEY` 等提供商凭据与提供商专属配置见[提供商](providers#%E4%BB%8E%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E4%BD%BF%E7%94%A8-api-%E5%AF%86%E9%92%A5)。

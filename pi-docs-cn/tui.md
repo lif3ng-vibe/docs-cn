@@ -4,7 +4,7 @@ title: "终端 UI"
 
 `@earendil-works/pi-tui` 提供 Pi 所用的终端组件系统。当内置的对话框、通知、状态文本和部件（widget）不足以支撑所需的交互时，扩展可以使用它。
 
-从[扩展](extensions.md#interact-with-the-user)的 `ctx.ui` 方法入手。只有当 UI 需要自己的渲染、键盘或鼠标输入、焦点、布局或生命周期时，才构建自定义组件。
+从[扩展](extensions#interact-with-the-user)的 `ctx.ui` 方法入手。只有当 UI 需要自己的渲染、键盘或鼠标输入、焦点、布局或生命周期时，才构建自定义组件。
 
 ## 选择集成点
 
@@ -103,7 +103,7 @@ return new Text(
 
 渲染期间求值的主题回调无需特殊重建。无状态组件也可以在每次渲染时计算带主题的输出。
 
-创建终端调色板见[主题](themes.md)。渲染需要与当前应用主题匹配的 Markdown 时，使用 Pi 的 `getMarkdownTheme()`。
+创建终端调色板见[主题](themes)。渲染需要与当前应用主题匹配的 Markdown 时，使用 Pi 的 `getMarkdownTheme()`。
 
 ## 保持渲染流畅
 
@@ -124,4 +124,4 @@ return new Text(
 - [`widget-placement.ts`](../examples/extensions/widget-placement.ts) 在编辑器周围放置持久内容。
 - [`doom-overlay/`](../examples/extensions/doom-overlay/) 演示持续渲染的浮层。
 
-公开导出定义在 [`packages/tui/src/index.ts`](https://github.com/earendil-works/pi/blob/main/packages/tui/src/index.ts)。扩展生命周期、状态、工具、事件和模式行为见[扩展](extensions.md)。
+公开导出定义在 [`packages/tui/src/index.ts`](https://github.com/earendil-works/pi/blob/main/packages/tui/src/index.ts)。扩展生命周期、状态、工具、事件和模式行为见[扩展](extensions)。

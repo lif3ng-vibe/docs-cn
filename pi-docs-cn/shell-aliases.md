@@ -35,7 +35,7 @@ Pi 通常以 `bash -c` 的方式调用 Bash。在 Unix 系统上，它依次尝�
 }
 ```
 
-更改该设置后请运行 `/reload`。原生 Windows 的默认值参见[在 Windows 上运行 Pi](windows.md)。
+更改该设置后请运行 `/reload`。原生 Windows 的默认值参见[在 Windows 上运行 Pi](windows)。
 
 ## 在每条 Bash 命令前运行初始化
 
@@ -92,4 +92,4 @@ Pi 已回退到 `sh`，或 `shellPath` 指向的不是 Bash。在使用 `shopt` 
 
 请从 `shellCommandPrefix` 中移除交互式命令。前缀在每条 Bash 命令之前的非交互进程中运行。
 
-完整的设置定义参见[Shell 设置](settings.md#shell)。
+完整的设置定义参见[Shell 设置](settings#shell)。

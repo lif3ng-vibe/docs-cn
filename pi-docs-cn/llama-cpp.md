@@ -90,7 +90,7 @@ Hugging Face 搜索在设置了 `HF_TOKEN` 时使用它，否则依次检查 `$H
 
 ## 分类
 
-分类模型回答关于 JSON 状态的类型化 `choice`、`bool` 与 `score` 问题，类似 TypeSafe 的 Jev 模型。模型通过 [`codemode`](cli.md#%E5%90%AF%E7%94%A8-codemode) 脚本访问它们，扩展则通过 `ctx.modelRegistry.classify()`；参见[分类模型](models.md#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)。Pi 以两种方式把 llama.cpp 模型列为分类器：
+分类模型回答关于 JSON 状态的类型化 `choice`、`bool` 与 `score` 问题，类似 TypeSafe 的 Jev 模型。模型通过 [`codemode`](cli#%E5%90%AF%E7%94%A8-codemode) 脚本访问它们，扩展则通过 `ctx.modelRegistry.classify()`；参见[分类模型](models#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)。Pi 以两种方式把 llama.cpp 模型列为分类器：
 
 - **决策模型**（如 [Julia-1、Laya、Kev、lev 与 OpenJev](https://huggingface.co/collections/ggml-org/decision-models-6abf80cca3c83f127060a769)）通过 llama.cpp 的 `/v1/systemone` 端点原生作答。它们只以分类器身份出现，使用 `typesafe-system-one` API，不出现在 `/model` 中。
 - **对话模型**也会以相同 ID 和 `llama-cpp-classify` API 被列为分类器，该 API 从下一个 token 的概率中读取答案，如下文所述。
@@ -120,4 +120,4 @@ curl http://127.0.0.1:8080/models
 - **加载失败或内存占用过高**：调低 `-c` 或卸载另一个模型。
 - **服务器未处于路由器模式**：启动时不要带 `--model`、`-m` 或 `-hf`。
 
-要移除 `llama.cpp` 提供商和 `/llama`，可在 `pi config` 的 Built-in 下禁用 `llama.cpp`，或在[设置](settings.md#%E8%B5%84%E6%BA%90)中设置 `"extensions": ["-builtin:llama.cpp"]`。
+要移除 `llama.cpp` 提供商和 `/llama`，可在 `pi config` 的 Built-in 下禁用 `llama.cpp`，或在[设置](settings#%E8%B5%84%E6%BA%90)中设置 `"extensions": ["-builtin:llama.cpp"]`。

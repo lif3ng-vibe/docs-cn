@@ -81,9 +81,9 @@
   --gray-200: 221 214 207;
   --gray-300: 199 190 181;
   --gray-400: 160 151 141;
-  --gray-500: 122 113 104;
-  --gray-600: 92 84 77;
-  --gray-700: 66 60 55;
+  --gray-500: 108 100 92;
+  --gray-600: 80 73 66;
+  --gray-700: 56 50 45;
   --gray-800: 48 43 40;
   --gray-900: 37 47 61;
   --gray-950: 24 30 39;
@@ -113,4 +113,70 @@ body {
 html.dark,
 html.dark body {
   background-color: rgb(var(--background-dark));
+}
+
+/* ---------- 正文对比度 ----------
+ * prose 的颜色是 Tailwind Typography 预烘焙的 oklch 字面量，不吃上面的灰阶
+ * token——这里整组覆盖为 pi 墨蓝系；内联 code 芯片给足与纸面的色差。
+ * 链接：墨蓝 + 加重下划线（官方就是下划线式链接，非彩色链接）。
+ */
+
+.prose {
+  --tw-prose-body: #333e4b;
+  --tw-prose-headings: #252f3d;
+  --tw-prose-lead: #4a5561;
+  --tw-prose-links: #252f3d;
+  --tw-prose-bold: #252f3d;
+  --tw-prose-code: #252f3d;
+  --tw-prose-quotes: #3c4a5a;
+  --tw-prose-quote-borders: #c9c1b8;
+  --tw-prose-counters: #6f6660;
+  --tw-prose-bullets: #a9a096;
+  --tw-prose-hr: #d9d3cc;
+  --tw-prose-captions: #6f6660;
+  --tw-prose-th-borders: #cfc8c0;
+  --tw-prose-td-borders: #e0dad2;
+}
+.prose code:not(pre *) {
+  background-color: #e3ddd5;
+  border: 1px solid rgb(139 132 125 / 0.4);
+  padding-inline: 0.32em;
+  font-weight: 600;
+}
+.prose a {
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  text-decoration-color: rgb(68 107 133 / 0.6);
+}
+.prose a:hover {
+  color: #40658a;
+  text-decoration-color: #40658a;
+}
+
+html.dark .prose {
+  --tw-prose-body: #d9dee4;
+  --tw-prose-headings: #ebe7e4;
+  --tw-prose-lead: #c3cad2;
+  --tw-prose-links: #ebe7e4;
+  --tw-prose-bold: #f2efec;
+  --tw-prose-code: #ece8e3;
+  --tw-prose-quotes: #c3cad2;
+  --tw-prose-quote-borders: #3a4757;
+  --tw-prose-counters: #9aa5b1;
+  --tw-prose-bullets: #5d6b7c;
+  --tw-prose-hr: #2c3846;
+  --tw-prose-captions: #9aa5b1;
+  --tw-prose-th-borders: #3a4757;
+  --tw-prose-td-borders: #2c3846;
+}
+html.dark .prose code:not(pre *) {
+  background-color: #1d2836;
+  border-color: rgb(73 80 89 / 0.6);
+}
+html.dark .prose a {
+  text-decoration-color: rgb(122 156 184 / 0.55);
+}
+html.dark .prose a:hover {
+  color: #8fb3d0;
+  text-decoration-color: #8fb3d0;
 }

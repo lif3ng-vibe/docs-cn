@@ -6,7 +6,7 @@ title: "CLI 集成"
 
 四种模式使用相同的智能体、会话、资源和工具。模式决定了输入如何进入 Pi、输出如何暴露，以及进程是否继续保持可用以接收更多命令。
 
-SDK 不是一种 CLI 模式。它把智能体直接嵌入 Node.js 或 Bun 进程。当直接访问 TypeScript 比跨越进程边界更合适时，见 [SDK](sdk.md)。
+SDK 不是一种 CLI 模式。它把智能体直接嵌入 Node.js 或 Bun 进程。当直接访问 TypeScript 比跨越进程边界更合适时，见 [SDK](sdk)。
 
 ## 选择模式
 
@@ -17,7 +17,7 @@ SDK 不是一种 CLI 模式。它把智能体直接嵌入 Node.js 或 Bun 进程
 | JSON | stdout 上的 JSONL 事件 | 单次调用 | 进程需要一次运行的结构化进度 |
 | RPC | JSONL 命令、响应和事件 | 长期运行 | 进程需要双向控制 |
 
-与模式无关，CLI 选项仍可指定工作目录、模型、工具、资源和会话持久化。完整的启动选项见[命令行](cli.md)。
+与模式无关，CLI 选项仍可指定工作目录、模型、工具、资源和会话持久化。完整的启动选项见[命令行](cli)。
 
 ## 打印到 stdout
 
@@ -51,7 +51,7 @@ pi --mode json "Review this repository" > events.jsonl
 
 `agent_end` 之后仍可能有自动恢复或排队工作。`agent_settled` 标志当前运行自动工作的结束。
 
-stdout 专用于 JSONL。诊断和应用日志写入 stderr。帧结构、事件形态和重建规则见 [JSON 事件流](json.md)。
+stdout 专用于 JSONL。诊断和应用日志写入 stderr。帧结构、事件形态和重建规则见 [JSON 事件流](json)。
 
 ## 用 RPC 控制 Pi
 
@@ -79,7 +79,7 @@ Node.js 或 TypeScript 集成优先使用 `@earendil-works/pi-coding-agent` 的 
 
 该客户端需要一个可运行的 Pi CLI 路径。仓库示例指向 `dist/cli.js`，因此在检出目录中运行该示例前必须先构建包。
 
-不用 `RpcClient` 构建客户端时，先读 [RPC 协议](rpc.md)，再用 [RPC 命令](rpc-commands.md)和 [JSON 事件流](json.md)作为线上格式参考。
+不用 `RpcClient` 构建客户端时，先读 [RPC 协议](rpc)，再用 [RPC 命令](rpc-commands)和 [JSON 事件流](json)作为线上格式参考。
 
 ## 分叉并重塑 Pi 品牌
 
@@ -100,9 +100,9 @@ Node.js 或 TypeScript 集成优先使用 `@earendil-works/pi-coding-agent` 的 
 
 - [RPC 客户端](../examples/rpc-client.ts)：带类型的 Node.js 集成
 - [RPC 扩展 UI](../examples/rpc-extension-ui.ts)：带扩展对话框的自定义终端客户端
-- [命令行](cli.md)：启动选项与模式选择
-- [JSON 事件流](json.md)：JSON 事件参考
-- [RPC 协议](rpc.md)：RPC 生命周期、帧结构、错误与关闭
-- [RPC 命令](rpc-commands.md)：命令与响应参考
-- [RPC 扩展 UI](rpc-extension-ui.md)：扩展交互子协议
+- [命令行](cli)：启动选项与模式选择
+- [JSON 事件流](json)：JSON 事件参考
+- [RPC 协议](rpc)：RPC 生命周期、帧结构、错误与关闭
+- [RPC 命令](rpc-commands)：命令与响应参考
+- [RPC 扩展 UI](rpc-extension-ui)：扩展交互子协议
 - [SDK 示例](../examples/sdk/)：进程内 TypeScript 集成

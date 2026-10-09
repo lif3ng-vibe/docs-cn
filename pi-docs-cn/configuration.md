@@ -2,35 +2,35 @@
 title: "配置"
 ---
 
-Pi 支持用户级与项目级配置。用户级配置存放于智能体目录（agent directory），默认为 `~/.pi/agent`。项目配置存放于工作目录下的 `.pi`，并在授予[项目信任](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后加载。唯一的例外是 `sessionDir`，Pi 会在判定信任之前读取它，以便定位会话。
+Pi 支持用户级与项目级配置。用户级配置存放于智能体目录（agent directory），默认为 `~/.pi/agent`。项目配置存放于工作目录下的 `.pi`，并在授予[项目信任](security#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后加载。唯一的例外是 `sessionDir`，Pi 会在判定信任之前读取它，以便定位会话。
 
 在交互模式下，可用 `/settings` 修改常用偏好设置。其他选项可以让 Pi 更新配置，或直接编辑相关文件。手动更改设置、按键绑定（keybinding）、指令或资源后，请运行 `/reload`。
 
 ## 智能体目录
 
-下文以 `<agent-dir>` 表示智能体目录。可通过 `PI_CODING_AGENT_DIR` 环境变量或 SDK 的 [`agentDir`](sdk.md) 选项设置其位置。
+下文以 `<agent-dir>` 表示智能体目录。可通过 `PI_CODING_AGENT_DIR` 环境变量或 SDK 的 [`agentDir`](sdk) 选项设置其位置。
 
 | 路径 | 职责 |
 |---|---|
-| `<agent-dir>/settings.json` | 用户级[设置](settings.md)，包括偏好设置、默认值、资源路径与 Pi 包声明。 |
-| `<agent-dir>/keybindings.json` | 自定义终端 UI 与应用级[按键绑定](keybindings.md)。 |
-| `<agent-dir>/mcp.json` | 所有项目均可用的 [MCP 服务器](mcp.md)。 |
-| `<agent-dir>/models.json` | [兼容端点、模型与模型覆盖项](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。 |
+| `<agent-dir>/settings.json` | 用户级[设置](settings)，包括偏好设置、默认值、资源路径与 Pi 包声明。 |
+| `<agent-dir>/keybindings.json` | 自定义终端 UI 与应用级[按键绑定](keybindings)。 |
+| `<agent-dir>/mcp.json` | 所有项目均可用的 [MCP 服务器](mcp)。 |
+| `<agent-dir>/models.json` | [兼容端点、模型与模型覆盖项](models#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。 |
 | `<agent-dir>/auth.json` | 已保存的 API 密钥与 OAuth 凭据。 |
 | `<agent-dir>/AGENTS.override.md`、`AGENTS.md`、`AGENTS.MD`、`CLAUDE.md` 或 `CLAUDE.MD` | 跨工作目录生效的用户指令。 |
 | `<agent-dir>/SYSTEM.md` | 替换 Pi 的默认系统提示词（system prompt）。 |
 | `<agent-dir>/APPEND_SYSTEM.md` | 向 Pi 的系统提示词追加指令。 |
-| `<agent-dir>/extensions/` | 用户级[扩展（extension）](extensions.md)。 |
-| `<agent-dir>/skills/` | 用户级[技能（skill）](skills.md)及配套文件。 |
-| `<agent-dir>/prompts/` | 用户级[提示词模板（prompt template）](prompt-templates.md)，以斜杠命令（slash command）形式提供。 |
-| `<agent-dir>/themes/` | 用户级[主题（theme）](themes.md)文件。 |
+| `<agent-dir>/extensions/` | 用户级[扩展（extension）](extensions)。 |
+| `<agent-dir>/skills/` | 用户级[技能（skill）](skills)及配套文件。 |
+| `<agent-dir>/prompts/` | 用户级[提示词模板（prompt template）](prompt-templates)，以斜杠命令（slash command）形式提供。 |
+| `<agent-dir>/themes/` | 用户级[主题（theme）](themes)文件。 |
 
 ## 项目 `.pi` 目录
 
 | 路径 | 职责 |
 |---|---|
-| `.pi/settings.json` | 项目级[设置](settings.md)、资源路径与 Pi 包声明。 |
-| `.pi/mcp.json` | 项目级 [MCP 服务器](mcp.md)。 |
+| `.pi/settings.json` | 项目级[设置](settings)、资源路径与 Pi 包声明。 |
+| `.pi/mcp.json` | 项目级 [MCP 服务器](mcp)。 |
 | `.pi/SYSTEM.md` | 替换该项目的系统提示词。 |
 | `.pi/APPEND_SYSTEM.md` | 向系统提示词追加项目专属指令。 |
 | `.pi/extensions/` | 项目扩展。 |

@@ -2,7 +2,7 @@
 title: "设置参考"
 ---
 
-本参考列出用户可配置的设置项、类型、默认值和用途。项目设置覆盖 agent 目录设置。资源列表则会合并。文件位置与信任行为参见[配置](configuration.md)。
+本参考列出用户可配置的设置项、类型、默认值和用途。项目设置覆盖 agent 目录设置。资源列表则会合并。文件位置与信任行为参见[配置](configuration)。
 
 ## 模型与思考
 
@@ -20,9 +20,9 @@ title: "设置参考"
 | `showCacheMissNotices` | boolean | `false` | 显示重大缓存未命中、缓存预热成功、压缩用量以及提供商恢复的通知。 |
 | `cacheWarming` | `"off" \| "streaming" \| "idle"` | `"streaming"` | 在运行期间保持符合条件的提供商提示词缓存热度；设为 `"idle"` 则在运行间隙保持。仅限全局设置。 |
 
-只有当模型声明了缓存有效期、且 Pi 估算可避免的缓存未命中成本不低于 $0.05 时，缓存预热才会运行。刷新用量计入会话总量，但不进入模型上下文。`/session` 会显示下一次决定；扩展可以用 `cache_warming_decision` 覆盖它。参见[提示词缓存有效期](models.md#prompt-cache-lifetimes)。
+只有当模型声明了缓存有效期、且 Pi 估算可避免的缓存未命中成本不低于 $0.05 时，缓存预热才会运行。刷新用量计入会话总量，但不进入模型上下文。`/session` 会显示下一次决定；扩展可以用 `cache_warming_decision` 覆盖它。参见[提示词缓存有效期](models#prompt-cache-lifetimes)。
 
-模型选择与思考控制参见[选择模型](models.md)。
+模型选择与思考控制参见[选择模型](models)。
 
 ## 交互
 
@@ -57,7 +57,7 @@ title: "设置参考"
 
 `/reload` 会启用新加入 `defaultTools` 的工具。它不会禁用从中移除的工具，也不会重新启用你关掉且未变更的工具。带普通名称的 `--tools`、`--no-tools` 和 `--no-builtin-tools` 会覆盖 `defaultTools`，重新加载时也是如此。
 
-CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` 条目的 `--tools` 则修改解析后的 `defaultTools` 选择，例如 `pi --tools +codemode`。`/reload` 时，这些条目同样作用于重新加载后的设置，因此用 `-name` 移除的工具会保持移除。参见[命令行](cli.md#%E5%B7%A5%E5%85%B7)。
+CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` 条目的 `--tools` 则修改解析后的 `defaultTools` 选择，例如 `pi --tools +codemode`。`/reload` 时，这些条目同样作用于重新加载后的设置，因此用 `-name` 移除的工具会保持移除。参见[命令行](cli#%E5%B7%A5%E5%85%B7)。
 
 ## 会话与上下文
 
@@ -78,7 +78,7 @@ CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` �
 
 压缩 token 值必须是非负安全整数。每个值独立解析：先看匹配的模型覆盖，再看普通压缩设置，最后是内置默认值。项目与用户的对象在模型查找前先行合并。
 
-触发、摘要与校验行为参见[压缩参考](compaction.md)。
+触发、摘要与校验行为参见[压缩参考](compaction)。
 
 ### 分支摘要
 
@@ -114,7 +114,7 @@ CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` �
 | `markdown.codeBlockIndent` | string | `"  "` | 用于缩进渲染后代码块的前缀。 |
 | `markdown.mermaid` | `"off" \| "final" \| "streaming"` | `"streaming"` | Mermaid 渲染模式。 |
 
-格式与平台细节参见[主题](themes.md)和[终端设置](terminal-setup.md)。
+格式与平台细节参见[主题](themes)和[终端设置](terminal-setup)。
 
 ## 网络与重试
 
@@ -142,7 +142,7 @@ CLI 工具选项只对一次调用覆盖此设置。仅含 `+name` 和 `-name` �
 | `shellCommandPrefix` | string | 无 | 前置到每条 shell 命令的前缀。 |
 | `npmCommand` | `string[]` | `npm` | 用于 npm 包查找与安装的命令和参数。 |
 
-shell 配置参见[shell 别名](shell-aliases.md)，包管理器行为参见[Pi 包](packages.md)。
+shell 配置参见[shell 别名](shell-aliases)，包管理器行为参见[Pi 包](packages)。
 
 ## 资源
 
@@ -150,7 +150,7 @@ shell 配置参见[shell 别名](shell-aliases.md)，包管理器行为参见[Pi
 
 | 设置 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `packages` | array | `[]` | npm、git 或本地 Pi 包来源。参见[Pi 包](packages.md)。 |
+| `packages` | array | `[]` | npm、git 或本地 Pi 包来源。参见[Pi 包](packages)。 |
 | `extensions` | `string[]` | `[]` | 扩展文件或目录。 |
 | `skills` | `string[]` | `[]` | 技能文件或目录。 |
 | `prompts` | `string[]` | `[]` | 提示词模板文件或目录。 |

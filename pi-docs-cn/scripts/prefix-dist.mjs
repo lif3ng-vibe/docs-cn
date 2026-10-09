@@ -73,6 +73,31 @@ function reJs(s) {
   return out;
 }
 
+/**
+ * 飞行数据（RSC payload）修正：只处理 HTML 内嵌字符串，不动 .js 文件。
+ * 静态导出的 hydration 恢复/懒加载会按 payload 里的路径插入 script 与
+ * 预取 chunk——不带前缀就去站点根拉 404，交互（主题切换/搜索/软导航）全灭。
+ * 同时把 flight 的资产前缀字段 `\"p\":\"\"` 补上（Next 运行时动态拼 chunk URL 用）。
+ */
+function reFlight(s) {
+  let out = s;
+  const variants = [
+    ['\\"src\\":\\"/_next/', '\\"src\\":\\"' + P + '/_next/'],
+    ['\\"/_next/static/', '\\"' + P + '/_next/static/'],
+    ['"src":"/_next/', '"src":"' + P + '/_next/'],
+    ['"/_next/static/', '"' + P + '/_next/static/'],
+    ['\\"p\\":\\"\\"', '\\"p\\":\\"' + P + '\\"'],
+  ];
+  for (const [from, to] of variants) {
+    const n = out.split(from).length - 1;
+    if (n) {
+      out = out.split(from).join(to);
+      changed += n;
+    }
+  }
+  return out;
+}
+
 // 0. 扁平化 <dir>/index/ 页面到 <dir>/（Mintlify 把 xxx/index 渲染在 /xxx）
 import { renameSync, existsSync } from 'node:fs';
 function flattenIndex(dir) {
@@ -105,8 +130,8 @@ function walk(dir) {
     else {
       const src = readFileSync(p, 'utf8');
       let out = src;
-      if (e.name.endsWith('.html')) out = reSrcset(reAttr(src));
-      out = reJs(out);
+      if (e.name.endsWith('.html')) out = reFlight(reJs(reSrcset(reAttr(src))));
+      else out = reJs(out);
       if (out !== src) writeFileSync(p, out);
     }
   }

@@ -2,7 +2,7 @@
 title: "Codemode"
 ---
 
-`codemode` 工具让模型编写一段 JavaScript 脚本，用于调用 pi 的其他工具并运行非 LLM 模型，例如分类模型和图像模型。只有脚本的输出会到达模型，因此脚本可以并行执行调用，并在模型看到结果之前过滤大量数据。开启方法参见[启用 codemode](cli.md#%E5%90%AF%E7%94%A8-codemode)。
+`codemode` 工具让模型编写一段 JavaScript 脚本，用于调用 pi 的其他工具并运行非 LLM 模型，例如分类模型和图像模型。只有脚本的输出会到达模型，因此脚本可以并行执行调用，并在模型看到结果之前过滤大量数据。开启方法参见[启用 codemode](cli#%E5%90%AF%E7%94%A8-codemode)。
 
 ## 脚本
 
@@ -49,9 +49,9 @@ title: "Codemode"
 
 失败、被阻止或参数非法的调用会 reject 一个携带该工具错误文本的 `Error`。用 `Promise.allSettled()` 可以保留成功调用的结果。
 
-`codemode` 的描述会按命名空间（例如单个 MCP 服务器）分组，列出工具及其 TypeScript 声明。`deferred` 暴露方式的工具不在列，其中包括采用默认 `codemode` 暴露方式的 MCP 工具，因此 MCP 服务器连接时描述保持不变。已列出的声明共享 3000 估算 token 的预算（[设置](settings.md#%E5%B7%A5%E5%85%B7)中的 `codemode.inlineBudget`）。脚本用 `searchTools()`、`describeTool()`、`describeNamespace()` 或过滤 `ALL_TOOLS` 来找到其余工具。
+`codemode` 的描述会按命名空间（例如单个 MCP 服务器）分组，列出工具及其 TypeScript 声明。`deferred` 暴露方式的工具不在列，其中包括采用默认 `codemode` 暴露方式的 MCP 工具，因此 MCP 服务器连接时描述保持不变。已列出的声明共享 3000 估算 token 的预算（[设置](settings#%E5%B7%A5%E5%85%B7)中的 `codemode.inlineBudget`）。脚本用 `searchTools()`、`describeTool()`、`describeNamespace()` 或过滤 `ALL_TOOLS` 来找到其余工具。
 
-`codemode` 激活时，[设置](settings.md#%E5%B7%A5%E5%85%B7)中的 `codemode.mode` 决定其他工具如何呈现。设为 `on`（默认）时，已声明的工具保持声明状态，其描述会说明如何从脚本调用它们。设为 `only` 时，这些工具对模型隐藏，改为列在 `codemode` 描述中，模型只能通过脚本调用它们。`codemode` 描述、`describeTool()` 和 `ALL_TOOLS` 中的工具声明会附带工具的提示词指引，因为系统提示词规则只覆盖已声明的工具。
+`codemode` 激活时，[设置](settings#%E5%B7%A5%E5%85%B7)中的 `codemode.mode` 决定其他工具如何呈现。设为 `on`（默认）时，已声明的工具保持声明状态，其描述会说明如何从脚本调用它们。设为 `only` 时，这些工具对模型隐藏，改为列在 `codemode` 描述中，模型只能通过脚本调用它们。`codemode` 描述、`describeTool()` 和 `ALL_TOOLS` 中的工具声明会附带工具的提示词指引，因为系统提示词规则只覆盖已声明的工具。
 
 ## 存储值
 
@@ -61,7 +61,7 @@ title: "Codemode"
 
 ## 模型
 
-`models` 访问模型目录，并使用会话的凭据运行非 LLM 模型：分类模型（对 JSON 状态回答有类型的问题，部分模型还支持图片）和图像模型（生成图片）。chat 模型会列出但不能从脚本运行。可用的分类模型与图像模型见[使用分类模型](models.md#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)和[使用图像模型](models.md#%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%83%8F%E6%A8%A1%E5%9E%8B)。
+`models` 访问模型目录，并使用会话的凭据运行非 LLM 模型：分类模型（对 JSON 状态回答有类型的问题，部分模型还支持图片）和图像模型（生成图片）。chat 模型会列出但不能从脚本运行。可用的分类模型与图像模型见[使用分类模型](models#%E4%BD%BF%E7%94%A8%E5%88%86%E7%B1%BB%E6%A8%A1%E5%9E%8B)和[使用图像模型](models#%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%83%8F%E6%A8%A1%E5%9E%8B)。
 
 ```ts
 type ModelType = "chat" | "image" | "classifier";
