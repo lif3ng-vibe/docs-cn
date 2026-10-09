@@ -1,36 +1,36 @@
-# RPC Extension UI
+# RPC 扩展 UI
 
-Extensions can request user interaction through `ctx.ui`. In RPC mode, supported calls become a request/response subprotocol alongside normal [RPC commands](rpc-commands.md) and [session events](json.md).
+扩展可以通过 `ctx.ui` 请求用户交互。在 RPC 模式下，受支持的调用成为一个请求/响应子协议，与常规的 [RPC 命令](rpc-commands.md)和[会话事件](json.md)并存。
 
-There are two categories of extension UI methods:
+扩展 UI 方法分为两类：
 
-- **Dialog methods** (`select`, `confirm`, `input`, `editor`): emit an `extension_ui_request` on stdout and block until the client sends back an `extension_ui_response` on stdin with the matching `id`.
-- **Fire-and-forget methods** (`notify`, `setStatus`, `setWidget`, `setTitle`, `set_editor_text`): emit an `extension_ui_request` on stdout but do not expect a response. The client can display the information or ignore it.
+- **对话框方法**（`select`、`confirm`、`input`、`editor`）：在 stdout 上发出 `extension_ui_request` 并阻塞，直到客户端在 stdin 上发回带有匹配 `id` 的 `extension_ui_response`。
+- **即发即忘方法**（`notify`、`setStatus`、`setWidget`、`setTitle`、`set_editor_text`）：在 stdout 上发出 `extension_ui_request`，但不期待响应。客户端可以展示该信息，也可以忽略。
 
-If a dialog method includes a `timeout` field, the agent-side will auto-resolve with a default value when the timeout expires. The client does not need to track timeouts.
+如果对话框方法带有 `timeout` 字段，当超时到期时，智能体侧会以默认值自动解决。客户端无需追踪超时。
 
-## Limitations
+## 限制
 
-Some `ExtensionUIContext` methods are not supported or degraded in RPC mode because they require direct terminal UI access:
+一些 `ExtensionUIContext` 方法在 RPC 模式下不受支持或功能降级，因为它们需要直接访问终端 UI：
 
-- `custom()` returns `undefined`.
-- `onTerminalInput()` returns a no-op unsubscribe function.
-- `setWorkingMessage()`, `setWorkingVisible()`, `setWorkingIndicator()`, `setHiddenThinkingLabel()`, `setFooter()`, `setHeader()`, `addAutocompleteProvider()`, `setEditorComponent()`, and `setToolsExpanded()` are no-ops.
-- `getEditorText()` returns `""` and `getEditorComponent()` returns `undefined`.
-- `getToolsExpanded()` returns `false`.
-- `pasteToEditor()` delegates to `setEditorText()` without terminal paste handling.
-- `getAllThemes()` returns `[]`, and `getTheme()` returns `undefined`.
-- `setTheme()` returns `{ success: false, error: "Theme switching not supported in RPC mode" }`.
+- `custom()` 返回 `undefined`。
+- `onTerminalInput()` 返回一个无操作（no-op）的取消订阅函数。
+- `setWorkingMessage()`、`setWorkingVisible()`、`setWorkingIndicator()`、`setHiddenThinkingLabel()`、`setFooter()`、`setHeader()`、`addAutocompleteProvider()`、`setEditorComponent()` 和 `setToolsExpanded()` 均为无操作。
+- `getEditorText()` 返回 `""`，`getEditorComponent()` 返回 `undefined`。
+- `getToolsExpanded()` 返回 `false`。
+- `pasteToEditor()` 委托给 `setEditorText()`，没有终端粘贴处理。
+- `getAllThemes()` 返回 `[]`，`getTheme()` 返回 `undefined`。
+- `setTheme()` 返回 `{ success: false, error: "Theme switching not supported in RPC mode" }`。
 
-Note: `ctx.mode` is `"rpc"` and `ctx.hasUI` is `true` in RPC mode because the dialog and fire-and-forget methods are functional via the extension UI sub-protocol. Use `ctx.mode === "tui"` to guard TUI-specific features like `custom()` that require a real terminal.
+注意：在 RPC 模式下 `ctx.mode` 为 `"rpc"` 且 `ctx.hasUI` 为 `true`，因为对话框与即发即忘方法可以通过扩展 UI 子协议正常工作。对于 `custom()` 这类需要真实终端的 TUI 专属功能，请用 `ctx.mode === "tui"` 加以保护。
 
-## Requests from Pi
+## 来自 Pi 的请求
 
-All requests have `type: "extension_ui_request"`, a unique `id`, and a `method` field.
+所有请求都带有 `type: "extension_ui_request"`、一个唯一的 `id` 和一个 `method` 字段。
 
 ### select
 
-Prompt the user to choose from a list. Dialog methods with a `timeout` field include the timeout in milliseconds; the agent auto-resolves with `undefined` if the client doesn't respond in time.
+提示用户从列表中选择。带 `timeout` 字段的对话框方法以毫秒为单位包含超时时间；如果客户端未及时响应，智能体会以 `undefined` 自动解决。
 
 ```json
 {
@@ -43,11 +43,11 @@ Prompt the user to choose from a list. Dialog methods with a `timeout` field inc
 }
 ```
 
-Expected response: `extension_ui_response` with `value` (the selected option string) or `cancelled: true`.
+期望的响应：带有 `value`（所选选项字符串）的 `extension_ui_response`，或 `cancelled: true`。
 
 ### confirm
 
-Prompt the user for yes/no confirmation.
+提示用户进行是/否确认。
 
 ```json
 {
@@ -60,11 +60,11 @@ Prompt the user for yes/no confirmation.
 }
 ```
 
-Expected response: `extension_ui_response` with `confirmed: true/false` or `cancelled: true`.
+期望的响应：带有 `confirmed: true/false` 的 `extension_ui_response`，或 `cancelled: true`。
 
 ### input
 
-Prompt the user for free-form text.
+提示用户输入自由格式文本。
 
 ```json
 {
@@ -76,11 +76,11 @@ Prompt the user for free-form text.
 }
 ```
 
-Expected response: `extension_ui_response` with `value` (the entered text) or `cancelled: true`.
+期望的响应：带有 `value`（输入的文本）的 `extension_ui_response`，或 `cancelled: true`。
 
 ### editor
 
-Open a multi-line text editor with optional prefilled content.
+打开一个多行文本编辑器，可选择预填内容。
 
 ```json
 {
@@ -92,11 +92,11 @@ Open a multi-line text editor with optional prefilled content.
 }
 ```
 
-Expected response: `extension_ui_response` with `value` (the edited text) or `cancelled: true`.
+期望的响应：带有 `value`（编辑后的文本）的 `extension_ui_response`，或 `cancelled: true`。
 
 ### notify
 
-Display a notification. Fire-and-forget, no response expected.
+显示一条通知。即发即忘，不期待响应。
 
 ```json
 {
@@ -108,11 +108,11 @@ Display a notification. Fire-and-forget, no response expected.
 }
 ```
 
-The `notifyType` field is `"info"`, `"warning"`, or `"error"`. Defaults to `"info"` if omitted.
+`notifyType` 字段为 `"info"`、`"warning"` 或 `"error"`。省略时默认为 `"info"`。
 
 ### setStatus
 
-Set or clear a status entry in the footer/status bar. Fire-and-forget.
+设置或清除页脚/状态栏中的状态条目。即发即忘。
 
 ```json
 {
@@ -124,11 +124,11 @@ Set or clear a status entry in the footer/status bar. Fire-and-forget.
 }
 ```
 
-Send `statusText: undefined` (or omit it) to clear the status entry for that key.
+发送 `statusText: undefined`（或省略它）即可清除该键的状态条目。
 
 ### setWidget
 
-Set or clear a widget (block of text lines) displayed above or below the editor. Fire-and-forget.
+设置或清除显示在编辑器上方或下方的部件（widget，文本行块）。即发即忘。
 
 ```json
 {
@@ -141,11 +141,11 @@ Set or clear a widget (block of text lines) displayed above or below the editor.
 }
 ```
 
-Send `widgetLines: undefined` (or omit it) to clear the widget. The `widgetPlacement` field is `"aboveEditor"` (default) or `"belowEditor"`. Only string arrays are supported in RPC mode; component factories are ignored.
+发送 `widgetLines: undefined`（或省略它）即可清除部件。`widgetPlacement` 字段为 `"aboveEditor"`（默认）或 `"belowEditor"`。RPC 模式只支持字符串数组；组件工厂会被忽略。
 
 ### setTitle
 
-Set the terminal window/tab title. Fire-and-forget.
+设置终端窗口/标签页标题。即发即忘。
 
 ```json
 {
@@ -158,7 +158,7 @@ Set the terminal window/tab title. Fire-and-forget.
 
 ### set_editor_text
 
-Set the text in the input editor. Fire-and-forget.
+设置输入编辑器中的文本。即发即忘。
 
 ```json
 {
@@ -169,32 +169,32 @@ Set the text in the input editor. Fire-and-forget.
 }
 ```
 
-## Responses to Pi
+## 发往 Pi 的响应
 
-Responses are sent for dialog methods only (`select`, `confirm`, `input`, `editor`). The `id` must match the request.
+只有对话框方法（`select`、`confirm`、`input`、`editor`）才会发送响应。`id` 必须与请求匹配。
 
-### Value response (select, input, editor)
+### 值响应（select、input、editor）
 
 ```json
 {"type": "extension_ui_response", "id": "uuid-1", "value": "Allow"}
 ```
 
-### Confirmation response (confirm)
+### 确认响应（confirm）
 
 ```json
 {"type": "extension_ui_response", "id": "uuid-2", "confirmed": true}
 ```
 
-### Cancellation response (any dialog)
+### 取消响应（任意对话框）
 
-Dismiss any dialog method. The extension receives `undefined` (for select/input/editor) or `false` (for confirm).
+适用于取消任何对话框方法。扩展会收到 `undefined`（select/input/editor）或 `false`（confirm）。
 
 ```json
 {"type": "extension_ui_response", "id": "uuid-3", "cancelled": true}
 ```
 
-## Example
+## 示例
 
-See the checked [RPC extension UI client](../examples/rpc-extension-ui.ts) and its [demo extension](../examples/extensions/rpc-demo.ts).
+经过验证的 [RPC 扩展 UI 客户端](../examples/rpc-extension-ui.ts)及其[演示扩展](../examples/extensions/rpc-demo.ts)可供参阅。
 
-The exported request and response unions are defined in [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts). See [Extensions](extensions.md#ui-and-modes) for mode-independent extension guidance.
+导出的请求与响应联合类型定义于 [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts)。与模式无关的扩展指南参见[扩展](extensions.md#ui-and-modes)。
