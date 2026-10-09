@@ -137,6 +137,8 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 4. 组装产物：入口页 `index.html` 在根，子站点分别在 `codegraph/`、`orca/`、`mattpocock-skills/`、`ai-coding-dictionary/`、`ai-memory/`、`nimbus/`。
 5. 部署到 https://lif3ng-vibe.github.io/docs-cn/ 。
 
+> 增量打包：每个子站的产物目录按「站点目录内容 + 本 workflow 文件」做内容哈希缓存（actions/cache）——源码没变直接命中缓存跳过构建，命中情况见 Actions 运行页的构建摘要表。改 workflow 文件会使全部站点缓存失效（全量重建）；`sites.json`/`gen-index.cjs` 变更只影响入口页（每次重新生成，秒级）；缓存 7 天未用被 GitHub 逐出后会 miss 自愈重建一次。
+
 部署后访问地址：
 - 入口：https://lif3ng-vibe.github.io/docs-cn/
 - codegraph：https://lif3ng-vibe.github.io/docs-cn/codegraph/

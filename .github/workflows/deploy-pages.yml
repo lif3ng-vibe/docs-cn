@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [master]
+    # 根 README 与设计文档不影响任何站点产物
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
   workflow_dispatch:
 
 # 允许 Pages 部署
@@ -16,6 +20,11 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# 增量打包：每个子站的产物目录按「站点目录内容 + 本 workflow 文件」做内容哈希缓存
+# （actions/cache）。源码没变 → 缓存命中 → 构建步骤整步跳过；变了 → miss → 照常
+# 构建，产物直接落 _site/<slug> 并在 job 结束后自动存缓存。缓存 7 天未用会被
+# GitHub 逐出，此时 miss 自愈重建一次。sites.json / gen-index.cjs 不参与站点缓存，
+# 入口页每次重新生成（秒级）。
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,12 +51,23 @@ jobs:
             claude-mem-docs-cn/package-lock.json
             pi-docs-cn/package-lock.json
 
+      - name: Prepare _site
+        run: mkdir -p _site
+
       # tester-army-e2e 是 Mintlify 站：登录凭据下 npx mint export 出纯静态站
       # （53 页目录式 index.html，全部 RSC payload 内嵌于 HTML），postprocess-export.mjs
       # 把 HTML 属性与内嵌 payload 里的根绝对引用改写为 /docs-cn/tester-army-e2e 前缀。
       # 只改 HTML，不动 JS chunk（会语法损坏）。凭据经 repo secret MINT_CONFIG
       # 还原到 mint CLI 的登录文件位置。
+      - name: Restore tester-army-e2e-docs-cn dist
+        id: dist-tester-army-e2e
+        uses: actions/cache@v4
+        with:
+          path: _site/tester-army-e2e
+          key: dist-tester-army-e2e-${{ hashFiles('tester-army-e2e-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build tester-army-e2e-docs-cn
+        if: steps.dist-tester-army-e2e.outputs.cache-hit != 'true'
         working-directory: tester-army-e2e-docs-cn
         env:
           MINT_CONFIG: ${{ secrets.MINT_CONFIG }}
@@ -57,6 +77,7 @@ jobs:
           npx mint export --output export.zip
           mkdir -p dist-deploy && cd dist-deploy && unzip -qo ../export.zip && cd ..
           node postprocess-export.mjs dist-deploy /docs-cn/tester-army-e2e
+          mv dist-deploy ../_site/tester-army-e2e
 
       # claude-mem 是 Mintlify 站：官方 CLI 的 export 是匿名可用的 air-gap 静态导出，
       # 但产物为根路径站；prefix-dist.mjs 事后加 /docs-cn/claude-mem/ 前缀（含
@@ -65,7 +86,15 @@ jobs:
       # mint export 不同）。注意：export 会把项目根散文件复制进渲染客户端
       # public，务必先清掉 dist/ 与旧 export.zip；干净导出约 18MB/50 页，
       # 异常膨胀直接重跑。
+      - name: Restore claude-mem-docs-cn dist
+        id: dist-claude-mem
+        uses: actions/cache@v4
+        with:
+          path: _site/claude-mem
+          key: dist-claude-mem-${{ hashFiles('claude-mem-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build claude-mem-docs-cn
+        if: steps.dist-claude-mem.outputs.cache-hit != 'true'
         working-directory: claude-mem-docs-cn
         env:
           DOCS_BASE: /docs-cn/claude-mem
@@ -76,13 +105,22 @@ jobs:
           mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
           rm -f export.zip
           node scripts/prefix-dist.mjs
+          mv dist ../_site/claude-mem
 
       # pi 是 Mintlify 格式文档（earendil-works/pi monorepo 的 packages/coding-agent/docs，
       # 上游 pi.dev 自研渲染器不开源，镜像用 Mintlify 原班工具链渲染同源 Markdown）。
       # 匿名 npx mintlify export 出静态站，prefix-dist.mjs 加 /docs-cn/pi 前缀（含水合
       # assetPrefix 修补）。export 会把项目根散文件复制进渲染客户端 public，先清
       # dist/ 与旧 export.zip。
+      - name: Restore pi-docs-cn dist
+        id: dist-pi
+        uses: actions/cache@v4
+        with:
+          path: _site/pi
+          key: dist-pi-${{ hashFiles('pi-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build pi-docs-cn
+        if: steps.dist-pi.outputs.cache-hit != 'true'
         working-directory: pi-docs-cn
         env:
           DOCS_BASE: /docs-cn/pi
@@ -93,13 +131,22 @@ jobs:
           mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
           rm -f export.zip
           node scripts/prefix-dist.mjs
+          mv dist ../_site/pi
 
       # ai-sdk 是 pnpm monorepo（geistdocs/fumadocs + Next.js 16 静态导出）。
       # 无需 sed：basePath 写死在其 next.config.ts 与 geistdocs config，内链/
       # canonical/sitemap 构建期自动带 /docs-cn/ai-sdk 前缀（已本地验证产物）；
       # 搜索是构建期静态索引，无需服务端。产物 out/ 在 apps/docs/ 根层，
       # postprocess 脚本负责折叠 root-param 目录与板块根跳转桩。
+      - name: Restore ai-sdk-docs-cn dist
+        id: dist-ai-sdk
+        uses: actions/cache@v4
+        with:
+          path: _site/ai-sdk
+          key: dist-ai-sdk-${{ hashFiles('ai-sdk-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build ai-sdk-docs-cn
+        if: steps.dist-ai-sdk.outputs.cache-hit != 'true'
         working-directory: ai-sdk-docs-cn
         env:
           NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: https://lif3ng-vibe.github.io/docs-cn/ai-sdk
@@ -107,8 +154,17 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm --filter ai-sdk-docs build
+          mv apps/docs/out ../_site/ai-sdk
+
+      - name: Restore codegraph-docs-cn dist
+        id: dist-codegraph
+        uses: actions/cache@v4
+        with:
+          path: _site/codegraph
+          key: dist-codegraph-${{ hashFiles('codegraph-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build codegraph-docs-cn
+        if: steps.dist-codegraph.outputs.cache-hit != 'true'
         working-directory: codegraph-docs-cn
         env:
           DOCS_BASE: /docs-cn/codegraph/
@@ -118,8 +174,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/codegraph/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/codegraph
+
+      - name: Restore orca-docs-cn dist
+        id: dist-orca
+        uses: actions/cache@v4
+        with:
+          path: _site/orca
+          key: dist-orca-${{ hashFiles('orca-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build orca-docs-cn
+        if: steps.dist-orca.outputs.cache-hit != 'true'
         working-directory: orca-docs-cn
         env:
           DOCS_BASE: /docs-cn/orca/
@@ -127,8 +192,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/orca/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/orca
+
+      - name: Restore mattpocock-skills-docs-cn dist
+        id: dist-mattpocock-skills
+        uses: actions/cache@v4
+        with:
+          path: _site/mattpocock-skills
+          key: dist-mattpocock-skills-${{ hashFiles('mattpocock-skills-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build mattpocock-skills-docs-cn
+        if: steps.dist-mattpocock-skills.outputs.cache-hit != 'true'
         working-directory: mattpocock-skills-docs-cn
         env:
           DOCS_BASE: /docs-cn/mattpocock-skills/
@@ -136,11 +210,20 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/mattpocock-skills/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/mattpocock-skills
 
       # agency-agents 是标准 Starlight + npm（326 篇正文 md）：authored 内链已在
       # 源码一次性根绝对化（](/catalog/… 与 hero 的 link: /…），CI 统一补 base 前缀。
       # agency-agents-en：与中文站同构的英文镜像（对照工具 origin 侧），同款 CI 补前缀。
+      - name: Restore agency-agents-docs-en dist
+        id: dist-agency-agents-en
+        uses: actions/cache@v4
+        with:
+          path: _site/agency-agents-en
+          key: dist-agency-agents-en-${{ hashFiles('agency-agents-docs-en/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build agency-agents-docs-en
+        if: steps.dist-agency-agents-en.outputs.cache-hit != 'true'
         working-directory: agency-agents-docs-en
         env:
           DOCS_SITE: https://lif3ng-vibe.github.io
@@ -150,8 +233,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i "s|link: '/|link: '/docs-cn/agency-agents-en/|g; s|link: /|link: /docs-cn/agency-agents-en/|g" {} +
           npm ci
           npm run build
+          mv dist ../_site/agency-agents-en
+
+      - name: Restore agency-agents-docs-cn dist
+        id: dist-agency-agents
+        uses: actions/cache@v4
+        with:
+          path: _site/agency-agents
+          key: dist-agency-agents-${{ hashFiles('agency-agents-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build agency-agents-docs-cn
+        if: steps.dist-agency-agents.outputs.cache-hit != 'true'
         working-directory: agency-agents-docs-cn
         env:
           DOCS_SITE: https://lif3ng-vibe.github.io
@@ -161,8 +253,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i "s|link: '/|link: '/docs-cn/agency-agents/|g; s|link: /|link: /docs-cn/agency-agents/|g" {} +
           npm ci
           npm run build
+          mv dist ../_site/agency-agents
+
+      - name: Restore ai-coding-dictionary-docs-cn dist
+        id: dist-ai-coding-dictionary
+        uses: actions/cache@v4
+        with:
+          path: _site/ai-coding-dictionary
+          key: dist-ai-coding-dictionary-${{ hashFiles('ai-coding-dictionary-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build ai-coding-dictionary-docs-cn
+        if: steps.dist-ai-coding-dictionary.outputs.cache-hit != 'true'
         working-directory: ai-coding-dictionary-docs-cn
         env:
           DOCS_BASE: /docs-cn/ai-coding-dictionary/
@@ -170,8 +271,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/ai-coding-dictionary/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/ai-coding-dictionary
+
+      - name: Restore ai-memory-docs-cn dist
+        id: dist-ai-memory
+        uses: actions/cache@v4
+        with:
+          path: _site/ai-memory
+          key: dist-ai-memory-${{ hashFiles('ai-memory-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build ai-memory-docs-cn
+        if: steps.dist-ai-memory.outputs.cache-hit != 'true'
         working-directory: ai-memory-docs-cn
         env:
           DOCS_BASE: /docs-cn/ai-memory/
@@ -179,8 +289,17 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/ai-memory/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/ai-memory
+
+      - name: Restore ai-memory-docs-en dist
+        id: dist-ai-memory-en
+        uses: actions/cache@v4
+        with:
+          path: _site/ai-memory-en
+          key: dist-ai-memory-en-${{ hashFiles('ai-memory-docs-en/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build ai-memory-docs-en
+        if: steps.dist-ai-memory-en.outputs.cache-hit != 'true'
         working-directory: ai-memory-docs-en
         env:
           DOCS_BASE: /docs-cn/ai-memory-en/
@@ -188,10 +307,19 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/ai-memory-en/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/ai-memory-en
 
       # openrig 是标准 Starlight + npm；正文 md/mdx 内链 ](/…) 与 index.mdx hero 的
       # YAML link: '/… 都需 CI 临时加 base 前缀（组件链接 Astro 会自动加，正文不会）。
+      - name: Restore openrig-docs-cn dist
+        id: dist-openrig
+        uses: actions/cache@v4
+        with:
+          path: _site/openrig
+          key: dist-openrig-${{ hashFiles('openrig-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build openrig-docs-cn
+        if: steps.dist-openrig.outputs.cache-hit != 'true'
         working-directory: openrig-docs-cn
         env:
           DOCS_SITE: https://lif3ng-vibe.github.io
@@ -202,8 +330,17 @@ jobs:
           find src/content/docs -name '*.mdx' -exec sed -i "s|link: '/|link: '/docs-cn/openrig/|g" {} +
           npm ci
           npm run build
+          mv dist ../_site/openrig
+
+      - name: Restore openrig-docs-en dist
+        id: dist-openrig-en
+        uses: actions/cache@v4
+        with:
+          path: _site/openrig-en
+          key: dist-openrig-en-${{ hashFiles('openrig-docs-en/**', '.github/workflows/deploy-pages.yml') }}
 
       - name: Build openrig-docs-en
+        if: steps.dist-openrig-en.outputs.cache-hit != 'true'
         working-directory: openrig-docs-en
         env:
           DOCS_BASE: /docs-cn/openrig-en/
@@ -211,11 +348,20 @@ jobs:
           find src/content/docs -name '*.md' -exec sed -i 's|\](/|\](/docs-cn/openrig-en/|g' {} +
           npm ci
           npm run build
+          mv dist ../_site/openrig-en
 
       # nimbus 是 pnpm monorepo：先装 workspace，再两段构建（框架包 → www 站点）。
       # 与其他站不同，无需 sed 内链——nimbus 框架的 authored-links 会按 base
       # 自动给正文内链加前缀；DOCS_SITE/DOCS_BASE 由 apps/www/astro.config.ts 读取。
+      - name: Restore nimbus-docs-cn dist
+        id: dist-nimbus
+        uses: actions/cache@v4
+        with:
+          path: _site/nimbus
+          key: dist-nimbus-${{ hashFiles('nimbus-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build nimbus-docs-cn
+        if: steps.dist-nimbus.outputs.cache-hit != 'true'
         working-directory: nimbus-docs-cn
         env:
           DOCS_SITE: https://lif3ng-vibe.github.io
@@ -225,11 +371,20 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --filter @cloudflare/nimbus-docs build
           pnpm --filter @nimbus/www build
+          mv apps/www/dist ../../_site/nimbus
 
       # openship 是 pnpm monorepo（fumadocs + Next.js 16）。
       # 与其他站不同，无需 sed：Next 按 NEXT_BASE_PATH 自动给资源与内链加前缀，
       # canonical/sitemap 由 NEXT_PUBLIC_SITE_URL 注入。产物 out/ 在仓库根层。
+      - name: Restore openship-docs-cn dist
+        id: dist-openship
+        uses: actions/cache@v4
+        with:
+          path: _site/openship
+          key: dist-openship-${{ hashFiles('openship-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build openship-docs-cn
+        if: steps.dist-openship.outputs.cache-hit != 'true'
         working-directory: openship-docs-cn
         env:
           NEXT_OUTPUT: export
@@ -239,42 +394,61 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm --filter @repo/web build
+          mv apps/web/out ../../_site/openship
 
       # agent-skills 是普通 Astro 营销/教程站（非 Starlight、无正文 markdown）：
       # 站内 authored 链接已在源码一次性带 /docs-cn/agent-skills/ 前缀
       # （见其 astro.config.mjs 注释），无需 sed，直接 npm ci + build。
+      - name: Restore agent-skills-docs-cn dist
+        id: dist-agent-skills
+        uses: actions/cache@v4
+        with:
+          path: _site/agent-skills
+          key: dist-agent-skills-${{ hashFiles('agent-skills-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
       - name: Build agent-skills-docs-cn
+        if: steps.dist-agent-skills.outputs.cache-hit != 'true'
         working-directory: agent-skills-docs-cn
         run: |
           npm ci
           npm run build
+          mv dist ../_site/agent-skills
 
       - name: Assemble Pages artifact
         run: |
-          mkdir -p _site
-          # 入口页由 sites.json 生成（加新站点改 sites.json 即可）
+          # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
+          # 各站点产物已由上方构建步骤（或缓存恢复）直接落到 _site/<slug>/
           node scripts/gen-index.cjs
           cp index.html _site/
-          # 子站点分别放子目录
-          mv codegraph-docs-cn/dist _site/codegraph
-          mv orca-docs-cn/dist _site/orca
-          mv mattpocock-skills-docs-cn/dist _site/mattpocock-skills
-          mv ai-coding-dictionary-docs-cn/dist _site/ai-coding-dictionary
-          mv ai-memory-docs-cn/dist _site/ai-memory
-          mv ai-memory-docs-en/dist _site/ai-memory-en
-          mv openrig-docs-cn/dist _site/openrig
-          mv openrig-docs-en/dist _site/openrig-en
-          mv agency-agents-docs-cn/dist _site/agency-agents
-          mv agency-agents-docs-en/dist _site/agency-agents-en
-          mv nimbus-docs-cn/apps/www/dist _site/nimbus
-          mv openship-docs-cn/apps/web/out _site/openship
-          mv agent-skills-docs-cn/dist _site/agent-skills
-          mv tester-army-e2e-docs-cn/dist-deploy _site/tester-army-e2e
-          mv claude-mem-docs-cn/dist _site/claude-mem
-          mv pi-docs-cn/dist _site/pi
-          mv ai-sdk-docs-cn/apps/docs/out _site/ai-sdk
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo '## 增量打包结果'
+            echo ''
+            echo '| 站点 | 缓存命中（跳过构建） |'
+            echo '|---|---|'
+            echo '| tester-army-e2e | ${{ steps.dist-tester-army-e2e.outputs.cache-hit == 'true' }} |'
+            echo '| claude-mem | ${{ steps.dist-claude-mem.outputs.cache-hit == 'true' }} |'
+            echo '| pi | ${{ steps.dist-pi.outputs.cache-hit == 'true' }} |'
+            echo '| ai-sdk | ${{ steps.dist-ai-sdk.outputs.cache-hit == 'true' }} |'
+            echo '| codegraph | ${{ steps.dist-codegraph.outputs.cache-hit == 'true' }} |'
+            echo '| orca | ${{ steps.dist-orca.outputs.cache-hit == 'true' }} |'
+            echo '| mattpocock-skills | ${{ steps.dist-mattpocock-skills.outputs.cache-hit == 'true' }} |'
+            echo '| agency-agents-en | ${{ steps.dist-agency-agents-en.outputs.cache-hit == 'true' }} |'
+            echo '| agency-agents | ${{ steps.dist-agency-agents.outputs.cache-hit == 'true' }} |'
+            echo '| ai-coding-dictionary | ${{ steps.dist-ai-coding-dictionary.outputs.cache-hit == 'true' }} |'
+            echo '| ai-memory | ${{ steps.dist-ai-memory.outputs.cache-hit == 'true' }} |'
+            echo '| ai-memory-en | ${{ steps.dist-ai-memory-en.outputs.cache-hit == 'true' }} |'
+            echo '| openrig | ${{ steps.dist-openrig.outputs.cache-hit == 'true' }} |'
+            echo '| openrig-en | ${{ steps.dist-openrig-en.outputs.cache-hit == 'true' }} |'
+            echo '| nimbus | ${{ steps.dist-nimbus.outputs.cache-hit == 'true' }} |'
+            echo '| openship | ${{ steps.dist-openship.outputs.cache-hit == 'true' }} |'
+            echo '| agent-skills | ${{ steps.dist-agent-skills.outputs.cache-hit == 'true' }} |'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3
         with:
