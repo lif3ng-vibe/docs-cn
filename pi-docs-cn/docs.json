@@ -1,0 +1,82 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Pi",
+  "description": "运行在终端里的可扩展 AI 智能体（非官方中文文档）",
+  "theme": "mint",
+  "colors": {
+    "primary": "#18181B",
+    "light": "#F4F4F5",
+    "dark": "#18181B"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "快速开始",
+        "pages": ["index", "quickstart", "how-pi-works"]
+      },
+      {
+        "group": "运行 Pi",
+        "pages": [
+          "usage",
+          "models",
+          "sessions",
+          "security",
+          "containerization",
+          "llama-cpp",
+          "terminal-setup",
+          "shell-aliases",
+          "tmux",
+          "windows",
+          "termux"
+        ]
+      },
+      {
+        "group": "自定义 Pi",
+        "pages": [
+          "configuration",
+          "prompt-templates",
+          "skills",
+          "themes",
+          "packages",
+          "mcp"
+        ]
+      },
+      {
+        "group": "基于 Pi 构建",
+        "pages": [
+          "extensions",
+          "custom-provider",
+          "virtual-models",
+          "tui",
+          "cli-integration",
+          "sdk"
+        ]
+      },
+      {
+        "group": "参考",
+        "pages": [
+          "cli",
+          "codemode",
+          "slash-commands",
+          "settings",
+          "environment-variables",
+          "keybindings",
+          "providers",
+          "session-format",
+          "compaction",
+          "json",
+          "rpc",
+          "rpc-commands",
+          "rpc-extension-ui",
+          "message-types"
+        ]
+      }
+    ]
+  },
+  "redirects": [
+    { "source": "/development", "destination": "/index" },
+    { "source": "/session", "destination": "/session-format" },
+    { "source": "/tree", "destination": "/sessions" },
+    { "source": "/process-integration", "destination": "/cli-integration" }
+  ]
+}

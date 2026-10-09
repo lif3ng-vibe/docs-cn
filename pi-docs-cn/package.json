@@ -1,0 +1,17 @@
+{
+  "name": "pi-docs-cn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi 文档中文镜像（非官方），源：https://pi.dev/docs/latest 上游快照 earendil-works/pi@6fb2e7815167e6b19006fc526d1a5d0f5f998787",
+  "scripts": {
+    "dev": "mintlify dev",
+    "export": "mintlify export --disable-openapi",
+    "validate": "mintlify validate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mintlify": "^4.2.992"
+  }
+}
