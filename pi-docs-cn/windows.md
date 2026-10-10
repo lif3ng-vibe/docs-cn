@@ -4,7 +4,7 @@ title: "在 Windows 上运行 Pi"
 
 Pi 可以作为原生 Windows 进程运行，也可以在适用于 Linux 的 Windows 子系统（WSL）中运行。原生 Windows 默认用 Git Bash 执行 Bash 命令，还可以选择向模型暴露 PowerShell。WSL 中的 Pi 则使用 Linux 环境及其 Bash 安装。
 
-按照[快速开始](quickstart)安装并认证 Pi。使用本页来选择和配置它的命令环境。
+按照[快速开始](quickstart.md)安装并认证 Pi。使用本页来选择和配置它的命令环境。
 
 ## 选择原生 Windows 还是 WSL
 
@@ -48,7 +48,7 @@ Pi 按以下顺序查找 Bash：
 
 重启 Pi，然后让它运行一条无害的 PowerShell 命令。`!` 和 `!!` 编辑器命令继续使用 Bash。`powershell` 工具仅在 Pi 作为原生 Windows 进程运行时可用。
 
-其他工具组合参见[设置](settings#%E5%B7%A5%E5%85%B7)。
+其他工具组合参见[设置](settings.md#%E5%B7%A5%E5%85%B7)。
 
 ## 使用自定义 Bash 可执行文件
 
@@ -62,8 +62,8 @@ Pi 按以下顺序查找 Bash：
 
 JSON 用反斜杠表示转义序列。写带反斜杠的 Windows 路径时，请像上面这样把每个反斜杠写两遍。
 
-命令前缀、别名以及完整的 shell 查找行为参见[配置 shell 命令](shell-aliases)。
+命令前缀、别名以及完整的 shell 查找行为参见[配置 shell 命令](shell-aliases.md)。
 
 ## 配置 Windows Terminal
 
-Windows Terminal 会保留或改写部分修饰键组合。要配置 `Shift+Enter` 和 `Alt+Enter`，参见 [Windows Terminal](terminal-setup#windows-terminal)；Pi 在 Windows 和 WSL 上的默认快捷键参见[按键绑定](keybindings)。
+Windows Terminal 会保留或改写部分修饰键组合。要配置 `Shift+Enter` 和 `Alt+Enter`，参见 [Windows Terminal](terminal-setup.md#windows-terminal)；Pi 在 Windows 和 WSL 上的默认快捷键参见[按键绑定](keybindings.md)。

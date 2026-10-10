@@ -5,7 +5,7 @@ title: "快速上手"
 
 Pi 在你的终端中运行，并操作你机器上的文件。要使用它，你需要通过受支持的提供商（provider）访问一个模型（model）。可以是订阅、API 密钥或本地模型。
 
-Windows 原生安装请阅读 [Windows 安装指南](windows)。Android 请阅读 [Termux 安装指南](termux)。
+Windows 原生安装请阅读 [Windows 安装指南](windows.md)。Android 请阅读 [Termux 安装指南](termux.md)。
 
 ## 1. 安装 Pi
 
@@ -50,7 +50,7 @@ pi
 
 <p align="center"><img src="images/interactive-mode.png" alt="在终端中运行的 Pi，包含对话、输入编辑器和状态页脚" width="750" /></p>
 
-界面会显示你的对话、一个用于输入提示词和命令的编辑器，以及一个显示当前目录、模型和会话状态的页脚。参见[在终端中使用 Pi](usage)，了解如何添加文件、运行命令、推进进行中的工作并管理结果。
+界面会显示你的对话、一个用于输入提示词和命令的编辑器，以及一个显示当前目录、模型和会话状态的页脚。参见[在终端中使用 Pi](usage.md)，了解如何添加文件、运行命令、推进进行中的工作并管理结果。
 
 ## 3. 选择模型
 
@@ -64,7 +64,7 @@ pi
 
 选择一个提供商，然后按提示使用订阅或保存 API 密钥。之后如果想选择另一个可用模型，可运行 `/model`。
 
-受支持的提供商、环境变量认证、本地模型和自定义端点，参见[选择模型与提供商](models)。
+受支持的提供商、环境变量认证、本地模型和自定义端点，参见[选择模型与提供商](models.md)。
 
 ## 4. 给 Pi 一个任务
 
@@ -84,7 +84,7 @@ Explain how this repository is structured and how to run its checks.
 Compare @previous.csv with @current.csv and summarize the important changes.
 ```
 
-在编辑器中输入 `@` 即可搜索文件，而无需输入完整路径。Pi 完成后，检查它的回复和任何被更改的文件。重要工作请使用版本控制或备份。不受信任或无人值守的工作，请使用容器（container）或其他沙箱（sandbox）。参见[安全](security)。
+在编辑器中输入 `@` 即可搜索文件，而无需输入完整路径。Pi 完成后，检查它的回复和任何被更改的文件。重要工作请使用版本控制或备份。不受信任或无人值守的工作，请使用容器（container）或其他沙箱（sandbox）。参见[安全](security.md)。
 
 ## 稍后继续
 
@@ -94,13 +94,13 @@ Pi 会自动保存会话。退出 Pi 后，用以下命令恢复同一工作目�
 pi --continue
 ```
 
-使用 `/resume` 选择另一个已保存的会话。会话命名、分支、压缩（compaction）、导出和共享，参见[继续或分支会话](sessions)。
+使用 `/resume` 选择另一个已保存的会话。会话命名、分支、压缩（compaction）、导出和共享，参见[继续或分支会话](sessions.md)。
 
 ## 后续步骤
 
-- [以交互模式使用 Pi](usage)，了解输入、命令、快捷键和排队消息。
-- [添加指令](configuration#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6)，让 Pi 在某个目录中工作时始终遵循。
-- [选择模型与提供商](models)。
+- [以交互模式使用 Pi](usage.md)，了解输入、命令、快捷键和排队消息。
+- [添加指令](configuration.md#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6)，让 Pi 在某个目录中工作时始终遵循。
+- [选择模型与提供商](models.md)。
 
 ### 选择如何定制 Pi
 
@@ -108,13 +108,13 @@ pi --continue
 
 | 需求 | 起步方式 |
 |---|---|
-| 让 Pi 为某个目录保留持久指令 | [`AGENTS.md`](configuration#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6) |
-| 从 `/` 菜单复用一条提示词 | [提示词模板](prompt-templates) |
-| 添加任务专项指令和配套文件 | [技能](skills) |
-| 添加可执行的工具、命令或事件处理器 | [扩展](extensions) |
-| 构建自定义终端组件 | [终端 UI](tui) |
-| 接入未受支持的模型服务 | [自定义提供商](custom-provider) |
-| 安装或分发多种资源 | [Pi 包](packages) |
+| 让 Pi 为某个目录保留持久指令 | [`AGENTS.md`](configuration.md#%E4%B8%8A%E4%B8%8B%E6%96%87%E6%96%87%E4%BB%B6) |
+| 从 `/` 菜单复用一条提示词 | [提示词模板](prompt-templates.md) |
+| 添加任务专项指令和配套文件 | [技能](skills.md) |
+| 添加可执行的工具、命令或事件处理器 | [扩展](extensions.md) |
+| 构建自定义终端组件 | [终端 UI](tui.md) |
+| 接入未受支持的模型服务 | [自定义提供商](custom-provider.md) |
+| 安装或分发多种资源 | [Pi 包](packages.md) |
 
 ## 卸载 Pi
 

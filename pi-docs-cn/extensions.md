@@ -37,7 +37,7 @@ export default function (pi: ExtensionAPI) {
 pi --extension ./hello.ts
 ```
 
-Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。要分发扩展及其依赖，请使用 [Pi 包](packages)。
+Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。要分发扩展及其依赖，请使用 [Pi 包](packages.md)。
 
 <a id="extension-locations"></a>
 <a id="available-imports"></a>
@@ -47,7 +47,7 @@ Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。�
 
 把扩展放到你的用户级或项目级扩展目录中。Pi 会加载直接的 TypeScript 或 JavaScript 文件，以及包含 `index.ts` 或 `index.js` 入口的子目录。
 
-小型扩展用单个文件，多文件实现用目录。npm 依赖放在附近的 `package.json` 中。约定位置见[配置](configuration)，附加路径见[设置](settings#%E8%B5%84%E6%BA%90)。
+小型扩展用单个文件，多文件实现用目录。npm 依赖放在附近的 `package.json` 中。约定位置见[配置](configuration.md)，附加路径见[设置](settings.md#%E8%B5%84%E6%BA%90)。
 
 重新加载会替换扩展运行时，因此 `await ctx.reload()` 之后的代码不得复用旧运行时的状态。只有个人扩展和命令行显式指定的扩展能参与 `project_trust` 事件（它在项目扩展加载之前触发）。
 
@@ -83,7 +83,7 @@ Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。�
 | 更改活动工具、模型或思考级别 | `pi` 上的会话控制方法 |
 | 添加模型提供商 | `pi.registerProvider()` |
 | 添加 MCP 服务器 | `pi.registerMcpServer()` |
-| 将每个请求路由到模型 | [`pi.registerVirtualModel()`](virtual-models) |
+| 将每个请求路由到模型 | [`pi.registerVirtualModel()`](virtual-models.md) |
 | 添加终端渲染 | 渲染器（renderer）注册与 `ctx.ui` |
 | 与其他扩展通信 | `pi.events` |
 
@@ -193,7 +193,7 @@ Pi 把初始提示词和工具集记录在转录的首条系统消息中，然�
 
 ### MCP 服务器
 
-`pi.registerMcpServer(name, config)` 为当前会话添加一个 MCP 服务器。`config` 的形状与 [`mcp.json`](mcp) 中 `mcpServers` 条目一致：stdio 服务器用 `command`、`args`、`env` 和 `cwd`，HTTP 服务器用 `url`、`headers` 和 `oauth`，另有 `exposure`、`toolExposure`、`description`、`enabled` 和 `timeout`。
+`pi.registerMcpServer(name, config)` 为当前会话添加一个 MCP 服务器。`config` 的形状与 [`mcp.json`](mcp.md) 中 `mcpServers` 条目一致：stdio 服务器用 `command`、`args`、`env` 和 `cwd`，HTTP 服务器用 `url`、`headers` 和 `oauth`，另有 `exposure`、`toolExposure`、`description`、`enabled` 和 `timeout`。
 
 ```typescript
 pi.registerMcpServer("jira", { url: "https://mcp.example.com/jira", exposure: "codemode" });
@@ -202,7 +202,7 @@ pi.unregisterMcpServer("jira");
 
 扩展加载期间注册的服务器会在会话启动时随 `mcp.json` 服务器一起连接；之后注册的服务器立即连接，`pi.unregisterMcpServer()` 会关闭连接并使该服务器的工具不可触达。注册不会被保存：每次加载都要重新注册，例如根据扩展自身的设置来决定。`mcp.json` 中同名服务器优先，且 `/mcp` 会显示这一覆盖。再次注册同名会替换本扩展先前的注册；注册其他扩展已占用的名称、无效名称或无效配置都会抛错。
 
-内置的 MCP 支持负责连接已注册的服务器。若没有任何组件去连接——因为内置支持被另一个扩展替换了（见 [MCP](mcp#替换内置的-mcp-支持)）——每次注册都会作为扩展错误上报。其他 MCP 扩展也可以连接已注册的服务器：在 `session_start` 时用 `pi.getMcpServers()` 读取它们，并处理 `mcp_servers_change` 事件以响应后续变更。
+内置的 MCP 支持负责连接已注册的服务器。若没有任何组件去连接——因为内置支持被另一个扩展替换了（见 [MCP](mcp.md#替换内置的-mcp-支持)）——每次注册都会作为扩展错误上报。其他 MCP 扩展也可以连接已注册的服务器：在 `session_start` 时用 `pi.getMcpServers()` 读取它们，并处理 `mcp_servers_change` 事件以响应后续变更。
 
 <a id="extensioncontext"></a>
 <a id="extensioncommandcontext"></a>
@@ -245,11 +245,11 @@ pi.unregisterMcpServer("jira");
 
 `ctx.ui` 提供对话框、通知、状态文本、部件（widget）、标题、编辑器（editor）访问和自定义组件。
 只有当交互需要自己的渲染和输入时才使用 `ctx.ui.custom()`。
-组件、焦点、浮层（overlay）、主题和性能方面的指引见[终端 UI](tui)。
+组件、焦点、浮层（overlay）、主题和性能方面的指引见[终端 UI](tui.md)。
 
 扩展在交互、RPC、JSON 和打印模式下都会加载。
 交互模式提供完整的终端 UI。
-RPC 模式可以通过 [RPC 扩展 UI 协议](rpc-extension-ui)转发受支持的对话框和通知，但不能转发自定义终端组件；JSON 和打印模式没有 UI。
+RPC 模式可以通过 [RPC 扩展 UI 协议](rpc-extension-ui.md)转发受支持的对话框和通知，但不能转发自定义终端组件；JSON 和打印模式没有 UI。
 终端专属行为用 `ctx.mode === "tui"` 保护，交互和 RPC 客户端都支持的交互用 `ctx.hasUI` 判断。
 
 保持工具与事件行为独立于渲染，非交互模式才能正常工作。
@@ -273,4 +273,4 @@ Pi 会上报处理器错误并尽可能继续运行。`tool_call` 处理器失�
 已提交的[扩展示例](../examples/extensions/)覆盖工具、生命周期事件、命令、标志、快捷键、状态、渲染、提供商、OAuth、远程执行和终端组件。
 从与你的集成点对应的最小示例入手。
 
-模型服务集成用[自定义提供商](custom-provider)，自定义组件用[终端 UI](tui)，随其他资源一起安装或分发扩展用 [Pi 包](packages)。
+模型服务集成用[自定义提供商](custom-provider.md)，自定义组件用[终端 UI](tui.md)，随其他资源一起安装或分发扩展用 [Pi 包](packages.md)。

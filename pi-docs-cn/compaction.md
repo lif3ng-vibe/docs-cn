@@ -2,7 +2,7 @@
 title: "压缩参考"
 ---
 
-本参考描述自动压缩、分支摘要、持久化条目和扩展钩子。用户工作流请参阅[会话与上下文](sessions#%E7%AE%A1%E7%90%86%E5%AF%B9%E8%AF%9D%E4%B8%8A%E4%B8%8B%E6%96%87)。
+本参考描述自动压缩、分支摘要、持久化条目和扩展钩子。用户工作流请参阅[会话与上下文](sessions.md#%E7%AE%A1%E7%90%86%E5%AF%B9%E8%AF%9D%E4%B8%8A%E4%B8%8B%E6%96%87)。
 
 **源码文件**（[pi](https://github.com/earendil-works/pi)）：
 - [`packages/coding-agent/src/core/compaction/compaction.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/compaction/compaction.ts) - 自动压缩逻辑
@@ -462,4 +462,4 @@ pi.on("session_before_tree", async (event, ctx) => {
 
 这些解析后的值用于手动压缩、所有自动阈值检查、溢出恢复以及扩展可见的 `preparation.settings`。切换模型会影响后续的检查和压缩，但不改变常规设置。已在进行中的压缩使用该操作开始时捕获的模型与设置。分支摘要设置不受影响。
 
-覆盖在全局设置和项目设置中都生效。文件在查找前会递归合并，因此全局的模型专属值优先于项目级的回退值；项目必须覆盖那个模型条目才能改变它。详情见[设置](settings#per-model-compaction-overrides)。
+覆盖在全局设置和项目设置中都生效。文件在查找前会递归合并，因此全局的模型专属值优先于项目级的回退值；项目必须覆盖那个模型条目才能改变它。详情见[设置](settings.md#per-model-compaction-overrides)。

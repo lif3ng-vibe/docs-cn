@@ -52,7 +52,7 @@ Read `references/formats.md` before converting a document. Run scripts relative 
 /skill:pdf-tools extract report.pdf
 ```
 
-当某个技能只应通过其显式命令使用时，在 frontmatter 中设置 `disable-model-invocation: true`。`enableSkillCommands` [设置](settings)控制技能命令是否出现在交互模式（interactive mode）的命令发现中；手动输入的 `/skill:name` 命令仍然有效。
+当某个技能只应通过其显式命令使用时，在 frontmatter 中设置 `disable-model-invocation: true`。`enableSkillCommands` [设置](settings.md)控制技能命令是否出现在交互模式（interactive mode）的命令发现中；手动输入的 `/skill:name` 命令仍然有效。
 
 <a id="choose-where-it-loads"></a>
 
@@ -62,7 +62,7 @@ Read `references/formats.md` before converting a document. Run scripts relative 
 
 Pi 也支持 Agent Skills 的 `~/.agents/skills/` 与 `.agents/skills/` 位置。项目级 `.agents/skills/` 目录会从工作目录沿祖先目录向上发现，遇到仓库根目录（如存在）即停止。
 
-Pi 也接受部分独立的 Markdown 技能，但包含 `SKILL.md` 的目录才是可移植形式，应优先采用。其他可用位置参见[设置](settings#%E8%B5%84%E6%BA%90)与 [Pi 包](packages)。
+Pi 也接受部分独立的 Markdown 技能，但包含 `SKILL.md` 的目录才是可移植形式，应优先采用。其他可用位置参见[设置](settings.md#%E8%B5%84%E6%BA%90)与 [Pi 包](packages.md)。
 
 项目技能可能指示模型运行脚本或修改文件。授予项目信任之前，请先审查不熟悉的技能及其配套文件。
 
@@ -90,6 +90,6 @@ Agent Skills 规范定义了以下字段：
 
 在技能可被发现的位置运行 Pi，然后检查启动诊断信息与 `/skill:name` 命令。在活跃会话中编辑技能后，请运行 `/reload`。
 
-使用 [Pi 包](packages)通过 npm 或 git 分发一个或多个技能。环境设置放在技能内部，所需的运行时依赖则在包中声明。
+使用 [Pi 包](packages.md)通过 npm 或 git 分发一个或多个技能。环境设置放在技能内部，所需的运行时依赖则在包中声明。
 
 示例参见 [Anthropic 技能合集](https://github.com/anthropics/skills)与 [Pi 技能合集](https://github.com/badlogic/pi-skills)。

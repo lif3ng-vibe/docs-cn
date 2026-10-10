@@ -2,7 +2,7 @@
 title: "RPC 扩展 UI"
 ---
 
-扩展可以通过 `ctx.ui` 请求用户交互。在 RPC 模式下，受支持的调用成为一个请求/响应子协议，与常规的 [RPC 命令](rpc-commands)和[会话事件](json)并存。
+扩展可以通过 `ctx.ui` 请求用户交互。在 RPC 模式下，受支持的调用成为一个请求/响应子协议，与常规的 [RPC 命令](rpc-commands.md)和[会话事件](json.md)并存。
 
 扩展 UI 方法分为两类：
 
@@ -199,4 +199,4 @@ title: "RPC 扩展 UI"
 
 经过验证的 [RPC 扩展 UI 客户端](../examples/rpc-extension-ui.ts)及其[演示扩展](../examples/extensions/rpc-demo.ts)可供参阅。
 
-导出的请求与响应联合类型定义于 [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts)。与模式无关的扩展指南参见[扩展](extensions#ui-%E4%B8%8E%E6%A8%A1%E5%BC%8F)。
+导出的请求与响应联合类型定义于 [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts)。与模式无关的扩展指南参见[扩展](extensions.md#ui-%E4%B8%8E%E6%A8%A1%E5%BC%8F)。

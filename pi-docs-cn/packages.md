@@ -16,7 +16,7 @@ pi install git:github.com/example/pi-tools@v1
 pi install ./local-package
 ```
 
-`pi list` 显示已配置的包。用 `pi remove <source>` 移除一个包，用 `pi update --extensions` 校准包的安装状态。所有包相关命令与选项参见[命令行](cli#%E5%8C%85%E5%91%BD%E4%BB%A4)。
+`pi list` 显示已配置的包。用 `pi remove <source>` 移除一个包，用 `pi update --extensions` 校准包的安装状态。所有包相关命令与选项参见[命令行](cli.md#%E5%8C%85%E5%91%BD%E4%BB%A4)。
 
 个人级安装会写入 `~/.pi/agent/settings.json`。加上 `--local` 或 `-l` 可把包声明写入 `.pi/settings.json`。Pi 只在授予项目信任后才读取该文件中的声明。
 
@@ -128,4 +128,4 @@ Pi 为扩展和技能提供以下包：
 
 Pi 用包名标识 npm 包，用不含 ref 的仓库 URL 标识 git 包，用解析后的绝对路径标识本地包。这样可以防止同一个包通过等价声明被加载两次。
 
-打包之前，先用[扩展](extensions)、[技能](skills)、[提示词模板](prompt-templates)和[主题](themes)设计好各个资源。
+打包之前，先用[扩展](extensions.md)、[技能](skills.md)、[提示词模板](prompt-templates.md)和[主题](themes.md)设计好各个资源。

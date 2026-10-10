@@ -122,6 +122,31 @@ for (const f of ['Start Docs.bat', 'Start Docs.command', 'serve.js']) {
   } catch {}
 }
 
+/**
+ * 正文相对链接解析（HTML only）：Mintlify 导出对正文 markdown 链接与
+ * <img> 相对 src 一概原样放行——浏览器按当前页 URL 目录解析
+ * （/page/ 下的 keybindings.md → /page/keybindings.md → 404）。
+ * 文档源是扁平根结构（所有 .md 与 images/ 都在站点根），故相对路径
+ * 一律按站点根解析：x.md → {P}/x（剥扩展名，Pages 对目录 /x → /x/ 跳转），
+ * images/x.png → {P}/images/x.png。外链/锚点/已前缀的不动。
+ */
+function reRelLinks(html) {
+  return html.replace(/((?:href|src)=")([^"#]+?)\.md(#[^"]*)?"/g, (full, head, p, anchor) => {
+    if (/^(https?:|mailto:|data:|tel:)/.test(p) || p.startsWith(P)) return full;
+    const abs = '/' + p.replace(/^\.\//, '').replace(/\.md$/, '').replace(/^\/+/, '');
+    changed++;
+    return `${head}${P}${abs}${anchor || ''}"`;
+  });
+}
+
+/** 相对资产 src（images/…）：按站点根解析 + 加前缀 */
+function reRelAssets(html) {
+  return html.replace(/(src=")(images\/[^"]+)(")/g, (full, head, p) => {
+    changed++;
+    return `${head}${P}/${p}"`;
+  });
+}
+
 function walk(dir) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
@@ -130,7 +155,8 @@ function walk(dir) {
     else {
       const src = readFileSync(p, 'utf8');
       let out = src;
-      if (e.name.endsWith('.html')) out = reFlight(reJs(reSrcset(reAttr(src))));
+      // 顺序敏感：reRelLinks/reRelAssets 要在 reAttr 之前吃原始相对路径
+      if (e.name.endsWith('.html')) out = reFlight(reJs(reRelAssets(reAttr(reRelLinks(reSrcset(src))))));
       else out = reJs(out);
       if (out !== src) writeFileSync(p, out);
     }

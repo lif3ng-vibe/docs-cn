@@ -4,7 +4,7 @@ title: "会话文件格式"
 
 会话以 JSONL（JSON Lines）文件的形式存储。每一行都是一个带有 `type` 字段的 JSON 对象。会话条目通过 `id`/`parentId` 字段构成树形结构，无需创建新文件即可原地分支。
 
-如需以编程方式创建、持久化和遍历树结构，请参阅 [`SessionManager` API](sdk#sessionmanager-api)。
+如需以编程方式创建、持久化和遍历树结构，请参阅 [`SessionManager` API](sdk.md#sessionmanager-api)。
 
 
 ## 文件位置
@@ -35,7 +35,7 @@ Pi 也支持在 `/resume` 中以交互方式删除会话（选中一个会话并
 
 GitHub 上的源码（[pi](https://github.com/earendil-works/pi)）：
 - [`packages/coding-agent/src/core/session-manager.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/session-manager.ts) - 会话条目类型与 SessionManager
-- [消息类型](message-types) - 共享的消息与内容块参考
+- [消息类型](message-types.md) - 共享的消息与内容块参考
 - [`packages/coding-agent/src/core/messages.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/messages.ts) - 扩展消息类型
 - [`packages/ai/src/types.ts`](https://github.com/earendil-works/pi/blob/main/packages/ai/src/types.ts) - 基础消息与内容块类型
 - [`packages/agent/src/types.ts`](https://github.com/earendil-works/pi/blob/main/packages/agent/src/types.ts) - 可扩展的 `AgentMessage` 联合类型
@@ -44,7 +44,7 @@ GitHub 上的源码（[pi](https://github.com/earendil-works/pi)）：
 
 ## 消息
 
-`message` 条目存储一个 [`AgentMessage`](message-types)。消息内容块、角色、用量和消息时间戳定义在[消息类型](message-types)中。
+`message` 条目存储一个 [`AgentMessage`](message-types.md)。消息内容块、角色、用量和消息时间戳定义在[消息类型](message-types.md)中。
 
 会话条目的时间戳是 ISO 8601 字符串。嵌套消息的时间戳是以毫秒为单位的 Unix 时间戳。
 
@@ -98,7 +98,7 @@ interface SessionEntryBase {
 
 ### ModelChangeEntry
 
-在会话中途用户切换模型时产生。最新的一条条目即当前选中的模型，它可能是一个[虚拟模型](virtual-models)；此时助手消息会记录实际应答的物理模型。
+在会话中途用户切换模型时产生。最新的一条条目即当前选中的模型，它可能是一个[虚拟模型](virtual-models.md)；此时助手消息会记录实际应答的物理模型。
 
 ```json
 {"type":"model_change","id":"d4e5f6g7","parentId":"c3d4e5f6","timestamp":"2024-12-03T14:05:00.000Z","provider":"openai","modelId":"gpt-4o"}
@@ -173,7 +173,7 @@ interface SessionEntryBase {
 
 使用 `customType` 在重新加载时识别你的扩展的条目。交互模式可以通过 `pi.registerEntryRenderer(customType, renderer)` 渲染自定义条目，但它们依然不参与 LLM 上下文。
 
-Pi 将[虚拟模型](virtual-models)的路由状态存储为自定义条目，其 `customType` 为 `pi.virtual-model-state`，`data` 为 `{ provider, modelId, state }`。
+Pi 将[虚拟模型](virtual-models.md)的路由状态存储为自定义条目，其 `customType` 为 `pi.virtual-model-state`，`data` 为 `{ provider, modelId, state }`。
 
 ### CustomMessageEntry
 

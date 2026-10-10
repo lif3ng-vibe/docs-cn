@@ -59,4 +59,4 @@ title: "斜杠命令"
 - 每个提示词模板都以其模板名可用。
 - 启用技能命令后，技能以 `/skill:name` 的形式可用。
 
-添加或更改被发现的命令资源后，请使用 `/reload`。它们的加载与命名规则参见[扩展](extensions)、[提示词模板](prompt-templates)和[技能](skills)。
+添加或更改被发现的命令资源后，请使用 `/reload`。它们的加载与命名规则参见[扩展](extensions.md)、[提示词模板](prompt-templates.md)和[技能](skills.md)。

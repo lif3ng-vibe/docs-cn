@@ -10,15 +10,15 @@ Pi 使用扩展按键协议（extended-key protocol），让终端能够把 `Shi
 
 | 症状 | 从这里开始 |
 |---|---|
-| `Shift+Enter` 被当作提交而不是插入换行 | 下方你的终端对应小节；tmux 用户参见[在 tmux 中运行 Pi](tmux) |
+| `Shift+Enter` 被当作提交而不是插入换行 | 下方你的终端对应小节；tmux 用户参见[在 tmux 中运行 Pi](tmux.md) |
 | `Alt+Enter` 无法将追问排入队列 | [WezTerm](#wezterm)、[Alacritty](#alacritty) 或 [Windows Terminal](#windows-terminal) |
 | 全屏滚动异常缓慢 | [iTerm2](#iterm2) |
 | 链接可以点击但没有悬停预览 | [Ghostty](#ghostty) |
 | 未检测到内联图片或颜色 | [覆盖自动检测的能力](#覆盖自动检测的能力) |
 | 输入法候选窗口出现在错误位置 | [WezTerm](#wezterm) 或 [IntelliJ IDEA](#intellij-idea-集成终端) |
-| 修饰键只在 tmux 中失效 | [在 tmux 中运行 Pi](tmux) |
+| 修饰键只在 tmux 中失效 | [在 tmux 中运行 Pi](tmux.md) |
 
-使用 `/hotkeys` 查看 Pi 当前生效的快捷键。要修改它们，参见[按键绑定](keybindings)。
+使用 `/hotkeys` 查看 Pi 当前生效的快捷键。要修改它们，参见[按键绑定](keybindings.md)。
 
 ## Kitty
 
@@ -168,7 +168,7 @@ VS Code 1.109.5 及更新版本默认在集成终端中启用 Kitty 键盘协议
 
 ## Windows Terminal
 
-Windows Terminal 使用 Pi 在 Windows 和 WSL 上的默认快捷键。完整列表参见[按键绑定](keybindings)。
+Windows Terminal 使用 Pi 在 Windows 和 WSL 上的默认快捷键。完整列表参见[按键绑定](keybindings.md)。
 
 ### 转发 Shift+Enter
 
@@ -187,7 +187,7 @@ Windows Terminal 使用 Pi 在 Windows 和 WSL 上的默认快捷键。完整列
 
 Windows Terminal 默认将 `Alt+Enter` 绑定为全屏。因此在 Windows 和 WSL 上，Pi 使用 `Ctrl+Q` 发送追问。
 
-要改用 `Alt+Enter`，请配置 Windows Terminal 转发该按键，并在 Pi 的 `keybindings.json` 中将 `app.message.followUp` 绑定到 `alt+enter`。参见[按键绑定](keybindings#%E5%88%86%E9%85%8D%E6%8C%89%E9%94%AE%E7%BB%91%E5%AE%9A)。
+要改用 `Alt+Enter`，请配置 Windows Terminal 转发该按键，并在 Pi 的 `keybindings.json` 中将 `app.message.followUp` 绑定到 `alt+enter`。参见[按键绑定](keybindings.md#%E5%88%86%E9%85%8D%E6%8C%89%E9%94%AE%E7%BB%91%E5%AE%9A)。
 
 ## xfce4-terminal 与 Terminator
 
@@ -218,7 +218,7 @@ Pi 会自动检测 OSC 8 超链接、内联图片协议和真彩色（truecolor�
 
 设置项优先于环境变量。未设置或取值为 `auto` 时保留自动检测。
 
-只在整个终端链路都支持某个能力时才强制启用。不支持的转义序列可能破坏渲染。权威取值定义参见[环境变量](environment-variables#pi-%E8%BF%9B%E7%A8%8B%E9%85%8D%E7%BD%AE)与[设置](settings)。
+只在整个终端链路都支持某个能力时才强制启用。不支持的转义序列可能破坏渲染。权威取值定义参见[环境变量](environment-variables.md#pi-%E8%BF%9B%E7%A8%8B%E9%85%8D%E7%BD%AE)与[设置](settings.md)。
 
 ## 程序状态
 

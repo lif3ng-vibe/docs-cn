@@ -42,7 +42,7 @@ tmux
 2. `Enter` 提交提示词。
 3. 在 macOS 和 Linux 上 `Alt+Enter` 会将追问排入队列。Windows 和 WSL 默认使用 `Ctrl+Q`。
 
-如果这些按键仍然表现得像普通 `Enter`，请确认 tmux 外层的终端能上报修饰键组合。参见[配置你的终端](terminal-setup)。
+如果这些按键仍然表现得像普通 `Enter`，请确认 tmux 外层的终端能上报修饰键组合。参见[配置你的终端](terminal-setup.md)。
 
 ## 使用 tmux 3.2 至 3.4
 

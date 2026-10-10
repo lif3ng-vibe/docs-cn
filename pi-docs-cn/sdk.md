@@ -4,7 +4,7 @@ title: "SDK"
 
 `@earendil-works/pi-coding-agent` 把 Pi 嵌入 Node.js 或 Bun 进程。它提供对命令行应用所用的智能体（agent）、会话（session）、工具、模型和资源的直接 TypeScript 访问。
 
-进程内 TypeScript 集成请使用 SDK。需要语言无关或隔离的子进程时，见 [CLI 集成](cli-integration)。
+进程内 TypeScript 集成请使用 SDK。需要语言无关或隔离的子进程时，见 [CLI 集成](cli-integration.md)。
 
 ```typescript
 import { createAgentSession } from "@earendil-works/pi-coding-agent";
@@ -51,7 +51,7 @@ const { session } = await createAgentSession({
 });
 ```
 
-创建、打开、继续、列出和分叉（fork）会话见已提交的[会话示例](../examples/sdk/11-sessions.ts)。[会话文件格式](session-format)定义了持久化的 JSONL 契约，[消息类型](message-types)定义了转录值。精确的方法和签名请使用导出的 TypeScript 声明或 [`session-manager.ts`](../src/core/session-manager.ts)。
+创建、打开、继续、列出和分叉（fork）会话见已提交的[会话示例](../examples/sdk/11-sessions.ts)。[会话文件格式](session-format.md)定义了持久化的 JSONL 契约，[消息类型](message-types.md)定义了转录值。精确的方法和签名请使用导出的 TypeScript 声明或 [`session-manager.ts`](../src/core/session-manager.ts)。
 
 `cwd` 选择用于项目资源发现、上下文文件、会话分组和内置工具路径的工作区。目标与 `process.cwd()` 不同时要显式传入。
 
@@ -142,8 +142,8 @@ CLI 把 `codemode`、`tool_search` 和 MCP 作为内置扩展加载。SDK 会话
 
 ## 资源
 
-- [选择模型](models)介绍模型选择与兼容端点；[提供商](providers)介绍凭据与提供商专属配置。
-- [配置](configuration)解释常规发现与设置；[设置](settings)列出每一项设置。
-- [会话与上下文](sessions)解释会话行为；[会话格式](session-format)定义持久化条目；[消息类型](message-types)定义共享的转录值。
-- [扩展](extensions)、[技能](skills)和[提示词模板](prompt-templates)记录通过 `ResourceLoader` 提供的资源。
-- [CLI 集成](cli-integration)介绍进程内 SDK 集成之外的打印、JSON 和 RPC 方案。
+- [选择模型](models.md)介绍模型选择与兼容端点；[提供商](providers.md)介绍凭据与提供商专属配置。
+- [配置](configuration.md)解释常规发现与设置；[设置](settings.md)列出每一项设置。
+- [会话与上下文](sessions.md)解释会话行为；[会话格式](session-format.md)定义持久化条目；[消息类型](message-types.md)定义共享的转录值。
+- [扩展](extensions.md)、[技能](skills.md)和[提示词模板](prompt-templates.md)记录通过 `ResourceLoader` 提供的资源。
+- [CLI 集成](cli-integration.md)介绍进程内 SDK 集成之外的打印、JSON 和 RPC 方案。

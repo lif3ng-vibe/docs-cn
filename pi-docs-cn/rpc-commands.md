@@ -2,7 +2,7 @@
 title: "RPC 命令"
 ---
 
-本参考列出 [RPC 模式](rpc)下可在 stdin 上接受的命令。每条命令和响应都是一个 JSON 对象。各命令共享的消息取值沿用[消息类型](message-types)。
+本参考列出 [RPC 模式](rpc.md)下可在 stdin 上接受的命令。每条命令和响应都是一个 JSON 对象。各命令共享的消息取值沿用[消息类型](message-types.md)。
 
 ## 发送提示词
 
@@ -205,7 +205,7 @@ title: "RPC 命令"
 }
 ```
 
-消息是 `AgentMessage` 对象（参见[消息类型](message-types)）。
+消息是 `AgentMessage` 对象（参见[消息类型](message-types.md)）。
 
 ## 模型
 
@@ -859,4 +859,4 @@ drwxr-xr-x ...
 }
 ```
 
-模型配置参见[配置兼容端点](models#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。TypeScript 方面，请使用 `@earendil-works/pi-ai` 导出的 `Model` 类型。
+模型配置参见[配置兼容端点](models.md#%E9%85%8D%E7%BD%AE%E5%85%BC%E5%AE%B9%E7%AB%AF%E7%82%B9)。TypeScript 方面，请使用 `@earendil-works/pi-ai` 导出的 `Model` 类型。

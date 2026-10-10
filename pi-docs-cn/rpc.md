@@ -4,11 +4,11 @@ title: "RPC 模式"
 
 RPC 模式把 Pi 作为一个长驻子进程运行，通过 stdin 与 stdout 上的 JSON 记录进行控制。适用于与语言无关的集成、进程隔离、IDE 以及自定义用户界面。
 
-进程内的 Node.js 或 Bun 集成请优先使用 [SDK](sdk)。基于子进程的 TypeScript 集成请优先使用导出的 `RpcClient`，它会启动 Pi、关联响应、提供带类型的命令方法，并把事件分发给监听器。
+进程内的 Node.js 或 Bun 集成请优先使用 [SDK](sdk.md)。基于子进程的 TypeScript 集成请优先使用导出的 `RpcClient`，它会启动 Pi、关联响应、提供带类型的命令方法，并把事件分发给监听器。
 
 | 接口 | 进程边界 | 控制模型 | 最适合 |
 |---|---|---|---|
-| [SDK](sdk) | 进程内 | 直接的 TypeScript 方法与事件 | 需要完整 API 访问的 Node.js 或 Bun 宿主 |
+| [SDK](sdk.md) | 进程内 | 直接的 TypeScript 方法与事件 | 需要完整 API 访问的 Node.js 或 Bun 宿主 |
 | RPC | 子进程 | JSONL 命令、响应与事件 | 其他语言、隔离进程、IDE 或自定义客户端 |
 
 ## 启动 RPC 模式
@@ -17,9 +17,9 @@ RPC 模式把 Pi 作为一个长驻子进程运行，通过 stdin 与 stdout 上
 pi --mode rpc --no-session
 ```
 
-常规 CLI 选项仍然用于选择工作目录、模型、工具、资源和会话行为。常见选择包括 `--provider`、`--model`、`--name`、`--no-session` 和 `--session-dir`。完整且与版本相关的接口参见[命令行](cli)；对已安装的版本，`pi --help` 是权威来源。
+常规 CLI 选项仍然用于选择工作目录、模型、工具、资源和会话行为。常见选择包括 `--provider`、`--model`、`--name`、`--no-session` 和 `--session-dir`。完整且与版本相关的接口参见[命令行](cli.md)；对已安装的版本，`pi --help` 是权威来源。
 
-RPC 模式拒绝 `@file` 提示词参数。请改用 [`prompt`](rpc-commands#prompt) 命令发送提示词。
+RPC 模式拒绝 `@file` 提示词参数。请改用 [`prompt`](rpc-commands.md#prompt) 命令发送提示词。
 
 ## 协议记录
 
@@ -32,7 +32,7 @@ RPC 模式拒绝 `@file` 提示词参数。请改用 [`prompt`](rpc-commands#pro
 | stdout | Session event | 流式传输运行、消息、工具、队列、压缩和重试活动 |
 | Both | Extension UI record | 在 Pi 与客户端之间转发受支持的扩展交互 |
 
-权威的记录定义参见 [RPC 命令](rpc-commands)、[JSON 事件流](json)和 [RPC 扩展 UI](rpc-extension-ui)。
+权威的记录定义参见 [RPC 命令](rpc-commands.md)、[JSON 事件流](json.md)和 [RPC 扩展 UI](rpc-extension-ui.md)。
 
 ### 关联命令与响应
 
@@ -45,7 +45,7 @@ RPC 模式拒绝 `@file` 提示词参数。请改用 [`prompt`](rpc-commands#pro
 
 只要可能有多条命令同时在途，就应使用唯一 ID。命令处理是异步的，因此客户端应按 ID 关联，而不是按响应顺序。
 
-会话事件通常没有命令 ID，因为它们描述的是会话活动。`bash_execution_update` 是例外：当发起的 [`bash`](rpc-commands#bash) 命令带有 ID 时，其输出事件会重复该 ID。
+会话事件通常没有命令 ID，因为它们描述的是会话活动。`bash_execution_update` 是例外：当发起的 [`bash`](rpc-commands.md#bash) 命令带有 ID 时，其输出事件会重复该 ID。
 
 `extension_ui_response` 使用其 `extension_ui_request` 提供的 ID。它不会产生常规的命令响应。
 
@@ -66,9 +66,9 @@ RPC 使用严格的 JSONL 分帧。每条记录写入一个完整的 JSON 对象
 {"id":"req-2","type":"response","command":"prompt","success":true,"data":{"disposition":"started"}}
 ```
 
-`data.disposition` 报告提示词的处理结果。如果它是 `"handled"`，则该提示词没有启动任何运行，因此不要等待 `agent_settled`。所有取值参见 [RPC 命令](rpc-commands#prompt)。
+`data.disposition` 报告提示词的处理结果。如果它是 `"handled"`，则该提示词没有启动任何运行，因此不要等待 `agent_settled`。所有取值参见 [RPC 命令](rpc-commands.md#prompt)。
 
-在该响应之后要继续消费[事件](json)。`agent_end` 标志一次底层智能体运行的结束，但随后仍可能出现重试、溢出恢复、压缩、引导或追问工作。当客户端需要知道 Pi 不会自动继续时，等待 `agent_settled`。
+在该响应之后要继续消费[事件](json.md)。`agent_end` 标志一次底层智能体运行的结束，但随后仍可能出现重试、溢出恢复、压缩、引导或追问工作。当客户端需要知道 Pi 不会自动继续时，等待 `agent_settled`。
 
 在发送提示词之前先订阅，以免错过快速完成的情况。`RpcClient.promptAndWait()` 内部就是这样做的。如果使用独立的 `RpcClient` 调用，请在 `prompt()` 之前安装事件监听器，并且只在运行活跃期间调用 `waitForIdle()`。
 
@@ -135,11 +135,11 @@ process.wait()
 
 ## 参考
 
-- [RPC 命令](rpc-commands)：所有 stdin 命令与响应
-- [JSON 事件流](json)：共享的 stdout 会话事件与流式重建
-- [RPC 扩展 UI](rpc-extension-ui)：对话框、通知、响应与限制
-- [消息类型](message-types)：响应与事件使用的消息和内容块
-- [会话文件格式](session-format)：会话命令返回的条目
+- [RPC 命令](rpc-commands.md)：所有 stdin 命令与响应
+- [JSON 事件流](json.md)：共享的 stdout 会话事件与流式重建
+- [RPC 扩展 UI](rpc-extension-ui.md)：对话框、通知、响应与限制
+- [消息类型](message-types.md)：响应与事件使用的消息和内容块
+- [会话文件格式](session-format.md)：会话命令返回的条目
 - [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts)：导出的 TypeScript 协议定义
 - [`RpcClient`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-client.ts)：子进程客户端实现
 
@@ -181,15 +181,15 @@ process.wait()
 <a id="set_session_name"></a>
 <a id="get_commands"></a>
 
-命令详情已移至 [RPC 命令](rpc-commands)。
+命令详情已移至 [RPC 命令](rpc-commands.md)。
 
 <a id="message_update-streaming"></a>
 <a id="bash_execution_update"></a>
 <a id="compaction_start--compaction_end"></a>
 <a id="summarization_retry_scheduled--summarization_retry_attempt_start--summarization_retry_finished"></a>
 
-事件详情已移至 [JSON 事件流](json)。
+事件详情已移至 [JSON 事件流](json.md)。
 
 <a id="extension-ui-protocol"></a>
 
-扩展交互详情已移至 [RPC 扩展 UI](rpc-extension-ui)。
+扩展交互详情已移至 [RPC 扩展 UI](rpc-extension-ui.md)。

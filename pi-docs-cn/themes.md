@@ -29,7 +29,7 @@ Pi 在启动时会向终端询问颜色。终端通常会在几毫秒内应答�
 
 打开 `/settings` 并选择 **Theme**。你可以让所有终端外观使用同一个主题，也可以为浅色和深色终端分别指定主题。
 
-该选择会保存为 `theme` [设置](settings#%E7%BB%88%E7%AB%AF%E4%B8%8E%E6%98%BE%E7%A4%BA)：
+该选择会保存为 `theme` [设置](settings.md#%E7%BB%88%E7%AB%AF%E4%B8%8E%E6%98%BE%E7%A4%BA)：
 
 ```json
 {
@@ -56,7 +56,7 @@ pi --use-theme light
 pi --use-theme light/dark
 ```
 
-命令行选项参见 [CLI 资源](cli#%E8%B5%84%E6%BA%90)。
+命令行选项参见 [CLI 资源](cli.md#%E8%B5%84%E6%BA%90)。
 
 ## 创建自定义主题
 
@@ -95,7 +95,7 @@ pi --use-theme light/dark
 
 终端默认色会按终端自身的颜色渲染。在 Pi 需要具体值的场合（例如 HTML 导出或扩展的颜色计算），它会使用终端上报的默认颜色，或根据主题外观猜测的黑色或白色。
 
-Pi 会解析链式变量引用。变量缺失或循环引用会使主题无效。Pi 在可用时使用真彩色（truecolor），将 OKLCH 映射到 sRGB 色域，并为 256 色终端近似颜色。HTML 导出会将 OKHSL 值转换为十六进制，因为 CSS 不支持它们。如果颜色与源值不一致，请检查终端的真彩色检测与对比度设置。参见[配置你的终端](terminal-setup#%E8%A6%86%E7%9B%96%E8%87%AA%E5%8A%A8%E6%A3%80%E6%B5%8B%E7%9A%84%E8%83%BD%E5%8A%9B)。
+Pi 会解析链式变量引用。变量缺失或循环引用会使主题无效。Pi 在可用时使用真彩色（truecolor），将 OKLCH 映射到 sRGB 色域，并为 256 色终端近似颜色。HTML 导出会将 OKHSL 值转换为十六进制，因为 CSS 不支持它们。如果颜色与源值不一致，请检查终端的真彩色检测与对比度设置。参见[配置你的终端](terminal-setup.md#%E8%A6%86%E7%9B%96%E8%87%AA%E5%8A%A8%E6%A3%80%E6%B5%8B%E7%9A%84%E8%83%BD%E5%8A%9B)。
 
 确切的属性、必填颜色和可接受的值类型，请参考[主题 JSON schema](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/schemas/theme.schema.json)。
 
@@ -133,8 +133,8 @@ schema 是格式参考。内置主题提供了完整的取值，可以复制后�
 
 ## 从项目或包加载主题
 
-项目主题放在 `.pi/themes/` 中。项目主题只在授予[项目信任](security#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后才会加载。
+项目主题放在 `.pi/themes/` 中。项目主题只在授予[项目信任](security.md#%E4%BA%86%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%BF%A1%E4%BB%BB)后才会加载。
 
-也可以通过 `themes` 设置加载主题文件和目录，或在 Pi 包中分发主题。参见[配置](configuration)、[设置](settings#%E8%B5%84%E6%BA%90)与 [Pi 包](packages)。
+也可以通过 `themes` 设置加载主题文件和目录，或在 Pi 包中分发主题。参见[配置](configuration.md)、[设置](settings.md#%E8%B5%84%E6%BA%90)与 [Pi 包](packages.md)。
 
 每个已加载的主题都必须有唯一的名称。名称重复时，Pi 会将其作为资源冲突上报。
