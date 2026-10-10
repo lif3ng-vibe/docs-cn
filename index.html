@@ -51,9 +51,15 @@
 			}
 			.header {
 				display: flex;
-				align-items: baseline;
+				align-items: center;
 				justify-content: space-between;
 				gap: 1rem;
+				flex-wrap: wrap;
+			}
+			.header-controls {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
 			}
 			h1 {
 				font-size: 1.6rem;
@@ -83,15 +89,14 @@
 			}
 			.search {
 				box-sizing: border-box;
-				width: 100%;
+				width: 190px;
 				font: inherit;
-				font-size: 0.9rem;
+				font-size: 0.85rem;
 				color: #1f2328;
 				background: var(--surface);
 				border: 1px solid #d0d7de;
 				border-radius: 8px;
-				padding: 0.45rem 0.85rem;
-				margin: 0 0 1rem;
+				padding: 0.35rem 0.75rem;
 				outline: none;
 				transition: border-color 0.15s ease;
 			}
@@ -413,10 +418,12 @@
 		<div class="wrap">
 			<div class="header">
 				<h1>docs-cn</h1>
-				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+				<div class="header-controls">
+					<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
+					<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+				</div>
 			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
 			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent"><span class="chip-zh">智能体</span><span class="chip-en">AI Agent</span></button><button class="chip" data-filter="multi-agent"><span class="chip-zh">多智能体协作</span><span class="chip-en">Multi-Agent</span></button><button class="chip" data-filter="skills"><span class="chip-zh">技能与提示词</span><span class="chip-en">Skills & Prompts</span></button><button class="chip" data-filter="memory"><span class="chip-zh">记忆系统</span><span class="chip-en">Memory</span></button><button class="chip" data-filter="testing"><span class="chip-zh">测试</span><span class="chip-en">Testing</span></button><button class="chip" data-filter="deployment"><span class="chip-zh">部署运维</span><span class="chip-en">Deployment</span></button><button class="chip" data-filter="docs-engineering"><span class="chip-zh">文档工程</span><span class="chip-en">Docs Engineering</span></button><button class="chip" data-filter="ai-app-dev"><span class="chip-zh">AI 应用开发</span><span class="chip-en">AI App Dev</span></button><button class="chip" data-filter="code-intelligence"><span class="chip-zh">代码智能</span><span class="chip-en">Code Intelligence</span></button><button class="chip" data-filter="learning"><span class="chip-zh">概念与入门</span><span class="chip-en">Learning</span></button><button class="chip" data-filter="cli-tool"><span class="chip-zh">命令行工具</span><span class="chip-en">CLI Tool</span></button><button class="chip" data-filter="sdk-api"><span class="chip-zh">SDK 与 API</span><span class="chip-en">SDK & API</span></button><button class="chip" data-filter="unofficial-en"><span class="chip-zh">非官方英文文档</span><span class="chip-en">Unofficial EN</span></button></div>
 			<div class="list">
 				<div class="item" data-tags="code-intelligence,cli-tool">
@@ -770,9 +777,9 @@
 					desired.forEach(function (it, i) {
 						if (list.children[i] !== it.el) list.appendChild(it.el);
 					});
-					// 关键词高亮：仅「仅高亮」模式标记命中片段；其余情况还原纯文本
+					// 关键词高亮：两种模式下都标记命中片段；无关键词时还原纯文本
 					items.forEach(function (it) {
-						if (searching && prefs.searchMode === 'highlight') {
+						if (searching) {
 							setHighlighted(it.nameEl, it.nameText, kw);
 							setHighlighted(it.descEl, it.descText, kw);
 						} else {

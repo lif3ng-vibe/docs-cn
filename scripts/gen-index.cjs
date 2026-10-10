@@ -10,9 +10,9 @@
  *   多选取交集；当前筛选下命中不了任何卡片的标签置灰禁用；列表动画用
  *   formkit/auto-animate（vendor ESM 产物构建时转全局变量内联，页面零外部请求）。
  *   lang:"en" 镜像条目自动继承中文站标签并附加 unofficial-en。
- * 搜索：顶部搜索框按名称/描述匹配关键词（大小写不敏感），设置可选
- *   「过滤」（隐藏不命中卡片[默认]）或「仅高亮」（命中片段 mark 高亮）；
- *   与标签筛选叠加生效。
+ * 搜索：标题行搜索框（设置按钮左侧）按名称/描述匹配关键词（大小写不敏感），
+ *   命中片段始终 mark 高亮；设置可选「过滤」（隐藏不命中卡片[默认]）或
+ *   「仅高亮」（保留全部卡片）；与标签筛选叠加生效。
  * 设置：右上角「⚙ 设置」弹窗——主题色小方块（页面背景/卡片底色随主题联动）、
  *   卡片风格、卡片各部分显隐、标签语言（中文[默认]/English）；偏好存 localStorage
  *   （key: docs-cn-prefs），head 内联脚本预读应用防主题闪烁，刷新后仍生效。
@@ -67,8 +67,8 @@ const TAG_LANGS = {
 	en: 'English',
 };
 
-// 关键词搜索行为（设置弹窗单选）：过滤=隐藏不命中卡片；仅高亮=保留全部卡片，
-// 命中片段用 mark 标出。默认过滤。
+// 关键词搜索行为（设置弹窗单选）：过滤=隐藏不命中卡片；仅高亮=保留全部卡片。
+// 两种模式下命中片段都用 mark 标出。默认过滤。
 const SEARCH_MODES = {
 	filter:    '过滤',
 	highlight: '仅高亮',
@@ -247,9 +247,15 @@ ${themeCss}
 			}
 			.header {
 				display: flex;
-				align-items: baseline;
+				align-items: center;
 				justify-content: space-between;
 				gap: 1rem;
+				flex-wrap: wrap;
+			}
+			.header-controls {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
 			}
 			h1 {
 				font-size: 1.6rem;
@@ -279,15 +285,14 @@ ${themeCss}
 			}
 			.search {
 				box-sizing: border-box;
-				width: 100%;
+				width: 190px;
 				font: inherit;
-				font-size: 0.9rem;
+				font-size: 0.85rem;
 				color: #1f2328;
 				background: var(--surface);
 				border: 1px solid #d0d7de;
 				border-radius: 8px;
-				padding: 0.45rem 0.85rem;
-				margin: 0 0 1rem;
+				padding: 0.35rem 0.75rem;
 				outline: none;
 				transition: border-color 0.15s ease;
 			}
@@ -609,10 +614,12 @@ ${themeCss}
 		<div class="wrap">
 			<div class="header">
 				<h1>docs-cn</h1>
-				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+				<div class="header-controls">
+					<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
+					<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+				</div>
 			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
 			<div class="filterbar">${filterChips}</div>
 			<div class="list">${cards}
 			</div>
@@ -838,9 +845,9 @@ ${themeCss}
 					desired.forEach(function (it, i) {
 						if (list.children[i] !== it.el) list.appendChild(it.el);
 					});
-					// 关键词高亮：仅「仅高亮」模式标记命中片段；其余情况还原纯文本
+					// 关键词高亮：两种模式下都标记命中片段；无关键词时还原纯文本
 					items.forEach(function (it) {
-						if (searching && prefs.searchMode === 'highlight') {
+						if (searching) {
 							setHighlighted(it.nameEl, it.nameText, kw);
 							setHighlighted(it.descEl, it.descText, kw);
 						} else {
