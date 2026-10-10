@@ -10,6 +10,9 @@
  *   多选取交集；当前筛选下命中不了任何卡片的标签置灰禁用；列表动画用
  *   formkit/auto-animate（vendor ESM 产物构建时转全局变量内联，页面零外部请求）。
  *   lang:"en" 镜像条目自动继承中文站标签并附加 unofficial-en。
+ * 搜索：顶部搜索框按名称/描述匹配关键词（大小写不敏感），设置可选
+ *   「过滤」（隐藏不命中卡片[默认]）或「仅高亮」（命中片段 mark 高亮）；
+ *   与标签筛选叠加生效。
  * 设置：右上角「⚙ 设置」弹窗——主题色小方块（页面背景/卡片底色随主题联动）、
  *   卡片风格、卡片各部分显隐、标签语言（中文[默认]/English）；偏好存 localStorage
  *   （key: docs-cn-prefs），head 内联脚本预读应用防主题闪烁，刷新后仍生效。
@@ -62,6 +65,13 @@ const CARD_STYLES = {
 const TAG_LANGS = {
 	zh: '中文',
 	en: 'English',
+};
+
+// 关键词搜索行为（设置弹窗单选）：过滤=隐藏不命中卡片；仅高亮=保留全部卡片，
+// 命中片段用 mark 标出。默认过滤。
+const SEARCH_MODES = {
+	filter:    '过滤',
+	highlight: '仅高亮',
 };
 
 // 卡片各部分显隐（设置弹窗勾选；CSS 按 data-show-* 分支）。
@@ -167,6 +177,13 @@ const tagLangRadios = Object.entries(TAG_LANGS)
 	)
 	.join('');
 
+const searchModeRadios = Object.entries(SEARCH_MODES)
+	.map(
+		([id, zh]) =>
+			`<label class="seg-item"><input type="radio" name="search-mode" value="${id}">${zh}</label>`
+	)
+	.join('');
+
 const showChecks = Object.entries(SHOW_PARTS)
 	.map(
 		([key, zh]) =>
@@ -259,6 +276,38 @@ ${themeCss}
 				color: #636c76;
 				font-size: 0.95rem;
 				margin: 0 0 2rem;
+			}
+			.search {
+				box-sizing: border-box;
+				width: 100%;
+				font: inherit;
+				font-size: 0.9rem;
+				color: #1f2328;
+				background: var(--surface);
+				border: 1px solid #d0d7de;
+				border-radius: 8px;
+				padding: 0.45rem 0.85rem;
+				margin: 0 0 1rem;
+				outline: none;
+				transition: border-color 0.15s ease;
+			}
+			.search:focus {
+				border-color: var(--accent);
+			}
+			.search::placeholder {
+				color: #636c76;
+			}
+			mark {
+				background: color-mix(in srgb, var(--accent) 22%, transparent);
+				color: inherit;
+				border-radius: 2px;
+				padding: 0 1px;
+			}
+			.empty {
+				color: #636c76;
+				font-size: 0.9rem;
+				text-align: center;
+				padding: 1.5rem 0;
 			}
 			.filterbar {
 				display: flex;
@@ -563,9 +612,11 @@ ${themeCss}
 				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
 			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
+			<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
 			<div class="filterbar">${filterChips}</div>
 			<div class="list">${cards}
 			</div>
+			<div class="empty" id="empty" hidden></div>
 			<footer>
 				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
 			</footer>
@@ -588,6 +639,10 @@ ${themeCss}
 				<div class="seg">${tagLangRadios}</div>
 			</fieldset>
 			<fieldset>
+				<legend>关键词搜索</legend>
+				<div class="seg">${searchModeRadios}</div>
+			</fieldset>
+			<fieldset>
 				<legend>卡片显示</legend>
 				<div class="checks">${showChecks}</div>
 			</fieldset>
@@ -602,6 +657,7 @@ ${themeCss}
 					theme: 'blue',
 					cardStyle: 'standard',
 					tagLang: 'zh',
+					searchMode: 'filter',
 					showDesc: true,
 					showTags: true,
 					showBtns: true,
@@ -619,6 +675,7 @@ ${themeCss}
 						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
 						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
 						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
+						if (SEARCH_MODE_IDS.indexOf(out.searchMode) === -1) out.searchMode = DEFAULTS.searchMode;
 						return out;
 					} catch (e) {
 						return Object.assign({}, DEFAULTS);
@@ -627,6 +684,7 @@ ${themeCss}
 				var THEME_IDS = ${JSON.stringify(Object.keys(THEMES))};
 				var CARD_STYLE_IDS = ${JSON.stringify(Object.keys(CARD_STYLES))};
 				var TAG_LANG_IDS = ${JSON.stringify(Object.keys(TAG_LANGS))};
+				var SEARCH_MODE_IDS = ${JSON.stringify(Object.keys(SEARCH_MODES))};
 				var prefs = loadPrefs();
 
 				function savePrefs() {
@@ -658,6 +716,8 @@ ${themeCss}
 					if (radio) radio.checked = true;
 					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
 					if (langRadio) langRadio.checked = true;
+					var modeRadio = root.querySelector('input[name="search-mode"][value="' + prefs.searchMode + '"]');
+					if (modeRadio) modeRadio.checked = true;
 					root.querySelectorAll('input[data-show]').forEach(function (cb) {
 						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
 					});
@@ -698,6 +758,15 @@ ${themeCss}
 						syncSettingsUi();
 					});
 				});
+				root.querySelectorAll('input[name="search-mode"]').forEach(function (r) {
+					r.addEventListener('change', function () {
+						prefs.searchMode = r.value;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+						apply(); // 模式切换立即生效（过滤↔高亮）
+					});
+				});
 				root.querySelectorAll('input[data-show]').forEach(function (cb) {
 					cb.addEventListener('change', function () {
 						var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
@@ -707,19 +776,60 @@ ${themeCss}
 					});
 				});
 
-				// —— 标签筛选（交集 + 不可用置灰 + auto-animate 动画）——
+				// —— 标签筛选 + 关键词搜索（交集 + 不可用置灰 + auto-animate 动画）——
 				var list = document.querySelector('.list');
 				autoAnimate(list);
+				var searchInput = document.getElementById('search');
+				var emptyEl = document.getElementById('empty');
 				var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
-					return { el: el, tags: el.dataset.tags ? el.dataset.tags.split(',') : [] };
+					var nameEl = el.querySelector('.name');
+					var descEl = el.querySelector('.desc');
+					var nameText = nameEl.textContent;
+					var descText = descEl.textContent;
+					return {
+						el: el,
+						tags: el.dataset.tags ? el.dataset.tags.split(',') : [],
+						nameEl: nameEl,
+						descEl: descEl,
+						nameText: nameText,
+						descText: descText,
+						hay: (nameText + ' ' + descText).toLowerCase(),
+					};
 				});
 				var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
 				var active = new Set();
+
+				// 高亮：清空重建文本节点，命中片段包 mark（textContent 先还原避免嵌套）
+				function setHighlighted(el, original, kw) {
+					el.textContent = original;
+					var needle = kw.toLowerCase();
+					var idx = original.toLowerCase().indexOf(needle);
+					if (idx === -1) return;
+					var frag = document.createDocumentFragment();
+					var pos = 0;
+					while (idx !== -1) {
+						if (idx > pos) frag.appendChild(document.createTextNode(original.slice(pos, idx)));
+						var mark = document.createElement('mark');
+						mark.textContent = original.slice(idx, idx + needle.length);
+						frag.appendChild(mark);
+						pos = idx + needle.length;
+						idx = original.toLowerCase().indexOf(needle, pos);
+					}
+					if (pos < original.length) frag.appendChild(document.createTextNode(original.slice(pos)));
+					el.textContent = '';
+					el.appendChild(frag);
+				}
+
 				function apply() {
 					var sel = Array.from(active);
-					// 交集：卡片须命中全部选中标签
+					var kw = searchInput.value.trim();
+					var searching = kw.length > 0;
+					var lowKw = kw.toLowerCase();
+					// 交集：卡片须命中全部选中标签；过滤模式下还须命中关键词
 					var desired = items.filter(function (it) {
-						return sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
+						var tagOk = sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
+						var kwOk = !searching || prefs.searchMode !== 'filter' || it.hay.indexOf(lowKw) !== -1;
+						return tagOk && kwOk;
 					});
 					// 先移出不再命中的卡片，再按原顺序补回命中的（auto-animate 负责动画）
 					items.forEach(function (it) {
@@ -728,6 +838,19 @@ ${themeCss}
 					desired.forEach(function (it, i) {
 						if (list.children[i] !== it.el) list.appendChild(it.el);
 					});
+					// 关键词高亮：仅「仅高亮」模式标记命中片段；其余情况还原纯文本
+					items.forEach(function (it) {
+						if (searching && prefs.searchMode === 'highlight') {
+							setHighlighted(it.nameEl, it.nameText, kw);
+							setHighlighted(it.descEl, it.descText, kw);
+						} else {
+							it.nameEl.textContent = it.nameText;
+							it.descEl.textContent = it.descText;
+						}
+					});
+					// 空态提示
+					emptyEl.hidden = desired.length !== 0;
+					if (desired.length === 0) emptyEl.textContent = '没有匹配「' + kw + '」的站点';
 					// 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
 					chips.forEach(function (c) {
 						var f = c.dataset.filter;
@@ -752,6 +875,7 @@ ${themeCss}
 						apply();
 					});
 				});
+				searchInput.addEventListener('input', apply);
 
 				applyPrefs();
 				apply();

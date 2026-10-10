@@ -81,6 +81,38 @@
 				font-size: 0.95rem;
 				margin: 0 0 2rem;
 			}
+			.search {
+				box-sizing: border-box;
+				width: 100%;
+				font: inherit;
+				font-size: 0.9rem;
+				color: #1f2328;
+				background: var(--surface);
+				border: 1px solid #d0d7de;
+				border-radius: 8px;
+				padding: 0.45rem 0.85rem;
+				margin: 0 0 1rem;
+				outline: none;
+				transition: border-color 0.15s ease;
+			}
+			.search:focus {
+				border-color: var(--accent);
+			}
+			.search::placeholder {
+				color: #636c76;
+			}
+			mark {
+				background: color-mix(in srgb, var(--accent) 22%, transparent);
+				color: inherit;
+				border-radius: 2px;
+				padding: 0 1px;
+			}
+			.empty {
+				color: #636c76;
+				font-size: 0.9rem;
+				text-align: center;
+				padding: 1.5rem 0;
+			}
 			.filterbar {
 				display: flex;
 				flex-wrap: wrap;
@@ -384,6 +416,7 @@
 				<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
 			</div>
 			<p class="sub">开源项目文档的中文翻译集合。</p>
+			<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
 			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent"><span class="chip-zh">智能体</span><span class="chip-en">AI Agent</span></button><button class="chip" data-filter="multi-agent"><span class="chip-zh">多智能体协作</span><span class="chip-en">Multi-Agent</span></button><button class="chip" data-filter="skills"><span class="chip-zh">技能与提示词</span><span class="chip-en">Skills & Prompts</span></button><button class="chip" data-filter="memory"><span class="chip-zh">记忆系统</span><span class="chip-en">Memory</span></button><button class="chip" data-filter="testing"><span class="chip-zh">测试</span><span class="chip-en">Testing</span></button><button class="chip" data-filter="deployment"><span class="chip-zh">部署运维</span><span class="chip-en">Deployment</span></button><button class="chip" data-filter="docs-engineering"><span class="chip-zh">文档工程</span><span class="chip-en">Docs Engineering</span></button><button class="chip" data-filter="ai-app-dev"><span class="chip-zh">AI 应用开发</span><span class="chip-en">AI App Dev</span></button><button class="chip" data-filter="code-intelligence"><span class="chip-zh">代码智能</span><span class="chip-en">Code Intelligence</span></button><button class="chip" data-filter="learning"><span class="chip-zh">概念与入门</span><span class="chip-en">Learning</span></button><button class="chip" data-filter="cli-tool"><span class="chip-zh">命令行工具</span><span class="chip-en">CLI Tool</span></button><button class="chip" data-filter="sdk-api"><span class="chip-zh">SDK 与 API</span><span class="chip-en">SDK & API</span></button><button class="chip" data-filter="unofficial-en"><span class="chip-zh">非官方英文文档</span><span class="chip-en">Unofficial EN</span></button></div>
 			<div class="list">
 				<div class="item" data-tags="code-intelligence,cli-tool">
@@ -515,6 +548,7 @@
 					<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
 				</div>
 			</div>
+			<div class="empty" id="empty" hidden></div>
 			<footer>
 				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
 			</footer>
@@ -537,6 +571,10 @@
 				<div class="seg"><label class="seg-item"><input type="radio" name="tag-lang" value="zh">中文</label><label class="seg-item"><input type="radio" name="tag-lang" value="en">English</label></div>
 			</fieldset>
 			<fieldset>
+				<legend>关键词搜索</legend>
+				<div class="seg"><label class="seg-item"><input type="radio" name="search-mode" value="filter">过滤</label><label class="seg-item"><input type="radio" name="search-mode" value="highlight">仅高亮</label></div>
+			</fieldset>
+			<fieldset>
 				<legend>卡片显示</legend>
 				<div class="checks"><label class="check-item"><input type="checkbox" data-show="desc">描述</label><label class="check-item"><input type="checkbox" data-show="tags">标签</label><label class="check-item"><input type="checkbox" data-show="btns">操作按钮</label></div>
 			</fieldset>
@@ -551,6 +589,7 @@
 					theme: 'blue',
 					cardStyle: 'standard',
 					tagLang: 'zh',
+					searchMode: 'filter',
 					showDesc: true,
 					showTags: true,
 					showBtns: true,
@@ -568,6 +607,7 @@
 						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
 						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
 						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
+						if (SEARCH_MODE_IDS.indexOf(out.searchMode) === -1) out.searchMode = DEFAULTS.searchMode;
 						return out;
 					} catch (e) {
 						return Object.assign({}, DEFAULTS);
@@ -576,6 +616,7 @@
 				var THEME_IDS = ["blue","green","purple","orange","red","teal"];
 				var CARD_STYLE_IDS = ["standard","compact","grid"];
 				var TAG_LANG_IDS = ["zh","en"];
+				var SEARCH_MODE_IDS = ["filter","highlight"];
 				var prefs = loadPrefs();
 
 				function savePrefs() {
@@ -607,6 +648,8 @@
 					if (radio) radio.checked = true;
 					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
 					if (langRadio) langRadio.checked = true;
+					var modeRadio = root.querySelector('input[name="search-mode"][value="' + prefs.searchMode + '"]');
+					if (modeRadio) modeRadio.checked = true;
 					root.querySelectorAll('input[data-show]').forEach(function (cb) {
 						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
 					});
@@ -647,6 +690,15 @@
 						syncSettingsUi();
 					});
 				});
+				root.querySelectorAll('input[name="search-mode"]').forEach(function (r) {
+					r.addEventListener('change', function () {
+						prefs.searchMode = r.value;
+						applyPrefs();
+						savePrefs();
+						syncSettingsUi();
+						apply(); // 模式切换立即生效（过滤↔高亮）
+					});
+				});
 				root.querySelectorAll('input[data-show]').forEach(function (cb) {
 					cb.addEventListener('change', function () {
 						var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
@@ -656,19 +708,60 @@
 					});
 				});
 
-				// —— 标签筛选（交集 + 不可用置灰 + auto-animate 动画）——
+				// —— 标签筛选 + 关键词搜索（交集 + 不可用置灰 + auto-animate 动画）——
 				var list = document.querySelector('.list');
 				autoAnimate(list);
+				var searchInput = document.getElementById('search');
+				var emptyEl = document.getElementById('empty');
 				var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
-					return { el: el, tags: el.dataset.tags ? el.dataset.tags.split(',') : [] };
+					var nameEl = el.querySelector('.name');
+					var descEl = el.querySelector('.desc');
+					var nameText = nameEl.textContent;
+					var descText = descEl.textContent;
+					return {
+						el: el,
+						tags: el.dataset.tags ? el.dataset.tags.split(',') : [],
+						nameEl: nameEl,
+						descEl: descEl,
+						nameText: nameText,
+						descText: descText,
+						hay: (nameText + ' ' + descText).toLowerCase(),
+					};
 				});
 				var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
 				var active = new Set();
+
+				// 高亮：清空重建文本节点，命中片段包 mark（textContent 先还原避免嵌套）
+				function setHighlighted(el, original, kw) {
+					el.textContent = original;
+					var needle = kw.toLowerCase();
+					var idx = original.toLowerCase().indexOf(needle);
+					if (idx === -1) return;
+					var frag = document.createDocumentFragment();
+					var pos = 0;
+					while (idx !== -1) {
+						if (idx > pos) frag.appendChild(document.createTextNode(original.slice(pos, idx)));
+						var mark = document.createElement('mark');
+						mark.textContent = original.slice(idx, idx + needle.length);
+						frag.appendChild(mark);
+						pos = idx + needle.length;
+						idx = original.toLowerCase().indexOf(needle, pos);
+					}
+					if (pos < original.length) frag.appendChild(document.createTextNode(original.slice(pos)));
+					el.textContent = '';
+					el.appendChild(frag);
+				}
+
 				function apply() {
 					var sel = Array.from(active);
-					// 交集：卡片须命中全部选中标签
+					var kw = searchInput.value.trim();
+					var searching = kw.length > 0;
+					var lowKw = kw.toLowerCase();
+					// 交集：卡片须命中全部选中标签；过滤模式下还须命中关键词
 					var desired = items.filter(function (it) {
-						return sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
+						var tagOk = sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
+						var kwOk = !searching || prefs.searchMode !== 'filter' || it.hay.indexOf(lowKw) !== -1;
+						return tagOk && kwOk;
 					});
 					// 先移出不再命中的卡片，再按原顺序补回命中的（auto-animate 负责动画）
 					items.forEach(function (it) {
@@ -677,6 +770,19 @@
 					desired.forEach(function (it, i) {
 						if (list.children[i] !== it.el) list.appendChild(it.el);
 					});
+					// 关键词高亮：仅「仅高亮」模式标记命中片段；其余情况还原纯文本
+					items.forEach(function (it) {
+						if (searching && prefs.searchMode === 'highlight') {
+							setHighlighted(it.nameEl, it.nameText, kw);
+							setHighlighted(it.descEl, it.descText, kw);
+						} else {
+							it.nameEl.textContent = it.nameText;
+							it.descEl.textContent = it.descText;
+						}
+					});
+					// 空态提示
+					emptyEl.hidden = desired.length !== 0;
+					if (desired.length === 0) emptyEl.textContent = '没有匹配「' + kw + '」的站点';
 					// 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
 					chips.forEach(function (c) {
 						var f = c.dataset.filter;
@@ -701,6 +807,7 @@
 						apply();
 					});
 				});
+				searchInput.addEventListener('input', apply);
 
 				applyPrefs();
 				apply();
