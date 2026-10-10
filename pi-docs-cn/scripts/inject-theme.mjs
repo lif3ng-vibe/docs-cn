@@ -112,5 +112,36 @@ for (const f of readdirSync(join(ROOT, 'theme-src', 'fonts'))) {
 writeFileSync(join(DIST, 'theme.css'), readFileSync(join(ROOT, 'theme-src', 'theme.css')));
 writeFileSync(join(DIST, 'theme-search.css'), readFileSync(join(ROOT, 'theme-src', 'theme-search.css')));
 
-console.log(`[theme] 页面 ${pages}，注入 ${injected}，theme.css + 搜索弹层 + ${readdirSync(join(DIST, 'fonts')).length} 字体就位`);
+// ---------- 生成 sitemap.xml 与 llms.txt（Mintlify 匿名导出不带，页头引用会 404） ----------
+const SITE_URL = (process.env.DOCS_SITE_URL || 'https://lif3ng-vibe.github.io').replace(/\/+$/, '');
+const pagesMeta = [];
+(function collect(dir, rel) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) collect(p, rel ? `${rel}/${e.name}` : e.name);
+    else if (e.name === 'index.html') {
+      const t = (readFileSync(p, 'utf8').match(/<title>([^<]*)<\/title>/) || [])[1] || rel || 'Pi';
+      pagesMeta.push({ path: rel, title: t });
+    }
+  }
+})(DIST, '');
+pagesMeta.sort((a, b) => (a.path === '' ? -1 : b.path === '' ? 1 : a.path.localeCompare(b.path)));
+const urls = pagesMeta.map((p) => {
+  const loc = p.path === '' ? `${SITE_URL}${BASE}/` : `${SITE_URL}${BASE}/${p.path}/`;
+  return `  <url><loc>${loc}</loc></url>`;
+});
+writeFileSync(
+  join(DIST, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`,
+);
+const lines = pagesMeta.map((p) => {
+  const url = p.path === '' ? `${SITE_URL}${BASE}/` : `${SITE_URL}${BASE}/${p.path}/`;
+  return `- [${p.title}](${url})`;
+});
+writeFileSync(
+  join(DIST, 'llms.txt'),
+  `# Pi 中文文档（非官方镜像）\n\n> Earendil 的终端 AI 编码智能体 Pi 官方文档中文镜像，源 https://pi.dev/docs/latest 。本文件为 LLM 友好的站点索引。\n\n## 文档\n\n${lines.join('\n')}\n`,
+);
+
+console.log(`[theme] 页面 ${pages}，注入 ${injected}，theme.css + 搜索弹层 + ${readdirSync(join(DIST, 'fonts')).length} 字体就位；sitemap.xml ${pagesMeta.length} URL + llms.txt 已生成`);
 if (!existsSync(join(DIST, 'theme.css'))) throw new Error('theme.css 未落盘');
