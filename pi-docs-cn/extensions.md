@@ -110,7 +110,7 @@ Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。�
 
 `provider_stream_event` 会在 Pi 归一化之前，针对每个已解析的提供商流事件触发。该事件标识提供商、API 和模型；`event.data` 是 Pi 能拿到的最早结构化值，未必是原始 HTTP 字节或 SSE 帧。请将其视为只读，因为修改可能影响归一化。该事件仅通知，不会被持久化。
 
-处理器按流顺序依次 await，因此慢处理器会延迟流的消费。处理器报错会上报，但不会改变提供商响应。参见 [`debug-provider.ts`](../examples/extensions/debug-provider.ts)，它提供一个可选查看器，按助手消息分组展示原始事件。
+处理器按流顺序依次 await，因此慢处理器会延迟流的消费。处理器报错会上报，但不会改变提供商响应。参见 [`debug-provider.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/debug-provider.ts)，它提供一个可选查看器，按助手消息分组展示原始事件。
 
 <a id="context_with_system"></a>
 
@@ -149,7 +149,7 @@ Pi 使用 `jiti`，因此本地 TypeScript 扩展无需单独的编译步骤。�
 
 工具可以通过 `ctx.executeTool(name, args, { signal, onUpdate })` 运行其他工具。嵌套调用与模型发起的调用一样，经过参数校验和 `tool_call`、`tool_result` 处理器，并发出 `tool_execution_start`、`tool_execution_update` 和 `tool_execution_end` 事件；这些事件都带有 `parentToolCallId`，其 `toolCallId` 由 pi 分配为 `<parent id>/<n>`。这些 id 不会作为工具调用或工具结果出现在转录中。嵌套调用不添加转录条目：其结果只送达调用方工具，由它自行汇报（例如通过 `onUpdate` 和 `details`）。会话会保留一份有界记录（名称、参数、状态、耗时、错误；绝不包含结果），作为调用方工具结果消息上的 `nestedCalls`。它用于压缩文件清单，并在 HTML 导出中展示。每次调用参数超过 8 KiB 或单个工具结果超过 32 KiB 的会被省略，最多保留 256 次调用，`complete: false` 标记丢失了内容的记录。任意深度下，嵌套结果的 `usage` 都会累加进调用方工具结果的 `usage`，因此工具只需上报自身用量，不必上报它调用的工具的用量。`ctx.tools` 列出 `ctx.executeTool()` 可以调用的工具。对 `content` 做脱敏的 `tool_result` 处理器也应替换 `structuredContent`；只替换 `content` 会把它丢弃。
 
-参见 [`hello.ts`](../examples/extensions/hello.ts)、[`todo.ts`](../examples/extensions/todo.ts)、[`dynamic-tools.ts`](../examples/extensions/dynamic-tools.ts) 和 [`truncated-tool.ts`](../examples/extensions/truncated-tool.ts)。
+参见 [`hello.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/hello.ts)、[`todo.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/todo.ts)、[`dynamic-tools.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/dynamic-tools.ts) 和 [`truncated-tool.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/truncated-tool.ts)。
 
 ### 工具暴露
 
@@ -270,7 +270,7 @@ Pi 会上报处理器错误并尽可能继续运行。`tool_call` 处理器失�
 
 ## 示例与参考
 
-已提交的[扩展示例](../examples/extensions/)覆盖工具、生命周期事件、命令、标志、快捷键、状态、渲染、提供商、OAuth、远程执行和终端组件。
+已提交的[扩展示例](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/)覆盖工具、生命周期事件、命令、标志、快捷键、状态、渲染、提供商、OAuth、远程执行和终端组件。
 从与你的集成点对应的最小示例入手。
 
 模型服务集成用[自定义提供商](custom-provider.md)，自定义组件用[终端 UI](tui.md)，随其他资源一起安装或分发扩展用 [Pi 包](packages.md)。

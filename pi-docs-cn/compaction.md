@@ -367,7 +367,7 @@ pi.on("session_before_compact", async (event, ctx) => {
 });
 ```
 
-使用不同模型的完整示例见 [custom-compaction.ts](../examples/extensions/custom-compaction.ts)。
+使用不同模型的完整示例见 [custom-compaction.ts](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/custom-compaction.ts)。
 
 ### session_compact_failed
 

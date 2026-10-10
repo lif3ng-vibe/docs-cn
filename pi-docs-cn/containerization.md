@@ -182,4 +182,4 @@ pi -e ~/.pi/agent/extensions/gondolin
 
 该扩展把主机工作目录挂载到虚拟机的 `/workspace`，并覆盖 `read`、`write`、`edit`、`bash`、`grep`、`find` 与 `ls`。`/workspace` 下的文件更改会直写到主机。
 
-其他扩展工具仍在主机上运行，除非它们显式委托自己的操作。在添加可能绕过虚拟机边界的工具之前，先审查 [Gondolin 示例](../examples/extensions/gondolin/)。
+其他扩展工具仍在主机上运行，除非它们显式委托自己的操作。在添加可能绕过虚拟机边界的工具之前，先审查 [Gondolin 示例](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/gondolin/)。

@@ -73,7 +73,7 @@ RPC 命令可以更改模型、检查状态、管理会话、运行 shell 命令
 
 Node.js 或 TypeScript 集成优先使用 `@earendil-works/pi-coding-agent` 的 `RpcClient`。它会启动 Pi RPC 子进程、关联请求、暴露带类型的命令方法，并把会话事件投递给监听器。
 
-[RPC 客户端示例](../examples/rpc-client.ts)发送一个提示词、流式展示文本和工具活动、等待 `agent_settled`，然后关闭子进程。它包含在仓库的 TypeScript 检查中。
+[RPC 客户端示例](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/rpc-client.ts)发送一个提示词、流式展示文本和工具活动、等待 `agent_settled`，然后关闭子进程。它包含在仓库的 TypeScript 检查中。
 
 `RpcClient.promptAndWait()` 会在发送提示词之前安装事件监听器，避免与快速完成产生竞态。分开操作时，在调用 `prompt()` 之前订阅，且只在运行进行中调用 `waitForIdle()`。
 
@@ -98,11 +98,11 @@ Node.js 或 TypeScript 集成优先使用 `@earendil-works/pi-coding-agent` 的 
 
 ## 示例与参考
 
-- [RPC 客户端](../examples/rpc-client.ts)：带类型的 Node.js 集成
-- [RPC 扩展 UI](../examples/rpc-extension-ui.ts)：带扩展对话框的自定义终端客户端
+- [RPC 客户端](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/rpc-client.ts)：带类型的 Node.js 集成
+- [RPC 扩展 UI](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/rpc-extension-ui.ts)：带扩展对话框的自定义终端客户端
 - [命令行](cli.md)：启动选项与模式选择
 - [JSON 事件流](json.md)：JSON 事件参考
 - [RPC 协议](rpc.md)：RPC 生命周期、帧结构、错误与关闭
 - [RPC 命令](rpc-commands.md)：命令与响应参考
 - [RPC 扩展 UI](rpc-extension-ui.md)：扩展交互子协议
-- [SDK 示例](../examples/sdk/)：进程内 TypeScript 集成
+- [SDK 示例](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/sdk/)：进程内 TypeScript 集成

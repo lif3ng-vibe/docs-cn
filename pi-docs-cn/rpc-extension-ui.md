@@ -197,6 +197,6 @@ title: "RPC 扩展 UI"
 
 ## 示例
 
-经过验证的 [RPC 扩展 UI 客户端](../examples/rpc-extension-ui.ts)及其[演示扩展](../examples/extensions/rpc-demo.ts)可供参阅。
+经过验证的 [RPC 扩展 UI 客户端](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/rpc-extension-ui.ts)及其[演示扩展](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/rpc-demo.ts)可供参阅。
 
 导出的请求与响应联合类型定义于 [`rpc-types.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/modes/rpc/rpc-types.ts)。与模式无关的扩展指南参见[扩展](extensions.md#ui-%E4%B8%8E%E6%A8%A1%E5%BC%8F)。

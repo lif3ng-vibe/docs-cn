@@ -139,9 +139,9 @@ function reRelLinks(html) {
   });
 }
 
-/** 相对资产 src（images/…）：按站点根解析 + 加前缀 */
+/** 相对资产（images/…）：按站点根解析 + 加前缀（src 与包着它的 href 都要） */
 function reRelAssets(html) {
-  return html.replace(/(src=")(images\/[^"]+)(")/g, (full, head, p) => {
+  return html.replace(/((?:src|href)=")(images\/[^"]+)(")/g, (full, head, p) => {
     changed++;
     return `${head}${P}/${p}"`;
   });

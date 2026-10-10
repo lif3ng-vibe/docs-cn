@@ -131,7 +131,7 @@ process.stdin.close()
 process.wait()
 ```
 
-对于维护良好的 TypeScript 客户端，请使用经过验证的 [RPC 客户端示例](../examples/rpc-client.ts)。它需要已构建的 Pi CLI，因为仓库示例指向 `dist/cli.js`。
+对于维护良好的 TypeScript 客户端，请使用经过验证的 [RPC 客户端示例](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/rpc-client.ts)。它需要已构建的 Pi CLI，因为仓库示例指向 `dist/cli.js`。
 
 ## 参考
 

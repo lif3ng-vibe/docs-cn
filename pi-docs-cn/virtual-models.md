@@ -113,4 +113,4 @@ pi.registerVirtualModel<{ phase: "plan" | "build" }>({
 
 路由器可以通过 `ctx.modelRegistry` 调用其他模型，例如用来自 `ctx.modelRegistry.findOfType("classifier", provider, id)` 的分类器模型调用 `ctx.modelRegistry.classify()`。该调用会给本轮首个 token 之前增加延迟。
 
-完整路由器见 [`jev-router.ts`](../examples/extensions/jev-router.ts)。它用 Jev 分类器选出的强 OpenAI Codex 模型做规划，让该模型完成首次编辑，然后一次性切换到更便宜的模型，接受一次提示词缓存未命中。它把阶段保存为路由器状态。
+完整路由器见 [`jev-router.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/jev-router.ts)。它用 Jev 分类器选出的强 OpenAI Codex 模型做规划，让该模型完成首次编辑，然后一次性切换到更便宜的模型，接受一次提示词缓存未命中。它把阶段保存为路由器状态。

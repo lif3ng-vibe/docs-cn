@@ -75,7 +75,7 @@ title: "终端 UI"
 
 用传给组件工厂的完成回调结束交互。它会 resolve `ctx.ui.custom()` 的 promise 并销毁组件。不要对 `ctx.ui.custom()` 创建的浮层调用 `OverlayHandle.hide()`。
 
-定位、堆叠、焦点、响应式可见性和动画行为见 [`overlay-qa-tests.ts`](../examples/extensions/overlay-qa-tests.ts)。
+定位、堆叠、焦点、响应式可见性和动画行为见 [`overlay-qa-tests.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/overlay-qa-tests.ts)。
 
 ## 正确应用主题
 
@@ -117,11 +117,11 @@ return new Text(
 
 已提交的扩展示例覆盖主要模式：
 
-- [`preset.ts`](../examples/extensions/preset.ts) 和 [`tools.ts`](../examples/extensions/tools.ts) 使用选择列表和设置列表。
-- [`qna.ts`](../examples/extensions/qna.ts) 使用可取消的异步 UI。
-- [`modal-editor.ts`](../examples/extensions/modal-editor.ts) 替换编辑器。
-- [`custom-footer.ts`](../examples/extensions/custom-footer.ts) 替换页脚。
-- [`widget-placement.ts`](../examples/extensions/widget-placement.ts) 在编辑器周围放置持久内容。
-- [`doom-overlay/`](../examples/extensions/doom-overlay/) 演示持续渲染的浮层。
+- [`preset.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/preset.ts) 和 [`tools.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/tools.ts) 使用选择列表和设置列表。
+- [`qna.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/qna.ts) 使用可取消的异步 UI。
+- [`modal-editor.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/modal-editor.ts) 替换编辑器。
+- [`custom-footer.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/custom-footer.ts) 替换页脚。
+- [`widget-placement.ts`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/widget-placement.ts) 在编辑器周围放置持久内容。
+- [`doom-overlay/`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/doom-overlay/) 演示持续渲染的浮层。
 
 公开导出定义在 [`packages/tui/src/index.ts`](https://github.com/earendil-works/pi/blob/main/packages/tui/src/index.ts)。扩展生命周期、状态、工具、事件和模式行为见[扩展](extensions.md)。

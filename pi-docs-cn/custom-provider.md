@@ -71,7 +71,7 @@ pi.registerProvider("media-tools", {
 
 初始扩展加载之后发出的调用立即生效。使用 `pi.unregisterProvider()` 移除动态提供商，并恢复其替换掉的内置行为。
 
-完整的注册示例——把流式处理委托给内置 API 实现——见已提交的 [GitLab Duo 提供商](../examples/extensions/custom-provider-gitlab-duo/)。
+完整的注册示例——把流式处理委托给内置 API 实现——见已提交的 [GitLab Duo 提供商](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/custom-provider-gitlab-duo/)。
 
 ## 提供身份验证
 
