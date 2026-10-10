@@ -1,12 +1,13 @@
 import { defineConfig } from '@vercel/geistdocs/config';
+import { BASE_PATH } from '@/lib/base-path';
 import { content, Logo, nav, siteId, title, translations } from '@/geistdocs';
 import { isSiteUrlConfigured, siteUrl } from './site-url';
 
 export const config = defineConfig({
   title,
-  // 与 next.config.ts 的 basePath 保持一致：geistdocs 用它给 sitemap、
-  // markdown、页面动作等生成公开 URL。
-  basePath: '/docs-cn/ai-sdk',
+  // 与 next.config.ts 的 basePath 保持一致（统一取自 lib/base-path.ts）：
+  // geistdocs 用它给 sitemap、markdown、页面动作等生成公开 URL。
+  basePath: BASE_PATH,
   // geistdocs 以 'cn' 作为中文 locale 键（search 路由仅对 'cn' 挂载
   // Orama 中文分词器，其他键会拿 displayName 当 stemmer 语言而报错）。
   defaultLanguage: 'cn',

@@ -1,5 +1,6 @@
 'use client';
 
+import { withBase } from '@/lib/base-path';
 import {
   IconChevronDownSmall,
   IconWrench,
@@ -158,7 +159,7 @@ const ProviderLogo = ({ provider }: { provider: string }) => {
         alt=""
         className="size-4 dark:invert"
         height={16}
-        src="/images/icons/custom.svg"
+        src={withBase("/images/icons/custom.svg")}
         width={16}
       />
     );
@@ -170,7 +171,7 @@ const ProviderLogo = ({ provider }: { provider: string }) => {
       alt=""
       className="size-4 rounded-full bg-background-100 ring-1 ring-gray-alpha-400"
       height={16}
-      src={`/images/icons/gateway/${provider}.png`}
+      src={withBase(`/images/icons/gateway/${provider}.png`)}
       width={16}
     />
   );

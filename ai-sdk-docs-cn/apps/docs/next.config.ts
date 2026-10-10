@@ -1,5 +1,6 @@
 import { createGeistdocs } from '@vercel/geistdocs/next';
 import type { NextConfig } from 'next';
+import { BASE_PATH } from './lib/base-path';
 
 // createGeistdocs composes Fumadocs MDX and discovers App Router pages and
 // route handlers so createProxy can recover unknown agent/Markdown requests.
@@ -7,11 +8,11 @@ import type { NextConfig } from 'next';
 const withGeistdocs = createGeistdocs();
 
 // 中文镜像：GitHub Pages 子路径部署（/docs-cn/ai-sdk/），静态导出。
-// basePath 必须与 lib/geistdocs/config.tsx 的 config.basePath 一致。
+// basePath 统一取自 lib/base-path.ts（geistdocs config 与组件层同源）。
 const config: NextConfig = {
   output: 'export',
   trailingSlash: true,
-  basePath: '/docs-cn/ai-sdk',
+  basePath: BASE_PATH,
   // cacheComponents 与 output:'export' 在 metadata 路由上互斥
   // （dynamic/revalidate 均被禁用，而导出检查要求其中之一），
   // 镜像站无 ISR 运行时，直接关闭。

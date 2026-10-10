@@ -1,5 +1,6 @@
 'use client';
 
+import { withBase } from '@/lib/base-path';
 import { IconForward10Seconds10 } from '@vercel/geistdocs/assets/icons/icon-forward-10-seconds-10';
 import { IconPause } from '@vercel/geistdocs/assets/icons/icon-pause';
 import { IconPlayFill } from '@vercel/geistdocs/assets/icons/icon-play-fill';
@@ -68,7 +69,7 @@ export function AudioPlayer({
           default
           kind="captions"
           label="English"
-          src="/images/home/speech.vtt"
+          src={withBase("/images/home/speech.vtt")}
           srcLang="en"
         />
       </audio>

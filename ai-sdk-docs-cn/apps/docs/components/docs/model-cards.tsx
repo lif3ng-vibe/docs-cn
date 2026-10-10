@@ -1,3 +1,4 @@
+import { withBase } from '@/lib/base-path';
 import { Badge } from '@vercel/geistdocs/components/badge';
 import {
   IconApi,
@@ -74,7 +75,7 @@ const FeatureBadges = ({ features }: { features: ModelFeatures }) => {
       {active.length === 0 ? (
         <Badge className="gap-1 border-none bg-gray-200 font-normal text-gray-900">
           <IconSandbox className="size-3.5" />
-          Provider Dependent
+          取决于提供商
         </Badge>
       ) : null}
     </div>
@@ -151,7 +152,7 @@ const ModelLogoImage = ({
     alt={`${title} logo`}
     className={logo.invert ? 'dark:invert' : undefined}
     height={size}
-    src={logo.src}
+    src={withBase(logo.src)}
     width={size}
   />
 );

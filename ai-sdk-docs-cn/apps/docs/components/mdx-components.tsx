@@ -3,6 +3,7 @@ import { LogoIconVercelSvg } from '@vercel/geistdocs/assets/logos';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ComponentType, JSX } from 'react';
 import { ExampleLinks } from '@/components/docs/example-links';
+import { withBase } from '@/lib/base-path';
 import { IndexCards } from '@/components/docs/index-cards';
 import { Check, Cross } from '@/components/docs/inline-icons';
 import { InstallPackages } from '@/components/docs/install-packages';
@@ -59,6 +60,11 @@ export const getMdxComponents = ({
 
   return {
     ...createMdxComponents({ a: VersionedLink }),
+    // markdown 图片（remarkImage 已关，走默认 img）：public 资产根绝对路径
+    // 需补 basePath。JSX 组件 <MDXImage>/<Image> 在下方单独映射。
+    img: ({ src, ...rest }: JSX.IntrinsicElements['img']) => (
+      <img {...rest} src={typeof src === 'string' ? withBase(src) : src} />
+    ),
     CodeTemplate: props => (
       <CodeTemplate {...props} versionPrefix={versionPrefix} />
     ),

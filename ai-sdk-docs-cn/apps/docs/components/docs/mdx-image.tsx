@@ -1,3 +1,5 @@
+import { withBase } from '@/lib/base-path';
+
 /**
  * Light/dark aware image (legacy `<MDXImage>` / `<Image>`).
  *
@@ -44,7 +46,7 @@ export const MDXImage = ({
         className="block rounded-lg border border-gray-alpha-400 bg-gray-100 dark:hidden"
         height={lightHeight}
         loading="lazy"
-        src={srcLight}
+        src={withBase(srcLight)}
         width={lightWidth}
       />
       {/* biome-ignore lint/performance/noImgElement: theme-specific public asset */}
@@ -53,7 +55,7 @@ export const MDXImage = ({
         className="hidden rounded-lg border border-gray-alpha-400 bg-gray-100 dark:block"
         height={darkHeight}
         loading="lazy"
-        src={srcDark}
+        src={withBase(srcDark)}
         width={darkWidth}
       />
       {caption ? <figcaption>{caption}</figcaption> : null}

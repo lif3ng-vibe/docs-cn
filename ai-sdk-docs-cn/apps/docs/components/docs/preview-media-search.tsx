@@ -1,5 +1,6 @@
 'use client';
 
+import { withBase } from '@/lib/base-path';
 import {
   ConversationReplay,
   type SimulationMessage,
@@ -62,7 +63,7 @@ const Images = ({ images }: { images: Artwork[] }) => {
           className="mt-8 h-[115px] w-full rounded-lg bg-gray-300 object-cover"
           height={115}
           loading="lazy"
-          src={mainImage.src}
+          src={withBase(mainImage.src)}
           width={150}
         />
         <div className="text-gray-900 text-sm">{mainImage.name}</div>
@@ -76,7 +77,7 @@ const Images = ({ images }: { images: Artwork[] }) => {
               className="h-[75px] w-full rounded-lg bg-gray-300 object-cover"
               height={75}
               loading="lazy"
-              src={image.src}
+              src={withBase(image.src)}
               width={150}
             />
             <div className="text-gray-900 text-xs">{image.name}</div>
