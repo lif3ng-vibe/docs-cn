@@ -1,0 +1,26 @@
+---
+title: "Troubleshoot hard NAT issues"
+description: "In a scenario with three contingent conditions, you may experience network performance issues. This affects latency-sensitive traffic through connectors (exit nodes, subnet routers, and app connectors"
+---
+
+Last validated Mar 16, 2026
+
+In a scenario with three contingent conditions, you may experience network performance issues. This affects latency-sensitive traffic through connectors (exit nodes, subnet routers, and app connectors). One possible visible symptom is DNS resolution timing out. Perform network tests to diagnose your configuration and traffic and ascertain if the following are applicable.
+
+1. [Hard NAT][docs-connection-types-hard-nat] makes establishing direct connections difficult (if not impossible). Tailscale will fall back to DERP relay servers based around the world.
+
+2. If heavy packets per second or bits per second of traffic are relaying over these DERP TCP connections, there is a higher potential for [head-of-line blocking][xt-wikipedia-head-of-line-blocking]—and in the extreme case: a [TCP meltdown][xt-wikipedia-tcp-meltdown].
+
+3. This packet blocking can occur with greater likelihood and impact on a network that consists of nodes with traffic aggregation and forwarding like subnet routers and exit nodes.
+
+The preferred and recommended approach is to use direct peer-to peer connections rather than DERP relay connections for these key nodes. Removing the Hard NAT will address the underlying and contributing factors. Change it to a no NAT (directly accessible) or [easy NAT][docs-device-connectivity-easy-nat] configuration.
+
+However, if removing the Hard NAT on the connector is not an option, you can attempt to minimize the contributing factor of packets blocked by shared traffic. One approach is to isolate latency-sensitive services behind separate subnet routers. Another approach would be to host latency-sensitive services on their own nodes without a subnet router in front of them.
+
+[docs-connection-types-hard-nat]: /docs/reference/connection-types#hard-nat
+
+[docs-device-connectivity-easy-nat]: /docs/reference/device-connectivity#easy-nat
+
+[xt-wikipedia-head-of-line-blocking]: https://en.wikipedia.org/wiki/Head-of-line_blocking
+
+[xt-wikipedia-tcp-meltdown]: https://en.wikipedia.org/wiki/Tunneling_protocol#TCP_meltdown_problem
