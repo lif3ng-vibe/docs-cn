@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>隐私政策 - Impeccable（汉化版）</title><meta name="description" content="Impeccable 如何处理数据、网络请求与可选的上报功能。"><meta name="theme-color" content="#f9f9f9"><meta name="robots" content="noindex"><meta property="og:type" content="website"><meta property="og:url" content="https://impeccable.style"><meta property="og:title" content="给智能体补上缺失的设计词汇。"><meta property="og:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta property="og:image" content="https://impeccable.style/og-image-v6.png"><meta property="og:image:width" content="1733"><meta property="og:image:height" content="907"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="给智能体补上缺失的设计词汇。"><meta name="twitter:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta name="twitter:image" content="https://impeccable.style/og-image-v6.png"><link rel="icon" type="image/svg+xml" href="/docs-cn/impeccable-mirror/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=Alumni+Sans:wght@200..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><script>// Exceptions we cannot act on, dropped in posthog.astro's before_send. This
+// file is inlined into the page as a classic script (no imports, no exports
+// beyond the one function), so keep it self-contained.
+//
+// Keep unknown rejections, SDK failures and first-party stacks observable.
+// Drop only opaque cross-origin errors, foreign-only stacks, the SDK's own
+// request timeout, and identifiable extension or injected wallet failures.
+function isUnactionableException(properties) {
+  var list = (properties && properties.$exception_list) || [];
+  if (!list.length) return false;
+  var framesOf = function (e) { return (e.stacktrace && e.stacktrace.frames) || []; };
+  var page = function (url) { return String(url || '').split(/[?#]/)[0]; };
+  var currentPage = page(properties.$current_url);
+  var isPage = function (f) { return /^https?:/.test(f.filename || '') && currentPage && page(f.filename) === currentPage; };
+  var foreign = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && own.every(function (f) { return !/^https?:/.test(f.filename || ''); });
+  });
+  var opaque = list.every(function (e) { return e.value === 'Script error.' && framesOf(e).length === 0; });
+  var sdkTimeout = list.every(function (e) {
+    var own = framesOf(e);
+    return /^PostHog request timed out after \d+ms$/.test(e.value || '') && own.length > 0 &&
+      own.every(function (f) { return /^https?:\/\/[^/]+\/relay\/static\//.test(f.filename || ''); });
+  });
+  // PostHog orders frames outermost first. Only discard an extension throw
+  // when the rest of the stack contains page URLs or foreign frames; a
+  // first-party bundle anywhere in the chain keeps the exception actionable.
+  var inExtension = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && /^(webkit-masked-url|chrome-extension|moz-extension|safari-web-extension):/.test(own[own.length - 1].filename || '') &&
+      own.every(function (f) { return !/^https?:/.test(f.filename || '') || isPage(f); });
+  });
+  // This exact Brave iOS wallet injection runs against the page itself.
+  // Other ethereum messages and exceptions from site bundles remain visible.
+  var wallet = list.every(function (e) {
+    var own = framesOf(e);
+    return e.value === "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')" &&
+      own.length > 0 && own.every(isPage);
+  });
+  return foreign || opaque || sdkTimeout || inExtension || wallet;
+}
+</script><script>(function(){const apiKey = "phc_qCpX2jadsFcLpk7T87rjhowCAMGohC3cnNZwn9Y8h9dp";
+const apiHost = "/relay";
+
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+    // Label every event, the first pageview included, by where it ran, so
+    // insights can leave out local dev and PR previews.
+    var host = location.hostname;
+    var environment = host === 'impeccable.style' || host.endsWith('.impeccable.style') ? 'production'
+      : host === 'localhost' || host === '127.0.0.1' ? 'development'
+      : 'preview';
+
+    window.posthog.init(apiKey, {
+      api_host: apiHost,
+      ui_host: 'https://us.posthog.com',
+      defaults: '2026-01-30',
+      // Replay is off, and the privacy policy says nothing about recording.
+      // Keep it off here so a dashboard toggle cannot change that.
+      disable_session_recording: true,
+      // Cloudflare Web Analytics already reports Core Web Vitals, and
+      // $pageleave doubles pageview volume for a scroll-depth signal we do not
+      // use. Together they were about 28% of all events.
+      capture_performance: { web_vitals: false },
+      capture_pageleave: false,
+      capture_exceptions: {
+        capture_unhandled_errors: true,
+        capture_unhandled_rejections: true,
+        capture_console_errors: false,
+      },
+      before_send(event) {
+        if (!event) return event;
+        if (event.event === '$exception' && isUnactionableException(event.properties)) return null;
+        event.properties = { ...event.properties, environment };
+        return event;
+      },
+    });
+  })();</script><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/sub-pages.CTJhASV9.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/privacy.BpZ62czQ.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/kinpaku-tokens.Czfxn__5.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/Base.C85DQK9e.css"></head><body class="sub-page kinpaku-chrome kinpaku-surface"><a href="#main" class="skip-link">跳到正文</a><header class="site-header" data-site-header data-nav-open="false"><a href="/" class="site-header-brand" aria-label="Impeccable 首页"><span class="site-header-brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 2.5 L13.5 2.5 L5.5 21.5 L5 21.5 Q2.5 21.5 2.5 19 L2.5 5 Q2.5 2.5 5 2.5 Z"></path><path d="M16.5 2.5 L19 2.5 Q21.5 2.5 21.5 5 L21.5 19 Q21.5 21.5 19 21.5 L8.5 21.5 Z"></path></svg></span><span class="site-header-brand-name">Impeccable</span></a><button type="button" class="site-header-menu" aria-label="打开导航" aria-expanded="false" aria-controls="site-header-nav-panel" data-site-header-menu><span class="site-header-menu-line" aria-hidden="true"></span><span class="site-header-menu-line" aria-hidden="true"></span></button><div class="site-header-right" id="site-header-nav-panel"><nav class="site-header-nav" aria-label="主导航"><a href="/" data-nav="home">首页</a><a href="/docs-cn/impeccable-mirror/designing" data-nav="designing">设计流程</a><a href="/docs-cn/impeccable-mirror/gallery" data-nav="gallery">画廊</a><a href="/docs-cn/impeccable-mirror/docs" data-nav="docs">文档</a><a href="/docs-cn/impeccable-mirror/slop" data-nav="slop">Slop</a><a href="/docs-cn/impeccable-mirror/live-mode" data-nav="live">Live</a></nav><a href="https://github.com/pbakaus/impeccable" class="site-header-github" target="_blank" rel="noopener" aria-label="Impeccable 的 GitHub，86k 星"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg><span class="site-header-github-label">86k</span><svg class="site-header-github-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.76 6.36L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.24-.91L12 2z"></path></svg></a></div></header><script>
+  (function () {
+    var header = document.querySelector('[data-site-header]');
+    var btn = document.querySelector('[data-site-header-menu]');
+    var panel = document.getElementById('site-header-nav-panel');
+    if (!header || !btn || !panel) return;
+    var mobile = window.matchMedia('(max-width: 760px)');
+
+    function setOpen(open, restoreFocus) {
+      open = mobile.matches && open;
+      header.setAttribute('data-nav-open', String(open));
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
+      if (restoreFocus) btn.focus();
+      panel.inert = mobile.matches && !open;
+    }
+
+    setOpen(false);
+    btn.addEventListener('click', function () {
+      var open = header.getAttribute('data-nav-open') === 'true';
+      setOpen(!open);
+    });
+
+    panel.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        setOpen(false, mobile.matches);
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && header.getAttribute('data-nav-open') === 'true') {
+        event.preventDefault();
+        setOpen(false, true);
+      }
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.target)) {
+        setOpen(false, panel.contains(document.activeElement));
+      }
+    });
+
+    header.addEventListener('focusout', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.relatedTarget)) {
+        setOpen(false);
+      }
+    });
+
+    mobile.addEventListener('change', function () {
+      setOpen(false, mobile.matches && panel.contains(document.activeElement));
+    });
+  })();
+</script><main id="main"><div class="privacy-content" data-astro-cid-dugyiyth><h1 data-astro-cid-dugyiyth>隐私政策</h1><p class="updated" data-astro-cid-dugyiyth>最后更新：2026 年 10 月 21 日</p><p data-astro-cid-dugyiyth>Renaissance Geek, Inc.（下称「我们」）运营 impeccable.style 及下文所述的 Impeccable 服务。</p><h2 data-astro-cid-dugyiyth>你的项目与编码工具</h2><p data-astro-cid-dugyiyth>Impeccable 为你的 AI 编码智能体提供设计指令和工具。它的项目检查在本地运行，并把发现返回给该智能体；检查不会把你的项目文件或检测结果上传到 Impeccable 的服务器。</p><p data-astro-cid-dugyiyth>你的编码工具可能把提示词、文件、截图及其他上下文发送给它所用的 AI 服务商。这类处理取决于该工具、你的设置以及服务商的条款。以下各节说明 Impeccable 自身发起的网络请求和网站服务。</p><h2 data-astro-cid-dugyiyth>版本检查与下载</h2><p data-astro-cid-dugyiyth>Impeccable 可以在 <code data-astro-cid-dugyiyth>impeccable.stylehttps://impeccable.style/api/version</code> 检查是否有更新版本的技能（skill）。该检查不发送任何项目内容，通常借助本地缓存每天至多运行一次。设置 <code data-astro-cid-dugyiyth>IMPECCABLE_NO_UPDATE_CHECK=1</code> 可将其关闭。</p><p data-astro-cid-dugyiyth>安装或更新 Impeccable 时，软件从你的安装方式所使用的服务下载，例如 npm 或 GitHub。网站上的安装包下载会重定向到 GitHub Releases。这些服务按各自的政策接收并处理下载请求。</p><h2 data-astro-cid-dugyiyth>视觉世界与预览</h2><p data-astro-cid-dugyiyth>当 Impeccable 向 <code data-astro-cid-dugyiyth>impeccable.stylehttps://impeccable.style/api/roll</code> 请求设计选项时，它会发送：</p><ul data-astro-cid-dugyiyth><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>roll 密钥和轮次编号</strong>，用于复现某次选择以及请求下一轮。密钥默认随机生成。</li><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>范围（scope）和可选过滤器</strong>，描述这次设计工作的类型：页面目的、正在设计界面的哪个部分、目标平台。API 还接受一个目录最低评分。</li></ul><p data-astro-cid-dugyiyth>这些请求不包含你的项目名称、文件路径、提示词或简报。配置了本地目录时，无需这个 API 请求即可提供选项。展示目录预览时，可能会单独向 Impeccable 的服务器请求预览图。</p><h2 data-astro-cid-dugyiyth>可选的选择上报</h2><p data-astro-cid-dugyiyth>对于由我们 API 提供的一轮选项，Impeccable 可以上报所选卡片的类型、它在页面上的位置，以及（当选中的是目录里的视觉世界时）它的目录 ID。如果用户没有选择而是要求换一批新选项，也会上报这一点。上报内容还包括 roll 密钥、轮次编号、目录版本、范围、页面模式、用户是否要求更保守或更大胆的选项，以及这次选择来自本地选择器里的点击还是来自你的智能体。它绝不会发送为你的项目创建的方向名称或描述。即便这类内容真的被发送过来，我们的服务器也会将其丢弃。</p><p data-astro-cid-dugyiyth>要关闭上报，运行 <code data-astro-cid-dugyiyth>npx impeccable telemetry off</code>，或设置 <code data-astro-cid-dugyiyth>IMPECCABLE_NO_TELEMETRY=1</code> 或 <code data-astro-cid-dugyiyth>DO_NOT_TRACK=1</code>。项目也可以为所有参与者关闭上报：在 <code data-astro-cid-dugyiyth>.impeccable/config.json</code> 中设置 <code data-astro-cid-dugyiyth>"telemetry": false</code>；<code data-astro-cid-dugyiyth>npx impeccable telemetry status</code> 可查看当前设置。关闭上报后，Impeccable 不发送任何选择报告，并且自 4.6.0 版本起，它的 roll 请求会要求我们的服务器不要记录，因此也不会保留 roll 的任何记录。更早的版本只对选择报告遵守那两个环境变量。目录选项和预览图的请求仍会发生，因为功能本身依赖它们。</p><h2 data-astro-cid-dugyiyth>我们的服务器从 roll 与选择中保留什么</h2><p data-astro-cid-dugyiyth>我们的 roll 与选择处理程序会为每个事件保留一条记录，以了解哪些选项被展示、哪些被选中。我们把这些记录存储在 Cloudflare D1 数据库和 Cloudflare Analytics Engine 中，并归档到 Cloudflare R2。一条记录包含被发出或被选中的目录 ID、上文列出的选择细节、Impeccable 版本，以及一个宽泛的客户端类型（例如命令行工具或浏览器）。</p><p data-astro-cid-dugyiyth>roll 密钥本身绝不存储。我们只保存它的带密钥哈希，它能把一次 roll 的各轮与结束它的那次选择关联起来，但无法还原出密钥本身。记录中不包含 IP 地址、项目内容或用户/设备 ID。Cloudflare 会另行处理请求信息以交付服务，详见下文。</p><p data-astro-cid-dugyiyth>我们首页上实时展示的视觉世界集合使用的也是同一个 API。这些请求以相同方式记录，并被标记为网站流量，因此绝不会计为在 Impeccable 中做出的选择。</p><p data-astro-cid-dugyiyth>我们无固定删除日期地保留这些记录，以便对比目录扩充过程中选择的变化。由于其中任何一条都无法对应到具体的人或设备，我们无法按请求查找或删除某个用户的记录。</p><h2 data-astro-cid-dugyiyth>图像生成</h2><p data-astro-cid-dugyiyth>当你的编码工具通过自带的图像工具生成图像时，适用该服务商的条款和数据设置。</p><p data-astro-cid-dugyiyth>如果你配置 <code data-astro-cid-dugyiyth>OPENAI_API_KEY</code> 来运行 Impeccable 的图像生成器，它会将图像提示词发送给 OpenAI，费用记在该密钥上。<strong data-astro-cid-dugyiyth>提供给命令的参考图像也会一并上传。</strong>提示词和参考图可能包含你项目的细节。移除该密钥即可停用这条 API 通道；它不会停用你编码工具内置的图像生成。参见 <a href="https://developers.openai.com/api/docs/guides/your-data" data-astro-cid-dugyiyth>OpenAI 的 API 数据控制</a>。</p><h2 data-astro-cid-dugyiyth>Live Mode 与方向选择器</h2><p data-astro-cid-dugyiyth>Live Mode 和方向选择器使用本地服务器与你的智能体交换选择、标注及其他工作状态。它们的控件通过 localhost 通信。Live Mode 可以把截图和标注保存在你的项目中，供智能体读取。</p><p data-astro-cid-dugyiyth>该本地连接不会把这些工作状态上传给 Impeccable。你的智能体的处理过程以及页面加载的任何远程资源，仍受相应服务商政策的约束。</p><h2 data-astro-cid-dugyiyth>网站服务与浏览器存储</h2><p data-astro-cid-dugyiyth>我们的首页使用 Google Analytics 来统计访问和交互。它可能收集页面与来源页信息、设备和浏览器细节、大致位置以及 Cookie 标识符。Google Analytics 使用 Cookie 区分访客和会话。参见 <a href="https://support.google.com/analytics/answer/11397207?hl=en" data-astro-cid-dugyiyth>Google 对 Analytics Cookie 的说明</a>和<a href="https://support.google.com/analytics/answer/6004245?hl=en" data-astro-cid-dugyiyth>数据收集</a>。</p><p data-astro-cid-dugyiyth>impeccable.style 的每个页面都使用 PostHog 来了解网站的使用情况。它记录页面浏览、点击、你复制的命令、你选择的安装方式以及 JavaScript 错误，同时收集页面与来源页信息、设备和浏览器细节以及大致位置。它在 Cookie 和本地存储中保存一个随机标识符，以关联同一浏览器的多次访问。这些请求经由 <code data-astro-cid-dugyiyth>impeccable.style/relay</code> 转发给 PostHog，并附带你的 IP 地址以便其估算位置。参见 <a href="https://posthog.com/privacy" data-astro-cid-dugyiyth>PostHog 的隐私政策</a>。</p><p data-astro-cid-dugyiyth>本站还从 Google Fonts 加载字体。你的浏览器会向 Google 发送加载这些字体所需的请求。命令语法切换开关会把你的偏好保存在浏览器的本地存储中。</p><p data-astro-cid-dugyiyth>Cloudflare 为我们的网站、API 和目录图像提供托管。它处理请求信息（包括 IP 地址）以交付并保护这些服务。<a href="https://www.cloudflare.com/privacypolicy/" data-astro-cid-dugyiyth>Cloudflare 的隐私政策</a>说明了它对这类信息的处理方式。</p><p data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>Do Not Track 与 Global Privacy Control：</strong>当你的浏览器发送这些信号时，网站目前不会改变其收集内容。无论信号如何，Google Analytics 和 PostHog 都照常运行。你可以在浏览器中阻止或清除 Cookie 和本地存储，Google 也提供一款<a href="https://tools.google.com/dlpage/gaoptout" data-astro-cid-dugyiyth>退出 Google Analytics 的浏览器插件</a>。上文提到的 <code data-astro-cid-dugyiyth>DO_NOT_TRACK=1</code> 设置只控制编码工具中 Impeccable 的上报，不控制网站。</p><h2 data-astro-cid-dugyiyth>Impeccable Pro 候补名单</h2><p data-astro-cid-dugyiyth>加入候补名单时，我们会把你的电子邮箱地址和注册时间存储在 Cloudflare D1 中。在可获得时，我们还会存储注册来源、来源页、国家/地区以及你 IP 地址的哈希值。该哈希用于限制重复注册；候补名单表不存储原始 IP 地址。</p><p data-astro-cid-dugyiyth>我们使用你的邮箱确认注册，并在 Pro 就绪时通知你。确认邮件通过 Cloudflare 的邮件服务发送。来源和来源页信息告诉我们注册来自哪里。</p><p data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>你可以用邮件中的链接取消订阅。</strong>确认该请求后，你的注册记录会从候补名单数据库中删除。如果邮件提供的是回复式退订选项，请按那些说明操作。</p><h2 data-astro-cid-dugyiyth>Chrome 扩展</h2><p data-astro-cid-dugyiyth>Impeccable 扩展在你的浏览器内检查页面。页面快照和检测结果都在本地处理，包括在一个离屏（offscreen）扩展文档中处理。检测器不会把它们上传到外部服务器。</p><p data-astro-cid-dugyiyth>扩展使用 <code data-astro-cid-dugyiyth>chrome.storage.sync</code> 保存规则和显示偏好。启用同步后，Chrome 可以跨登录了你 Google 账号的浏览器同步这些设置。参见 <a href="https://developer.chrome.com/docs/extensions/reference/api/storage" data-astro-cid-dugyiyth>Chrome 的存储文档</a>。</p><p data-astro-cid-dugyiyth>扩展会请求以下权限：</p><ul data-astro-cid-dugyiyth><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>activeTab 和 scripting：</strong>检查你选定的页面。</li><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>storage：</strong>保存你的偏好设置。</li><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>webNavigation：</strong>响应页面导航以进行自动扫描。</li><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>offscreen：</strong>在扩展文档中运行检测器的 WebAssembly 代码。</li><li data-astro-cid-dugyiyth><strong data-astro-cid-dugyiyth>访问所有网址：</strong>支持对你选定的网站进行检查。</li></ul><h2 data-astro-cid-dugyiyth>GitHub 与联系方式</h2><p data-astro-cid-dugyiyth>我们的源代码和公开 issue 讨论托管在 GitHub 上，受 <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" data-astro-cid-dugyiyth>GitHub 的隐私政策</a>约束。</p><p data-astro-cid-dugyiyth>对本政策或你的数据有疑问，请发邮件至 <a href="mailto:privacy@impeccable.style"><span class="__cf_email__" data-email="privacy@impeccable.style">[email&#160;protected]</span></a>。你也可以联系 <a href="https://x.com/pbakaus" data-astro-cid-dugyiyth>@pbakaus</a>，或在 <a href="https://github.com/pbakaus/impeccable" data-astro-cid-dugyiyth>Impeccable 仓库</a>中开一个 issue；issue 是公开的，私密内容请用邮件。</p><h2 data-astro-cid-dugyiyth>政策的变更</h2><p data-astro-cid-dugyiyth>当我们的做法发生变化时，我们会更新本页面及顶部的日期。</p></div></main><footer class="site-footer"><div class="footer-row"><a class="footer-logo" href="/">Impeccable</a><nav class="footer-links" aria-label="页脚"><a href="/docs-cn/impeccable-mirror/gallery">画廊</a><a href="/docs-cn/impeccable-mirror/changelog">更新日志</a><a href="/docs-cn/impeccable-mirror/faq">常见问题</a><a href="/docs-cn/impeccable-mirror/privacy">隐私</a><a href="https://app.vanta.com/renaissance-geek.ai/trust/jhldu1ow0u17opmmk3s7zk">信任中心</a><a href="https://github.com/pbakaus/impeccable">GitHub</a></nav><div class="footer-credit"><span>作者：<a href="https://x.com/pbakaus" target="_blank" rel="noopener">Paul Bakaus</a></span><a href="https://x.com/pbakaus" class="footer-social-link" aria-label="在 X 上关注" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a><a href="https://linkedin.com/in/paulbakaus" class="footer-social-link" aria-label="在 LinkedIn 上连接" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg></a></div></div></footer><script type="module" src="/docs-cn/impeccable-mirror/_astro/Base.astro_astro_type_script_index_0_lang.BD-jcN2D.js"></script><!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2375b0fdc85c43a68f4b0e89cc6ae43c"}'></script><!-- Cloudflare Pages Analytics --></body></html>

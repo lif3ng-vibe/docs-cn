@@ -1,0 +1,155 @@
+---
+import '../styles/live-ui-gallery.css';
+import { LIVE_COMMANDS } from '../../skill/scripts/live/vocabulary.mjs';
+import { LIVE_UI_SURFACES } from '../../skill/scripts/live/ui-core.mjs';
+
+const STATE_GROUPS = [
+  {
+    key: 'global-chrome',
+    label: '全局骨架',
+    summary: '会话状态、整页工具与定向。',
+    states: [
+      ['global-ready', '就绪', 'global-bottom-bar'],
+      ['global-disconnected', '智能体已断开', 'global-bottom-bar'],
+      ['global-foreground', 'Codex CLI 回退', 'global-bottom-bar'],
+      ['global-tools', '检测 + DESIGN.md', 'global-bottom-bar'],
+      ['steer-expanded', '定向输入中', 'global-bottom-bar'],
+      ['steer-processing', '定向处理中', 'global-bottom-bar'],
+    ],
+  },
+  {
+    key: 'selection',
+    label: '选取',
+    summary: '生成前的选取、标注与插入。',
+    states: [
+      ['configure-replace', '配置所选元素', 'element-selection-chrome'],
+      ['action-picker', '操作选择器', 'action-picker'],
+      ['configure-listening', '语音输入', 'element-selection-chrome'],
+      ['configure-locked', '应用已锁定', 'element-selection-chrome'],
+      ['annotation', '标注', 'annotation-chrome'],
+      ['insert-placeholder', '插入占位元素', 'insert-mode-chrome'],
+    ],
+  },
+  {
+    key: 'generation-review',
+    label: '生成 + 评审',
+    summary: '渐进到达、调参、应用与确认。',
+    states: [
+      ['generating', '生成中', 'generating-row'],
+      ['generation-recovery', '恢复', 'generating-row'],
+      ['cycling-progressive', '变体 1 已到达', 'variant-cycling-row'],
+      ['cycling-second', '变体 2 已到达', 'variant-cycling-row'],
+      ['tune-open', '调参面板', 'variant-params-panel'],
+      ['applying', '正在应用变体', 'saving-confirmed-rows'],
+      ['confirmed', '变体已应用', 'saving-confirmed-rows'],
+    ],
+  },
+  {
+    key: 'copy-support',
+    label: '文案 + 支持',
+    summary: '就地文案编辑、设计上下文与恢复反馈。',
+    states: [
+      ['edit-copy', '编辑文案', 'edit-chrome'],
+      ['copy-pending', '文案修改待应用', 'pending-copy-edit-dock'],
+      ['copy-applying', '文案修改应用中', 'pending-copy-edit-dock'],
+      ['copy-attention', '应用需要注意', 'pending-copy-edit-dock'],
+      ['design-panel', 'DESIGN.md 面板', 'design-system-panel'],
+      ['toast-error', '错误提示', 'toasts-and-errors'],
+    ],
+  },
+];
+
+// Keep the catalog honest as Live grows. CSS isolation is a structural mount
+// contract rather than a visible state; every other surface must own at least
+// one snapshot here or the site build fails with the missing surface name.
+const STRUCTURAL_SURFACES = new Set(['css-isolation-boundary']);
+const coveredSurfaces = new Set(
+  STATE_GROUPS.flatMap((group) => group.states.map(([, , surface]) => surface)),
+);
+const visualSurfaces = LIVE_UI_SURFACES.filter((surface) => !STRUCTURAL_SURFACES.has(surface.key));
+const uncoveredSurfaces = visualSurfaces.filter((surface) => !coveredSurfaces.has(surface.key));
+if (uncoveredSurfaces.length > 0) {
+  throw new Error(`Live UI lab is missing snapshots for: ${uncoveredSurfaces.map((surface) => surface.key).join(', ')}`);
+}
+
+const statePayload = STATE_GROUPS.flatMap((group) =>
+  group.states.map(([key, label, surface]) => ({
+    key,
+    label,
+    surface,
+    groupKey: group.key,
+    group: group.label,
+    groupSummary: group.summary,
+  })),
+);
+const groupPayload = STATE_GROUPS.map((group) => ({
+  key: group.key,
+  label: group.label,
+  summary: group.summary,
+  states: statePayload.filter((state) => state.groupKey === group.key),
+}));
+const commandPayload = JSON.stringify(LIVE_COMMANDS).replace(/</g, '\\u003c');
+const groupsJson = JSON.stringify(groupPayload).replace(/</g, '\\u003c');
+---
+
+<!--
+  Dev-only state harness for Impeccable Live. The chrome mirrors:
+  - skill/scripts/live-browser.js (standalone browser UI and exact wording)
+  - skill/scripts/live/ui-core.mjs (surface/state inventory)
+  - skill/scripts/live/vocabulary.mjs (canonical command labels and SVGs)
+
+  Production Live deliberately uses the same dark Neo Kinpaku chrome on light
+  and dark host pages (barPaletteForTheme, live-browser.js). The host control
+  therefore changes the canvas behind every state, not the product chrome.
+-->
+<section class="live-ui-gallery" data-live-ui-gallery data-dev-only="true" aria-label="Live UI 状态检视器">
+  <aside class="live-ui-gallery__sidebar">
+    <header class="live-ui-gallery__sidebar-head">
+      <span>状态目录</span>
+      <strong>{statePayload.length} 个快照</strong>
+      <small>{visualSurfaces.length} 个可见表面</small>
+    </header>
+
+    <nav class="live-ui-gallery__group-nav" aria-label="Live UI 工作流分组" aria-keyshortcuts="ArrowUp ArrowDown Home End">
+      {STATE_GROUPS.map((group, index) => (
+        <button type="button" data-gallery-group={group.key} aria-current={index === 0 ? 'true' : 'false'}>
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <span>
+            <strong>{group.label}</strong>
+            <small>{group.states.length} 个状态</small>
+          </span>
+        </button>
+      ))}
+    </nav>
+
+    <footer>
+      <span>产品规则</span>
+      <p>Live 的界面骨架保持深色。宿主环境只在它周围变化。</p>
+    </footer>
+  </aside>
+
+  <div class="live-ui-gallery__workspace">
+    <header class="live-ui-gallery__toolbar">
+      <div class="live-ui-gallery__group-readout" aria-live="polite" aria-atomic="true">
+        <span data-gallery-group-index>分组 01</span>
+        <h2 data-gallery-group-label>全局骨架</h2>
+        <p data-gallery-group-summary>会话状态、整页工具与定向。</p>
+      </div>
+
+      <div class="live-ui-gallery__host-switch" role="group" aria-label="预览宿主主题">
+        <span>宿主</span>
+        <button type="button" data-gallery-host="light" aria-pressed="true">浅色</button>
+        <button type="button" data-gallery-host="dark" aria-pressed="false">深色</button>
+      </div>
+    </header>
+
+    <div class="live-ui-gallery__cluster" data-gallery-cluster role="list" aria-label="全局骨架状态"></div>
+  </div>
+
+  <script is:inline type="application/json" data-live-gallery-groups set:html={groupsJson}></script>
+  <script is:inline type="application/json" data-live-gallery-vocabulary set:html={commandPayload}></script>
+</section>
+
+<script>
+  import '../scripts/live-ui-gallery.js';
+</script>

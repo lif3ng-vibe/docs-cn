@@ -1,0 +1,355 @@
+---
+import Base from '../../layouts/Base.astro';
+import LiveDemoGbar from '../../components/LiveDemoGbar.astro';
+import LiveDemoPalette from '../../components/LiveDemoPalette.astro';
+import '../../styles/sub-pages.css';
+import '../../styles/live-mode.css';
+import '../../styles/live-mode-kinpaku.css';
+---
+
+<Base
+  title="Live Mode | Impeccable（汉化版）"
+  description="在浏览器里迭代 UI。选取元素、留一条评论，得到三个生产质量的变体，采纳其一即可写回源码。/impeccable live。"
+  activeNav="live"
+  canonicalPath="/live-mode"
+  bodyClass="sub-page live-mode-page-body live-mode-kinpaku kinpaku-chrome"
+>
+
+<div class="live-mode-page">
+  <header class="live-mode-page-header">
+    <h1 class="live-mode-page-title">Live Mode <span class="live-mode-page-title-badge">Beta</span></h1>
+    <p class="live-mode-page-lede">在浏览器里选取任意元素，留一条评论或画上一笔。三个生产质量的变体经由你框架的 HMR 原位换入。采纳想要的那个，它就会写回源码。</p>
+    <div class="live-mode-start" aria-label="Live Mode 启动命令">
+      <span class="live-mode-start-prompt">$</span>
+      <code class="live-mode-start-cmd">/impeccable live</code>
+      <button class="live-mode-start-copy" type="button" aria-label="复制命令" data-copy="/impeccable live">
+        <svg class="live-mode-start-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+        </svg>
+        <svg class="live-mode-start-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </button>
+    </div>
+    <p class="live-mode-page-alpha-note"><strong>为什么是 Beta：</strong>在常见框架上已能端到端跑通，可以日常使用。不常见的项目配置可能仍有毛边。遇到问题请反馈给我们。</p>
+  </header>
+
+  <section class="live-mode-demo-wrap" aria-label="Live Mode 交互演示">
+    <div class="live-demo" id="live-demo" aria-label="Live Mode 交互演示循环">
+      <div class="live-demo-frame-col"><div class="live-demo-frame">
+        <div class="live-demo-chrome">
+          <span class="live-demo-dot"></span>
+          <span class="live-demo-dot"></span>
+          <span class="live-demo-dot"></span>
+          <span class="live-demo-url">localhost:3000</span>
+        </div>
+
+        <div class="live-demo-stage">
+          <div class="live-demo-skeleton" aria-hidden="true">
+            <div class="live-demo-skel-nav">
+              <span class="live-demo-skel-logo"></span>
+              <span class="live-demo-skel-link"></span>
+              <span class="live-demo-skel-link"></span>
+              <span class="live-demo-skel-link"></span>
+              <span class="live-demo-skel-cta"></span>
+            </div>
+            <div class="live-demo-skel-heading"></div>
+            <div class="live-demo-skel-line"></div>
+            <div class="live-demo-skel-line live-demo-skel-line--short"></div>
+          </div>
+
+          <div class="live-demo-target" data-demo-target>
+            <div class="live-demo-variant is-active" data-variant="original">
+              <div class="live-demo-card live-demo-card--plain">
+                <span class="live-demo-card-kicker">邮件通讯</span>
+                <h3>订阅最新动态</h3>
+                <p>大约每月一期的设计笔记。</p>
+                <button type="button">订阅</button>
+              </div>
+            </div>
+            <div class="live-demo-variant" data-variant="1">
+              <div class="live-demo-card live-demo-card--v1">
+                <span class="live-demo-card-kicker">第 04 期</span>
+                <h3>一封信，<em>偶尔</em>寄出。</h3>
+                <p>编辑寄来的明信片，大约每月一封。没有跟踪像素，也没有"最近还好吗"。</p>
+                <button type="button">给我也寄一封</button>
+              </div>
+            </div>
+            <div class="live-demo-variant" data-variant="2">
+              <div class="live-demo-card live-demo-card--v2">
+                <div class="live-demo-card-stamp">&#x261E;</div>
+                <span class="live-demo-card-kicker">快讯</span>
+                <h3>设计笔记，<br>隔周<br>周四寄出。</h3>
+                <button type="button">加入列表 &rarr;</button>
+              </div>
+            </div>
+            <div class="live-demo-variant" data-variant="3">
+              <div class="live-demo-card live-demo-card--v3">
+                <div class="live-demo-card-sticker"><span>&star;</span><span>&star;</span><span>&star;</span></div>
+                <span class="live-demo-card-kicker">随行手记</span>
+                <h3>一封每月一期的信，写给仍乐于读邮件的人。</h3>
+                <button type="button">收下这封信 <span aria-hidden="true">&#x273A;</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="live-demo-outline" data-demo-outline aria-hidden="true"></div>
+
+          <div class="live-demo-annotations" data-demo-annotations aria-hidden="true">
+            <svg class="live-demo-stroke" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M 10,40 Q 60,10 110,38 T 210,32 T 290,20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" pathLength="1"/>
+            </svg>
+            <div class="live-demo-comment">更俏皮一点</div>
+          </div>
+
+          <div class="live-demo-ctx" data-demo-ctx data-phase="hidden">
+            <div class="live-demo-ctx-row live-demo-ctx-row--configure">
+              <div class="live-demo-ctx-command">
+                <span class="live-demo-ctx-input" data-demo-input>
+                  <button type="button" class="live-demo-ctx-selection">h1</button>
+                  <span data-demo-input-text></span><span class="live-demo-ctx-caret"></span>
+                </span>
+              </div>
+              <div class="live-demo-ctx-trailing">
+                <div class="live-demo-ctx-modifiers">
+                  <button type="button" class="live-demo-ctx-action" data-demo-ctx-pill>
+                    <span data-demo-cmd-name>adapt</span>
+                    <span class="live-demo-ctx-action-caret" aria-hidden="true">&#x25BE;</span>
+                  </button>
+                  <button type="button" class="live-demo-ctx-count">&times;3</button>
+                </div>
+                <div class="live-demo-ctx-actions">
+                  <button type="button" class="live-demo-ctx-voice" aria-label="语音输入">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                  </button>
+                  <button type="button" class="live-demo-ctx-go" data-demo-go aria-label="生成变体">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <LiveDemoPalette pick="delight" />
+            <div class="live-demo-ctx-row live-demo-ctx-row--generating">
+              <span class="live-demo-ctx-spinner" aria-hidden="true"></span>
+              <span>正在生成变体&hellip;</span>
+            </div>
+            <div class="live-demo-ctx-row live-demo-ctx-row--cycling">
+              <button type="button" class="live-demo-ctx-nav" aria-label="上一个变体">&lsaquo;</button>
+              <span class="live-demo-ctx-counter" data-demo-counter>1 / 3</span>
+              <button type="button" class="live-demo-ctx-nav" aria-label="下一个变体">&rsaquo;</button>
+              <span class="live-demo-ctx-divider"></span>
+              <button type="button" class="live-demo-ctx-discard" aria-label="弃用">&times;</button>
+              <button type="button" class="live-demo-ctx-accept" data-demo-accept>采纳</button>
+            </div>
+            <div class="live-demo-ctx-row live-demo-ctx-row--accepted">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>变体 3 已写入源码</span>
+            </div>
+          </div>
+
+          <div class="live-demo-cursor" data-demo-cursor aria-hidden="true">
+            <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+              <path d="M1 1 L1 17 L5 13 L8 20 L11 19 L7.5 12 L13 12 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <LiveDemoGbar />
+      </div></div>
+    </div>
+    <p class="live-mode-demo-caption">点击画框或将其滚动到可视区域，即可开始整个演示循环。遵循 <code>prefers-reduced-motion</code>。</p>
+  </section>
+
+  <section class="live-mode-stages" aria-label="Live Mode 会话中会发生什么">
+    <h2 class="live-mode-stages-title">整个过程，只有三步</h2>
+    <div class="live-mode-stages-grid">
+      <article class="live-mode-stage">
+        <span class="live-mode-stage-num">01 &middot; 选取</span>
+        <h3 class="live-mode-stage-name">指到让你别扭的地方</h3>
+        <p class="live-mode-stage-desc">在运行中的开发服务器上点击任意元素，在问题所在处钉一枚评论图钉，在你想改的那一笔上画条线，或者直接输入"更俏皮一点"。</p>
+        <div class="live-mode-stage-viz">
+          <div class="docs-viz-picker-row" style="min-height:72px;padding:10px">
+            <div class="docs-viz-picker-target" style="font-size:12px;padding:6px 12px">
+              邮件通讯卡片
+              <span class="docs-viz-picker-pin" style="width:18px;height:18px;font-size:9px">1</span>
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="live-mode-stage">
+        <span class="live-mode-stage-num">02 &middot; 生成</span>
+        <h3 class="live-mode-stage-name">三种真正不同的思路</h3>
+        <p class="live-mode-stage-desc">变体锚定在不同的原型上，而不是在同一配色上变出三朵花。每个变体探索一条不同的主轴：层级、字体排印、密度、布局或配色策略。</p>
+        <div class="live-mode-stage-viz live-mode-stage-viz--rail">
+          <div class="viz-rail">
+            <div class="viz-rail-cell"><span>第04期</span><span class="viz-rail-mark"></span></div>
+            <div class="viz-rail-cell is-active"><span>快讯</span><span class="viz-rail-mark"></span></div>
+            <div class="viz-rail-cell"><span>手记</span><span class="viz-rail-mark"></span></div>
+          </div>
+        </div>
+      </article>
+      <article class="live-mode-stage">
+        <span class="live-mode-stage-num">03 &middot; 采纳</span>
+        <h3 class="live-mode-stage-name">落进真正的源码</h3>
+        <p class="live-mode-stage-desc">采纳的变体会替换源文件里被选取的元素。CSS 会归并进你真正的样式表，而不是内联。三个都弃用，原样保持不变。</p>
+        <div class="live-mode-stage-viz">
+          <span class="docs-viz-accept-pill">变体 2 已写入源码</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="live-mode-pathways" aria-label="接下来去哪">
+    <h2 class="live-mode-pathways-title">开始使用</h2>
+    <div class="live-mode-pathways-grid">
+      <a class="live-mode-pathway" href="/docs-cn/impeccable/tutorials/iterate-live">
+        <span class="live-mode-pathway-kind">教程</span>
+        <h3 class="live-mode-pathway-title">跟着步骤走一遍</h3>
+        <p class="live-mode-pathway-desc">十分钟走查，从首次运行到采纳变体。涵盖 CSP 补丁、选取器操作，以及生成文件的兜底流程。</p>
+        <span class="live-mode-pathway-cta">打开教程 &rarr;</span>
+      </a>
+      <a class="live-mode-pathway" href="/docs-cn/impeccable/docs/live">
+        <span class="live-mode-pathway-kind">参考</span>
+        <h3 class="live-mode-pathway-title">完整命令参考</h3>
+        <p class="live-mode-pathway-desc"><code>/impeccable live</code> 运行时你的 AI 宿主（harness）会读取的全部内容：轮询循环、wrap/accept 辅助函数、CSP 模板，以及每一种事件结构。</p>
+        <span class="live-mode-pathway-cta">阅读参考 &rarr;</span>
+      </a>
+      <a class="live-mode-pathway" href="/#downloads">
+        <span class="live-mode-pathway-kind">安装</span>
+        <h3 class="live-mode-pathway-title">把 Impeccable 装好</h3>
+        <p class="live-mode-pathway-desc">技能和 CLI 各装一次，之后就能在你的 AI 宿主里运行 <code>/impeccable live</code>。支持 Claude Code、Cursor、GitHub Copilot、Codex、Gemini 等。</p>
+        <span class="live-mode-pathway-cta">查看安装步骤 &rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="live-mode-frameworks" aria-label="支持的框架">
+    <span class="live-mode-frameworks-label">支持的开发服务器</span>
+    <ul class="live-mode-frameworks-list framework-list--matrix">
+      <li><small>打包器</small><strong>Vite</strong></li>
+      <li><small>应用</small><strong>Next.js</strong></li>
+      <li><small>应用</small><strong>SvelteKit</strong></li>
+      <li><small>页面</small><strong>Astro</strong></li>
+      <li><small>应用</small><strong>Nuxt</strong></li>
+      <li><small>运行时</small><strong>Bun</strong></li>
+      <li><small>静态</small><strong>静态 HTML</strong></li>
+    </ul>
+  </section>
+</div>
+
+<script>
+  import { initLiveDemo, initGbarPageChat } from "../../scripts/components/live-demo.js";
+  import { initCopyFeedback } from "../../scripts/utils/copy-feedback.js";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initLiveDemo();
+    initGbarPageChat();
+    initCopyFeedback();
+  });
+</script>
+
+<script is:inline>
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('.skills-sidebar-toggle');
+    if (!toggle) return;
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+  });
+
+  (function initSplitCompare() {
+    const wrappers = document.querySelectorAll('.split-comparison');
+    if (wrappers.length === 0) return;
+    const hasHover = matchMedia('(hover: hover)').matches;
+    const DEFAULT_POSITION = 50;
+
+    for (const wrapper of wrappers) {
+      const container = wrapper.querySelector('.split-container');
+      const splitAfter = wrapper.querySelector('.split-after');
+      const splitDivider = wrapper.querySelector('.split-divider');
+      if (!container || !splitAfter || !splitDivider) continue;
+
+      const tanAngle = Math.tan(10 * Math.PI / 180);
+      let skewOffset = 8;
+      const recalcSkew = () => {
+        const r = container.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          skewOffset = 50 * r.height * tanAngle / r.width;
+        }
+      };
+      recalcSkew();
+      window.addEventListener('resize', recalcSkew, { passive: true });
+
+      let targetX = DEFAULT_POSITION;
+      let currentX = DEFAULT_POSITION;
+      let rafId = null;
+
+      const paint = (pct) => {
+        const x = Math.max(-skewOffset, Math.min(100 + skewOffset, pct));
+        splitAfter.style.clipPath =
+          `polygon(${x + skewOffset}% 0%, 100% 0%, 100% 100%, ${x - skewOffset}% 100%)`;
+        splitDivider.style.left = `${x}%`;
+      };
+
+      const step = () => {
+        currentX += (targetX - currentX) * 0.2;
+        if (Math.abs(targetX - currentX) < 0.1) {
+          currentX = targetX;
+          rafId = null;
+        } else {
+          rafId = requestAnimationFrame(step);
+        }
+        paint(currentX);
+      };
+
+      const setTarget = (pct) => {
+        targetX = pct;
+        if (rafId === null) rafId = requestAnimationFrame(step);
+      };
+
+      paint(DEFAULT_POSITION);
+
+      const pctFromClientX = (clientX) => {
+        const rect = container.getBoundingClientRect();
+        return ((clientX - rect.left) / rect.width) * 100;
+      };
+
+      let hovering = false;
+      let dragging = false;
+
+      wrapper.addEventListener('pointerenter', (e) => {
+        if (hasHover && e.pointerType === 'mouse') hovering = true;
+      });
+
+      wrapper.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        wrapper.setPointerCapture(e.pointerId);
+        setTarget(pctFromClientX(e.clientX));
+      });
+
+      wrapper.addEventListener('pointermove', (e) => {
+        if (dragging || hovering) setTarget(pctFromClientX(e.clientX));
+      });
+
+      const endDrag = (e) => {
+        if (dragging) {
+          dragging = false;
+          try { wrapper.releasePointerCapture(e.pointerId); } catch {}
+        }
+      };
+
+      wrapper.addEventListener('pointerup', endDrag);
+      wrapper.addEventListener('pointercancel', endDrag);
+
+      wrapper.addEventListener('pointerleave', (e) => {
+        endDrag(e);
+        if (hovering) {
+          hovering = false;
+          setTarget(DEFAULT_POSITION);
+        }
+      });
+    }
+  })();
+</script>
+
+</Base>

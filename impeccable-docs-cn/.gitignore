@@ -1,0 +1,7 @@
+node_modules/
+build/
+.astro/
+site/.astro/
+site/public/_data/
+site/public/js/
+*.log

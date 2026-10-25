@@ -1,0 +1,6 @@
+# robots.txt for impeccable.style
+
+User-agent: *
+Allow: /
+
+Sitemap: https://lif3ng-vibe.github.io/docs-cn/impeccable-mirror/sitemap.xml

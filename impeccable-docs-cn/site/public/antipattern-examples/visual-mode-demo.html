@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视觉模式演示</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%);
+      color: white;
+      padding: 60px 24px 24px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: linear-gradient(145deg, #2a1a4a 0%, #1a0a2e 100%);
+      border-radius: 24px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* orbs removed to reduce detector noise */
+
+    .content { position: relative; z-index: 1; }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .nav-cta {
+      background: linear-gradient(135deg, #8b5cf6, #a855f7) !important;
+      color: white !important;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 0 20px;
+      margin-bottom: 32px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.2));
+      border: 1px solid rgba(168,85,247,0.4);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      margin-bottom: 16px;
+      color: #c4b5fd;
+    }
+
+    .badge::before { content: '\2728'; }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      max-width: 400px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+
+    /* Side-tab border cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .card-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .card h3 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(139,92,246,0.3);
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <nav>
+        <div class="logo">蒸汽波.ai</div>
+        <div class="nav-links">
+          <a href="#">功能</a>
+          <a href="#">定价</a>
+          <a href="#" class="nav-cta">立即开始</a>
+        </div>
+      </nav>
+
+      <div class="hero">
+        <span class="badge">新品：一切皆 AI 驱动</span>
+        <h1>用 AI 魔法<br>构建未来</h1>
+        <p class="subtitle">用我们革命性的 AI 平台改造你的工作流。紫色渐变，标配。</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-heading">
+            <span class="card-icon">&#9889;</span>
+            <h3>性能飞快</h3>
+          </div>
+          <p>优化后的推理管线，快到飞起。</p>
+        </div>
+        <div class="card">
+          <div class="card-heading">
+            <span class="card-icon">&#128274;</span>
+            <h3>安全无忧</h3>
+          </div>
+          <p>企业级安全，数据加密存储。</p>
+        </div>
+        <div class="card">
+          <div class="card-heading">
+            <span class="card-icon">&#128200;</span>
+            <h3>数据分析</h3>
+          </div>
+          <p>强大的洞察力，助你做出更明智的决策。</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">10K+</div>
+          <div class="stat-label">活跃用户</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">99.9%</div>
+          <div class="stat-label">可用性保障</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">50M+</div>
+          <div class="stat-label">已处理数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script src="/docs-cn/impeccable/js/detect-antipatterns-browser.js""></script>
+</body>
+</html>

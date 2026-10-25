@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- impeccable-disable marquee, marketing-buzzword -- This standalone 2026 anti-pattern specimen deliberately demonstrates an auto-scrolling ticker and generic marketing copy. These are page-level findings; all other rules remain active. -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>流明 — 更聪明地工作。更响亮地交付。（Impeccable 示例）</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Intentionally exaggerated model defaults for the Slop gallery.
+   Heavy outlines, hard shadows, decorative grids and sticker clutter are
+   the subject of this example, not the site's own design system. */
+:root { --ink:#171717; --paper:#fffdf5; --yellow:#ffdf38; --purple:#c4adff; --lime:#ceff75; --orange:#ff8d63; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--ink); background:var(--paper); font-family:'Space Grotesk',sans-serif; }
+a { color:inherit; }
+nav { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:18px 30px; border-bottom:3px solid; background:var(--paper); }
+.logo { font-size:27px; font-weight:700; letter-spacing:-1px; text-decoration:none; display:flex; align-items:center; gap:10px; }
+.logo-mark { width:30px; height:30px; display:grid; place-items:center; background:var(--yellow); border:2px solid; box-shadow:3px 3px 0 var(--ink); }
+.nav-links { display:flex; gap:22px; font-size:13px; font-weight:700; }
+.nav-links a { text-decoration:none; }
+.button { display:inline-block; padding:12px 19px; border:3px solid var(--ink); box-shadow:5px 5px 0 var(--ink); background:var(--yellow); color:var(--ink); font:700 13px 'IBM Plex Mono',monospace; text-decoration:none; }
+.button:hover { transform:translate(-2px,-2px); box-shadow:7px 7px 0 var(--ink); }
+.button:active { transform:translate(4px,4px); box-shadow:1px 1px 0 var(--ink); }
+.button.secondary { background:white; }
+a:focus-visible { outline:3px solid #7340cb; outline-offset:6px; }
+.hero { display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:36px; padding:64px 38px 62px; background-color:var(--yellow); background-image:linear-gradient(#17171716 1px,transparent 1px),linear-gradient(90deg,#17171716 1px,transparent 1px); background-size:24px 24px; border-bottom:3px solid; }
+.kicker { display:inline-flex; align-items:center; gap:8px; padding:7px 11px; margin-bottom:20px; background:white; border:2px solid; box-shadow:3px 3px 0; font:600 10px 'IBM Plex Mono',monospace; letter-spacing:1px; }
+.kicker i { width:8px; height:8px; border-radius:50%; background:#35b948; animation:pulse 1.4s infinite; }
+h1 { margin:0; font-size:clamp(46px,6.4vw,84px); font-weight:700; line-height:.99; letter-spacing:-.065em; }
+h1 mark { display:inline-block; margin:9px 0 0; padding:0 9px 6px; color:inherit; background:var(--purple); border:3px solid; box-shadow:6px 6px 0; transform:rotate(-3deg); }
+.hero-copy>p { max-width:35ch; font-size:16px; line-height:1.6; margin:25px 0 22px; }
+.actions { display:flex; flex-wrap:wrap; gap:14px; }
+.fine-print { display:block; font:10px 'IBM Plex Mono',monospace; margin-top:18px; }
+.dashboard-wrap { position:relative; min-width:0; transform:rotate(2deg); }
+.dashboard { background:white; border:3px solid; box-shadow:10px 10px 0; }
+.window-bar { padding:12px; border-bottom:3px solid; background:var(--purple); display:flex; align-items:center; gap:6px; }
+.window-bar i { width:10px; height:10px; border:2px solid; border-radius:50%; background:white; }
+.window-bar span { font:600 10px 'IBM Plex Mono',monospace; margin-left:auto; }
+.board { padding:22px; }
+.board-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.board-heading strong { font-size:22px; letter-spacing:-1px; }
+.tag { font:500 10px 'IBM Plex Mono',monospace; background:var(--lime); border:2px solid; padding:4px 6px; }
+.task { display:flex; align-items:center; gap:9px; padding:13px 10px; margin:12px 0; border:2px solid; box-shadow:3px 3px 0; font-size:12px; }
+.check { width:17px; height:17px; border:2px solid; background:var(--yellow); flex-shrink:0; display:grid; place-items:center; font-size:11px; }
+.task span:last-child { margin-left:auto; font:10px 'IBM Plex Mono',monospace; }
+.task.done { background:#f2f2f2; }
+.task.done strong { text-decoration:line-through; }
+.progress { margin-top:22px; padding:12px; background:var(--lime); border:2px solid; }
+.progress-label { display:flex; justify-content:space-between; font:600 10px 'IBM Plex Mono',monospace; }
+.track { height:12px; margin-top:9px; border:2px solid; background:white; }
+.track span { display:block; width:75%; height:100%; background:var(--ink); }
+.sticker { position:absolute; right:-15px; top:-35px; width:98px; height:98px; display:grid; place-items:center; text-align:center; font:700 12px/1.1 'IBM Plex Mono',monospace; transform:rotate(13deg); }
+.sticker svg { position:absolute; inset:0; width:100%; height:100%; }
+.sticker span { position:relative; }
+.floating-tag { position:absolute; bottom:-20px; left:-20px; background:var(--orange); border:3px solid; box-shadow:4px 4px 0; padding:9px 14px; font:600 11px 'IBM Plex Mono',monospace; transform:rotate(-7deg); }
+.ticker { overflow:hidden; border-bottom:3px solid; padding:13px 0; background:var(--ink); color:var(--yellow); }
+.ticker div { display:flex; gap:32px; width:max-content; font:700 13px 'IBM Plex Mono',monospace; animation:marquee 24s linear infinite; }
+.features { padding:50px 38px; }
+.section-label { font:600 11px 'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:2px; }
+h2 { font-size:38px; letter-spacing:-2px; margin:12px 0 28px; }
+.feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.feature { border:3px solid; box-shadow:6px 6px 0; padding:22px; background:var(--purple); }
+.feature:nth-child(2) { background:var(--lime); }
+.feature:nth-child(3) { background:var(--orange); }
+.feature-icon { width:62px; height:62px; display:grid; place-items:center; border:3px solid; box-shadow:4px 4px 0; background:white; font-size:32px; }
+.feature h3 { font-size:19px; margin:22px 0 10px; }
+.feature p { font-size:13px; line-height:1.6; }
+.footer { padding:22px 38px; border-top:3px solid; font:11px/1.5 'IBM Plex Mono',monospace; display:flex; justify-content:space-between; gap:20px; }
+@keyframes pulse { 50% { opacity:.35; transform:scale(.8); } }
+@keyframes marquee { to { transform:translateX(-50%); } }
+@media(max-width:650px) { nav { padding:14px 20px; } .nav-links { display:none; } .hero { grid-template-columns:1fr; padding:36px 24px 48px; gap:56px; } h1 { font-size:60px; } .dashboard-wrap { max-width:420px; } .feature-grid { grid-template-columns:1fr; } .features { padding:36px 24px; } .footer { padding:20px 24px; flex-direction:column; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ticker div,.kicker i { animation:none; } }
+</style>
+<style>
+  /* Keep the embedded detector's findings inset, without its decorative dot. */
+  .impeccable-banner > span:first-child:empty { display: none; }
+  .impeccable-banner > div:first-of-type { scroll-padding-inline: 12px; }
+</style>
+</head>
+<body>
+<nav aria-label="示例导航"><a class="logo" href="#top"><span class="logo-mark">流</span>流明.</a><div class="nav-links"><a href="#features">好东西都在这</a><a href="#workspace">怎么运作</a></div><a class="button" href="#workspace">冲呀 ↗</a></nav>
+<main id="top">
+<section class="hero">
+  <div class="hero-copy">
+    <div class="kicker"><i></i> 你的独门优势</div>
+    <h1>你的工作。<br>减去<br><mark>工作。</mark></h1>
+    <p>一体化工作区，献给拒绝小打小闹的团队。更少的混乱。更多的交付。彻底告别无聊。</p>
+    <div class="actions"><a class="button" href="#workspace">开始行动 ↗</a><a class="button secondary" href="#features">看看怎么做</a></div>
+    <span class="fine-print">无需信用卡。没有废话。只有更好的工作。</span>
+  </div>
+  <div class="dashboard-wrap" id="workspace">
+    <div class="dashboard"><div class="window-bar"><i></i><i></i><i></i><span>YOUR_NEXT_BIG_THING.exe</span></div><div class="board">
+      <div class="board-heading"><strong>把事干成。</strong><span class="tag">状态在线</span></div>
+      <div class="task done"><span class="check">✓</span><strong>想个大点子</strong><span>完成</span></div>
+      <div class="task done"><span class="check">✓</span><strong>做个计划</strong><span>完成</span></div>
+      <div class="task"><span class="check"></span><strong>交付点了不起的东西</strong><span>今天</span></div>
+      <div class="progress"><div class="progress-label"><span>大事加载中</span><span>75%</span></div><div class="track"><span></span></div></div>
+    </div></div>
+    <div class="sticker" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 3 60 14 76 10 79 26 94 32 87 47 97 61 82 70 81 87 64 87 53 99 42 87 25 91 21 75 6 69 12 53 2 40 18 30 19 14 36 15Z" fill="#ff8d63" stroke="#171717" stroke-width="3"/></svg><span>与众<br>不同。</span></div>
+    <span class="floating-tag">✦ 少点煎熬，多点冲劲。</span>
+  </div>
+</section>
+<div class="ticker" aria-hidden="true"><div><span>✦ 更聪明地工作</span><span>✦ 更响亮地交付</span><span>✦ 打破常规</span><span>✦ 干票大的</span><span>✦ 更聪明地工作</span><span>✦ 更响亮地交付</span><span>✦ 打破常规</span><span>✦ 干票大的</span></div></div>
+<section class="features" id="features"><span class="section-label">01 / 好东西都在这</span><h2>工具全都有。废话一句没有。</h2><div class="feature-grid">
+  <article class="feature"><div class="feature-icon">↗</div><h3>快到离谱。</h3><p>给工作流装上涡轮，把大点子变成你的下一件大事。</p></article>
+  <article class="feature"><div class="feature-icon">✳</div><h3>一处收纳一切。</h3><p>所有东西都在一个地方。你的才华不该困在十七个标签页里。</p></article>
+  <article class="feature"><div class="feature-icon">⚡</div><h3>做更多。毫不费力。</h3><p>把无聊的活自动化。专注真正要紧的事。你懂的。</p></article>
+</div></section>
+</main>
+<footer class="footer"><span>© 2026 流明。大创意，粗边框。</span><span>虚构产品 · Impeccable 设计模式示例</span></footer>
+<script src="/docs-cn/impeccable-mirror/js/detect-antipatterns-browser.js"></script>
+<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2375b0fdc85c43a68f4b0e89cc6ae43c"}'></script><!-- Cloudflare Pages Analytics --></body>
+</html>

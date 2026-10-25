@@ -1,0 +1,108 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/sub-pages.css';
+---
+
+<Base
+  title="Neo Mirai 案例 | Impeccable（汉化版）"
+  description="看看 Impeccable 如何把生成的品牌与高保真参考，变成上线的 Neo Mirai 会议网站。"
+  canonicalPath="/cases/neo-mirai"
+  bodyClass="sub-page neon-case-page kinpaku-chrome"
+>
+
+  <div class="neon-case">
+  <section class="neon-case-hero">
+    <div class="neon-case-hero-copy">
+      <a class="neon-case-back" href="/docs-cn/impeccable/designing#start">与 Impeccable 共设计</a>
+      <span class="neon-case-eyebrow">案例研究</span>
+      <h1>Neo Mirai：从生成的视觉稿到上线的页面。</h1>
+      <p>Neo Mirai 始于 OpenAI GPT Image 2 生成的一张高保真视觉稿和一套生成的品牌工具包。<code>/impeccable new-work</code> 一口气把它变成上线的会议站点：品牌解读、语义化实现、重新生成的素材、响应式修复，以及浏览器里的迭代。</p>
+      <div class="neon-case-actions">
+        <a class="neon-case-primary" href="/docs-cn/impeccable/neo-mirai/">打开可运行站点</a>
+        <a class="neon-case-secondary" href="/docs-cn/impeccable/docs/new-work">阅读 new-work 文档</a>
+      </div>
+    </div>
+    <a class="neon-case-hero-shot" href="/docs-cn/impeccable/neo-mirai/" aria-label="打开 Neo Mirai 可运行站点">
+      <img src="/docs-cn/impeccable/assets/cases/neo-mirai/live-fold.png" alt="上线的 Neo Mirai 会议网站首屏与议程：温暖的复古未来主义东京天际线和巨大的 NEO MIRAI 标题。" width="1440" height="1100">
+    </a>
+  </section>
+
+  <section class="neon-case-strip" aria-label="从生成的参考到上线的网站">
+    <figure>
+      <span>01 &middot; 页面视觉稿</span>
+      <img src="/docs-cn/impeccable/assets/openai_image_2_hifi.jpg" alt="为 Neo Mirai 会议页面生成的高保真网站视觉稿。" loading="lazy" width="864" height="1821">
+      <figcaption>高保真的北极星。一个可以朝它构建的具体构图，而不是一段需要解读的文字。</figcaption>
+    </figure>
+    <figure>
+      <span>02 &middot; 品牌工具包</span>
+      <img src="/docs-cn/impeccable/assets/openai_image_2_brand.jpg" alt="生成的 Neo Mirai 品牌工具包图版，包含配色、字体排印、符号与应用示例。" loading="lazy" width="1536" height="1024">
+      <figcaption>品牌工具包。在写代码之前定好标识、配色、字体、图像语言和动效方向。</figcaption>
+    </figure>
+    <figure>
+      <span>03 &middot; 可用站点</span>
+      <a href="/docs-cn/impeccable/neo-mirai/" aria-label="打开 Neo Mirai 可运行站点">
+        <img src="/docs-cn/impeccable/assets/cases/neo-mirai/live-page.png" alt="已实现的 Neo Mirai 网站全页截图。" loading="lazy" width="1440" height="3013">
+      </a>
+      <figcaption>已实现的页面。语义化 HTML、响应式布局、重新生成的素材、真实状态，以及打磨。</figcaption>
+    </figure>
+  </section>
+
+  <section class="neon-case-body">
+    <div class="neon-case-column">
+      <span class="neon-case-section-label">变化了什么</span>
+      <h2>视觉稿没有变成一张截图。它变成了 HTML、CSS、重新生成的素材，以及静态图像只能暗示的响应式行为。</h2>
+    </div>
+    <div class="neon-case-notes">
+      <article>
+        <h3>构图对齐</h3>
+        <p>实现保留了视觉稿的非对称节奏：通栏首屏插画、深色议程区块、橙色宣言横带、漂浮的装置网格，以及规整的票务区块。</p>
+      </article>
+      <article>
+        <h3>素材再生成</h3>
+        <p>图像本位的部分保持图像本位。宣言城市、讲者肖像、松树覆盖层和配套插画，在位图细节重要的地方都做了再生成或单独抠出。</p>
+      </article>
+      <article>
+        <h3>浏览器迭代</h3>
+        <p>每轮之后都在浏览器里实测页面。元素重叠、别扭的裁切、导航激活状态、讲者轮播行为、移动端高度和大视口下的平衡，都在视觉上一一修掉。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="neon-case-details" aria-label="对比视觉稿与可用页面">
+    <figure>
+      <img src="/docs-cn/impeccable/assets/openai_image_2_hifi.jpg" alt="生成的 Neo Mirai 高保真页面视觉稿。" loading="lazy" width="864" height="1821">
+      <figcaption><span>北极星视觉稿</span> 这张参考图定下了预期的节奏：通栏首屏、深色议程、讲者轮播、装置阵列、宣言和票务。</figcaption>
+    </figure>
+    <figure>
+      <a href="/docs-cn/impeccable/neo-mirai/" aria-label="打开 Neo Mirai 可运行站点">
+        <img src="/docs-cn/impeccable/assets/cases/neo-mirai/live-page.png" alt="已实现的 Neo Mirai 网站全页截图。" loading="lazy" width="1440" height="3013">
+      </a>
+      <figcaption><span>可运行站点</span> 上线的页面保住了同样的视觉野心，同时变成响应式标记、真实链接、轮播控件、悬停状态和经浏览器实测的布局。</figcaption>
+    </figure>
+  </section>
+
+  <section class="neon-case-command">
+    <div>
+      <span class="neon-case-section-label">复现这个循环</span>
+      <h2>当产出必须显得有设计时，用 new-work。</h2>
+      <p>当一个功能需要在一次运行里完成定向、视觉方向、实现和浏览器迭代时，<code>/impeccable new-work</code> 就是正确的命令。</p>
+    </div>
+    <div class="code-block-wrap"><pre class="code-block"><code>/impeccable new-work retro-futurist AI design conference website</code></pre><button class="code-block-copy" type="button" data-copy="/impeccable new-work retro-futurist AI design conference website" aria-label="复制到剪贴板">
+      <svg class="code-block-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+      </svg>
+      <svg class="code-block-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6 9 17l-5-5"></path>
+      </svg>
+    </button></div>
+  </section>
+  </div>
+
+  <script>
+    import { initCopyFeedback } from "../../scripts/utils/copy-feedback.js";
+
+    initCopyFeedback();
+  </script>
+
+</Base>

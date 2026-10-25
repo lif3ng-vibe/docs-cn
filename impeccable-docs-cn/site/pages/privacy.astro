@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/sub-pages.css';
+---
+
+<Base title="隐私 | Impeccable（汉化版）" noIndex={true} bodyClass="sub-page kinpaku-chrome kinpaku-surface">
+
+<style>
+  .privacy-content { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .privacy-content h1 { font-family: var(--font-display); font-size: 2.25rem; margin-bottom: 0.5rem; letter-spacing: -0.01em; color: var(--color-ink); }
+  .privacy-content h2 { font-size: 1.125rem; margin-top: 2rem; font-weight: 600; color: var(--color-ink); }
+  .privacy-content p, .privacy-content ul { color: var(--color-charcoal); margin-top: 0.5rem; }
+  .privacy-content ul { padding-left: 1.25rem; }
+  .privacy-content li { margin-top: 0.25rem; }
+  .privacy-content a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
+  .privacy-content a:hover { color: var(--color-accent-hover); }
+  .privacy-content .updated { color: var(--color-ash); font-size: 0.875rem; margin-bottom: 2rem; font-style: italic; }
+</style>
+
+<div class="privacy-content">
+  <h1>隐私政策</h1>
+  <p class="updated">最后更新：2026 年 6 月 8 日</p>
+
+  <h2>Impeccable 是什么</h2>
+  <p>Impeccable 是一套开源的智能体技能（文本文件）集合，在你的 AI 编码工具中本地运行。技能本身不收集任何数据，不会向 Impeccable 发送项目内容，也没有任何统计分析。该技能发出的唯一网络请求，是下文所述的可选、仅 GET 的版本检查。</p>
+
+  <h2>技能版本检查</h2>
+  <p>当智能体加载 Impeccable 技能时，<code>scripts/context.mjs</code> 可能会以尽力而为的方式向 <code>https://impeccable.style/api/version</code> 发送 <code>GET</code> 请求（每天至多一次），检查是否有更新的技能版本。该请求不会发送任何项目文件、提示词、页面内容、检测结果或个人信息。请求失败时静默处理，并且可以通过设置 <code>IMPECCABLE_NO_UPDATE_CHECK=1</code> 禁用。</p>
+
+  <h2>网站统计</h2>
+  <p>Impeccable 网站（<a href="https://impeccable.style">impeccable.style</a>）使用 Google Analytics 了解流量模式（页面浏览量、来源、国家/地区）。除 Google Analytics 默认提供的信息外，不收集任何个人信息。Cookie 不用于广告。</p>
+
+  <h2>下载</h2>
+  <p>当你从网站下载技能包时，我们会记录下载事件（哪个包、时间戳）用于使用统计。这些日志不附带任何个人信息。</p>
+
+  <h2>编码智能体插件</h2>
+  <p>作为 ChatGPT、Codex 或 Claude Code 的插件安装时，Impeccable 在本地编码智能体会话内运行。内置的设计钩子会在编辑后检查 UI 文件，并把发现的结果报告回该本地会话。任何项目内容或检测结果都不会发送到 Impeccable 的服务器。宿主应用本身受其隐私政策约束。</p>
+
+  <h2>Chrome 扩展</h2>
+  <p>Impeccable 的 Chrome DevTools 扩展完全在你的浏览器中运行。所有反模式检测都在你正在检查的页面上本地完成。任何页面内容、URL 或检测结果都不会发送到任何外部服务器。</p>
+  <p>扩展使用 Chrome 内置的同步存储（<code>chrome.storage.sync</code>）保存你的规则偏好（启用或禁用了哪些检测），并通过你的 Google 账号在多个 Chrome 实例之间同步设置。除此之外，不存储也不传输任何其他数据。</p>
+  <p>扩展请求以下权限：</p>
+  <ul>
+    <li><strong>activeTab / scripting</strong>——向正在检查的页面注入检测器脚本</li>
+    <li><strong>storage</strong>——保存你的规则偏好</li>
+    <li><strong>webNavigation</strong>——在你导航到新页面时自动重新扫描</li>
+    <li><strong>Host permissions（所有 URL）</strong>——让检测器能在你选择检查的任何网站上运行</li>
+  </ul>
+
+  <h2>GitHub</h2>
+  <p>源代码托管在 GitHub 上。与仓库的交互（issue、pull request、star）受 <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub 的隐私政策</a>约束。</p>
+
+  <h2>联系我们</h2>
+  <p>对本政策有疑问？在 <a href="https://github.com/pbakaus/impeccable">GitHub</a> 上提交 issue，或联系 <a href="https://x.com/pbakaus">@pbakaus</a>。</p>
+</div>
+
+</Base>

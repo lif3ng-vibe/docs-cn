@@ -190,5 +190,27 @@
     "tags": ["networking", "learning", "sdk-api"],
     "orig": "https://tailscale.com/docs",
     "repo": "https://github.com/tailscale/tailscale"
+  },
+  {
+    "name": "Impeccable",
+    "slug": "impeccable",
+    "desc": "给 AI 宿主补上设计词汇——1 个技能 24 个命令的完整中文文档：把 AI slop 打磨成可上线的界面（基于上游公开快照重建，内容为 2026-07 版）。",
+    "tags": [
+      "skills",
+      "frontend-design"
+    ],
+    "orig": "https://impeccable.style",
+    "repo": "https://github.com/pbakaus/impeccable"
+  },
+  {
+    "name": "Impeccable（线上镜像）",
+    "slug": "impeccable-mirror",
+    "desc": "impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照；文档页/更新日志/命令台全译，检测器覆盖层提示保持英文）。",
+    "tags": [
+      "skills",
+      "frontend-design"
+    ],
+    "orig": "https://impeccable.style",
+    "repo": "https://github.com/pbakaus/impeccable"
   }
 ]

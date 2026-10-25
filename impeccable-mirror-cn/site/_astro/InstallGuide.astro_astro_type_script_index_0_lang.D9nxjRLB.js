@@ -1,0 +1,1 @@
+import{n as e}from"./copy-feedback.C9pP2RQV.js";import{t}from"./install-controls.Cm-kywS4.js";import{r as n}from"./scroll.D0hc_2q1.js";document.querySelectorAll(`[data-install-tabs]`).forEach(e=>{t(e),n(e)}),e();

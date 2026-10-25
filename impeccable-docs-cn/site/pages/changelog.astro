@@ -1,0 +1,410 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/sub-pages.css';
+import '../styles/changelog-faq-kinpaku.css';
+---
+
+<Base
+  title="更新日志 | Impeccable（汉化版）"
+  description="Impeccable 各版本的变化：技能、CLI、Chrome 扩展与检测器。逐版本说明，附近期亮点。"
+  activeNav="docs"
+  canonicalPath="/changelog"
+  bodyClass="sub-page kinpaku-chrome kinpaku-surface"
+>
+  <div class="cf-page">
+    <p class="cf-eyebrow">发布说明</p>
+    <h1 class="cf-title">更新日志</h1>
+    <p class="cf-lede">发了什么、何时发、为何而发。最新在上，一路回溯到 v3.0 上线。</p>
+
+    <div class="cf-filter" role="group" aria-label="按组件筛选">
+      <button type="button" class="cf-filter-btn is-active" data-cf-filter="skill" aria-pressed="true">技能</button>
+      <button type="button" class="cf-filter-btn" data-cf-filter="cli" aria-pressed="false">CLI</button>
+      <button type="button" class="cf-filter-btn" data-cf-filter="ext" aria-pressed="false">扩展</button>
+      <button type="button" class="cf-filter-btn" data-cf-filter="all" aria-pressed="false">全部</button>
+    </div>
+
+    <article id="v3.9.1" class="cf-entry cf-entry--current">
+      <header class="cf-entry-head"><span class="cf-version">v3.9.1</span><span class="cf-date">July 1, 2026</span><span class="cf-current-badge">当前版本</span></header>
+      <p class="cf-entry-lead">一个打包修复，让设计钩子在 Codex 中加载。</p>
+      <ul class="cf-items">
+        <li><strong>Codex 重新加载插件设计钩子。</strong>插件打包的钩子 manifest 带有一个顶层 <code>description</code> 字段，被 Codex 严格的钩子解析器拒绝，导致修改后设计检查无法注册。该字段已从插件产物中移除，钩子如今在 Codex 上干净加载，在 Claude Code 上保持不变。</li>
+      </ul>
+    </article>
+
+    <article id="v3.9.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.9.0</span><span class="cf-date">July 1, 2026</span></header>
+      <p class="cf-entry-lead">针对 Codex 式网格背景的新反 slop 规则、尊重你设计系统的 bolder 通道，以及在更多宿主上保持独立的 critique。</p>
+      <ul class="cf-items">
+        <li><strong>装饰性网格背景如今是一项具名的 AI 痕迹。</strong>Impeccable 会拒绝那种由发丝渐变线与重复 <code>background-size</code> 搭出的双轴 CSS 网格覆盖层——Codex 在几乎任何空白表面上都爱用这一手。真正的画布、地图、蓝图与测量工具仍配有网格；其余一切会得到真实的产品结构或素净的表面。</li>
+        <li><strong><code>/impeccable bolder</code> 不越出你的设计系统。</strong>项目有 <code>DESIGN.md</code>、令牌或已成型的组件样式时，bolder 通道现在通过层级、比例、密度与文案让既有语言更果断，而不是发明新颜色、新渐变或新特效。如果系统确实表达不了这个方向，它会列出确切的增补项，征得同意再扩展。</li>
+        <li><strong>critique 在更多宿主上保持独立。</strong>在 Claude 与 Codex 之外的宿主上，critique 环节现在更多地在自己的子智能体中运行，评审以新鲜的眼光阅读设计，而不是继承催生它的编辑上下文。</li>
+        <li><strong>内置助手在严格权限宿主下也能运行。</strong>技能自带的 Node 助手现在能在锁死权限的宿主上执行，安装配置与检测无需额外的批准提示。</li>
+        <li><strong>Codex 钩子 manifest 修复。</strong>纠正了 Codex 钩子 manifest 的 schema，修改后设计检查得以干净注册。</li>
+      </ul>
+    </article>
+
+    <article id="v3.8.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.8.0</span><span class="cf-date">June 22, 2026</span></header>
+      <p class="cf-entry-lead">Impeccable 伸向你工作流的更多角落：设计钩子现在能在 GitHub Copilot 中运行，项目上下文也读懂 monorepo。</p>
+      <ul class="cf-items">
+        <li><strong>GitHub Copilot 的设计钩子。</strong>安装技能会添加一个 <code>.github/hooks/impeccable.json</code> 钩子，在 Copilot 编辑 UI 文件后运行检测器，并把发现作为聚焦的设计提醒回传。它同时覆盖 Copilot CLI 与云端智能体，识别 Copilot 使用的所有编辑路径，包括 <code>apply_patch</code>。</li>
+        <li><strong>识别 monorepo 的上下文。</strong>打开仓库根，Impeccable 会逐应用解析 <code>PRODUCT.md</code> 与 <code>DESIGN.md</code>：每个子应用用自己的上下文文件，未定义的部分回退到根文件。<code>/impeccable live</code> 能发现多个应用，询问要在哪个上工作，然后在该应用内运行并存放 live 状态。</li>
+      </ul>
+    </article>
+
+    <article id="v3.7.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.7.1</span><span class="cf-date">June 16, 2026</span></header>
+      <p class="cf-entry-lead">一个打包修复，让内置检测器处处可运行。</p>
+      <ul class="cf-items">
+        <li><strong><code>/impeccable critique</code> 恢复工作。</strong>内置检测器缺了一个所需的配置模块，启动即崩。构建现在会把该文件随技能一起带上，critique 与其他依赖检测器的命令恢复干净运行。</li>
+      </ul>
+    </article>
+
+    <article id="v3.7.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.7.0</span><span class="cf-date">June 16, 2026</span></header>
+      <p class="cf-entry-lead">Impeccable 现在把项目设计上下文带进钩子、检测器与文档。智能体能拿修改与你的真实字体、颜色与圆角系统对照，而不只是套用全局反模式规则。</p>
+      <ul class="cf-items">
+        <li><strong>懂设计的钩子检测。</strong>项目有 <code>DESIGN.md</code> 时，钩子与 <code>impeccable detect</code> 会加载本地设计系统，对照文档化的配色、字体栈、圆角阶梯与 sidecar 色调阶梯标记字体、颜色与圆角漂移。</li>
+        <li><strong>忽略在钩子与 CLI 之间通用。</strong>检测器例外迁入共享配置，<code>impeccable ignores</code> 能列出、添加、移除规则/文件/值忽略，无需手改 JSON。</li>
+        <li><strong>文档覆盖完整的项目上下文链路。</strong>新的参考页讲解钩子、检测器、配置与 Design Context，包括 <code>PRODUCT.md</code>、<code>DESIGN.md</code> 与 <code>.impeccable/design.json</code> 如何加载并保持最新。</li>
+        <li><strong>文档代码块换上 Impeccable 配色。</strong>Shiki 语法高亮在明暗两种模式下都使用设计系统颜色，并配有对比度测试，示例保持可读，也不再触发设计系统颜色漂移。</li>
+      </ul>
+    </article>
+
+    <article id="v3.6.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.6.0</span><span class="cf-date">June 14, 2026</span></header>
+      <p class="cf-entry-lead">Impeccable 现在能在智能体编辑时施以援手，核心技能也更精简：经消融检验的指引、项目钩子、更锐利的检测器信号，以及对 Svelte 与手动浏览器编辑的 Live Mode 支持。</p>
+      <ul class="cf-items">
+        <li><strong>经消融检验的技能核心。</strong>经过跨三个提供方、四个垂直领域的规则级评测，主技能瘦身了。冗余的排版与文案指引移出常驻提示词，没有可测提升的规则被砍掉，诱导模型复刻被禁模式的示例被重写。结果是一个更小的提示词，把注意力花在证明能改善设计产出的指引上。</li>
+        <li><strong>面向真实编辑会话的设计钩子。</strong><code>/impeccable hooks</code> 把检测器接进 Claude、Codex 与 Cursor 项目。Claude 与 Codex 在 UI 文件编辑后收到聚焦的设计提醒，Cursor 能在写入落地前审阅，<code>/impeccable hooks on</code> 替你处理 manifest 安装、修复与授权。</li>
+        <li><strong>发现保持可复审。</strong>钩子运行会区分新发现、已见发现与干净扫描，智能体得到有效压力而不再面对反复的信息墙。确认过的例外可通过 <code>ignore-value</code>、<code>ignore-file</code> 与 <code>ignore-rule</code> 保存进 <code>.impeccable</code> 配置文件，不再依赖源码注释。</li>
+        <li><strong>检测器更贴近可见的设计问题。</strong>41 条规则的引擎会跳过隐藏元素与仅供屏幕阅读器的文本，理解 OKLCH alpha 与类 Sass 输入，报告 bounce/elastic 缓动的精确动效令牌，并收紧重复眉题、超大 H1、裁切溢出、透明边框/阴影、编号标记与 cramped-padding 检查。</li>
+        <li><strong>Svelte 原生 Live Mode。</strong>Svelte 与 SvelteKit 变体以临时框架组件的形式预览，参数存于 <code>params.json</code>，接受后写回选定的源组件。有状态页面更贴近真实形态，避免字符串注入预览造成的 HMR 重置。</li>
+        <li><strong>Live Mode 更干净地接受更多真实修改。</strong>手动文本编辑有了专属的证据、应用与放弃路径。插入保留锚点，接受的变体更可靠地清理映射列表与 JSX 槽位，SvelteKit 项目获得框架感知的 live 适配器，不去碰 <code>src/app.html</code>。</li>
+      </ul>
+    </article>
+
+    <article id="v3.5.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.5.0</span><span class="cf-date">May 28, 2026</span></header>
+      <p class="cf-entry-lead">迄今最大的一次发布。最能提升 GPT-5.5 与 Codex 的按提供方定制规则、能区分新项目与既有项目的技能，以及进入 Beta 的 Live Mode。</p>
+
+      <figure class="cf-ba">
+        <div class="cf-ba-pair">
+          <div class="cf-ba-shot">
+            <span class="cf-ba-tag cf-ba-tag--before">改前</span>
+            <img src="/docs-cn/impeccable/assets/changelog/luxury-hotel-gpt55-before.jpg" alt="不用 Impeccable 的 GPT-5.5：奶油色背景、抽象矢量 hero，以及溢出栏宽的超大衬线标题。" loading="lazy" width="1200" height="900" />
+          </div>
+          <div class="cf-ba-shot">
+            <span class="cf-ba-tag cf-ba-tag--after">改后</span>
+            <img src="/docs-cn/impeccable/assets/changelog/luxury-hotel-gpt55-after.jpg" alt="用 Impeccable 的 GPT-5.5：满幅的崖边村落摄影、杂志式标题，以及温暖的第一人称文案。" loading="lazy" width="1200" height="900" />
+          </div>
+        </div>
+        <figcaption>GPT-5.5，同一份豪华酒店简报。不用 Impeccable：奶油色的 AI 背景、抽象矢量 hero，以及溢出栏宽的大标题。用 Impeccable：真实摄影、杂志式排版，以及有人味的第一人称文案。</figcaption>
+      </figure>
+
+      <div class="cf-stats" aria-label="开启 Impeccable 前 GPT-5.5 上的缺陷率">
+        <div class="cf-stat">
+          <span class="cf-stat-num">74%</span>
+          <span class="cf-stat-label">的 GPT-5.5 页面用了奶油/米色的 AI 默认背景</span>
+        </div>
+        <div class="cf-stat">
+          <span class="cf-stat-num">76%</span>
+          <span class="cf-stat-label">的技术类简报动用极端负字距</span>
+        </div>
+        <div class="cf-stat">
+          <span class="cf-stat-num">90%+</span>
+          <span class="cf-stat-label">的正文低于 WCAG 对比度下限就上线</span>
+        </div>
+        <p class="cf-stats-note">基于约 190 个样本测得，技能关闭。每个比率都能追到技能里的一行，然后修掉。</p>
+      </div>
+
+      <ul class="cf-items">
+        <li><strong>GPT 与 Codex 上提升显著。</strong>Impeccable 现在会在构建期把宿主定制规则编译进技能。Codex 与 GPT-5.5 拿到的规则专为他们产出的缺陷而写，其他宿主永远看不到。没有第二个设计技能这样做；别人都在给每个模型发同一份通用文件。</li>
+        <li><strong>AI 默认味儿大幅减少。</strong>对约 190 个样本的偏差挖掘发现，导致缺陷的正是技能自己的若干行，于是删掉。奶油/米色背景痕迹（GPT 上 74%）在整个暖中性色带内禁用。催生极端字距与斜体衬线 hero 的“类别到美学”配方移除：形态取决于品牌，而不是类别。新增禁令覆盖全大写眉题、编号小节标记、超过三款字体，以及硬性对比度下限。</li>
+        <li><strong>新项目与既有项目区别对待。</strong>在既有代码库上，技能先读你的令牌、主题与组件，并在其中工作：保住你的身份压过强加新面貌。白纸一张时，它从 129 个手工策划的锚点里抽取一个种子色，每个锚点都带一种情绪与构图策略，然后围绕它手工搭出完整配色。同一颗种子，简报不同，可以长成深色爵士俱乐部或浅色酒店品牌。无论哪种，都终结了每次都漂向同一套安全配色的冷启动惯性。</li>
+        <li><strong>Live Mode 进入 Beta。</strong>告别 alpha，现在在两个尺度上工作。在新的 Steer 栏输入一个方向，或直接说，智能体会读整页并原地编辑——不选元素、不轮播变体。或者选中单个元素，用大白话引导，接受后变体直接写回源码。你还能原地改文案：在浏览器里改元素文本，点 Apply 时子智能体重写它渲染自的真实源码，并修复一切与之挂钩的东西，比如身兼图片键的卡片标签。Insert 模式在既有元素之间搭出全新元素。恢复机制扛得住 HMR、隐藏 hero 与开发者工具覆盖层，实验性的流式轮询模式把响应从秒级压到亚秒级。</li>
+        <li><strong><code>/impeccable teach</code> 更名 <code>/impeccable init</code>。</strong>改名以名实相符：一条命令完成项目配置。一次代码库扫描，写出 PRODUCT.md，提供 DESIGN.md，把 Live Mode 配置到你第一次运行就能用，然后给你指出最合适的起手命令。旧名仍作别名可用。</li>
+        <li><strong>裸敲 <code>/impeccable</code> 会推荐你的下一步。</strong>不带命令运行，它不再甩出一个静态菜单，而是读取项目、你未提交的 git 改动与最近一次 critique，然后给出两三条价值最高的命令及理由（还没有 DESIGN.md，先跑 document；你正在编辑的文件里有未解决发现，跑 polish）。运行任何东西之前它都会先问，完整菜单仍列在下方。</li>
+        <li><strong>摆脱 jsdom 的更快检测器。</strong>HTML/CSS 引擎基于 <code>htmlparser2</code> 与一个真正的 CSS 级联解析器从零重建，取代 jsdom。同一份 160 文件 HTML 语料，在 Node 上快约 20 倍：0.34 秒，而旧 jsdom 引擎要 6.8 秒，约每文件 2 ms 而非 43 ms。零依赖，小到可以直接打包进技能内联运行，而不仅限于 CLI 与扩展。</li>
+        <li><strong>检测器：14 条新规则。</strong><code>cream-palette</code>、<code>em-dash-overuse</code>、<code>marketing-buzzword</code>、<code>numbered-section-markers</code>、<code>aphoristic-cadence</code>、<code>theater-slop-phrase</code>、<code>oversized-h1</code>、<code>extreme-negative-tracking</code>、<code>gpt-thin-border-wide-shadow</code>、<code>repeating-stripes-gradient</code>、<code>image-hover-transform</code>、<code>broken-image</code>、<code>text-overflow</code> 与 <code>clipped-overflow-container</code>。共 41 条确定性规则，一个权威注册表同时喂给 CLI、浏览器扩展、critique 与评测。</li>
+        <li><strong>技能自我保鲜。</strong>当天第一个会话里，Impeccable 会悄悄检查是否出了新版本。若有，它会提议替你运行 <code>npx impeccable update</code>。它总是先问，绝不纠缠你拒绝过的版本，也绝不打断手头任务。设 <code>IMPECCABLE_NO_UPDATE_CHECK=1</code> 可关闭。</li>
+        <li><strong>内里更利落的工艺。</strong>禁令之外，工艺本身也收紧了。小默认值落在见效的地方，比如标题上的 <code>text-wrap: balance</code>，在消融运行中理顺了参差的 hero 字型。指令本身也更精炼：孤儿参考文件并入各自命令，上下文加载简化，还有一套新的基于 LLM 的测试套件，每次变更都在三个提供方上捕捉指令遵循回退。外加专门的 <a href="/docs-cn/impeccable/changelog">/changelog</a> 与 <a href="/docs-cn/impeccable/faq">/faq</a> 页面。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.2.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.2.1</span><span class="cf-date">July 9, 2026</span></header>
+      <p class="cf-entry-lead">面向 Node 22/23 的兼容版本，同时带上 main 分支上等待已久的检测器与安装器修复。</p>
+      <ul class="cf-items">
+        <li><strong>Node 22 与 23 恢复干净安装。</strong>CLI 现在声明 <code>"node": "&gt;=22.12.0"</code>，CI 在 Node 22.12 与 Node 24 上跑主测试/构建流水线。ZIP 安装器自 v3.0.2 起已改用 <code>fflate</code>，旧的 <code>extract-zip</code> 流缺陷不再要求避开 Node 22/23。</li>
+        <li><strong>现代 LTS Node 上 <code>npx</code> 不再回退到陈旧的 2.x。</strong>由于当前版本在 Node 22.12+ 上引擎兼容，<code>npx impeccable install</code> 会停留在最新 CLI，不再选中不理解顶层 <code>install</code> 命令的旧版 Node-18 兼容发行。</li>
+        <li><strong>检测器预扫描可聚焦排版或布局。</strong><code>impeccable detect --scope type</code> 与 <code>--scope layout</code> 把发现收窄到命令即将编辑的设计领域，新的 <code>design-system-font-size</code> 规则会标记 <code>DESIGN.md</code> 字阶之外的写死字号。确定性规则集达到 46 条。</li>
+        <li><strong>Google Fonts 与检测器忽略更精准。</strong>含多个字族、坐标轴与编码名的 <code>fonts.googleapis.com/css2</code> URL 现在能正确喂给 overused-font 与 single-font 检查；按文件限定的通配忽略也能抑制不带值的发现，比如侧标签。</li>
+        <li><strong>Pi 全局安装落到正确目录。</strong>用户范围的安装、更新与检查现在使用 <code>~/.pi/agent/skills</code>，项目安装继续使用 <code>.pi/skills</code>，Pi 用户由此获得与其他宿主一致的安装/更新行为。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.2.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.2.0</span><span class="cf-date">July 1, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>新规则：Codex 网格线背景。</strong>检测器会标记由发丝渐变加重复 <code>background-size</code> 画出的双轴网格覆盖层，且只统计背景内的发丝渐变，杂散的 <code>mask-image</code> 行不会误触。它最初随 <code>--gpt</code> 一起提供；提供方门槛后来移除，规则现在默认运行。确定性规则集达到 45 条。</li>
+        <li><strong>首次安装保留外部技能符号链接。</strong>向 <code>~/.claude/skills</code> 指向外部目录的项目安装时，首次安装不再覆盖该符号链接，共享技能配置保持完好。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.1.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.1.0</span><span class="cf-date">June 22, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>行内忽略注释。</strong>用随文件走的一个行内注释豁免某条检测发现，适用于没有 <code>.impeccable/config.json</code> 的导出或独立文档。<code>impeccable-disable &lt;rule&gt;</code> 覆盖整个文件；<code>impeccable-disable-line</code> 与 <code>impeccable-disable-next-line</code> 限定一行。标记可用于任何注释语法，可附可选原因，并可用 <code>--no-inline-ignores</code> 绕过。</li>
+        <li><strong>未知命令的报错更清楚。</strong>无法识别的子命令现在会带着用法提示大声失败，而不是悄悄什么都不做。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.0.3" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.0.3</span><span class="cf-date">June 17, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>已有安装现在能拿到纯脚本的技能修复。</strong><code>impeccable update</code> 改为比对完整的打包技能树而不只是 <code>SKILL.md</code>，打包脚本中的修复因此能被检测到。对已安装的项目运行 <code>impeccable install</code> 也会刷新过期的技能文件，而不是停在 "already installed."</li>
+        <li><strong>Codex 安装会报告技能版本。</strong><code>.agents</code> 与 <code>.codex</code> 构建现在带上与其他宿主相同的 <code>version</code> frontmatter，check/update 输出能一致地显示已安装的技能版本。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.0.2" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.0.2</span><span class="cf-date">June 16, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong><code>impeccable detect</code> 现在读懂你的设计系统。</strong>项目有 <code>DESIGN.md</code> 时，CLI 扫描会加载与钩子相同的上下文，对照文档化的字体、配色、圆角阶梯与 sidecar 色调阶梯标记字体、颜色与圆角漂移。只想要全局检测器时传 <code>--no-design-system</code>。</li>
+        <li><strong>忽略管理成为一等 CLI 工作流。</strong><code>impeccable ignores</code> 能在共享检测器配置中列出、添加、移除规则/文件/值例外，团队不必再手改 <code>.impeccable/config.json</code>。钩子与手动 CLI 扫描遵循同一套例外。</li>
+        <li><strong>在较新的 Node 上安装不再无声失败。</strong>在 Node v24.16.0 与 v26.1.0+ 上，<code>impeccable install</code> 可能打印 "Downloading impeccable skills..."、以 0 退出却什么都没写。ZIP 解压现在改用纯 JS 的 <code>fflate</code>，绕开 <a href="https://github.com/nodejs/node/issues/63487" target="_blank" rel="noopener">nodejs/node#63487</a> 背后的销毁流卡死，同时保留 Windows 安装修复。<a href="https://github.com/kenryu42" target="_blank" rel="noopener">@kenryu42</a> 在 <a href="https://github.com/pbakaus/impeccable/issues/250" target="_blank" rel="noopener">#250</a> 中报告。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.0.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.0.1</span><span class="cf-date">June 15, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>精确的动效发现。</strong><code>bounce-easing</code> 现在报告具体的动画令牌、Tailwind 类或过冲的 cubic-bezier 值，而不是笼统的 <code>bounce</code> 标签。有意为之的动效可以在更窄的值级别保留或忽略。</li>
+        <li><strong>钩子指引偏向设计判断。</strong>项目钩子输出现在要求智能体在编辑前先为每条发现分类：修真正的设计问题，放过有意的演示或符合领域的动效，并解释这一决定。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v3.0.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v3.0.0</span><span class="cf-date">June 14, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>破坏性变更：Node 24 起步。</strong>CLI 现在声明 <code>"node": "&gt;=24"</code>。安装或运行此版本前请先升级 Node。</li>
+        <li><strong>更短的命令。</strong><code>impeccable install</code>、<code>impeccable update</code>、<code>impeccable link</code> 与 <code>impeccable check</code> 成为主要的命令形态。旧的 <code>impeccable skills ...</code> 命名空间仍可用于既有脚本。</li>
+        <li><strong>安装器选项贴合你的机器。</strong><code>impeccable install</code> 展示它探测到的宿主并默认选中，支持通过可搜索的选择器自定义提供方，并询问装进当前项目还是全局。默认项目安装，除非已存在真正的全局技能。</li>
+        <li><strong>选择加入时，钩子随技能一起安装。</strong><code>impeccable install</code> 与 <code>impeccable update</code> 可一次性询问钩子授权，记住本机答案，并安装或修复 Claude、Codex 与 Cursor 的钩子 manifest。只要技能的团队仍可传 <code>--no-hooks</code>。</li>
+        <li><strong>本地与子模块安装更安全。</strong><code>impeccable link --source=.impeccable</code> 支持仓库内开发，符号链接安全的更新不再覆盖链接安装，提供方别名包含 Codex 与 Rovo Dev 名称，本地包覆盖需要显式声明，Windows 上的 ZIP 解压也更安全。</li>
+        <li><strong>检测器输出更精准。</strong>CLI 扫描获得与技能钩子相同的精度工作：跳过隐藏元素、处理 sr-only 文本、收紧重复眉题与超大 H1 启发式、OKLCH alpha、类 Sass 的 CSS 输入、透明边框处理，以及不误伤实现字面量的页面级编号标记检查。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v2.3.2" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v2.3.2</span><span class="cf-date">May 29, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong><code>i-</code> 命令前缀退场。</strong>安装时选择加前缀是每条命令各自为技能那个年代的遗留。在只有一个 <code>impeccable</code> 技能的现在，它只会把这一个技能改名成 <code>i-impeccable</code>，而安装消息错误许诺了从未存在的 <code>/i-audit</code> 式命令，改名还可能砸坏同一宿主文件夹里无关的第三方技能。该参数与提示已移除。</li>
+        <li><strong>已带前缀的安装会自我痊愈。</strong><code>skills install</code> 与 <code>skills update</code> 现在会把旧的 <code>i-impeccable</code>（或自定义前缀）技能改回规范的 <code>impeccable</code>，按名称精确匹配，碰巧以 <code>i-</code> 开头的第三方技能不会被动。想要短的顶层命令？<code>/impeccable pin audit</code> 依旧能把 <code>/audit</code> 变成独立快捷方式。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v2.3.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v2.3.1</span><span class="cf-date">May 28, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>Codex 智能体交付简化。</strong>Codex 会自动发现已安装技能自带 <code>agents/</code> 文件夹里的子智能体，<code>skills install</code> 与 <code>skills update</code> 不再另写 <code>.codex/agents/*.toml</code> sidecar。嵌在技能里的智能体就是全部交付：少一个要安装与修复的文件，非 Codex 项目里也不留残余。</li>
+        <li><strong><code>--fast</code> 废弃。</strong>移除 jsdom 之后，完整静态扫描约每文件 4 ms 且覆盖每条规则，纯正则的 <code>--fast</code> 路径只剩下丢覆盖面（41 条规则里约 10 条），换不来真实提速，而且 <code>--fast</code> 跑出来可能显示“干净”，只因大多数规则悄悄没跑。参数仍然接受，既有 CI 脚本不受影响，但它会被忽略并给出一行提示，完整扫描总是运行。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v2.3.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v2.3.0</span><span class="cf-date">May 28, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>Codex 子智能体交付。</strong><code>skills install</code> 与 <code>skills update</code> 现在会为 Codex 项目在技能旁写入 <code>.codex/agents/impeccable_asset_producer.toml</code>，从 <code>.agents</code> 目标或全局 <code>~/.codex</code> 安装探测。旧安装漏掉该文件时 update 会补齐，非 Codex 项目不受影响。</li>
+      </ul>
+    </article>
+
+    <article id="cli-v2.2.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">CLI v2.2.0</span><span class="cf-date">May 28, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>静态引擎，告别 jsdom。</strong>检测基于 <code>htmlparser2</code> 与真正的 CSS 级联解析器重建，取代 jsdom。大型 HTML 扫描快约 20 倍（160 文件语料在 Node 上从 6.8s 降到 0.34s），零依赖，小到可打包，规则本身不变。</li>
+        <li><strong>14 条新检测规则。</strong><code>cream-palette</code>（暖调米白“claude beige”背景，包括 Tailwind warm-light 工具类）、<code>em-dash-overuse</code>、<code>marketing-buzzword</code>、<code>numbered-section-markers</code>、<code>aphoristic-cadence</code>、<code>theater-slop-phrase</code>、<code>oversized-h1</code>、<code>extreme-negative-tracking</code>、<code>gpt-thin-border-wide-shadow</code>、<code>repeating-stripes-gradient</code>、<code>image-hover-transform</code>、<code>broken-image</code>、<code>text-overflow</code> 与 <code>clipped-overflow-container</code>。共 41 条确定性规则。</li>
+        <li><strong>everything-centered 移除。</strong>从注册表、正则分析器与布局检查中除名：这条规则误伤太多名正言顺的居中布局，配不上它的位置。</li>
+        <li><strong>一个权威注册表。</strong>评测侧的检测逻辑并回共享引擎，CLI、浏览器扩展、critique 技能与评测全部运行同一套检查。</li>
+      </ul>
+    </article>
+
+    <article id="ext-v1.2.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">Extension v1.2.1</span><span class="cf-date">June 18, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>工具栏徽标计数与弹窗、面板一致。</strong>浏览器动作徽标数的是被标记元素，弹窗与 DevTools 面板数的是反模式发现，同一次扫描因此显示两个数字（比如 21 对 34）。一个元素可携带多条发现；徽标现在也按发现计数，所有界面口径一致。见 <a href="https://github.com/pbakaus/impeccable/issues/262" target="_blank" rel="noopener">#262</a>。</li>
+        <li><strong>本地文件扫描会说明失败原因。</strong>在文件 URL 访问关闭时扫描 <code>file://</code> 页面，过去会让弹窗永远卡在 "Scanning…"。弹窗现在显示真实原因并附本地文件权限提示，下次扫描时清除。见 <a href="https://github.com/pbakaus/impeccable/issues/258" target="_blank" rel="noopener">#258</a>。</li>
+        <li><strong>弹窗对齐 Kinpaku 设计系统。</strong>工具栏弹窗换上正牌的刻砖标志与跟随系统偏好的明暗主题。见 <a href="https://github.com/pbakaus/impeccable/issues/260" target="_blank" rel="noopener">#260</a>。</li>
+      </ul>
+    </article>
+
+    <article id="ext-v1.2.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">Extension v1.2.0</span><span class="cf-date">June 14, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>Firefox 支持。</strong>同一套检测器、弹窗、DevTools 面板与逐规则开关如今以 Firefox 附加组件发布。Firefox 包明确声明扩展一贯的做法：扫描在页面内运行，没有任何数据离开你的机器。</li>
+        <li><strong>覆盖层对齐 41 条规则的引擎。</strong>浏览器扫描获得最新检测器改进，包括跳过隐藏元素、处理 sr-only 文本溢出、收紧重复眉题、超大 H1、裁切溢出、OKLCH alpha、类 Sass 的 CSS 解析、透明边框处理，以及 bounce/elastic 动效的精确动画值。</li>
+        <li><strong>打包构建中 DevTools 可靠打开。</strong>Firefox 面板与侧栏 URL 改为根相对，扫描响应回传各自的扫描 ID，图标集与商店元数据也对齐当前检测器。</li>
+      </ul>
+    </article>
+
+    <article id="ext-v1.1.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">Extension v1.1.0</span><span class="cf-date">May 28, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>新检测规则在覆盖层中亮起。</strong>cream-palette、em-dash-overuse、marketing-buzzword、numbered-section-markers、aphoristic-cadence、theater-slop-phrase、oversized-h1、broken-image、text-overflow 等规则现在会在你扫描的任何页面上亮起，引擎与 CLI 相同。</li>
+        <li><strong>设置里有逐规则开关。</strong>每条规则——包括新规则——都有开/关，按 AI 痕迹与质量分组。开关状态在你的浏览器之间同步，扫描立即遵循。</li>
+      </ul>
+    </article>
+
+    <article id="v3.1.1" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.1.1</span><span class="cf-date">May 14, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong><code>/impeccable critique</code> 在 Windows 上可用。</strong><code>critique-storage.mjs</code> 里的 CLI 入口检查拿 <code>import.meta.url</code> 与一个手工拼的 <code>file://</code> 字符串比较，在 Windows 上无声失败，因为 Node 在 <code>import.meta.url</code> 里返回正斜杠而在 <code>process.argv[1]</code> 里返回反斜杠。脚本以 0 退出、无输出，快照保存被跳过。已改用 <code>pathToFileURL</code>，标准的跨平台写法。<a href="https://github.com/Genmutant" target="_blank" rel="noopener">@Genmutant</a> 在 <a href="https://github.com/pbakaus/impeccable/issues/155" target="_blank" rel="noopener">#155</a> 中报告。</li>
+      </ul>
+    </article>
+
+    <article id="v3.1.0" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.1.0</span><span class="cf-date">May 13, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>Codex 素材生产者智能体。</strong>一个原生 Codex 子智能体，从已批准的 Impeccable 视觉稿参考产出干净、可复用的位图素材，不重新设计方向。保留轮廓、配色、光照与材质；剥掉本该由 CSS 负责的烤进图里的 UI 文字与展示性外壳。仅限 Codex，因为 Codex 是当下唯一带原生图像生成的宿主。</li>
+        <li><strong>critique 持久化。</strong>每次 <code>/impeccable critique</code> 运行都会把目标快照写到 <code>.impeccable/critique/&lt;timestamp&gt;__&lt;slug&gt;.md</code>，含得分、P0/P1 计数与完整报告。在同一目标上调用 <code>/impeccable polish</code> 时，会读取最新匹配快照作为额外信号。同路径的 <code>ignore.md</code> 由用户维护；里面的每一行都是设计师有意为之、critique 不会再提的偏差。</li>
+        <li><strong>Codex 专属图像流程抽出。</strong>视觉稿与配色工作流移入 <code>reference/codex.md</code>，带配色优先闸门（先锁配色再出任何视觉稿，生成的视觉稿不再漂移）。Craft.md 对所有非 Codex 宿主更短更干净。</li>
+        <li><strong>检测器：新规则 + 误报修复。</strong><code>body-text-viewport-edge</code> 捕捉贴到视口绝对边缘的正文。OKLCH 与 CSS 变量解析的改进消除了现代令牌化代码库中的一类误报。</li>
+        <li><strong>品牌调性更锋利。</strong>一道“反向测试”提问放到最前：用竞争对手描述他们页面的方式描述你的页面；如果这句话也适用于该类别的典型落地页，推倒重来。文化符号配色护栏拦下偷懒的顺手一抓。</li>
+        <li><strong>shape 与 craft 闸门加固。</strong>跳过图像生成会用一行说明。简报确认改为显式，不再默认。宿主有原生图像生成时，craft 会点名 shape 与 code 之间的四道用户闸门（方向提问、配色生成、视觉稿生成、视觉稿批准），每道都有明确的 STOP 标记。</li>
+        <li><strong>技能文案、图像纪律与检测器计数都保持诚实。</strong>技能侧的文案校验器抓参考指令里的 em dash 与 AI 痕迹。craft 第 3 步在截图之后把截图读回上下文。构建校验器检查检测器计数时不再计入更新日志历史。</li>
+      </ul>
+    </article>
+
+    <article id="v3.0.7" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.0.7</span><span class="cf-date">May 4, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>检测器标记斜体衬线展示型 hero。</strong>超大号斜体衬线（Fraunces、Recoleta、Newsreader、Playfair、Cormorant、Tiempos）充当主 hero h1，现在会被当作 2025 年末与 2026 年初 AI 生成营销页的结构指纹捕获。确有正当需求的编辑类界面可忽略该规则。<a href="https://github.com/vinaypokharkar" target="_blank" rel="noopener">@vinaypokharkar</a> 在 <a href="https://github.com/pbakaus/impeccable/pull/129" target="_blank" rel="noopener">#129</a> 中贡献。</li>
+        <li><strong>检测器标记 hero 眉题胶囊。</strong>紧贴 hero h1 上方的大写加字距标签现在会触发，包括胶囊变体（带背景加 999px 圆角）。仅限小尺寸的短标签，编辑类图注不会误报。同样出自 <a href="https://github.com/pbakaus/impeccable/pull/129" target="_blank" rel="noopener">#129</a>。</li>
+        <li><strong>检测器标记新的字体单一化。</strong>overused-font 规则在 Inter 与旧默认之外，新增捕获 Fraunces、Geist、Mona Sans、Plus Jakarta Sans、Space Grotesk、Recoleta 与 Instrument Sans。对比度检查也覆盖带样式的 <code>&lt;a&gt;</code> 与 <code>&lt;button&gt;</code> 元素（近黑底上炭色文字的“Get started”胶囊不再算合格）。Vercel、Next.js 与 GitHub 在自家域名上享有品牌豁免。</li>
+        <li><strong>Live mode 断线存活。</strong>一份持久的会话日志记录每个事件，智能体崩溃、网络抖动或浏览器刷新都不再丢会话。三个新子命令：<code>live status</code>、<code>live resume</code> 与 <code>live complete</code>。<a href="https://github.com/nqh-packages" target="_blank" rel="noopener">@nqh-packages</a> 在 <a href="https://github.com/pbakaus/impeccable/pull/125" target="_blank" rel="noopener">#125</a> 中贡献。</li>
+        <li><strong>参考文件剥掉重复脚手架。</strong>SKILL.md 与 33 个子命令文件去掉了“Remember：”式收尾口号、12 个旧命令的宣传册式开场，以及 419 个让人看不清该用冒号、分号、句号还是括号的 em dash。</li>
+      </ul>
+    </article>
+
+    <article id="v3.0.6" class="cf-entry">
+      <header class="cf-entry-head"><span class="cf-version">v3.0.6</span><span class="cf-date">April 30, 2026</span></header>
+      <ul class="cf-items">
+        <li><strong>Live mode 默认保留身份。</strong>变体现在忠于既有界面的品牌（同一配色、字体搭配、视觉修辞），在该身份之内探索不同的表达轴。只有 PRODUCT.md 反向参考明确点名当前界面，或用户开口要求时，才会偏离既有美学。</li>
+        <li><strong>偏离模式从品牌语调推导，而非固定目录。</strong>旧的路线清单（Swiss-grid、Terminal、Industrial-signage）让模型每次都收敛到同样三个方向。现在改为品牌语调推导：读性格词，想象实体体验，推导视觉方向。</li>
+        <li><strong>大界面上参数配置保持一致。</strong>参数规划是变体规划的一部分。自由发挥的倾向与预算表对齐：hero 与区块每个变体 2-3 个旋钮，0 参数的 hero 会被记为失误而不是取舍。</li>
+        <li><strong>条件反射式拒绝的美学路线。</strong>与字体反射拒绝清单并行。Editorial-typographic 是第一条，捕捉二阶训练反射——一离开 SaaS 奶油风就默认奔向杂志封面美学。</li>
+      </ul>
+    </article>
+
+    <article id="v3.0.5" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v3.0.5</span><span class="cf-date">April 28, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>在 Vite/Next React/TSX 项目上，Live mode 通过 wrap → preview → accept → carbonize 循环落地合法 TSX。</strong>包裹层现在只保留一个 JSX 槽位子元素，而不是三个相邻兄弟，因此能在 <code>return (...)</code>、数组 <code>.map(...)</code> 与 <code>asChild</code> 父级中干净往返。关闭 <a href="https://github.com/pbakaus/impeccable/issues/114" target="_blank" rel="noopener">#114</a>，感谢 <a href="https://github.com/dergachoff" target="_blank" rel="noopener">@dergachoff</a>。</li>
+            <li><strong>wrap 能正确区分重复的同 class 兄弟。</strong>渲染了三次的 <code>&lt;Card className="card"&gt;</code> 列表，过去无论用户选中哪个都会落到第一个。<code>live-wrap.mjs</code> 现在接受 <code>--text TEXT</code>（被选元素的 <code>textContent</code>）并据此收窄候选。</li>
+            <li><strong><code>live-inject</code> 的 CSP-meta 解包现在逐字节保留自闭合标签的空白。</strong>带 CSP meta 的常见 Vite 形态都能干净往返。</li>
+          </ul>
+        </article>
+
+        <article id="v3.0.4" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v3.0.4</span><span class="cf-date">April 28, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong><code>/impeccable craft</code> 把已批准的视觉稿当作视觉契约。</strong>craft 流程在构建前要求一份视觉稿保真清单，把主要可见成分映射到代码或素材，并把缺失的 hero 物件、图像、区块结构、导航/CTA 处理与独特母题标记为阻断性缺陷——除非用户接受了该偏差。</li>
+            <li><strong>以图像为主的品牌界面不再退化成抽象色块。</strong>旅行、编辑、作品集、场馆、产品展示、娱乐与教育类项目，在已批准视觉稿或题材需要时，必须给出可信的图像。</li>
+            <li><strong>Live 选择器与模态宿主和平共处。</strong>在 Radix Dialog、Headless UI、vaul 等锁定 <code>body &#123; pointer-events: none &#125;</code> 的传送门里，选择器外壳曾经点不动。现在在外壳边界解除外部处理器，并对自身强制 <code>pointer-events: auto</code>。关闭 <a href="https://github.com/pbakaus/impeccable/issues/113" target="_blank" rel="noopener">#113</a>。</li>
+          </ul>
+        </article>
+
+        <article id="v3.0.2" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v3.0.2</span><span class="cf-date">April 27, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>Claude Code 插件安装缩小 380 倍。</strong>市场现在只发布运行时载荷（约 770 KB），而不是整个 monorepo（291 MB）。插件源码从 <code>./</code> 移到 <code>./plugin</code>。见 <a href="https://github.com/pbakaus/impeccable/issues/107" target="_blank" rel="noopener">#107</a>。</li>
+            <li><strong>斜杠命令在 Claude Code 上可靠注册。</strong><code>plugin.json</code> 的 <code>skills</code> 字段此前缺少文档化 schema 要求的尾斜杠。三位用户在 <a href="https://github.com/pbakaus/impeccable/issues/86" target="_blank" rel="noopener">#86</a> 中报告。</li>
+          </ul>
+        </article>
+
+        <article id="v3.0.1" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v3.0.1</span><span class="cf-date">April 24, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>Live mode 在严格 CSP 应用中运行。</strong>HTML 带 Content-Security-Policy meta 标签时，<code>/impeccable live</code> 现在会在会话开始时把 live 服务器源静默追加到 <code>script-src</code> 与 <code>connect-src</code>，停止时原样还原补丁。</li>
+            <li><strong>Live mode 能处理条件渲染内容。</strong>在关闭的模态框、未激活标签页或可折叠面板里选元素，过去会在 Vite Fast Refresh 重挂父级时卡死 live mode。现在：选中时先给一句简短预告，Go 之后再来一条情境 toast，元素一回到 DOM 变体就到位。</li>
+            <li><strong><code>/impeccable polish</code> 如今是已退役 <code>/normalize</code> 的真超集。</strong>对齐设计系统不是可选项；漂移按根因命名（缺令牌、一次性实现或概念性错位）；新增 Information Architecture &amp; Flow 维度，覆盖渐进式披露。</li>
+          </ul>
+        </article>
+
+        <article id="v3.0" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v3.0</span><span class="cf-date">April 10, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>Live Mode（Alpha）。</strong>运行 <code>/impeccable live</code>，在浏览器里迭代你的 UI：任选元素，丢上一条评论或一笔涂画，按下 Go，三个生产级变体经框架的 HMR 换入，选中想要的那个即写回源码。支持 Vite、Next.js（含 monorepo）、SvelteKit、Astro、Nuxt。</li>
+            <li><strong>先可视化，再构建。</strong>随着 GPT Image 2、Nano Banana Pro 与 Imagen 4 Ultra，图像生成跨过参考级质量门槛。<code>/impeccable shape</code> 以真实图片起草品牌工具箱（颜色、字体、情绪板）；<code>/impeccable craft</code> 预渲染供代码逼近的高保真视觉稿。在搭载 GPT 5.5 的 Codex 中最强。</li>
+            <li><strong>PRODUCT.md，给 AI 的共享设计记忆。</strong>项目根目录的一个文件，写明受众、品牌个性、反向参考与调性（brand 还是 product）。每条命令生成前都会读它。</li>
+            <li><strong>DESIGN.md 生成，合乎规范且可互操作。</strong><code>/impeccable document</code> 扫描你的令牌、组件与渲染输出，写出遵循 <a href="https://stitch.withgoogle.com/docs/design-md/format/" target="_blank" rel="noopener">Google Stitch DESIGN.md 格式</a>的 DESIGN.md。</li>
+            <li><strong>18 个技能合并成 1 个技能加 23 条命令。</strong>每条命令现在都在 <code>/impeccable</code> 之下。<code>/</code> 菜单里一项而不是 18 项，共享的设计词汇表，命名空间污染少得多。</li>
+            <li><strong>把爱用的固定回独立快捷方式。</strong>运行 <code>/impeccable pin audit</code>，<code>/audit</code> 再次成为独立命令，同时不推翻合并。</li>
+          </ul>
+        </article>
+
+        <article id="v2.1" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v2.1</span><span class="cf-date">April 9, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>从 21 条命令精简到 18 条。</strong><code>/arrange</code> 更名 <code>/layout</code>，<code>/normalize</code> 并入 <code>/polish</code>，<code>/onboard</code> 并入 <code>/harden</code>，<code>/extract</code> 变成 <code>/impeccable extract</code>。</li>
+            <li><strong>自动清理废弃技能。</strong>更新后首次加载时，技能会检测并移除更名或合并命令留下的残余文件。</li>
+          </ul>
+        </article>
+
+        <article id="v2.0" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v2.0</span><span class="cf-date">April 8, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong><code>frontend-design</code> 更名 <code>impeccable</code>。</strong>核心技能与项目同名。</li>
+            <li><strong>技能基于评测重写。</strong>十五份简报在 gpt-5.4 与 Qwen 3.6 Plus 上运行，有技能与无技能各跑一遍，再并排评分。字体与颜色更多样，紫色渐变更少，Codex 输出大幅变好。</li>
+            <li><strong>反模式检测引擎。</strong>28 条确定性规则，覆盖排版、颜色、布局、动效与质量。</li>
+            <li><strong>CLI：<code>npx impeccable detect</code>。</strong>扫描 HTML、CSS、JSX/TSX、Vue、Svelte 与 CSS-in-JS。框架检测、多文件导入追踪、CI 可用的 JSON 输出。</li>
+            <li><strong>Chrome DevTools 扩展。</strong>任意页面一键检测。读取实时计算样式，在交互面板中呈现发现，并在页面上高亮元素。</li>
+            <li><strong><code>/critique</code> 长了牙。</strong>角色化子智能体并行评审，按 Nielsen 启发式打分，自动运行检测器，并打开 live 浏览器覆盖层，让你逐条就地走查发现。</li>
+          </ul>
+        </article>
+
+        <article id="v1.x" class="cf-entry">
+          <header class="cf-entry-head"><span class="cf-version">v1.x</span><span class="cf-date">February 28 – March 18, 2026</span></header>
+          <ul class="cf-items">
+            <li><strong>v1.6.0</strong> 支持 Trae（中国版 + 国际版）。<code>/critique</code> 按 Nielsen 10 条启发式与角色原型打分。<code>/audit</code> 按 5 个维度打分并给 P0-P3 严重度评级。</li>
+            <li><strong>v1.5.0</strong> <code>/typeset</code>（修排版）、<code>/arrange</code>（修布局）、<code>/overdrive</code>（技术上的超凡效果）。经 <code>.impeccable.md</code> 自动收集设计上下文。</li>
+            <li><strong>v1.3.0</strong> OpenCode 与 Pi 提供方支持。</li>
+            <li><strong>v1.2.0</strong> Kiro 支持。前缀开关恢复。audit 与 critique 只建议已安装的命令。</li>
+            <li><strong>v1.1.0</strong> 统一的技能架构。VS Code Copilot 与 Google Antigravity 支持。通用 ZIP 安装器。<code>/simplify</code> 更名 <code>/distill</code>。</li>
+            <li><strong>v1.0.0</strong> 首个版本。17 条设计命令。Cursor、Claude Code、Gemini CLI 与 Codex CLI。</li>
+          </ul>
+        </article>
+  </div>
+
+  <script is:inline>
+    (function () {
+      const buttons = Array.from(document.querySelectorAll('.cf-filter-btn'));
+      const entries = Array.from(document.querySelectorAll('.cf-entry'));
+      if (!buttons.length || !entries.length) return;
+
+      // Component is derived from the entry id prefix: cli-*, ext-*, else skill.
+      const kindOf = (entry) => {
+        const id = entry.id || '';
+        if (id.startsWith('cli-')) return 'cli';
+        if (id.startsWith('ext-')) return 'ext';
+        return 'skill';
+      };
+
+      const apply = (filter) => {
+        entries.forEach((entry) => {
+          const show = filter === 'all' || kindOf(entry) === filter;
+          entry.classList.toggle('cf-entry--hidden', !show);
+        });
+        buttons.forEach((btn) => {
+          const active = btn.dataset.cfFilter === filter;
+          btn.classList.toggle('is-active', active);
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      };
+
+      buttons.forEach((btn) => btn.addEventListener('click', () => apply(btn.dataset.cfFilter)));
+      apply('skill'); // default view: skill only
+    })();
+  </script>
+</Base>

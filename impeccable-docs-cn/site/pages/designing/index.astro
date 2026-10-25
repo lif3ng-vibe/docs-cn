@@ -1,0 +1,632 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/sub-pages.css';
+import '../../styles/designing-kinpaku.css';
+---
+
+<Base
+  title="与 Impeccable 共设计 | Impeccable（汉化版）"
+  description="核心循环：起步、迭代、打磨、维护。如何端到端使用 Impeccable——从空白文件，到上线的功能，再到还清的设计债。"
+  activeNav="designing"
+  canonicalPath="/designing"
+  bodyClass="sub-page designing-page-body designing-kinpaku kinpaku-chrome"
+>
+
+<div class="designing-page">
+  <section class="designing-hero">
+    <header class="designing-page-header">
+      <h1 class="designing-page-title">与 <em>Impeccable</em> 共设计</h1>
+      <p class="designing-page-lede">在四个阶段中使用 Impeccable：设定上下文、改进现有的东西、上线前检查，以及防止设计系统漂移。</p>
+    </header>
+
+    <div class="designing-loop-wrap" aria-label="四阶段循环">
+    <span class="designing-loop-wrap-eyebrow">核心循环</span>
+    <div class="designing-loop">
+
+      <a class="designing-loop-node designing-loop-node--start" href="#start">
+        <span class="designing-loop-name">起步</span>
+        <span class="designing-loop-hint">从空白文件出发，经过简报，做成有设计感的功能。</span>
+      </a>
+      <a class="designing-loop-node designing-loop-node--iterate" href="#iterate">
+        <span class="designing-loop-name">迭代</span>
+        <span class="designing-loop-hint">原位精修。命令行或浏览器皆可。</span>
+      </a>
+      <a class="designing-loop-node designing-loop-node--polish" href="#polish">
+        <span class="designing-loop-name">打磨</span>
+        <span class="designing-loop-hint">上线前关卡。audit、clarify、harden。</span>
+      </a>
+      <a class="designing-loop-node designing-loop-node--maintain" href="#maintain">
+        <span class="designing-loop-name">维护</span>
+        <span class="designing-loop-hint">趁设计债尚未固化，及早偿还。</span>
+      </a>
+      <div class="designing-loop-wheel" aria-hidden="true">
+        <svg class="designing-loop-wheel-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <circle class="designing-loop-wheel-ring" cx="50" cy="50" r="46"/>
+          <!-- 12 tick marks at 30° increments. Cardinals (0/90/180/270) stronger. -->
+          <line class="designing-loop-wheel-tick designing-loop-wheel-tick--cardinal" x1="50" y1="2.5" x2="50" y2="5.5"/>
+          <line class="designing-loop-wheel-tick" x1="73" y1="8.7" x2="72" y2="11.4"/>
+          <line class="designing-loop-wheel-tick" x1="91.3" y1="27" x2="88.6" y2="28"/>
+          <line class="designing-loop-wheel-tick designing-loop-wheel-tick--cardinal" x1="97.5" y1="50" x2="94.5" y2="50"/>
+          <line class="designing-loop-wheel-tick" x1="91.3" y1="73" x2="88.6" y2="72"/>
+          <line class="designing-loop-wheel-tick" x1="73" y1="91.3" x2="72" y2="88.6"/>
+          <line class="designing-loop-wheel-tick designing-loop-wheel-tick--cardinal" x1="50" y1="97.5" x2="50" y2="94.5"/>
+          <line class="designing-loop-wheel-tick" x1="27" y1="91.3" x2="28" y2="88.6"/>
+          <line class="designing-loop-wheel-tick" x1="8.7" y1="73" x2="11.4" y2="72"/>
+          <line class="designing-loop-wheel-tick designing-loop-wheel-tick--cardinal" x1="2.5" y1="50" x2="5.5" y2="50"/>
+          <line class="designing-loop-wheel-tick" x1="8.7" y1="27" x2="11.4" y2="28"/>
+          <line class="designing-loop-wheel-tick" x1="27" y1="8.7" x2="28" y2="11.4"/>
+        </svg>
+        <svg class="designing-loop-wheel-dot-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <!-- Clockwise-orbiting accent dot, animates with offset-path. -->
+          <circle class="designing-loop-wheel-dot" cx="0" cy="0" r="2.2"/>
+        </svg>
+        <span class="designing-loop-wheel-arrow designing-loop-wheel-arrow--ne">&#x2198;</span>
+        <span class="designing-loop-wheel-arrow designing-loop-wheel-arrow--se">&#x2199;</span>
+        <span class="designing-loop-wheel-arrow designing-loop-wheel-arrow--sw">&#x2196;</span>
+        <span class="designing-loop-wheel-arrow designing-loop-wheel-arrow--nw">&#x2197;</span>
+        <div class="designing-loop-wheel-center">
+          <span class="designing-loop-wheel-center-label">设计中</span>
+          <span class="designing-loop-wheel-center-mark">impeccable</span>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <div class="designing-loop-track">
+  <nav class="designing-phasenav" aria-label="循环阶段">
+    <a class="designing-phasenav-link" href="#start">起步</a>
+    <a class="designing-phasenav-link" href="#iterate">迭代</a>
+    <a class="designing-phasenav-link" href="#polish">打磨</a>
+    <a class="designing-phasenav-link" href="#maintain">维护</a>
+  </nav>
+
+  <section class="ks-section designing-phase" id="start">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">从上下文开始。</h2>
+      <p class="ks-section-sub designing-phase-sub">在让智能体动手设计之前，先给它基本信息：界面为谁而做、应该是什么感觉、应该避开什么，以及这是营销页面还是应用界面。<code>/impeccable init</code> 会先把这份上下文保存下来。之后可用 <code>/impeccable shape</code> 产出简报，或用 <code>/impeccable new-work</code> 完成完整构建。</p>
+      <div class="designing-phase-commands">
+        <a class="designing-phase-cmd" href="/docs-cn/impeccable/docs/init">/impeccable init</a>
+        <a class="designing-phase-cmd" href="/docs-cn/impeccable/docs/shape">/impeccable shape</a>
+        <a class="designing-phase-cmd" href="/docs-cn/impeccable/docs/new-work">/impeccable new-work</a>
+      </div>
+    </header>
+
+    <div class="designing-phase-body designing-start">
+      <div class="designing-start-step">
+        <div class="designing-start-grid">
+          <div class="docs-viz-file" style="margin:0">
+            <div class="docs-viz-file-header">
+              <span class="docs-viz-file-name">PRODUCT.md</span>
+              <span class="docs-viz-file-status">由 init 写入</span>
+            </div>
+            <div class="docs-viz-file-body">
+              <div class="docs-viz-file-row">
+                <span class="docs-viz-file-k">调性</span>
+                <span class="docs-viz-file-v">产品。设计服务于任务。</span>
+              </div>
+              <div class="docs-viz-file-row">
+                <span class="docs-viz-file-k">用户</span>
+                <span class="docs-viz-file-v">值班的 SRE，快速阅读，常常在黑暗环境中。</span>
+              </div>
+              <div class="docs-viz-file-row">
+                <span class="docs-viz-file-k">语调</span>
+                <span class="docs-viz-file-v">冷静、克制，毫不浮夸。</span>
+              </div>
+              <div class="docs-viz-file-row">
+                <span class="docs-viz-file-k">反向参考</span>
+                <span class="docs-viz-file-v">紫色渐变。玻璃拟态。浮夸营销腔。</span>
+              </div>
+            </div>
+          </div>
+          <div class="designing-start-grid-prose">
+            <p>init 会进行一次简短的设置访谈，涉及受众、品牌/产品路线、语调和反向参考。它写入 <code>PRODUCT.md</code>，若有代码可扫描，还会提供一份 <code>DESIGN.md</code>。此后每条命令在生成之前都会先读这两个文件。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="designing-start-step">
+        <p class="designing-start-step-note">从零开始的工作，一份视觉参考比一段长提示词更有用。<code>shape</code> 可以起草一份品牌工具包供你评审，<code>new-work</code> 则可以照着高保真视觉稿写代码，而不是对着一段文字猜。Neo Mirai 就是完整的一圈：生成方向、实现页面、浏览器迭代。</p>
+
+        <div class="designing-visualize-spread">
+          <figure class="designing-visualize-plate designing-visualize-plate--brand">
+            <a class="designing-visualize-plate-frame" href="/docs-cn/impeccable/cases/neo-mirai" aria-label="阅读 Neo Mirai 案例研究">
+              <img src="/docs-cn/impeccable/assets/openai_image_2_brand.jpg" alt="自动生成的品牌工具包图版：虚构 AI 设计会议的标识组合、配色、字体样例、图标系统与应用视觉稿，呈现为温暖的大地色调。" loading="lazy" width="1536" height="1024" />
+            </a>
+            <figcaption class="designing-visualize-plate-cap">
+              <span class="designing-visualize-plate-kind">品牌决策</span>
+              <p class="designing-visualize-plate-note">品牌工具包：标识、配色、字体、图标语言、应用示例、社交图块、UI 方向，一张图版尽收眼底、便于评审。通过评审的决策会写入 <code>DESIGN.md</code>。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="designing-visualize-plate designing-visualize-plate--hifi">
+            <a class="designing-visualize-plate-frame" href="/docs-cn/impeccable/cases/neo-mirai" aria-label="阅读 Neo Mirai 案例研究">
+              <img src="/docs-cn/impeccable/assets/openai_image_2_hifi.jpg" alt="自动生成的高保真落地页视觉稿：为虚构的东京 AI 设计会议排出的长幅编辑式构图，温暖的大地色调配上有态度的衬线展示字体。" loading="lazy" width="864" height="1821" />
+            </a>
+            <figcaption class="designing-visualize-plate-cap">
+              <span class="designing-visualize-plate-kind">页面视觉稿</span>
+              <p class="designing-visualize-plate-note">高保真参考。在写第一行 CSS 之前就看清终点。让代码朝一张具体的图像靠拢，而不是对着一篇抽象简报猜。这就是质变所在。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="designing-visualize-plate designing-visualize-plate--live">
+            <a class="designing-visualize-plate-frame" href="/docs-cn/impeccable/neo-mirai/" aria-label="打开 Neo Mirai 可运行站点">
+              <img src="/docs-cn/impeccable/assets/cases/neo-mirai/live-page.png" alt="已实现的 Neo Mirai 网站全页截图。" loading="lazy" width="1440" height="3013" />
+            </a>
+            <figcaption class="designing-visualize-plate-cap">
+              <span class="designing-visualize-plate-kind">可运行站点</span>
+              <p class="designing-visualize-plate-note">上线的构建。视觉稿变成了语义化标记、重新生成的素材、响应式修复、导航状态、讲者轮播行为，以及经浏览器验证的打磨。<a href="/docs-cn/impeccable/neo-mirai/">打开可运行站点</a>。</p>
+            </figcaption>
+          </figure>
+        </div>
+
+        <p class="designing-visualize-foot">前两张图版由 <strong>OpenAI GPT Image 2</strong> 生成，第三张是实现后的 Neo Mirai 页面。<strong>Gemini Nano Banana Pro</strong>、<strong>Imagen 4 Ultra</strong> 与 <strong>Grok Imagen</strong> 也可以这样用，经由 Codex、Gemini CLI 及兼容的 AI 宿主（harness）。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ks-section designing-phase" id="iterate">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">改进已有的东西。</h2>
+      <p class="ks-section-sub designing-phase-sub">只要界面上有了东西，你就是在迭代。有两条路径：用特定命令处理叫得出名字的维度，或用 Live Mode 做视觉探索。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <div class="designing-iterate-split">
+        <div class="designing-iterate-col">
+          <h3 class="designing-iterate-name">当改动说得清名字。</h3>
+          <p class="designing-iterate-when">输入一条命令，让技能执行一门具体的设计学科。适合你说得出那个词的时候：字体排印、布局、颜色、动效。</p>
+          <div class="designing-iterate-terminal" aria-hidden="true">
+            <div class="designing-iterate-terminal-line"><span class="designing-iterate-terminal-prompt">$</span><span>/impeccable polish pricing</span></div>
+            <div class="designing-iterate-terminal-line"><span class="designing-iterate-terminal-prompt">$</span><span>/impeccable bolder hero</span></div>
+            <div class="designing-iterate-terminal-line"><span class="designing-iterate-terminal-prompt">$</span><span>/impeccable typeset checkout</span></div>
+          </div>
+        </div>
+
+        <div class="designing-iterate-col">
+          <h3 class="designing-iterate-name">当改动指出来更容易。</h3>
+          <p class="designing-iterate-when">在你的 AI 工具里运行 <code>/impeccable live</code>，它会把这套选取器挂到你正在运行的开发服务器上。指向任意元素，画一笔或输入你想要的效果，然后按下 Go。得到三个生产质量的变体；采纳其一，它就会写回源码。</p>
+          <div class="designing-iterate-live" aria-hidden="true">
+            <div class="docs-viz-live-frame" style="max-width:100%">
+              <div class="docs-viz-live-chrome">
+                <span class="docs-viz-live-dot"></span>
+                <span class="docs-viz-live-dot"></span>
+                <span class="docs-viz-live-dot"></span>
+                <span class="docs-viz-live-url">localhost:3000</span>
+              </div>
+              <div class="docs-viz-live-stage">
+                <div class="docs-viz-live-target">
+                  <span class="docs-viz-live-kicker">第 04 期</span>
+                  <h4 class="docs-viz-live-title">一封信，<em>偶尔</em>寄出。</h4>
+                  <button class="docs-viz-live-btn" type="button">给我也寄一封</button>
+                </div>
+                <div class="docs-viz-live-outline"></div>
+                <div class="docs-viz-live-ctx">
+                  <button class="docs-viz-live-ctx-nav" type="button">&#x2039;</button>
+                  <span class="docs-viz-live-ctx-counter">2 / 3</span>
+                  <button class="docs-viz-live-ctx-nav" type="button">&#x203A;</button>
+                  <span class="docs-viz-live-ctx-divider"></span>
+                  <button class="docs-viz-live-ctx-discard" type="button">&#x2715;</button>
+                  <button class="docs-viz-live-ctx-accept" type="button">采纳</button>
+                </div>
+                <div class="docs-viz-live-gbar">
+                  <span class="docs-viz-live-gbar-mark">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 2.5 L13.5 2.5 L5.5 21.5 L5 21.5 Q2.5 21.5 2.5 19 L2.5 5 Q2.5 2.5 5 2.5 Z"/><path d="M16.5 2.5 L19 2.5 Q21.5 2.5 21.5 5 L21.5 19 Q21.5 21.5 19 21.5 L8.5 21.5 Z"/></svg>
+                  </span>
+                  <span class="docs-viz-live-gbar-btn is-active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+                    <span>选取</span>
+                  </span>
+                  <span class="docs-viz-live-gbar-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    <span>插入</span>
+                  </span>
+                  <span class="docs-viz-live-gbar-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>检测</span>
+                  </span>
+                  <span class="docs-viz-live-gbar-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1" opacity="0.5"/></svg>
+                    <span class="docs-viz-live-gbar-btn-mono">DESIGN.md</span>
+                  </span>
+                  <span class="docs-viz-live-gbar-divider"></span>
+                  <span class="docs-viz-live-gbar-x">
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="designing-iterate-table">
+        <caption>什么时候用哪个</caption>
+        <tbody>
+          <tr>
+            <th scope="row">修一种说不出名字的"不对劲"</th>
+            <td><a href="/docs-cn/impeccable/live-mode">/impeccable live</a></td>
+          </tr>
+          <tr>
+            <th scope="row">应用一门具体的设计学科：字体、布局、颜色、动效</th>
+            <td><a href="/docs-cn/impeccable/docs/typeset">/typeset</a> &middot; <a href="/docs-cn/impeccable/docs/layout">/layout</a> &middot; <a href="/docs-cn/impeccable/docs/colorize">/colorize</a> &middot; <a href="/docs-cn/impeccable/docs/animate">/animate</a></td>
+          </tr>
+          <tr>
+            <th scope="row">并排探索三个方向</th>
+            <td><a href="/docs-cn/impeccable/live-mode">/impeccable live</a></td>
+          </tr>
+          <tr>
+            <th scope="row">问一句"这做得好吗？"</th>
+            <td><a href="/docs-cn/impeccable/docs/critique">/impeccable critique</a></td>
+          </tr>
+          <tr>
+            <th scope="row">让保守的设计活起来，或给吵闹的设计降降调</th>
+            <td><a href="/docs-cn/impeccable/docs/bolder">/bolder</a> &middot; <a href="/docs-cn/impeccable/docs/quieter">/quieter</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="ks-section designing-phase" id="polish">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">上线前关卡。</h2>
+      <p class="ks-section-sub designing-phase-sub">任何东西上线之前，先过这三条命令。它们不做重新设计，而是找出还没修完的问题。把目标收窄：细看一个区块，胜过扫一眼整个页面——就像镜头越收越清晰。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <div class="designing-polish">
+        <div class="designing-polish-band">
+          <span class="designing-polish-band-label">上线前</span>
+          <div class="designing-polish-band-cmds">
+            <a href="/docs-cn/impeccable/docs/audit">audit</a>
+            <a href="/docs-cn/impeccable/docs/clarify">clarify</a>
+            <a href="/docs-cn/impeccable/docs/harden">harden</a>
+          </div>
+          <span class="designing-polish-band-meta">03 &middot; 04</span>
+        </div>
+        <div class="designing-polish-grid">
+          <div class="designing-polish-col">
+            <h3 class="designing-polish-name">打个分。</h3>
+            <p class="designing-polish-desc">五个维度按 0 到 4 打分：无障碍、性能、主题适配、响应式、反模式。发现按 P0 到 P3 标注。</p>
+          </div>
+          <div class="designing-polish-col">
+            <h3 class="designing-polish-name">重写文案。</h3>
+            <p class="designing-polish-desc">标签、错误信息、空状态文案、微文案，并按 PRODUCT.md 里的受众调整语气。</p>
+          </div>
+          <div class="designing-polish-col">
+            <h3 class="designing-polish-name">用真实世界做压力测试。</h3>
+            <p class="designing-polish-desc">60 个字符的名字、德语的商品标题、数十亿的价格、500 错误、离线状态。生产环境的数据就是这么乱。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ks-section designing-phase" id="maintain">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">设计债真实存在。把它还上。</h2>
+      <p class="ks-section-sub designing-phase-sub">功能不断上线，漂移随之发生。两条命令能在差异固化之前把它弥合。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <div class="ks-bento designing-maintain">
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <span class="designing-maintain-label"><a href="/docs-cn/impeccable/docs/extract">/impeccable extract</a></span>
+          <div class="designing-maintain-stage">
+            <div class="designing-extract-viz" aria-hidden="true">
+              <div class="designing-extract-before">
+                <span class="designing-extract-btn">订阅</span>
+                <span class="designing-extract-btn">提交</span>
+                <span class="designing-extract-btn">加入</span>
+                <span class="designing-extract-btn">发送</span>
+                <span class="designing-extract-btn">前往</span>
+                <span class="designing-extract-btn">确定</span>
+              </div>
+              <span class="designing-extract-arrow">&rarr;</span>
+              <span class="designing-extract-after">按钮</span>
+            </div>
+          </div>
+          <h3 class="designing-maintain-name">归并漂移。</h3>
+          <p class="designing-maintain-desc">找出以相同意图被使用三次以上的模式，提出令牌与基础组件。</p>
+        </article>
+
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <span class="designing-maintain-label"><a href="/docs-cn/impeccable/docs/document">/impeccable document</a></span>
+          <div class="designing-maintain-stage">
+            <div class="designing-designmd-preview" aria-hidden="true">
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">01</span><span>概述</span></div>
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">02</span><span>颜色</span></div>
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">03</span><span>字体排印</span></div>
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">04</span><span>阴影层级</span></div>
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">05</span><span>组件</span></div>
+              <div class="designing-designmd-preview-line"><span class="designing-designmd-preview-num">06</span><span>宜与忌</span></div>
+            </div>
+          </div>
+          <h3 class="designing-maintain-name">重新盘点设计系统。</h3>
+          <p class="designing-maintain-desc">扫描你的令牌、组件和已渲染的路由，然后以 Stitch 格式写出一份 DESIGN.md。它指向的真实组件和线上路由越多，Impeccable 就越能读懂你的设计语言，而不是靠猜。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <section class="ks-section designing-phase designing-phase--appendix" aria-label="Impeccable 运行在哪里">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">大多数时候，你都在技能里。</h2>
+      <p class="ks-section-sub designing-phase-sub">这 23 条命令在你的 AI 编码工具里运行：Cursor、Claude Code、GitHub Copilot、Codex、Gemini CLI。本页的一切都发生在那里。同一套反模式检测器还能在对话之外的两处运行。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <div class="ks-bento designing-surfaces">
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <span class="designing-maintain-label">命令行</span>
+          <h3 class="designing-maintain-name">在 CI 里，作为一道关卡。</h3>
+          <div class="designing-surface-cmd">
+            <span class="designing-surface-cmd-prompt">$</span>
+            <span>npx impeccable detect src/</span>
+          </div>
+          <p class="designing-maintain-desc">指向一个目录、一个文件或一个 URL。确定性规则加 JSON 输出，退出码会在 slop 溜进 pull request 时让构建失败。</p>
+        </article>
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <span class="designing-maintain-label">Chrome 扩展</span>
+          <h3 class="designing-maintain-name">在任何页面上，实时运行。</h3>
+          <div class="designing-surface-cmd designing-surface-cmd--chrome">
+            <span class="docs-viz-live-dot"></span>
+            <span class="docs-viz-live-dot"></span>
+            <span class="docs-viz-live-dot"></span>
+            <span class="designing-surface-cmd-url">a-competitor.com</span>
+          </div>
+          <p class="designing-maintain-desc">与浏览器覆盖层相同的检查，作用于任何实时页面：你的预发布环境、竞品的站点，或是你永远没法放进编辑器的页面。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ks-section designing-phase designing-phase--appendix" aria-label="品牌路线还是产品路线">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">品牌，还是产品。</h2>
+      <p class="ks-section-sub designing-phase-sub">两种默认模式，各有一套词汇。Impeccable 会在每条命令之前，依据你的任务线索和 <code>PRODUCT.md</code> 选定路线，因此 <code>typeset</code>、<code>animate</code>、<code>colorize</code> 等命令都会相应调整输出。你很少需要手动设置。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <div class="ks-bento designing-lanes">
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <p class="designing-lane-rule"><strong>品牌。</strong>设计本身就是交付物：落地页、营销活动、编辑内容、作品集。独特的字体、鲜明的配色、以图像为首屏主角。印象就是产品。</p>
+          <div class="designing-lane-mock designing-lane-mock--brand" aria-hidden="true">
+            <span class="designing-lane-mock-label">第 04 期 · 快讯</span>
+            <span class="designing-lane-mock-title"><span class="designing-lane-mock-accent">Shape</span> 你的故事。</span>
+          </div>
+        </article>
+        <article class="ks-bento-tile ks-bento-tile--span-6">
+          <p class="designing-lane-rule"><strong>产品。</strong>设计服务于任务：应用 UI、后台、仪表盘、工具。流畅的信息密度、语义化的状态、可复用的组件。用户来这里是为了把事情办完。</p>
+          <div class="designing-lane-mock designing-lane-mock--product" aria-hidden="true">
+            <div class="designing-lane-product-row">
+              <span class="designing-lane-product-k">用户</span>
+              <span class="designing-lane-product-v">12,482</span>
+            </div>
+            <div class="designing-lane-product-row">
+              <span class="designing-lane-product-k">当前在线</span>
+              <span class="designing-lane-product-v">1,207</span>
+            </div>
+            <div class="designing-lane-product-row">
+              <span class="designing-lane-product-k">转化率</span>
+              <span class="designing-lane-product-v">4.8%</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ks-section designing-phase designing-phase--appendix" aria-label="应当避免什么">
+    <header class="ks-section-head designing-phase-head">
+      <h2 class="designing-phase-title">应当避免的事。</h2>
+      <p class="ks-section-sub designing-phase-sub">一份反模式清单，帮你用好这个反模式工具。</p>
+    </header>
+
+    <div class="designing-phase-body">
+      <ul class="designing-avoid">
+        <li>
+          <span class="designing-avoid-x" aria-hidden="true">&times;</span>
+          <div>
+            <span class="designing-avoid-title">同时使用 Impeccable 和 Anthropic 的 frontend-design 技能</span>
+            <p class="designing-avoid-desc">Anthropic 仍在 Claude Code 里推广自家的技能，但那个技能已无人维护，推荐的样式模式也已落后。两个一起用会在词汇上打架、互相抵消。二选一。</p>
+          </div>
+        </li>
+        <li>
+          <span class="designing-avoid-x" aria-hidden="true">&times;</span>
+          <div>
+            <span class="designing-avoid-title">把每条命令都固定成快捷方式</span>
+            <p class="designing-avoid-desc">固定快捷方式会把 <code>/audit</code>、<code>/polish</code>、<code>/critique</code> 重新带回菜单。全都固定，就等于把 v3.0 整合时清理干净的 <code>/</code> 菜单重新撑爆。只固定每天都会用的两三条。</p>
+          </div>
+        </li>
+        <li>
+          <span class="designing-avoid-x" aria-hidden="true">&times;</span>
+          <div>
+            <span class="designing-avoid-title">跳过 <code>init</code></span>
+            <p class="designing-avoid-desc">没有 PRODUCT.md 和 DESIGN.md，命令照样能跑，但只会套用千篇一律的 SaaS 模板。有了上下文，下限会显著抬高。init 只要跑一次，之后的每条命令都受益。</p>
+          </div>
+        </li>
+        <li>
+          <span class="designing-avoid-x" aria-hidden="true">&times;</span>
+          <div>
+            <span class="designing-avoid-title">把它当成 linter 用</span>
+            <p class="designing-avoid-desc">Impeccable 是一位有主见的设计搭档，不是一个校验器。它有自己的观点。带着理由反驳，它会配合你调整；毫无理由地无视它的观点，输出只会更差，不会更好。</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <nav class="designing-cta" aria-label="接下来去哪">
+    <a class="designing-cta-card" href="/docs-cn/impeccable/docs/init">
+      <h2 class="designing-cta-card-title">从 <em>init</em> 开始</h2>
+      <p class="designing-cta-card-desc">五分钟需求澄清访谈，得到一份 PRODUCT.md、一份 DESIGN.md，Live Mode 也准备就绪。此后每条命令都从这里开始变得更准。</p>
+    </a>
+    <a class="designing-cta-card" href="/docs-cn/impeccable/tutorials">
+      <h2 class="designing-cta-card-title">打开一份<em>教程</em></h2>
+      <p class="designing-cta-card-desc">三篇简短走查：上手入门、Live Mode，以及用覆盖层做 critique。</p>
+    </a>
+  </nav>
+</div>
+
+<script is:inline>
+  // Phase scroll-spy: highlight the active loop phase in the sticky nav as
+  // the reader scrolls. The active section is the one occupying the band just
+  // under the sticky header + nav (rootMargin clears the anchor seam).
+  (function initPhaseNav() {
+    const nav = document.querySelector('.designing-phasenav');
+    if (!nav || !('IntersectionObserver' in window)) return;
+    const links = [...nav.querySelectorAll('.designing-phasenav-link')];
+    const setActive = (id) => links.forEach((a) =>
+      a.classList.toggle('is-active', a.getAttribute('href') === '#' + id));
+    const sections = links
+      .map((a) => document.getElementById(a.getAttribute('href').slice(1)))
+      .filter(Boolean);
+    if (!sections.length) return;
+    const phaseIds = new Set(sections.map((s) => s.id));
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      const id = a?.getAttribute('href')?.slice(1);
+      if (phaseIds.has(id)) setActive(id);
+    });
+    window.addEventListener('hashchange', () => {
+      const id = location.hash.slice(1);
+      if (phaseIds.has(id)) setActive(id);
+    });
+    const spyTop = matchMedia('(max-width: 600px)').matches ? 124 : 160;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
+    }, { rootMargin: `-${spyTop}px 0px -55% 0px`, threshold: 0 });
+    sections.forEach((s) => observer.observe(s));
+  })();
+
+  // Copy buttons on rendered code blocks
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-copy]');
+    if (!btn) return;
+    const text = btn.getAttribute('data-copy');
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('is-copied');
+      setTimeout(() => btn.classList.remove('is-copied'), 1500);
+    }).catch(() => {});
+  });
+
+  // Mobile sidebar toggle (shown on narrow viewports, hidden on desktop).
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('.skills-sidebar-toggle');
+    if (!toggle) return;
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+  });
+
+  // Before/after split-compare: drag on touch, hover OR drag on mouse.
+  // Pointer events attach to the padded .split-comparison wrapper so
+  // there is a ~20px invisible buffer around the visible box. The
+  // divider only snaps back when the pointer leaves that outer buffer.
+  (function initSplitCompare() {
+    const wrappers = document.querySelectorAll('.split-comparison');
+    if (wrappers.length === 0) return;
+    const hasHover = matchMedia('(hover: hover)').matches;
+    const DEFAULT_POSITION = 50;
+
+    for (const wrapper of wrappers) {
+      const container = wrapper.querySelector('.split-container');
+      const splitAfter = wrapper.querySelector('.split-after');
+      const splitDivider = wrapper.querySelector('.split-divider');
+      if (!container || !splitAfter || !splitDivider) continue;
+
+      const tanAngle = Math.tan(10 * Math.PI / 180);
+      let skewOffset = 8;
+      const recalcSkew = () => {
+        const r = container.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          skewOffset = 50 * r.height * tanAngle / r.width;
+        }
+      };
+      recalcSkew();
+      window.addEventListener('resize', recalcSkew, { passive: true });
+
+      let targetX = DEFAULT_POSITION;
+      let currentX = DEFAULT_POSITION;
+      let rafId = null;
+
+      const paint = (pct) => {
+        const x = Math.max(-skewOffset, Math.min(100 + skewOffset, pct));
+        splitAfter.style.clipPath =
+          `polygon(${x + skewOffset}% 0%, 100% 0%, 100% 100%, ${x - skewOffset}% 100%)`;
+        splitDivider.style.left = `${x}%`;
+      };
+
+      const step = () => {
+        currentX += (targetX - currentX) * 0.2;
+        if (Math.abs(targetX - currentX) < 0.1) {
+          currentX = targetX;
+          rafId = null;
+        } else {
+          rafId = requestAnimationFrame(step);
+        }
+        paint(currentX);
+      };
+
+      const setTarget = (pct) => {
+        targetX = pct;
+        if (rafId === null) rafId = requestAnimationFrame(step);
+      };
+
+      paint(DEFAULT_POSITION);
+
+      // Percentage is always relative to the VISIBLE .split-container,
+      // not the padded .split-comparison wrapper. The pointer event
+      // target is the wrapper but the clip-path math uses the inner box.
+      const pctFromClientX = (clientX) => {
+        const rect = container.getBoundingClientRect();
+        return ((clientX - rect.left) / rect.width) * 100;
+      };
+
+      let hovering = false;
+      let dragging = false;
+
+      wrapper.addEventListener('pointerenter', (e) => {
+        if (hasHover && e.pointerType === 'mouse') {
+          hovering = true;
+        }
+      });
+
+      wrapper.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        wrapper.setPointerCapture(e.pointerId);
+        setTarget(pctFromClientX(e.clientX));
+      });
+
+      wrapper.addEventListener('pointermove', (e) => {
+        if (dragging || hovering) {
+          setTarget(pctFromClientX(e.clientX));
+        }
+      });
+
+      const endDrag = (e) => {
+        if (dragging) {
+          dragging = false;
+          try { wrapper.releasePointerCapture(e.pointerId); } catch {}
+        }
+      };
+
+      wrapper.addEventListener('pointerup', endDrag);
+      wrapper.addEventListener('pointercancel', endDrag);
+
+      wrapper.addEventListener('pointerleave', (e) => {
+        endDrag(e);
+        if (hovering) {
+          hovering = false;
+          setTarget(DEFAULT_POSITION);
+        }
+      });
+    }
+  })();
+</script>
+
+</Base>

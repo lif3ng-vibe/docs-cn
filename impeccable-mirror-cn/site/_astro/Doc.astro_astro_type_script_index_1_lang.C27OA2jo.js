@@ -1,0 +1,1 @@
+import{n as e}from"./word-performances.c5jo_NzU.js";var t=document.querySelector(`.sub-page-title[data-perform]`);t&&e(t,t.dataset.perform,{onView:!0,onHover:!0});

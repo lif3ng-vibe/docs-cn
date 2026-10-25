@@ -1,0 +1,32 @@
+---
+const {
+  rule,
+  visual,
+  layer = 'cli',
+  description = rule.description,
+  categoryLabel = rule.category === 'slop' ? 'AI slop' : '品质',
+  category = rule.category,
+  skillHref = rule.skillSection ? `/docs-cn/impeccable/docs/impeccable#section-${rule.skillSection.toLowerCase().replace(/\s*&\s*/g, '-').replace(/\s+/g, '-')}` : '/docs-cn/impeccable/docs/detector',
+  linkLabel = rule.skillSection ? '在 /impeccable 中查看' : '查看检测器',
+} = Astro.props;
+
+const layerLabel = layer === 'browser' ? '浏览器' : 'CLI';
+const layerTitle = layer === 'browser'
+  ? '确定性的，但需要真实浏览器渲染后的布局。'
+  : '确定性的。对源文件运行 npx impeccable detect。';
+---
+
+<article class="rule-card" id={`rule-${rule.id}`} data-layer={layer}>
+  <div class="rule-card-visual" aria-hidden="true">
+    <div class="rule-card-visual-inner" set:html={visual} />
+  </div>
+  <div class="rule-card-body">
+    <div class="rule-card-head">
+      <span class="rule-card-category" data-category={category}>{categoryLabel}</span>
+      <span class="rule-card-layer" data-layer={layer} title={layerTitle}>{layerLabel}</span>
+    </div>
+    <h3 class="rule-card-name">{rule.name}</h3>
+    <p class="rule-card-desc">{description}</p>
+    <a class="rule-card-skill-link" href={skillHref}>{linkLabel}</a>
+  </div>
+</article>

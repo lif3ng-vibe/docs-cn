@@ -1,0 +1,1 @@
+function e(){let e;try{e=decodeURIComponent(location.hash.slice(1))}catch{return}if(!e)return;let t=document.getElementById(e);if(!t)return;let n=!1,r=t;for(;r;)r instanceof HTMLDetailsElement&&!r.open&&(r.open=!0,n=!0),r=r.parentElement;n&&requestAnimationFrame(()=>t.scrollIntoView({block:`start`}))}e(),window.addEventListener(`hashchange`,e);

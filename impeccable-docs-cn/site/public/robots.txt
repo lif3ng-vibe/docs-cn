@@ -1,0 +1,5 @@
+# 汉化镜像（非官方翻译，内容版权归原作）
+User-agent: *
+Allow: /
+
+Sitemap: https://lif3ng-vibe.github.io/docs-cn/impeccable/sitemap.xml

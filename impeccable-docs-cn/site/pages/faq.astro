@@ -1,0 +1,96 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/sub-pages.css';
+import '../styles/changelog-faq-kinpaku.css';
+---
+
+<Base
+  title="常见问题 | Impeccable（汉化版）"
+  description="关于安装 Impeccable、更新版本、固定命令、故障排查，以及入门 AI 宿主的常见问题解答。"
+  activeNav="docs"
+  canonicalPath="/faq"
+  bodyClass="sub-page kinpaku-chrome kinpaku-surface"
+>
+  <div class="cf-page">
+    <p class="cf-eyebrow">支持</p>
+    <h1 class="cf-title">常见问题</h1>
+    <p class="cf-lede">安装、更新、故障排查，以及新手最先想问的问题。每条解答都支持锚点直达。</p>
+
+    <div class="cf-faq-list">
+      <details id="install-location" class="cf-faq-item">
+        <summary class="cf-faq-question">下载的文件放在哪里？</summary>
+        <div class="cf-faq-answer">
+          <p>最简单的方式是 <code>npx impeccable install</code>：它会列出检测到的宿主文件夹，让你保留或自定义工具列表，并询问安装到当前项目还是全局。非交互式安装可改用 <code>--scope=project</code> 或 <code>--scope=global</code>。</p>
+          <p>如果你下载的是<strong>通用 ZIP</strong>，请解压到<strong>项目根目录</strong>（与 <code>package.json</code> 或 <code>src/</code> 文件夹同级）。它会为每个受支持的工具创建隐藏文件夹：<code>.cursor/</code>、<code>.claude/</code>、<code>.gemini/</code>、<code>.codex/</code>、<code>.agents/</code> 和 <code>.github/</code>。</p>
+          <p>项目级安装优先于全局安装，还能让你把技能纳入版本控制。</p>
+        </div>
+      </details>
+
+      <details id="update" class="cf-faq-item">
+        <summary class="cf-faq-question">如何更新到最新版本？</summary>
+        <div class="cf-faq-answer">
+          <p>在项目根目录运行 <code>npx impeccable update</code>。它会下载最新的技能并清理已废弃的文件。不确定自己是否落后？可以先跑 <code>npx impeccable check</code>，把已安装内容与最新版本做个对比。</p>
+          <ul>
+            <li><strong>重装：</strong><code>npx impeccable install --force</code> 全新安装一遍。</li>
+            <li><strong>Claude Code 插件：</strong>在 Claude Code 中打开 <code>/plugin</code>。</li>
+            <li><strong>npx skills：</strong><code>npx skills add pbakaus/impeccable</code> 也可行，但它为所有宿主安装同一个共享构建，而不是专门为你的宿主编译的版本。</li>
+            <li><strong>手动 ZIP：</strong>从首页下载并解压到项目根目录。</li>
+          </ul>
+          <p>你的 <code>PRODUCT.md</code> 和 <code>DESIGN.md</code> 上下文文件永远不会被覆盖。</p>
+        </div>
+      </details>
+
+      <details id="pin" class="cf-faq-item">
+        <summary class="cf-faq-question">我以前可以直接输入 <code>/critique</code>，怎么把它找回来？</summary>
+        <div class="cf-faq-answer">
+          <p>固定（pin）功能已经内置。运行 <code>/impeccable pin critique</code>，<code>/critique</code> 就会重新成为独立快捷方式，而且不会撤销命令整合。</p>
+          <p>它会在底层写入一个轻量级重定向技能，委托给 <code>/impeccable critique</code>，因此父技能的更新会自动传导过来。这套机制对所有命令都适用。</p>
+          <p><strong>示例：</strong></p>
+          <ul>
+            <li><code>/impeccable pin polish</code> &rarr; <code>/polish</code> 重新可用</li>
+            <li><code>/impeccable pin audit</code> &rarr; <code>/audit</code> 重新可用</li>
+            <li><code>/impeccable pin live</code> &rarr; <code>/live</code> 重新可用</li>
+          </ul>
+          <p>解除固定：<code>/impeccable unpin critique</code>。要查看当前已固定的命令，可在宿主的技能目录（<code>.claude/skills/</code>、<code>.cursor/skills/</code> 等）里查找以被固定命令命名的目录，例如 <code>.claude/skills/critique/</code>。</p>
+        </div>
+      </details>
+
+      <details id="missing-commands" class="cf-faq-item">
+        <summary class="cf-faq-question">命令或技能没有出现，怎么办？</summary>
+        <div class="cf-faq-answer">
+          <p><strong>命令：</strong>在 AI 宿主中输入 <code>/impeccable</code>，看是否出现 <code>/impeccable audit</code>、<code>/impeccable polish</code> 等命令。如果没有出现，请再确认文件位置是否正确。</p>
+          <p><strong>技能：</strong>技能会在相关场景自动应用。想验证的话，可以在提示词里明确提到“使用 impeccable 技能”。这会促使 AI 确认并应用它。</p>
+          <p><strong>各工具的专属设置：</strong></p>
+          <ul>
+            <li><strong>Cursor：</strong>需要 Nightly 渠道，并在 Settings → Rules 中启用 Agent Skills</li>
+            <li><strong>GitHub Copilot：</strong>技能安装到 <code>.github/skills/</code>。设计钩子位于 <code>.github/hooks/impeccable.json</code>，一旦提交到仓库默认分支，就会在 Copilot CLI 与云端代理中同时生效。</li>
+            <li><strong>Gemini CLI：</strong>需要 <code>@google/gemini-cli@preview</code>，并通过 <code>/settings</code> 启用 Skills</li>
+            <li><strong>Codex：</strong>技能不会出现在普通的 <code>/</code> 命令选择器里。请打开 <code>/skills</code> 或输入 <code>$</code>。仓库级安装在 <code>.agents/skills/</code>，用户级安装在 <code>~/.agents/skills/</code>。如果新技能没有显示，重启 Codex 即可。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details id="new-to-harnesses" class="cf-faq-item">
+        <summary class="cf-faq-question">我刚开始接触 AI 宿主，应该从哪里入手？</summary>
+        <div class="cf-faq-answer">
+          <p>技能和命令属于进阶功能。如果你刚上手，请先掌握基础：</p>
+          <ul>
+            <li><strong>Claude Code：</strong> <a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank" rel="noopener">官方文档</a></li>
+            <li><strong>GitHub Copilot：</strong> <a href="https://docs.github.com/en/copilot" target="_blank" rel="noopener">GitHub Copilot 文档</a></li>
+            <li><strong>Cursor：</strong> <a href="https://docs.cursor.com" target="_blank" rel="noopener">Cursor 文档</a></li>
+            <li><strong>Gemini CLI：</strong> <a href="https://geminicli.com/docs/" target="_blank" rel="noopener">Gemini CLI 文档</a></li>
+            <li><strong>Codex CLI：</strong> <a href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex GitHub</a></li>
+          </ul>
+          <p>等你熟悉了基本的提示词编写和代码生成，再回来试试 Impeccable。</p>
+        </div>
+      </details>
+
+      <details id="pricing" class="cf-faq-item">
+        <summary class="cf-faq-question">Impeccable 免费吗？</summary>
+        <div class="cf-faq-answer">
+          <p>免费。所有内容都以 <strong>Apache 2.0</strong> 协议开源：技能、命令、CLI 和检测引擎。完全开源，人人可用。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</Base>

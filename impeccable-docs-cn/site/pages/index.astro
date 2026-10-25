@@ -1,0 +1,704 @@
+---
+import Base from '../layouts/Base.astro';
+import Testimonials from '../components/Testimonials.astro';
+import HeroProof from '../components/HeroProof.astro';
+import LiveSteeringDemo from '../components/LiveSteeringDemo.astro';
+import SlopPatternPreview from '../components/SlopPatternPreview.astro';
+import '../styles/main.css';
+import '../styles/sub-pages.css';
+import '../styles/home-kinpaku.css';
+import '../styles/home-rebuild.css';
+import '../styles/home-refresh.css';
+import '../styles/testimonials.css';
+
+// Hero background is the locked /design-system finalist referenced from CSS:
+// /assets/neo-kinpaku/candidates/finalists/m-01-v2-01.png.
+// Previous hero: /assets/neo-kinpaku/kintsugi-hero-v3.png
+---
+
+<Base
+  title="给智能体补上缺失的设计词汇 | Impeccable（汉化版）"
+  description="1 个技能、23 个命令和精心整理的反模式，成就无可挑剔的前端设计。支持 Cursor、Claude Code、GitHub Copilot、Gemini CLI 和 Codex CLI。"
+  activeNav="home"
+  canonicalPath="/"
+  bodyClass="home-kinpaku kinpaku-chrome"
+  mainId="main-content"
+  mainClass="site-content"
+  ogTitle="Impeccable：面向 AI 宿主的设计技能"
+  ogDescription="1 个技能、23 个命令和精心整理的反模式，成就无可挑剔的前端设计。支持 Cursor、Claude Code、GitHub Copilot、Gemini CLI 和 Codex CLI。"
+  ogImage="https://impeccable.style/og-image-v2.jpg"
+  twitterSite="@pbakaus"
+  twitterCreator="@pbakaus"
+>
+
+<Fragment slot="head">
+  <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-TEXGHC7V34"></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-TEXGHC7V34');
+  </script>
+  <link rel="apple-touch-icon" href="/docs-cn/impeccable/apple-touch-icon.png">
+  <meta name="theme-color" content="#070604">
+</Fragment>
+
+<Fragment slot="before-header">
+  <div class="grain-overlay" aria-hidden="true"></div>
+</Fragment>
+
+<Fragment slot="after-header">
+  <!-- 1. HERO -->
+  <section id="hero" class="hero-rebuild">
+    <div class="hero-rebuild-art" aria-hidden="true"></div>
+    <div class="hero-rebuild-container">
+      <div class="hero-rebuild-left">
+        <h1 class="hero-rebuild-title">给智能体补上缺失的设计词汇。</h1>
+
+        <p class="hero-rebuild-body">
+          Impeccable 阻止 AI 生成的界面塌向同一批俗套特征。它教会你的智能体该避开什么，给你精确的命令去引导它，并在你的生产代码库中审查结果。
+        </p>
+
+        <div class="hero-rebuild-actions">
+          <a href="#downloads" class="ks-button ks-button-primary">
+            开始使用
+            <span class="ks-button-arrow" aria-hidden="true">
+              <svg viewBox="0 0 16 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                <path d="M0 4h14M10 0l4 4-4 4"/>
+              </svg>
+            </span>
+          </a>
+          <a href="/docs-cn/impeccable/designing" class="ks-button ks-button-ghost">工作原理</a>
+        </div>
+
+        <div class="hero-rebuild-logos" aria-label="Impeccable 支持的 AI 编码宿主">
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Codex CLI"><img src="assets/openai-logo.png" alt="Codex CLI" width="20" height="20" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Claude Code"><img src="assets/claude-logo.png" alt="Claude Code" width="22" height="22" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="GitHub Copilot"><img src="assets/github-copilot-logo.svg" alt="GitHub Copilot" width="20" height="20" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Cursor"><img src="assets/cursor-logo.png" alt="Cursor" width="22" height="22" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Gemini CLI"><img src="assets/gemini-logo.png" alt="Gemini CLI" width="20" height="20" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Antigravity"><img src="assets/antigravity-logo.png" alt="Antigravity" width="20" height="20" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="OpenCode"><img src="assets/opencode-logo.png" alt="OpenCode" width="20" height="20" loading="lazy"></span>
+          <span class="hero-rebuild-logo has-tooltip" data-tooltip="Pi"><img src="assets/pi-logo.svg" alt="Pi" width="20" height="20" loading="lazy"></span>
+        </div>
+      </div>
+
+      <div class="hero-rebuild-right">
+        <HeroProof />
+      </div>
+    </div>
+  </section>
+</Fragment>
+
+    <!-- 01b. TESTIMONIALS: five-variant section, switcher in the bottom-right
+         floating panel. Sits between the hero and the slop teaser. The dot-grid
+         divider that used to open the slop section now opens this one. -->
+    <Testimonials />
+
+
+    <SlopPatternPreview />
+
+    <!-- 02. THE LANGUAGE - Commands vocabulary + two steering surfaces -->
+    <section class="language-section" id="language">
+      <div id="solution" style="height:0;overflow:hidden;visibility:hidden"></div>
+      <div class="section-header" data-reveal>
+        <h2 class="section-title">设计语言</h2>
+      </div>
+      <div class="language-content">
+        <div class="language-intro-row" data-reveal>
+          <p class="section-lead">23 个命令为你和 AI 提供一套共享的设计词汇。每个命令对应一类干预：<code>/typeset</code> 针对字体排印，<code>/distill</code> 针对复杂度，<code>/audit</code> 针对生产级质量。任选一个看实际效果，或<a href="/docs-cn/impeccable/docs" class="cheatsheet-link">浏览完整参考 &rarr;</a></p>
+          <div class="language-view-toggle" role="tablist" aria-label="命令视图">
+            <button type="button" role="tab" class="language-view-tab is-active" data-view="palette" aria-selected="true">面板</button>
+            <button type="button" role="tab" class="language-view-tab" data-view="periodic" aria-selected="false">周期表</button>
+          </div>
+        </div>
+
+        <div id="commands-section" style="height:0;overflow:hidden;visibility:hidden"></div>
+
+        <div class="language-view language-view--palette is-active" data-view-panel="palette">
+          <div class="commands-subsection">
+            <div class="commands-gallery">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="language-view language-view--periodic" data-view-panel="periodic" hidden>
+          <div class="solution-visual-interactive" id="framework-viz-container" data-reveal>
+          <!-- Periodic table generated by JS -->
+          </div>
+        </div>
+
+        <section class="language-steering" aria-labelledby="language-steering-title">
+          <header class="language-steering-head">
+            <h3 id="language-steering-title">在对话中定方向，在页面上精修结果。</h3>
+            <p>每一处改动都直接落到你的源码。</p>
+          </header>
+
+          <div class="steering-desktop" data-steering-desktop data-mobile-pane="agent">
+            <div class="steering-desktop-bar">
+              <span class="steering-window-controls" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="steering-desktop-context">main</span>
+              <span class="steering-desktop-brand"><i aria-hidden="true"></i> Claudex Cocursor</span>
+            </div>
+
+            <div class="steering-mobile-tabs" role="tablist" aria-label="引导演示视图">
+              <button type="button" role="tab" class="is-active" data-steering-mobile-tab="agent" aria-selected="true">智能体会话</button>
+              <button type="button" role="tab" data-steering-mobile-tab="browser" aria-selected="false">应用内浏览器</button>
+            </div>
+
+            <div class="steering-desktop-panes">
+              <article class="steering-pane steering-agent" tabindex="0" data-steering-pane="agent">
+                <header class="steering-pane-head">
+                  <span class="steering-pane-title"><i aria-hidden="true"></i> 智能体会话</span>
+                  <span class="steering-pane-meta">工作树</span>
+                </header>
+
+                <div class="steering-thread" data-steering-thread aria-label="Impeccable 智能体会话示例">
+                  <div class="steering-thread-scene" data-steering-thread-scene="polish">
+                    <div class="steering-thread-user">
+                      <span>你</span>
+                      <p><code>/impeccable <span data-steering-active-command>polish</span></code> 定价页。保留我们锋利的直角与沉稳的配色。去掉那些 AI 俗套特征。</p>
+                    </div>
+
+                    <div class="steering-thread-agent" aria-live="polite">
+                      <span>智能体</span>
+                      <p data-steering-agent-copy>我会在页面现有设计系统内进行打磨，然后在交还之前先跑一遍检测器。</p>
+                      <div class="steering-hook-log">
+                        <p><i aria-hidden="true">↳</i><strong>DESIGN.md 已加载</strong><small>已有系统保持不变</small></p>
+                        <p><i aria-hidden="true">↳</i><strong>发现 4 处俗套特征</strong><small>AI 米色 · 斜体衬线 · 侧边标签 · 脉冲圆点</small></p>
+                        <p><i aria-hidden="true">✓</i><strong>已写入源码</strong><small>0 条发现</small></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="steering-thread-scene steering-thread-scene--live" data-steering-thread-scene="live">
+                    <div class="steering-thread-user">
+                      <span>你</span>
+                      <p><code>/impeccable live</code></p>
+                    </div>
+
+                    <div class="steering-thread-agent">
+                      <span>智能体</span>
+                      <p>正在对运行中的应用启动 Live Mode。我会打开页面，然后等待元素选取和页面级引导。</p>
+                      <div class="steering-hook-log">
+                        <p><i aria-hidden="true">↳</i><strong>Live 助手已启动</strong><small>选取器已注入应用</small></p>
+                        <p><i aria-hidden="true">↳</i><strong>localhost:3000 已打开</strong><small>生产源码已连接</small></p>
+                        <p><i aria-hidden="true">●</i><strong>等待输入</strong><small>选取一个元素，或对整页进行引导</small></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="steering-composer-wrap">
+                  <div class="steering-command-menu" aria-label="Impeccable 命令">
+                    <div class="steering-command-query"><span>/impeccable</span><small>选择一个命令</small></div>
+                    <button type="button" class="is-active" data-steering-command="polish" data-agent-copy="我会在页面现有设计系统内进行打磨，然后在交还之前先跑一遍检测器。" aria-pressed="true"><strong>polish</strong><span>最终质量打磨</span><kbd>↵</kbd></button>
+                    <button type="button" data-steering-command="audit" data-agent-copy="我会对页面做无障碍、响应式行为与生产级质量的审查。" aria-pressed="false"><strong>audit</strong><span>生产级质量</span><kbd>↵</kbd></button>
+                    <button type="button" data-steering-command="typeset" data-agent-copy="我会在保留项目现有字体与令牌的前提下理清字体层级。" aria-pressed="false"><strong>typeset</strong><span>字体排印层级</span><kbd>↵</kbd></button>
+                    <button type="button" data-steering-command="distill" data-agent-copy="我会删掉非必要的 UI，让首要任务一目了然。" aria-pressed="false"><strong>distill</strong><span>提炼本质</span><kbd>↵</kbd></button>
+                  </div>
+                  <button type="button" class="steering-composer" aria-label="选择一个 Impeccable 命令">
+                    <span class="steering-composer-plus" aria-hidden="true">+</span>
+                    <p><code>/impeccable <span data-steering-active-command data-steering-composer-command>polish</span></code><span class="steering-composer-caret" aria-hidden="true"></span></p>
+                    <span class="steering-composer-send" aria-hidden="true">↑</span>
+                  </button>
+                </div>
+              </article>
+
+              <article class="steering-pane steering-browser" tabindex="0" data-steering-pane="browser">
+                <header class="steering-pane-head">
+                  <span class="steering-pane-title"><i aria-hidden="true"></i> 浏览器</span>
+                  <span class="steering-pane-meta">实时预览</span>
+                </header>
+                <div class="steering-browser-toolbar" aria-hidden="true">
+                  <span class="steering-browser-nav">
+                    <i><svg viewBox="0 0 16 16"><path d="m9.75 3.5-4.5 4.5 4.5 4.5M5.5 8h6.25" /></svg></i>
+                    <i><svg viewBox="0 0 16 16"><path d="m6.25 3.5 4.5 4.5-4.5 4.5M10.5 8H4.25" /></svg></i>
+                    <i><svg viewBox="0 0 16 16"><path d="M12.5 6A5 5 0 1 0 13 9M12.5 3.5V6H10" /></svg></i>
+                  </span>
+                  <span class="steering-browser-address"><i></i> localhost:3000</span>
+                  <span class="steering-browser-open"><svg viewBox="0 0 16 16"><path d="M9 3h4v4M13 3 7.5 8.5M12 9.5V13H3V4h3.5" /></svg></span>
+                </div>
+                <LiveSteeringDemo />
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+
+    <!-- 05. READY TO DROP IN: bento grid with six tiles. Replaces the
+         carousel (initWhyTabs in app.js returns early when .why-layout is
+         missing, so leaving that JS in place is harmless). Tiles share
+         inner content classes (.why-panel-title, .why-panel-body,
+         .why-visual--*) with the old carousel; only the outer chrome
+         changed. -->
+    <section class="why-section" id="why">
+      <div class="why-content" data-reveal>
+        <div class="section-header">
+          <h2 class="section-title">开箱即用</h2>
+        </div>
+
+        <div class="ks-bento why-bento">
+          <!-- T1: hero, wide. Respects your design system. -->
+          <article class="ks-bento-tile ks-bento-tile--span-8" id="why-respects">
+            <span class="ks-bento-num" data-color="kinpaku">01</span>
+            <h3 class="why-panel-title">尊重你的设计系统。</h3>
+            <p class="why-panel-body">继承你的令牌、组件与约定，而不是覆盖它们。新工作贴合你的系统，而不是模型的默认值。</p>
+            <div class="why-visual why-visual--terminal">
+                <div class="why-terminal">
+                  <div class="why-terminal-header">
+                    <span class="why-terminal-dot"></span>
+                    <span class="why-terminal-dot"></span>
+                    <span class="why-terminal-dot"></span>
+                    <span class="why-terminal-title">/impeccable polish：正在扫描代码库</span>
+                  </div>
+                  <div class="why-terminal-body">
+                    <div class="why-terminal-line why-terminal-line--prompt"><span class="why-terminal-prompt">&rsaquo;</span> 正在遍历 src/…</div>
+                    <div class="why-terminal-line">  <span class="why-terminal-ok">&check;</span> <span class="why-terminal-path">src/styles/tokens.css</span> &nbsp;<span class="why-terminal-meta">14 种颜色、6 个字号、7 档间距</span></div>
+                    <div class="why-terminal-line">  <span class="why-terminal-ok">&check;</span> <span class="why-terminal-path">tailwind.config.ts</span> &nbsp;<span class="why-terminal-meta">已合并 theme.extend</span></div>
+                    <div class="why-terminal-line">  <span class="why-terminal-ok">&check;</span> <span class="why-terminal-path">src/components/</span> &nbsp;<span class="why-terminal-meta">34 个组件</span></div>
+                    <div class="why-terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="why-terminal-meta">&middot; Button：primary、secondary、ghost、destructive</span></div>
+                    <div class="why-terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="why-terminal-meta">&middot; Card：3 种变体，8px / 16px 圆角</span></div>
+                    <div class="why-terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="why-terminal-meta">&middot; Input、Select、Dialog、Toast、Table…</span></div>
+                    <div class="why-terminal-line">  <span class="why-terminal-ok">&check;</span> <span class="why-terminal-path">DESIGN.md</span> &nbsp;<span class="why-terminal-meta">品牌规则已加载</span></div>
+                    <div class="why-terminal-line why-terminal-line--hint"><span class="why-terminal-arrow">&rarr;</span> 匹配你的系统，而不是凭空发明一套。</div>
+                  </div>
+                </div>
+              </div>
+          </article>
+
+          <!-- T2: narrow. Real product context. -->
+          <article class="ks-bento-tile ks-bento-tile--span-4" id="why-product">
+            <span class="ks-bento-num" data-color="patina">02</span>
+            <h3 class="why-panel-title">真实产品上下文。</h3>
+            <p class="why-panel-body">把简报一次性写进 <code>PRODUCT.md</code>。每个命令在设计前都会先读它。</p>
+              <div class="why-visual why-visual--productmd">
+                <div class="why-productmd-file">
+                  <div class="why-productmd-header">
+                    <span class="why-productmd-filename">PRODUCT.md</span>
+                    <span class="why-productmd-status">每个命令都会加载</span>
+                  </div>
+                  <div class="why-productmd-body">
+                    <div class="why-productmd-field">
+                      <span class="why-productmd-k">用户</span>
+                      <span class="why-productmd-v">值班中的 SRE：读得快，常常身处暗色环境。</span>
+                    </div>
+                    <div class="why-productmd-field">
+                      <span class="why-productmd-k">模式</span>
+                      <span class="why-productmd-v">作业。设计服务于任务。</span>
+                    </div>
+                    <div class="why-productmd-field">
+                      <span class="why-productmd-k">品牌语调</span>
+                      <span class="why-productmd-v">冷静、克制、不炒作。</span>
+                    </div>
+                    <div class="why-productmd-field">
+                      <span class="why-productmd-k">反面参照</span>
+                      <span class="why-productmd-v">紫色渐变。玻璃拟态。“提升你的效率。”</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          </article>
+
+          <!-- T3: narrow. DESIGN.md travels. Restored from the parked panel
+               at site/_parked/the-case.astro. -->
+          <article class="ks-bento-tile ks-bento-tile--span-4" id="why-designmd">
+            <span class="ks-bento-num" data-color="kinpaku">03</span>
+            <h3 class="why-panel-title">一份 DESIGN.md 随处可用。</h3>
+            <p class="why-panel-body"><code>/impeccable document</code> 会按 <a href="https://stitch.withgoogle.com/docs/design-md/overview/" target="_blank" rel="noopener">Google Stitch 格式</a>生成一份。你的视觉系统从此可移植。</p>
+            <div class="why-visual why-visual--designmd-v2">
+              <div class="why-dm-header">
+                <span class="why-dm-filename">DESIGN.md</span>
+                <span class="why-dm-badge">Google Stitch 规范</span>
+              </div>
+              <div class="why-dm-grid">
+                <div class="why-dm-tile why-dm-tile--color" style="--c: var(--ks-kinpaku);">
+                  <div class="why-dm-tile-meta"><span>主色</span><span>oklch(78% .12 82)</span></div>
+                  <div class="why-dm-color-hero"></div>
+                  <div class="why-dm-color-ramp">
+                    <span style="background: oklch(22% .04 78)"></span>
+                    <span style="background: oklch(34% .06 78)"></span>
+                    <span style="background: oklch(48% .08 78)"></span>
+                    <span style="background: oklch(61% .085 78)"></span>
+                    <span style="background: oklch(72% .105 82)"></span>
+                    <span style="background: oklch(78% .12 82)"></span>
+                    <span style="background: oklch(84% .075 84)"></span>
+                    <span style="background: oklch(89% .055 84)"></span>
+                  </div>
+                </div>
+                <div class="why-dm-tile why-dm-tile--type">
+                  <div class="why-dm-tile-meta"><span>字标</span><span>Spaced 400</span></div>
+                  <div class="why-dm-type-specimen">IM</div>
+                  <div class="why-dm-type-family">Avenir Next</div>
+                </div>
+                <div class="why-dm-tile why-dm-tile--type">
+                  <div class="why-dm-tile-meta"><span>正文</span><span>Regular 400</span></div>
+                  <div class="why-dm-type-specimen why-dm-type-specimen--sans">Aa</div>
+                  <div class="why-dm-type-family">Avenir Next</div>
+                </div>
+                <div class="why-dm-tile why-dm-tile--components">
+                  <div class="why-dm-tile-meta"><span>组件</span><span>34</span></div>
+                  <div class="why-dm-comp-row">
+                    <span class="why-dm-comp-chip why-dm-comp-chip--primary">Primary</span>
+                    <span class="why-dm-comp-chip">Ghost</span>
+                  </div>
+                  <div class="why-dm-comp-input">邮箱地址</div>
+                </div>
+              </div>
+              <div class="why-dm-foot">所有识别 DESIGN.md 的工具都能读取。</div>
+            </div>
+          </article>
+
+          <!-- T4: wide. V4 creative direction, shown through a real case. -->
+          <article class="ks-bento-tile ks-bento-tile--span-8 why-panel--vizfirst" id="why-tuned">
+            <span class="ks-bento-num" data-color="patina">04</span>
+            <h3 class="why-panel-title">让有能力的模型拥有立场。</h3>
+            <p class="why-panel-body">V4 把真实项目素材变成一个可拥有的界面概念，然后让构建过程始终对齐它。下方是 Neo Mirai 案例。</p>
+              <div class="why-visual why-visual--vizfirst">
+                <div class="why-direction-rail">
+                  <span><i>模式</i> 说服</span>
+                  <span><i>概念</i> 来自近未来的一封文化快讯</span>
+                  <span class="why-direction-locked"><i>方向契约</i> 已锁定</span>
+                </div>
+                <figure class="why-vz-plate why-vz-plate--hifi">
+                  <span class="why-vz-plate-kind">01 &middot; 视觉探针</span>
+                  <a class="why-vz-plate-frame" href="/docs-cn/impeccable/cases/neo-mirai" aria-label="阅读 Neo Mirai 案例研究">
+                    <img src="assets/openai_image_2_hifi.jpg" alt="以编辑风暖纸质感自动生成的高保真落地页视觉稿。" loading="lazy" width="864" height="1821" />
+                  </a>
+                </figure>
+                <figure class="why-vz-plate why-vz-plate--brand">
+                  <span class="why-vz-plate-kind">02 &middot; 方向</span>
+                  <a class="why-vz-plate-frame" href="/docs-cn/impeccable/cases/neo-mirai" aria-label="阅读 Neo Mirai 案例研究">
+                    <img src="assets/openai_image_2_brand.jpg" alt="自动生成的品牌工具包：为一场虚构的 AI 设计大会准备的身份标识组合、配色、字体、图标系统与应用示例。" loading="lazy" width="1536" height="1024" />
+                  </a>
+                </figure>
+                <figure class="why-vz-plate why-vz-plate--live">
+                  <span class="why-vz-plate-kind">03 &middot; 已上线的界面</span>
+                  <a class="why-vz-plate-frame" href="/docs-cn/impeccable/neo-mirai/" aria-label="打开 Neo Mirai 在线成品">
+                    <img src="assets/cases/neo-mirai/live-fold.png" alt="依据生成的会议视觉稿实现的 Neo Mirai 网站首屏与议程成品。" loading="lazy" width="1440" height="1100" />
+                  </a>
+                </figure>
+              </div>
+              <p class="why-panel-meta"><a href="/docs-cn/impeccable/cases/neo-mirai">阅读案例 &rarr;</a> &nbsp;&middot;&nbsp; <a href="/docs-cn/impeccable/neo-mirai/">打开在线成品 &rarr;</a></p>
+          </article>
+
+          <!-- T5: medium. Surface modes replace the old brand/product registers. -->
+          <article class="ks-bento-tile ks-bento-tile--span-6" id="why-modes">
+            <span class="ks-bento-num" data-color="kinpaku">05</span>
+            <h3 class="why-panel-title">清楚每个界面是做什么的。</h3>
+            <p class="why-panel-body">落地页应该能说服人。仪表盘应该帮人干活。Impeccable 在动手设计之前，先点明模式。</p>
+
+              <div class="why-visual why-visual--modes">
+                <div class="why-mode-card why-mode-card--persuade">
+                  <div class="why-mode-head"><strong>说服</strong><span>赢得注意</span></div>
+                  <div class="why-mode-preview" aria-hidden="true">
+                    <span class="why-mode-kicker">一个锋利的点子</span>
+                    <b>让它<br />无法被忽视。</b>
+                    <i>看完整故事</i>
+                  </div>
+                </div>
+                <div class="why-mode-card why-mode-card--operate">
+                  <div class="why-mode-head"><strong>作业</strong><span>完成一项任务</span></div>
+                  <div class="why-mode-preview" aria-hidden="true">
+                    <span class="why-mode-toolbar"></span>
+                    <span class="why-mode-data"><i></i><i></i><i></i></span>
+                    <span class="why-mode-action">处理</span>
+                  </div>
+                </div>
+                <div class="why-mode-card why-mode-card--read">
+                  <div class="why-mode-head"><strong>阅读</strong><span>建立理解</span></div>
+                  <div class="why-mode-preview" aria-hidden="true">
+                    <b>一个清晰的论证。</b>
+                    <span class="why-mode-copy"><i></i><i></i><i></i><i></i></span>
+                  </div>
+                </div>
+                <div class="why-mode-card why-mode-card--experience">
+                  <div class="why-mode-head"><strong>体验</strong><span>让作品本身主导</span></div>
+                  <div class="why-mode-preview" aria-hidden="true">
+                    <span class="why-mode-art"></span>
+                    <b>NEO<br />MIRAI</b>
+                  </div>
+                </div>
+              </div>
+
+          </article>
+
+          <!-- T6: medium. Hooks keep the detector in the agent loop; CI is
+               the final gate rather than the whole story. -->
+          <article class="ks-bento-tile ks-bento-tile--span-6" id="why-ci">
+            <span class="ks-bento-num" data-color="patina">06</span>
+            <h3 class="why-panel-title">在上线前拦住 slop。</h3>
+            <p class="why-panel-body">钩子检查每一次 UI 编辑，并把发现直接发回给智能体。同一套检测器也能让 PR 不过关。</p>
+              <div class="why-visual why-visual--ci">
+                <div class="why-ci-window">
+                  <div class="why-ci-header">
+                    <span class="why-ci-branch">Edit &middot; Hero.tsx</span>
+                    <span class="why-ci-status why-ci-status--hook">钩子已启用</span>
+                  </div>
+                  <div class="why-ci-body why-hook-loop">
+                    <div class="why-hook-step">
+                      <span class="why-hook-mark">1</span>
+                      <span><strong>编辑落盘</strong><small>智能体更新 Hero 区块。</small></span>
+                    </div>
+                    <div class="why-hook-step why-hook-step--found">
+                      <span class="why-hook-mark">2</span>
+                      <span><strong>钩子返回两条发现</strong><small>AI 米色 &middot; 标签被裁切</small></span>
+                    </div>
+                    <div class="why-hook-step why-hook-step--clean">
+                      <span class="why-hook-mark">&#x2713;</span>
+                      <span><strong>智能体修正文件</strong><small>第二轮：干净通过</small></span>
+                    </div>
+                    <div class="why-ci-summary"><span>深度终审</span><strong>0 条发现 &middot; PR 就绪</strong></div>
+                  </div>
+                </div>
+              </div>
+              <p class="why-panel-meta"><a href="/detector">探索检测器实验室 &rarr;</a></p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 06. GET STARTED -->
+    <section class="downloads-rebuild" id="downloads" aria-labelledby="downloads-title">
+      <div class="downloads-rebuild-card">
+      <div class="downloads-rebuild-head">
+        <h2 id="downloads-title" class="downloads-rebuild-title">开始使用</h2>
+      </div>
+
+      <div class="downloads-rebuild-install" data-install-tabs>
+        <div class="downloads-rebuild-cmd-group">
+          <div class="downloads-rebuild-tabs" role="tablist" aria-label="安装方式">
+            <span class="downloads-rebuild-tabs-label">安装途径</span>
+            <button class="downloads-rebuild-tab" type="button" role="tab" id="install-tab-impeccable" aria-controls="install-panel-impeccable update-panel-impeccable" aria-selected="true" data-method="impeccable" title="推荐">impeccable<svg class="downloads-rebuild-tab-rec" width="11" height="11" viewBox="0 0 24 24" role="img" aria-label="推荐"><title>推荐</title><path d="M12 .587l3.668 7.431 8.2 1.193-5.934 5.787 1.401 8.169L12 18.896l-7.335 3.871 1.401-8.169L.132 9.211l8.2-1.193z"/></svg></button>
+            <button class="downloads-rebuild-tab" type="button" role="tab" id="install-tab-marketplace" aria-controls="install-panel-marketplace update-panel-marketplace" aria-selected="false" tabindex="-1" data-method="marketplace"><img class="downloads-rebuild-tab-logo" src="assets/claude-mark.png" alt="" width="13" height="13" loading="lazy" aria-hidden="true">marketplace</button>            <button class="downloads-rebuild-tab" type="button" role="tab" id="install-tab-skills" aria-controls="install-panel-skills update-panel-skills" aria-selected="false" tabindex="-1" data-method="skills">skills.sh</button>
+          </div>
+
+          <p class="downloads-rebuild-copilot-note">
+            <svg class="downloads-rebuild-copilot-note-logo" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.922 16.992c-.861 1.495-5.859 5.023-11.922 5.023-6.063 0-11.061-3.528-11.922-5.023A.641.641 0 0 1 0 16.736v-2.869a.841.841 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.195 10.195 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952 1.399-1.136 3.392-2.093 6.122-2.093 2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.832.832 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256ZM12.172 11h-.344a4.323 4.323 0 0 1-.355.508C10.703 12.455 9.555 13 7.965 13c-1.725 0-2.989-.359-3.782-1.259a2.005 2.005 0 0 1-.085-.104L4 11.741v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.323 4.323 0 0 1-.355-.508h-.016.016Zm.641-2.935c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"/><path d="M14.5 14.25a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Zm-5 0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Z"/></svg>
+            <span>用的是 GitHub Copilot 应用？Impeccable 已<strong>内置</strong>。跳过安装，在 <strong>Settings → Experimental</strong> 中启用即可。</span>
+          </p>
+
+          <div class="downloads-rebuild-method-panel" id="install-panel-impeccable" role="tabpanel" aria-labelledby="install-tab-impeccable" data-method-panel="impeccable">
+            <div class="downloads-rebuild-cmd">
+              <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+              <code>npx impeccable install</code>
+              <button class="downloads-rebuild-copy" type="button" aria-label="复制安装命令" data-copy="npx impeccable install">
+                <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
+            <p class="downloads-rebuild-method-note">安装为你的宿主和模型量身定制的构建。需要 <strong title="Node 22.12+ 会让 npx 停留在当前 CLI 上，而不是回退到过时的旧版本。">Node 22.12+</strong>。</p>
+
+            <details class="downloads-rebuild-branch">
+              <summary class="downloads-rebuild-branch-summary">
+                <svg class="downloads-rebuild-branch-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                <span>为什么一条命令、多种构建</span>
+              </summary>
+              <div class="downloads-rebuild-branch-body">
+                <svg class="downloads-rebuild-branch-diagram" viewBox="0 0 430 210" role="img" aria-label="impeccable 源码会分支出按宿主定制的构建。Gemini 与 Codex 构建附带额外的模型专属 slop 规则，禁止该模型已知的俗套；在工具支持时，每个构建还带有原生钩子接线与子代理。">
+                  <path class="downloads-rebuild-branch-line" d="M104 105 C150 105 150 36 186 36"/>
+                  <path class="downloads-rebuild-branch-line" d="M104 105 C150 105 150 82 186 82"/>
+                  <path class="downloads-rebuild-branch-line" d="M104 105 C150 105 150 128 186 128"/>
+                  <path class="downloads-rebuild-branch-line" d="M104 105 C150 105 150 174 186 174"/>
+
+                  <rect class="downloads-rebuild-branch-root-box" x="6" y="83" width="96" height="44" rx="3"/>
+                  <text class="downloads-rebuild-branch-root-text" x="54" y="109" text-anchor="middle">impeccable</text>
+
+                  <g class="downloads-rebuild-branch-target">
+                    <circle class="downloads-rebuild-branch-dot" cx="188" cy="36" r="3"/>
+                    <text class="downloads-rebuild-branch-name" x="200" y="33">Claude Code</text>
+                    <text class="downloads-rebuild-branch-tags" x="200" y="46">钩子 + 子代理</text>
+                  </g>
+                  <g class="downloads-rebuild-branch-target">
+                    <circle class="downloads-rebuild-branch-dot" cx="188" cy="82" r="3"/>
+                    <text class="downloads-rebuild-branch-name" x="200" y="79">Cursor</text>
+                    <text class="downloads-rebuild-branch-tags" x="200" y="92">编辑前钩子</text>
+                  </g>
+                  <g class="downloads-rebuild-branch-target">
+                    <circle class="downloads-rebuild-branch-dot" cx="188" cy="128" r="3"/>
+                    <text class="downloads-rebuild-branch-name" x="200" y="125">Gemini CLI</text>
+                    <text class="downloads-rebuild-branch-tags downloads-rebuild-branch-tags--slop" x="200" y="138">+ 针对 Gemini 调校的 slop 规则</text>
+                  </g>
+                  <g class="downloads-rebuild-branch-target">
+                    <circle class="downloads-rebuild-branch-dot" cx="188" cy="174" r="3"/>
+                    <text class="downloads-rebuild-branch-name" x="200" y="171">Codex CLI</text>
+                    <text class="downloads-rebuild-branch-tags downloads-rebuild-branch-tags--slop" x="200" y="184">+ 针对 Codex 调校的 slop 规则</text>
+                  </g>
+                </svg>
+                <p class="downloads-rebuild-branch-caption">同一技能，按目标重新编译。关键在于：为带有已知俗套的模型构建时，会附带禁止该模型习惯的额外 slop 规则。Gemini 构建会干掉它的悬停图片动效；Codex 构建会拒绝幽灵卡片与过度圆角。在工具支持的场合，原生钩子接线和子代理也会一并交付。</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="downloads-rebuild-method-panel" id="install-panel-marketplace" role="tabpanel" aria-labelledby="install-tab-marketplace" data-method-panel="marketplace" hidden>
+            <div class="downloads-rebuild-cmd">
+              <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+              <code>/plugin marketplace add pbakaus/impeccable</code>
+              <button class="downloads-rebuild-copy" type="button" aria-label="复制 Claude Code 插件命令" data-copy="/plugin marketplace add pbakaus/impeccable">
+                <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
+            <p class="downloads-rebuild-method-note">仅限 Claude Code。添加 marketplace 后，打开 <code>/plugin</code>，从列表中安装 Impeccable。</p>
+          </div>
+
+          <div class="downloads-rebuild-method-panel" id="install-panel-skills" role="tabpanel" aria-labelledby="install-tab-skills" data-method-panel="skills" hidden>
+            <div class="downloads-rebuild-cmd">
+              <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+              <code>npx skills add pbakaus/impeccable</code>
+              <button class="downloads-rebuild-copy" type="button" aria-label="复制 npx skills 命令" data-copy="npx skills add pbakaus/impeccable">
+                <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
+            <p class="downloads-rebuild-method-note">通用的技能安装器。它为所有宿主安装同一个共享构建，而不是专门为你的宿主编译的版本，因此你会失去各工具原生的命令文件，以及为你的工具调校过的路径。功能完整，只是不够定制。</p>
+          </div>
+        </div>
+
+        <div class="downloads-rebuild-cmd-group">
+          <span class="downloads-rebuild-cmd-label">首次运行</span>
+          <div class="downloads-rebuild-cmd">
+            <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+            <code>/impeccable init</code>
+            <button class="downloads-rebuild-copy" type="button" aria-label="复制首次运行命令" data-copy="/impeccable init">
+              <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+              <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+              <span>复制</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="downloads-rebuild-cmd-group">
+          <span class="downloads-rebuild-cmd-label downloads-rebuild-cmd-label--update">更新</span>
+
+          <div class="downloads-rebuild-method-panel" id="update-panel-impeccable" role="tabpanel" aria-labelledby="install-tab-impeccable" data-method-panel="impeccable">
+            <div class="downloads-rebuild-cmd downloads-rebuild-cmd--update">
+              <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+              <code>npx impeccable update</code>
+              <button class="downloads-rebuild-copy" type="button" aria-label="复制更新命令" data-copy="npx impeccable update">
+                <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="downloads-rebuild-method-panel" id="update-panel-marketplace" role="tabpanel" aria-labelledby="install-tab-marketplace" data-method-panel="marketplace" hidden>
+            <p class="downloads-rebuild-update-menu">在 Claude Code 内的 <code>/plugin</code> 菜单中更新。</p>
+          </div>
+
+          <div class="downloads-rebuild-method-panel" id="update-panel-skills" role="tabpanel" aria-labelledby="install-tab-skills" data-method-panel="skills" hidden>
+            <div class="downloads-rebuild-cmd downloads-rebuild-cmd--update">
+              <span class="downloads-rebuild-prompt" aria-hidden="true">$</span>
+              <code>npx skills update</code>
+              <button class="downloads-rebuild-copy" type="button" aria-label="复制 npx skills update 命令" data-copy="npx skills update">
+                <svg class="downloads-rebuild-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="downloads-rebuild-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p class="downloads-rebuild-note">支持 Cursor、Claude Code、GitHub Copilot、Gemini CLI、Codex CLI 以及其他所有主流 AI 编码宿主。</p>
+
+        <p class="downloads-rebuild-secondary"><a href="/docs-cn/impeccable/tutorials/getting-started">阅读安装指南</a> &middot; <a href="/docs-cn/impeccable/changelog">查看更新内容</a> &middot; <a href="/docs-cn/impeccable/faq">还有疑问？</a></p>
+      </div>
+
+
+      <ul class="downloads-rebuild-extras">
+        <li>
+          <strong>Chrome 扩展</strong>
+          <span>在任意页面运行检测器覆盖层：你的预发布环境、竞品站点，浏览器里的任何页面。</span>
+          <a href="https://chromewebstore.google.com/detail/impeccable/bdkgmiklpdmaojlpflclinlofgjfpabf" target="_blank" rel="noopener">从 Chrome 应用商店安装 →</a>
+        </li>
+        <li>
+          <strong>面向 CI 的 CLI</strong>
+          <span>在 PR 检查中运行 <code>npx impeccable detect src/</code>。58 条确定性规则。JSON 输出，并为构建关卡提供退出码。</span>
+          <a href="https://www.npmjs.com/package/impeccable" target="_blank" rel="noopener">在 npm 上查看 →</a>
+        </li>
+        <li>
+          <strong>关注动态</strong>
+          <span>新命令与反模式背后的设计思考，以长文呈现。阅读 Newsletter，或在 X 上看更短的笔记。</span>
+          <a href="https://impeccablestyle.substack.com" target="_blank" rel="noopener" class="downloads-rebuild-link-primary">阅读 Newsletter →</a>
+          <a href="https://x.com/impeccable_ai" target="_blank" rel="noopener" class="downloads-rebuild-link-secondary">在 X 上关注 @impeccable_ai →</a>
+        </li>
+      </ul>
+
+      <p class="downloads-rebuild-more">了解更多：<a href="/docs-cn/impeccable/tutorials/getting-started">上手指南</a> &middot; <a href="/docs-cn/impeccable/designing">用 Impeccable 做设计</a> &middot; <a href="/docs-cn/impeccable/docs">命令文档</a></p>
+      </div>
+    </section>
+
+<Fragment slot="scripts">
+    <script is:inline>
+      (function () {
+        const root = document.querySelector('[data-install-tabs]');
+        if (!root) return;
+        const tabs = Array.from(root.querySelectorAll('[role="tab"][data-method]'));
+        const panels = Array.from(root.querySelectorAll('[data-method-panel]'));
+        function select(method, focus) {
+          tabs.forEach((tab) => {
+            const on = tab.dataset.method === method;
+            tab.setAttribute('aria-selected', String(on));
+            tab.tabIndex = on ? 0 : -1;
+            if (on && focus) tab.focus();
+          });
+          panels.forEach((panel) => {
+            panel.hidden = panel.dataset.methodPanel !== method;
+          });
+        }
+        tabs.forEach((tab, i) => {
+          tab.addEventListener('click', () => select(tab.dataset.method));
+          tab.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+            event.preventDefault();
+            const step = event.key === 'ArrowRight' ? 1 : tabs.length - 1;
+            select(tabs[(i + step) % tabs.length].dataset.method, true);
+          });
+        });
+      })();
+    </script>
+
+  <script>
+    import '../scripts/app.js';
+  </script>
+</Fragment>
+
+</Base>

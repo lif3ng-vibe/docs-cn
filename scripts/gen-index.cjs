@@ -29,6 +29,7 @@ const TAGS = {
 	'ai-agent':          { en: 'AI Agent',          zh: '智能体' },
 	'multi-agent':       { en: 'Multi-Agent',       zh: '多智能体协作' },
 	'skills':            { en: 'Skills & Prompts',  zh: '技能与提示词' },
+	'frontend-design':   { en: 'Frontend Design',  zh: '前端设计' },
 	'memory':            { en: 'Memory',            zh: '记忆系统' },
 	'testing':           { en: 'Testing',           zh: '测试' },
 	'deployment':        { en: 'Deployment',        zh: '部署运维' },

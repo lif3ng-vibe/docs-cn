@@ -1,0 +1,351 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>上下文文件 | 文档 | Impeccable（汉化版）</title><meta name="description" content="用 PRODUCT.md 记录受众与目标，DESIGN.md 记录视觉系统，页面简报记录只适用于产品某一部分的决策。"><meta name="theme-color" content="#f9f9f9"><link rel="canonical" href="https://impeccable.style/docs/context"><meta property="og:type" content="website"><meta property="og:url" content="https://impeccable.style/docs/context"><meta property="og:title" content="给智能体补上缺失的设计词汇。"><meta property="og:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta property="og:image" content="https://impeccable.style/og-image-v6.png"><meta property="og:image:width" content="1733"><meta property="og:image:height" content="907"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="给智能体补上缺失的设计词汇。"><meta name="twitter:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta name="twitter:image" content="https://impeccable.style/og-image-v6.png"><link rel="icon" type="image/svg+xml" href="/docs-cn/impeccable-mirror/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=Alumni+Sans:wght@200..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><script>// Exceptions we cannot act on, dropped in posthog.astro's before_send. This
+// file is inlined into the page as a classic script (no imports, no exports
+// beyond the one function), so keep it self-contained.
+//
+// Keep unknown rejections, SDK failures and first-party stacks observable.
+// Drop only opaque cross-origin errors, foreign-only stacks, the SDK's own
+// request timeout, and identifiable extension or injected wallet failures.
+function isUnactionableException(properties) {
+  var list = (properties && properties.$exception_list) || [];
+  if (!list.length) return false;
+  var framesOf = function (e) { return (e.stacktrace && e.stacktrace.frames) || []; };
+  var page = function (url) { return String(url || '').split(/[?#]/)[0]; };
+  var currentPage = page(properties.$current_url);
+  var isPage = function (f) { return /^https?:/.test(f.filename || '') && currentPage && page(f.filename) === currentPage; };
+  var foreign = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && own.every(function (f) { return !/^https?:/.test(f.filename || ''); });
+  });
+  var opaque = list.every(function (e) { return e.value === 'Script error.' && framesOf(e).length === 0; });
+  var sdkTimeout = list.every(function (e) {
+    var own = framesOf(e);
+    return /^PostHog request timed out after \d+ms$/.test(e.value || '') && own.length > 0 &&
+      own.every(function (f) { return /^https?:\/\/[^/]+\/relay\/static\//.test(f.filename || ''); });
+  });
+  // PostHog orders frames outermost first. Only discard an extension throw
+  // when the rest of the stack contains page URLs or foreign frames; a
+  // first-party bundle anywhere in the chain keeps the exception actionable.
+  var inExtension = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && /^(webkit-masked-url|chrome-extension|moz-extension|safari-web-extension):/.test(own[own.length - 1].filename || '') &&
+      own.every(function (f) { return !/^https?:/.test(f.filename || '') || isPage(f); });
+  });
+  // This exact Brave iOS wallet injection runs against the page itself.
+  // Other ethereum messages and exceptions from site bundles remain visible.
+  var wallet = list.every(function (e) {
+    var own = framesOf(e);
+    return e.value === "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')" &&
+      own.length > 0 && own.every(isPage);
+  });
+  return foreign || opaque || sdkTimeout || inExtension || wallet;
+}
+</script><script>(function(){const apiKey = "phc_qCpX2jadsFcLpk7T87rjhowCAMGohC3cnNZwn9Y8h9dp";
+const apiHost = "/relay";
+
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+    // Label every event, the first pageview included, by where it ran, so
+    // insights can leave out local dev and PR previews.
+    var host = location.hostname;
+    var environment = host === 'impeccable.style' || host.endsWith('.impeccable.style') ? 'production'
+      : host === 'localhost' || host === '127.0.0.1' ? 'development'
+      : 'preview';
+
+    window.posthog.init(apiKey, {
+      api_host: apiHost,
+      ui_host: 'https://us.posthog.com',
+      defaults: '2026-01-30',
+      // Replay is off, and the privacy policy says nothing about recording.
+      // Keep it off here so a dashboard toggle cannot change that.
+      disable_session_recording: true,
+      // Cloudflare Web Analytics already reports Core Web Vitals, and
+      // $pageleave doubles pageview volume for a scroll-depth signal we do not
+      // use. Together they were about 28% of all events.
+      capture_performance: { web_vitals: false },
+      capture_pageleave: false,
+      capture_exceptions: {
+        capture_unhandled_errors: true,
+        capture_unhandled_rejections: true,
+        capture_console_errors: false,
+      },
+      before_send(event) {
+        if (!event) return event;
+        if (event.event === '$exception' && isUnactionableException(event.properties)) return null;
+        event.properties = { ...event.properties, environment };
+        return event;
+      },
+    });
+  })();</script><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/DocsCommandSyntax.C5rjZV-W.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/kinpaku-tokens.Czfxn__5.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/sub-pages.CTJhASV9.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/Base.C85DQK9e.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/docs-kinpaku.u_zHQAQM.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/docs-system-examples.2_N5xtGa.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/_..T9PZ0Um_.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/docs-reading.BT9XhWTg.css"></head><body class="sub-page skills-layout-page docs-kinpaku kinpaku-chrome"><a href="#main" class="skip-link">跳到正文</a><header class="site-header" data-site-header data-nav-open="false"><a href="/" class="site-header-brand" aria-label="Impeccable 首页"><span class="site-header-brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 2.5 L13.5 2.5 L5.5 21.5 L5 21.5 Q2.5 21.5 2.5 19 L2.5 5 Q2.5 2.5 5 2.5 Z"></path><path d="M16.5 2.5 L19 2.5 Q21.5 2.5 21.5 5 L21.5 19 Q21.5 21.5 19 21.5 L8.5 21.5 Z"></path></svg></span><span class="site-header-brand-name">Impeccable</span></a><button type="button" class="site-header-menu" aria-label="打开导航" aria-expanded="false" aria-controls="site-header-nav-panel" data-site-header-menu><span class="site-header-menu-line" aria-hidden="true"></span><span class="site-header-menu-line" aria-hidden="true"></span></button><div class="site-header-right" id="site-header-nav-panel"><nav class="site-header-nav" aria-label="主导航"><a href="/" data-nav="home">首页</a><a href="/docs-cn/impeccable-mirror/designing" data-nav="designing">设计流程</a><a href="/docs-cn/impeccable-mirror/gallery" data-nav="gallery">画廊</a><a href="/docs-cn/impeccable-mirror/docs" data-nav="docs" aria-current="page">文档</a><a href="/docs-cn/impeccable-mirror/slop" data-nav="slop">Slop</a><a href="/docs-cn/impeccable-mirror/live-mode" data-nav="live">Live</a></nav><a href="https://github.com/pbakaus/impeccable" class="site-header-github" target="_blank" rel="noopener" aria-label="Impeccable 的 GitHub，86k 星"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg><span class="site-header-github-label">86k</span><svg class="site-header-github-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.76 6.36L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.24-.91L12 2z"></path></svg></a></div></header><script>
+  (function () {
+    var header = document.querySelector('[data-site-header]');
+    var btn = document.querySelector('[data-site-header-menu]');
+    var panel = document.getElementById('site-header-nav-panel');
+    if (!header || !btn || !panel) return;
+    var mobile = window.matchMedia('(max-width: 760px)');
+
+    function setOpen(open, restoreFocus) {
+      open = mobile.matches && open;
+      header.setAttribute('data-nav-open', String(open));
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
+      if (restoreFocus) btn.focus();
+      panel.inert = mobile.matches && !open;
+    }
+
+    setOpen(false);
+    btn.addEventListener('click', function () {
+      var open = header.getAttribute('data-nav-open') === 'true';
+      setOpen(!open);
+    });
+
+    panel.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        setOpen(false, mobile.matches);
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && header.getAttribute('data-nav-open') === 'true') {
+        event.preventDefault();
+        setOpen(false, true);
+      }
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.target)) {
+        setOpen(false, panel.contains(document.activeElement));
+      }
+    });
+
+    header.addEventListener('focusout', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.relatedTarget)) {
+        setOpen(false);
+      }
+    });
+
+    mobile.addEventListener('change', function () {
+      setOpen(false, mobile.matches && panel.contains(document.activeElement));
+    });
+  })();
+</script><main id="main"><div class="skills-layout"><aside class="skills-sidebar" aria-label="文档导航"><button class="skills-sidebar-toggle" type="button" aria-expanded="false" aria-controls="skills-sidebar-inner"><span class="skills-sidebar-toggle-label">浏览文档</span><svg class="skills-sidebar-toggle-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><div class="skills-sidebar-inner" id="skills-sidebar-inner"><nav aria-label="指南"><div class="skills-sidebar-group"><h2 class="skills-sidebar-category">从这里开始</h2><ul class="skills-sidebar-list"><li><a href="/docs-cn/impeccable-mirror/tutorials/getting-started"><span>安装与第一步</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/image-generation"><span>启用图像生成</span></a></li></ul></div><div class="skills-sidebar-group"><h2 class="skills-sidebar-category">设计工作流</h2><ul class="skills-sidebar-list"><li><a href="/docs-cn/impeccable-mirror/docs/new-work"><span>构建新东西</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/improve-design"><span>改进现有设计</span></a></li><li><a href="/docs-cn/impeccable-mirror/tutorials/critique-with-overlay"><span>用可视化覆盖层评审</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/design-system"><span>在设计系统内工作</span></a></li><li><a href="/docs-cn/impeccable-mirror/tutorials/iterate-live"><span>在浏览器里迭代</span></a></li></ul></div><div class="skills-sidebar-group"><h2 class="skills-sidebar-category">检查与排错</h2><ul class="skills-sidebar-list"><li><a href="/docs-cn/impeccable-mirror/docs/hooks"><span>自动设计检查</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/detector"><span>运行检测扫描</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/doctor"><span>修复安装问题</span></a></li></ul></div><div class="skills-sidebar-group"><h2 class="skills-sidebar-category">参考</h2><ul class="skills-sidebar-list"><li><a href="/docs-cn/impeccable-mirror/docs/context" aria-current="page"><span>上下文文件</span></a></li><li><a href="/docs-cn/impeccable-mirror/docs/config"><span>配置与忽略</span></a></li></ul></div></nav><details class="docs-command-reference"><summary>命令参考</summary><a class="docs-all-commands" href="/docs-cn/impeccable-mirror/docs#command-reference">全部命令</a><nav class="docs-palette" aria-labelledby="docs-commands-label"><h2 class="skills-sidebar-label" id="docs-commands-label">命令</h2><div class="skills-sidebar-group"><span class="skills-sidebar-category">创建</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/impeccable"><span class="docs-palette-name">impeccable</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/shape"><span class="docs-palette-name">shape</span></a></li></ul></div><div class="skills-sidebar-group"><span class="skills-sidebar-category">评估</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/audit"><span class="docs-palette-name">audit</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/critique"><span class="docs-palette-name">critique</span></a></li></ul></div><div class="skills-sidebar-group"><span class="skills-sidebar-category">精修</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/animate"><span class="docs-palette-name">animate</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/bolder"><span class="docs-palette-name">bolder</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/colorize"><span class="docs-palette-name">colorize</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/delight"><span class="docs-palette-name">delight</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/layout"><span class="docs-palette-name">layout</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/overdrive"><span class="docs-palette-name">overdrive</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/quieter"><span class="docs-palette-name">quieter</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/typeset"><span class="docs-palette-name">typeset</span></a></li></ul></div><div class="skills-sidebar-group"><span class="skills-sidebar-category">简化</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/adapt"><span class="docs-palette-name">adapt</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/clarify"><span class="docs-palette-name">clarify</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/distill"><span class="docs-palette-name">distill</span></a></li></ul></div><div class="skills-sidebar-group"><span class="skills-sidebar-category">加固</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/harden"><span class="docs-palette-name">harden</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/onboard"><span class="docs-palette-name">onboard</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/optimize"><span class="docs-palette-name">optimize</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/polish"><span class="docs-palette-name">polish</span></a></li></ul></div><div class="skills-sidebar-group"><span class="skills-sidebar-category">系统</span><ul class="skills-sidebar-list"><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/document"><span class="docs-palette-name">document</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/extract"><span class="docs-palette-name">extract</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/generate"><span class="docs-palette-name">generate</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/init"><span class="docs-palette-name">init</span></a></li><li><a class="docs-palette-row" href="/docs-cn/impeccable-mirror/docs/live"><span class="docs-palette-name">live</span></a></li></ul></div></nav></details></div></aside><script>
+  // The rail scrolls on its own, and every docs page is a full load, so
+  // without this it starts at the top on each one: scroll down, click a
+  // link, and the link you clicked is gone. The position is kept for the
+  // session and restored here, before first paint, since this script runs
+  // as soon as the rail has parsed. If the current page's link still is not
+  // in view (arrived from elsewhere with a stale position), it is brought
+  // into the rail's view without moving the page.
+  (() => {
+    const rail = document.querySelector('.skills-sidebar');
+    if (!rail) return;
+    const KEY = 'impeccable:docs-rail-scroll';
+    try {
+      const saved = sessionStorage.getItem(KEY);
+      if (saved !== null) rail.scrollTop = Number(saved) || 0;
+    } catch {}
+    const current = rail.querySelector('[aria-current="page"]');
+    if (current && rail.scrollHeight > rail.clientHeight) {
+      const r = current.getBoundingClientRect();
+      const s = rail.getBoundingClientRect();
+      if (r.top < s.top || r.bottom > s.bottom) rail.scrollTop += r.top - s.top - s.height / 2;
+    }
+    let queued = false;
+    rail.addEventListener('scroll', () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        try { sessionStorage.setItem(KEY, String(rail.scrollTop)); } catch {}
+      });
+    }, { passive: true });
+  })();
+
+</script><div class="skills-main"><div class="skills-detail docs-guide"><header class="sub-page-header"><h1 class="sub-page-title">上下文文件</h1><p class="sub-page-lede">把智能体需要了解的项目信息保存下来。</p></header><details class="docs-contents"><summary>本页内容 <span>6 个小节</span></summary><nav aria-label="本页内容"><ol><li><a href="#start-with-your-product">从你的产品开始</a></li><li><a href="#record-an-existing-visual-system">记录已有的视觉系统</a></li><li><a href="#what-goes-where">什么内容放在哪里</a></li><li><a href="#name-the-page-youre-working-on">指明你正在处理的页面</a></li><li><a href="#keep-the-files-useful">让文件保持有用</a></li><li><a href="#reference-details">参考细节</a></li></ol></nav></details><script type="module" src="/docs-cn/impeccable-mirror/_astro/DocsContents.astro_astro_type_script_index_0_lang.D-o4rU-p.js"></script><div class="skills-detail-body docs-body prose"><noscript><p class="docs-syntax-fallback">大多数智能体使用 <code>/impeccable</code>。在 Codex 中则使用 <code>$impeccable</code>。</p></noscript><p>缺失或含糊的上下文会让设计更加泛泛。Impeccable 能读取你的代码，但它还需要理解你的用户、他们的目标，以及你想保留的那些决策。把这些知识随项目保存下来，让它指导后续工作。</p>
+<p>关于保持页面一致的实操走查，见<a href="/docs-cn/impeccable-mirror/docs/design-system">在设计系统内工作</a>。本页介绍各类上下文记录及其解析方式。</p>
+<h2 id="start-with-your-product">从你的产品开始</h2>
+<p>在你的智能体对话里运行：</p>
+<pre class="astro-code impeccable-paper" style="background-color:#EEEEEE;color:#1B1B1B; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>/impeccable init</span></span></code></pre>
+<p>Impeccable 会读取项目，就缺失的上下文提问，并把敲定的细节保存到 <code>PRODUCT.md</code>。请检查它写下的内容。你可以自己编辑该文件，也可以让 Impeccable 修正。</p>
+<p>重点写清楚产品为谁服务、他们要完成什么，以及设计必须满足的种种要求。有用的回答会把用户的处境与一个决策联系起来：</p>
+<blockquote>
+<p>人们离开工位时会在手机上查看服务故障。他们需要看到哪些功能受了影响、是否已有人在处理。</p>
+</blockquote>
+<p>设置阶段不需要指定调色板或挑选字体。</p>
+<h2 id="record-an-existing-visual-system">记录已有的视觉系统</h2>
+<p>如果你的项目已有想保留的视觉风格，运行：</p>
+<pre class="astro-code impeccable-paper" style="background-color:#EEEEEE;color:#1B1B1B; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>/impeccable document</span></span></code></pre>
+<p>Impeccable 会把现有的颜色、字体排印、布局规则和组件记录到 <code>DESIGN.md</code>。在用它指导更多工作之前先通读一遍。凡是记下偶然现象或过时决策的地方，都要修正。</p>
+<p>想要这份记录时单独运行 <code>document</code>；<code>init</code> 只保存产品上下文，不会创建 <code>DESIGN.md</code>。新项目可以通过<a href="/docs-cn/impeccable-mirror/docs/new-work">构建新东西</a>确立视觉方向。</p>
+<h2 id="what-goes-where">什么内容放在哪里</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>应放内容</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PRODUCT.md</code></td>
+<td>受众、目标、平台、约束、术语，以及已确认的品牌承诺。</td>
+<td>“客户在手机上复购耗材。”</td>
+</tr>
+<tr>
+<td><code>DESIGN.md</code></td>
+<td>共享的视觉系统：颜色、字体排印、组件与设计规则。</td>
+<td>“主要操作沿用现有的主按钮。”</td>
+</tr>
+<tr>
+<td><code>.impeccable/surfaces/*.md</code></td>
+<td>针对单个页面或路由的决策，例如它的用途与选定的设计方向。</td>
+<td>“定价页应帮助购买者比较各档方案。”</td>
+</tr>
+<tr>
+<td><code>.impeccable/design.json</code></td>
+<td>供工具使用的生成式设计元数据。用 <code>document</code> 刷新；不要手工编辑。</td>
+<td>组件预览与额外的令牌信息。</td>
+</tr>
+</tbody>
+</table>
+<p>这些 Markdown 文件由你审查与编辑。记录已有系统时，<code>document</code> 会把设计令牌存入 <code>DESIGN.md</code> 的 frontmatter，并在其旁生成额外的元数据。</p>
+<h2 id="name-the-page-youre-working-on">指明你正在处理的页面</h2>
+<pre class="astro-code impeccable-paper" style="background-color:#EEEEEE;color:#1B1B1B; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>/impeccable polish the marketing homepage</span></span>
+<span class="line"><span>/impeccable audit the billing settings</span></span></code></pre>
+<p>首页帮助人们判断产品是否符合自己的需求；账单设置帮助他们完成一项任务。指明页面能让 Impeccable 采用合适的处理方式，而不是把产品的每个部分一概而论。</p>
+<details class="docs-prose-details">
+<summary>Impeccable 如何选择页面的处理方式</summary>
+<p>Impeccable 依据访客到该页面想做什么，采用四种模式：</p>
+<ul>
+<li><strong>说服（Persuade）：</strong>做出决策并行动。落地页、营销活动页与定价页。</li>
+<li><strong>操作（Operate）：</strong>完成一项任务。仪表盘、设置、编辑器及其他应用界面。</li>
+<li><strong>阅读（Read）：</strong>理解某件事。文档、指南与帮助页。</li>
+<li><strong>体验（Experience）：</strong>欣赏作品本身。作品集、画廊与展示页。</li>
+</ul>
+<p>模式由页面决定。开发者工具的落地页可以用「说服」，它的文档则用「阅读」。如果页面用途不明确，就说明访客应在该页面做什么。</p>
+<p>解析出的模式会与该页面的简报一并记录在 <code>.impeccable/surfaces/</code> 下。</p>
+</details>
+<h2 id="keep-the-files-useful">让文件保持有用</h2>
+<p>项目变化时更新上下文：</p>
+<table>
+<thead>
+<tr>
+<th>变化了什么</th>
+<th>该做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>你的受众、目标、平台或产品需求</td>
+<td>编辑 <code>PRODUCT.md</code>，或运行 <code>/impeccable init</code> 重新确认相关细节。</td>
+</tr>
+<tr>
+<td>你的视觉系统</td>
+<td>运行 <code>/impeccable document</code>，从实现中更新记录。</td>
+</tr>
+<tr>
+<td>某个页面的用途或设计方向</td>
+<td>更新它在 <code>.impeccable/surfaces/</code> 下的简报。</td>
+</tr>
+<tr>
+<td>不确定哪些内容过时了</td>
+<td>运行 <code>/impeccable doctor</code>。<a href="/docs-cn/impeccable-mirror/docs/doctor">关于 Doctor</a>。</td>
+</tr>
+</tbody>
+</table>
+<p>如果结果显得泛泛或没对准用户需求，先检查上下文。补上缺失内容、修正过时之处，然后告诉智能体还有哪里需要改进。好的上下文能改善它的判断；反馈则帮助它精修结果。</p>
+<details class="docs-prose-details">
+<summary>在还没有任何代码时先建 DESIGN.md</summary>
+<p>可以让 <code>document</code> 为新项目确立视觉方向。它需要产品上下文和一个要设计的具体首个页面，然后与你一起选定方向。</p>
+<p>得到的 <code>DESIGN.md</code> 会标记为种子（seed）。它记录选定的方向，把未定的实现细节留白。此时还不会生成设计元数据文件。等有了代码再运行一次 <code>document</code>，以捕捉实际的令牌与组件。</p>
+</details>
+<p>要为检测规则做有意豁免，请使用<a href="/docs-cn/impeccable-mirror/docs/config">配置与忽略</a>。</p>
+<h2 id="reference-details">参考细节</h2>
+<details class="docs-context-details">
+<summary>原生应用：iOS、Android 与 adaptive（alpha）</summary>
+<div>
+<p><code>PRODUCT.md</code> 在 <code>## Platform</code> 下记录平台。<a href="/docs-cn/impeccable-mirror/docs/init">init</a> 会从项目推断它，证据不明确时会发问。缺省值为 <code>web</code>。</p>
+<table>
+<thead><tr><th>取值</th><th>适用对象</th><th>设计指南</th></tr></thead>
+<tbody>
+<tr><td><code>web</code></td><td>网站与 Web 应用，包括移动端 Web。</td><td>Web 界面指南。</td></tr>
+<tr><td><code>ios</code></td><td>原生 iPhone 与 iPad 应用。</td><td>Apple Human Interface Guidelines。</td></tr>
+<tr><td><code>android</code></td><td>原生 Android 应用。</td><td>Material Design 3。</td></tr>
+<tr><td><code>adaptive</code></td><td>共享一套代码库，界面随各操作系统自适应。</td><td>同时采用 iOS 与 Android 指南。</td></tr>
+</tbody>
+</table>
+<p><strong>原生支持处于 alpha 阶段。</strong><a href="/docs-cn/impeccable-mirror/docs/audit">audit</a> 与 <a href="/docs-cn/impeccable-mirror/docs/adapt">adapt</a> 会就屏幕阅读器、触控目标与平台惯例采用原生指南。Live Mode、浏览器检测器与设计钩子不会检查原生界面。</p>
+<p>Flutter、React Native 或 Kotlin Multiplatform 可以支持 adaptive 界面，但仅凭框架本身并不能决定取值。移动端 Web 仍算 <code>web</code>，包括在原生壳里展示的网站。</p>
+</div>
+</details>
+<details class="docs-context-details">
+<summary>上下文文件放在哪里（包括 monorepo）</summary>
+<div>
+<p>把 <code>PRODUCT.md</code> 和 <code>DESIGN.md</code> 一起放在项目根目录。Impeccable 也支持 <code>.agents/context/</code> 与 <code>docs/</code>：从根目录开始，按这一顺序采用第一个实际含有上下文的位置。</p>
+<p><strong>在 monorepo 中，每个应用可以有自己的上下文。</strong>应用自己的文件优先；缺失的文件回退到仓库根目录。产品与设计上下文各自独立解析。</p>
+<p>例如，下面这家店铺共用产品的受众与目标，但拥有自己的视觉系统：</p>
+<pre><code>repo/
+├── PRODUCT.md          Shared audience and goals
+├── DESIGN.md           Shared visual system
+└── apps/
+    └── store/
+        ├── DESIGN.md   Store’s visual system
+        └── src/</code></pre>
+<table>
+<thead><tr><th>在 <code>apps/store/</code> 里工作</th><th>Impeccable 读取</th></tr></thead>
+<tbody>
+<tr><td>产品上下文</td><td><code>repo/PRODUCT.md</code></td></tr>
+<tr><td>设计上下文</td><td><code>repo/apps/store/DESIGN.md</code></td></tr>
+</tbody>
+</table>
+<p>如果这家店铺还需要不同的产品上下文，就为它添加自己的 <code>PRODUCT.md</code>。</p>
+<p>项目边界来自 package workspace 声明或 <code>.impeccable/config.json</code> 中的 <code>projectRoots</code>。对于所匹配的路径，配置的模式可以覆盖 package 边界。示例与优先级见<a href="/docs-cn/impeccable-mirror/docs/config">项目边界</a>。</p>
+<p>生成的设计元数据放在 <code>.impeccable/design.json</code>。旧的 <code>DESIGN.json</code> 仍会被识别为回退；用 <a href="/docs-cn/impeccable-mirror/docs/document">document</a> 生成当前格式。</p>
+</div>
+</details>
+<details class="docs-context-details">
+<summary>上下文与代码不一致时怎么办</summary>
+<div>
+<p>每种记录回答的是不同的问题：</p>
+<ul>
+<li><strong>PRODUCT.md：</strong>产品为谁服务、承诺什么，以及哪些要求与品牌承诺必须成立。</li>
+<li><strong>DESIGN.md：</strong>共享的视觉选择、组件与交互规则。</li>
+<li><strong>页面简报：</strong>该页面要达成什么，以及为它选定的方向。</li>
+</ul>
+<p>实现本身也是证据。当既有惯例比文档更新时，Impeccable 应当保留它们。</p>
+<p>例如，代码已用上你批准的新字体而 <code>DESIGN.md</code> 还写着旧字体，就更新记录；如果代码引入了一次意外的字体改动，就修代码。当证据不足以裁定时，说明哪个决策是当前有效的。</p>
+<p>用 <a href="/docs-cn/impeccable-mirror/docs/document">document</a> 刷新已有视觉系统的记录，或用 <a href="/docs-cn/impeccable-mirror/docs/doctor">doctor</a> 检查过时或不兼容的上下文。</p>
+</div>
+</details>
+<details class="docs-context-details">
+<summary>检测器会对照设计系统检查什么</summary>
+<div>
+<p>当 <code>DESIGN.md</code> 可用时，检测器与设计钩子可以检查是否偏离了记录在案的设计值：</p>
+<table>
+<thead><tr><th>规则</th><th>检查内容</th></tr></thead>
+<tbody>
+<tr><td><code>design-system-font</code></td><td>记录的类型系统之外的字体。</td></tr>
+<tr><td><code>design-system-color</code></td><td>调色板与配套文件色阶之外的硬编码颜色。</td></tr>
+<tr><td><code>design-system-radius</code></td><td>记录刻度之外的圆角半径。</td></tr>
+<tr><td><code>design-system-font-size</code></td><td>记录的字号刻度之外的硬编码字号。</td></tr>
+</tbody>
+</table>
+<p>这些检查需要对应的设计值。文件存在本身并不构成完整的系统。用 <a href="/docs-cn/impeccable-mirror/docs/document">document</a> 让 <code>DESIGN.md</code> 及其生成的配套文件保持最新。</p>
+<p><code>DESIGN.md</code> 缺失、配置将其停用或扫描使用 <code>--no-design-system</code> 时，设计系统检查会被跳过。其他检测器检查仍会运行。扫描选项见 <a href="/docs-cn/impeccable-mirror/docs/detector">Detector CLI</a>，有意豁免见<a href="/docs-cn/impeccable-mirror/docs/config">配置与忽略</a>。</p>
+</div>
+</details>
+<details class="docs-context-details">
+<summary>从旧的 brand/product 调性升级</summary>
+<div>
+<p>模式取代了旧的 <strong>brand/product 调性</strong>：brand 对应说服（Persuade），product 对应操作（Operate）；阅读（Read）与体验（Experience）覆盖以学习或探索为目的的页面。</p>
+<p>模式归属于页面的简报。<code>PRODUCT.md</code> 里旧的 <code>## Register</code> 小节已不再使用。<a href="/docs-cn/impeccable-mirror/docs/doctor">doctor</a> 会标记它并提议移除，以免后来的读者误以为它仍是现行设置。</p>
+</div>
+</details>
+</div></div></div></div><script>
+    document.addEventListener('click', (e) => {
+      const toggle = e.target.closest('.skills-sidebar-toggle');
+      if (!toggle) return;
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+    });
+  </script><script type="module" src="/docs-cn/impeccable-mirror/_astro/Doc.astro_astro_type_script_index_0_lang.CtelqPQc.js"></script><script type="module" src="/docs-cn/impeccable-mirror/_astro/Doc.astro_astro_type_script_index_1_lang.C27OA2jo.js"></script><script type="module" src="/docs-cn/impeccable-mirror/_astro/Doc.astro_astro_type_script_index_2_lang.DdcAfEke.js"></script></main><footer class="site-footer"><div class="footer-row"><a class="footer-logo" href="/">Impeccable</a><nav class="footer-links" aria-label="页脚"><a href="/docs-cn/impeccable-mirror/gallery">画廊</a><a href="/docs-cn/impeccable-mirror/changelog">更新日志</a><a href="/docs-cn/impeccable-mirror/faq">常见问题</a><a href="/docs-cn/impeccable-mirror/privacy">隐私</a><a href="https://app.vanta.com/renaissance-geek.ai/trust/jhldu1ow0u17opmmk3s7zk">信任中心</a><a href="https://github.com/pbakaus/impeccable">GitHub</a></nav><div class="footer-credit"><span>作者：<a href="https://x.com/pbakaus" target="_blank" rel="noopener">Paul Bakaus</a></span><a href="https://x.com/pbakaus" class="footer-social-link" aria-label="在 X 上关注" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a><a href="https://linkedin.com/in/paulbakaus" class="footer-social-link" aria-label="在 LinkedIn 上连接" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg></a></div></div></footer><script type="module" src="/docs-cn/impeccable-mirror/_astro/Base.astro_astro_type_script_index_0_lang.BD-jcN2D.js"></script><!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2375b0fdc85c43a68f4b0e89cc6ae43c"}'></script><!-- Cloudflare Pages Analytics --></body></html>

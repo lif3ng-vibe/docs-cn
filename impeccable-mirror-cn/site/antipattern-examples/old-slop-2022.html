@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>流明 — 智能工作流的未来</title>
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a14;
+    --bg-elev: #14141f;
+    --text: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --border: rgba(255, 255, 255, 0.08);
+    --purple: #8b5cf6;
+    --violet: #7c3aed;
+    --pink: #ec4899;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(24px);
+    background: rgba(10, 10, 20, 0.6);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1180px; margin: 0 auto;
+    padding: 18px 32px;
+    display: flex; align-items: center; gap: 40px;
+  }
+  .logo {
+    font-weight: 700; font-size: 22px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; }
+  .nav-cta { margin-left: auto; display: flex; gap: 16px; align-items: center; }
+  .nav-cta a { font-size: 14px; color: var(--text-muted); text-decoration: none; }
+  .pill {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    padding: 9px 18px; border-radius: 999px;
+    font-weight: 600; font-size: 14px;
+    box-shadow: 0 0 32px rgba(139, 92, 246, 0.5);
+  }
+
+  /* Hero */
+  .hero {
+    padding: 140px 32px 160px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: 0;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 100px; right: 5%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: 0;
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .eyebrow {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 32px;
+  }
+  .h1 {
+    font-weight: 800;
+    font-size: clamp(48px, 7vw, 88px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    max-width: 920px;
+    margin: 0 auto 28px;
+    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 50%, var(--pink) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede {
+    font-size: 20px;
+    color: var(--text-muted);
+    max-width: 620px;
+    margin: 0 auto 44px;
+  }
+  .ctas { display: flex; gap: 16px; justify-content: center; margin-bottom: 48px; }
+  .btn {
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.2s ease;
+    border: 0;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5), 0 4px 16px rgba(139, 92, 246, 0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 60px rgba(139, 92, 246, 0.7);
+  }
+  .btn-ghost {
+    color: #fff;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+  }
+  .trust { font-size: 13px; color: var(--text-muted); }
+  .trust strong { color: #fff; font-weight: 600; }
+
+  /* Logo strip */
+  .logos {
+    padding: 56px 32px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .logos-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 32px;
+    font-weight: 600; font-size: 18px; color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  /* Features */
+  .features {
+    padding: 120px 32px;
+    max-width: 1180px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .features-head {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 80px;
+  }
+  .features-head h2 {
+    font-weight: 800;
+    font-size: clamp(36px, 4.5vw, 52px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0 0 20px;
+    background: linear-gradient(135deg, #fff, #c4b5fd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .features-head p { font-size: 18px; color: var(--text-muted); margin: 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 32px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .card:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    background: rgba(139, 92, 246, 0.04);
+    transform: translateY(-4px);
+  }
+  .icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 32px rgba(139, 92, 246, 0.4);
+  }
+  .card h3 {
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .card p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* CTA */
+  .cta-section {
+    padding: 120px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+  }
+  .cta-section > * { position: relative; }
+  .cta-section h2 {
+    font-weight: 800;
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0 0 20px;
+    max-width: 720px;
+    margin-left: auto; margin-right: auto;
+    background: linear-gradient(135deg, #fff, #c4b5fd, var(--pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .cta-section p {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin: 0 auto 40px;
+    max-width: 540px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 40px 32px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+<style>
+  /* Keep the embedded detector's findings inset, without its decorative dot. */
+  .impeccable-banner > span:first-child:empty { display: none; }
+  .impeccable-banner > div:first-of-type { scroll-padding-inline: 12px; }
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo">流明 ✨</div>
+      <div class="nav-links">
+        <a href="#">产品</a>
+        <a href="#">解决方案</a>
+        <a href="#">定价</a>
+        <a href="#">客户</a>
+        <a href="#">文档</a>
+      </div>
+      <div class="nav-cta">
+        <a href="#">登录</a>
+        <a href="#" class="pill">开始使用 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="eyebrow">🚀 AI 强力驱动</div>
+    <h1 class="h1">用智能工作流更快构建</h1>
+    <p class="lede">一站式平台，帮助现代团队以前所未有的速度交付更好的产品。由 AI 驱动，为人而设计。</p>
+    <div class="ctas">
+      <a href="#" class="btn btn-primary">加入等候名单 →</a>
+      <a href="#" class="btn btn-ghost">观看演示</a>
+    </div>
+    <div class="trust">获得 <strong>顶级投资机构</strong> 支持</div>
+  </section>
+
+  <section class="logos">
+    <div class="logos-inner">
+      <span>北风</span>
+      <span>宁和</span>
+      <span>子午</span>
+      <span>札记</span>
+      <span>擎天洋行</span>
+      <span>真言</span>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="features-head">
+      <h2>更快交付所需的一切</h2>
+      <p>一个平台。无限可能。为未来而打造。</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h3>快如闪电</h3>
+        <p>从想法到上线只要几分钟，而不是几个月。AI 替你干重活，你只管专注要紧的事。</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔒</div>
+        <h3>企业级安全</h3>
+        <p>符合 SOC 2 的基础设施，端到端加密。你的数据永远安全。</p>
+      </div>
+      <div class="card">
+        <div class="icon">📈</div>
+        <h3>为规模而生</h3>
+        <p>从第一个原型到数百万用户，流明随你的团队轻松成长。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>准备好改变团队的构建方式了吗？</h2>
+    <p>加入数千个已用流明加速交付的团队。</p>
+    <a href="#" class="btn btn-primary">抢先体验 →</a>
+  </section>
+
+  <footer class="footer">
+    © 2022 流明公司。由 AI 驱动，坐标旧金山。
+  </footer>
+<script src="/docs-cn/impeccable-mirror/js/detect-antipatterns-browser.js"></script>
+<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2375b0fdc85c43a68f4b0e89cc6ae43c"}'></script><!-- Cloudflare Pages Analytics --></body>
+</html>

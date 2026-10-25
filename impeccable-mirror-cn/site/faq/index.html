@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>常见问题 | Impeccable（汉化版）</title><meta name="description" content="安装与更新 Impeccable、排查技能缺失、创建命令快捷方式以及上手指引等常见问题解答。"><meta name="theme-color" content="#f9f9f9"><link rel="canonical" href="https://impeccable.style/faq"><meta property="og:type" content="website"><meta property="og:url" content="https://impeccable.style/faq"><meta property="og:title" content="给智能体补上缺失的设计词汇。"><meta property="og:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta property="og:image" content="https://impeccable.style/og-image-v6.png"><meta property="og:image:width" content="1733"><meta property="og:image:height" content="907"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="给智能体补上缺失的设计词汇。"><meta name="twitter:description" content="把 AI slop 变成你乐于上线的界面。Impeccable 赋予你的智能体设计专业能力：从零构建、改进现有页面、忠实遵循你的设计系统。"><meta name="twitter:image" content="https://impeccable.style/og-image-v6.png"><link rel="icon" type="image/svg+xml" href="/docs-cn/impeccable-mirror/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=Alumni+Sans:wght@200..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><script>// Exceptions we cannot act on, dropped in posthog.astro's before_send. This
+// file is inlined into the page as a classic script (no imports, no exports
+// beyond the one function), so keep it self-contained.
+//
+// Keep unknown rejections, SDK failures and first-party stacks observable.
+// Drop only opaque cross-origin errors, foreign-only stacks, the SDK's own
+// request timeout, and identifiable extension or injected wallet failures.
+function isUnactionableException(properties) {
+  var list = (properties && properties.$exception_list) || [];
+  if (!list.length) return false;
+  var framesOf = function (e) { return (e.stacktrace && e.stacktrace.frames) || []; };
+  var page = function (url) { return String(url || '').split(/[?#]/)[0]; };
+  var currentPage = page(properties.$current_url);
+  var isPage = function (f) { return /^https?:/.test(f.filename || '') && currentPage && page(f.filename) === currentPage; };
+  var foreign = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && own.every(function (f) { return !/^https?:/.test(f.filename || ''); });
+  });
+  var opaque = list.every(function (e) { return e.value === 'Script error.' && framesOf(e).length === 0; });
+  var sdkTimeout = list.every(function (e) {
+    var own = framesOf(e);
+    return /^PostHog request timed out after \d+ms$/.test(e.value || '') && own.length > 0 &&
+      own.every(function (f) { return /^https?:\/\/[^/]+\/relay\/static\//.test(f.filename || ''); });
+  });
+  // PostHog orders frames outermost first. Only discard an extension throw
+  // when the rest of the stack contains page URLs or foreign frames; a
+  // first-party bundle anywhere in the chain keeps the exception actionable.
+  var inExtension = list.every(function (e) {
+    var own = framesOf(e);
+    return own.length > 0 && /^(webkit-masked-url|chrome-extension|moz-extension|safari-web-extension):/.test(own[own.length - 1].filename || '') &&
+      own.every(function (f) { return !/^https?:/.test(f.filename || '') || isPage(f); });
+  });
+  // This exact Brave iOS wallet injection runs against the page itself.
+  // Other ethereum messages and exceptions from site bundles remain visible.
+  var wallet = list.every(function (e) {
+    var own = framesOf(e);
+    return e.value === "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')" &&
+      own.length > 0 && own.every(isPage);
+  });
+  return foreign || opaque || sdkTimeout || inExtension || wallet;
+}
+</script><script>(function(){const apiKey = "phc_qCpX2jadsFcLpk7T87rjhowCAMGohC3cnNZwn9Y8h9dp";
+const apiHost = "/relay";
+
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+    // Label every event, the first pageview included, by where it ran, so
+    // insights can leave out local dev and PR previews.
+    var host = location.hostname;
+    var environment = host === 'impeccable.style' || host.endsWith('.impeccable.style') ? 'production'
+      : host === 'localhost' || host === '127.0.0.1' ? 'development'
+      : 'preview';
+
+    window.posthog.init(apiKey, {
+      api_host: apiHost,
+      ui_host: 'https://us.posthog.com',
+      defaults: '2026-01-30',
+      // Replay is off, and the privacy policy says nothing about recording.
+      // Keep it off here so a dashboard toggle cannot change that.
+      disable_session_recording: true,
+      // Cloudflare Web Analytics already reports Core Web Vitals, and
+      // $pageleave doubles pageview volume for a scroll-depth signal we do not
+      // use. Together they were about 28% of all events.
+      capture_performance: { web_vitals: false },
+      capture_pageleave: false,
+      capture_exceptions: {
+        capture_unhandled_errors: true,
+        capture_unhandled_rejections: true,
+        capture_console_errors: false,
+      },
+      before_send(event) {
+        if (!event) return event;
+        if (event.event === '$exception' && isUnactionableException(event.properties)) return null;
+        event.properties = { ...event.properties, environment };
+        return event;
+      },
+    });
+  })();</script><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/DocsCommandSyntax.C5rjZV-W.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/sub-pages.CTJhASV9.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/faq.DRp2TOxa.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/kinpaku-tokens.Czfxn__5.css"><link rel="stylesheet" href="/docs-cn/impeccable-mirror/_astro/Base.C85DQK9e.css"></head><body class="sub-page kinpaku-chrome kinpaku-surface"><a href="#main" class="skip-link">跳到正文</a><header class="site-header" data-site-header data-nav-open="false"><a href="/" class="site-header-brand" aria-label="Impeccable 首页"><span class="site-header-brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 2.5 L13.5 2.5 L5.5 21.5 L5 21.5 Q2.5 21.5 2.5 19 L2.5 5 Q2.5 2.5 5 2.5 Z"></path><path d="M16.5 2.5 L19 2.5 Q21.5 2.5 21.5 5 L21.5 19 Q21.5 21.5 19 21.5 L8.5 21.5 Z"></path></svg></span><span class="site-header-brand-name">Impeccable</span></a><button type="button" class="site-header-menu" aria-label="打开导航" aria-expanded="false" aria-controls="site-header-nav-panel" data-site-header-menu><span class="site-header-menu-line" aria-hidden="true"></span><span class="site-header-menu-line" aria-hidden="true"></span></button><div class="site-header-right" id="site-header-nav-panel"><nav class="site-header-nav" aria-label="主导航"><a href="/" data-nav="home">首页</a><a href="/docs-cn/impeccable-mirror/designing" data-nav="designing">设计流程</a><a href="/docs-cn/impeccable-mirror/gallery" data-nav="gallery">画廊</a><a href="/docs-cn/impeccable-mirror/docs" data-nav="docs">文档</a><a href="/docs-cn/impeccable-mirror/slop" data-nav="slop">Slop</a><a href="/docs-cn/impeccable-mirror/live-mode" data-nav="live">Live</a></nav><a href="https://github.com/pbakaus/impeccable" class="site-header-github" target="_blank" rel="noopener" aria-label="Impeccable 的 GitHub，86k 星"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg><span class="site-header-github-label">86k</span><svg class="site-header-github-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.76 6.36L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.24-.91L12 2z"></path></svg></a></div></header><script>
+  (function () {
+    var header = document.querySelector('[data-site-header]');
+    var btn = document.querySelector('[data-site-header-menu]');
+    var panel = document.getElementById('site-header-nav-panel');
+    if (!header || !btn || !panel) return;
+    var mobile = window.matchMedia('(max-width: 760px)');
+
+    function setOpen(open, restoreFocus) {
+      open = mobile.matches && open;
+      header.setAttribute('data-nav-open', String(open));
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
+      if (restoreFocus) btn.focus();
+      panel.inert = mobile.matches && !open;
+    }
+
+    setOpen(false);
+    btn.addEventListener('click', function () {
+      var open = header.getAttribute('data-nav-open') === 'true';
+      setOpen(!open);
+    });
+
+    panel.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        setOpen(false, mobile.matches);
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && header.getAttribute('data-nav-open') === 'true') {
+        event.preventDefault();
+        setOpen(false, true);
+      }
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.target)) {
+        setOpen(false, panel.contains(document.activeElement));
+      }
+    });
+
+    header.addEventListener('focusout', function (event) {
+      if (header.getAttribute('data-nav-open') === 'true' && !header.contains(event.relatedTarget)) {
+        setOpen(false);
+      }
+    });
+
+    mobile.addEventListener('change', function () {
+      setOpen(false, mobile.matches && panel.contains(document.activeElement));
+    });
+  })();
+</script><main id="main"><div class="cf-page docs-kinpaku"><h1 class="cf-title">常见问题</h1><p class="cf-lede">完成安装、保持 Impeccable 为最新版本，并在出问题时找到解决办法。</p><noscript><p class="docs-syntax-fallback">大多数智能体使用 <code>/impeccable</code>。在 Codex 中使用 <code>$impeccable</code>。</p></noscript><div class="cf-faq-list prose"><details id="new-to-harnesses" class="cf-faq-item"><summary class="cf-faq-question">我是 AI 编程工具的新手，该从哪里开始？</summary><div class="cf-faq-answer"><p>在一个<a href="/docs-cn/impeccable-mirror/tutorials/getting-started#supported-tools">受支持的编程工具</a>里打开你的项目，然后跟随<a href="/docs-cn/impeccable-mirror/tutorials/getting-started">入门教程</a>。它会带你完成安装与项目上下文设置，再让你选择构建新页面还是改进现有页面。</p><p>你不需要设计经验，也不必记住一堆设计术语。只要描述你在做什么、给谁用、哪里感觉不对劲。例如，在智能体对话里输入：</p><pre><code class="language-text">/impeccable 这个仪表盘上重要信息容易被淹没，帮我把它变得更清晰。
+</code></pre><p>如果你对编程工具本身也不熟悉，先看它的「打开项目」和「与智能体对话」入门指南。Impeccable 可以边用边学。</p></div></details><details id="install-location" class="cf-faq-item"><summary class="cf-faq-question">如何安装 Impeccable，或使用下载的文件？</summary><div class="cf-faq-answer"><p><strong>在终端里</strong>，进入项目文件夹并运行：</p><pre><code class="language-sh">npx impeccable install
+</code></pre><p>选择你的编程工具，以及是只装到当前项目还是所有项目。安装器会自动挑选匹配的构建版本。需要 Node.js 18.19 或更高版本。安装完成后请重新加载你的编程工具。</p><p><strong>下载的是 ZIP？</strong> 把其中内容（包括隐藏文件夹）复制到项目根目录，与 <code>package.json</code> 或 <code>src/</code> 并排，不要多套一层文件夹。压缩包里的 <code>README.txt</code> 说明了每种工具对应的文件夹。</p><p>例如，Codex 的项目级安装包含：</p><pre><code class="language-text">your-project/
+├── .agents/
+│   └── skills/
+│       └── impeccable/
+│           └── SKILL.md
+├── package.json
+└── src/
+</code></pre><p>在 macOS 上，在访达中按 <strong>Command–Shift–.</strong> 显示隐藏文件夹。其他安装方式见<a href="/#downloads">「安装 Impeccable」</a>。</p></div></details><details id="update" class="cf-faq-item"><summary class="cf-faq-question">如何更新 Impeccable？</summary><div class="cf-faq-answer"><p>如果是用 Impeccable 安装器安装的，请在<strong>终端</strong>里运行：</p><pre><code class="language-sh">npx impeccable update
+</code></pre><p>在项目文件夹里运行。如果项目级和用户级安装并存，会让你选择更新哪一个；也可以直接用 <code>--project</code> 或 <code>--user</code> 指定。</p><p>想先检查是否有更新，运行 <code>npx impeccable check</code>。更新会替换 Impeccable 安装的文件；不会动你项目的 <code>PRODUCT.md</code> 和 <code>DESIGN.md</code>。</p><p><strong>用其他方式安装的？</strong> 就走同样的渠道更新：</p><ul><li><strong>市场或插件：</strong>用你编程工具的插件管理器更新。</li><li><strong>npx skills：</strong>重新运行 <code>npx skills add pbakaus/impeccable</code>。这会安装通用构建；Impeccable 安装器则会为你的工具挑选专用构建。</li><li><strong>ZIP：</strong>从主页下载当前压缩包，替换已安装的 Impeccable 文件。</li></ul><p>之后重新加载编程工具。只有确实想覆盖现有安装时才用 <code>npx impeccable install --force</code>。</p></div></details><details id="missing-commands" class="cf-faq-item"><summary class="cf-faq-question">Impeccable 没出现或没反应，应该检查什么？</summary><div class="cf-faq-answer"><ol><li><strong>检查安装。</strong>确认安装时选对了你在用的编程工具；项目级安装必须装在当前打开的项目里。复制 ZIP 安装的话，也要检查隐藏文件夹。</li><li><strong>重新加载工具。</strong>新装的技能可能要重载或新开会话才会出现。</li><li><strong>直接呼叫 Impeccable。</strong>在智能体对话里试试：</li></ol><pre><code class="language-text">/impeccable
+</code></pre><p>设计命令都隶属这个主技能。<code>audit</code>、<code>polish</code>、<code>critique</code> 不需要单独安装。</p><p>用命令框里的切换开关可换成 Codex 语法。在 Codex CLI 或 IDE 扩展中，也可以打开 <code>/skills</code> 或输入 <code>$</code> 查看已装技能。参见<a href="https://learn.chatgpt.com/docs/build-skills#how-codex-uses-skills">Codex 技能指引</a>。</p><p><strong>还是没有？</strong>检查你工具的技能设置与发现列表：</p><ul><li><strong>Cursor：</strong>在发现的技能里找 Impeccable。参见 <a href="https://cursor.com/docs/skills">Cursor 技能文档</a>。</li><li><strong>Gemini CLI：</strong>运行 <code>/skills list</code>；改动安装后用 <code>/skills reload</code>。参见 <a href="https://geminicli.com/docs/cli/using-agent-skills/">Gemini 技能管理</a>。</li><li><strong>GitHub Copilot：</strong>确认你使用的环境支持 agent skills。参见 <a href="https://docs.github.com/en/copilot/concepts/agents/about-agent-skills">Copilot agent skills 文档</a>。</li></ul><p>如果 Impeccable 已可用但自动检查毫无动静，请按<a href="/docs-cn/impeccable-mirror/docs/hooks#allow-the-hook-in-your-harness">钩子设置指南</a>排查。技能发现与钩子运行权限是两个独立的检查。</p></div></details><details id="pin" class="cf-faq-item"><summary class="cf-faq-question">能给常用命令设个快捷方式吗？</summary><div class="cf-faq-answer"><p>在<strong>智能体对话</strong>里固定（pin）它：</p><pre><code class="language-text">/impeccable pin critique
+</code></pre><p>这会在你的编程工具里添加 <code>critique</code> 的快捷方式。它会把请求转发给 Impeccable，因此主技能的改进会同步生效。<code>polish</code>、<code>audit</code>、<code>live</code> 等命令也可以固定。</p><p>移除快捷方式：</p><pre><code class="language-text">/impeccable unpin critique
+</code></pre><p>移除快捷方式后主命令仍然可用。快捷方式名称以编程工具的技能或命令列表里显示的为准。</p></div></details><details id="generate-or-live" class="cf-faq-item"><summary class="cf-faq-question">什么时候用 generate 而不是 live？</summary><div class="cf-faq-answer"><p>如果你能点名元素、说清想探索的方向，就用 <a href="/docs-cn/impeccable-mirror/docs/generate">generate</a>。在智能体对话里运行：</p><pre><code class="language-text">/impeccable generate 给定价卡片来 3 个大胆的变体
+</code></pre><p>智能体会找到该元素，并在运行中的页面上展示备选方案。逐一比较，在控件可用时微调，然后采纳其一写入源码，或整组丢弃。</p><p>如果要在浏览器里进行持续会话——自己挑选元素、加批注，或用 Steer 做整页级请求——就用 <a href="/docs-cn/impeccable-mirror/docs/live">live</a>。两个命令都适用于 Web 项目，除非你主动要求改变，否则都会遵循你现有的设计风格。</p></div></details><details id="pricing" class="cf-faq-item"><summary class="cf-faq-question">Impeccable 免费吗？</summary><div class="cf-faq-answer"><p>免费。Impeccable 的公开技能、命令、CLI 与检测引擎都以 <a href="https://github.com/pbakaus/impeccable/blob/main/LICENSE">Apache 2.0 许可证</a>开源。</p><p>你的编程工具或模型供应商可能按用量收费，包括图像生成。这些费用与 Impeccable 无关。内置支持、OpenAI API 兜底与计费指引见<a href="/docs-cn/impeccable-mirror/docs/image-generation">「启用图像生成」</a>。</p></div></details></div></div></main><footer class="site-footer"><div class="footer-row"><a class="footer-logo" href="/">Impeccable</a><nav class="footer-links" aria-label="页脚"><a href="/docs-cn/impeccable-mirror/gallery">画廊</a><a href="/docs-cn/impeccable-mirror/changelog">更新日志</a><a href="/docs-cn/impeccable-mirror/faq">常见问题</a><a href="/docs-cn/impeccable-mirror/privacy">隐私</a><a href="https://app.vanta.com/renaissance-geek.ai/trust/jhldu1ow0u17opmmk3s7zk">信任中心</a><a href="https://github.com/pbakaus/impeccable">GitHub</a></nav><div class="footer-credit"><span>作者：<a href="https://x.com/pbakaus" target="_blank" rel="noopener">Paul Bakaus</a></span><a href="https://x.com/pbakaus" class="footer-social-link" aria-label="在 X 上关注" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a><a href="https://linkedin.com/in/paulbakaus" class="footer-social-link" aria-label="在 LinkedIn 上连接" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg></a></div></div></footer><script type="module" src="/docs-cn/impeccable-mirror/_astro/Base.astro_astro_type_script_index_0_lang.BD-jcN2D.js"></script><!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2375b0fdc85c43a68f4b0e89cc6ae43c"}'></script><!-- Cloudflare Pages Analytics --></body></html>

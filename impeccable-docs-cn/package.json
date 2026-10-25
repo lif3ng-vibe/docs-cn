@@ -1,0 +1,33 @@
+{
+  "name": "impeccable-docs-cn",
+  "version": "1.0.0",
+  "private": true,
+  "description": "汉化版 impeccable.style（基于上游 Astro 站点源码快照 main@b5ec969c，2026-07-21）",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "prebuild": "node scripts/prebuild-site.mjs",
+    "build": "astro build",
+    "dev": "node scripts/prebuild-site.mjs && astro dev",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@paper-design/shaders": "^0.0.77",
+    "archiver": "^8.0.0",
+    "astro": "^7.0.0",
+    "css-select": "^7.0.0",
+    "css-tree": "^3.2.1",
+    "domutils": "^4.0.2",
+    "fflate": "^0.8.3",
+    "htmlparser2": "^12.0.0",
+    "marked": "^18.0.5",
+    "modern-screenshot": "^4.7.0",
+    "motion": "^12.38.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.16.0"
+  }
+}
