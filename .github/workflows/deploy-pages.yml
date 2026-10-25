@@ -458,6 +458,8 @@ jobs:
           npm ci
           npm run build
           mv dist ../_site/tailscale
+          # 正文树保留 /docs 段与上游 URL 1:1（对照配对），站点根放一个跳转页
+          printf '<!DOCTYPE html><meta charset="utf-8"><title>Tailscale 中文文档</title><script>location.replace("./docs/")</script><a href="./docs/">进入文档</a>' > ../_site/tailscale/index.html
 
       - name: Assemble Pages artifact
         run: |
