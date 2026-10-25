@@ -19,6 +19,7 @@
 | OpenRig (EN) | `openrig-docs-en/` | 无（仓库即源） | https://github.com/mvschwarz/openrig | 2026-09-30 |
 | OpenShip | `openship-docs-cn/` | https://openship.io/docs | https://github.com/oblien/openship | 2026-09-30 |
 | NVIDIA OpenShell | `openshell-docs-cn/` | https://docs.nvidia.com/openshell/latest/ | https://github.com/NVIDIA/OpenShell | 2026-10-25 |
+| Tailscale | `tailscale-docs-cn/` | https://tailscale.com/docs | 闭源站（官方 .md 导出快照 2026-10-24，704 路径闭包 700 页） | 2026-10-25 |
 | Agent Skills | `agent-skills-docs-cn/` | https://skills.addy.ie/ | https://github.com/addyosmani/agent-skills（站点工程：[skills.addy.ie](https://github.com/addyosmani/skills.addy.ie)） | 2026-10-08 |
 | e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
 | Claude-Mem | `claude-mem-docs-cn/` | https://docs.claude-mem.ai/ | https://github.com/thedotmack/claude-mem（快照 `71ddd11`，Mintlify 源在其 docs/public/） | 2026-10-08 |
@@ -88,6 +89,7 @@ docs-cn/
 ├── openrig-docs-en/                    # OpenRig 英文镜像（Starlight，脚本生成，90 篇）
 ├── openship-docs-cn/                   # OpenShip 中文文档（fumadocs + Next.js 16 静态导出，164 篇 + 营销站）
 ├── openshell-docs-cn/                  # NVIDIA OpenShell 中文文档（Starlight 重建 Fern 托管站，65 篇）
+├── tailscale-docs-cn/                  # Tailscale 官方文档中文镜像（Starlight 重建，700 页，官方 .md 导出源）
 ├── agent-skills-docs-cn/               # Agent Skills 官方站中文版（原版 Astro 5 营销/教程站，36 页）
 ├── tester-army-e2e-docs-cn/            # e2e 中文文档（Mintlify 原班 + export 导出，52 篇 MDX）
 ├── claude-mem-docs-cn/                 # Claude-Mem 中文文档（Mintlify 原班构建，49 篇 + export+prefix 部署链）
@@ -154,6 +156,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - OpenRig（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/openrig-en/
 - OpenShip：https://lif3ng-vibe.github.io/docs-cn/openship/
 - NVIDIA OpenShell：https://lif3ng-vibe.github.io/docs-cn/openshell/
+- Tailscale：https://lif3ng-vibe.github.io/docs-cn/tailscale/
 - Agent Skills：https://lif3ng-vibe.github.io/docs-cn/agent-skills/
 - Agency Agents：https://lif3ng-vibe.github.io/docs-cn/agency-agents/
 - Agency Agents（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/agency-agents-en/

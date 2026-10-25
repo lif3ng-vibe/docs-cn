@@ -438,6 +438,27 @@ jobs:
           npm run build
           mv dist ../_site/agent-skills
 
+  # tailscale-docs-cn 是标准 Starlight + npm（700 篇正文 md）：正文内链为根绝对路径
+  # （](/docs/… 内联与 [id]: /docs/… 引用式两种形态），CI sed v2 统一补 base 前缀。
+  - name: Restore tailscale-docs-cn dist
+    id: dist-tailscale
+    uses: actions/cache@v4
+    with:
+      path: _site/tailscale
+      key: dist-tailscale-${{ hashFiles('tailscale-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+  - name: Build tailscale-docs-cn
+    if: steps.dist-tailscale.outputs.cache-hit != 'true'
+    working-directory: tailscale-docs-cn
+    env:
+      DOCS_SITE: https://lif3ng-vibe.github.io
+      DOCS_BASE: /docs-cn/tailscale/
+    run: |
+      find src/content/docs -name '*.md' -exec sed -E -i 's@(\]\(|\]: )/@\1/docs-cn/tailscale/@g' {} +
+      npm ci
+      npm run build
+      mv dist ../_site/tailscale
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -472,6 +493,7 @@ jobs:
             echo '| nimbus | ${{ steps.dist-nimbus.outputs.cache-hit == 'true' }} |'
             echo '| openship | ${{ steps.dist-openship.outputs.cache-hit == 'true' }} |'
             echo '| agent-skills | ${{ steps.dist-agent-skills.outputs.cache-hit == 'true' }} |'
+            echo '| tailscale | ${{ steps.dist-tailscale.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

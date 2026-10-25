@@ -182,5 +182,13 @@
     ],
     "orig": "https://docs.nvidia.com/openshell/latest/",
     "repo": "https://github.com/NVIDIA/OpenShell"
+  },
+  {
+    "name": "Tailscale",
+    "slug": "tailscale",
+    "desc": "Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。",
+    "tags": ["networking", "learning", "sdk-api"],
+    "orig": "https://tailscale.com/docs",
+    "repo": "https://github.com/tailscale/tailscale"
   }
 ]

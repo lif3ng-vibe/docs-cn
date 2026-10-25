@@ -38,6 +38,7 @@ const TAGS = {
 	'learning':          { en: 'Learning',          zh: '概念与入门' },
 	'cli-tool':          { en: 'CLI Tool',          zh: '命令行工具' },
 	'sdk-api':           { en: 'SDK & API',         zh: 'SDK 与 API' },
+	'networking':        { en: 'Networking',        zh: '网络与安全' },
 	'unofficial-en':     { en: 'Unofficial EN',     zh: '非官方英文文档' },
 };
 
