@@ -5,7 +5,7 @@ description: "了解 Tailscale 如何确定机器名，以及如何重命名机�
 
 最后验证于 Jan 5, 2026
 
-在 Tailscale 上，机器通过 [100.x.y.z][docs-100.x-addresses] IP 地址和**机器名（machine name）**加以区分。
+在 Tailscale 上，机器通过 [100.x.y.z][docs-100.x-addresses] IP 地址和**机器名**（machine name）加以区分。
 
 机器名显示在管理控制台和 Tailscale 原生应用的各个角落，是机器在 Tailscale 网络上的规范名称。如果你使用 [MagicDNS][docs-magicdns]，机器名还决定了访问你机器所用的 URL。
 

@@ -11,7 +11,7 @@ Tailscale PAM 是新一代特权访问管理（PAM）方案，为你的 Tailscal
 
 探索以下主题，了解 Tailscale PAM 的功能，以及如何开始治理对 tailnet 中资源的特权访问。
 
-[**什么是 Tailscale PAM？**](/docs/privileged-access-management/what-is-tailscale-pam)——Tailscale PAM 为你的 Tailscale 网络中的 Linux 服务器、数据库、Kubernetes 集群等资源提供特权的、可审计的访问。
+[**什么是 Tailscale PAM**？](/docs/privileged-access-management/what-is-tailscale-pam)——Tailscale PAM 为你的 Tailscale 网络中的 Linux 服务器、数据库、Kubernetes 集群等资源提供特权的、可审计的访问。
 
 [**Tailscale PAM 架构与核心概念**](/docs/privileged-access-management/architecture-and-concepts)——概览 Tailscale PAM 的架构与核心概念。
 

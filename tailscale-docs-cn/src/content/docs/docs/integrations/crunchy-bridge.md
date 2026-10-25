@@ -55,7 +55,7 @@ description: "将 Crunchy Bridge 与 Tailscale 一起使用。"
 
 [docs-tags]: /docs/features/tags
 
-[docs-terminology-and-concepts-ip-address]: /docs/reference/glossary#tailscale-ip-address
+[docs-terminology-and-concepts-ip-address]: /docs/reference/glossary#tailscale-ip-地址
 
 [xt-crunchydata-bridge-tailscale]: https://www.crunchydata.com/blog/crunchy-bridge-with-tailscale
 

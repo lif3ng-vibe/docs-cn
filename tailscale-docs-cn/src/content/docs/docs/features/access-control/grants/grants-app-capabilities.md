@@ -1,6 +1,6 @@
 ---
 title: "应用能力"
-description: "应用能力（app capabilities，常称 "app capabilities"）将 Tailscale 的访问控制系统扩展到传统网络流量规则之外。标准授权控制哪些设备可以在"
+description: "应用能力（app capabilities，常称 “app capabilities”）将 Tailscale 的访问控制系统扩展到传统网络流量规则之外。标准授权控制哪些设备可以在"
 ---
 
 最后验证于 Dec 1, 2025
@@ -350,7 +350,7 @@ Tailscale 提供四种将应用能力与应用集成的方式：
 
 [docs-pam-control-access]: /docs/privileged-access-management/how-to/control-access
 
-[docs-serve-app-capabilities]: /docs/features/tailscale-serve#app-capabilities-header
+[docs-serve-app-capabilities]: /docs/features/tailscale-serve#应用能力标头
 
 [docs-taildrive]: /docs/features/taildrive
 

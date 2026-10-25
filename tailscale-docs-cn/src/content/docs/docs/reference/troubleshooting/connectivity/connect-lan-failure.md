@@ -13,7 +13,7 @@ description: "按照以下说明排查无法连接到局域网（LAN）中另一
 
    要单独测试本地连接，请先断开 Tailscale 连接，然后再次尝试连接局域网设备。
 
-2. **检查能否使用设备的 [Tailscale IP 地址][docs-tailscale-ip-addresses]进行连接（而非其私有 IP 地址）**。
+2. **检查能否使用设备的 [Tailscale IP 地址][docs-tailscale-ip-addresses]进行连接**（而非其私有 IP 地址）。
 
    如果设备运行了 Tailscale，并且你有一个通告局域网网段的[子网路由器（subnet router）][docs-subnets]，那么你的设备与其他局域网设备之间就有两条路径可以互通。Tailscale 通常会配置路由表以优先使用子网路由器（如果启用了接受子网路由）。
 

@@ -220,7 +220,7 @@ tailscale metrics write /var/lib/prometheus/node-exporter/tailscaled.prom
 
 [docs-peer-relays]: /docs/features/peer-relay
 
-[docs-subnet-route-approval]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-subnet-route-approval]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 

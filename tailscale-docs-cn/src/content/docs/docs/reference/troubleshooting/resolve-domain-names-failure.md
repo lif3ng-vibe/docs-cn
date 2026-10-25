@@ -25,7 +25,7 @@ description: "无法解析域名说明 DNS 存在问题。不过，这可能与�
 
    如果客户端已设置为使用 Tailscale 的 DNS 设置，请在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面核对这些设置。确保设备有权访问所配置的[名称服务器][docs-nameservers]。例如，访问控制策略可能阻止了它的访问，或者要求设备经由子网路由器访问名称服务器。
 
-[docs-dns-rebinding-workarounds]: /docs/reference/faq/dns-rebinding#workarounds-to-consider-when-using-tailscale
+[docs-dns-rebinding-workarounds]: /docs/reference/faq/dns-rebinding#使用-tailscale-时可考虑的解决方法
 
 [docs-dns-rebinding]: /docs/reference/faq/dns-rebinding
 

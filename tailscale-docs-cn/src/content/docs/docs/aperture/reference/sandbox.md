@@ -5,7 +5,7 @@ description: "Aperture 聊天沙箱为助手提供每个对话独立的 Linux �
 
 最后验证于 Sep 28, 2026
 
-> **注意：**Aperture 聊天沙箱目前处于 alpha 阶段。
+> **注意**：Aperture 聊天沙箱目前处于 alpha 阶段。
 
 \[缺失片段：contact\_account\_manager.mdx]
 
@@ -188,4 +188,4 @@ Tailscale 负责管理你的 Aperture 网关的沙箱可用性。设置说明请
 
 [docs-troubleshooting]: /docs/aperture/troubleshooting/sandbox
 
-[docs-storage-limit]: /docs/aperture/troubleshooting/sandbox#storage-limit-exceeded
+[docs-storage-limit]: /docs/aperture/troubleshooting/sandbox#超出存储上限

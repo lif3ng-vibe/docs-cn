@@ -62,7 +62,7 @@ tailscale up --advertise-tags=
 
 [bl-opensource-coordination-server]: https://tailscale.com/blog/opensource#the-open-source-coordination-server
 
-[docs-acl-samples-all-default]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-all-default]: /docs/reference/examples/acls#允许所有默认-acl
 
 [docs-acls]: /docs/features/access-control/acls
 
@@ -88,7 +88,7 @@ tailscale up --advertise-tags=
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-run-unattended]: /docs/how-to/run-unattended
 

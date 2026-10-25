@@ -81,7 +81,7 @@ Tailscale 会把组成员关系从集成了 SCIM 的身份提供方同步到 Tai
 
 [ln-what-is-scim]: https://tailscale.com/learn/what-is-scim
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
 [docs-access-control]: /docs/features/access-control/acls
 

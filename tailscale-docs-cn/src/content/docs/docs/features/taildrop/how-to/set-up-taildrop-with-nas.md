@@ -67,6 +67,6 @@ Taildrop 让你能在 Tailscale 网络（即 tailnet）上的个人设备之间�
 
 [docs-installation]: /docs/install
 
-[docs-qnap-installation-steps]: /docs/integrations/qnap#installation-steps
+[docs-qnap-installation-steps]: /docs/integrations/qnap#安装步骤
 
-[docs-synology-manual-installation-steps]: /docs/integrations/synology#install-tailscale-on-dsm-manually
+[docs-synology-manual-installation-steps]: /docs/integrations/synology#在-dsm-上手动安装-tailscale

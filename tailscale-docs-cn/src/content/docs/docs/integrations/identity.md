@@ -82,7 +82,7 @@ Tailscale 只请求运行所需的最小权限范围（scope），关于我们�
 
 [docs-sso-apple]: /docs/integrations/identity/apple-sso
 
-[docs-sso-custom-oidc-additional-config]: /docs/integrations/identity/custom-oidc#additional-provider-configurations
+[docs-sso-custom-oidc-additional-config]: /docs/integrations/identity/custom-oidc#其他提供方配置
 
 [docs-sso-custom-oidc]: /docs/integrations/identity/custom-oidc
 

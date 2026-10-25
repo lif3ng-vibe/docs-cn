@@ -54,7 +54,7 @@ NAT-PMP 是一种协议，局域网客户端可以通过它请求防火墙临时
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 
-[docs-policy-syntax-network-policy-options]: /docs/reference/syntax/policy-file#network-policy-options
+[docs-policy-syntax-network-policy-options]: /docs/reference/syntax/policy-file#网络策略选项
 
 [docs-derp-servers]: /docs/reference/derp-servers
 

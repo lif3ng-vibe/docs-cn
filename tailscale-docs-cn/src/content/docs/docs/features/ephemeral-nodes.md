@@ -35,7 +35,7 @@ description: "在 Tailscale 中使用临时节点（ephemeral node）管理容�
 
 > **注意：**
 >
-> **认证密钥请务必妥善保管！**这些密钥一旦失窃可能造成严重危害。
+> **认证密钥请务必妥善保管**！这些密钥一旦失窃可能造成严重危害。
 > 最好将它们保存在专门为此设计的密钥保管库（key vault）产品中。
 
 > **注意：**
@@ -94,9 +94,9 @@ Tailscale 守护进程，运行在已安装 Tailscale 客户端的设备上。`-
 
 [docs-kubernetes]: /docs/kubernetes
 
-[docs-tags-auth-key-tag]: /docs/features/tags#best-practices
+[docs-tags-auth-key-tag]: /docs/features/tags#最佳实践
 
-[docs-tailnet-policy-tags]: /docs/reference/syntax/policy-file#tags
+[docs-tailnet-policy-tags]: /docs/reference/syntax/policy-file#标签
 
 [docs-tailscale-on-aws-lambda]: /docs/install/cloud/aws/aws-lambda
 

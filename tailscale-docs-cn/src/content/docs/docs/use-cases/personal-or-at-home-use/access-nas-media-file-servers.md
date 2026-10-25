@@ -9,7 +9,7 @@ description: "从网络之外访问家里的 NAS、媒体库或文件共享，�
 >
 > 精选参考：
 >
-> [**连接网络附加存储（NAS）**](/docs/integrations/nas)——在受支持的网络附加存储（NAS）设备上安装 Tailscale 客户端。
+> [**连接网络附加存储**（NAS）](/docs/integrations/nas)——在受支持的网络附加存储（NAS）设备上安装 Tailscale 客户端。
 
 从网络之外访问家里的 NAS、媒体库或文件共享，通常意味着要开放防火墙端口或运行传统 VPN。Tailscale 会在你的设备之间创建加密的点对点连接，让你从任何地方都能访问这些服务，而不必把它们暴露到互联网上。
 

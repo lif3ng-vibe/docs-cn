@@ -70,7 +70,7 @@ description: "将 1Password Extended Access Management（XAM）上报的信号�
 
    *（图：在 Tailscale 管理控制台中连接 1Password XAM (Kolide) 的配置界面。）*
 
-4. 选择 **Connect to 1Password XAM (Kolide)**。
+4. 选择 **Connect to 1Password XAM**（Kolide）。
 
 ## 检查集成状态
 

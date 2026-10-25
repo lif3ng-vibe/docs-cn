@@ -7,7 +7,7 @@ description: "为运行在 Tailscale 网络中的应用程序获取群组成员�
 
 你可以将 Tailscale 网络（即 tailnet）中的设备配置为从 Tailscale [控制平面][docs-control-data-planes-control-plane]接收群组成员身份信息。群组信息既包括策略文件中定义的[群组][docs-policy-file-groups]，也包括通过 SCIM（跨域身份管理系统）从身份提供方（IdP）[同步的群组][docs-user-group-provisioning]。一旦 Tailscale 客户端配置为接收群组信息，你就可以通过 [Tailscale CLI][docs-tailscale-cli]、[`tsnet`][docs-tsnet] 库和 [LocalAPI][xt-go-tailscale-ipn-localapi] 获取这些信息。
 
-> **注意：**此功能目前处于 alpha 阶段。
+> **注意**：此功能目前处于 alpha 阶段。
 
 ## 要求
 
@@ -171,13 +171,13 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 [...]
 ```
 
-[docs-control-data-planes-control-plane]: /docs/concepts/control-data-planes#control-plane
+[docs-control-data-planes-control-plane]: /docs/concepts/control-data-planes#控制平面
 
 [docs-create-basic-tsnet-app]: /docs/features/tsnet/how-to/create-basic-tsnet-app
 
-[docs-policy-file-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-file-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-policy-file-node-attributes]: /docs/reference/syntax/policy-file#node-attributes
+[docs-policy-file-node-attributes]: /docs/reference/syntax/policy-file#节点属性
 
 [docs-tags]: /docs/features/tags
 

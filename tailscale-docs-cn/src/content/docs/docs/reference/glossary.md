@@ -171,11 +171,11 @@ Tailscalar 指 Tailscale 的员工。
 
 [docs-cli]: /docs/reference/tailscale-cli
 
-[docs-control-plane]: /docs/concepts/control-data-planes#control-plane
+[docs-control-plane]: /docs/concepts/control-data-planes#控制平面
 
 [docs-coordination-server]: /docs/concepts/control-data-planes#coordination-server
 
-[docs-data-plane]: /docs/concepts/control-data-planes#data-plane
+[docs-data-plane]: /docs/concepts/control-data-planes#数据平面
 
 [docs-derp-servers]: /docs/reference/derp-servers
 

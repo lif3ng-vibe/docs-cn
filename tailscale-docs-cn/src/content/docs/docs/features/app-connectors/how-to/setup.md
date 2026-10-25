@@ -330,9 +330,9 @@ Tailscale 会自动查找预设应用的 IP 地址。前往管理控制台的 [A
 
 [docs-kubernetes-app-connector]: /docs/kubernetes-operator/connector/deploy-app-connector
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-grants]: /docs/reference/syntax/policy-file#grants
+[docs-policy-syntax-grants]: /docs/reference/syntax/policy-file#授权grants
 
 [docs-policy-syntax-node-attributes]: /docs/reference/syntax/policy-file#nodeattrs
 

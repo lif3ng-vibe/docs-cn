@@ -165,7 +165,7 @@ sudo tailscale set --exit-node=
 
 [docs-acls]: /docs/features/access-control/acls
 
-[docs-appletv-use-exit-node]: /docs/install/appletv#use-a-device-exit-node
+[docs-appletv-use-exit-node]: /docs/install/appletv#使用设备出口节点
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -173,7 +173,7 @@ sudo tailscale set --exit-node=
 
 [docs-grants-allow-all]: /docs/reference/examples/grants#allow-all
 
-[docs-grants-allow-exit-nodes]: /docs/reference/examples/grants#allow-using-exit-nodes
+[docs-grants-allow-exit-nodes]: /docs/reference/examples/grants#允许使用出口节点
 
 [docs-install-android]: /docs/install/android
 
@@ -183,6 +183,6 @@ sudo tailscale set --exit-node=
 
 [docs-install-macos]: /docs/install/mac
 
-[docs-install-tvos]: /docs/install/appletv#install-tailscale-on-tvos
+[docs-install-tvos]: /docs/install/appletv#在-tvos-上安装-tailscale
 
 [docs-install-windows]: /docs/install/windows

@@ -120,4 +120,4 @@ tailscale up
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 
-[docs-mdm-keys-sn]: /docs/features/tailscale-system-policies#specify-the-device-serial-number
+[docs-mdm-keys-sn]: /docs/features/tailscale-system-policies#指定设备序列号

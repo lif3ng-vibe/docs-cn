@@ -360,20 +360,20 @@ tailscale lock revoke-keys <tlpub:key1 tlpub:key2 ...> [flags]
 
 [docs-auth-keys-generating-a-key]: /docs/features/access-control/auth-keys#generate-an-auth-key
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
 [docs-device-approval-pre-approve]: /docs/features/access-control/device-management/device-approval#pre-approve-devices-with-an-auth-key
 
-[docs-tailnet-lock-add-pre-approved]: /docs/features/tailnet-lock#add-a-node-using-a-pre-signed-auth-key
+[docs-tailnet-lock-add-pre-approved]: /docs/features/tailnet-lock#使用预签名认证密钥添加节点
 
-[docs-tailnet-lock-disable-tailnet-lock]: /docs/features/tailnet-lock#disable-tailnet-lock
+[docs-tailnet-lock-disable-tailnet-lock]: /docs/features/tailnet-lock#禁用-tailnet-lock
 
-[docs-tailnet-lock-enable-tailnet-lock]: /docs/features/tailnet-lock#enable-tailnet-lock
+[docs-tailnet-lock-enable-tailnet-lock]: /docs/features/tailnet-lock#启用-tailnet-lock
 
-[docs-tailnet-lock-tka]: /docs/features/tailnet-lock#tailnet-key-authority
+[docs-tailnet-lock-tka]: /docs/features/tailnet-lock#tailnet-密钥管理机构
 
-[docs-tailnet-lock-whitepaper-aums]: /docs/concepts/tailnet-lock-whitepaper#authority-update-messages-aums
+[docs-tailnet-lock-whitepaper-aums]: /docs/concepts/tailnet-lock-whitepaper#权限更新消息aum
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock

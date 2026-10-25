@@ -22,8 +22,8 @@ MCP 服务器代理适用于以下场景：
 
 [Model Context Protocol][xt-mcp-spec] 定义了 AI agent 发现和使用外部能力的标准方式。以下概念与在 Aperture 中配置 MCP 相关：
 
-* **工具（tools）**：LLM 可以发现并调用的函数，例如搜索数据库或执行命令。
-* **资源（resources）**：由 URI 标识、LLM 可以读取的上下文数据，例如文件内容或 API 响应。
+* **工具**（tools）：LLM 可以发现并调用的函数，例如搜索数据库或执行命令。
+* **资源**（resources）：由 URI 标识、LLM 可以读取的上下文数据，例如文件内容或 API 响应。
 * **Streamable HTTP**：当前的 MCP 传输协议，使用单一 HTTP 端点进行双向通信。
 * **旧版 SSE**：已弃用的 MCP 传输方式，使用 Server-Sent Events。为保持向后兼容，Aperture 对两种传输方式都提供支持。
 
@@ -337,7 +337,7 @@ MCP 服务器代理存在以下限制：
 
 [docs-connectors-built-in]: /docs/aperture/connectors/built-in-connectors
 
-[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#dynamic-client-registration-oauth2_dcr
+[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#动态客户端注册oauth2_dcr
 
 [docs-grant-by-label]: /docs/aperture/how-to/grant-connector-access-by-label
 

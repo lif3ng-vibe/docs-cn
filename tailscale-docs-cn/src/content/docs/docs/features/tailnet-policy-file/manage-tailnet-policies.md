@@ -53,7 +53,7 @@ tailscale ping
 >
 > 如果你正在使用 [Tailscale 的 GitOps][docs-gitops-acls]，则无法撤销 tailnet 策略文件。
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-acls]: /docs/features/access-control/acls
 
@@ -61,7 +61,7 @@ tailscale ping
 
 [docs-api]: /docs/reference/tailscale-api
 
-[docs-audit-logging-revert-acls]: /docs/features/logging/audit-logging#reverting-access-control-policies-from-audit-logs
+[docs-audit-logging-revert-acls]: /docs/features/logging/audit-logging#从审计日志回滚访问控制策略
 
 [docs-gitops-acls]: /docs/gitops
 
@@ -71,4 +71,4 @@ tailscale ping
 
 [docs-migrate-acls-grants]: /docs/reference/migrate-acls-grants
 
-[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件

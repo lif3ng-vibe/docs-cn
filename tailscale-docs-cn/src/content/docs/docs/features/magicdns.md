@@ -7,7 +7,7 @@ description: "了解如何为 Tailscale 网络中的设备自动注册 DNS 名�
 
 MagicDNS 会为网络中的设备自动注册 DNS 名称。
 
-> **注意：**MagicDNS [所有套餐](https://tailscale.com/pricing)均可用。
+> **注意**：MagicDNS [所有套餐](https://tailscale.com/pricing)均可用。
 
 如果你向网络添加了一个名为 `my-server` 的新 Web 服务器，就不再需要使用它的 Tailscale IP：在浏览器地址栏或命令行中使用名称 `my-server` 即可。
 
@@ -131,7 +131,7 @@ tailscale set --accept-dns=false
 
 [ar-fqnd-vs-machine-name]: #完全限定域名与机器名
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-machine-names-renaming-a-machine]: /docs/concepts/machine-names#renaming-a-machine
 
@@ -139,6 +139,6 @@ tailscale set --accept-dns=false
 
 [docs-sharing]: /docs/features/sharing
 
-[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailnet-name]: /docs/concepts/tailnet-name

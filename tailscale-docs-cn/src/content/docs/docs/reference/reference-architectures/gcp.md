@@ -175,7 +175,7 @@ see https://github.com/tailscale/tailscale/issues/3310
 
 [docs-firewalls]: /docs/integrations/firewalls
 
-[docs-high-availability-region-load-balancing]: /docs/features/route-selection#regional-routing
+[docs-high-availability-region-load-balancing]: /docs/features/route-selection#区域路由
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 
@@ -193,7 +193,7 @@ see https://github.com/tailscale/tailscale/issues/3310
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#turn-on-session-recording-in-your-tailnet-policy-file
+[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#在-tailnet-策略文件中开启会话录制
 
 [docs-userspace-networking]: /docs/concepts/userspace-networking
 

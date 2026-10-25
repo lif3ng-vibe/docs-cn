@@ -39,9 +39,9 @@ ConductorOne 会自动识别 tailnet 中的所有用户，并将 Tailscale 访�
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 

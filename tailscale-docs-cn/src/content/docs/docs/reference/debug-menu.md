@@ -22,7 +22,7 @@ macOS 和 Windows 版 Tailscale 客户端的菜单包含调试模式，提供用
   * **Add Account**：显示一个对话框，用于将客户端添加到自定义协调服务器。
   * **System Extension**：显示 Tailscale 系统扩展的健康状态。你也可以使用 [`tailscale configure sysext status`][docs-cli-configure] CLI 命令。
   * **Reset**：删除并重新安装 macOS VPN 配置。如果重启 Mac 后 Tailscale 仍然无法启动，使用该选项可能会有帮助。如果你的组织正通过 MDM 方案在 Mac 上部署 VPN 配置描述文件，该选项将不可用。
-* **Quit (Leave VPN Active)**：退出 Tailscale 图形界面应用，但让 VPN 网络扩展在后台继续运行。使用该选项后，你可以随后在 macOS 系统设置应用中单独开关该网络扩展。
+* **Quit**（Leave VPN Active）：退出 Tailscale 图形界面应用，但让 VPN 网络扩展在后台继续运行。使用该选项后，你可以随后在 macOS 系统设置应用中单独开关该网络扩展。
 
 #### Windows
 
@@ -43,7 +43,7 @@ macOS 和 Windows 版 Tailscale 客户端的菜单包含调试模式，提供用
 
 [docs-control-data-planes]: /docs/concepts/control-data-planes
 
-[docs-mdm-keys-debug]: /docs/features/tailscale-system-policies#hide-the-debug-menu
+[docs-mdm-keys-debug]: /docs/features/tailscale-system-policies#隐藏调试菜单
 
 [docs-mdm]: /docs/mdm
 

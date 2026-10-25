@@ -160,7 +160,7 @@ Tailscale 应用在 iOS/tvOS 设备上首次启动时，会安装一个 NetworkE
 
 [docs-mdm-jamf]: /docs/integrations/mdm/jamf
 
-[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#set-your-organization-name
+[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#设置组织名称
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 

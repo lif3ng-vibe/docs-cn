@@ -77,13 +77,13 @@ sudo tailscale set --advertise-routes=10.0.0.0/24,10.1.0.0/24
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-route-selection-configure]: /docs/features/route-selection#change-the-route-selection-option
+[docs-route-selection-configure]: /docs/features/route-selection#更改路由选择选项
 
-[docs-route-selection-prefix-matching]: /docs/features/route-selection#route-eligibility-and-prefix-matching
+[docs-route-selection-prefix-matching]: /docs/features/route-selection#路由资格与前缀匹配
 
-[docs-route-selection-use-cases]: /docs/features/route-selection#route-selection-use-cases
+[docs-route-selection-use-cases]: /docs/features/route-selection#路由选择使用场景
 
-[docs-route-selection-verify]: /docs/features/route-selection#verify-route-selection
+[docs-route-selection-verify]: /docs/features/route-selection#验证路由选择
 
 [docs-route-selection]: /docs/features/route-selection
 

@@ -152,7 +152,7 @@ Aperture 会把请求转发到 `https://api.github.com/user`，并自动注入�
 
 [docs-connectors-how-it-works]: /docs/aperture/connectors/how-connectors-work
 
-[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#dynamic-client-registration-oauth2_dcr
+[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#动态客户端注册oauth2_dcr
 
 [docs-connectors-reference]: /docs/aperture/connectors/reference
 
@@ -162,7 +162,7 @@ Aperture 会把请求转发到 `https://api.github.com/user`，并自动注入�
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors
 
 [docs-set-up-http-api-connector]: /docs/aperture/how-to/set-up-http-api-connector
 

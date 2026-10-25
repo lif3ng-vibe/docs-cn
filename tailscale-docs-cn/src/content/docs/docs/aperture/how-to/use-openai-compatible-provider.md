@@ -109,10 +109,10 @@ Aperture 先根据提供商 `baseurl` 的主机名推断[定价来源][docs-prov
 
 [docs-aperture-url-construction]: /docs/aperture/configuration#how-aperture-builds-upstream-urls
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#authorization-types
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#认证类型
 
-[docs-provider-compatibility-cost-basis]: /docs/aperture/provider-compatibility#cost-basis
+[docs-provider-compatibility-cost-basis]: /docs/aperture/provider-compatibility#成本基准
 
-[docs-provider-compatibility-model-cost-map]: /docs/aperture/provider-compatibility#model-cost-map
+[docs-provider-compatibility-model-cost-map]: /docs/aperture/provider-compatibility#模型成本映射
 
 [docs-use-self-hosted]: /docs/aperture/how-to/use-self-hosted

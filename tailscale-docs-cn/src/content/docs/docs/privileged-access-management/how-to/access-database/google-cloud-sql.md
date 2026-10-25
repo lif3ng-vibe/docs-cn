@@ -135,8 +135,8 @@ Cloud SQL 实例就绪后，为它创建一个 PAM 服务。
 
        IAM 数据库用户名的格式取决于数据库引擎：
 
-       * **MySQL：**使用去掉 `@` 和域名的 IAM 用户名。对于服务账户，去掉 `@project-id.iam.gserviceaccount.com` 后缀。
-       * **PostgreSQL：**使用 IAM 用户的完整电子邮件地址。对于服务账户，只去掉 `.gserviceaccount.com` 后缀。
+       * **MySQL**：使用去掉 `@` 和域名的 IAM 用户名。对于服务账户，去掉 `@project-id.iam.gserviceaccount.com` 后缀。
+       * **PostgreSQL**：使用 IAM 用户的完整电子邮件地址。对于服务账户，只去掉 `.gserviceaccount.com` 后缀。
 
        例如，名为 `pam-connector@my-project.iam.gserviceaccount.com` 的 PostgreSQL 服务账户，其数据库用户名为 `pam-connector@my-project.iam`。
 

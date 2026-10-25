@@ -246,15 +246,15 @@ MagicDNS 会为 tailnet 中的设备自动注册 DNS 名称。2022 年 10 月 20
 
 [docs-grants-app-capabilities]: /docs/features/access-control/grants/grants-app-capabilities
 
-[docs-magicdns-enable]: /docs/features/magicdns#enabling-magicdns
+[docs-magicdns-enable]: /docs/features/magicdns#启用-magicdns
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-tags-define-a-tag]: /docs/features/tags#define-a-tag
+[docs-tags-define-a-tag]: /docs/features/tags#定义标签
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 

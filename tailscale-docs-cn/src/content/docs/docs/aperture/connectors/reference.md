@@ -430,7 +430,7 @@ Aperture 会修改经过 HTTP 连接器代理的请求和响应：
 
 * **请求头**：转发给上游前，Aperture 从客户端请求中剥除 `Authorization` 和 `Cookie` 头，防止客户端注入可能泄露给上游服务器的凭证。Aperture 会根据连接器的 `auth` 配置单独注入正确的凭证。
 * **响应头**：Aperture 从上游响应中剥除 `Set-Cookie` 头，防止上游在 Aperture 的源上设置 cookie。
-* **逐跳头（hop-by-hop headers）**：标准逐跳头（`Connection`、`Keep-Alive`、`Proxy-Authenticate`、`Proxy-Authorization`、`Te`、`Trailer`、`Transfer-Encoding`、`Upgrade`）按 HTTP 规范在双向剥除。
+* **逐跳头**（hop-by-hop headers）：标准逐跳头（`Connection`、`Keep-Alive`、`Proxy-Authenticate`、`Proxy-Authorization`、`Te`、`Trailer`、`Transfer-Encoding`、`Upgrade`）按 HTTP 规范在双向剥除。
 * **请求体**：原样转发，无大小限制。
 * **响应体**：上限 50 MB，超出部分被截断。
 

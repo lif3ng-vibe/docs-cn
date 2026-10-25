@@ -49,7 +49,7 @@ tailnet 还支持[共享][docs-sharing]功能。你可以[邀请][docs-invite-an
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-acl-contractor-example]: /docs/reference/examples/acls#share-access-with-a-contractor
+[docs-acl-contractor-example]: /docs/reference/examples/acls#与承包商共享访问权限
 
 [docs-app-connectors]: /docs/features/app-connectors
 
@@ -91,7 +91,7 @@ tailnet 还支持[共享][docs-sharing]功能。你可以[邀请][docs-invite-an
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 
-[docs-tailnet-name-default-tailnet-name]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-default-tailnet-name]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailnet-name]: /docs/concepts/tailnet-name
 

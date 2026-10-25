@@ -91,7 +91,7 @@ description: "在 Aperture 中配置 Microsoft Foundry，让你的团队通过 t
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [xt-foundry-anthropic-auth]: https://platform.claude.com/docs/en/build-with-claude/claude-in-microsoft-foundry#authentication
 

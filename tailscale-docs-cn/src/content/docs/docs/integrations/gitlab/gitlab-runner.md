@@ -49,7 +49,7 @@ runner 执行时，会使用认证密钥创建一个
 
 [docs-tags]: /docs/features/tags
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

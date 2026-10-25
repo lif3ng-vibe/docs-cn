@@ -116,13 +116,13 @@ Let's Encrypt 签发的证书有效期为 90 天，需要定期续期。当证�
 
 [docs-machine-names-renaming-a-machine]: /docs/concepts/machine-names#renaming-a-machine
 
-[docs-magicdns-enabling-magicdns]: /docs/features/magicdns#enabling-magicdns
+[docs-magicdns-enabling-magicdns]: /docs/features/magicdns#启用-magicdns
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
-[docs-tailnet-name-generate-a-new-tailnet-dns-name]: /docs/concepts/tailnet-name#generate-a-new-tailnet-dns-name
+[docs-tailnet-name-generate-a-new-tailnet-dns-name]: /docs/concepts/tailnet-name#生成新的-tailnet-dns-名称
 
 [docs-tailnet-name]: /docs/concepts/tailnet-name
 

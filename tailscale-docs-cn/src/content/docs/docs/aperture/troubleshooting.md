@@ -278,7 +278,7 @@ Aperture 对 HTTP 连接器响应强制执行 50 MB 的响应体上限。超过�
 
 [docs-admin-console]: /docs/aperture/reference/dashboard-admin
 
-[docs-admin-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-admin-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 
@@ -288,13 +288,13 @@ Aperture 对 HTTP 连接器响应强制执行 50 MB 的响应体上限。超过�
 
 [docs-aperture-quotas]: /docs/aperture/configuration#quotas
 
-[docs-aperture-tagged-identity]: /docs/aperture/how-aperture-works#tagged-device-identity
+[docs-aperture-tagged-identity]: /docs/aperture/how-aperture-works#已打标签设备的身份
 
 [docs-aperture-url-construction]: /docs/aperture/configuration#how-aperture-builds-upstream-urls
 
 [docs-aperture]: /docs/aperture
 
-[docs-chat-sessions]: /docs/aperture/reference/chat#sessions
+[docs-chat-sessions]: /docs/aperture/reference/chat#会话sessions
 
 [docs-chat]: /docs/aperture/reference/chat
 
@@ -318,9 +318,9 @@ Aperture 对 HTTP 连接器响应强制执行 50 MB 的响应体上限。超过�
 
 [docs-monitor-quota-balances]: /docs/aperture/how-to/check-and-refill-budgets
 
-[docs-provider-compatibility-flags]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility-flags]: /docs/aperture/provider-compatibility#兼容性标志
 
-[docs-provider-compatibility]: /docs/aperture/reference/supported-providers-clients#provider-matrix
+[docs-provider-compatibility]: /docs/aperture/reference/supported-providers-clients#提供商矩阵
 
 [docs-set-up-admin-access]: /docs/aperture/how-to/set-up-admin-access
 

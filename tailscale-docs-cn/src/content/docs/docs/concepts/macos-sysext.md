@@ -56,6 +56,6 @@ Tailscale 将开始连接。如果你以前从未登录过 Tailscale，需要使
 
 [docs-cli-configure]: /docs/reference/tailscale-cli#configure
 
-[docs-macos-mdm-approve-system-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-system-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
 [xt-apple-docs-system-extensions]: https://support.apple.com/HT210999

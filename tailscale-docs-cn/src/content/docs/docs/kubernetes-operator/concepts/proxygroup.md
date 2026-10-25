@@ -7,11 +7,11 @@ description: "`ProxyGroup` 管理一个由 Tailscale 代理副本组成的 `Stat
 
 `ProxyGroup` 管理一个由 Tailscale 代理副本组成的 `StatefulSet`。与独立代理模式相比，它具有多项优势：
 
-* **高可用：**多个副本确保即使某个代理 pod 失败或被重新调度，你的服务仍然可访问。
-* **资源整合：**单个 `ProxyGroup` 可以处理多个 Kubernetes `Service` 或 `Ingress` 资源的流量，而不必为每个资源单独部署一个代理。
-* **高可用：**多个副本确保即使某个代理 pod 失败或被重新调度，你的服务仍然可访问。
-* **资源整合：**单个 `ProxyGroup` 可以处理多个 Kubernetes `Service` 或 `Ingress` 资源的流量，而不必为每个资源单独部署一个代理。
-* **可扩展：**根据流量需求增减代理副本数量。
+* **高可用**：多个副本确保即使某个代理 pod 失败或被重新调度，你的服务仍然可访问。
+* **资源整合**：单个 `ProxyGroup` 可以处理多个 Kubernetes `Service` 或 `Ingress` 资源的流量，而不必为每个资源单独部署一个代理。
+* **高可用**：多个副本确保即使某个代理 pod 失败或被重新调度，你的服务仍然可访问。
+* **资源整合**：单个 `ProxyGroup` 可以处理多个 Kubernetes `Service` 或 `Ingress` 资源的流量，而不必为每个资源单独部署一个代理。
+* **可扩展**：根据流量需求增减代理副本数量。
 
 ## 类型
 

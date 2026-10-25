@@ -49,7 +49,7 @@ Tailscale PAM 代理会为面向浏览器的服务处理 TLS，因此即使用�
 
 3. 选择 **PAM service**。
 
-4. 选择 **HTTP (Web App)**。
+4. 选择 **HTTP**（Web App）。
 
 5. 选择 **Continue**。
 
@@ -306,7 +306,7 @@ HTTP 服务的公开主机名可能与你直接访问应用所用的主机名不
 
 [docs-pam]: /docs/privileged-access-management
 
-[docs-tags-define]: /docs/features/tags#define-a-tag
+[docs-tags-define]: /docs/features/tags#定义标签
 
 [docs-tags]: /docs/features/tags
 

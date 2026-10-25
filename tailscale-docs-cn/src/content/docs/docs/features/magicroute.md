@@ -5,9 +5,9 @@ description: "使用 MagicRoute 在符合条件的子网路由器、应用连接
 
 最后验证于 Oct 7, 2026
 
-> **注意：**MagicRoute 目前处于 beta 阶段。
+> **注意**：MagicRoute 目前处于 beta 阶段。
 
-> **注意：**MagicRoute [面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
+> **注意**：MagicRoute [面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
 MagicRoute 是一个 tailnet 级的[路由选择选项][docs-route-selection]，它使用优先级评分为每个客户端在符合条件的子网路由器、应用连接器和 Tailscale Service 主机之间做出选择。它还会在受支持的客户端上改变[推荐出口节点][docs-recommended-exit-nodes]的算法。符合区域路由条件的 Premium 和 Enterprise tailnet 可以选择加入该 beta。
 
@@ -62,13 +62,13 @@ MagicRoute 不保证流量均等、基于容量的均衡，也不保证总是选
 
 [docs-recommended-exit-nodes]: /docs/features/exit-nodes/auto-exit-nodes
 
-[docs-route-selection-configure]: /docs/features/route-selection#change-the-route-selection-option
+[docs-route-selection-configure]: /docs/features/route-selection#更改路由选择选项
 
-[docs-route-selection-prefix-matching]: /docs/features/route-selection#route-eligibility-and-prefix-matching
+[docs-route-selection-prefix-matching]: /docs/features/route-selection#路由资格与前缀匹配
 
-[docs-route-selection-use-cases]: /docs/features/route-selection#route-selection-use-cases
+[docs-route-selection-use-cases]: /docs/features/route-selection#路由选择使用场景
 
-[docs-route-selection-verify]: /docs/features/route-selection#verify-route-selection
+[docs-route-selection-verify]: /docs/features/route-selection#验证路由选择
 
 [docs-route-selection]: /docs/features/route-selection
 

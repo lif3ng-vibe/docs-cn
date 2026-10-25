@@ -95,15 +95,15 @@ description: "从 Tailscale v1.78 开始，你可以使用 Tailscale Kubernetes 
 * 配置应用连接器需要大量手动设置，包括更新 tailnet 策略文件以及需要经由连接器路由流量的应用程序。
 * 应用连接器的出站 IP 地址无法自动发现。你可以在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面获取。
 
-[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-app-connector-apps]: /docs/features/app-connectors/how-to/setup#configure-a-device-as-an-app-connector
 
 [docs-app-connector-ip-allowlist]: /docs/features/app-connectors/how-to/setup#restrict-application-access-by-ip-address
 
-[docs-app-connector-policy]: /docs/features/app-connectors/how-to/setup#update-the-tailnet-policy-file
+[docs-app-connector-policy]: /docs/features/app-connectors/how-to/setup#更新-tailnet-策略文件
 
-[docs-app-connector-preconfiguration]: /docs/reference/best-practices/app-connectors#preconfiguration
+[docs-app-connector-preconfiguration]: /docs/reference/best-practices/app-connectors#预配置
 
 [docs-app-connector]: /docs/features/app-connectors
 

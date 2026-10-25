@@ -87,15 +87,15 @@ description: "使用应用连接器在 tailnet 中路由 SaaS 应用流量。"
 
 [docs-audit-logging]: /docs/features/logging/audit-logging
 
-[docs-client-preferences-accept-routes]: /docs/features/client/manage-preferences#use-tailscale-subnets
+[docs-client-preferences-accept-routes]: /docs/features/client/manage-preferences#使用-tailscale-子网
 
 [docs-gitops]: /docs/gitops
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 
-[docs-mdm-keys-always-on]: /docs/features/tailscale-system-policies#set-tailscale-to-always-be-connected
+[docs-mdm-keys-always-on]: /docs/features/tailscale-system-policies#设置-tailscale-始终保持连接
 
-[docs-mdm-keys-tailscale-subnets]: /docs/features/tailscale-system-policies#set-whether-the-device-accepts-tailscale-subnets
+[docs-mdm-keys-tailscale-subnets]: /docs/features/tailscale-system-policies#设置设备是否接受-tailscale-子网
 
 [docs-route-selection]: /docs/features/route-selection
 

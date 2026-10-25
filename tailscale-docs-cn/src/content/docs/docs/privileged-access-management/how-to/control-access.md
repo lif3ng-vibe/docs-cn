@@ -188,7 +188,7 @@ SSH 权限让你可以分别控制 SSH 会话的多个部分，包括交互式 s
 
 SSH exec 让用户无需启动交互式 shell 即可运行命令，例如运行 `ssh user@server uptime`。
 
-你可以完全停用 exec 访问，或者选择**仅允许特定 exec 命令（正则表达式）**来限制可以通过 SSH exec 运行哪些命令。
+你可以完全停用 exec 访问，或者选择**仅允许特定 exec 命令**（正则表达式）来限制可以通过 SSH exec 运行哪些命令。
 
 exec 命令限制不适用于在交互式 shell 中输入的命令。如果用户拥有 shell 访问权限，他们可以在该 shell 中运行命令，不受 exec 命令允许列表的约束。
 
@@ -273,7 +273,7 @@ Kubernetes 权限让你可以定义用户能对 Kubernetes API 服务执行哪�
 
 一条 Kubernetes 规则可以匹配：
 
-* **动词（verb）**，例如 `get`、`list`、`create` 或 `delete`。
+* **动词**（verb），例如 `get`、`list`、`create` 或 `delete`。
 * **命名空间**。
 * **资源类型**，例如 pods、deployments 或 services。
 * **资源名称**。
@@ -541,6 +541,6 @@ Tailscale PAM 会根据目的地服务应用相关权限。例如，访问 `svc:
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-visual-editor-general-access-rules]: /docs/reference/visual-editor#general-access-rules
+[docs-visual-editor-general-access-rules]: /docs/reference/visual-editor#通用访问规则
 
 [docs-visual-editor]: /docs/reference/visual-editor

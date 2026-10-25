@@ -190,7 +190,7 @@ Tailscale 不会在每次发布新客户端时都更新 Tailscale GitHub Action 
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-connection-types]: /docs/reference/connection-types
 
@@ -202,15 +202,15 @@ Tailscale 不会在每次发布新客户端时都更新 Tailscale GitHub Action 
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-oauth-clients-setup]: /docs/features/oauth-clients#setting-up-an-oauth-client
+[docs-oauth-clients-setup]: /docs/features/oauth-clients#设置-oauth-客户端
 
 [docs-workload-identity-federation]: /docs/features/workload-identity-federation
 
-[docs-workload-identity-federation-setup]: /docs/features/workload-identity-federation#set-up-a-federated-identity
+[docs-workload-identity-federation-setup]: /docs/features/workload-identity-federation#设置联合身份
 
 [docs-tags]: /docs/features/tags
 
-[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#scopes
+[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
 [pk-stable-static]: https://pkgs.tailscale.com/stable/#static
 

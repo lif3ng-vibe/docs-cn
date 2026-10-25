@@ -124,7 +124,7 @@ env:
 
 ## 网络流日志
 
-> **注意：**网络流日志[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
+> **注意**：网络流日志[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
 [网络流日志][docs-network-flow-logs]可以帮助你了解哪些设备随时间推移相互连接，也就是流量在整个 tailnet 中的*流动*情况。
 
@@ -164,7 +164,7 @@ env:
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
-[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#enable-network-flow-logs
+[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#启用网络流日志
 
 [docs-network-flow-logs]: /docs/features/logging/network-flow-logs
 

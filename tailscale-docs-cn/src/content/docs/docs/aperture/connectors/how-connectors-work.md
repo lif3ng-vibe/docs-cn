@@ -102,7 +102,7 @@ FQN 模式点名单个连接器，因此只用 FQN 模式表达的策略，每�
 
 [ar-capability-discovery-and-updates]: #能力发现与更新
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors
 
 [docs-aperture-set-up-providers]: /docs/aperture/set-up-providers
 
@@ -114,7 +114,7 @@ FQN 模式点名单个连接器，因此只用 FQN 模式表达的策略，每�
 
 [docs-connectors-kinds]: /docs/aperture/connectors/kinds-of-connector
 
-[docs-connectors-reference-labels]: /docs/aperture/connectors/reference#connector-labels
+[docs-connectors-reference-labels]: /docs/aperture/connectors/reference#连接器标签
 
 [docs-connectors-reference]: /docs/aperture/connectors/reference
 

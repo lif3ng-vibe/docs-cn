@@ -92,7 +92,7 @@ Tailnet [管理员](/docs/reference/user-roles)可以在 tailnet 策略文件中
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-grants-allow-all]: /docs/reference/examples/grants#allow-all
+[docs-grants-allow-all]: /docs/reference/examples/grants#全部允许
 
 [docs-grants]: /docs/features/access-control/grants
 

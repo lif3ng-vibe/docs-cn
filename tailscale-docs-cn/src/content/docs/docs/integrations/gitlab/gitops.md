@@ -185,9 +185,9 @@ Tailscale！
 
 [docs-gitops-acls]: /docs/gitops
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
-[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#permissions-managed-by-user-roles
+[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#由用户角色管理的权限
 
 [xt-gh-tailscale-cmd-gitops-pusher]: https://github.com/tailscale/tailscale/tree/main/cmd/gitops-pusher
 

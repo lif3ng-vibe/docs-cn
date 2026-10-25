@@ -171,7 +171,7 @@ tag://<tailnet-alias>/<tag-name>
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-sharing]: /docs/features/sharing#share-using-a-link
+[docs-sharing]: /docs/features/sharing#通过链接共享
 
 [docs-tags]: /docs/features/tags
 

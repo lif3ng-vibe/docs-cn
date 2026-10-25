@@ -94,7 +94,7 @@ description: "在 tailnet 中设置服务器，并使用 Tailscale SSH 管理这
 
 [co-download]: https://tailscale.com/download
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
 [docs-tags]: /docs/features/tags
 
@@ -106,9 +106,9 @@ description: "在 tailnet 中设置服务器，并使用 Tailscale SSH 管理这
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-oauth-clients-generate-long]: /docs/features/oauth-clients#generating-long-lived-auth-keys
+[docs-oauth-clients-generate-long]: /docs/features/oauth-clients#生成长期认证密钥
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#检查模式
 
 [docs-tailscale-ssh-console]: /docs/features/tailscale-ssh/tailscale-ssh-console
 

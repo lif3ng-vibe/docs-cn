@@ -342,7 +342,7 @@ Tailscale-Webhook-Signature:t=1663781880,v1=0123456789abcdef0123456789abcdef0123
 
 [docs-audit-logging]: /docs/features/logging/audit-logging
 
-[docs-audit-logging-log-structure]: /docs/features/logging/audit-logging#log-structure
+[docs-audit-logging-log-structure]: /docs/features/logging/audit-logging#日志结构
 
 [docs-changing-user-roles]: /docs/features/sharing/how-to/change-role
 

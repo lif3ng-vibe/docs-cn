@@ -5,7 +5,7 @@ description: "将你的网络中某台特定设备设为出口节点，让全部
 
 最后验证于 Dec 15, 2025
 
-> **注意：**出口节点[所有套餐](https://tailscale.com/pricing)均可用。
+> **注意**：出口节点[所有套餐](https://tailscale.com/pricing)均可用。
 
 默认情况下，Tailscale 充当覆盖网络（overlay network）：它只在运行 Tailscale 的设备之间路由流量，不会触碰你的公共互联网流量，比如你访问 Google 或 Twitter 的时候。这种覆盖网络配置适合大多数只需要在敏感设备（例如公司服务器或家用电脑）之间安全通信、而不希望公共互联网连接增加额外[加密][docs-encryption]层或延迟的人。
 
@@ -282,7 +282,7 @@ sudo tailscale set --exit-node=
 
 ## 网络流日志中的目标日志记录
 
-> **注意：**目标日志记录[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
+> **注意**：目标日志记录[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
 > **注意：**
 >
@@ -406,27 +406,27 @@ Tailscale 在 Windows 上的 DNS 服务器实现[目前][xt-gh-tailscale-issue-3
 
 [docs-app-connectors]: /docs/features/app-connectors
 
-[docs-appletv-advertise-exit-node]: /docs/install/appletv#advertise-apple-tv-as-an-exit-node
+[docs-appletv-advertise-exit-node]: /docs/install/appletv#将-apple-tv-宣告为出口节点
 
-[docs-appletv-install-tailscale-on-tvos]: /docs/install/appletv#install-tailscale-on-tvos
+[docs-appletv-install-tailscale-on-tvos]: /docs/install/appletv#在-tvos-上安装-tailscale
 
-[docs-appletv-troubleshooting]: /docs/install/appletv#troubleshooting
+[docs-appletv-troubleshooting]: /docs/install/appletv#故障排除
 
-[docs-appletv-use-exit-node]: /docs/install/appletv#use-a-device-exit-node
+[docs-appletv-use-exit-node]: /docs/install/appletv#使用设备出口节点
 
 [docs-auto-exit-nodes]: /docs/features/exit-nodes/auto-exit-nodes
 
 [docs-encryption]: /docs/concepts/tailscale-encryption
 
-[docs-gcp-reference-architecture]: /docs/reference/reference-architectures/gcp#linux-vms-using-exit-nodes
+[docs-gcp-reference-architecture]: /docs/reference/reference-architectures/gcp#使用出口节点的-linux-vm
 
-[docs-get-suggested-exit-node]: /docs/features/exit-nodes/auto-exit-nodes#use-a-suggested-exit-node
+[docs-get-suggested-exit-node]: /docs/features/exit-nodes/auto-exit-nodes#使用建议出口节点
 
 [docs-grants]: /docs/features/access-control/grants
 
 [docs-grants-allow-all]: /docs/reference/examples/grants#allow-all
 
-[docs-grants-allow-exit-nodes]: /docs/reference/examples/grants#allow-using-exit-nodes
+[docs-grants-allow-exit-nodes]: /docs/reference/examples/grants#允许使用出口节点
 
 [docs-install]: /docs/how-to/quickstart
 
@@ -440,7 +440,7 @@ Tailscale 在 Windows 上的 DNS 服务器实现[目前][xt-gh-tailscale-issue-3
 
 [docs-network-flow-logs]: /docs/features/logging/network-flow-logs
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-quick-start-exit-nodes]: /docs/features/exit-nodes/how-to/setup
 

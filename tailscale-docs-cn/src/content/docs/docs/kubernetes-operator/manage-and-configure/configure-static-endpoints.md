@@ -143,7 +143,7 @@ Tailscale 使用多种 [NAT 穿透技术][bl-how-nat-traversal-works]，无需�
 
 [docs-derp-region]: /docs/reference/derp-servers
 
-[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#hard-nat
+[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#硬-nat
 
 [docs-firewalls]: /docs/integrations/firewalls
 

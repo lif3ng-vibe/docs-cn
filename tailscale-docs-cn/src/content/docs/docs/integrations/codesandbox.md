@@ -37,7 +37,7 @@ docker-compose exec tailscale tailscale up \
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

@@ -90,11 +90,11 @@ description: "员工需要访问内部仪表盘、文件共享、SaaS 工具和�
 
 [docs-device-posture]: /docs/features/device-posture
 
-[docs-grants-device-posture]: /docs/reference/examples/grants#allow-access-to-resources-based-on-device-posture
+[docs-grants-device-posture]: /docs/reference/examples/grants#基于设备态势控制资源访问
 
-[docs-grants-groups]: /docs/reference/examples/grants#allow-access-to-different-environments-by-group
+[docs-grants-groups]: /docs/reference/examples/grants#按组访问不同环境
 
-[docs-grants-tags]: /docs/reference/examples/grants#allow-based-on-purpose-using-tags
+[docs-grants-tags]: /docs/reference/examples/grants#使用标签按用途授权
 
 [docs-jit]: /docs/features/access-control/just-in-time-access
 
@@ -102,6 +102,6 @@ description: "员工需要访问内部仪表盘、文件共享、SaaS 工具和�
 
 [docs-tailscale-accessbot-jit]: /docs/features/tailscale-accessbot-jit
 
-[docs-visual-editor-groups]: /docs/reference/visual-editor#groups
+[docs-visual-editor-groups]: /docs/reference/visual-editor#组
 
-[docs-visual-editor-hosts]: /docs/reference/visual-editor#hosts
+[docs-visual-editor-hosts]: /docs/reference/visual-editor#主机

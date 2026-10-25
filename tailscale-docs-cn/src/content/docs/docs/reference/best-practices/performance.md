@@ -143,9 +143,9 @@ fi
 
 [bl-throughput-improvements]: https://tailscale.com/blog/throughput-improvements
 
-[docs-aws-recommended-instance-sizing]: /docs/reference/reference-architectures/aws#recommended-instance-sizing
+[docs-aws-recommended-instance-sizing]: /docs/reference/reference-architectures/aws#推荐的实例规格
 
-[docs-azure-recommended-vm-sizing]: /docs/reference/reference-architectures/azure#recommended-vm-sizing
+[docs-azure-recommended-vm-sizing]: /docs/reference/reference-architectures/azure#推荐的-vm-规格
 
 [docs-connection-types]: /docs/reference/connection-types
 
@@ -155,7 +155,7 @@ fi
 
 [docs-firewall-ports]: /docs/reference/faq/firewall-ports
 
-[docs-gce-recommended-instance-sizing]: /docs/reference/reference-architectures/gcp#recommended-instance-sizing
+[docs-gce-recommended-instance-sizing]: /docs/reference/reference-architectures/gcp#推荐的实例规格
 
 [docs-peer-relays]: /docs/features/peer-relay
 

@@ -39,6 +39,6 @@ tailnet 的[路由选择][docs-route-selection]选项决定由哪台符合条件
 
 [docs-route-selection]: /docs/features/route-selection
 
-[docs-subnets-overlapping-routes]: /docs/features/subnet-routers#use-overlapping-routes-with-different-prefix-lengths
+[docs-subnets-overlapping-routes]: /docs/features/subnet-routers#使用前缀长度不同的重叠路由
 
 [docs-via]: /docs/features/access-control/grants/grants-via

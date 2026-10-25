@@ -241,7 +241,7 @@ func main() {
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
-[docs-tailnet-name-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tsnet]: /docs/features/tsnet
 

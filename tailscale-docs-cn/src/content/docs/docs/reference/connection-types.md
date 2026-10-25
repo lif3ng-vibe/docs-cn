@@ -7,7 +7,7 @@ description: "了解 Tailscale 如何使用直连或中继连接设备。"
 
 Tailscale 使用三种连接类型在 Tailscale 网络（称为 [tailnet][docs-tailnet]）内[连接设备][docs-connect-to-devices]：
 
-* **直连（direct connections）**：设备通过 UDP 直接互发数据包。
+* **直连**（direct connections）：设备通过 UDP 直接互发数据包。
 * **DERP 中继连接**：设备经由 [DERP 服务器][docs-derp-servers]发送数据包。
 * **Tailscale Peer Relay 连接**：设备经由同一 tailnet 中充当中继的另一台设备发送数据包。
 
@@ -205,7 +205,7 @@ Tailscale 并不总能在设备之间建立直连。而且当网络状况变化�
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-hard-nat]: /docs/reference/device-connectivity#hard-nat
+[docs-hard-nat]: /docs/reference/device-connectivity#硬-nat
 
 [docs-peer-relays]: /docs/features/peer-relay
 

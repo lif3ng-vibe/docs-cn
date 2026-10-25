@@ -56,6 +56,6 @@ description: "基于应用的拆分隧道是 Android 版 Tailscale 客户端中�
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 
-[docs-mdm-keys-excluded-package-names]: /docs/features/tailscale-system-policies#set-excluded-applications
+[docs-mdm-keys-excluded-package-names]: /docs/features/tailscale-system-policies#设置排除的应用
 
-[docs-mdm-keys-included-package-names]: /docs/features/tailscale-system-policies#set-included-applications
+[docs-mdm-keys-included-package-names]: /docs/features/tailscale-system-policies#设置包含的应用

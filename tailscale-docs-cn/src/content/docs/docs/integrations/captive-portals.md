@@ -80,7 +80,7 @@ tailscale status
 
 [docs-cli]: /docs/reference/tailscale-cli
 
-[docs-coordination-server]: /docs/reference/glossary#coordination-server
+[docs-coordination-server]: /docs/reference/glossary#协调服务器
 
 [docs-derp]: /docs/reference/derp-servers
 

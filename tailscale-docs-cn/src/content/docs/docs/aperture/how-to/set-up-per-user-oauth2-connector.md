@@ -220,7 +220,7 @@ Aperture 会省略你的授权所拒绝的已配置连接器，不会在 Chat �
 
 [docs-connectors-reference]: /docs/aperture/connectors/reference
 
-[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#dynamic-client-registration-oauth2_dcr
+[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#动态客户端注册oauth2_dcr
 
 [docs-get-started]: /docs/aperture/get-started
 
@@ -230,4 +230,4 @@ Aperture 会省略你的授权所拒绝的已配置连接器，不会在 Chat �
 
 [docs-set-up-authenticated-mcp-connector]: /docs/aperture/connectors/set-up-authenticated-mcp-connector
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors

@@ -294,7 +294,7 @@ tailscale serve advertise <service>
 
 [docs-grants-app-capabilities]: /docs/features/access-control/grants/grants-app-capabilities
 
-[docs-l3-services]: /docs/features/tailscale-services#layer-3-endpoints-network-layer
+[docs-l3-services]: /docs/features/tailscale-services#第-3-层端点网络层
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 

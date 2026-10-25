@@ -68,7 +68,7 @@ tailscale set --advertise-routes=10.0.0.0/24,169.254.169.254/32 --accept-dns=fal
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-install-linux]: /docs/install/linux
 

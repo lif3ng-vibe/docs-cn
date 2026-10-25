@@ -121,7 +121,7 @@ TLS 证书是为完整 FQDN（例如 `tailscale-operator.<tailnet>.ts.net`）签
 
 [docs-access-api]: /docs/kubernetes-operator/api-server-access/setup-api-over-tailscale
 
-[docs-auth-mode]: /docs/kubernetes-operator/api-server-access#auth-mode-default
+[docs-auth-mode]: /docs/kubernetes-operator/api-server-access#身份验证模式默认
 
 [docs-acls]: /docs/features/access-control/acls
 

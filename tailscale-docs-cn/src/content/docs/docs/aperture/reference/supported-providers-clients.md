@@ -87,7 +87,7 @@ Groq、Together AI、Fireworks、Mistral、DeepSeek 和 Perplexity 属于通用�
 * 自动化客户端配置请参阅 [Aperture CLI][docs-cli]。
 * 连接和请求失败问题请参阅 [Aperture 故障排除][docs-troubleshooting]。
 
-[docs-compatibility-flags]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-compatibility-flags]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-aperture-configuration-url]: /docs/aperture/configuration#how-aperture-builds-upstream-urls
 
@@ -133,7 +133,7 @@ Groq、Together AI、Fireworks、Mistral、DeepSeek 和 Perplexity 属于通用�
 
 [docs-gateway-kilo]: /docs/aperture/use-your-tools#kilo-code
 
-[docs-gateway-setup]: /docs/aperture/use-your-tools#gateway-generated-configuration
+[docs-gateway-setup]: /docs/aperture/use-your-tools#网关生成的配置
 
 [docs-generic-clients]: /docs/aperture/how-to/use-openai-compatible-tools
 

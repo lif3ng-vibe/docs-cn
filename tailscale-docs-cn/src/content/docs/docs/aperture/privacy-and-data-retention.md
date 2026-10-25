@@ -64,8 +64,8 @@ Aperture 转发给模型的请求会发送到已配置的提供商。你的配�
 
 [docs-integrate]: /docs/aperture/integrate
 
-[docs-retention-postures]: /docs/aperture/how-to/configure-zero-retention#step-1-choose-a-retention-posture
+[docs-retention-postures]: /docs/aperture/how-to/configure-zero-retention#第-1-步选择保留策略
 
 [docs-retention]: /docs/aperture/configuration#database
 
-[docs-zero-retention-impact]: /docs/aperture/how-to/configure-zero-retention#step-4-preview-the-impact-before-saving
+[docs-zero-retention-impact]: /docs/aperture/how-to/configure-zero-retention#第-4-步保存前预览影响

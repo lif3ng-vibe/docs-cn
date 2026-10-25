@@ -86,15 +86,15 @@ description: "安装和卸载 Tailscale 客户端。"
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
-[docs-mdm-keys-auto-update]: /docs/features/tailscale-system-policies#configure-the-auto-update-settings
+[docs-mdm-keys-auto-update]: /docs/features/tailscale-system-policies#配置自动更新设置
 
 [docs-mdm]: /docs/mdm
 
 [docs-uninstall]: /docs/features/client/uninstall
 
-[docs-update-auto-on-device]: /docs/features/client/update#enable-auto-updates-on-devices
+[docs-update-auto-on-device]: /docs/features/client/update#在设备上启用自动更新
 
-[docs-update-manual]: /docs/features/client/update#manual-updates
+[docs-update-manual]: /docs/features/client/update#手动更新
 
 [docs-update]: /docs/features/client/update
 

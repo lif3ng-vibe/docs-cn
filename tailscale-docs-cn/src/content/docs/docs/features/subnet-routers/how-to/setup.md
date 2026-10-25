@@ -103,7 +103,7 @@ description: "要把 tailnet 设备用作子网路由器，请选择你的平台
 
 [docs-install-android]: /docs/install/android
 
-[docs-install-appletv]: /docs/install/appletv#install-tailscale-on-tvos
+[docs-install-appletv]: /docs/install/appletv#在-tvos-上安装-tailscale
 
 [docs-install-linux]: /docs/install/linux
 

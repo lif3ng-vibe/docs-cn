@@ -5,7 +5,7 @@ description: "日志流式传输让你可以把有关 Tailscale 网络（即 tai
 
 最后验证于 Feb 2, 2026
 
-> **注意：**日志流式传输[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
+> **注意**：日志流式传输[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
 日志流式传输让你可以把有关 Tailscale 网络（即 tailnet）的[配置审计日志][docs-audit-logging]或[网络流日志][docs-network-flow-logs]收集并发送到各种系统进行采集与分析。
 
@@ -330,7 +330,7 @@ Azure Portal 前提条件
 
 仍在 Azure Portal 的账户 **Overview** 页面上：
 
-1. 选择 **Access Control (IAM)**。这会打开 **Access Control** 窗格。
+1. 选择 **Access Control**（IAM）。这会打开 **Access Control** 窗格。
 2. 选择 **Add**。
 3. 选择 **Add role assignment**。你会被重定向到 **Add role assignment** 页面。
    1. 在 **Job function roles** 下，将角色筛选为 **Storage Blob Data Contributor**。
@@ -740,7 +740,7 @@ Azure Portal 前提条件
 
 仍在 Azure Portal 的账户 **Overview** 页面上：
 
-1. 选择 **Access Control (IAM)**。这会打开 **Access Control** 窗格。
+1. 选择 **Access Control**（IAM）。这会打开 **Access Control** 窗格。
 2. 选择 **Add**。
 3. 选择 **Add role assignment**。你会被重定向到 **Add role assignment** 页面。
    1. 在 **Job function roles** 下，将角色筛选为 **Storage Blob Data Contributor**。
@@ -1004,7 +1004,7 @@ sinks:
 
 [ar-private-endpoints]: #私有端点
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
 [docs-acls]: /docs/features/access-control/acls
 
@@ -1012,19 +1012,19 @@ sinks:
 
 [docs-gitops-acls]: /docs/gitops
 
-[docs-magicdns-fqdn-vs-machine-names]: /docs/features/magicdns#fully-qualified-domain-names-vs-machine-names
+[docs-magicdns-fqdn-vs-machine-names]: /docs/features/magicdns#完全限定域名与机器名
 
-[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#enable-network-flow-logs
+[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#启用网络流日志
 
 [docs-network-flow-logs]: /docs/features/logging/network-flow-logs
 
 [docs-sharing]: /docs/features/sharing
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员
 
-[docs-user-roles-it-admin]: /docs/reference/user-roles#it-admin
+[docs-user-roles-it-admin]: /docs/reference/user-roles#it-adminit-管理员
 
-[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin
+[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin网络管理员
 
 [ln-security-info-event-management]: https://tailscale.com/learn/security-information-and-event-management
 

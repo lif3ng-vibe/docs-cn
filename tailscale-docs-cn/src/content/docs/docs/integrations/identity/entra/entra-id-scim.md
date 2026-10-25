@@ -212,11 +212,11 @@ Tailscale 不支持 SCIM [Enterprise User Schema Extension][xt-rfc-7643-4.3]。�
 
 [docs-auth-keys-revoke]: /docs/features/access-control/auth-keys#revoke-an-auth-key
 
-[docs-offboarding-users-offboarding-scim]: /docs/features/sharing/how-to/offboard#offboarding-when-using-user--group-provisioning-scim
+[docs-offboarding-users-offboarding-scim]: /docs/features/sharing/how-to/offboard#使用用户与组预配scim时的用户离职处理
 
-[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#deleting-users
+[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#删除用户
 
-[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#suspending-users
+[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#停用用户
 
 [docs-user-roles]: /docs/reference/user-roles
 

@@ -164,12 +164,12 @@ Aperture 通过 [hook 系统][docs-configuration-hooks]向 Highflame 发送数�
 
 将 Aperture 连接到 Highflame 时，请求内容（包括用户消息、工具调用和响应体）会离开 Aperture，被发送到 Highflame 端点。请考虑以下几点：
 
-* **内容暴露。**授权中的 `send` 数组控制 Highflame 能收到哪些数据。只包含你的使用场景下 Highflame 所需的数据类型。对于仅强制管控的配置，`request_body` 和 `user_message` 就足够了。
-* **API 密钥保管。**妥善保管 Highflame API 密钥。Aperture 会将该密钥存储在配置中，并在每次 hook 请求中作为 header 发送。请定期从 [Highflame 控制台][xt-highflame-console]轮换密钥。
-* **网络路径。**hook 请求经由你的 tailnet 传输。请确保 Highflame 端点可从你的 Aperture 网关访问，且没有中间服务记录或缓存请求负载。
-* **数据范围。**使用授权中的 `src` 字段限制 Aperture 将哪些用户的请求发送给 Highflame。避免发送不受你的强制管控或可观测策略约束的用户的数据。
-* **本地留存。**Aperture 发送给 Highflame 的内容与它在磁盘上留存的内容是两回事。如果你要求 Aperture 绝不在磁盘上存储提示或响应内容，请参阅[配置零留存模式][docs-aperture-zero-retention]和[隐私与数据留存][docs-aperture-privacy]。
-* **第三方处理。**Highflame 是第三方服务。当 Aperture 向它转发请求数据时，Highflame 对这些数据的使用受你与 Highflame 之间协议的约束，而非你与 Tailscale 之间的协议。
+* **内容暴露**。授权中的 `send` 数组控制 Highflame 能收到哪些数据。只包含你的使用场景下 Highflame 所需的数据类型。对于仅强制管控的配置，`request_body` 和 `user_message` 就足够了。
+* **API 密钥保管**。妥善保管 Highflame API 密钥。Aperture 会将该密钥存储在配置中，并在每次 hook 请求中作为 header 发送。请定期从 [Highflame 控制台][xt-highflame-console]轮换密钥。
+* **网络路径**。hook 请求经由你的 tailnet 传输。请确保 Highflame 端点可从你的 Aperture 网关访问，且没有中间服务记录或缓存请求负载。
+* **数据范围**。使用授权中的 `src` 字段限制 Aperture 将哪些用户的请求发送给 Highflame。避免发送不受你的强制管控或可观测策略约束的用户的数据。
+* **本地留存**。Aperture 发送给 Highflame 的内容与它在磁盘上留存的内容是两回事。如果你要求 Aperture 绝不在磁盘上存储提示或响应内容，请参阅[配置零留存模式][docs-aperture-zero-retention]和[隐私与数据留存][docs-aperture-privacy]。
+* **第三方处理**。Highflame 是第三方服务。当 Aperture 向它转发请求数据时，Highflame 对这些数据的使用受你与 Highflame 之间协议的约束，而非你与 Tailscale 之间的协议。
 
 ## 后续步骤
 

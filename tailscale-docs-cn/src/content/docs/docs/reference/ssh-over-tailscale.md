@@ -140,8 +140,8 @@ ssh username@100.100.123.123
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#configure-tailscale-ssh-with-check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#使用检查模式配置-tailscale-ssh
 
-[docs-tailscale-ssh-configure-tailscale-ssh]: /docs/features/tailscale-ssh#configure-tailscale-ssh
+[docs-tailscale-ssh-configure-tailscale-ssh]: /docs/features/tailscale-ssh#配置-tailscale-ssh
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh

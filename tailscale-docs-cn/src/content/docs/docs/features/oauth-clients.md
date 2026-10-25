@@ -282,7 +282,7 @@ go run tailscale.com/cmd/get-authkey@latest -reusable -tags tag:development
 
 [docs-api]: /docs/reference/tailscale-api
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
@@ -292,7 +292,7 @@ go run tailscale.com/cmd/get-authkey@latest -reusable -tags tag:development
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 
-[docs-tags-ownership]: /docs/features/tags#ownership
+[docs-tags-ownership]: /docs/features/tags#所有权
 
 [docs-tags]: /docs/features/tags
 
@@ -300,9 +300,9 @@ go run tailscale.com/cmd/get-authkey@latest -reusable -tags tag:development
 
 [docs-tailscale-up]: /docs/reference/tailscale-cli/up
 
-[docs-trust-credentials-legacy-scopes]: /docs/reference/trust-credentials#legacy-scopes
+[docs-trust-credentials-legacy-scopes]: /docs/reference/trust-credentials#旧版-scope
 
-[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#scopes
+[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
 [xt-gh-node-oauth]: https://github.com/ciaranj/node-oauth#oauth20
 

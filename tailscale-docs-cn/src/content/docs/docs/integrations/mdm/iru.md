@@ -99,9 +99,9 @@ Tailscale [系统策略][docs-mdm-keys]让你可以自定义设备群中各设�
 
 [ar-managing-tailscale-updates-with-kandji]: #使用-kandji-管理-tailscale-更新
 
-[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
-[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#deploying-system-policies-in-a-configuration-profile
+[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#在配置描述文件中部署系统策略
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

@@ -423,7 +423,7 @@ allowedRoutes:
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-split-dns]: /docs/reference/dns-in-tailscale#restricted-nameservers
+[docs-split-dns]: /docs/reference/dns-in-tailscale#受限域名服务器
 
 [docs-operator-customization]: /docs/kubernetes-operator/reference/tags
 

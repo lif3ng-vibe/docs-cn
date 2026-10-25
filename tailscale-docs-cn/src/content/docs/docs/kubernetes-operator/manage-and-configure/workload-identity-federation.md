@@ -141,9 +141,9 @@ spec:
 * 了解[工作负载身份联合][docs-wif]的工作原理及其与 Tailscale 的集成方式。
 * [安装][docs-install-operator] Tailscale Kubernetes Operator。
 
-[docs-install-helm]: /docs/kubernetes-operator/install-operator#install-using-helm
+[docs-install-helm]: /docs/kubernetes-operator/install-operator#使用-helm-安装
 
-[docs-install-static-manifests]: /docs/kubernetes-operator/install-operator#install-using-static-manifests-with-kubectl
+[docs-install-static-manifests]: /docs/kubernetes-operator/install-operator#使用-kubectl-静态清单安装
 
 [docs-install-operator]: /docs/kubernetes-operator/install-operator
 
@@ -151,4 +151,4 @@ spec:
 
 [docs-wif]: /docs/features/workload-identity-federation
 
-[docs-wif-configure]: /docs/features/workload-identity-federation#configure-federated-identities-in-the-admin-console
+[docs-wif-configure]: /docs/features/workload-identity-federation#在管理控制台中配置联合身份

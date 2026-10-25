@@ -104,7 +104,7 @@ EC2 实例
 
 1. 在**应用程序和操作系统映像**（Application and OS Images）下选择 **Amazon Linux** 或其他[受支持的 Linux 发行版][docs-install-linux]。
 2. 在**实例类型**（Instance type）下选择满足你计算、内存、网络或存储需求的实例类型。测试此部署时，使用 `t2.micro` 或任何符合 [AWS 免费套餐][xt-aws-free-tier]条件的实例类型就足够了。
-3. 在**密钥对（登录）**（Key pair (login)）下选择用于 SSH 的密钥对。
+3. 在**密钥对**（登录）（Key pair (login)）下选择用于 SSH 的密钥对。
 4. 在**网络设置**（Network settings）下选择你在上面创建的 VPC。
 5. 将实例分配到该 VPC 的公有子网，并启用**自动分配公有 IP**（Auto-assign public IP）。
 6. 创建一个安全组并允许入站 SSH。（初始设置期间需要用到，之后可以关闭。）
@@ -159,7 +159,7 @@ sudo tailscale set --advertise-routes=10.0.0.0/16
 
 1. 在**应用程序和操作系统映像**（Application and OS Images）下选择 **Amazon Linux** 或其他[受支持的 Linux 发行版][docs-install-linux]。
 2. 在**实例类型**（Instance type）下选择与之前相同的实例类型。
-3. 在**密钥对（登录）**（Key pair (login)）下选择用于 SSH 的密钥对。
+3. 在**密钥对**（登录）（Key pair (login)）下选择用于 SSH 的密钥对。
 4. 在**网络设置**（Network settings）下选择你在上面创建的 VPC。
 5. 将实例分配到该 VPC 的私有子网，并将**自动分配公有 IP**（Auto-assign public IP）保持为**禁用**（Disable）。
 6. 创建一个安全组，允许来自 `tailscale-subnet-router` 安全组的所有入站流量。
@@ -217,9 +217,9 @@ Tailscale 提供多种[支持选项][docs-support-options]，响应时间对应�
 
 [docs-support-options]: /docs/reference/support-options
 
-[docs-tailscaled-flags-to-tailscaled]: /docs/reference/tailscaled#flags-to-tailscaled
+[docs-tailscaled-flags-to-tailscaled]: /docs/reference/tailscaled#tailscaled-的标志
 
-[docs-terminology-and-concepts-coordination-server]: /docs/reference/glossary#coordination-server
+[docs-terminology-and-concepts-coordination-server]: /docs/reference/glossary#协调服务器
 
 [docs-troubleshooting-error-with-advertised-routes]: /docs/reference/troubleshooting/network-configuration/ip-forwarding-errors-advertise
 

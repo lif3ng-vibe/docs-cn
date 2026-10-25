@@ -97,7 +97,7 @@ description: "你可以使用 [Jamf Pro][xt-jamf-pro] 移动设备管理（MDM�
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 
-[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

@@ -401,7 +401,7 @@ Tailnet Lock 会尝试将数据存储在每个节点的 Tailscale 状态目录�
 
 [docs-cli]: /docs/reference/tailscale-cli
 
-[docs-control-data-planes-control-plane]: /docs/concepts/control-data-planes#control-plane
+[docs-control-data-planes-control-plane]: /docs/concepts/control-data-planes#控制平面
 
 [docs-control-data-planes-coordination-server]: /docs/concepts/control-data-planes#coordination-server
 
@@ -417,9 +417,9 @@ Tailnet Lock 会尝试将数据存储在每个节点的 Tailscale 状态目录�
 
 [docs-sharing]: /docs/features/sharing
 
-[docs-tailnet-lock-whitepaper-keys]: /docs/concepts/tailnet-lock-whitepaper#tailnet-lock-keys
+[docs-tailnet-lock-whitepaper-keys]: /docs/concepts/tailnet-lock-whitepaper#tailnet-lock-密钥
 
-[docs-tailnet-lock-whitepaper-tofu]: /docs/concepts/tailnet-lock-whitepaper#enablement-is-trust-on-first-use-tofu
+[docs-tailnet-lock-whitepaper-tofu]: /docs/concepts/tailnet-lock-whitepaper#启用基于首次使用即信任tofu
 
 [docs-tailnet-lock-whitepaper]: /docs/concepts/tailnet-lock-whitepaper
 
@@ -445,6 +445,6 @@ Tailnet Lock 会尝试将数据存储在每个节点的 Tailscale 状态目录�
 
 [docs-tailscaled]: /docs/reference/tailscaled
 
-[docs-tailscaled-flags]: /docs/reference/tailscaled#flags-to-tailscaled
+[docs-tailscaled-flags]: /docs/reference/tailscaled#tailscaled-的标志
 
 [xt-headscale]: https://headscale.net

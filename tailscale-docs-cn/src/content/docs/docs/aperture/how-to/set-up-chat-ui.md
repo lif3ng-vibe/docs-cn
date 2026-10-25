@@ -131,7 +131,7 @@ Aperture 管理仪表盘包含一个仅管理员可见的 **Chat Activity** 页�
 
 [docs-admin-console]: /docs/aperture/reference/dashboard-admin
 
-[docs-chat-models]: /docs/aperture/reference/chat#model-and-reasoning-selection
+[docs-chat-models]: /docs/aperture/reference/chat#模型与推理选择
 
 [docs-get-started]: /docs/aperture/get-started
 

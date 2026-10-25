@@ -83,6 +83,6 @@ curl "https://api.tailscale.com/api/v2/device/11055/authorized" \
 
 [docs-device-posture]: /docs/features/device-posture
 
-[docs-webhooks-events]: /docs/features/webhooks#events
+[docs-webhooks-events]: /docs/features/webhooks#事件
 
 [docs-webhooks]: /docs/features/webhooks

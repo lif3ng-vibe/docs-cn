@@ -50,7 +50,7 @@ description: "在 Aperture 中配置 Anthropic 提供商，让你的团队通过
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-use-passthrough-mode]: /docs/aperture/how-to/use-passthrough-mode
 

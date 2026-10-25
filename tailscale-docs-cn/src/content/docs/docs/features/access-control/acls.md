@@ -129,9 +129,9 @@ ipsets
 
 [docs-acl-samples]: /docs/reference/examples/acls
 
-[docs-acl-samples-allow-all]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-allow-all]: /docs/reference/examples/acls#允许所有默认-acl
 
-[docs-acl-samples-deny-all]: /docs/reference/examples/acls#deny-all
+[docs-acl-samples-deny-all]: /docs/reference/examples/acls#拒绝所有
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 

@@ -101,9 +101,9 @@ passkey 用户名：
 
 [ar-passkey-username-rules]: #passkey-用户名规则
 
-[docs-invite-email]: /docs/features/sharing/how-to/invite-any-user#send-an-invite-email
+[docs-invite-email]: /docs/features/sharing/how-to/invite-any-user#发送邀请电子邮件
 
-[docs-invite-link]: /docs/features/sharing/how-to/invite-any-user#send-an-invite-link
+[docs-invite-link]: /docs/features/sharing/how-to/invite-any-user#发送邀请链接
 
 [docs-invite]: /docs/features/sharing/how-to/invite-any-user
 

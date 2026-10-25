@@ -11,7 +11,7 @@ description: "网络流日志让你了解 Tailscale 网络（即 tailnet）中�
 
 网络流日志可查看最近 30 天的记录。
 
-> **注意：**此功能[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
+> **注意**：此功能[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
 > **注意：**
 >
@@ -500,9 +500,9 @@ PhysicalTraffic:                                   28.80    4.46Ki    46.41    7
 
 [docs-api]: /docs/reference/tailscale-api
 
-[docs-exit-nodes-logging]: /docs/features/exit-nodes#destination-logging-in-network-flow-logs
+[docs-exit-nodes-logging]: /docs/features/exit-nodes#网络流日志中的目标日志记录
 
-[docs-log-mesh-traffic-opt-out]: /docs/features/logging#opt-out-of-client-logging
+[docs-log-mesh-traffic-opt-out]: /docs/features/logging#退出客户端日志记录
 
 [docs-log-streaming]: /docs/features/logging/log-streaming
 

@@ -59,4 +59,4 @@ Tailscale 提供了帮助保护 tailnet 安全的建议。
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
-[docs-terminology-and-concepts-policy]: /docs/reference/glossary#tailnet-policy-file
+[docs-terminology-and-concepts-policy]: /docs/reference/glossary#tailnet-策略文件

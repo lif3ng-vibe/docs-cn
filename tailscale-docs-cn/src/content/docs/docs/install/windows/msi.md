@@ -191,7 +191,7 @@ Tailscale MSI 属性一经设置，会存储在 `HKEY_LOCAL_MACHINE\SOFTWARE\Pol
 
 [docs-install-windows]: /docs/install/windows
 
-[docs-mdm-keys-custom-control-server]: /docs/features/tailscale-system-policies#set-a-custom-control-server-url
+[docs-mdm-keys-custom-control-server]: /docs/features/tailscale-system-policies#设置自定义控制服务器-url
 
 [docs-sso-providers]: /docs/integrations/identity
 

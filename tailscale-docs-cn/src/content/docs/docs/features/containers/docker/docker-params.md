@@ -190,9 +190,9 @@ tailscaled LocalAPI 套接字所在的 Unix 套接字路径。默认为 `/var/ru
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-oauth-clients-register-new-nodes]: /docs/features/oauth-clients#register-new-nodes-using-oauth-credentials
+[docs-oauth-clients-register-new-nodes]: /docs/features/oauth-clients#使用-oauth-凭证注册新节点
 
-[docs-oauth-clients-setup]: /docs/features/oauth-clients#setting-up-an-oauth-client
+[docs-oauth-clients-setup]: /docs/features/oauth-clients#设置-oauth-客户端
 
 [docs-subnets]: /docs/features/subnet-routers
 
@@ -202,8 +202,8 @@ tailscaled LocalAPI 套接字所在的 Unix 套接字路径。默认为 `/var/ru
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
-[docs-tailscaled-flags-to-tailscaled]: /docs/reference/tailscaled#flags-to-tailscaled
+[docs-tailscaled-flags-to-tailscaled]: /docs/reference/tailscaled#tailscaled-的标志
 
-[docs-userspace-networking-socks5-vs-http]: /docs/concepts/userspace-networking#socks5-vs-http
+[docs-userspace-networking-socks5-vs-http]: /docs/concepts/userspace-networking#socks5-与-http-的区别
 
 [docs-workload-identity-federation]: /docs/features/workload-identity-federation

@@ -17,7 +17,7 @@ Aperture 有两个 Web 界面。你可以使用 [Chat][docs-chat] 与模型对�
 
 浏览以下主题，了解 Aperture 的功能，以及它如何验证用户身份、路由请求和采集遥测数据。
 
-[**Aperture 是什么？**](/docs/aperture/what-is-aperture) —— Tailscale 的 Aperture 是一个 AI 智能体，可与你的 tailnet 中的机器协同工作，其背后是一个通过你的 Tailscale 身份路由 LLM 请求的网关。
+[**Aperture 是什么**？](/docs/aperture/what-is-aperture) —— Tailscale 的 Aperture 是一个 AI 智能体，可与你的 tailnet 中的机器协同工作，其背后是一个通过你的 Tailscale 身份路由 LLM 请求的网关。
 
 [**Aperture 的工作原理**](/docs/aperture/how-aperture-works) —— 了解 Aperture 如何利用 Tailscale 身份、基于模型的路由以及遥测数据来保护并监控 LLM 请求。
 

@@ -17,7 +17,7 @@ description: "配置 Tailscale 一些最常用的功能。"
 
 [**SSH 连接 Linux 虚拟机**](/docs/how-to/connect-ssh-linux-vm)——使用 Tailscale SSH 安全连接到 Linux 虚拟机。
 
-[**访问你的虚拟私有云（VPC）**](/docs/how-to/connect-vpc)——访问你的虚拟私有云（VPC），并使用 Tailscale 配置子网路由器。
+[**访问你的虚拟私有云**（VPC）](/docs/how-to/connect-vpc)——访问你的虚拟私有云（VPC），并使用 Tailscale 配置子网路由器。
 
 [**使用 Docker Compose 将 Docker 容器接入你的 tailnet**](/docs/features/containers/docker/how-to/connect-docker-container)——使用 Docker Compose 和 nginx 搭建接入 Tailscale 的容器，通过 tailnet 安全访问该服务。
 

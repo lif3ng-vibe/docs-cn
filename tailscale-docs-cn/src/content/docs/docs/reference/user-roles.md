@@ -378,13 +378,13 @@ Member
 
 [docs-access-control]: /docs/features/access-control/acls
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-billing-information-billing-email]: /docs/account/billing/modify-billing#change-the-billing-email-address
 
-[docs-changing-user-roles-limitations-when-changing-owners]: /docs/features/sharing/how-to/change-role#limitations-when-changing-owner
+[docs-changing-user-roles-limitations-when-changing-owners]: /docs/features/sharing/how-to/change-role#更改-owner-的限制
 
 [docs-changing-user-roles]: /docs/features/sharing/how-to/change-role
 

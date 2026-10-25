@@ -11,10 +11,10 @@ description: "[Aperture recipes][xt-recipes] 是一个开源仓库，由 Tailsca
 
 配方覆盖四种集成类型：
 
-* **请求前 hook（pre-request hooks）**：在请求到达 LLM 提供商之前检查、修改或拦截请求。
-* **响应后 hook（post-response hooks）**：处理已完成的请求，用于记录或审计。
-* **提供商（providers）**：把 Aperture 连接到 LLM 提供商或转售商。
-* **工具（tools）**：把 Aperture 与开发者工具、平台或工作流配合使用。
+* **请求前 hook**（pre-request hooks）：在请求到达 LLM 提供商之前检查、修改或拦截请求。
+* **响应后 hook**（post-response hooks）：处理已完成的请求，用于记录或审计。
+* **提供商**（providers）：把 Aperture 连接到 LLM 提供商或转售商。
+* **工具**（tools）：把 Aperture 与开发者工具、平台或工作流配合使用。
 
 每个配方都有一个包含设置说明和示例的 `README.md`。配方可以附带配套脚本或配置文件，但这个仓库不是一组可部署的应用。
 

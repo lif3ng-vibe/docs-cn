@@ -90,7 +90,7 @@ MySQL  database-2.0123456789ab.us-west-2.rds.amazonaws.com:3306 ssl  SQL > show 
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-firewall-ports]: /docs/reference/faq/firewall-ports
 

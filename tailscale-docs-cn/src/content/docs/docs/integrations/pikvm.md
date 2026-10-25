@@ -118,7 +118,7 @@ tailscale serve --bg https+insecure://localhost:443
 
 [co-pricing]: https://tailscale.com/pricing
 
-[docs-tags-key-expiry]: /docs/features/tags#key-expiry
+[docs-tags-key-expiry]: /docs/features/tags#密钥过期
 
 [docs-tags]: /docs/features/tags
 

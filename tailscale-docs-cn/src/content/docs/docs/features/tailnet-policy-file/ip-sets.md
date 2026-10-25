@@ -243,11 +243,11 @@ tailnet 策略文件中支持引用 IP 集的分区包括：
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-acl-groups]: /docs/reference/syntax/policy-file#groups
+[docs-acl-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-acl-hosts]: /docs/reference/syntax/policy-file#hosts
+[docs-acl-hosts]: /docs/reference/syntax/policy-file#主机
 
-[docs-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
 [docs-exit-node]: /docs/features/exit-nodes
 
@@ -259,7 +259,7 @@ tailnet 策略文件中支持引用 IP 集的分区包括：
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-targets]: /docs/reference/targets-and-selectors
 

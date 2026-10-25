@@ -105,9 +105,9 @@ Tailscale 在将数据发送给 Control D 之前会去掉优先级后缀。
 
 [docs-dns]: /docs/reference/dns-in-tailscale
 
-[docs-dns-global-nameservers]: /docs/reference/dns-in-tailscale#global-nameservers
+[docs-dns-global-nameservers]: /docs/reference/dns-in-tailscale#全局域名服务器
 
-[docs-dns-restricted-nameservers]: /docs/reference/dns-in-tailscale#restricted-nameservers
+[docs-dns-restricted-nameservers]: /docs/reference/dns-in-tailscale#受限域名服务器
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 

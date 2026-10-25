@@ -64,7 +64,7 @@ TruffleHog 对 Tailscale 端点的 API 调用不会修改你的 tailnet，它只
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-secret
+[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-密钥
 
 [ln-what-is-scim]: https://tailscale.com/learn/what-is-scim
 

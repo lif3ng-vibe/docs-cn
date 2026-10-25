@@ -46,10 +46,10 @@ description: "[Webhook][docs-webhooks] 密钥用于对从 Tailscale 发送到你
 * [测试 webhook 端点][docs-test-webhooks]：发送测试事件，确认你的端点在新密钥下工作正常。
 * [配置 webhook 事件][docs-configure-webhook]：管理哪些事件会向你的端点触发通知。
 
-[docs-configure-webhook]: /docs/features/webhooks#setting-up-a-webhook-endpoint
+[docs-configure-webhook]: /docs/features/webhooks#设置-webhook-端点
 
-[docs-test-webhooks]: /docs/features/webhooks#testing-your-webhook
+[docs-test-webhooks]: /docs/features/webhooks#测试你的-webhook
 
-[docs-verify-event-signature]: /docs/features/webhooks#verifying-an-event-signature
+[docs-verify-event-signature]: /docs/features/webhooks#验证事件签名
 
 [docs-webhooks]: /docs/features/webhooks

@@ -9,7 +9,7 @@ description: "当员工加入或离开你的组织时，他们对网络资源的
 >
 > 精选参考：
 >
-> [**用户与群组预配（User & group provisioning）**](/docs/features/user-group-provisioning) — 了解 Tailscale 支持的跨域身份管理系统（SCIM）身份提供方。
+> [**用户与群组预配**（User & group provisioning）](/docs/features/user-group-provisioning) — 了解 Tailscale 支持的跨域身份管理系统（SCIM）身份提供方。
 
 当员工加入或离开你的组织时，他们对网络资源的访问权限需要反映其当前的角色与状态。跨域身份管理系统（SCIM）让你可以通过将 Tailscale 连接到身份提供方来自动实现这一点。如果你的身份提供方不支持 SCIM，也可以通过管理控制台手动管理访问权限。
 

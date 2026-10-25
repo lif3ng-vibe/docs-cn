@@ -7,7 +7,7 @@ description: "在单一组织下管理多个 tailnet。"
 
 你可以在单一组织下、使用共同的身份提供方和域名创建多个 Tailscale 网络（即 tailnet）。
 
-> **注意：**多 tailnet 功能目前处于 alpha 阶段。
+> **注意**：多 tailnet 功能目前处于 alpha 阶段。
 
 > **注意：**
 >
@@ -158,13 +158,13 @@ https://login.tailscale.com/switch-tailnet?tailnet=T123456789CNTRL
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-acl-tests]: /docs/reference/syntax/policy-file#tests
+[docs-acl-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
-[docs-display-name]: /docs/concepts/tailnet-name#display-name
+[docs-display-name]: /docs/concepts/tailnet-name#显示名称
 
-[docs-invite-any-user-join-external-tailnets]: /docs/features/sharing/how-to/invite-any-user#enable-or-disable-joining-external-tailnets
+[docs-invite-any-user-join-external-tailnets]: /docs/features/sharing/how-to/invite-any-user#启用或禁用加入外部-tailnet
 
 [docs-provisioning]: /docs/features/user-group-provisioning
 

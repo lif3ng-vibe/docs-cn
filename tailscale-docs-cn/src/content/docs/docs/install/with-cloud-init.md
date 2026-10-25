@@ -75,7 +75,7 @@ runcmd:
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
-[docs-oauth-clients-get-authkey-utility]: /docs/features/oauth-clients#get-authkey-utility
+[docs-oauth-clients-get-authkey-utility]: /docs/features/oauth-clients#get-authkey-工具
 
 [xt-aws-ec2-pass-user-data]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
 

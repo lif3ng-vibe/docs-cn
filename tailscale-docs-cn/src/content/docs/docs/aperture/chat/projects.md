@@ -131,8 +131,8 @@ Aperture 会将项目指令追加到 system prompt 中，不做额外的包装�
 * [Chat 连接器参考][docs-chat-connectors]：chat 中的连接器访问。
 * [Chat 沙盒][docs-chat-sandbox]：在对话中于隔离环境运行代码。
 
-[docs-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-chat-connectors]: /docs/aperture/reference/chat#连接器connectors
 
-[docs-chat-projects]: /docs/aperture/reference/chat#projects
+[docs-chat-projects]: /docs/aperture/reference/chat#项目projects
 
 [docs-chat-sandbox]: /docs/aperture/chat-sandbox

@@ -37,9 +37,9 @@ description: "结合使用 Tailscale 与 Opal，为你的 Tailscale 网络提供
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 

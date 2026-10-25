@@ -44,7 +44,7 @@ Tailscale 控制平面还提供带地理位置数据的设备态势属性。这�
 
 \[缺少代码片段：attributes-ip.mdx]
 
-> **注意：**\`ip:publicAddress\` 设备态势属性目前处于 beta 阶段。
+> **注意**：\`ip:publicAddress\` 设备态势属性目前处于 beta 阶段。
 
 > **注意：**
 >
@@ -169,7 +169,7 @@ Tailscale 控制平面还提供带地理位置数据的设备态势属性。这�
 
 [docs-posture-failure]: /docs/features/device-posture/monitoring-postures
 
-[docs-posture-plans]: /docs/features/device-posture#usage-by-plan
+[docs-posture-plans]: /docs/features/device-posture#按套餐区分的可用性
 
 [docs-posture-integrations]: /docs/features/device-posture/integrations
 
@@ -177,7 +177,7 @@ Tailscale 控制平面还提供带地理位置数据的设备态势属性。这�
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-audit-logging-events]: /docs/features/logging/audit-logging#events
+[docs-audit-logging-events]: /docs/features/logging/audit-logging#事件
 
 [docs-crowdstrike]: /docs/integrations/crowdstrike-zta
 
@@ -201,7 +201,7 @@ Tailscale 控制平面还提供带地理位置数据的设备态势属性。这�
 
 [docs-tailscale-ssh-console]: /docs/features/tailscale-ssh/tailscale-ssh-console
 
-[docs-update-auto-updates]: /docs/features/client/update#auto-updates
+[docs-update-auto-updates]: /docs/features/client/update#自动更新
 
 [docs-zero-trust]: /docs/concepts/zero-trust
 

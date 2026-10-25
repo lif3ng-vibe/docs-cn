@@ -168,7 +168,7 @@ xfreerdp /u:<username> /p:<password> /v:<hostaddress>
 
 [docs-magic-dns]: /docs/features/magicdns
 
-[docs-mdm-keys-unattended]: /docs/features/tailscale-system-policies#set-unattended-mode
+[docs-mdm-keys-unattended]: /docs/features/tailscale-system-policies#设置无人值守模式
 
 [docs-nextdns]: /docs/integrations/nextdns
 

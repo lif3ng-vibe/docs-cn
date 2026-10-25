@@ -160,15 +160,15 @@ Amelie 可以继续在 `Amelie-workstation` 上选择要使用的 tailnet。Tail
 
 [docs-oauth-client]: /docs/features/oauth-clients
 
-[docs-serve-app-capabilities-headers]: /docs/features/tailscale-serve#app-capabilities-header
+[docs-serve-app-capabilities-headers]: /docs/features/tailscale-serve#应用能力标头
 
-[docs-serve-identity-headers]: /docs/features/tailscale-serve#identity-headers
+[docs-serve-identity-headers]: /docs/features/tailscale-serve#身份标头
 
 [docs-serve]: /docs/features/tailscale-serve
 
 [docs-sso-custom-oidc]: /docs/integrations/identity/custom-oidc
 
-[docs-sso-providers-native]: /docs/integrations/identity#supported-native-identity-providers
+[docs-sso-providers-native]: /docs/integrations/identity#原生支持的身份提供方
 
 [docs-tags]: /docs/features/tags
 
@@ -178,9 +178,9 @@ Amelie 可以继续在 `Amelie-workstation` 上选择要使用的 tailnet。Tail
 
 [docs-targets-autogrouprole]: /docs/reference/targets-and-selectors#autogrouprole
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [docs-targets]: /docs/reference/targets-and-selectors
 

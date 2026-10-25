@@ -246,7 +246,7 @@ curl http://192.0.2.9:80/
 
 [docs-operator-cluster-ingress]: /docs/kubernetes-operator/ingress
 
-[docs-operator-static-manifests-with-kubectl]: /docs/kubernetes-operator/install-operator#install-using-static-manifests-with-kubectl
+[docs-operator-static-manifests-with-kubectl]: /docs/kubernetes-operator/install-operator#使用-kubectl-静态清单安装
 
 [docs-proxygroup]: /docs/kubernetes-operator/concepts/proxygroup
 

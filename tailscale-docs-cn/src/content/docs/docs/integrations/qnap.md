@@ -99,7 +99,7 @@ tailscale [...]
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-qnap-setup]: /docs/features/taildrop/how-to/set-up-taildrop-with-nas#set-up-taildrop-on-qnap
+[docs-qnap-setup]: /docs/features/taildrop/how-to/set-up-taildrop-with-nas#在-qnap-上设置-taildrop
 
 [docs-sharing]: /docs/features/sharing
 

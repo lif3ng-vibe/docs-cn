@@ -195,7 +195,7 @@ Tailscale PAM 让你清楚了解与 SQL Server 服务的连接情况。
 
 [docs-pam-connectors]: /docs/privileged-access-management/connectors
 
-[docs-pam-control-access-database]: /docs/privileged-access-management/how-to/control-access#control-database-access
+[docs-pam-control-access-database]: /docs/privileged-access-management/how-to/control-access#控制数据库访问
 
 [docs-pam-control-access]: /docs/privileged-access-management/how-to/control-access
 

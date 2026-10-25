@@ -242,13 +242,13 @@ tailscale whois 100.100.123.123
 
 [docs-tailscale-cli-whois]: /docs/reference/tailscale-cli#whois
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-targets]: /docs/reference/targets-and-selectors
 
 [docs-terraform-provider]: /docs/integrations/terraform-provider
 
-[docs-tests]: /docs/reference/syntax/policy-file#tests
+[docs-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-tsnet]: /docs/features/tsnet
 

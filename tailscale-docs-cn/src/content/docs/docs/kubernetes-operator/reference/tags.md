@@ -144,7 +144,7 @@ spec:
 
 [docs-auth-rbac]: /docs/kubernetes-operator/api-server-access/auth-and-rbac
 
-[docs-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-grants]: /docs/features/access-control/grants
 

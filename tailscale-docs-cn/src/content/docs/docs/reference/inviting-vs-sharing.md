@@ -62,8 +62,8 @@ Tailscale 提供两种共享设备和服务的访问权限的方式：
 
 [docs-taildrop]: /docs/features/taildrop
 
-[docs-terminology-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-terminology-policy-file]: /docs/reference/glossary#tailnet-策略文件
 
-[docs-user-roles-members]: /docs/reference/user-roles#member
+[docs-user-roles-members]: /docs/reference/user-roles#member成员
 
 [docs-user-roles]: /docs/reference/user-roles

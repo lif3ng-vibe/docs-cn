@@ -7,6 +7,6 @@ description: "如果在[日志][docs-client-logs]中发现提及 `failed to unse
 
 如果在[日志][docs-client-logs]中发现提及 `failed to unseal state file` 的错误，请参阅[从 TPM 故障中恢复][docs-recover-from-tpm-failures]。
 
-[docs-client-logs]: /docs/features/logging#client-logs
+[docs-client-logs]: /docs/features/logging#客户端日志
 
-[docs-recover-from-tpm-failures]: /docs/features/secure-node-state-storage#recover-from-tpm-failures
+[docs-recover-from-tpm-failures]: /docs/features/secure-node-state-storage#从-tpm-故障中恢复

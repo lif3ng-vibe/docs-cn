@@ -43,7 +43,7 @@ Tailscale 可以在内核网络模式或[用户态网络模式][docs-userspace-n
 
 [ar-workarounds]: #解决方法
 
-[docs-restricted-nameservers]: /docs/reference/dns-in-tailscale#restricted-nameservers
+[docs-restricted-nameservers]: /docs/reference/dns-in-tailscale#受限域名服务器
 
 [ar-userspace-networking]: #用户态网络
 

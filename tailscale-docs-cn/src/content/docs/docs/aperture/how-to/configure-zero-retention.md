@@ -145,9 +145,9 @@ Aperture 将建立了索引的头部值单独存储，清除捕获记录不会�
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 
-[docs-aperture-dashboard-admin-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-aperture-dashboard-admin-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
-[docs-aperture-export-s3-verification]: /docs/aperture/how-to/export-usage-data-to-s3#verify-the-export
+[docs-aperture-export-s3-verification]: /docs/aperture/how-to/export-usage-data-to-s3#验证导出
 
 [docs-aperture-export-s3]: /docs/aperture/how-to/export-usage-data-to-s3
 

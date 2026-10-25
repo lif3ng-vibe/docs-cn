@@ -196,7 +196,7 @@ AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所�
 
 [docs-aws-lightsail]: /docs/install/cloud/aws/aws-lightsail
 
-[docs-aws-rds-add-aws-dns]: /docs/install/cloud/aws/aws-rds#step-3-add-aws-dns-for-your-tailnet
+[docs-aws-rds-add-aws-dns]: /docs/install/cloud/aws/aws-rds#第-3-步为你的-tailnet-添加-aws-dns
 
 [docs-aws-rds]: /docs/install/cloud/aws/aws-rds
 
@@ -204,7 +204,7 @@ AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所�
 
 [docs-derp-servers]: /docs/reference/derp-servers
 
-[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#hard-nat
+[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#硬-nat
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 
@@ -214,7 +214,7 @@ AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所�
 
 [docs-firewalls]: /docs/integrations/firewalls
 
-[docs-high-availability-region-load-balancing]: /docs/features/route-selection#regional-routing
+[docs-high-availability-region-load-balancing]: /docs/features/route-selection#区域路由
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 
@@ -224,7 +224,7 @@ AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所�
 
 [docs-multiple-recorder-nodes]: /docs/reference/multiple-recorder-nodes
 
-[docs-peer-relays-get-started]: /docs/features/peer-relay#get-started
+[docs-peer-relays-get-started]: /docs/features/peer-relay#开始使用
 
 [docs-peer-relays]: /docs/features/peer-relay
 
@@ -232,17 +232,17 @@ AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所�
 
 [docs-route-selection]: /docs/features/route-selection
 
-[docs-session-recording-s3-create-policy]: /docs/features/tailscale-ssh/how-to/session-recording-s3#configure-s3-as-storage-for-session-recording-nodes
+[docs-session-recording-s3-create-policy]: /docs/features/tailscale-ssh/how-to/session-recording-s3#将-s3-配置为会话录制节点的存储
 
 [docs-set-up-servers]: /docs/how-to/set-up-servers
 
-[docs-subnets-set-up-a-subnet-router]: /docs/features/subnet-routers#set-up-a-subnet-router
+[docs-subnets-set-up-a-subnet-router]: /docs/features/subnet-routers#设置子网路由器
 
 [docs-subnets]: /docs/features/subnet-routers
 
 [docs-tailscale-ssh-session-recording]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording
 
-[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#turn-on-session-recording-in-your-tailnet-policy-file
+[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#在-tailnet-策略文件中开启会话录制
 
 [docs-terminology-and-concepts]: /docs/reference/glossary
 

@@ -185,12 +185,12 @@ tailnet 中的任何用户，或与该设备发生过共享的任何用户，只
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-subnets-enable-subnet-routes]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-subnets-enable-subnet-routes]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
 [docs-subnets]: /docs/features/subnet-routers
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件
 
 [docs-what-is-quad100]: /docs/reference/quad100

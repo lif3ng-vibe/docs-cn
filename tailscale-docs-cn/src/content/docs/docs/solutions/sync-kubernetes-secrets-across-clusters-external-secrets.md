@@ -375,7 +375,7 @@ kubectl get externalsecret <YOUR_SECRET_NAME> -n <YOUR_NAMESPACE>
 
 [docs-app-capabilities]: /docs/features/access-control/grants/grants-app-capabilities#tailscale-kubernetes-operator
 
-[docs-dns-nameserver]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-nameserver]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-grants]: /docs/features/access-control/grants
 
@@ -385,7 +385,7 @@ kubectl get externalsecret <YOUR_SECRET_NAME> -n <YOUR_NAMESPACE>
 
 [docs-operator-install]: /docs/kubernetes
 
-[docs-operator-oauth]: /docs/kubernetes-operator/install-operator#configure-tags-and-oauth-credentials
+[docs-operator-oauth]: /docs/kubernetes-operator/install-operator#配置标签和-oauth-凭证
 
 [docs-proxy-group]: /docs/kubernetes-operator/concepts/proxygroup
 

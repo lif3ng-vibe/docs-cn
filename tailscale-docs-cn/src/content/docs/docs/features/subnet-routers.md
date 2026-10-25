@@ -148,7 +148,7 @@ sudo tailscale set --advertise-routes=192.0.2.0/24,198.51.100.0/24
 
 如果认证该设备的用户有权在 [`autoApprovers`][docs-policy-syntax-autoapprovers] 中通告指定路由，子网路由器的路由会自动获得批准。你也可以通告 tailnet 策略文件中 `autoApprovers` 允许路由的任意子集。如果你想暴露默认路由（`0.0.0.0/0` 和 `::/0`），请考虑改用[出口节点][docs-exit-nodes]。
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -176,7 +176,7 @@ sudo tailscale set --advertise-routes=192.0.2.0/24,198.51.100.0/24
 
 如果认证该设备的用户有权在 [`autoApprovers`][docs-policy-syntax-autoapprovers] 中通告指定路由，子网路由器的路由会自动获得批准。你也可以通告 tailnet 策略文件中 `autoApprovers` 允许路由的任意子集。如果你想暴露默认路由（`0.0.0.0/0` 和 `::/0`），请考虑改用[出口节点][docs-exit-nodes]。
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -428,15 +428,15 @@ tailscale up --snat-subnet-routes=false
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-acls]: /docs/features/access-control/acls
 
-[docs-appletv-advertise-subnet-router]: /docs/install/appletv#advertise-apple-tv-as-a-subnet-router
+[docs-appletv-advertise-subnet-router]: /docs/install/appletv#将-apple-tv-宣告为子网路由器
 
-[docs-appletv-install-tailscale-on-tvos]: /docs/install/appletv#install-tailscale-on-tvos
+[docs-appletv-install-tailscale-on-tvos]: /docs/install/appletv#在-tvos-上安装-tailscale
 
 [docs-cli-macos]: /docs/reference/tailscale-cli?tab=macos
 
@@ -458,7 +458,7 @@ tailscale up --snat-subnet-routes=false
 
 [docs-site-to-site]: /docs/features/site-to-site
 
-[docs-tags-key-expiry]: /docs/features/tags#key-expiry
+[docs-tags-key-expiry]: /docs/features/tags#密钥过期
 
 [docs-tags]: /docs/features/tags
 

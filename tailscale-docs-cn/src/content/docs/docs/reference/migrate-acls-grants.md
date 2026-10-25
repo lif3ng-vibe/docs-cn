@@ -316,7 +316,7 @@ ACL 主要关注网络层权限，其语法将目标和端口合并到一个字�
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-targets]: /docs/reference/targets-and-selectors
 
@@ -328,4 +328,4 @@ ACL 主要关注网络层权限，其语法将目标和端口合并到一个字�
 
 [xt-wiki-deny-by-default]: https://en.wikipedia.org/wiki/Fail-safe
 
-[docs-tests]: /docs/reference/syntax/policy-file#tests
+[docs-tests]: /docs/reference/syntax/policy-file#测试tests

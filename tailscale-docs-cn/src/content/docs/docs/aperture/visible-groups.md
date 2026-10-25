@@ -155,4 +155,4 @@ Aperture 支持两类组：
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning
 
-[docs-admin-quota-usage]: /docs/aperture/reference/dashboard-admin#quota-usage
+[docs-admin-quota-usage]: /docs/aperture/reference/dashboard-admin#配额用量quota-usage

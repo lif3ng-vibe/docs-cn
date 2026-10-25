@@ -112,7 +112,7 @@ gcloud compute addresses list \
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-install-linux]: /docs/install/linux
 

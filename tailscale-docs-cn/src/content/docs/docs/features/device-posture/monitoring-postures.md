@@ -82,7 +82,7 @@ curl 'https://api.tailscale.com/api/v2/tailnet/-/devices?failingPostures=posture
 
 ## 为设备启用控制台徽标
 
-> **注意：**设备态势未通过的控制台徽标功能目前处于 beta 阶段。
+> **注意**：设备态势未通过的控制台徽标功能目前处于 beta 阶段。
 
 你可以启用在 Tailscale 管理控制台中显示的徽标，用于标记未通过特定态势的设备。这能让你快速确定哪些设备未通过重要态势。
 
@@ -121,7 +121,7 @@ curl 'https://api.tailscale.com/api/v2/tailnet/-/devices?failingPostures=posture
 
 ## 发送警告或通知
 
-> **注意：**设备态势未通过的警告或通知功能目前处于 beta 阶段。
+> **注意**：设备态势未通过的警告或通知功能目前处于 beta 阶段。
 
 你可以配置态势，在设备未通过态势时向最终用户客户端发送带自定义消息的警告或通知。
 你可以在策略文件中按态势逐个配置这些消息。

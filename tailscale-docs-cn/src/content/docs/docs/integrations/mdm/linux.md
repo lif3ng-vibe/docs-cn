@@ -56,7 +56,7 @@ description: "本页包含对在企业环境中于 Linux 上部署 Tailscale 的
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 
-[docs-tailscaled-flags]: /docs/reference/tailscaled#flags-to-tailscaled
+[docs-tailscaled-flags]: /docs/reference/tailscaled#tailscaled-的标志
 
 [xt-go-parse-duration]: https://pkg.go.dev/time#ParseDuration
 

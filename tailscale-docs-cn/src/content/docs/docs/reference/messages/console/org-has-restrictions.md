@@ -28,6 +28,6 @@ Your organization has restricted members from joining external tailnets
 
 * 有关启用和停用外部 tailnet 访问权限的信息，请参阅 [邀请任意用户加入你的 tailnet][docs-invite-any-user]。
 
-[docs-invite-any-user]: /docs/features/sharing/how-to/invite-any-user#enable-or-disable-joining-external-tailnets
+[docs-invite-any-user]: /docs/features/sharing/how-to/invite-any-user#启用或禁用加入外部-tailnet
 
 [docs-messages]: /docs/reference/messages

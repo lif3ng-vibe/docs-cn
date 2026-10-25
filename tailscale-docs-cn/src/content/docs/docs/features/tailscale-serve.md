@@ -143,7 +143,7 @@ Tailscale Serve 要求你在 tailnet 中[启用 HTTPS][docs-enabling-https]，�
 
 [docs-serve-examples]: /docs/reference/examples/serve
 
-[docs-serve-examples-app-caps]: /docs/reference/examples/serve#forward-app-capabilities-to-a-local-service
+[docs-serve-examples-app-caps]: /docs/reference/examples/serve#将应用能力转发到本地服务
 
 [docs-tags]: /docs/features/tags
 
@@ -153,13 +153,13 @@ Tailscale Serve 要求你在 tailnet 中[启用 HTTPS][docs-enabling-https]，�
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 
-[docs-tailscale-serve-disable-serve]: /docs/reference/tailscale-cli/serve#disable-tailscale-serve
+[docs-tailscale-serve-disable-serve]: /docs/reference/tailscale-cli/serve#停用-tailscale-serve
 
-[docs-tailscale-serve-proxy-protocol]: /docs/reference/tailscale-cli/serve#use-the-proxy-protocol
+[docs-tailscale-serve-proxy-protocol]: /docs/reference/tailscale-cli/serve#使用-proxy-protocol
 
-[docs-tailscale-serve-reset-serve]: /docs/reference/tailscale-cli/serve#reset-tailscale-serve
+[docs-tailscale-serve-reset-serve]: /docs/reference/tailscale-cli/serve#重置-tailscale-serve
 
-[docs-tailscale-serve-tcp-forwarder]: /docs/reference/tailscale-cli/serve#use-a-tcp-forwarder
+[docs-tailscale-serve-tcp-forwarder]: /docs/reference/tailscale-cli/serve#使用-tcp-转发器
 
 [docs-tailscale-serve]: /docs/reference/tailscale-cli/serve
 

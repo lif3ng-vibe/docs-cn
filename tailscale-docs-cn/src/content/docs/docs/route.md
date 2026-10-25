@@ -19,7 +19,7 @@ description: "探索 Tailscale 的路由功能，例如子网路由器、出口�
 
 出口节点会路由你的**全部**网络流量，这往往不是你想要的。若要将 Tailscale 配置为只路由去往特定子网的流量（更常见的配置），请阅读[从你的网络访问非 Tailscale 设备][ar-non-tailscale-devices]。
 
-[**出口节点（路由全部流量）**](/docs/features/exit-nodes)——让全部互联网流量经由网络中的特定设备路由。
+[**出口节点**（路由全部流量）](/docs/features/exit-nodes)——让全部互联网流量经由网络中的特定设备路由。
 
 [**Mullvad 出口节点**](/docs/features/exit-nodes/mullvad-exit-nodes)——使用 Mullvad VPN 端点作为你 tailnet 的出口节点。
 

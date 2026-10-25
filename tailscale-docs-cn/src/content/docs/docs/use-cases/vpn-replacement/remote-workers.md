@@ -86,34 +86,34 @@ description: "远程办公与居家办公员工需要访问本地部署和办公
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-exit-node-allow]: /docs/features/exit-nodes#allow-the-exit-node-from-the-admin-console
+[docs-exit-node-allow]: /docs/features/exit-nodes#在管理控制台中允许出口节点
 
-[docs-exit-node-configure]: /docs/features/exit-nodes#configure-an-exit-node
+[docs-exit-node-configure]: /docs/features/exit-nodes#配置出口节点
 
-[docs-exit-node-use]: /docs/features/exit-nodes#use-the-exit-node
+[docs-exit-node-use]: /docs/features/exit-nodes#使用出口节点
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
 [docs-set-up-high-availability]: /docs/how-to/set-up-high-availability
 
-[docs-subnet-router-acl]: /docs/features/subnet-routers#add-access-rules-for-the-advertised-subnet-routes
+[docs-subnet-router-acl]: /docs/features/subnet-routers#为通告的子网路由添加访问规则
 
-[docs-subnet-router-advertise]: /docs/features/subnet-routers#connect-to-tailscale-as-a-subnet-router
+[docs-subnet-router-advertise]: /docs/features/subnet-routers#以子网路由器身份连接-tailscale
 
-[docs-subnet-router-enable]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-subnet-router-enable]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
-[docs-subnet-router-install]: /docs/features/subnet-routers#install-the-tailscale-client
+[docs-subnet-router-install]: /docs/features/subnet-routers#安装-tailscale-客户端
 
-[docs-grants-groups]: /docs/reference/examples/grants#allow-access-to-different-environments-by-group
+[docs-grants-groups]: /docs/reference/examples/grants#按组访问不同环境
 
-[docs-grants-location]: /docs/reference/examples/grants#route-traffic-through-exit-nodes-based-on-location
+[docs-grants-location]: /docs/reference/examples/grants#按位置经出口节点路由流量
 
 [docs-system-policies]: /docs/features/tailscale-system-policies
 
 [docs-subnet-routers]: /docs/features/subnet-routers
 
-[docs-tags-working-with-tags]: /docs/features/tags#working-with-tags
+[docs-tags-working-with-tags]: /docs/features/tags#使用标签
 
-[docs-visual-editor-groups]: /docs/reference/visual-editor#groups
+[docs-visual-editor-groups]: /docs/reference/visual-editor#组
 
-[docs-visual-editor-tags]: /docs/reference/visual-editor#tags
+[docs-visual-editor-tags]: /docs/reference/visual-editor#标签

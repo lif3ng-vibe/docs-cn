@@ -130,7 +130,7 @@ description: "你可以以生成的 URL 形式，向任何你想让其加入 Tai
 
 [co-download]: https://tailscale.com/download
 
-[docs-audit-logging-events]: /docs/features/logging/audit-logging#events
+[docs-audit-logging-events]: /docs/features/logging/audit-logging#事件
 
 [docs-billing-information]: /docs/account/billing/modify-billing
 

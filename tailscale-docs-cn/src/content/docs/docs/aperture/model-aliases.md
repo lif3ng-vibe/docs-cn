@@ -553,7 +553,7 @@ hook 是策略和监控工具。它们不能改变路由，也不能把别名重
 
 [docs-chat-models]: /docs/aperture/configuration#chat_models
 
-[docs-dashboard-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-dashboard-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
 [docs-get-started]: /docs/aperture/get-started
 

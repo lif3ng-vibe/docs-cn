@@ -89,4 +89,4 @@ description: "你可以使用 Tailscale 管理控制台为以下身份提供方�
 
 [docs-sso-onelogin]: /docs/integrations/identity/onelogin
 
-[docs-webfinger]: /docs/integrations/identity/custom-oidc#webfinger-setup
+[docs-webfinger]: /docs/integrations/identity/custom-oidc#webfinger-设置

@@ -206,7 +206,7 @@ Tailscale 还提供了 [Tailscale Kubernetes Operator][docs-kubernetes-operator]
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-auth-keys-types]: /docs/features/access-control/auth-keys#types-of-auth-keys
+[docs-auth-keys-types]: /docs/features/access-control/auth-keys#认证密钥的类型
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
@@ -214,7 +214,7 @@ Tailscale 还提供了 [Tailscale Kubernetes Operator][docs-kubernetes-operator]
 
 [docs-docker]: /docs/features/containers/docker
 
-[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#faq
+[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#常见问题
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 
@@ -232,7 +232,7 @@ Tailscale 还提供了 [Tailscale Kubernetes Operator][docs-kubernetes-operator]
 
 [docs-tailscaled]: /docs/reference/tailscaled
 
-[docs-userspace-networking-socks5-vs-http]: /docs/concepts/userspace-networking#socks5-vs-http
+[docs-userspace-networking-socks5-vs-http]: /docs/concepts/userspace-networking#socks5-与-http-的区别
 
 [docs-userspace-networking]: /docs/concepts/userspace-networking
 

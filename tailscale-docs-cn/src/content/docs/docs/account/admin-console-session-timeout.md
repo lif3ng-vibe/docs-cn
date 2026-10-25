@@ -28,6 +28,6 @@ description: "了解 Tailscale 管理控制台中的空闲会话超时。"
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-roles]: /docs/reference/user-roles#roles
+[docs-roles]: /docs/reference/user-roles#角色
 
 [docs-session-expiry]: /docs/reference/admin-console-session-expiry

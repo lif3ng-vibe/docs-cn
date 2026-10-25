@@ -73,7 +73,7 @@ AWS App Runner 容器部署完成后，就能连接到你的私有 Tailscale 网
 
 [docs-cli-logout]: /docs/reference/tailscale-cli#logout
 
-[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#faq
+[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#常见问题
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 

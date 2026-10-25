@@ -178,6 +178,6 @@ tailscale logout
 
 [bl-headscale]: https://tailscale.com/blog/opensource#the-open-source-coordination-server
 
-[docs-deploy-tailscale-windows-mdm-registry]: /docs/integrations/mdm/windows-mdm#registry-values
+[docs-deploy-tailscale-windows-mdm-registry]: /docs/integrations/mdm/windows-mdm#注册表值
 
 [docs-macos-variants]: /docs/concepts/macos-variants

@@ -496,7 +496,7 @@ Taildrive 在"文件"（Files）App 中作为一个位置提供。
 要在 Material Files 中访问 Taildrive，请按以下步骤操作：
 
 1. 点按左上角的汉堡菜单。
-2. 选择**+ 添加存储**（+ Add storage...）。
+2. 选择 **+ 添加存储**（+ Add storage...）。
 3. 选择 **WebDAV 服务器**（WebDAV server）。
 4. 在**主机名**（Hostname）中输入 `100.100.100.100`。
 5. 在**端口**（Port）中输入 `8080`。

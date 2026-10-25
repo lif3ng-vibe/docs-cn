@@ -131,7 +131,7 @@ Host my-server.example.ts.net
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
-[docs-magicdns-enabling-magicdns]: /docs/features/magicdns#enabling-magicdns
+[docs-magicdns-enabling-magicdns]: /docs/features/magicdns#启用-magicdns
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 

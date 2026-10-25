@@ -361,15 +361,15 @@ IP 集通过 **Add** 和 **Remove** 操作支持组合。先用 **Add** 加入�
 
 [docs-mullvad-exit-nodes]: /docs/features/exit-nodes/mullvad-exit-nodes
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#hosts
+[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#主机
 
 [docs-policy-syntax-nodeattrs]: /docs/reference/syntax/policy-file#nodeattrs
 
 [docs-policy-syntax-sshtests]: /docs/reference/syntax/policy-file#sshtests
 
-[docs-policy-syntax-synced-groups]: /docs/reference/syntax/policy-file#synced-groups
+[docs-policy-syntax-synced-groups]: /docs/reference/syntax/policy-file#同步的群组
 
 [docs-policy-syntax-users]: /docs/reference/syntax/policy-file#users
 
@@ -387,12 +387,12 @@ IP 集通过 **Add** 和 **Remove** 操作支持组合。先用 **Add** 加入�
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-targets]: /docs/reference/targets-and-selectors
 
 [docs-via]: /docs/features/access-control/grants/grants-via
 
-[docs-visual-editor-tests]: /docs/features/visual-editor#tests
+[docs-visual-editor-tests]: /docs/features/visual-editor#测试
 
 [docs-visual-editor]: /docs/features/visual-editor

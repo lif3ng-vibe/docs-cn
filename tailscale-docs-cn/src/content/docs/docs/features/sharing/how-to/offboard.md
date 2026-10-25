@@ -39,11 +39,11 @@ description: "当你想删除、停用或停权环境中的用户时，就需要
 
 我们建议把 SCIM 自动取消用户预配作为离职处理的一部分。你也可以选择从 tailnet 中[删除][docs-remove-team-members-deleting-users]被停用的用户。出于安全考虑没有必要删除这些用户，因为他们已经无法登录；出于计费考虑也没有理由删除，因为非活跃用户不计费。
 
-[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#deleting-users
+[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#删除用户
 
-[docs-remove-team-members-resources]: /docs/features/sharing/how-to/remove-team-members#managing-user-resources
+[docs-remove-team-members-resources]: /docs/features/sharing/how-to/remove-team-members#管理用户资源
 
-[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#suspending-users
+[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#停用用户
 
 [docs-remove-team-members]: /docs/features/sharing/how-to/remove-team-members
 

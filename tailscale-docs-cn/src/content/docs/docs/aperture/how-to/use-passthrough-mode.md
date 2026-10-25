@@ -147,7 +147,7 @@ models 端点只列出你的 Tailscale 身份已获授权的模型。如果新�
 
 [docs-get-started]: /docs/aperture/get-started
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#authorization-types
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#认证类型
 
 [docs-use-your-tools]: /docs/aperture/use-your-tools
 

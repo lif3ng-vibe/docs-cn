@@ -289,19 +289,19 @@ Atlas 只允许来自 [Atlas 访问列表][xt-mongodb-atlas-configure-ips]中条
 
 [ar-start-app-connector]: #第-2-步为-atlas-启动一个应用连接器
 
-[docs-app-connectors-setup-requirements]: /docs/features/app-connectors/how-to/setup#requirements
+[docs-app-connectors-setup-requirements]: /docs/features/app-connectors/how-to/setup#要求
 
 [docs-app-connectors]: /docs/features/app-connectors
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-grants]: /docs/reference/syntax/policy-file#grants
+[docs-policy-syntax-grants]: /docs/reference/syntax/policy-file#授权grants
 
 [docs-policy-syntax-node-attributes]: /docs/reference/syntax/policy-file#nodeattrs
 
-[docs-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-tags]: /docs/features/tags
 

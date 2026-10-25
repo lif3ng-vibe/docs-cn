@@ -282,7 +282,7 @@ argocd cluster list
 
 [docs-control-data-planes]: /docs/features/oauth-clients
 
-[docs-dns-nameserver]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-nameserver]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-grants]: /docs/features/access-control/grants
 
@@ -298,4 +298,4 @@ argocd cluster list
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailnet-names]: /docs/features/magicdns#fully-qualified-domain-names-vs-machine-names
+[docs-tailnet-names]: /docs/features/magicdns#完全限定域名与机器名

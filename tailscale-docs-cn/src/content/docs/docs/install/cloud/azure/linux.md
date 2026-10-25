@@ -55,7 +55,7 @@ tailscale set --advertise-routes=10.1.0.0/24,168.63.129.16/32 --accept-dns=false
 
 [docs-azure-windows]: /docs/install/cloud/azure/windows
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-install-linux]: /docs/install/linux
 

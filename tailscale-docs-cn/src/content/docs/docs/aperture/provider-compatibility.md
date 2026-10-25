@@ -181,12 +181,12 @@ Aperture 使用第一个匹配的条目。
 
 [docs-use-your-tools]: /docs/aperture/use-your-tools
 
-[docs-chat-models]: /docs/aperture/reference/chat#models
+[docs-chat-models]: /docs/aperture/reference/chat#模型models
 
-[docs-client-matrix]: /docs/aperture/reference/supported-providers-clients#clients-and-agent-harnesses
+[docs-client-matrix]: /docs/aperture/reference/supported-providers-clients#客户端与-agent-框架
 
-[docs-compatibility-limitations]: /docs/aperture/reference/supported-providers-clients#limitations
+[docs-compatibility-limitations]: /docs/aperture/reference/supported-providers-clients#限制
 
-[docs-other-integrations]: /docs/aperture/reference/supported-providers-clients#other-providers-and-clients
+[docs-other-integrations]: /docs/aperture/reference/supported-providers-clients#其他提供商与客户端
 
-[docs-provider-matrix]: /docs/aperture/reference/supported-providers-clients#provider-matrix
+[docs-provider-matrix]: /docs/aperture/reference/supported-providers-clients#提供商矩阵

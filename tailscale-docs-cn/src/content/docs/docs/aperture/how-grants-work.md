@@ -91,7 +91,7 @@ Aperture 在请求时根据连接用户的 Tailscale 身份解析访问权限：
 
 [ar-next-steps]: #后续步骤
 
-[docs-aperture-connectors-labels]: /docs/aperture/connectors/reference#connector-labels
+[docs-aperture-connectors-labels]: /docs/aperture/connectors/reference#连接器标签
 
 [docs-aperture-grants]: /docs/aperture/configuration#grants
 

@@ -72,4 +72,4 @@ Tailscale 的功能会经历多个发布阶段：Alpha、Beta 和正式发布（
 
 [docs-docs]: /docs
 
-[docs-terminology-admin-console]: /docs/reference/glossary#admin-console
+[docs-terminology-admin-console]: /docs/reference/glossary#管理控制台

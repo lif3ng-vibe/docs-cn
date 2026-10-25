@@ -846,7 +846,7 @@ jobs:
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 
-[docs-hello-tsnet-create-a-tsnet]: /docs/features/tsnet/how-to/create-basic-tsnet-app#create-a-tsnet-hello-world-program
+[docs-hello-tsnet-create-a-tsnet]: /docs/features/tsnet/how-to/create-basic-tsnet-app#创建-tsnet-hello-world-程序
 
 [docs-magicdns]: /docs/features/magicdns
 
@@ -858,7 +858,7 @@ jobs:
 
 [docs-tailscale-github-action]: /docs/integrations/github/github-action
 
-[docs-tailscale-github-action-cache-tailscale]: /docs/integrations/github/github-action#cache-tailscale-binaries
+[docs-tailscale-github-action-cache-tailscale]: /docs/integrations/github/github-action#缓存-tailscale-二进制文件
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 

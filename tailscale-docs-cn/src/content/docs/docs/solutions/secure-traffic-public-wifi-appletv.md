@@ -131,9 +131,9 @@ sudo tailscale set --exit-node=
 
 [docs-apple-tv]: /docs/install/appletv
 
-[docs-appletv-subnet]: /docs/install/appletv#advertise-apple-tv-as-a-subnet-router
+[docs-appletv-subnet]: /docs/install/appletv#将-apple-tv-宣告为子网路由器
 
-[docs-appletv-use-exit-node]: /docs/install/appletv#use-a-device-exit-node
+[docs-appletv-use-exit-node]: /docs/install/appletv#使用设备出口节点
 
 [docs-device-add]: /docs/features/access-control/device-management/how-to/set-up
 
@@ -143,7 +143,7 @@ sudo tailscale set --exit-node=
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-shortcuts]: /docs/features/mac-ios-shortcuts#exit-nodes
+[docs-shortcuts]: /docs/features/mac-ios-shortcuts#出口节点
 
 [docs-sso-providers]: /docs/integrations/identity
 

@@ -114,9 +114,9 @@ Aperture 使用配额桶来执行支出限额。每个桶有一个容量（最�
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 
-[docs-aperture-model-aliases]: /docs/aperture/model-aliases#quotas
+[docs-aperture-model-aliases]: /docs/aperture/model-aliases#配额
 
-[docs-aperture-quotas]: /docs/aperture/configuration#quotas
+[docs-aperture-quotas]: /docs/aperture/configuration#配额
 
 [docs-get-started]: /docs/aperture/get-started
 

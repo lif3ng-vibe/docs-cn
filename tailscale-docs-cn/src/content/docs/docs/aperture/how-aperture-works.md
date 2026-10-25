@@ -104,7 +104,7 @@ Aperture 使用客户端提供的标识符识别会话，或者在可能时基�
 * [设置连接器][docs-aperture-connectors]：配置与 MCP 服务器和 HTTP API 的出站集成。
 * [隐私与数据保留][docs-aperture-privacy]：选择网关存储哪些内容，并了解请求内容可能流向何处。
 
-[docs-aperture-chat-sessions]: /docs/aperture/reference/chat#sessions
+[docs-aperture-chat-sessions]: /docs/aperture/reference/chat#会话sessions
 
 [docs-aperture-connect-outside-tailnet]: /docs/aperture/connect-outside-tailnet
 
@@ -112,19 +112,19 @@ Aperture 使用客户端提供的标识符识别会话，或者在可能时基�
 
 [docs-aperture-control-access]: /docs/aperture/control-access
 
-[docs-aperture-dashboard-admin-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-aperture-dashboard-admin-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 
-[docs-aperture-grant-model-access]: /docs/aperture/how-to/grant-model-access#grant-access-to-tagged-devices
+[docs-aperture-grant-model-access]: /docs/aperture/how-to/grant-model-access#授予打标签设备的访问权限
 
 [docs-aperture-how-grants-work]: /docs/aperture/how-grants-work
 
-[docs-aperture-incorrect-user-identity]: /docs/aperture/troubleshooting#all-sessions-appear-to-come-from-the-same-user
+[docs-aperture-incorrect-user-identity]: /docs/aperture/troubleshooting#所有会话似乎来自同一用户
 
 [docs-aperture-mcp-server]: /docs/aperture/mcp-server
 
-[docs-aperture-model-aliases]: /docs/aperture/model-aliases#how-aliases-resolve
+[docs-aperture-model-aliases]: /docs/aperture/model-aliases#别名如何解析
 
 [docs-aperture-observe-and-export]: /docs/aperture/observe-and-export
 
@@ -132,7 +132,7 @@ Aperture 使用客户端提供的标识符识别会话，或者在可能时基�
 
 [docs-aperture-provider-compatibility]: /docs/aperture/reference/supported-providers-clients
 
-[docs-provider-flags]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-flags]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-tags]: /docs/features/tags
 

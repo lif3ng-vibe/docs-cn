@@ -62,7 +62,7 @@ Aperture 维护着一个包含预配置默认值的经验证连接器（verified
 
 [docs-connectors-get-started]: /docs/aperture/connectors/get-started
 
-[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#dynamic-client-registration-oauth2_dcr
+[docs-connectors-reference-dcr]: /docs/aperture/connectors/reference#动态客户端注册oauth2_dcr
 
 [docs-connectors-reference]: /docs/aperture/connectors/reference
 
@@ -72,4 +72,4 @@ Aperture 维护着一个包含预配置默认值的经验证连接器（verified
 
 [docs-set-up-per-user-oauth2-connector]: /docs/aperture/how-to/set-up-per-user-oauth2-connector
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors

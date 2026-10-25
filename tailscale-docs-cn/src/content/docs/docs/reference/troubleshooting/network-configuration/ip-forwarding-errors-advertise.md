@@ -11,6 +11,6 @@ Tailscale 的路由功能（[子网路由器][docs-subnets]和[出口节点][doc
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-subnets-linux-ip-forwarding]: /docs/features/subnet-routers#enable-ip-forwarding
+[docs-subnets-linux-ip-forwarding]: /docs/features/subnet-routers#启用-ip-地址转发
 
 [docs-subnets]: /docs/features/subnet-routers

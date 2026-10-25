@@ -368,7 +368,7 @@ Tailscale 按以下顺序应用策略：
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
-[docs-policy-syntax-node-attributes]: /docs/reference/syntax/policy-file#node-attributes
+[docs-policy-syntax-node-attributes]: /docs/reference/syntax/policy-file#节点属性
 
 [docs-subnets]: /docs/features/subnet-routers
 

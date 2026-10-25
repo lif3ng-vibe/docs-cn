@@ -31,9 +31,9 @@ description: "你可以使用移动设备管理（MDM）工具强制启用始终
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-mdm-keys-allowedsuggestedexitnodes]: /docs/features/tailscale-system-policies#suggest-allowed-forced-exit-nodes
+[docs-mdm-keys-allowedsuggestedexitnodes]: /docs/features/tailscale-system-policies#建议允许的强制出口节点
 
-[docs-mdm-keys-exitnodeid]: /docs/features/tailscale-system-policies#force-an-exit-node-to-always-be-used
+[docs-mdm-keys-exitnodeid]: /docs/features/tailscale-system-policies#强制始终使用某个出口节点
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 

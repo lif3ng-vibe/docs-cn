@@ -189,7 +189,7 @@ ACL 无法限制对特定出口节点的使用。相关进展请参阅 [issue #1
 
 ## 引用用户
 
-> **注意：**用户功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：用户功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 你可以在访问规则的源（`src`）和目标（`dst`）字段中指定用户。指定用户时，请使用以下格式之一（取决于用户的 Tailscale 登录方式）：
 
@@ -207,7 +207,7 @@ ACL 无法限制对特定出口节点的使用。相关进展请参阅 [issue #1
 
 ## Autogroup
 
-> **注意：**Autogroup 适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：Autogroup 适用于[所有套餐](https://tailscale.com/pricing)。
 
 [Autogroup][docs-targets-autogroups] 是一种特殊的群组，会自动包含具有相同属性的用户、目标或用户名。
 
@@ -292,7 +292,7 @@ autogroup 中使用的域名受到以下限制：
 
 ### 从"用户"页面编辑用户的群组成员资格
 
-你必须拥有[所有者、管理员或网络管理员](/docs/reference/user-roles)角色，才能在**用户（Users）**页面编辑用户的群组成员资格。
+你必须拥有[所有者、管理员或网络管理员](/docs/reference/user-roles)角色，才能在**用户**（Users）页面编辑用户的群组成员资格。
 
 1. 打开管理控制台中的[用户（Users）](https://console.tailscale.com/admin/users)页面。
 2. 按名称查找用户。
@@ -334,7 +334,7 @@ autogroup 中使用的域名受到以下限制：
 
 ### 标签
 
-> **注意：**标签功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：标签功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 tailnet 策略文件的 `tags` 部分让你创建把非人类设备分组的[标签][docs-tags]。然后你可以在 ACL 中使用这些标签来选择这些设备。
 
@@ -344,7 +344,7 @@ tailnet 策略文件的 `tags` 部分让你创建把非人类设备分组的[标
 
 ### 主机
 
-> **注意：**主机功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：主机功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 `hosts` 部分让你为 IP 地址或 CIDR 范围定义一个人类友好的名称。
 
@@ -363,7 +363,7 @@ tailnet 策略文件的 `tags` 部分让你创建把非人类设备分组的[标
 
 ## 设备态势（postures）
 
-> **注意：**设备态势功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：设备态势功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 `postures` 部分让你定义一组[设备态势管理][docs-device-posture]规则，设备必须满足这些规则才能符合特定的访问规则。
 
@@ -462,7 +462,7 @@ tailnet 策略文件的 `tags` 部分让你创建把非人类设备分组的[标
 
 ## 标签所有者
 
-> **注意：**标签功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：标签功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 tailnet 策略文件的 `tagOwners` 部分定义了可分配给设备的标签，以及允许分配每个标签的用户列表。
 
@@ -505,7 +505,7 @@ autogroup `autogroup:admin` 和 `autogroup:network-admin` 可以分配所有标�
 
 ## 自动批准（autoApprovers）
 
-> **注意：**自动批准功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：自动批准功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 tailnet 策略文件的 `autoApprovers` 部分定义了无需在管理控制台进一步批准即可执行特定操作的用户列表。Tailscale 中的某些操作需要双重确认：[管理员](/docs/reference/user-roles)既要在运行 Tailscale 的设备上启用，也要在 Tailscale 管理控制台中启用。这些操作包括：
 
@@ -540,7 +540,7 @@ tailnet 策略文件的 `autoApprovers` 部分定义了无需在管理控制台�
 
 ## Tailscale SSH
 
-> **注意：**Tailscale SSH tailnet 策略适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：Tailscale SSH tailnet 策略适用于[所有套餐](https://tailscale.com/pricing)。
 
 tailnet 策略文件的 `ssh` 部分定义了可以使用 [Tailscale SSH][docs-tailscale-ssh] 的用户和设备列表（以及 SSH 用户）。要允许一条连接，tailnet 策略文件必须同时包含允许网络访问和 SSH 访问的规则：
 
@@ -586,7 +586,7 @@ tailnet 策略文件的 `ssh` 部分定义了可以使用 [Tailscale SSH][docs-t
 
 ### `users`
 
-> **注意：**此策略适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：此策略适用于[所有套餐](https://tailscale.com/pricing)。
 
 指定主机上允许的用户名集合。Tailscale 只使用主机上已经存在的用户账户。
 
@@ -596,7 +596,7 @@ tailnet 策略文件的 `ssh` 部分定义了可以使用 [Tailscale SSH][docs-t
 
 ### `checkPeriod`
 
-> **注意：**此策略仅在 [Premium 和 Enterprise 套餐](https://tailscale.com/pricing)可用。
+> **注意**：此策略仅在 [Premium 和 Enterprise 套餐](https://tailscale.com/pricing)可用。
 
 当 `action` 为 `check` 时，`checkPeriod` 指定在要求重新检查之前允许连接存续的时间段。你可以以分钟或小时为单位指定时间。时间必须至少一分钟，至多 168 小时（一周）。
 
@@ -855,7 +855,7 @@ tailnet 策略文件的 `nodeAttrs` 部分定义应用于 tailnet 中特定设�
 
 ## 测试（tests）
 
-> **注意：**测试功能适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：测试功能适用于[所有套餐](https://tailscale.com/pricing)。
 
 `tests` 部分让你对访问控制策略（授权和 ACL）编写断言，这些断言会在每次 tailnet 策略文件变更时作为检查运行。如果某个断言失败，Tailscale 会拒绝更新后的 tailnet 策略文件并报错，错误消息会指出失败的测试。
 
@@ -926,7 +926,7 @@ tailnet 策略文件的 `nodeAttrs` 部分定义应用于 tailnet 中特定设�
 
 ## SSH 测试
 
-> **注意：**SSH 测试适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：SSH 测试适用于[所有套餐](https://tailscale.com/pricing)。
 
 `sshTests` 部分让你对 [Tailscale SSH][docs-tailscale-ssh] 访问规则编写断言。SSH 测试的工作方式与 ACL [测试][ar-tests]类似。
 
@@ -985,7 +985,7 @@ IP 集是一种管理 IP 地址群组的方式。它可以封装一组 IP 地址
 
 ## 网络策略选项
 
-> **注意：**网络策略选项适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：网络策略选项适用于[所有套餐](https://tailscale.com/pricing)。
 
 除了访问规则，tailnet 策略文件还包含一些用于特定目的的全网策略设置。大多数网络永远不需要指定这些。
 
@@ -1088,7 +1088,7 @@ Tailscale 客户端可以有两种选择：
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
-[docs-exit-nodes-advertise-exit-node]: /docs/features/exit-nodes#advertise-a-device-as-an-exit-node
+[docs-exit-nodes-advertise-exit-node]: /docs/features/exit-nodes#将设备宣告为出口节点
 
 [docs-firewalls]: /docs/integrations/firewalls
 
@@ -1106,39 +1106,39 @@ Tailscale 客户端可以有两种选择：
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-subnets-subnet-router]: /docs/features/subnet-routers#connect-to-tailscale-as-a-subnet-router
+[docs-subnets-subnet-router]: /docs/features/subnet-routers#以子网路由器身份连接-tailscale
 
 [docs-tags]: /docs/features/tags
 
-[docs-tags-defining-a-tag]: /docs/features/tags#define-a-tag
+[docs-tags-defining-a-tag]: /docs/features/tags#定义标签
 
-[docs-tags-tag-a-device]: /docs/features/tags#apply-a-tag-to-a-device
+[docs-tags-tag-a-device]: /docs/features/tags#为设备应用标签
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#configure-tailscale-ssh-with-check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#使用检查模式配置-tailscale-ssh
 
 [docs-tailscale-ssh-ssh-access-rules]: /docs/features/tailscale-ssh#ssh-access-rules-in-default-acl
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-troubleshooting-cgnat-conflicts]: /docs/reference/troubleshooting/network-configuration/cgnat-conflicts
 
-[docs-user-group-provisioning-sync-groups]: /docs/features/user-group-provisioning#syncing-group-membership
+[docs-user-group-provisioning-sync-groups]: /docs/features/user-group-provisioning#同步组成员关系
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员管理员
 
-[docs-user-roles-auditor]: /docs/reference/user-roles#auditor
+[docs-user-roles-auditor]: /docs/reference/user-roles#auditor审计员审计员
 
-[docs-user-roles-billing-admin]: /docs/reference/user-roles#billing-admin
+[docs-user-roles-billing-admin]: /docs/reference/user-roles#billing-admin账单管理员账单管理员
 
-[docs-user-roles-it-admin]: /docs/reference/user-roles#it-admin
+[docs-user-roles-it-admin]: /docs/reference/user-roles#it-adminit-管理员
 
-[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin
+[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin网络管理员网络管理员
 
-[docs-user-roles-owner]: /docs/reference/user-roles#owner
+[docs-user-roles-owner]: /docs/reference/user-roles#owner所有者所有者
 
 [docs-wireguard]: /docs/concepts/wireguard
 

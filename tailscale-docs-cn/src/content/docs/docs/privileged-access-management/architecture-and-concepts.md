@@ -129,19 +129,19 @@ Tailscale PAM 的 [Border0 web 客户端](https://my.tailscale.com)让用户无�
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员
 
-[docs-user-roles-auditor]: /docs/reference/user-roles#auditor
+[docs-user-roles-auditor]: /docs/reference/user-roles#auditor审计员
 
-[docs-user-roles-billing-admin]: /docs/reference/user-roles#billing-admin
+[docs-user-roles-billing-admin]: /docs/reference/user-roles#billing-admin账单管理员
 
-[docs-user-roles-it-admin]: /docs/reference/user-roles#it-admin
+[docs-user-roles-it-admin]: /docs/reference/user-roles#it-adminit-管理员
 
-[docs-user-roles-member]: /docs/reference/user-roles#member
+[docs-user-roles-member]: /docs/reference/user-roles#member成员
 
-[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin
+[docs-user-roles-network-admin]: /docs/reference/user-roles#network-admin网络管理员
 
-[docs-user-roles-owner]: /docs/reference/user-roles#owner
+[docs-user-roles-owner]: /docs/reference/user-roles#owner所有者
 
 [docs-user-roles]: /docs/reference/user-roles
 

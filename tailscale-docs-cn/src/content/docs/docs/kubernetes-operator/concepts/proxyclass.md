@@ -54,8 +54,8 @@ spec:
 
 Operator 可以将一个默认 `ProxyClass` 自动应用到任何未显式指定 ProxyClass 的代理。要配置默认 `ProxyClass`：
 
-* **Helm：**设置 `proxyConfig.defaultProxyClass` 值。
-* **环境变量：**在 Operator 上设置 `PROXY_DEFAULT_CLASS`。
+* **Helm**：设置 `proxyConfig.defaultProxyClass` 值。
+* **环境变量**：在 Operator 上设置 `PROXY_DEFAULT_CLASS`。
 
 ## 进一步探索
 

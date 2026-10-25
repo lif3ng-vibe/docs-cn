@@ -15,7 +15,7 @@ Tailscale 中的服务器是向 Tailscale 网络（即 tailnet）中其他设备
 
 [**用标签为设备分组**](/docs/features/tags)——使用 Tailscale 标签对服务器等非用户设备进行认证和标识。
 
-[**认证密钥（auth keys）**](/docs/features/access-control/auth-keys)——使用 Tailscale 认证密钥认证设备、自动化设备开通并增强安全性。创建和管理认证密钥，实现更顺畅的网络访问与控制。
+[**认证密钥**（auth keys）](/docs/features/access-control/auth-keys)——使用 Tailscale 认证密钥认证设备、自动化设备开通并增强安全性。创建和管理认证密钥，实现更顺畅的网络访问与控制。
 
 [**临时节点**](/docs/features/ephemeral-nodes)——在 Tailscale 中使用临时节点（ephemeral node）管理容器、CI/CD 系统等短生命周期设备。
 

@@ -15,7 +15,7 @@ API 服务器代理支持两种身份验证模式，既可以作为[进程内代
 
 > **提示：**
 >
-> **想直接连接？**如果 API 服务器代理已配置好，可使用 `tailscale configure kubeconfig <proxy-hostname>` 设置 `kubectl` 访问。你可以在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面找到代理的 MagicDNS 名称，也可以询问你的集群管理员。详情请参阅[设置主题][docs-access-api]。
+> **想直接连接**？如果 API 服务器代理已配置好，可使用 `tailscale configure kubeconfig <proxy-hostname>` 设置 `kubectl` 访问。你可以在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面找到代理的 MagicDNS 名称，也可以询问你的集群管理员。详情请参阅[设置主题][docs-access-api]。
 
 有关设置步骤，请参阅[通过 Tailscale 设置 Kubernetes API 服务器][docs-access-api]。
 

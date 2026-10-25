@@ -97,7 +97,7 @@ Tailscale 依赖物理层，但不直接操作物理层的信号或数据包。�
 
 [docs-cli]: /docs/reference/tailscale-cli
 
-[docs-coordination-server]: /docs/reference/glossary#coordination-server
+[docs-coordination-server]: /docs/reference/glossary#协调服务器
 
 [docs-derp]: /docs/reference/derp-servers
 

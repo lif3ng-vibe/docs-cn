@@ -219,13 +219,13 @@ sudo dnf update tailscale
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
-[docs-macos-variants-standalone]: /docs/concepts/macos-variants#standalone-variant
+[docs-macos-variants-standalone]: /docs/concepts/macos-variants#standalone-变体
 
-[docs-mdm-keys-configure-auto-update]: /docs/features/tailscale-system-policies#configure-the-auto-update-settings
+[docs-mdm-keys-configure-auto-update]: /docs/features/tailscale-system-policies#配置自动更新设置
 
-[docs-synology-manual]: /docs/integrations/synology#install-tailscale-on-dsm-manually
+[docs-synology-manual]: /docs/integrations/synology#在-dsm-上手动安装-tailscale
 
-[docs-synology-schedule-updates]: /docs/integrations/synology#schedule-automatic-updates
+[docs-synology-schedule-updates]: /docs/integrations/synology#安排自动更新
 
 [xt-apple-ios-store-tailscale]: https://apps.apple.com/app/tailscale/id1470499037
 

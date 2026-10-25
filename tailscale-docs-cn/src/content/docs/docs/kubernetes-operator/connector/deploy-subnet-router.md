@@ -81,9 +81,9 @@ spec:
 
 [docs-4via6]: /docs/features/subnet-routers/4via6-subnets
 
-[docs-acls-autoapprovers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-acls-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -93,7 +93,7 @@ spec:
 
 [docs-operator-troubleshooting]: /docs/kubernetes-operator/reference/troubleshooting
 
-[docs-subnets-use-routes]: /docs/features/subnet-routers#use-your-subnet-routes-from-other-devices
+[docs-subnets-use-routes]: /docs/features/subnet-routers#从其他设备使用你的子网路由
 
 [docs-tags]: /docs/features/tags
 

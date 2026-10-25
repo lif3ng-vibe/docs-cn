@@ -177,7 +177,7 @@ sudo systemctl enable --now tailscaled
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-policy-file-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-file-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-subnet-routers]: /docs/features/subnet-routers
 
@@ -185,6 +185,6 @@ sudo systemctl enable --now tailscaled
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-targets-and-selectors-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-and-selectors-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
 [docs-up]: /docs/reference/tailscale-cli/up

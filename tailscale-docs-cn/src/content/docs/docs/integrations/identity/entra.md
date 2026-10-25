@@ -1,6 +1,6 @@
 ---
 title: "设置 Microsoft Entra ID 以与 Tailscale 配合使用"
-description: "**你应该可以直接使用 Microsoft Entra ID 身份登录 Tailscale，无需额外配置。**"
+description: "**你应该可以直接使用 Microsoft Entra ID 身份登录 Tailscale，无需额外配置**。"
 ---
 
 最后验证于 Jan 5, 2026

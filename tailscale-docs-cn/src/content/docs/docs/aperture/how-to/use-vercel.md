@@ -68,6 +68,6 @@ description: "在 Aperture 中配置 Vercel AI Gateway provider，让你的团�
 
 [docs-aperture-url-construction]: /docs/aperture/configuration#how-aperture-builds-upstream-urls
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [xt-vercel-tokens]: https://vercel.com/account/tokens

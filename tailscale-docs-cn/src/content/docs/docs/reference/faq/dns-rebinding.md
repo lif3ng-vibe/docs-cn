@@ -41,7 +41,7 @@ description: "某些 DNS 服务器具有一项名为 DNS 重绑定防护（DNS r
 
 5. 使用 [Tailscale DNS 配置][docs-dns-using-settings]并启用**覆盖 DNS 服务器**选项，把所有 DNS 查询（[MagicDNS][docs-magicdns] 或已配置使用特定名称服务器的域名除外）发送到不含 DNS 重绑定防护的公共 DNS 服务。这与上一个选项类似，但作用于整个 tailnet。
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-magicdns]: /docs/features/magicdns
 

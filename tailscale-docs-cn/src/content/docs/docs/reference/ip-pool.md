@@ -5,7 +5,7 @@ description: "配置 Tailscale 从特定的 IP 池中分配 IP 地址。"
 
 最后验证于 Jan 12, 2026
 
-> **注意：**IP 地址池目前处于 beta 阶段。
+> **注意**：IP 地址池目前处于 beta 阶段。
 
 默认情况下，Tailscale 会从 100.64.0.0/10 的 [CGNAT 地址段][docs-100.x-addresses]中为 tailnet 内的节点分配 IPv4 地址。
 这是一个公共互联网不使用的私有 IP 地址段。

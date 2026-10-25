@@ -9,7 +9,7 @@ Tailscale 是一个基于身份的零信任连接平台，可取代你的传统 
 
 ## 开始使用
 
-[**Tailscale 是什么？**](/docs/concepts/what-is-tailscale) —— 简要介绍 Tailscale。
+[**Tailscale 是什么**？](/docs/concepts/what-is-tailscale) —— 简要介绍 Tailscale。
 
 [**开始使用 Tailscale**](/docs/install/start) —— 安装 Tailscale、创建网络并邀请你的团队。
 
@@ -31,7 +31,7 @@ Tailscale 是一个基于身份的零信任连接平台，可取代你的传统 
 
 [**子网路由器**](/docs/features/subnet-routers) —— 使用子网路由器让本地网络之外的设备能够访问特定子网内的服务。用 Tailscale 扩展你的私有网络。
 
-[**出口节点（路由全部流量）**](/docs/features/exit-nodes) —— 将所有互联网流量路由通过网络中的特定设备。
+[**出口节点**（路由全部流量）](/docs/features/exit-nodes) —— 将所有互联网流量路由通过网络中的特定设备。
 
 [**Docker**](/docs/features/containers/docker) —— 探索如何在 Docker 容器内使用 Tailscale。
 

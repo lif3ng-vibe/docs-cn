@@ -79,7 +79,7 @@ description: "配置 [Claude Code][xt-claude-code]，让请求经由 [Aperture b
 }
 ```
 
-如果你在 VS Code 中搭配 Bedrock 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings (JSON)**）。
+如果你在 VS Code 中搭配 Bedrock 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings**（JSON））。
 
 ### Claude Code 搭配 Gemini Enterprise Agent Platform
 
@@ -98,7 +98,7 @@ description: "配置 [Claude Code][xt-claude-code]，让请求经由 [Aperture b
 }
 ```
 
-如果你在 VS Code 中搭配 Gemini Enterprise Agent Platform 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings (JSON)**）。
+如果你在 VS Code 中搭配 Gemini Enterprise Agent Platform 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings**（JSON））。
 
 ## 验证连接
 

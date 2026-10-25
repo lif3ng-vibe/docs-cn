@@ -131,19 +131,19 @@ operator 的 OAuth 客户端必须是你使用的每个标签的 [`tagOwner`][do
 
 详细说明与讨论请参阅 [GitHub 上的设备插件提案][xt-gh-device-plugin-discussion]。
 
-[docs-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-kubernetes-operator-setup]: /docs/kubernetes-operator/install-operator#configure-tags-and-oauth-credentials
+[docs-kubernetes-operator-setup]: /docs/kubernetes-operator/install-operator#配置标签和-oauth-凭证
 
 [docs-operator-cluster-egress]: /docs/kubernetes-operator/egress
 
-[docs-operator-cluster-ingress-service]: /docs/kubernetes-operator/ingress#standalone-layer-3-ingress-for-tcpudp
+[docs-operator-cluster-ingress-service]: /docs/kubernetes-operator/ingress#独立-l3-入站tcpudp
 
 [docs-operator-connector]: /docs/kubernetes-operator/connector
 
 [docs-proxy-group]: /docs/kubernetes-operator/concepts/proxygroup
 
-[docs-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-tags]: /docs/features/tags
 

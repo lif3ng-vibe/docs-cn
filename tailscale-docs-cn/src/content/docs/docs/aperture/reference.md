@@ -25,7 +25,7 @@ description: "Aperture 接口、配置、提供商兼容性、CLI 和集成配�
 
 [**Aperture CLI**](/docs/aperture/cli)——使用 Aperture CLI 发现、配置并运行经由你的 Aperture 网关连接的编码智能体。
 
-[**Aperture 配方（recipes）**](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
+[**Aperture 配方**（recipes）](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
 
 [docs-how-to]: /docs/aperture/how-to
 

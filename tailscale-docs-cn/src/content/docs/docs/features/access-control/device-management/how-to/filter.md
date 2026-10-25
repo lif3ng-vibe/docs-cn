@@ -257,7 +257,7 @@ description: "管理控制台的 [Machines](https://console.tailscale.com/admin/
 
 [docs-peer-relay]: /docs/features/peer-relay
 
-[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#suspending-users
+[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#停用用户
 
 [docs-sharing]: /docs/features/sharing
 
@@ -265,9 +265,9 @@ description: "管理控制台的 [Machines](https://console.tailscale.com/admin/
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailnet-lock-add-signing-node]: /docs/features/tailnet-lock#add-a-signing-node
+[docs-tailnet-lock-add-signing-node]: /docs/features/tailnet-lock#添加签名节点
 
-[docs-tailnet-lock-add]: /docs/features/tailnet-lock#add-a-node-to-a-locked-tailnet
+[docs-tailnet-lock-add]: /docs/features/tailnet-lock#向已锁定-tailnet-添加节点
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 

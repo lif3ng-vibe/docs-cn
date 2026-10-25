@@ -119,13 +119,13 @@ Google Admin Console 中组内成员与用户的更改每 40 分钟同步到 Tai
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-mullvad-exit-nodes]: /docs/features/exit-nodes/mullvad-exit-nodes
 
-[docs-offboarding-users-offboarding-scim]: /docs/features/sharing/how-to/offboard#offboarding-when-using-user--group-provisioning-scim
+[docs-offboarding-users-offboarding-scim]: /docs/features/sharing/how-to/offboard#使用用户与组预配scim时的用户离职处理
 
-[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件
 
 [docs-user-roles]: /docs/reference/user-roles
 

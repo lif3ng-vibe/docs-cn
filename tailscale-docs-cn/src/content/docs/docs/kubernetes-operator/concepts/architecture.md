@@ -115,7 +115,7 @@ L7 入站架构图与 L3 入站类似。它通过 `Ingress` 对象而非 `Servic
 
 [docs-l7-ingress]: /docs/kubernetes-operator/ingress/expose-workload-to-tailnet-l7
 
-[docs-proxygroup-egress]: /docs/kubernetes-operator/egress#high-availability-ha-egress
+[docs-proxygroup-egress]: /docs/kubernetes-operator/egress#高可用ha出站
 
 [docs-tsrecorder]: /docs/kubernetes-operator/recorder/deploy-tsrecorder
 

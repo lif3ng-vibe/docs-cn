@@ -55,7 +55,7 @@ description: "在 Aperture 中配置 Google Gemini 提供商，让你的团队�
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-use-geap]: /docs/aperture/how-to/use-gemini-enterprise-agent-platform
 

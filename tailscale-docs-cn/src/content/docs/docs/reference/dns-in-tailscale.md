@@ -224,7 +224,7 @@ Tailscale 允许你强制 tailnet 中的任何设备使用 tailnet DNS 设置而
 
 [docs-cli-dns]: /docs/reference/tailscale-cli#dns
 
-[docs-client-preferences-use-tailscale-dns-settings]: /docs/features/client/manage-preferences#use-tailscale-dns-settings
+[docs-client-preferences-use-tailscale-dns-settings]: /docs/features/client/manage-preferences#使用-tailscale-dns-设置
 
 [docs-control-d]: /docs/integrations/control-d
 

@@ -26,7 +26,7 @@ CoreWeave 节点没有公网 IP 地址，且位于[硬 NAT][docs-device-connecti
 
 [docs-connection-types]: /docs/reference/connection-types
 
-[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#hard-nat
+[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#硬-nat
 
 [docs-kubernetes-operator]: /docs/kubernetes-operator
 

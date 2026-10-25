@@ -214,7 +214,7 @@ Persistent Dynamic IP 支持自 PAN-OS 11.1.1 起可用。[Palo Alto Networks �
 
 [docs-derp-servers]: /docs/reference/derp-servers
 
-[docs-disable-magicdns]: /docs/features/magicdns#disabling-magicdns
+[docs-disable-magicdns]: /docs/features/magicdns#停用-magicdns
 
 [docs-firewall-palo-alto-networks]: /docs/integrations/firewalls/palo-alto-firewall
 
@@ -224,19 +224,19 @@ Persistent Dynamic IP 支持自 PAN-OS 11.1.1 起可用。[Palo Alto Networks �
 
 [docs-install-opnsense]: /docs/install/opnsense
 
-[docs-install-opnsense-direct-connections]: /docs/install/opnsense#direct-connections-for-lan-clients
+[docs-install-opnsense-direct-connections]: /docs/install/opnsense#局域网客户端的直连
 
-[docs-mac-variant-appstore]: /docs/concepts/macos-variants#mac-app-store-variant
+[docs-mac-variant-appstore]: /docs/concepts/macos-variants#mac-app-store-变体
 
-[docs-mac-variant-standalone]: /docs/concepts/macos-variants#standalone-variant
+[docs-mac-variant-standalone]: /docs/concepts/macos-variants#standalone-变体
 
 [docs-override-dns-servers]: /docs/reference/dns-in-tailscale#override-dns-servers
 
 [docs-peer-relays]: /docs/features/peer-relay
 
-[docs-pfsense-direct-connections]: /docs/integrations/firewalls/pfsense#direct-connections-for-lan-clients
+[docs-pfsense-direct-connections]: /docs/integrations/firewalls/pfsense#局域网客户端的直连
 
-[docs-policy-syntax-network-policy-options]: /docs/reference/syntax/policy-file#network-policy-options
+[docs-policy-syntax-network-policy-options]: /docs/reference/syntax/policy-file#网络策略选项
 
 [docs-quad100]: /docs/reference/quad100
 
@@ -244,7 +244,7 @@ Persistent Dynamic IP 支持自 PAN-OS 11.1.1 起可用。[Palo Alto Networks �
 
 [docs-secure-server-ubuntu]: /docs/how-to/secure-ubuntu-server-with-ufw
 
-[docs-system-policy-dns-settings]: /docs/features/tailscale-system-policies#set-whether-the-device-uses-tailscale-dns-settings
+[docs-system-policy-dns-settings]: /docs/features/tailscale-system-policies#设置设备是否使用-tailscale-dns-设置
 
 [xt-barracuda-cloudgen]: https://campus.barracuda.com/product/cloudgenfirewall/doc/95258827/general-firewall-configuration/?sl=AX5zwzvyOBUvMAhoTe4U&so=2
 

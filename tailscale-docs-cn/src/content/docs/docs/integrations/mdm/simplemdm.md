@@ -56,9 +56,9 @@ SimpleMDM 随即将开始向所选组中的设备部署该描述文件。设备�
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 
-[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
-[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#deploying-system-policies-in-a-configuration-profile
+[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#在配置描述文件中部署系统策略
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

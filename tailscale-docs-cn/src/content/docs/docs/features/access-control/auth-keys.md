@@ -21,12 +21,12 @@ description: "预认证密钥（auth key）让你无需通过网页浏览器登�
 
 认证密钥可以分为：
 
-* **一次性（one-off）**，仅限单次使用。它只能用来连接一台设备或服务器一次。适用于你无法在设备上亲自完成认证的场景，此时使用密钥更为实际。例如，云服务器可以用一次性密钥来连接。
-* **可重复使用（reusable）**，可多次使用。它可用于连接多台设备。例如，本地部署数据库的多个实例可以用可重复使用密钥来连接。
+* **一次性**（one-off），仅限单次使用。它只能用来连接一台设备或服务器一次。适用于你无法在设备上亲自完成认证的场景，此时使用密钥更为实际。例如，云服务器可以用一次性密钥来连接。
+* **可重复使用**（reusable），可多次使用。它可用于连接多台设备。例如，本地部署数据库的多个实例可以用可重复使用密钥来连接。
 
 > **警告：**
 >
-> **务必谨慎使用可重复使用的密钥！**一旦被窃取，后果可能非常严重。最好将其保存在专门为此设计的密钥保险库产品中。
+> **务必谨慎使用可重复使用的密钥**！一旦被窃取，后果可能非常严重。最好将其保存在专门为此设计的密钥保险库产品中。
 
 ## 密钥过期
 
@@ -112,10 +112,10 @@ sudo tailscale up --auth-key=tskey-abcdef1432341818
 
 根据你要认证的设备类型，可以考虑使用具备以下特性的认证密钥：
 
-* **临时（ephemeral）**，用于对作为短生命周期工作负载一部分的[临时节点][docs-ephemeral-nodes]进行认证。由于工作负载重启后节点密钥不会保留，它们会以另一个节点的身份重新连接。Tailscale 会自动移除不活跃的节点。例如，容器或 Lambda 函数应使用临时密钥来连接。
-* **预批准（pre-approved）**，适用于服务器。如果你的 tailnet 启用了[设备审批][docs-device-approval]，这种密钥让你无需额外授权即可将设备加入 tailnet。例如，在启用了设备审批的网络中，服务器这类共享设备应使用预批准认证密钥来连接。
-* **预签名（pre-signed）**，适用于认证密钥在[签名节点][docs-tailnet-lock-add]上本地签名的节点，适用于启用了 [Tailnet Lock][docs-tailnet-lock] 的 tailnet。只有通过 [`tailscale lock sign`][docs-tailscale-lock-lock-sign] CLI 命令，才能将认证密钥（无论以何种方式创建）变为预签名状态。
-* **带标签（tagged）**，适用于服务器。在认证密钥中包含[标签][docs-tags-auth-key-tag]即可自动为设备应用标签。基于标签限制设备权限的访问控制策略会在设备配置完成后生效。例如，服务器这类共享设备应使用带标签的认证密钥来连接。
+* **临时**（ephemeral），用于对作为短生命周期工作负载一部分的[临时节点][docs-ephemeral-nodes]进行认证。由于工作负载重启后节点密钥不会保留，它们会以另一个节点的身份重新连接。Tailscale 会自动移除不活跃的节点。例如，容器或 Lambda 函数应使用临时密钥来连接。
+* **预批准**（pre-approved），适用于服务器。如果你的 tailnet 启用了[设备审批][docs-device-approval]，这种密钥让你无需额外授权即可将设备加入 tailnet。例如，在启用了设备审批的网络中，服务器这类共享设备应使用预批准认证密钥来连接。
+* **预签名**（pre-signed），适用于认证密钥在[签名节点][docs-tailnet-lock-add]上本地签名的节点，适用于启用了 [Tailnet Lock][docs-tailnet-lock] 的 tailnet。只有通过 [`tailscale lock sign`][docs-tailscale-lock-lock-sign] CLI 命令，才能将认证密钥（无论以何种方式创建）变为预签名状态。
+* **带标签**（tagged），适用于服务器。在认证密钥中包含[标签][docs-tags-auth-key-tag]即可自动为设备应用标签。基于标签限制设备权限的访问控制策略会在设备配置完成后生效。例如，服务器这类共享设备应使用带标签的认证密钥来连接。
 
 [ar-authkey-one-off]: #authkey-one-off
 
@@ -141,9 +141,9 @@ sudo tailscale up --auth-key=tskey-abcdef1432341818
 
 [docs-system-policies]: /docs/features/tailscale-system-policies
 
-[docs-tags-auth-key-tag]: /docs/features/tags#best-practices
+[docs-tags-auth-key-tag]: /docs/features/tags#最佳实践
 
-[docs-tailnet-lock-add]: /docs/features/tailnet-lock#add-a-node-to-a-locked-tailnet
+[docs-tailnet-lock-add]: /docs/features/tailnet-lock#向已锁定-tailnet-添加节点
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 

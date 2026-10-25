@@ -95,7 +95,7 @@ API 访问令牌、认证密钥和 OAuth 密钥在生成时都带有过期时间
 
 [docs-api]: /docs/reference/tailscale-api
 
-[docs-audit-logging-events]: /docs/features/logging/audit-logging#events
+[docs-audit-logging-events]: /docs/features/logging/audit-logging#事件
 
 [docs-audit-logging]: /docs/features/logging/audit-logging
 
@@ -109,7 +109,7 @@ API 访问令牌、认证密钥和 OAuth 密钥在生成时都带有过期时间
 
 [docs-key-prefixes]: /docs/reference/key-prefixes
 
-[docs-oauth-clients-setup]: /docs/features/oauth-clients#setting-up-an-oauth-client
+[docs-oauth-clients-setup]: /docs/features/oauth-clients#设置-oauth-客户端
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
@@ -119,23 +119,23 @@ API 访问令牌、认证密钥和 OAuth 密钥在生成时都带有过期时间
 
 [docs-security-hardening]: /docs/reference/best-practices/security
 
-[docs-sso-entra-ai-scim-enable]: /docs/integrations/identity/entra/entra-id-scim#enable-provisioning
+[docs-sso-entra-ai-scim-enable]: /docs/integrations/identity/entra/entra-id-scim#启用预配置
 
-[docs-sso-okta-scim-enable-provisioning]: /docs/integrations/identity/okta/okta-scim#enable-provisioning
+[docs-sso-okta-scim-enable-provisioning]: /docs/integrations/identity/okta/okta-scim#启用预配置
 
 [docs-sso-providers]: /docs/integrations/identity
 
-[docs-trust-credentials-revoke]: /docs/reference/trust-credentials#revoke-a-trust-credential
+[docs-trust-credentials-revoke]: /docs/reference/trust-credentials#吊销信任凭证
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning
 
-[docs-webhooks-deleting-an-endpoint]: /docs/features/webhooks#deleting-an-endpoint
+[docs-webhooks-deleting-an-endpoint]: /docs/features/webhooks#删除端点
 
-[docs-webhooks-events]: /docs/features/webhooks#events
+[docs-webhooks-events]: /docs/features/webhooks#事件
 
-[docs-webhooks-rotating-a-webhook-secret]: /docs/features/webhooks#rotating-a-webhook-secret
+[docs-webhooks-rotating-a-webhook-secret]: /docs/features/webhooks#轮换-webhook-密钥
 
-[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-secret
+[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-密钥
 
 [docs-webhooks]: /docs/features/webhooks
 

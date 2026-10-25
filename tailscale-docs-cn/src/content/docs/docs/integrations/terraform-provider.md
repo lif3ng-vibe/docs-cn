@@ -90,7 +90,7 @@ Tailscale Terraform provider 由 Tailscale 在 Terraform registry 中维护并�
 
 [docs-trust-credentials]: /docs/reference/trust-credentials
 
-[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#scopes
+[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
 [xt-gh-david-bond]: https://github.com/davidsbond
 

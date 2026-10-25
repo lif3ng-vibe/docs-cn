@@ -310,11 +310,11 @@ Tailscale 发布了一个用于[同步 Tailscale 访问控制策略][xt-gh-acl-s
 
 [docs-oauth]: /docs/features/oauth-clients
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
-[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#scopes
+[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
-[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#permissions-managed-by-user-roles
+[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#由用户角色管理的权限
 
 [docs-workload-identity-federation]: /docs/features/workload-identity-federation
 

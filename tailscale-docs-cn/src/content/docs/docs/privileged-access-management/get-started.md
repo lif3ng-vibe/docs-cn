@@ -23,8 +23,8 @@ Tailscale 会自动：
 
 * **创建 `tag:border0-managed` 标签**。由 PAM 管理的资源（包括连接器和服务）都使用这个标签。该标签由 `autogroup:admin` 所有。
 * **添加一条 `autoApprovers` 规则**。带有 `tag:border0-managed` 标签的连接器可以自动批准使用同一标签的 PAM 服务。这意味着你无需手动批准每一条 PAM 服务通告。
-* **添加初始 PAM 应用授权（grant）**。`autogroup:admin` 的成员会获得对带有 `tag:border0-managed` 标签的 PAM 服务的访问权限，让管理员能够初步访问受支持的 PAM 服务，例如 SSH、数据库、Kubernetes、RDP 和 HTTP。
-* **为 Tailscale PAM 创建信任凭证（trust credentials）**。这条 OpenID Connect（OIDC）信任凭证用于你的 tailnet 与 Tailscale PAM API 服务之间的集成。你可以在 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面查看它。自动创建的凭证带有 `tag:border0-managed` 标签。
+* **添加初始 PAM 应用授权**（grant）。`autogroup:admin` 的成员会获得对带有 `tag:border0-managed` 标签的 PAM 服务的访问权限，让管理员能够初步访问受支持的 PAM 服务，例如 SSH、数据库、Kubernetes、RDP 和 HTTP。
+* **为 Tailscale PAM 创建信任凭证**（trust credentials）。这条 OpenID Connect（OIDC）信任凭证用于你的 tailnet 与 Tailscale PAM API 服务之间的集成。你可以在 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面查看它。自动创建的凭证带有 `tag:border0-managed` 标签。
 
 这些设置会自动创建，以便 PAM 开箱即用。除非你打算替换相应配置，否则不要删除或修改自动创建的标签、`autoApprovers` 规则或信任凭证，否则可能导致 PAM 集成的部分功能无法正常工作。
 

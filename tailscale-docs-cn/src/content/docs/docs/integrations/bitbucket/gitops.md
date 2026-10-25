@@ -148,9 +148,9 @@ description: "[访问控制策略][docs-access-control]定义了用户或设备�
 
 [docs-gitops-acls]: /docs/gitops
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
-[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#permissions-managed-by-user-roles
+[docs-user-roles-permissions-by-roles]: /docs/reference/user-roles#由用户角色管理的权限
 
 [xt-atlassian-bitbucket-pipeline-ref]: https://support.atlassian.com/bitbucket-cloud/docs/bitbucket-pipelines-configuration-reference
 

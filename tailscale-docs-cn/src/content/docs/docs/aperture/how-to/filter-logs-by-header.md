@@ -99,7 +99,7 @@ Aperture 把请求和响应头部以压缩数据的形式存入捕获记录，�
 
 仅记录存在的头部只支持 **Present** 匹配；**Contains** 和 **Is exactly** 对它不可用。适用于取值敏感或基数过高、不宜持久存储的头部。
 
-在 **Administration** > **Configuration** 页面设置 `redact_values`。**Reporting** 页面会遵循该字段，但不编辑它。
+在 **Administration** > **Configuration** 页面设置 `redact_values`**。Reporting** 页面会遵循该字段，但不编辑它。
 
 ## 第 5 步：在 Logs 页面过滤
 
@@ -123,7 +123,7 @@ Aperture 把请求和响应头部以压缩数据的形式存入捕获记录，�
 
 [ar-store-a-header-as-presence-only]: #第-4-步将头部存为仅记录存在可选
 
-[docs-aperture-configuration-headers]: /docs/aperture/configuration#databaseheaders-fields
+[docs-aperture-configuration-headers]: /docs/aperture/configuration#databaseheaders-字段
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

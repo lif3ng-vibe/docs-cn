@@ -610,7 +610,7 @@ Tailscale SSH 可能不适合：
 
 [docs-access-control]: /docs/features/access-control/acls
 
-[docs-acl-samples-all-default]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-all-default]: /docs/reference/examples/acls#允许所有默认-acl
 
 [docs-api]: /docs/reference/tailscale-api
 
@@ -620,7 +620,7 @@ Tailscale SSH 可能不适合：
 
 [docs-invite-any-user]: /docs/features/sharing/how-to/invite-any-user
 
-[docs-macos-variants-open-source]: /docs/concepts/macos-variants#open-source-tailscaled-variant
+[docs-macos-variants-open-source]: /docs/concepts/macos-variants#开源-tailscaled-变体
 
 [docs-machine-names-renaming-a-machine]: /docs/concepts/machine-names#renaming-a-machine
 
@@ -628,9 +628,9 @@ Tailscale SSH 可能不适合：
 
 [docs-multifactor-auth]: /docs/multifactor-auth
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
-[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 

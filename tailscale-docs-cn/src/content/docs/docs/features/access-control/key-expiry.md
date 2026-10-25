@@ -81,6 +81,6 @@ description: "作为一项安全特性，用户需要定期在其每台设备上
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-tags-key-expiry]: /docs/features/tags#key-expiry
+[docs-tags-key-expiry]: /docs/features/tags#密钥过期
 
 [docs-tailscale-up]: /docs/reference/tailscale-cli/up

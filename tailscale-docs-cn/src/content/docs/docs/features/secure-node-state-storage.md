@@ -109,13 +109,13 @@ Tailscale 节点状态包含[节点密钥][docs-node-keys]（node key）以及�
 
 [co-changelog-1.86]: https://tailscale.com/changelog#2025-07-24
 
-[docs-client-logs]: /docs/features/logging#client-logs
+[docs-client-logs]: /docs/features/logging#客户端日志
 
 [docs-device-posture-attributes]: /docs/features/device-posture/postures-and-attributes#device-posture-attributes
 
-[docs-mac-variant-standalone]: /docs/concepts/macos-variants#standalone-variant
+[docs-mac-variant-standalone]: /docs/concepts/macos-variants#standalone-变体
 
-[docs-mdm-key-encrypt-state]: /docs/features/tailscale-system-policies#encrypt-node-state-file
+[docs-mdm-key-encrypt-state]: /docs/features/tailscale-system-policies#加密节点状态文件
 
 [docs-mdm-macos]: /docs/integrations/mdm/mac
 
@@ -127,7 +127,7 @@ Tailscale 节点状态包含[节点密钥][docs-node-keys]（node key）以及�
 
 [docs-tailnet]: /docs/concepts/tailnet
 
-[docs-tailscaled-flags]: /docs/reference/tailscaled#flags-to-tailscaled
+[docs-tailscaled-flags]: /docs/reference/tailscaled#tailscaled-的标志
 
 [docs-tailscaled-stop-and-start]: /docs/reference/tailscaled#stopping-and-starting-tailscaled
 

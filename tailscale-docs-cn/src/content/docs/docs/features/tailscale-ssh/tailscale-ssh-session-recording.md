@@ -251,11 +251,11 @@ asciinema 会话录制回放的演示。
 
 [docs-operator-session-recording]: /docs/kubernetes-operator/recorder
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailscale-pam]: /docs/privileged-access-management/session-logs
 

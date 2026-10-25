@@ -250,7 +250,7 @@ DERP 服务器只转发加密流量，无法接触明文流量。此外，Tailsc
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
-[docs-regional-routing]: /docs/features/route-selection#regional-routing
+[docs-regional-routing]: /docs/features/route-selection#区域路由
 
 [docs-route-selection]: /docs/features/route-selection
 

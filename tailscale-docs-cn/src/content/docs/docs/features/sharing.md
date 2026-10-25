@@ -238,15 +238,15 @@ Tailscale 支持两种向 tailnet 之外共享资源的方式：
 
 [docs-declarative-node-sharing]: /docs/features/declarative-node-sharing
 
-[docs-policy-syntax-access-rules]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-access-rules]: /docs/reference/syntax/policy-file#acl
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-exit-nodes-advertise-exit-node]: /docs/features/exit-nodes#advertise-a-device-as-an-exit-node
+[docs-exit-nodes-advertise-exit-node]: /docs/features/exit-nodes#将设备宣告为出口节点
 
-[docs-exit-nodes-allow-exit-node]: /docs/features/exit-nodes#allow-the-exit-node-from-the-admin-console
+[docs-exit-nodes-allow-exit-node]: /docs/features/exit-nodes#在管理控制台中允许出口节点
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 

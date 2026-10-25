@@ -132,15 +132,15 @@ tailnet 之外的用户可以[通过 Aperture CLI 桥接或 `ts-unplug` 连接][
 
 [docs-aperture-connectors]: /docs/aperture/connectors
 
-[docs-aperture-admin-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-aperture-admin-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
-[docs-aperture-admin-usage]: /docs/aperture/reference/dashboard-admin#usage-overview
+[docs-aperture-admin-usage]: /docs/aperture/reference/dashboard-admin#用量总览usage-overview
 
 [docs-aperture-chat]: /docs/aperture/reference/chat
 
-[docs-aperture-chat-sessions]: /docs/aperture/reference/chat#sessions
+[docs-aperture-chat-sessions]: /docs/aperture/reference/chat#会话sessions
 
-[docs-aperture-chat-usage]: /docs/aperture/reference/chat#usage
+[docs-aperture-chat-usage]: /docs/aperture/reference/chat#用量usage
 
 [docs-aperture-export-s3]: /docs/aperture/how-to/export-usage-data-to-s3
 

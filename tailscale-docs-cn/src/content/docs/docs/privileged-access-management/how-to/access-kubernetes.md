@@ -385,9 +385,9 @@ Tailscale PAM 为你提供一个集中位置，用于审查谁访问了你的 Ku
 
 [docs-pam]: /docs/privileged-access-management
 
-[docs-policy-file-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-file-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-policy-file-node-attributes]: /docs/reference/syntax/policy-file#node-attributes
+[docs-policy-file-node-attributes]: /docs/reference/syntax/policy-file#节点属性
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 

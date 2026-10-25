@@ -5,7 +5,7 @@ description: "Mullvad VPN 附加服务让你可以在 Tailscale 网络（即 tai
 
 最后验证于 Jan 9, 2026
 
-> **注意：**此功能目前处于 beta 阶段。
+> **注意**：此功能目前处于 beta 阶段。
 
 Mullvad VPN 附加服务让你可以在 Tailscale 网络（即 tailnet）中把 [Mullvad][xt-mullvad-why] VPN 服务器用作[出口节点][docs-exit-nodes]。Mullvad 出口节点的运作方式与常规出口节点类似，但它使用的是 [Mullvad 现有的 VPN 基础设施][xt-mullvad-server-list]，而不是你自己的设备。
 
@@ -314,7 +314,7 @@ sudo tailscale set --exit-node=<exit-node-name-or-ip> --exit-node-allow-lan-acce
 
 [co-pricing]: https://tailscale.com/pricing
 
-[docs-appletv-use-mullvad-exit-node]: /docs/install/appletv#use-a-mullvad-exit-node
+[docs-appletv-use-mullvad-exit-node]: /docs/install/appletv#使用-mullvad-出口节点
 
 [docs-auto-exit-nodes]: /docs/features/exit-nodes/auto-exit-nodes
 
@@ -332,7 +332,7 @@ sudo tailscale set --exit-node=<exit-node-name-or-ip> --exit-node-allow-lan-acce
 
 [docs-encryption]: /docs/concepts/tailscale-encryption
 
-[docs-exit-node-local-network-access]: /docs/features/exit-nodes#local-network-access
+[docs-exit-node-local-network-access]: /docs/features/exit-nodes#本地网络访问
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -340,25 +340,25 @@ sudo tailscale set --exit-node=<exit-node-name-or-ip> --exit-node-allow-lan-acce
 
 [docs-gitops-acls]: /docs/gitops
 
-[docs-global-nameserver]: /docs/reference/dns-in-tailscale#global-nameservers
+[docs-global-nameserver]: /docs/reference/dns-in-tailscale#全局域名服务器
 
 [docs-google-sso]: /docs/integrations/identity/google-sso
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-opt-out-logging]: /docs/features/logging#opt-out-of-client-logging
+[docs-opt-out-logging]: /docs/features/logging#退出客户端日志记录
 
 [docs-override-dns-servers]: /docs/reference/dns-in-tailscale#override-dns-servers
 
 [docs-policy-syntax-nodeattrs]: /docs/reference/syntax/policy-file#nodeattrs
 
-[docs-suggested-exit-nodes]: /docs/features/exit-nodes/auto-exit-nodes#use-a-suggested-exit-node
+[docs-suggested-exit-nodes]: /docs/features/exit-nodes/auto-exit-nodes#使用建议出口节点
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [docs-wireguard]: /docs/concepts/wireguard
 

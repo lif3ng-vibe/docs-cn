@@ -25,7 +25,7 @@ description: "你可以使用 [Microsoft Intune][xt-intune-landing-page] 移动�
 2. 登录 [Microsoft Intune 管理中心][xt-intune-admin-center]。
 3. 在侧边栏中选择 **Devices**（设备），然后在 **Policy**（策略）部分下选择 **Configuration profiles**（配置描述文件）。
 4. 此时将显示当前已配置的描述文件列表。选择 **Create**（创建）菜单项，然后在出现的下拉菜单中选择 **New Policy**（新建策略）。
-5. 使用 **Platform**（平台）下拉菜单选择你要配置的平台：**macOS** 或 **iOS/iPadOS**。
+5. 使用 **Platform**（平台）下拉菜单选择你要配置的**平台**：macOS 或 **iOS/iPadOS**。
 6. 将 **Profile type**（描述文件类型）选择为 **Templates**（模板）。
 7. 选择 **Custom**（自定义）模板，并使用模板列表底部的 **Create**（创建）按钮确认。
 8. 为策略设置一个描述性名称和可选描述，例如 `Tailscale macOS system policies`。
@@ -63,7 +63,7 @@ description: "你可以使用 [Microsoft Intune][xt-intune-landing-page] 移动�
 6. 返回 **Policies**（策略）部分。此时将显示当前已配置的描述文件列表。选择 **Create**（创建）菜单项，然后在出现的下拉菜单中选择 **New Policy**（新建策略）。
 7. 使用 **Platform**（平台）下拉菜单选择 **Windows 10 and later**（Windows 10 及更高版本）。
 8. 将 **Profile type**（描述文件类型）选择为 **Templates**（模板）。
-9. 选择 **Imported Administrative templates (Preview)**（已导入的管理模板（预览））。
+9. 选择 **Imported Administrative templates**（Preview）（已导入的管理模板（预览））。
 
    *（图：选择 Imported Administrative templates (Preview)。）*
 10. 为策略设置一个描述性名称和可选描述，例如 `Tailscale windows policies`。
@@ -121,9 +121,9 @@ description: "你可以使用 [Microsoft Intune][xt-intune-landing-page] 移动�
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 
-[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
-[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#deploying-system-policies-in-a-configuration-profile
+[docs-macos-mdm-deploy-policies-profile]: /docs/integrations/mdm/mac#在配置描述文件中部署系统策略
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

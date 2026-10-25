@@ -827,7 +827,7 @@ macOS 上的 Tailscale Dock 图标在存在应用窗口时显示。默认情况�
 
 [docs-device-posture]: /docs/features/device-posture
 
-[docs-exit-nodes-use-exit-node]: /docs/features/exit-nodes#use-the-exit-node
+[docs-exit-nodes-use-exit-node]: /docs/features/exit-nodes#使用出口节点
 
 [docs-ios-mdm]: /docs/integrations/mdm/ios
 

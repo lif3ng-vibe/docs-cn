@@ -12,7 +12,7 @@ description: "了解 Tailscale 如何把子网路由注入客户端路由表，�
 路由和访问控制工作在不同的层级，用途也不同：
 
 * **路由**（第 3 层）：决定哪些 IP 地址段可以通过 Tailscale 隧道到达
-* **访问控制（ACL/授权）**：决定哪些连接可以通过 Tailscale 网络进行
+* **访问控制**（ACL/授权）：决定哪些连接可以通过 Tailscale 网络进行
 
 一个常见的误解是认为[授权][docs-grants]或 [ACL][docs-acls]控制路由注入。其实并非如此。授权控制的是数据包过滤，而路由是根据子网路由器通告的内容以及控制平面批准的结果注入的。
 
@@ -133,7 +133,7 @@ description: "了解 Tailscale 如何把子网路由注入客户端路由表，�
 
 [docs-acls]: /docs/features/access-control/acls
 
-[docs-admin-console-subnets]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-admin-console-subnets]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
 [docs-app-connectors]: /docs/features/app-connectors
 
@@ -145,7 +145,7 @@ description: "了解 Tailscale 如何把子网路由注入客户端路由表，�
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-route-selection]: /docs/features/route-selection
 

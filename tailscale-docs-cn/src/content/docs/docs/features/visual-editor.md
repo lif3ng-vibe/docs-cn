@@ -174,21 +174,21 @@ JSON 预览有多种用途：
 
 [docs-migrate-acls-grants]: /docs/reference/migrate-acls-grants
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#hosts
+[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#主机
 
 [docs-policy-syntax-ipsets]: /docs/features/tailnet-policy-file/ip-sets
 
-[docs-policy-syntax-network-options]: /docs/reference/syntax/policy-file#network-policy-options
+[docs-policy-syntax-network-options]: /docs/reference/syntax/policy-file#网络策略选项
 
-[docs-policy-syntax-nodeattrs]: /docs/reference/syntax/policy-file#node-attributes
+[docs-policy-syntax-nodeattrs]: /docs/reference/syntax/policy-file#节点属性
 
-[docs-policy-syntax-tests-ssh]: /docs/reference/syntax/policy-file#ssh-tests
+[docs-policy-syntax-tests-ssh]: /docs/reference/syntax/policy-file#ssh-测试
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
@@ -200,24 +200,24 @@ JSON 预览有多种用途：
 
 [docs-via]: /docs/features/access-control/grants/grants-via
 
-[docs-visual-editor-reference-auto-approvers]: /docs/reference/visual-editor#auto-approvers
+[docs-visual-editor-reference-auto-approvers]: /docs/reference/visual-editor#自动批准autoapprovers
 
-[docs-visual-editor-reference-device-posture]: /docs/reference/visual-editor#device-posture
+[docs-visual-editor-reference-device-posture]: /docs/reference/visual-editor#设备态势
 
-[docs-visual-editor-reference-general-access-rules]: /docs/reference/visual-editor#general-access-rules
+[docs-visual-editor-reference-general-access-rules]: /docs/reference/visual-editor#通用访问规则
 
-[docs-visual-editor-reference-groups]: /docs/reference/visual-editor#groups
+[docs-visual-editor-reference-groups]: /docs/reference/visual-editor#群组groups
 
-[docs-visual-editor-reference-hosts]: /docs/reference/visual-editor#hosts
+[docs-visual-editor-reference-hosts]: /docs/reference/visual-editor#主机
 
-[docs-visual-editor-reference-ip-sets]: /docs/reference/visual-editor#ip-sets
+[docs-visual-editor-reference-ip-sets]: /docs/reference/visual-editor#ip-集
 
-[docs-visual-editor-reference-node-attributes]: /docs/reference/visual-editor#node-attributes
+[docs-visual-editor-reference-node-attributes]: /docs/reference/visual-editor#节点属性
 
-[docs-visual-editor-reference-tags]: /docs/reference/visual-editor#tags
+[docs-visual-editor-reference-tags]: /docs/reference/visual-editor#标签
 
 [docs-visual-editor-reference-tailscale-ssh]: /docs/reference/visual-editor#tailscale-ssh
 
-[docs-visual-editor-reference-tests]: /docs/reference/visual-editor#tests
+[docs-visual-editor-reference-tests]: /docs/reference/visual-editor#测试tests
 
 [xt-gh-hujson]: https://github.com/tailscale/hujson

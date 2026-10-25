@@ -189,9 +189,9 @@ curl https://nginx.<tailnet>.ts.net
 
 [co-pricing]: https://tailscale.com/pricing
 
-[docs-accept-routes]: /docs/features/subnet-routers#use-your-subnet-routes-from-other-devices
+[docs-accept-routes]: /docs/features/subnet-routers#从其他设备使用你的子网路由
 
-[docs-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-expose-l7]: /docs/kubernetes-operator/ingress/expose-workload-to-tailnet-l7
 
@@ -205,7 +205,7 @@ curl https://nginx.<tailnet>.ts.net
 
 [docs-magicroute]: /docs/features/magicroute
 
-[docs-regional-routing]: /docs/features/route-selection#regional-routing
+[docs-regional-routing]: /docs/features/route-selection#区域路由
 
 [docs-route-selection]: /docs/features/route-selection
 

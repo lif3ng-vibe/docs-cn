@@ -109,7 +109,7 @@ description: "在 TrueNAS SCALE 服务器上配置 Tailscale 客户端，并安�
 
 [docs-install]: /docs/how-to/quickstart
 
-[docs-quick-exit-nodes-use]: /docs/features/exit-nodes/how-to/setup#use-an-exit-node
+[docs-quick-exit-nodes-use]: /docs/features/exit-nodes/how-to/setup#_top
 
 [docs-subnets]: /docs/features/subnet-routers
 

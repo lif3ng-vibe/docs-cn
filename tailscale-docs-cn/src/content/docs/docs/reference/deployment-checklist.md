@@ -170,27 +170,27 @@ description: "确保你的 Tailscale 部署取得成功的检查清单。"
 
 [docs-log-streaming]: /docs/features/logging/log-streaming
 
-[docs-mdm-keys-exit-node-picker]: /docs/features/tailscale-system-policies#hide-the-exit-node-picker
+[docs-mdm-keys-exit-node-picker]: /docs/features/tailscale-system-policies#隐藏出口节点选择器
 
-[docs-mdm-keys-hide-menu-item]: /docs/features/tailscale-system-policies#hide-the-admin-console-menu-item
+[docs-mdm-keys-hide-menu-item]: /docs/features/tailscale-system-policies#隐藏管理控制台菜单项
 
-[docs-mdm-keys-hide-network-devices]: /docs/features/tailscale-system-policies#hide-network-devices
+[docs-mdm-keys-hide-network-devices]: /docs/features/tailscale-system-policies#隐藏网络设备
 
-[docs-mdm-keys-info-message]: /docs/features/tailscale-system-policies#set-an-info-message
+[docs-mdm-keys-info-message]: /docs/features/tailscale-system-policies#设置信息消息
 
-[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#set-your-organization-name
+[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#设置组织名称
 
-[docs-mdm-keys-posture-checking]: /docs/features/tailscale-system-policies#enable-gathering-device-posture-data
+[docs-mdm-keys-posture-checking]: /docs/features/tailscale-system-policies#启用设备态势数据收集
 
-[docs-mdm-keys-support-url]: /docs/features/tailscale-system-policies#set-a-support-url
+[docs-mdm-keys-support-url]: /docs/features/tailscale-system-policies#设置支持-url
 
-[docs-mdm-keys-tailnet-lock-settings]: /docs/features/tailscale-system-policies#hide-the-tailnet-lock-settings
+[docs-mdm-keys-tailnet-lock-settings]: /docs/features/tailscale-system-policies#隐藏-tailnet-lock-设置
 
-[docs-mdm-keys-tailnet]: /docs/features/tailscale-system-policies#set-a-suggested-or-required-tailnet
+[docs-mdm-keys-tailnet]: /docs/features/tailscale-system-policies#设置建议或强制的-tailnet
 
-[docs-mdm-keys-use-tailscale-dns]: /docs/features/tailscale-system-policies#set-whether-the-device-uses-tailscale-dns-settings
+[docs-mdm-keys-use-tailscale-dns]: /docs/features/tailscale-system-policies#设置设备是否使用-tailscale-dns-设置
 
-[docs-mdm-keys-use-tailscale-subnets]: /docs/features/tailscale-system-policies#set-whether-the-device-accepts-tailscale-subnets
+[docs-mdm-keys-use-tailscale-subnets]: /docs/features/tailscale-system-policies#设置设备是否接受-tailscale-子网
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 
@@ -204,17 +204,17 @@ description: "确保你的 Tailscale 部署取得成功的检查清单。"
 
 [docs-shared-responsibility]: /docs/concepts/shared-responsibility
 
-[docs-tags-common-tag-names]: /docs/features/tags#common-patterns-for-tag-names
+[docs-tags-common-tag-names]: /docs/features/tags#标签命名的常见模式
 
-[docs-update-auto-updates]: /docs/features/client/update#auto-updates
+[docs-update-auto-updates]: /docs/features/client/update#自动更新
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning
 
-[docs-user-roles-owner]: /docs/reference/user-roles#owner
+[docs-user-roles-owner]: /docs/reference/user-roles#owner所有者
 
 [docs-user-roles]: /docs/reference/user-roles
 
-[docs-webhooks-events]: /docs/features/webhooks#events
+[docs-webhooks-events]: /docs/features/webhooks#事件
 
 [docs-webhooks]: /docs/features/webhooks
 

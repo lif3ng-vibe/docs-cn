@@ -107,7 +107,7 @@ Tailscale 的密码学实现不符合 [FIPS][xt-federal-information-processing-s
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 
-[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns-name]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailnet]: /docs/concepts/tailnet
 

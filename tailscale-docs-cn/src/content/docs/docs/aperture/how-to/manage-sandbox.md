@@ -56,4 +56,4 @@ description: "[聊天沙箱][docs-chat-sandbox]让每段对话都有一个隔离
 
 [docs-troubleshoot-sandbox]: /docs/aperture/troubleshooting/sandbox
 
-[docs-sandbox-limits]: /docs/aperture/reference/sandbox#size-limits-and-quotas
+[docs-sandbox-limits]: /docs/aperture/reference/sandbox#大小限制与配额

@@ -555,19 +555,19 @@ log.Printf("IPv4: %v, IPv6: %v", ip4, ip6)
 
 [docs-oauth-client]: /docs/features/oauth-clients
 
-[docs-policy-syntax-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-policy-syntax-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailscale-services-prerequisites]: /docs/features/tailscale-services#prerequisites
+[docs-tailscale-services-prerequisites]: /docs/features/tailscale-services#前提条件
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-workload-identity-federation-auto]: /docs/features/workload-identity-federation#automatic-cloud-token-discovery-and-exchange
+[docs-workload-identity-federation-auto]: /docs/features/workload-identity-federation#自动发现并交换云端令牌
 
-[docs-workload-identity-federation-get-started]: /docs/features/workload-identity-federation#set-up-a-federated-identity
+[docs-workload-identity-federation-get-started]: /docs/features/workload-identity-federation#设置联合身份
 
 [docs-workload-identity-federation]: /docs/features/workload-identity-federation
 

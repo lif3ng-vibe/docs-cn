@@ -13,11 +13,11 @@ description: "管理对 Tailscale 资源的访问。"
 
 [**使用 ACL 管理权限**](/docs/features/access-control/acls)——在 Tailscale 中配置访问控制列表（ACL），管理设备权限并保护你的网络安全。
 
-[**授权（grants）**](/docs/features/access-control/grants)——同时为网络连接和应用权限授予访问控制权限。
+[**授权**（grants）](/docs/features/access-control/grants)——同时为网络连接和应用权限授予访问控制权限。
 
 [**tailnet 策略文件语法参考**](/docs/reference/syntax/policy-file)——tailnet 策略文件的语法参考。
 
-[**即时访问（JIT）**](/docs/features/access-control/just-in-time-access)——为 Tailscale 网络的用户提供即时访问（也称按需访问）。
+[**即时访问**（JIT）](/docs/features/access-control/just-in-time-access)——为 Tailscale 网络的用户提供即时访问（也称按需访问）。
 
 ## 管理设备
 
@@ -39,4 +39,4 @@ description: "管理对 Tailscale 资源的访问。"
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 
-[docs-terminology-and-concepts-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-terminology-and-concepts-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件

@@ -17,7 +17,7 @@ Aperture 支持与外部工具集成，用于授权、可观测性和自定义�
 
 [**构建自定义 webhook**](/docs/aperture/how-to/build-custom-webhook)——创建自定义 webhook 集成，把 Aperture 事件数据发送到你自己的服务。
 
-[**Aperture 配方（recipes）**](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
+[**Aperture 配方**（recipes）](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

@@ -67,7 +67,7 @@ Funnel 最适合临时共享单个资源，例如一个服务或一个文件夹�
 
 [docs-invite-users]: /docs/features/sharing/how-to/invite-users
 
-[docs-sharing-quarantine]: /docs/features/sharing#quarantine
+[docs-sharing-quarantine]: /docs/features/sharing#隔离
 
 [docs-sharing]: /docs/features/sharing
 

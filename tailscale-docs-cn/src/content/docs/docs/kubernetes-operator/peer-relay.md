@@ -276,9 +276,9 @@ tailscale debug peer-relay-servers
 
 [ar-pin-replicas-to-elastic-ips]: #将副本固定到弹性-ip
 
-[docs-acls-autoapprovers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-acls-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-acls-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-grant-app-capabilities]: /docs/features/access-control/grants/grants-app-capabilities
 
@@ -292,7 +292,7 @@ tailscale debug peer-relay-servers
 
 [docs-peer-relay]: /docs/features/peer-relay
 
-[docs-peer-relay-static-endpoints]: /docs/features/peer-relay#static-endpoints
+[docs-peer-relay-static-endpoints]: /docs/features/peer-relay#静态端点
 
 [docs-tags]: /docs/features/tags
 

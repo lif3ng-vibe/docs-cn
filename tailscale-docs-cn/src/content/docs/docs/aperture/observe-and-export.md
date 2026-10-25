@@ -17,7 +17,7 @@ Aperture 会记录 LLM 请求的 token 计数、模型名称、会话和工具�
 
 > **注意：**
 >
-> **连接器可观测性。**由 LLM 发起的 MCP 工具调用，会作为 LLM 请求体和响应体的一部分（`tool_use` 和 `tool_result` 内容块）出现在捕获中。用户可以在 **Sessions** 中检查自己的留存捕获。管理员可以在管理仪表板的 **Security** > **Logs** 中检查这些内容。
+> **连接器可观测性**。由 LLM 发起的 MCP 工具调用，会作为 LLM 请求体和响应体的一部分（`tool_use` 和 `tool_result` 内容块）出现在捕获中。用户可以在 **Sessions** 中检查自己的留存捕获。管理员可以在管理仪表板的 **Security** > **Logs** 中检查这些内容。
 >
 > HTTP 连接器代理请求（发往 `/v1/connectors/{id}/` 的流量）**不会**出现在捕获或用量遥测中。Aperture 不记录连接器请求、错误、延迟、token 或成本。配置 MCP 和 HTTP 连接器的更多信息请参阅[连接器][docs-aperture-connectors]。
 
@@ -35,6 +35,6 @@ Aperture 会记录 LLM 请求的 token 计数、模型名称、会话和工具�
 
 [docs-aperture-privacy]: /docs/aperture/privacy-and-data-retention
 
-[docs-chat]: /docs/aperture/reference/chat#usage
+[docs-chat]: /docs/aperture/reference/chat#用量usage
 
 [docs-admin-dashboard]: /docs/aperture/admin-dashboard

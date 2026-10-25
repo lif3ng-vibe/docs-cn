@@ -1266,21 +1266,21 @@ description: "本主题提供常见场景的 [access controls (ACLs)][docs-acls]
 
 [docs-4via6-subnets]: /docs/features/subnet-routers/4via6-subnets
 
-[docs-edit-policies-reverted]: /docs/features/tailnet-policy-file/manage-tailnet-policies#revert-changes
+[docs-edit-policies-reverted]: /docs/features/tailnet-policy-file/manage-tailnet-policies#撤销更改
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#hosts
+[docs-policy-syntax-hosts]: /docs/reference/syntax/policy-file#主机
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 
-[docs-policy-syntax-tagowners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tagowners]: /docs/reference/syntax/policy-file#标签所有者
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
@@ -1292,9 +1292,9 @@ description: "本主题提供常见场景的 [access controls (ACLs)][docs-acls]
 
 [docs-gitpod]: /docs/install/cloud/gitpod
 
-[docs-sharing-acl]: /docs/features/sharing#sharing-and-access-control-policies
+[docs-sharing-acl]: /docs/features/sharing#共享与访问控制策略
 
-[docs-sharing-quarantine]: /docs/features/sharing#quarantine
+[docs-sharing-quarantine]: /docs/features/sharing#隔离
 
 [docs-sharing]: /docs/features/sharing
 
@@ -1302,7 +1302,7 @@ description: "本主题提供常见场景的 [access controls (ACLs)][docs-acls]
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#configure-tailscale-ssh-with-check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#使用检查模式配置-tailscale-ssh
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 

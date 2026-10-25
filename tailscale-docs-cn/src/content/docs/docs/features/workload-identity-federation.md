@@ -50,7 +50,7 @@ OIDC 令牌是一个经过签名的 JSON Web Token（JWT），它传达来自云
 5. 输入 **Subject**。该值决定工作负载必须匹配哪些属性才能成功获得 Tailscale API 令牌。常见云服务商的 subject（`sub`）claim 语法请参阅[常见云服务商的令牌格式][ar-common-cloud-provider-token-formats]一节。
 6. （可选）添加额外的 **Custom claims** 来进一步收紧访问。常见云服务商的令牌 claims 请在[常见云服务商的令牌格式][ar-common-cloud-provider-token-formats]一节中查看。
 7. 从列表中选择相关的读写作用域，然后选择 **Generate credential**。
-8. 复制 **Client ID** 和 **Audience (aud claim)**。这些不是机密信息，在管理控制台中始终可见。
+8. 复制 **Client ID** 和 **Audience**（aud claim）。这些不是机密信息，在管理控制台中始终可见。
 
 #### 在管理控制台中检索 Client ID
 
@@ -58,7 +58,7 @@ OIDC 令牌是一个经过签名的 JSON Web Token（JWT），它传达来自云
 
 1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
 
-2. 使用 **Search** 和（可选的）**Filters** 功能找到你关注的联合身份。
+2. 使用 **Search** 和 **（可选的）Filters** 功能找到你关注的联合身份。
 
    * 按 `tag` 搜索可能有用。
    * 把 **Filters** 值设为 **Client type** 并选择 **OIDC** 也可能有帮助。
@@ -255,7 +255,7 @@ curl -X POST https://api.tailscale.com/api/v2/oauth/token-exchange \
 
 1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
 
-2. 使用 **Search** 和（可选的）**Filters** 功能找到你关注的联合身份。
+2. 使用 **Search** 和 **（可选的）Filters** 功能找到你关注的联合身份。
 
    * 按 `tag` 搜索可能有用。
    * 把 **Filters** 值设为 **Client type** 并选择 **OIDC** 也可能有帮助。
@@ -579,7 +579,7 @@ Tailscale 生成的 audience 值格式为：`api.tailscale.com/<client ID>`。
 
 [docs-tailscale-up]: /docs/reference/tailscale-cli/up
 
-[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#scopes
+[docs-trust-credentials-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
 [xt-aws-token-claims]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_outbound_token_claims.html
 

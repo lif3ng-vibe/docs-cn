@@ -65,17 +65,17 @@ description: "了解 Tailscale 目标（target），即你在 tailnet 策略文�
 >
 > **技术定义**：`autogroup:internet` 定义为 `0.0.0.0/0` 和 `2000::/3`，但排除以下地址范围：
 >
-> **私有（Private）**：
+> **私有**（Private）：
 >
 > * `10.0.0.0/8`
 > * `172.16.0.0/12`
 > * `192.168.0.0/16`
 >
-> **Tailscale（CGNAT）**：
+> **Tailscale**（CGNAT）：
 >
 > * `100.64.0.0/10`
 >
-> **链路本地（link-local）**：
+> **链路本地**（link-local）：
 >
 > * `169.254.0.0/16`
 
@@ -432,25 +432,25 @@ description: "了解 Tailscale 目标（target），即你在 tailnet 策略文�
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-acl-autoapprovers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-acl-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-acl-groups]: /docs/reference/syntax/policy-file#groups
+[docs-acl-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-acl-hosts]: /docs/reference/syntax/policy-file#hosts
+[docs-acl-hosts]: /docs/reference/syntax/policy-file#主机
 
 [docs-acl-nodeattrs]: /docs/reference/syntax/policy-file#nodeattrs
 
 [docs-acl-ssh]: /docs/reference/syntax/policy-file#ssh
 
-[docs-acl-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-acl-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
-[docs-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
 [docs-grants]: /docs/features/access-control/grants
 
 [docs-ipsets]: /docs/features/tailnet-policy-file/ip-sets
 
-[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
+[docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acl
 
 [docs-sharing]: /docs/features/sharing
 

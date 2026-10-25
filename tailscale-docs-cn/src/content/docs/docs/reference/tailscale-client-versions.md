@@ -64,7 +64,7 @@ Unstable 通道的构建仅在 [Tailscale Packages][pk-home] 网站的 [unstable
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
-[docs-update-manual]: /docs/features/client/update#manual-updates
+[docs-update-manual]: /docs/features/client/update#手动更新
 
 [docs-update]: /docs/features/client/update
 

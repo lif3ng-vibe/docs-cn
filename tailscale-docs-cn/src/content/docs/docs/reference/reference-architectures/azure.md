@@ -162,9 +162,9 @@ Tailscale [对等中继（peer relay）][docs-peer-relays]让你在网络条件�
 
 [docs-derp-servers]: /docs/reference/derp-servers
 
-[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#hard-nat
+[docs-device-connectivity-hard-nat]: /docs/reference/device-connectivity#硬-nat
 
-[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
+[docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-设置
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 
@@ -174,7 +174,7 @@ Tailscale [对等中继（peer relay）][docs-peer-relays]让你在网络条件�
 
 [docs-firewalls]: /docs/integrations/firewalls
 
-[docs-high-availability-region-load-balancing]: /docs/features/route-selection#regional-routing
+[docs-high-availability-region-load-balancing]: /docs/features/route-selection#区域路由
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 
@@ -184,7 +184,7 @@ Tailscale [对等中继（peer relay）][docs-peer-relays]让你在网络条件�
 
 [docs-multiple-recorder-nodes]: /docs/reference/multiple-recorder-nodes
 
-[docs-peer-relays-get-started]: /docs/features/peer-relay#get-started
+[docs-peer-relays-get-started]: /docs/features/peer-relay#开始使用
 
 [docs-peer-relays]: /docs/features/peer-relay
 
@@ -196,7 +196,7 @@ Tailscale [对等中继（peer relay）][docs-peer-relays]让你在网络条件�
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#turn-on-session-recording-in-your-tailnet-policy-file
+[docs-tailscale-ssh-session-turn-on]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording#在-tailnet-策略文件中开启会话录制
 
 [docs-terminology-and-concepts]: /docs/reference/glossary
 

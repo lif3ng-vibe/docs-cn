@@ -11,7 +11,7 @@ description: "要为你的域名启用 OneLogin 认证，请按照以下步骤�
 
    * 选择 **Add App**
 
-2. 搜索"OIDC"，然后选择 **OpenID Connect (OIDC)**。
+2. 搜索"OIDC"，然后选择 **OpenID Connect**（OIDC）。
 
 3. 将 *Display Name* 设置为"Tailscale"。
 

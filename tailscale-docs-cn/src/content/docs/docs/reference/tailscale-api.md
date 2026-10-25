@@ -5,7 +5,7 @@ description: "探索 Tailscale 应用程序编程接口（API）。"
 
 最后验证于 Jun 24, 2026
 
-> **注意：**Tailscale API 适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：Tailscale API 适用于[所有套餐](https://tailscale.com/pricing)。
 
 Tailscale 提供应用程序编程接口（API），让你能够把网络的各个方面自动化。
 

@@ -169,7 +169,7 @@ description: "在 Apple TV 上安装 Tailscale 客户端。"
 
 [docs-install]: /docs/how-to/quickstart
 
-[docs-mullvad-exit-nodes-use]: /docs/features/exit-nodes/mullvad-exit-nodes#use-mullvad-exit-nodes
+[docs-mullvad-exit-nodes-use]: /docs/features/exit-nodes/mullvad-exit-nodes#使用-mullvad-出口节点
 
 [docs-subnets]: /docs/features/subnet-routers
 

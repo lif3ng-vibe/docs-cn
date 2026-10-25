@@ -203,11 +203,11 @@ locals {
 
 [docs-dns]: /docs/reference/dns-in-tailscale
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-route-selection]: /docs/features/route-selection
 
-[docs-subnet-router]: /docs/features/subnet-routers#connect-to-tailscale-as-a-subnet-router
+[docs-subnet-router]: /docs/features/subnet-routers#以子网路由器身份连接-tailscale
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 

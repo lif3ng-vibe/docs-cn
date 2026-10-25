@@ -19,6 +19,6 @@ tailscale up --snat-subnet-routes=false
 
 更多信息请参阅[禁用 SNAT][docs-subnet-routers-disable-snat]。
 
-[docs-subnet-routers-disable-snat]: /docs/features/subnet-routers#disable-snat
+[docs-subnet-routers-disable-snat]: /docs/features/subnet-routers#禁用-snat
 
 [docs-subnet-routers]: /docs/features/subnet-routers

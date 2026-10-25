@@ -4,7 +4,7 @@
 // 后再查正文文本。命中即译文引入了 CommonMark 粗体闭合坑，回源修复。
 // 用法：node scripts/scan-dist-bold.mjs   （构建后执行；干净打印 CLEAN 退出 0）
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');

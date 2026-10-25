@@ -39,7 +39,7 @@ https://amelie-workstation.pango-lin.ts.net
 Press Ctrl+C to exit.
 ```
 
-在 Windows 上，不用 `sudo`，而是按 Windows+x 打开管理员控制台，然后从菜单中选择**终端（管理员）**。接着运行：
+在 Windows 上，不用 `sudo`，而是按 Windows+x 打开管理员控制台，然后从菜单中选择**终端**（管理员）。接着运行：
 
 ```shell
 c:\Users\Amelie> tailscale serve c:\tmp\public
@@ -287,10 +287,10 @@ tailscale serve --accept-app-caps=example.com/cap/sql 8080
 
 [docs-serve]: /docs/features/tailscale-serve
 
-[docs-serve-setup]: /docs/features/tailscale-serve#get-started-with-serve
+[docs-serve-setup]: /docs/features/tailscale-serve#开始使用-serve
 
 [docs-tailscale-serve]: /docs/reference/tailscale-cli/serve
 
-[docs-tailscale-serve-disable-tailscale-serve]: /docs/reference/tailscale-cli/serve#disable-tailscale-serve
+[docs-tailscale-serve-disable-tailscale-serve]: /docs/reference/tailscale-cli/serve#停用-tailscale-serve
 
 [xt-gh-awesome-static-generators]: https://github.com/myles/awesome-static-generators

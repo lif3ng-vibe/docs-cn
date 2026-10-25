@@ -173,7 +173,7 @@ tailscale status --json
 
 [docs-app-connectors-best-practices]: /docs/reference/best-practices/app-connectors
 
-[docs-credential-scopes]: /docs/reference/trust-credentials#scopes
+[docs-credential-scopes]: /docs/reference/trust-credentials#权限范围scopes
 
 [docs-custom-derp]: /docs/reference/derp-servers/custom-derp-servers
 

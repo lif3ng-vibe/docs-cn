@@ -153,9 +153,9 @@ curl -s http://localhost:8080/v1/messages \
 
 [docs-aperture-cli-bridge-delete]: /docs/aperture/cli#delete-a-bridge
 
-[docs-aperture-cli-bridges]: /docs/aperture/cli#bridges
+[docs-aperture-cli-bridges]: /docs/aperture/cli#桥接
 
-[docs-aperture-cli-install]: /docs/aperture/cli#install-the-aperture-cli
+[docs-aperture-cli-install]: /docs/aperture/cli#安装-aperture-cli
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

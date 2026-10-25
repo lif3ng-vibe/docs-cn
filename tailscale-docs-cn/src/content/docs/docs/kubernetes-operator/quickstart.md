@@ -493,7 +493,7 @@ Subjects:
 
 [docs-ingress]: /docs/kubernetes-operator/ingress
 
-[docs-k8s-compatibility]: /docs/kubernetes-operator/reference/compatibility#kubernetes-versions
+[docs-k8s-compatibility]: /docs/kubernetes-operator/reference/compatibility#kubernetes-版本
 
 [docs-kubernetes-operator]: /docs/kubernetes-operator
 

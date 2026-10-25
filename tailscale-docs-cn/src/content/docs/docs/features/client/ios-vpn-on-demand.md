@@ -80,7 +80,7 @@ VPN On Demand 规则可以决定是否允许 Tailscale 应用在你的设备上�
 
 这些 Tailscale 策略不能与受管理的 VPN 描述文件同时使用。
 
-[docs-mdm-mac-vpn]: /docs/integrations/mdm/mac#deploy-a-vpn-on-demand-configuration-using-mdm
+[docs-mdm-mac-vpn]: /docs/integrations/mdm/mac#使用-mdm-部署-vpn-on-demand-配置
 
 [docs-other-vpns]: /docs/reference/faq/other-vpns
 

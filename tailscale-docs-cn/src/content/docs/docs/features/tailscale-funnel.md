@@ -212,23 +212,23 @@ Tailscale Funnel 需要你的 tailnet 拥有有效的 [HTTPS 证书][docs-enabli
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-node-attribute]: /docs/reference/syntax/policy-file#node-attributes
+[docs-node-attribute]: /docs/reference/syntax/policy-file#节点属性
 
-[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-policy-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
 [docs-serve]: /docs/features/tailscale-serve
 
 [docs-tailnet-name]: /docs/concepts/tailnet-name
 
-[docs-tailscale-funnel-disable-funnel]: /docs/reference/tailscale-cli/funnel#turn-tailscale-funnel-off
+[docs-tailscale-funnel-disable-funnel]: /docs/reference/tailscale-cli/funnel#关闭-tailscale-funnel
 
-[docs-tailscale-funnel-flags]: /docs/reference/tailscale-cli/funnel#funnel-command-flags
+[docs-tailscale-funnel-flags]: /docs/reference/tailscale-cli/funnel#funnel-命令标志
 
-[docs-tailscale-funnel-proxy-protocol]: /docs/reference/tailscale-cli/funnel#use-the-proxy-protocol
+[docs-tailscale-funnel-proxy-protocol]: /docs/reference/tailscale-cli/funnel#使用-proxy-protocol
 
-[docs-tailscale-funnel-reset-funnel]: /docs/reference/tailscale-cli/funnel#reset-tailscale-funnel
+[docs-tailscale-funnel-reset-funnel]: /docs/reference/tailscale-cli/funnel#重置-tailscale-funnel
 
-[docs-tailscale-funnel-tcp-forwarder]: /docs/reference/tailscale-cli/funnel#use-a-tcp-forwarder
+[docs-tailscale-funnel-tcp-forwarder]: /docs/reference/tailscale-cli/funnel#使用-tcp-转发器
 
 [docs-tailscale-funnel]: /docs/reference/tailscale-cli/funnel
 

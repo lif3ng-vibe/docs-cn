@@ -90,7 +90,7 @@ description: "[Azure App Service][xt-azure-app-service] 是一个流行的云托
 
 [docs-cli-logout]: /docs/reference/tailscale-cli#logout
 
-[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#faq
+[docs-ephemeral-nodes-faq]: /docs/features/ephemeral-nodes#常见问题
 
 [docs-ephemeral-nodes]: /docs/features/ephemeral-nodes
 

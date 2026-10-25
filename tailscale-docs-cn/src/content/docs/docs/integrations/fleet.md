@@ -155,7 +155,7 @@ Fleet 集成成功运行后，会显示最近一次同步的时间、已同步�
 
 [docs-node-attributes]: /docs/reference/syntax/policy-file#nodeattrs
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员
 
 [xt-fleet]: https://fleetdm.com/
 

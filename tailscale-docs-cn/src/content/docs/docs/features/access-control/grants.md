@@ -120,7 +120,7 @@ description: "授权是 Tailscale 增强版[访问控制][docs-access-control]�
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [docs-targets]: /docs/reference/targets-and-selectors
 

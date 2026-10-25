@@ -564,7 +564,7 @@ description: "[授权][docs-grants]（grants）是在 [tailnet 策略文件][doc
 
 要实现本示例，你需要定义 DevOps 组，并给承担监控和日志角色的相应设备打标签。本示例将监控访问限制在必要的端口上，在保持可观测性的同时缩小了攻击面。你应根据自己使用的监控工具和协议调整端口限制。
 
-**注意：**随着监控需求变化或引入新的监控端口，这种方法可能需要相应更新。
+**注意**：随着监控需求变化或引入新的监控端口，这种方法可能需要相应更新。
 
 ## 网络微分段
 
@@ -748,7 +748,7 @@ description: "[授权][docs-grants]（grants）是在 [tailnet 策略文件][doc
 
 [docs-peer-relays-configure]: /docs/features/peer-relay#step-1
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-sharing]: /docs/features/sharing
 
@@ -760,9 +760,9 @@ description: "[授权][docs-grants]（grants）是在 [tailnet 策略文件][doc
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroups
+[docs-targets-autogroups]: /docs/reference/targets-and-selectors#autogroup
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [docs-versions]: /docs/reference/tailscale-client-versions
 

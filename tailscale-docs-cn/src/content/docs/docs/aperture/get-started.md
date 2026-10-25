@@ -148,7 +148,7 @@ curl -s http://<aperture-hostname>/v1/responses \
 
 [docs-use-openai-compatible-provider]: /docs/aperture/how-to/use-openai-compatible-provider
 
-[docs-admin-logs]: /docs/aperture/reference/dashboard-admin#logs
+[docs-admin-logs]: /docs/aperture/reference/dashboard-admin#日志logs
 
 [docs-chat]: /docs/aperture/reference/chat
 

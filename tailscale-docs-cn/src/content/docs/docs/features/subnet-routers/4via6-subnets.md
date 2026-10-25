@@ -120,6 +120,6 @@ tailscale set --advertise-routes=fd7a:115c:a1e0:b1a:0:7:a01:100/120
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-route-selection]: /docs/features/route-selection#active-passive-failover
+[docs-route-selection]: /docs/features/route-selection#主备故障转移
 
-[docs-subnets-setup-subnet-router]: /docs/features/subnet-routers#set-up-a-subnet-router
+[docs-subnets-setup-subnet-router]: /docs/features/subnet-routers#设置子网路由器

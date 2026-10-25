@@ -226,7 +226,7 @@ Aperture 会估算每个 LLM 请求的美元成本，用于配额扣减、hook �
 Aperture 在多处展示成本数据：
 
 * **Models**（`/admin/models`）：每个模型显示每百万 token 的定价（输入/输出），悬停提示中还包含缓存、推理、图片和网络搜索费率。
-* **Usage Overview**（`/admin/adoption`）：**CSV** 按钮可导出组织范围的用量数据，包括按模型、用户和日期统计的 token 数。
+* **Usage Overview**（`/admin/adoption`）：CSV 按钮可导出组织范围的用量数据，包括按模型、用户和日期统计的 token 数。
 * **Hooks**：在 hook 的 `send` 数组中加入 `"estimated_cost"`，即可在每次 hook 调用时收到美元成本、定价依据和 token 用量。详情参阅 [hook 发送类型][ar-hook-send-types]。
 
 ### `model_aliases`
@@ -1657,7 +1657,7 @@ Aperture 在通过 API 或管理仪表板保存配置之前进行校验。错误
 
 [docs-aperture-configure-overdrafts]: /docs/aperture/how-to/configure-overdraft-quotas
 
-[docs-aperture-connectors-labels]: /docs/aperture/connectors/reference#connector-labels
+[docs-aperture-connectors-labels]: /docs/aperture/connectors/reference#连接器标签
 
 [docs-aperture-connectors-reference]: /docs/aperture/connectors/reference
 
@@ -1689,9 +1689,9 @@ Aperture 在通过 API 或管理仪表板保存配置之前进行校验。错误
 
 [docs-aperture-privacy]: /docs/aperture/privacy-and-data-retention
 
-[docs-aperture-provider-compatibility-cost-basis]: /docs/aperture/provider-compatibility#cost-basis
+[docs-aperture-provider-compatibility-cost-basis]: /docs/aperture/provider-compatibility#成本基准
 
-[docs-aperture-provider-compatibility-model-cost-map]: /docs/aperture/provider-compatibility#model-cost-map
+[docs-aperture-provider-compatibility-model-cost-map]: /docs/aperture/provider-compatibility#模型成本映射
 
 [docs-aperture-provider-compatibility]: /docs/aperture/provider-compatibility
 
@@ -1707,7 +1707,7 @@ Aperture 在通过 API 或管理仪表板保存配置之前进行校验。错误
 
 [docs-aperture-set-up-providers]: /docs/aperture/set-up-providers
 
-[docs-aperture-troubleshoot-405]: /docs/aperture/troubleshooting#http-405-error-from-upstream-provider
+[docs-aperture-troubleshoot-405]: /docs/aperture/troubleshooting#来自上游提供商的-http-405-错误
 
 [docs-aperture-troubleshooting]: /docs/aperture/troubleshooting
 
@@ -1717,17 +1717,17 @@ Aperture 在通过 API 或管理仪表板保存配置之前进行校验。错误
 
 [docs-aperture]: /docs/aperture
 
-[docs-model-alias-destination-requirements]: /docs/aperture/model-aliases#destination-requirements
+[docs-model-alias-destination-requirements]: /docs/aperture/model-aliases#目的地要求
 
-[docs-model-alias-errors]: /docs/aperture/model-aliases#configuration-errors
+[docs-model-alias-errors]: /docs/aperture/model-aliases#配置错误
 
-[docs-model-alias-schema]: /docs/aperture/model-aliases#configuration-schema
+[docs-model-alias-schema]: /docs/aperture/model-aliases#配置架构
 
-[docs-provider-authorization]: /docs/aperture/provider-compatibility#authorization-types
+[docs-provider-authorization]: /docs/aperture/provider-compatibility#认证类型
 
-[docs-provider-flags]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-flags]: /docs/aperture/provider-compatibility#兼容性标志
 
-[docs-provider-matrix]: /docs/aperture/reference/supported-providers-clients#provider-matrix
+[docs-provider-matrix]: /docs/aperture/reference/supported-providers-clients#提供商矩阵
 
 [docs-supported-providers-clients]: /docs/aperture/reference/supported-providers-clients
 

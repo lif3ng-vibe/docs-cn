@@ -151,13 +151,13 @@ kubectl create clusterrolebinding engineering-view \
 * 以 [noauth 模式][docs-noauth]运行 API 服务器代理，跳过身份验证。
 * [录制][docs-session-recording] kubectl 会话，以满足审计与合规需求。
 
-[docs-in-process]: /docs/kubernetes-operator/api-server-access#in-process-proxy
+[docs-in-process]: /docs/kubernetes-operator/api-server-access#进程内代理
 
 [docs-acls]: /docs/features/access-control/acls
 
 [docs-auth-rbac]: /docs/kubernetes-operator/api-server-access/auth-and-rbac
 
-[docs-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-enabling-https]: /docs/how-to/set-up-https-certificates
 

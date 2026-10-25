@@ -54,15 +54,15 @@ tailnet 策略文件由多个顶层[分区][ar-sections]组成，每个分区提
 
 [ar-sections]: #分区
 
-[docs-acl-tests-syntax]: /docs/reference/syntax/policy-file#tests
+[docs-acl-tests-syntax]: /docs/reference/syntax/policy-file#测试tests
 
-[docs-acls-syntax]: /docs/reference/syntax/policy-file#acls
+[docs-acls-syntax]: /docs/reference/syntax/policy-file#acl
 
 [docs-acls]: /docs/features/access-control/acls
 
 [docs-app-connectors]: /docs/features/app-connectors
 
-[docs-autoapprovers-syntax]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-autoapprovers-syntax]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-derp-servers]: /docs/reference/derp-servers
 
@@ -72,15 +72,15 @@ tailnet 策略文件由多个顶层[分区][ar-sections]组成，每个分区提
 
 [docs-gitops]: /docs/gitops
 
-[docs-grants-syntax]: /docs/reference/syntax/policy-file#grants
+[docs-grants-syntax]: /docs/reference/syntax/policy-file#授权grants
 
 [docs-grants]: /docs/features/access-control/grants
 
-[docs-groups-syntax]: /docs/reference/syntax/policy-file#groups
+[docs-groups-syntax]: /docs/reference/syntax/policy-file#组
 
-[docs-hosts-syntax]: /docs/reference/syntax/policy-file#hosts
+[docs-hosts-syntax]: /docs/reference/syntax/policy-file#主机
 
-[docs-ipsets-syntax]: /docs/reference/syntax/policy-file#ip-sets
+[docs-ipsets-syntax]: /docs/reference/syntax/policy-file#ip-集
 
 [docs-ipsets]: /docs/features/tailnet-policy-file/ip-sets
 
@@ -92,28 +92,28 @@ tailnet 策略文件由多个顶层[分区][ar-sections]组成，每个分区提
 
 [docs-network-policy-options-randomizeclientport]: /docs/reference/syntax/policy-file#randomizeclientport
 
-[docs-network-policy-options]: /docs/reference/syntax/policy-file#network-policy-options
+[docs-network-policy-options]: /docs/reference/syntax/policy-file#网络策略选项
 
-[docs-nodeattr-syntax]: /docs/reference/syntax/policy-file#node-attributes
+[docs-nodeattr-syntax]: /docs/reference/syntax/policy-file#节点属性
 
-[docs-osi-l3]: /docs/concepts/tailscale-osi#network-layer
+[docs-osi-l3]: /docs/concepts/tailscale-osi#网络层
 
-[docs-osi-l7]: /docs/concepts/tailscale-osi#application-layer
+[docs-osi-l7]: /docs/concepts/tailscale-osi#应用层
 
-[docs-postures-syntax]: /docs/reference/syntax/policy-file#postures
+[docs-postures-syntax]: /docs/reference/syntax/policy-file#设备态势postures
 
 [docs-ssh-syntax]: /docs/reference/syntax/policy-file#ssh
 
-[docs-ssh-tests-syntax]: /docs/reference/syntax/policy-file#ssh-tests
+[docs-ssh-tests-syntax]: /docs/reference/syntax/policy-file#ssh-测试
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-tag-owners-syntax]: /docs/reference/syntax/policy-file#tag-owners
+[docs-tag-owners-syntax]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-tags]: /docs/features/tags
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [xt-hujson]: https://github.com/tailscale/hujson

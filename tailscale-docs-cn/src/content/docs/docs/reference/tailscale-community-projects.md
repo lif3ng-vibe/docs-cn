@@ -9,10 +9,10 @@ Tailscale Community Projects 是一个经过精选的集合，收录基于 Tails
 
 Tailscale Community Projects 分为以下几类：
 
-* **应用（Apps）**：用户部署在自己的 Tailscale 网络（即 tailnet）内部、原生利用 Tailscale 的应用程序。
-* **工具（Tools）**：用户手动或在流水线中运行的程序和脚本，让 Tailscale 管理体验更顺畅。
-* **扩展（Extensions）**：用户部署后用于修改或扩展 Tailscale 核心功能的应用程序。
-* **界面（Interfaces）**：让用户以超越标准 Tailscale 客户端或网页界面的新方式与设备上的 Tailscale 交互的应用程序。
+* **应用**（Apps）：用户部署在自己的 Tailscale 网络（即 tailnet）内部、原生利用 Tailscale 的应用程序。
+* **工具**（Tools）：用户手动或在流水线中运行的程序和脚本，让 Tailscale 管理体验更顺畅。
+* **扩展**（Extensions）：用户部署后用于修改或扩展 Tailscale 核心功能的应用程序。
+* **界面**（Interfaces）：让用户以超越标准 Tailscale 客户端或网页界面的新方式与设备上的 Tailscale 交互的应用程序。
 
 该平台既包含由 Tailscale 发起的项目，也包含来自更广泛的 Tailscale 社区的项目。关于可用项目的详细信息，请参阅 Tailscale Community Projects [目录][co-community-projects]。
 

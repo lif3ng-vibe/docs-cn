@@ -275,13 +275,13 @@ ip route add <second-subnet-CIDR> via <second-subnet-router-IP-address>
 
 [docs-osi]: /docs/concepts/tailscale-osi
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-subnets]: /docs/features/subnet-routers
 
 [docs-tags]: /docs/features/tags
 
-[docs-tags-key-expiry]: /docs/features/tags#key-expiry
+[docs-tags-key-expiry]: /docs/features/tags#密钥过期
 
 [docs-troubleshoot-connectivity]: /docs/reference/troubleshooting/connectivity
 

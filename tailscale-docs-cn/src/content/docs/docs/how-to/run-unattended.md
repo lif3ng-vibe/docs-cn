@@ -122,7 +122,7 @@ psexec -s -i "C:\Program Files\Tailscale\tailscale.exe" set --unattended=false
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-mdm-keys-unattended]: /docs/features/tailscale-system-policies#set-unattended-mode
+[docs-mdm-keys-unattended]: /docs/features/tailscale-system-policies#设置无人值守模式
 
 [docs-secure-rdp-windows]: /docs/solutions/access-remote-desktops-using-windows-rdp
 

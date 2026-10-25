@@ -97,7 +97,7 @@ Aperture 会尽量在把你带回详情页之前发现你的工具。如果上�
 
 [ar-review-or-refresh-mcp-tools]: #查看或刷新-mcp-工具
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors
 
 [docs-connectors-get-started]: /docs/aperture/connectors/get-started
 
@@ -107,6 +107,6 @@ Aperture 会尽量在把你带回详情页之前发现你的工具。如果上�
 
 [docs-grant-mcp-tool-access]: /docs/aperture/how-to/grant-mcp-tool-access
 
-[docs-magicdns-access]: /docs/features/magicdns#accessing-devices-over-magicdns
+[docs-magicdns-access]: /docs/features/magicdns#通过-magicdns-访问设备
 
-[docs-troubleshooting-http-403]: /docs/aperture/troubleshooting#http-connector-returns-403-forbidden
+[docs-troubleshooting-http-403]: /docs/aperture/troubleshooting#http-连接器返回-403-forbidden

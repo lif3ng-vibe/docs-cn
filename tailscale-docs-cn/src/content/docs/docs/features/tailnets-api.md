@@ -87,7 +87,7 @@ curl -d "client_id=${OAUTH_CLIENT_ID}" -d "client_secret=${OAUTH_CLIENT_SECRET}"
 
 [co-api-list-tailnets]: https://tailscale.com/api#tag/organizations/GET/organizations/{organization}/tailnets
 
-[docs-exchange-token]: /docs/features/oauth-clients#verifying-you-can-generate-api-access-tokens
+[docs-exchange-token]: /docs/features/oauth-clients#验证你能否生成-api-访问令牌
 
 [docs-multiple-tailnets]: /docs/features/multiple-tailnets
 
@@ -95,4 +95,4 @@ curl -d "client_id=${OAUTH_CLIENT_ID}" -d "client_secret=${OAUTH_CLIENT_SECRET}"
 
 [docs-workload-identity-federation]: /docs/features/workload-identity-federation
 
-[docs-workload-identity-federation-token-exchange]: /docs/features/workload-identity-federation#token-exchange-api
+[docs-workload-identity-federation-token-exchange]: /docs/features/workload-identity-federation#令牌交换-api

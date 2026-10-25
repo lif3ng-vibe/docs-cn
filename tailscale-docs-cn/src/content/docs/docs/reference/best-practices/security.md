@@ -202,15 +202,15 @@ Host: webserver.example2.ts.net
 
 [co-security]: https://tailscale.com/security
 
-[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-policy-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-audit-logging-access-via-api]: /docs/features/logging/audit-logging#accessing-configuration-audit-logs-using-the-tailscale-api
+[docs-audit-logging-access-via-api]: /docs/features/logging/audit-logging#使用-tailscale-api-访问配置审计日志
 
 [docs-audit-logging]: /docs/features/logging/audit-logging
 
@@ -242,7 +242,7 @@ Host: webserver.example2.ts.net
 
 [docs-key-expiry]: /docs/features/access-control/key-expiry
 
-[docs-log-mesh-traffic-opt-out]: /docs/features/logging#opt-out-of-client-logging
+[docs-log-mesh-traffic-opt-out]: /docs/features/logging#退出客户端日志记录
 
 [docs-multifactor-auth]: /docs/multifactor-auth
 
@@ -256,11 +256,11 @@ Host: webserver.example2.ts.net
 
 [docs-sso-providers]: /docs/integrations/identity
 
-[docs-tags-auth-key]: /docs/features/tags#best-practices
+[docs-tags-auth-key]: /docs/features/tags#最佳实践
 
 [docs-tags]: /docs/features/tags
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#configure-tailscale-ssh-with-check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#使用检查模式配置-tailscale-ssh
 
 [docs-tailscale-ssh-session-recording]: /docs/features/tailscale-ssh/tailscale-ssh-session-recording
 
@@ -268,9 +268,9 @@ Host: webserver.example2.ts.net
 
 [docs-terraform-provider]: /docs/integrations/terraform-provider
 
-[docs-update-auto-updates]: /docs/features/client/update#auto-updates
+[docs-update-auto-updates]: /docs/features/client/update#自动更新
 
-[docs-update-check-for-updates]: /docs/features/client/update#check-for-updates
+[docs-update-check-for-updates]: /docs/features/client/update#检查更新
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning
 

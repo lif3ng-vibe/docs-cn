@@ -112,4 +112,4 @@ MCP 连接器默认拒绝。添加一条 `connectors` 授权，用户才能列�
 
 [docs-set-up-per-user-oauth2-connector]: /docs/aperture/how-to/set-up-per-user-oauth2-connector
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors

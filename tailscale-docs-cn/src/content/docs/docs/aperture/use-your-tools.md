@@ -75,7 +75,7 @@ Aperture 网关会根据你有权使用的模型生成客户端设置。可用�
 
 [ar-gateway-generated-configuration]: #网关生成的配置
 
-[docs-client-compatibility]: /docs/aperture/reference/supported-providers-clients#clients-and-agent-harnesses
+[docs-client-compatibility]: /docs/aperture/reference/supported-providers-clients#客户端与-agent-框架
 
 [docs-get-started]: /docs/aperture/get-started
 

@@ -559,7 +559,7 @@ Tailscale Services 有以下限制：
 
 [docs-install-unstable]: /docs/install/unstable
 
-[docs-macos-variants-tailscaled]: /docs/concepts/macos-variants#open-source-tailscaled-variant
+[docs-macos-variants-tailscaled]: /docs/concepts/macos-variants#开源-tailscaled-变体
 
 [docs-macos-variants]: /docs/concepts/macos-variants
 
@@ -569,15 +569,15 @@ Tailscale Services 有以下限制：
 
 [docs-osi-model]: /docs/concepts/tailscale-osi
 
-[docs-policy-syntax-auto-approvers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-route-selection]: /docs/features/route-selection
 
 [docs-serve-examples]: /docs/reference/examples/serve
 
-[docs-subnets-approve]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-subnets-approve]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
 [docs-tags]: /docs/features/tags
 
@@ -595,7 +595,7 @@ Tailscale Services 有以下限制：
 
 [docs-tsnet]: /docs/features/tsnet
 
-[docs-userspace-networking]: /docs/reference/kernel-vs-userspace-routers#userspace-netstack-mode
+[docs-userspace-networking]: /docs/reference/kernel-vs-userspace-routers#用户态netstack模式
 
 [xt-http-server]: https://www.npmjs.com/package/http-server
 

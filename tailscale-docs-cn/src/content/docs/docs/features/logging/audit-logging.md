@@ -11,7 +11,7 @@ description: "配置审计日志让你了解 tailnet 中*谁*在*什么时间*�
 
 对于策略文件的更改，日志会包含旧文件与新文件之间的完整差异（diff）。
 
-> **注意：**配置审计日志[所有套餐](https://tailscale.com/pricing)均可用。
+> **注意**：配置审计日志[所有套餐](https://tailscale.com/pricing)均可用。
 
 所有[有权访问管理控制台的用户][docs-user-roles]都可以在管理控制台的 [Logs](https://console.tailscale.com/admin/logs) 页面找到配置审计日志，并且可以筛选这些日志来查找特定事件。
 
@@ -21,11 +21,11 @@ description: "配置审计日志让你了解 tailnet 中*谁*在*什么时间*�
 
 日志包含以下几个组成部分：
 
-* **Timestamp（时间戳）**：事件发生的时间。以你浏览器的本地时间显示。
-* **Action（操作）**：发生了什么操作。例如批准一台设备，或修改策略文件。
-* **Actor（操作者）**：哪个用户或进程完成了该操作。如果操作由用户做出，该值为用户名。API 返回的事件中会提供用户的邮箱或 GitHub 用户名以及姓名。如果操作由 Tailscale 控制平面做出，该值为 Tailscale 服务。有关 Tailscale 控制平面执行的操作列表，参见[服务事件][ar-service-events]。
-* **Target（目标）**：操作作用于哪个资源。例如，对于修改用户角色的操作，目标就是该用户；对于批准设备的操作，目标是该设备；对于 tailnet 级别的配置操作，目标就是整个 tailnet。
-* **Diff（差异）**：相关时提供的新旧值。例如，如果你重命名了节点的机器名，或更新了标签列表，你会同时看到旧值和新值。对于访问控制策略的更改，你会看到旧版与更新版的完整差异，包括注释等非实质性更改。对于节点重新认证，你会看到旧的节点密钥过期时间和新的过期时间。
+* **Timestamp**（时间戳）：事件发生的时间。以你浏览器的本地时间显示。
+* **Action**（操作）：发生了什么操作。例如批准一台设备，或修改策略文件。
+* **Actor**（操作者）：哪个用户或进程完成了该操作。如果操作由用户做出，该值为用户名。API 返回的事件中会提供用户的邮箱或 GitHub 用户名以及姓名。如果操作由 Tailscale 控制平面做出，该值为 Tailscale 服务。有关 Tailscale 控制平面执行的操作列表，参见[服务事件][ar-service-events]。
+* **Target**（目标）：操作作用于哪个资源。例如，对于修改用户角色的操作，目标就是该用户；对于批准设备的操作，目标是该设备；对于 tailnet 级别的配置操作，目标就是整个 tailnet。
+* **Diff**（差异）：相关时提供的新旧值。例如，如果你重命名了节点的机器名，或更新了标签列表，你会同时看到旧值和新值。对于访问控制策略的更改，你会看到旧版与更新版的完整差异，包括注释等非实质性更改。对于节点重新认证，你会看到旧的节点密钥过期时间和新的过期时间。
 
 *（图：管理控制台的 Logs 页面，列出示例配置日志。）*
 
@@ -422,13 +422,13 @@ curl -u  $ACCESS_TOKEN: -X GET \
 
 [co-privacy-policy-collect]: https://tailscale.com/privacy-policy#the-information-we-collect
 
-[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-policy-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 
-[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-tags]: /docs/features/tags
 
@@ -494,11 +494,11 @@ curl -u  $ACCESS_TOKEN: -X GET \
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#deleting-users
+[docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#删除用户
 
-[docs-remove-team-members-restoring-users]: /docs/features/sharing/how-to/remove-team-members#restoring-users
+[docs-remove-team-members-restoring-users]: /docs/features/sharing/how-to/remove-team-members#恢复用户
 
-[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#suspending-users
+[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#停用用户
 
 [docs-services]: /docs/features/services
 
@@ -508,7 +508,7 @@ curl -u  $ACCESS_TOKEN: -X GET \
 
 [docs-sso-onelogin]: /docs/integrations/identity/onelogin
 
-[docs-sso-providers-change]: /docs/integrations/identity#changing-identity-providers
+[docs-sso-providers-change]: /docs/integrations/identity#更换身份提供方
 
 [docs-subnets]: /docs/features/subnet-routers
 
@@ -516,13 +516,13 @@ curl -u  $ACCESS_TOKEN: -X GET \
 
 [docs-tailnet-lock]: /docs/features/tailnet-lock
 
-[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-name
+[docs-tailnet-name-tailnet-dns]: /docs/concepts/tailnet-name#tailnet-dns-名称
 
 [docs-tailnet-name-tailnet-id]: /docs/concepts/tailnet-name#tailnet-id
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#configure-tailscale-ssh-with-check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#使用检查模式配置-tailscale-ssh
 
-[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件
 
 [docs-troubleshooting-same-ip-address]: /docs/reference/troubleshooting/network-configuration/multiple-devices-same-100-x-ip-address
 
@@ -530,15 +530,15 @@ curl -u  $ACCESS_TOKEN: -X GET \
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning
 
-[docs-user-roles-member]: /docs/reference/user-roles#member
+[docs-user-roles-member]: /docs/reference/user-roles#member成员
 
-[docs-user-roles-permission-matrix]: /docs/reference/user-roles#permission-matrix
+[docs-user-roles-permission-matrix]: /docs/reference/user-roles#权限矩阵
 
 [docs-user-roles]: /docs/reference/user-roles
 
-[docs-webhooks-events]: /docs/features/webhooks#events
+[docs-webhooks-events]: /docs/features/webhooks#事件
 
-[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-secret
+[docs-webhooks-webhook-secret]: /docs/features/webhooks#webhook-密钥
 
 [docs-webhooks]: /docs/features/webhooks
 

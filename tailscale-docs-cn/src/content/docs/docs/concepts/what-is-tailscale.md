@@ -114,7 +114,7 @@ Tailscale 灵活架构的设计初衷就是随组织需求无缝成长。无论�
 
 [docs-access-control]: /docs/features/access-control
 
-[docs-acl-samples-allow-all-default-acl]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-allow-all-default-acl]: /docs/reference/examples/acls#允许所有默认-acl
 
 [docs-encryption]: /docs/concepts/tailscale-encryption
 

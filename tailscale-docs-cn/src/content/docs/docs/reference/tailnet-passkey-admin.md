@@ -30,7 +30,7 @@ Tailscale 支持使用 [passkey][docs-passkeys]（通行密钥）进行 Tailscal
 
 关于管理员与 IT 管理员角色的不同能力，更多信息请参阅[由用户角色管理的权限][docs-user-roles-permission-matrix]。
 
-[docs-invite-any-user-send-links]: /docs/features/sharing/how-to/invite-any-user#send-an-invite-link
+[docs-invite-any-user-send-links]: /docs/features/sharing/how-to/invite-any-user#发送邀请链接
 
 [docs-passkeys]: /docs/integrations/identity/passkeys
 
@@ -38,8 +38,8 @@ Tailscale 支持使用 [passkey][docs-passkeys]（通行密钥）进行 Tailscal
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员管理员管理员
 
-[docs-user-roles-it-admin]: /docs/reference/user-roles#it-admin
+[docs-user-roles-it-admin]: /docs/reference/user-roles#it-adminit-管理员
 
-[docs-user-roles-permission-matrix]: /docs/reference/user-roles#permission-matrix
+[docs-user-roles-permission-matrix]: /docs/reference/user-roles#权限矩阵

@@ -114,8 +114,8 @@ bug 报告详情记录在[客户端日志][docs-log-mesh-traffic-client-logs]中
 
 [docs-cli]: /docs/reference/tailscale-cli
 
-[docs-log-mesh-traffic-client-logs]: /docs/features/logging#client-logs
+[docs-log-mesh-traffic-client-logs]: /docs/features/logging#客户端日志
 
-[docs-log-mesh-traffic-opt-out]: /docs/features/logging#opt-out-of-client-logging
+[docs-log-mesh-traffic-opt-out]: /docs/features/logging#退出客户端日志记录
 
 [xt-gh-tailscale-opn-localapi]: https://github.com/tailscale/tailscale/blob/main/ipn/localapi/localapi.go

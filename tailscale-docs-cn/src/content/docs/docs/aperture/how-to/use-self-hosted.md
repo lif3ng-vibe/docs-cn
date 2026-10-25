@@ -55,6 +55,6 @@ description: "把自托管的 LLM 服务器配置为 Aperture 中的提供商，
 
 [docs-aperture-url-construction]: /docs/aperture/configuration#how-aperture-builds-upstream-urls
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-use-openai-compatible-provider]: /docs/aperture/how-to/use-openai-compatible-provider

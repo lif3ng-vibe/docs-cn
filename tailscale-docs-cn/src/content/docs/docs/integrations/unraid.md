@@ -133,7 +133,7 @@ Unraid 让你可以：
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
-[docs-auto-approvers]: /docs/reference/syntax/policy-file#auto-approvers
+[docs-auto-approvers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

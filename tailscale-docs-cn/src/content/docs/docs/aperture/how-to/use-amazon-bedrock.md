@@ -74,7 +74,7 @@ description: "在 Aperture 中配置 Amazon Bedrock 提供商，让你的团队�
 
 [docs-grant-model-access]: /docs/aperture/how-to/grant-model-access
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-use-your-tools]: /docs/aperture/use-your-tools
 

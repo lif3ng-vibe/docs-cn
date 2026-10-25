@@ -177,7 +177,7 @@ Operator 加入你的 tailnet 可能需要一些时间，因为容器镜像要�
 
 [docs-oauth-clients]: /docs/features/oauth-clients
 
-[docs-oauth-clients-setup]: /docs/features/oauth-clients#setting-up-an-oauth-client
+[docs-oauth-clients-setup]: /docs/features/oauth-clients#设置-oauth-客户端
 
 [docs-operator-customization]: /docs/kubernetes-operator/concepts/proxyclass
 

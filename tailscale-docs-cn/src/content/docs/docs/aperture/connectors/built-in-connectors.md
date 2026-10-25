@@ -332,7 +332,7 @@ Linux web-1 6.8.0-40-generic x86_64
 
 [ar-where-to-define-grants]: #在哪里定义授权
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors
 
 [docs-aperture-mcp-server]: /docs/aperture/mcp-server
 
@@ -344,9 +344,9 @@ Linux web-1 6.8.0-40-generic x86_64
 
 [docs-connectors-how-it-works]: /docs/aperture/connectors/how-connectors-work
 
-[docs-connectors-labels]: /docs/aperture/connectors/reference#connector-labels
+[docs-connectors-labels]: /docs/aperture/connectors/reference#连接器标签
 
-[docs-connectors-reference-labels]: /docs/aperture/connectors/reference#the-reserved-system-label
+[docs-connectors-reference-labels]: /docs/aperture/connectors/reference#保留的-system-标签
 
 [docs-connectors-reference]: /docs/aperture/connectors/reference
 
@@ -362,4 +362,4 @@ Linux web-1 6.8.0-40-generic x86_64
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
-[docs-troubleshooting-oauth]: /docs/aperture/troubleshooting#oauth-20-authorization-fails
+[docs-troubleshooting-oauth]: /docs/aperture/troubleshooting#oauth-20-授权失败

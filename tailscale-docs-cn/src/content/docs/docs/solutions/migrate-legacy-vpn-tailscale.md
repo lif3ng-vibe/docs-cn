@@ -507,13 +507,13 @@ Tailscale 节点之间的连接使用端到端加密。但浏览器、web API �
 
 [co-download]: https://tailscale.com/download
 
-[docs-acl-samples-default-allow-all]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-default-allow-all]: /docs/reference/examples/acls#允许所有默认-acl
 
-[docs-acl-syntax-autoapprovers]: /docs/reference/syntax/policy-file#autoapprovers
+[docs-acl-syntax-autoapprovers]: /docs/reference/syntax/policy-file#自动批准autoapprovers
 
-[docs-acl-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroups
+[docs-acl-syntax-autogroups]: /docs/reference/syntax/policy-file#autogroup
 
-[docs-acl-syntax-groups]: /docs/reference/syntax/policy-file#groups
+[docs-acl-syntax-groups]: /docs/reference/syntax/policy-file#群组groups
 
 [docs-app-connectors]: /docs/features/app-connectors
 
@@ -529,7 +529,7 @@ Tailscale 节点之间的连接使用端到端加密。但浏览器、web API �
 
 [docs-enabling-https]: /docs/how-to/set-up-https-certificates
 
-[docs-exit-nodes-allow-admin-console]: /docs/features/exit-nodes#allow-the-exit-node-from-the-admin-console
+[docs-exit-nodes-allow-admin-console]: /docs/features/exit-nodes#在管理控制台中允许出口节点
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 
@@ -541,7 +541,7 @@ Tailscale 节点之间的连接使用端到端加密。但浏览器、web API �
 
 [docs-manage]: /docs/manage
 
-[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#enable-network-flow-logs
+[docs-network-flow-logs-enable]: /docs/features/logging/network-flow-logs#启用网络流日志
 
 [docs-quick-guide-exit-nodes]: /docs/features/exit-nodes/how-to/setup
 
@@ -555,11 +555,11 @@ Tailscale 节点之间的连接使用端到端加密。但浏览器、web API �
 
 [docs-sso-providers]: /docs/integrations/identity
 
-[docs-subnets-enable-admin-console]: /docs/features/subnet-routers#enable-subnet-routes-from-the-admin-console
+[docs-subnets-enable-admin-console]: /docs/features/subnet-routers#从管理控制台启用子网路由
 
 [docs-subnets-linux-access-rules]: /docs/features/subnet-routers?tab=linux#add-access-rules-for-the-advertised-subnet-routes
 
-[docs-subnets-setup]: /docs/features/subnet-routers#set-up-a-subnet-router
+[docs-subnets-setup]: /docs/features/subnet-routers#设置子网路由器
 
 [docs-subnets]: /docs/features/subnet-routers
 
@@ -567,16 +567,16 @@ Tailscale 节点之间的连接使用端到端加密。但浏览器、web API �
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#check-mode
+[docs-tailscale-ssh-check-mode]: /docs/features/tailscale-ssh#检查模式
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 
 [docs-user-approval-enable]: /docs/features/access-control/user-approval#enable-user-approval-for-your-network
 
-[docs-user-roles-admin]: /docs/reference/user-roles#admin
+[docs-user-roles-admin]: /docs/reference/user-roles#admin管理员管理员
 
-[docs-user-roles-member]: /docs/reference/user-roles#member
+[docs-user-roles-member]: /docs/reference/user-roles#member成员
 
-[docs-user-roles-permission-matrix]: /docs/reference/user-roles#permission-matrix
+[docs-user-roles-permission-matrix]: /docs/reference/user-roles#权限矩阵
 
 [docs-user-roles]: /docs/reference/user-roles

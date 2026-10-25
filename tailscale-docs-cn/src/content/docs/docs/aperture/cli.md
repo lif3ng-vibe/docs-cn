@@ -659,7 +659,7 @@ Aperture CLI 接受以下标志：
 
 [docs-aperture]: /docs/aperture
 
-[docs-connect-outside-tailnet-ts-unplug]: /docs/aperture/connect-outside-tailnet#connect-using-ts-unplug
+[docs-connect-outside-tailnet-ts-unplug]: /docs/aperture/connect-outside-tailnet#使用-ts-unplug-连接
 
 [docs-provider-compatibility]: /docs/aperture/reference/supported-providers-clients
 
@@ -705,6 +705,6 @@ Aperture CLI 接受以下标志：
 
 [xt-opencode]: https://opencode.ai
 
-[docs-gateway-setup]: /docs/aperture/use-your-tools#gateway-generated-configuration
+[docs-gateway-setup]: /docs/aperture/use-your-tools#网关生成的配置
 
 [docs-use-openai-compatible-provider]: /docs/aperture/how-to/use-openai-compatible-provider

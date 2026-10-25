@@ -31,4 +31,4 @@ Tailscale API 让你可以管理 tailnet 策略文件，包括用于即时访问
 
 [docs-tailnet-policy-file]: /docs/features/tailnet-policy-file
 
-[docs-user-group-provisioning-sync]: /docs/features/user-group-provisioning#syncing-group-membership
+[docs-user-group-provisioning-sync]: /docs/features/user-group-provisioning#同步组成员关系

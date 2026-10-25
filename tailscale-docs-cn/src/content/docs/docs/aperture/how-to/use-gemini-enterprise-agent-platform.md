@@ -177,7 +177,7 @@ gcloud iam service-accounts keys delete <key-id> \
 
 [docs-magicdns]: /docs/features/magicdns
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [docs-web-dashboard-admin]: /docs/aperture/reference/dashboard-admin
 

@@ -62,11 +62,11 @@ description: "你可以使用 [TinyMDM][xt-tinymdm-marketing-website] 移动设�
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 
-[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
+[docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#自动批准-tailscale-系统扩展
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 
-[docs-org-name-policy]: /docs/features/tailscale-system-policies#set-your-organization-name
+[docs-org-name-policy]: /docs/features/tailscale-system-policies#设置组织名称
 
 [xt-tinymdm-admin-console]: https://www.tinymdm.net/console
 

@@ -402,7 +402,7 @@ Tailscale Kubernetes Operator 不会在其代理容器上配置 startup、livene
 
 [docs-quad100]: /docs/reference/quad100
 
-[docs-split-dns]: /docs/reference/dns-in-tailscale#restricted-nameservers
+[docs-split-dns]: /docs/reference/dns-in-tailscale#受限域名服务器
 
 [docs-subnet-routers]: /docs/features/subnet-routers
 

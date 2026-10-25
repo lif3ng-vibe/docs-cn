@@ -478,9 +478,9 @@ sleep 10
 
 [docs-ios-vpn-on-demand]: /docs/features/client/ios-vpn-on-demand
 
-[docs-mac-variants-app-store]: /docs/concepts/macos-variants#mac-app-store-variant
+[docs-mac-variants-app-store]: /docs/concepts/macos-variants#mac-app-store-变体
 
-[docs-mac-variants-standalone]: /docs/concepts/macos-variants#standalone-variant
+[docs-mac-variants-standalone]: /docs/concepts/macos-variants#standalone-变体
 
 [docs-mdm-iru]: /docs/integrations/mdm/iru
 
@@ -488,9 +488,9 @@ sleep 10
 
 [docs-mdm-jumpcloud]: /docs/integrations/mdm/jumpcloud
 
-[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#set-your-organization-name
+[docs-mdm-keys-org-name]: /docs/features/tailscale-system-policies#设置组织名称
 
-[docs-mdm-keys-suppress-address-copy]: /docs/features/tailscale-system-policies#suppress-ip-address-copied-notifications
+[docs-mdm-keys-suppress-address-copy]: /docs/features/tailscale-system-policies#抑制-ip-地址复制通知
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 

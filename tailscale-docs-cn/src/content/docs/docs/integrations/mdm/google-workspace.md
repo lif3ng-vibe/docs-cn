@@ -67,7 +67,7 @@ Tailscale][xt-google-workspace-managed-chromeos]。ChromeOS 上 Android 应用�
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 
-[docs-org-name-policy]: /docs/features/tailscale-system-policies#set-your-organization-name
+[docs-org-name-policy]: /docs/features/tailscale-system-policies#设置组织名称
 
 [xt-google-workspace-admin-console]: https://admin.google.com/ac/home
 

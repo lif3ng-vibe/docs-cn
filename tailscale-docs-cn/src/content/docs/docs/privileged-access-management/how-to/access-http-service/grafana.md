@@ -71,9 +71,9 @@ http://localhost:3000
 
 [docs-pam-access-http-service]: /docs/privileged-access-management/how-to/access-http-service
 
-[docs-pam-identity-headers]: /docs/privileged-access-management/how-to/access-http-service#pass-tailscale-identity-to-your-web-application
+[docs-pam-identity-headers]: /docs/privileged-access-management/how-to/access-http-service#把-tailscale-身份传给你的-web-应用
 
-[docs-pam-verify-identity-headers]: /docs/privileged-access-management/how-to/access-http-service#verify-identity-headers
+[docs-pam-verify-identity-headers]: /docs/privileged-access-management/how-to/access-http-service#验证身份头
 
 [docs-pam]: /docs/privileged-access-management
 

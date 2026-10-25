@@ -113,7 +113,7 @@ Tailscale 提供内置的 SSH 功能，扩展并简化设备之间的 SSH 连接
 
 [docs-database]: /docs/database
 
-[docs-default-acl]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-default-acl]: /docs/reference/examples/acls#允许所有默认-acl
 
 [docs-device-connectivity]: /docs/reference/device-connectivity
 

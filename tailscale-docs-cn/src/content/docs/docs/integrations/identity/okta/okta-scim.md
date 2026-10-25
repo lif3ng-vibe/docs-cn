@@ -189,7 +189,7 @@ Tailscale 支持跨域身份管理系统（SCIM），可与 Okta 集成。
 
 [docs-auth-keys-revoke]: /docs/features/access-control/auth-keys#revoke-an-auth-key
 
-[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#suspending-users
+[docs-remove-team-members-suspending-users]: /docs/features/sharing/how-to/remove-team-members#停用用户
 
 [docs-sso-okta]: /docs/integrations/identity/okta
 

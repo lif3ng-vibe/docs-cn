@@ -7,7 +7,7 @@ description: "使用 Tailscale 命令行界面（Tailscale CLI）管理和排查
 
 Tailscale 客户端内置了命令行界面（CLI），可用于管理和排查你的设备在 Tailscale 网络（即 tailnet）中的问题。
 
-> **注意：**Tailscale CLI 适用于[所有套餐](https://tailscale.com/pricing)。
+> **注意**：Tailscale CLI 适用于[所有套餐](https://tailscale.com/pricing)。
 
 ## 使用 Tailscale CLI
 
@@ -1133,7 +1133,7 @@ tailscale appc-routes [flags]
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 
-[docs-acl-samples-all-default]: /docs/reference/examples/acls#allow-all-default-acl
+[docs-acl-samples-all-default]: /docs/reference/examples/acls#允许所有默认-acl
 
 [docs-acls]: /docs/features/access-control/acls
 
@@ -1165,21 +1165,21 @@ tailscale appc-routes [flags]
 
 [docs-fast-user-switching]: /docs/features/client/fast-user-switching
 
-[docs-fast-user-switching-set-nickname]: /docs/features/client/fast-user-switching#setting-a-nickname
+[docs-fast-user-switching-set-nickname]: /docs/features/client/fast-user-switching#设置昵称
 
 [docs-ip-and-dns-addresses]: /docs/concepts/ip-and-dns-addresses
 
-[docs-kernel-vs-userspace-routers-kernel]: /docs/reference/kernel-vs-userspace-routers#kernel-mode
+[docs-kernel-vs-userspace-routers-kernel]: /docs/reference/kernel-vs-userspace-routers#内核模式
 
-[docs-kernel-vs-userspace-routers-netstack]: /docs/reference/kernel-vs-userspace-routers#userspace-netstack-mode
+[docs-kernel-vs-userspace-routers-netstack]: /docs/reference/kernel-vs-userspace-routers#用户态netstack模式
 
 [docs-linux-systray]: /docs/features/client/linux-systray
 
 [docs-machine-names]: /docs/concepts/machine-names
 
-[docs-macos-mac-app-store]: /docs/concepts/macos-variants#mac-app-store-variant
+[docs-macos-mac-app-store]: /docs/concepts/macos-variants#mac-app-store-变体
 
-[docs-macos-standalone]: /docs/concepts/macos-variants#standalone-variant
+[docs-macos-standalone]: /docs/concepts/macos-variants#standalone-变体
 
 [docs-magicdns]: /docs/features/magicdns
 
@@ -1193,7 +1193,7 @@ tailscale appc-routes [flags]
 
 [docs-ping-types]: /docs/reference/ping-types
 
-[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
 [docs-release-stages-beta]: /docs/reference/tailscale-release-stages#beta
 
@@ -1213,9 +1213,9 @@ tailscale appc-routes [flags]
 
 [docs-tailscale-funnel]: /docs/reference/tailscale-cli/funnel
 
-[docs-tailscale-funnel-get-the-status]: /docs/reference/tailscale-cli/funnel#get-the-status
+[docs-tailscale-funnel-get-the-status]: /docs/reference/tailscale-cli/funnel#获取状态
 
-[docs-tailscale-funnel-reset-tailscale-funnel]: /docs/reference/tailscale-cli/funnel#reset-tailscale-funnel
+[docs-tailscale-funnel-reset-tailscale-funnel]: /docs/reference/tailscale-cli/funnel#重置-tailscale-funnel
 
 [docs-tailscale-lock]: /docs/reference/tailscale-cli/lock
 
@@ -1231,9 +1231,9 @@ tailscale appc-routes [flags]
 
 [docs-tailscale-serve]: /docs/reference/tailscale-cli/serve
 
-[docs-tailscale-serve-get-the-status]: /docs/reference/tailscale-cli/serve#get-the-status
+[docs-tailscale-serve-get-the-status]: /docs/reference/tailscale-cli/serve#获取状态
 
-[docs-tailscale-serve-reset-tailscale-serve]: /docs/reference/tailscale-cli/serve#reset-tailscale-serve
+[docs-tailscale-serve-reset-tailscale-serve]: /docs/reference/tailscale-cli/serve#重置-tailscale-serve
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
@@ -1243,11 +1243,11 @@ tailscale appc-routes [flags]
 
 [docs-tailscaled]: /docs/reference/tailscaled
 
-[docs-terminology-and-concepts-node]: /docs/reference/glossary#node
+[docs-terminology-and-concepts-node]: /docs/reference/glossary#节点
 
 [docs-update]: /docs/features/client/update
 
-[docs-update-auto-updates]: /docs/features/client/update#auto-updates
+[docs-update-auto-updates]: /docs/features/client/update#自动更新
 
 [docs-workload-identity]: /docs/features/workload-identity-federation
 

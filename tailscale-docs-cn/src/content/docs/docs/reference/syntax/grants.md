@@ -262,7 +262,7 @@ Tailscale 策略引擎会编译授权并分发给 Tailscale 客户端，客户�
 
 [docs-tailscale-services]: /docs/features/tailscale-services
 
-[docs-targets-groups]: /docs/reference/targets-and-selectors#groups
+[docs-targets-groups]: /docs/reference/targets-and-selectors#组
 
 [docs-targets]: /docs/reference/targets-and-selectors
 

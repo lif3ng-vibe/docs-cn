@@ -55,7 +55,7 @@ OpenRouter 上的模型名称使用 `provider/model` 前缀格式。可用的模
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 
-[docs-provider-compatibility]: /docs/aperture/provider-compatibility#compatibility-flags
+[docs-provider-compatibility]: /docs/aperture/provider-compatibility#兼容性标志
 
 [xt-openrouter-keys]: https://openrouter.ai/settings/keys
 

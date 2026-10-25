@@ -157,7 +157,7 @@ Aperture 会自动把 `system` 标签应用于内置的 `aperture` 系统连接�
 * [连接器的工作原理][docs-connectors-how-it-works]解释了标签所参与的访问控制模型。
 * [设置管理员访问权限][docs-set-up-admin-access]：控制谁可以编辑连接器及其标签。
 
-[docs-aperture-connectors-config]: /docs/aperture/configuration#connectors
+[docs-aperture-connectors-config]: /docs/aperture/configuration#连接器connectors
 
 [docs-aperture-connectors]: /docs/aperture/connectors
 
@@ -177,4 +177,4 @@ Aperture 会自动把 `system` 标签应用于内置的 `aperture` 系统连接�
 
 [docs-visible-groups]: /docs/aperture/visible-groups
 
-[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
+[docs-aperture-chat-connectors]: /docs/aperture/reference/chat#连接器connectors

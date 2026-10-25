@@ -394,12 +394,12 @@ sudo tailscale up --auth-key=<key-1> --advertise-tags=tag:prod-2
 
 [docs-policy-syntax]: /docs/reference/syntax/policy-file
 
-[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#tag-owners
+[docs-policy-syntax-tag-owners]: /docs/reference/syntax/policy-file#标签所有者
 
-[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#tests
+[docs-policy-syntax-tests]: /docs/reference/syntax/policy-file#测试tests
 
 [docs-subnets]: /docs/features/subnet-routers
 
-[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-policy-file
+[docs-tailnet-policy-file]: /docs/reference/glossary#tailnet-策略文件
 
 [docs-targets]: /docs/reference/targets-and-selectors
